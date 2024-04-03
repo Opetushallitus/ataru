@@ -3,12 +3,14 @@
   (:require [ajax.core]
             [ajax.protocols :as pr]
             [ataru.cljs-util :as cljs-util]
-            [ataru.excel-common :refer [form-field-belongs-to-hakukohde common-field-labels]]
+            [ataru.excel-common :refer [common-field-labels
+                                        form-field-belongs-to-hakukohde]]
             [ataru.util :as util :refer [assoc?]]
             [ataru.virkailija.application.excel-download.excel-utils :refer [assoc-in-excel
                                                                              download-blob
                                                                              get-excel-checkbox-filter-defs
-                                                                             get-in-excel]]
+                                                                             get-in-excel
+                                                                             get-values-for-child-filters]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [clojure.string :as clj-string]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
@@ -27,23 +29,21 @@
  :application/excel-request-filter-changed
  (fn [db [_ id]]
    (let [filter (get-in-excel db [:filters id])
-         parent-id (:parent-id filter)
-         parent-filter (get-in-excel db [:filters (:parent-id filter)])
          child-ids (:child-ids filter)
-         new-checked (not (:checked filter))]
-     (as-> db db-result
-       (assoc-in-excel db-result [:filters id :checked] new-checked)
-       ; if checked, then select all children
-       (loop [cids child-ids acc db-result]
+         new-checked (not (:checked filter))
+         parent-id (:parent-id filter)]
+     (as-> db $
+       (assoc-in-excel $ [:filters id :checked] new-checked)
+       ; set values for all children
+       (loop [cids child-ids acc $]
          (if (not-empty cids)
            (recur (rest cids) (assoc-in-excel acc [:filters (first cids) :checked] new-checked))
            acc))
-       (if parent-filter (let [sibling-checkeds (map
-                                                 (fn [sibling-id] (boolean (get-in-excel db-result [:filters sibling-id :checked])))
-                                                 (:child-ids parent-filter))]
-                           (cond (every? true? sibling-checkeds) (assoc-in-excel db-result [:filters parent-id :checked] true)
-                                 :else (assoc-in-excel db-result [:filters parent-id :checked] false)))
-           db-result)))))
+       ; set parent value according to changed children
+       (if parent-id
+         (cond (every? true? (get-values-for-child-filters $ parent-id)) (assoc-in-excel $ [:filters parent-id :checked] true)
+               :else (assoc-in-excel $ [:filters parent-id :checked] false))
+         $)))))
 
 (reg-event-db
  :application/excel-request-filters-set-all
@@ -53,7 +53,6 @@
        (if (not-empty rest-ids)
          (recur (rest rest-ids) (assoc-in-excel acc [:filters (first rest-ids) :checked] (boolean checked)))
          acc)))))
-
 
 (reg-event-db
  :application/handle-excel-download-success
@@ -75,22 +74,27 @@
        (assoc-in-excel :fetching? false)
        (assoc-in-excel :error error))))
 
+(defn- get-included-ids [db]
+  (let [selected-mode (get-in-excel db :selected-mode)]
+    (case selected-mode
+      "with-defaults" (as-> (get-in-excel db :included-ids) $
+                        (clj-string/split $ #"\s+")
+                        (remove clj-string/blank? $)
+                        (not-empty $))
+      "ids-only" (->> (get-in-excel db :filters)
+                      (vals)
+                      (filter :checked)
+                      (filter #(empty? (:child-ids %))) ;Sisällytetään vain "lehti"-id:t, koska ylemmät tasot on ryhmittelyä
+                      (map :id))
+      :else nil)))
+
 (reg-event-fx
  :application/start-excel-download
  (fn [{:keys [db]} [_ params]]
    (when (not (get-in-excel db :fetching?))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in-excel db :selected-mode)
-           applications-sort (get-in db [:application :sort])
-           written-ids (as-> (get-in-excel db :included-ids) $
-                         (clj-string/split $ #"\s+")
-                         (remove clj-string/blank? $)
-                         (not-empty $))
-           filtered-ids (->> (get-in-excel db :filters)
-                             (vals)
-                             (filter :checked)
-                             (filter #(empty? (:child-ids %))) ;Sisällytetään vain "lehti"-id:t, koska ylemmät tasot on ryhmittelyä
-                             (map :id))]
+           applications-sort (get-in db [:application :sort])]
        {:db   (-> db
                   (assoc-in-excel :error nil)
                   (assoc-in-excel :fetching? true))
@@ -100,10 +104,7 @@
                :params              (-> params
                                         (assoc? :application-keys application-keys)
                                         (assoc? :CSRF (cljs-util/csrf-token))
-                                        (assoc? :included-ids (case selected-mode
-                                                                "with-defaults" written-ids
-                                                                "ids-only" filtered-ids
-                                                                :else nil))
+                                        (assoc? :included-ids (get-included-ids db))
                                         (assoc? :export-mode selected-mode)
                                         (assoc? :sort-by-field (:order-by applications-sort))
                                         (assoc? :sort-order (:order applications-sort)))

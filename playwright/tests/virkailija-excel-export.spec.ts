@@ -47,7 +47,7 @@ test.beforeAll(async ({ browser }) => {
       const fixture = getFixturePath('uusiLomake.json')
       const filecontents = await fs.readFile(fixture, 'utf-8')
       const json = await JSON.parse(filecontents)
-      json.key = '551149'
+      json.key = '11111111-2222-3333-4444-555555555555'
       await route.fulfill({ json })
     }
   )
