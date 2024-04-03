@@ -869,12 +869,17 @@
 
 
 (defn- assoc-in-excel [db k v]
-  (assoc-in db [:application :excel-request k] v))
+  (assoc-in db (concat [:application :excel-request] (if (vector? k) k [k])) v))
 
 (reg-event-db
  :application/set-excel-popup-visibility
  (fn [db [_ visible?]]
    (assoc-in-excel db :visible? visible?)))
+
+(reg-event-db
+ :application/excel-request-filter-changed
+ (fn [db [_ id]]
+   (assoc-in-excel db [:filters id] (not (get-in db [:application :excel-request :filters id])))))
 
 (reg-event-db
  :application/change-excel-download-mode
