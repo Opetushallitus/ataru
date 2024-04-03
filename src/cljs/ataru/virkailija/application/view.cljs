@@ -223,7 +223,12 @@
             [:span
              @(subscribe [:editor/virkailija-translation :load-excel])]
             (when (or @fetching-applications? @fetching-excel?)
-              [:i.zmdi.zmdi-spinner.spin])]]])])))
+              [:i.zmdi.zmdi-spinner.spin])]
+           (let [some-excel-filters-selected? @(subscribe [:application/excel-request-filters-some-selected?])]
+             (when (= @excel-download-mode "valitse-tiedot")
+               [:button.application-handling__excel-toggle-all-button
+                {:on-click (fn [] (dispatch [:application/excel-request-filters-set-all (if some-excel-filters-selected? false true)]))}
+                (if some-excel-filters-selected? "Poista valinta" "Valitse kaikki")]))]])])))
 
 (defn- closed-row
   [on-click label]
