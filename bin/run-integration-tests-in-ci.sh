@@ -8,7 +8,7 @@ echo "Generating nginx configuration"
 
 echo "Starting Docker containers for integration tests"
 docker-compose up -d ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
-./bin/wait-for.sh localhost:8354 -t 10 || exit 1
+./bin/wait-for.sh localhost:8354 -t 20 || exit 1
 
 echo "Running ClojureScript build for integration tests"
 time lein cljsbuild once virkailija-cypress-ci hakija-cypress-ci
