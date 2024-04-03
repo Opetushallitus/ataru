@@ -48,17 +48,17 @@
 (defn- accordion-heading [id title open? child-ids]
   (let [has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
+     {:id (accordion-heading-id id)}
      [excel-checkbox-control id title]
      (when has-children? (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
                                click-action #(dispatch [:application/excel-request-toggle-accordion-open id])]
                            [:button.application-handling__excel-accordion-header-button
-                            {:id (accordion-heading-id id)
-                             :type "button"
+                            {:type "button"
                              "aria-expanded" open?
                              "aria-controls" (accordion-content-id id)
                              :on-click click-action}
                             [:span.excel-accordion-heading-text
-                             (str @selected-children-count "/" (count child-ids) " valittu")]
+                             (str @selected-children-count "/" (count child-ids) " valittu")] ; TODO: käännös!
                             [:i
                              {:class (classes "zmdi"
                                               (if open? "zmdi-chevron-up" "zmdi-chevron-down"))}]]))]))
