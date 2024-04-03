@@ -182,6 +182,17 @@
         :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
         :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]]))
 
+(defn- excel-download-mode-radio [id excel-download-mode set-excel-download-mode]
+  [:span.application-handling__excel-download-mode-radio-control
+   [:input
+    {:type      "radio"
+     :id        (str id "-input")
+     :value     id
+     :checked   (= @excel-download-mode id)
+     :name      "download-mode"
+     :on-change (fn [] (set-excel-download-mode id))}]
+   [:label {:for (str id "-input")} @(subscribe [:editor/virkailija-translation (keyword (str "excel-mode-" id))])]])
+
 (defn excel-download-link
   [_ _ _]
   (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
@@ -209,22 +220,8 @@
               :on-click #(dispatch [:application/set-excel-popup-visibility false])}
              [:i.zmdi.zmdi-close]]]
            [:div.application-handling__excel-download-mode-radiogroup
-            [:span.application-handling__excel-download-mode-radio-control
-             [:input
-              {:type      "radio"
-               :value     "valitse-tiedot"
-               :checked   (= @excel-download-mode "valitse-tiedot")
-               :name      "download-mode"
-               :on-change (fn [] (set-excel-download-mode "valitse-tiedot"))}]
-             [:label {:on-click (fn [] (set-excel-download-mode "valitse-tiedot"))} "Valitse excelin tiedot"]]
-            [:span.application-handling__excel-download-mode-radio-control
-             [:input
-              {:type      "radio"
-               :value     "kirjoita-tunnisteet"
-               :checked   (= @excel-download-mode "kirjoita-tunnisteet")
-               :name      "download-mode"
-               :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
-             [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet"]]]]
+            [excel-download-mode-radio "valitse-tiedot" excel-download-mode set-excel-download-mode]
+            [excel-download-mode-radio "kirjoita-tunnisteet" excel-download-mode set-excel-download-mode]]]
           [:div
            (if @fetching-form-content?
              [:div
