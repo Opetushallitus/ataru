@@ -1,10 +1,29 @@
 (ns ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util
   (:require [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
             [clojure.walk :refer [keywordize-keys]]
+            [ataru.number :as number]
             [ataru.component-data.base-education-module-2nd :refer [base-education-option-values-affecting-harkinnanvaraisuus
                                                                     yksilollistetty-key-values-affecting-harkinnanvaraisuus
                                                                     base-education-option-where-harkinnanvaraisuus-do-not-need-to-be-checked
-                                                                    base-education-choice-key]]))
+                                                                    base-education-choice-key
+                                                                    suoritusvuosi-keys]]
+            [taoensso.timbre :as log]))
+
+;Kaikki 2017 tai myöhemmin valmistuneet perusopetukset pitäisi löytyä suoritusrekisteristä.
+(defn perusopetus-should-be-in-sure [answers pick-value-fn]
+  (let [tutkinto-vuosi-key (->> suoritusvuosi-keys
+                                (map keyword)
+                                (filter #(not (nil? (% answers))))
+                                first)
+        tutkinto-vuosi (when tutkinto-vuosi-key
+                          (pick-value-fn answers tutkinto-vuosi-key))
+        parsed-vuosi (if (int? tutkinto-vuosi)
+                       tutkinto-vuosi
+                       (when (not-empty tutkinto-vuosi)
+                         (number/->int tutkinto-vuosi)))
+        result (boolean (when (some? parsed-vuosi)
+                          (>= parsed-vuosi 2017)))]
+    result))
 
 (defn can-skip-recheck-for-yks-ma-ai
   [application]
@@ -77,22 +96,31 @@
     (not (nil? common-reason))))
 
 (defn decide-reason
-  [common-reason targeted-reason]
-  (cond
-    (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
-    targeted-reason
+  [common-reason targeted-reason perusopetus-should-be-in-sure]
+  (let [result (cond
+                 (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
+                 targeted-reason
 
-    (not (nil? common-reason))
-    common-reason
+                 (not (nil? common-reason))
+                 common-reason
 
-    :else
-    targeted-reason))
+                 ;Tässä nojataan siihen, että Valintalaskentakoostepalvelun HarkinnanvaraisuusResourcen päättely yliajaa
+                 ;tämän tiedon jos suresta löytyy suoritus
+                 (and perusopetus-should-be-in-sure
+                      (= targeted-reason (:none harkinnanvaraisuus-reasons)))
+                 (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+
+                 :else
+                 targeted-reason)]
+    (log/info (str "Decide reason - common " common-reason ", targeted " targeted-reason ", sure? " perusopetus-should-be-in-sure ", result " result))
+    result))
 
 (defn assoc-harkinnanvaraisuustieto
   [hakukohteet tarjonta-application]
   (let [answers                       (keywordize-keys (:keyValues tarjonta-application))
         pick-value-fn                 (fn [answers question]
                                         (question answers))
+        should-be-in-sure             (perusopetus-should-be-in-sure answers pick-value-fn)
         common-reason                 (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
     (letfn [(get-hakukohde-for-hakutoive
               [hakutoive]
@@ -107,7 +135,7 @@
             (assoc-harkinnanvaraisuustieto
               [hakutoive]
               (let [targeted-reason (get-targeted-reason hakutoive)
-                    reason          (decide-reason common-reason targeted-reason)]
+                    reason          (decide-reason common-reason targeted-reason should-be-in-sure)]
                 (assoc hakutoive :harkinnanvaraisuus reason)))]
       (update tarjonta-application :hakutoiveet #(map assoc-harkinnanvaraisuustieto %)))))
 
@@ -116,9 +144,10 @@
   (let [answers         (keywordize-keys answers)
         pick-value-fn   (fn [answers question]
                           (:value (question answers)))
+        should-be-in-sure (perusopetus-should-be-in-sure answers pick-value-fn)
         targeted-reason (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde pick-value-fn)
         common-reason   (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
-    (decide-reason common-reason targeted-reason)))
+    (decide-reason common-reason targeted-reason should-be-in-sure)))
 
 (defn assoc-harkinnanvaraisuustieto-to-hakukohde
   [answers hakukohde]
