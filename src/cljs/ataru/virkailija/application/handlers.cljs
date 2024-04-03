@@ -969,7 +969,8 @@
                                         (assoc? :included-ids (->> (case selected-mode
                                                                      "kirjoita-tunnisteet" written-ids
                                                                      "valitse-tiedot" filtered-ids
-                                                                     :else ""))))
+                                                                     :else "")))
+                                        (assoc? :include-default-columns (= selected-mode "kirjoita-tunnisteet"))) 
                :skip-parse-times?   true
                :skip-flasher?       true
                :handler-or-dispatch :application/handle-excel-download-success
