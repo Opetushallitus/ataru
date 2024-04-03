@@ -11,7 +11,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
-            [ataru.util :as util]
+            [ataru.util :as util :refer [to-vec]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.core.match :refer [match]]
@@ -294,8 +294,6 @@
                    ". Exception:"
                    e)
         (throw e)))))
-
-(defn to-vec [val] (if (vector? val) val [val]))
 
 (defn write-meta-field! [writer meta-field value-from lang col]
   (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
