@@ -689,6 +689,8 @@
 (defn- sanitize-name [name]
   (-> name
       (string/replace #"[\s]+" "-")
+      (string/replace #"[åä]" "a")
+      (string/replace #"ö" "o")
       (string/replace #"[^\w-]+" "")))
 
 (defn create-filename [identifying-part]
