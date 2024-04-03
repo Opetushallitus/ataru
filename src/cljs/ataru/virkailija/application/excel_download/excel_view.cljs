@@ -4,7 +4,7 @@
                                         hakemuksen-yleiset-tiedot-field-labels
                                         kasittelymerkinnat-field-labels]]
             [ataru.translations.texts :refer [virkailija-texts]]
-            [ataru.util :refer [assoc?]]
+            [ataru.util :refer [assoc? from-multi-lang]]
             [ataru.virkailija.application.excel-download.excel-handlers]
             [ataru.virkailija.application.excel-download.excel-subs]
             [ataru.virkailija.application.excel-download.excel-utils :refer [get-excel-checkbox-filter-defs]]
@@ -21,7 +21,7 @@
   (dispatch [:application/excel-request-filter-changed
              (-> e .-target .-value)]))
 
-(defn excel-checkbox [id]
+(defn- excel-checkbox [id]
   (let [ref (atom nil)
         checked? @(subscribe [:application/excel-request-filter-value id])
         indeterminate? @(subscribe [:application/excel-request-filter-indeterminate? id])]
@@ -37,11 +37,11 @@
       :on-change excel-checkbox-on-change
       :checked (boolean checked?)}]))
 
-(defn excel-checkbox-control
-  [id title]
+(defn- excel-checkbox-control
+  [id label]
   [:span.application-handling__excel-checkbox-control
-   [excel-checkbox id title]
-   (when title [:label {:for (checkbox-name id)} title])])
+   [excel-checkbox id label]
+   (when label [:label {:for (checkbox-name id)} label])])
 
 
 (defn- accordion-heading [id title open? child-ids]
@@ -62,7 +62,7 @@
                              {:class (classes "zmdi"
                                               (if open? "zmdi-chevron-up" "zmdi-chevron-down"))}]]))]))
 
-(defn excel-accordion
+(defn- excel-accordion
   [id title child-ids content]
   (let [open? @(subscribe [:application/excel-request-accordion-open? id])
         has-children? (not-empty child-ids)]
@@ -76,7 +76,7 @@
                            "aria-labelledby" (accordion-heading-id id)}
                           ^{:key (accordion-content-id id)} content])]))
 
-(def common-fields
+(def ^:private common-fields
   [{:id "hakemuksen-yleiset-tiedot"
     :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
     :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-field-labels)}
@@ -84,25 +84,21 @@
     :label (:excel-kasittelymerkinnat virkailija-texts)
     :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
 
-(defn get-label-trans [l lng default]
-  (let [label (into {} (filter #(not-empty (second %)) l))]
-    (or (get label lng) (get label :fi) (get label :sv) (get label :en) default)))
+(defn- get-filter-trans [filter-def lng]
+  (or (from-multi-lang (:label filter-def) lng) (:id filter-def)))
 
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
-  (let [form-key @(subscribe [:application/selected-form-key])
-        fetching-applications? (subscribe [:application/fetching-applications?])
-        fetching-form-content? (subscribe [:application/fetching-form-content?])
-        fetching-hakukohteet? (subscribe [:state-query [:fetching-hakukohteet]])
-        form-content @(subscribe [:state-query [:forms form-key :content]])
+  (let [form-key (subscribe [:application/selected-form-key])
+        form-content (subscribe [:state-query [:forms @form-key :content]])
         all-hakukohteet (subscribe [:state-query [:hakukohteet]])
         form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))
-        filters-initialized? (subscribe [:application/excel-request-filters-initialized?])
-        fetching? (and @fetching-form-content? @fetching-hakukohteet? @fetching-applications?)]
-    (when (and (not @filters-initialized?) (not fetching?))
+        filters-initializing? @(subscribe [:application/excel-request-filters-initializing?])
+        filters-need-initialization? @(subscribe [:application/excel-request-filters-need-initialization?])]
+    (when filters-need-initialization?
       (dispatch [:application/excel-request-filters-init (get-excel-checkbox-filter-defs
-                                                          (concat common-fields form-content)
+                                                          (concat common-fields @form-content)
                                                           form-field-belongs-to)]))
-    (if (or fetching? (not @filters-initialized?))
+    (if filters-initializing?
       [:div
        {:style {:display "flex"
                 :width "100%"
@@ -121,7 +117,7 @@
                       ^{:key (str (:id section) "_section")}
                       [excel-accordion
                        (:id section)
-                       (get-label-trans (:label section) :fi (:id section))
+                       (get-filter-trans section :fi)
                        (:child-ids section)
                        [:div.application-handling__excel-accordion-checkbox-col
                         (map (fn [child-id]
@@ -129,7 +125,7 @@
                                  ^{:key (str child-id "_checkbox")}
                                  [excel-checkbox-control
                                   child-id
-                                  (get-label-trans (:label sub-filter) :fi (:id sub-filter))]))
+                                  (get-filter-trans sub-filter :fi)]))
                              (:child-ids section))]]))))]])))
 
 (defn- excel-kirjoita-tunnisteet-content

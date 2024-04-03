@@ -116,8 +116,7 @@
 (reg-event-db
  :application/excel-request-filters-init
  (fn [db [_ filter-defs]]
-   (let [old-filters (get-in-excel db :filters)]
-     (assoc-in-excel db :filters (merge-with merge old-filters filter-defs)))))
+   (assoc-in-excel db :filters filter-defs)))
 
 (reg-event-db
  :application/excel-request-toggle-accordion-open
