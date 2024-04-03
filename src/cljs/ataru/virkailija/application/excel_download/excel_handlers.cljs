@@ -3,10 +3,12 @@
   (:require [ajax.core]
             [ajax.protocols :as pr]
             [ataru.cljs-util :as cljs-util]
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde common-field-labels]]
             [ataru.util :as util :refer [assoc?]]
             [ataru.virkailija.application.excel-download.excel-utils :refer [assoc-in-excel
-                                                                             get-in-excel
-                                                                             download-blob]]
+                                                                             download-blob
+                                                                             get-excel-checkbox-filter-defs
+                                                                             get-in-excel]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [clojure.string :as clj-string]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
@@ -115,8 +117,18 @@
 
 (reg-event-db
  :application/excel-request-filters-init
- (fn [db [_ filter-defs]]
-   (assoc-in-excel db :filters filter-defs)))
+ (fn [db [_ selected-form-key selected-hakukohde selected-hakukohderyhma]]
+   (let [form-content (get-in db [:forms selected-form-key :content])
+         all-hakukohteet (get-in db [:hakukohteet])
+         form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma (delay all-hakukohteet)))
+         new-filters-init-params {:selected-form-key selected-form-key
+                                  :selected-hakukohde selected-hakukohde
+                                  :selected-hakukohderyhma selected-hakukohderyhma}]
+     (-> db
+         (assoc-in-excel :filters (get-excel-checkbox-filter-defs
+                                   (concat common-field-labels form-content)
+                                   form-field-belongs-to))
+         (assoc-in-excel :filters-init-params new-filters-init-params)))))
 
 (reg-event-db
  :application/excel-request-toggle-accordion-open

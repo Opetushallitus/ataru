@@ -1,13 +1,8 @@
 (ns ataru.virkailija.application.excel-download.excel-view
   (:require [ataru.cljs-util :refer [classes]]
-            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
-                                        hakemuksen-yleiset-tiedot-field-labels
-                                        kasittelymerkinnat-field-labels]]
-            [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc? from-multi-lang]]
             [ataru.virkailija.application.excel-download.excel-handlers]
             [ataru.virkailija.application.excel-download.excel-subs]
-            [ataru.virkailija.application.excel-download.excel-utils :refer [get-excel-checkbox-filter-defs]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -43,7 +38,6 @@
    [excel-checkbox id label]
    (when label [:label {:for (checkbox-name id)} label])])
 
-
 (defn- accordion-heading [id title open? child-ids]
   (let [has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
@@ -76,28 +70,15 @@
                            "aria-labelledby" (accordion-heading-id id)}
                           ^{:key (accordion-content-id id)} content])]))
 
-(def ^:private common-fields
-  [{:id "hakemuksen-yleiset-tiedot"
-    :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
-    :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-field-labels)}
-   {:id "kasittelymerkinnat"
-    :label (:excel-kasittelymerkinnat virkailija-texts)
-    :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
-
 (defn- get-filter-trans [filter-def lng]
   (or (from-multi-lang (:label filter-def) lng) (:id filter-def)))
 
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key (subscribe [:application/selected-form-key])
-        form-content (subscribe [:state-query [:forms @form-key :content]])
-        all-hakukohteet (subscribe [:state-query [:hakukohteet]])
-        form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))
         filters-initializing? @(subscribe [:application/excel-request-filters-initializing?])
-        filters-need-initialization? @(subscribe [:application/excel-request-filters-need-initialization?])]
+        filters-need-initialization? @(subscribe [:application/excel-request-filters-need-initialization? @form-key selected-hakukohde selected-hakukohderyhma])]
     (when filters-need-initialization?
-      (dispatch [:application/excel-request-filters-init (get-excel-checkbox-filter-defs
-                                                          (concat common-fields @form-content)
-                                                          form-field-belongs-to)]))
+      (dispatch [:application/excel-request-filters-init @form-key selected-hakukohde selected-hakukohderyhma]))
     (if filters-initializing?
       [:div
        {:style {:display "flex"
