@@ -17,6 +17,7 @@ function start() {
   if [[ ! -z "$AJOSSA_OLEVA_PID" ]]; then
     echo "Varoitus: Löytyi jo käynnistetty palvelu pidillä $AJOSSA_OLEVA_PID . Stopataan se ensin."
     kill ${AJOSSA_OLEVA_PID} || true
+    wait ${AJOSSA_OLEVA_PID} || true
   fi
 
   npx http-server -p ${PORTTI} ${DATAHAKEMISTO} &
@@ -29,6 +30,7 @@ function stop() {
   if [[ ! -z "$AJOSSA_OLEVA_PID" ]]; then
     echo "Pysäytetään prosessi $AJOSSA_OLEVA_PID ..."
     kill ${AJOSSA_OLEVA_PID} || true
+    wait ${AJOSSA_OLEVA_PID} || true
   fi
   rm -f ${PIDFILE}
 }
