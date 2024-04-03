@@ -120,7 +120,7 @@
   {"application-number"            {:field     [:application :key]}
    "application-submitted-time"    {:field     [:application :submitted]
                                     :format-fn time-formatter}
-   "application-created-time"      {:field     [:application :created-time]
+   "application-modified-time"     {:field     [:application :created-time]
                                     :format-fn time-formatter}
    "application-state"             {:field     [:application :state]
                                     :lang?     true
@@ -164,7 +164,7 @@
 (def ^:private old-application-meta-fields-order
   ["application-number"
    "application-submitted-time"
-   "application-created-time"
+   "application-modified-time"
    "application-state"
    "hakukohde-handling-state"
    "kielitaitovaatimus"

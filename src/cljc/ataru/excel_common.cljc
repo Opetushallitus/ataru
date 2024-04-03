@@ -7,7 +7,7 @@
     :label     (:application-number excel-texts)}
    {:id        "application-submitted-time"
     :label     (:application-submitted excel-texts)}
-   {:id        "application-created-time"
+   {:id        "application-modified-time"
     :label     (:application-modified excel-texts)}
    {:id        "application-state"
     :label     (:application-state excel-texts)}
