@@ -1,13 +1,16 @@
 (ns ataru.virkailija.editor.subs
-  (:require [ataru.util :as util :refer [collect-ids]]
-            [re-frame.core :as re-frame]
-            [ataru.cljs-util :as cu]
+  (:require [ataru.cljs-util :as cu]
+            [ataru.tarjonta.haku :as haku]
+            [ataru.translations.translation-util :as translations]
+            [ataru.util :as util :refer [collect-ids]]
+            [ataru.virkailija.editor.editor-selectors :refer [db-all-organizations-have-only-opinto-ohjaaja-rights?
+                                                              get-email-template
+                                                              get-virkailija-lang]]
+            [cljs-time.coerce :as time-coerce]
+            [cljs.core.match :refer-macros [match]]
             [clojure.set :as cset]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as translations]
-            [cljs.core.match :refer-macros [match]]
-            [cljs-time.coerce :as time-coerce]
-            [ataru.tarjonta.haku :as haku]))
+            [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -552,12 +555,12 @@
 (re-frame/reg-sub
   :editor/email-template
   (fn [db _]
-    (get-in db [:editor :email-template (get-in db [:editor :selected-form-key])])))
+    (get-email-template db)))
 
 (re-frame/reg-sub
   :editor/virkailija-lang
   (fn [db _]
-    (or (-> db :editor :user-info :lang keyword) :fi)))
+    (get-virkailija-lang db)))
 
 (re-frame/reg-sub
   :editor/opinto-ohjaaja?
@@ -582,8 +585,7 @@
 (re-frame/reg-sub
   :editor/all-organizations-have-only-opinto-ohjaaja-rights?
   (fn [db _]
-    (let [user-info (-> db :editor :user-info)]
-      (every? (fn [org] (every? #(= "opinto-ohjaaja" %) (:rights org))) (:organizations user-info)))))
+    (db-all-organizations-have-only-opinto-ohjaaja-rights? db)))
 
 (re-frame/reg-sub
   :editor/autosave-enabled?
