@@ -801,6 +801,7 @@
                       {selected-hakukohderyhma :- s/Str nil}
                       {export-mode :- (s/enum "ids-only" "with-defaults") "ids-only"}
                       {included-ids :- [s/Str] []}
+                      {sort-by-field :- (s/enum "created-time" "submitted") "created-time"}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [size-limit       40000]
@@ -817,6 +818,7 @@
                                 selected-hakukohderyhma
                                 included-ids
                                 ids-only?
+                                sort-by-field
                                 session)]
               (if xls
                 {:status  200

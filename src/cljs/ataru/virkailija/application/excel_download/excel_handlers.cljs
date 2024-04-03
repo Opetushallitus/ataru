@@ -79,6 +79,7 @@
    (when (not (get-in-excel db :fetching?))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in-excel db :selected-mode)
+           list-sort-time-column (get-in db [:application :selected-time-column])
            written-ids (as-> (get-in-excel db :included-ids) $
                          (clj-string/split $ #"\s+")
                          (remove clj-string/blank? $)
@@ -101,7 +102,8 @@
                                                                 "with-defaults" written-ids
                                                                 "ids-only" filtered-ids
                                                                 :else nil))
-                                        (assoc? :export-mode selected-mode))
+                                        (assoc? :export-mode selected-mode)
+                                        (assoc? :sort-by-field list-sort-time-column))
                :skip-parse-times?   true
                :skip-flasher?       true
                :handler-or-dispatch :application/handle-excel-download-success
