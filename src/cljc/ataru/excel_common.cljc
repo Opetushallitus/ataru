@@ -1,15 +1,14 @@
 (ns ataru.excel-common
   (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]
-            [ataru.util :refer [to-vec]]
             [clojure.set :as set]))
 
 (def hakemuksen-yleiset-tiedot-field-labels
   [{:id        "application-number"
-    :label     (:application-number excel-texts)} 
+    :label     (:application-number excel-texts)}
    {:id        "application-submitted-time"
     :label     (:application-submitted excel-texts)}
    {:id        "application-created-time"
-    :label     (:application-modified excel-texts)} 
+    :label     (:application-modified excel-texts)}
    {:id        "application-state"
     :label     (:application-state excel-texts)}
    {:id        "student-number"
@@ -82,8 +81,3 @@
                                          (contains? (set hakukohderyhmas) selected-hakukohderyhma)))
       :else true)))
 
-(defn assoc-in-excel [db k v]
-  (assoc-in db (concat [:application :excel-request] (to-vec k)) v))
-
-(defn get-in-excel [db k]
-  (get-in db (concat [:application :excel-request] (to-vec k))))

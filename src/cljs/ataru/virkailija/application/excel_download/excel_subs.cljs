@@ -1,5 +1,5 @@
 (ns ataru.virkailija.application.excel-download.excel-subs
-  (:require [ataru.excel-common :refer [get-in-excel]]
+  (:require [ataru.virkailija.application.excel-download.excel-utils :refer [get-in-excel]]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
@@ -44,3 +44,8 @@
  :application/excel-request-accordion-open?
  (fn [db [_ id]]
    (get-in-excel db [:filters id :open?])))
+
+(re-frame/reg-sub
+ :application/excel-request-filters
+ (fn [db [_]]
+   (get-in-excel db :filters)))

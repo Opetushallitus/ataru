@@ -3,8 +3,10 @@
   (:require [ajax.core]
             [ajax.protocols :as pr]
             [ataru.cljs-util :as cljs-util]
-            [ataru.excel-common :refer [assoc-in-excel get-in-excel]]
             [ataru.util :as util :refer [assoc?]]
+            [ataru.virkailija.application.excel-download.excel-utils :refer [assoc-in-excel
+                                                                             get-in-excel
+                                                                             download-blob]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [clojure.string :as clj-string]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
@@ -50,18 +52,6 @@
          (recur (rest rest-ids) (assoc-in-excel acc [:filters (first rest-ids) :checked] (boolean checked)))
          acc)))))
 
-(defn download-blob [file-name blob]
-  (let [object-url (js/URL.createObjectURL blob)
-        anchor-element
-        (doto (js/document.createElement "a")
-          (-> .-href (set! object-url))
-          (-> .-download (set! file-name)))]
-    (.appendChild (.-body js/document) anchor-element)
-    (.click anchor-element)
-    (try
-      (.removeChild (.-body js/document) anchor-element)
-      (js/URL.revokeObjectURL object-url)
-      (catch js/Error e (println e)))))
 
 (reg-event-db
  :application/handle-excel-download-success

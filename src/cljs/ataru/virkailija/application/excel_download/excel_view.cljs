@@ -90,37 +90,47 @@
 
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key @(subscribe [:application/selected-form-key])
+        fetching-applications? (subscribe [:application/fetching-applications?])
+        fetching-form-content? (subscribe [:application/fetching-form-content?])
+        fetching-hakukohteet? (subscribe [:state-query [:fetching-hakukohteet]])
         form-content @(subscribe [:state-query [:forms form-key :content]])
         all-hakukohteet (subscribe [:state-query [:hakukohteet]])
         form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))
-        filter-defs (get-excel-checkbox-filter-defs
-                     (concat common-fields form-content)
-                     form-field-belongs-to)
-        top-filters (->> filter-defs
-                         (filter #(not (:parent-id (second %))))
-                         (map second)
-                         (sort-by :index))
-        filters-initialized? (subscribe [:application/excel-request-filters-initialized?])]
-    (when (not @filters-initialized?)
-      (dispatch [:application/excel-request-filters-init filter-defs]))
-    (fn []
+        filters-initialized? (subscribe [:application/excel-request-filters-initialized?])
+        fetching? (and @fetching-form-content? @fetching-hakukohteet? @fetching-applications?)]
+    (when (and (not @filters-initialized?) (not fetching?))
+      (dispatch [:application/excel-request-filters-init (get-excel-checkbox-filter-defs
+                                                          (concat common-fields form-content)
+                                                          form-field-belongs-to)]))
+    (if (or fetching? (not @filters-initialized?))
+      [:div
+       {:style {:display "flex"
+                :width "100%"
+                :font-size "40px"
+                :justify-content "center"
+                :margin "50px 0"}}
+       [:i.zmdi.zmdi-spinner.spin]]
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
-        (->> top-filters
-             (map (fn [section]
-                    ^{:key (str (:id section) "_section")}
-                    [excel-accordion
-                     (:id section)
-                     (get-label-trans (:label section) :fi (:id section))
-                     (:child-ids section)
-                     [:div.application-handling__excel-accordion-checkbox-col
-                      (map (fn [child-id]
-                             (let [sub-filter (get-in filter-defs [child-id])]
-                               ^{:key (str child-id "_checkbox")}
-                               [excel-checkbox-control
-                                child-id
-                                (get-label-trans (:label sub-filter) :fi (:id sub-filter))]))
-                           (:child-ids section))]])))]])))
+        (let [filter-defs @(subscribe [:application/excel-request-filters])]
+          (->> filter-defs
+               (filter #(not (:parent-id (second %))))
+               (vals)
+               (sort-by :index)
+               (map (fn [section]
+                      ^{:key (str (:id section) "_section")}
+                      [excel-accordion
+                       (:id section)
+                       (get-label-trans (:label section) :fi (:id section))
+                       (:child-ids section)
+                       [:div.application-handling__excel-accordion-checkbox-col
+                        (map (fn [child-id]
+                               (let [sub-filter (get-in filter-defs [child-id])]
+                                 ^{:key (str child-id "_checkbox")}
+                                 [excel-checkbox-control
+                                  child-id
+                                  (get-label-trans (:label sub-filter) :fi (:id sub-filter))]))
+                             (:child-ids section))]]))))]])))
 
 (defn- excel-kirjoita-tunnisteet-content
   []
@@ -151,9 +161,7 @@
   [_ _ _]
   (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
         fetching-applications?     (subscribe [:application/fetching-applications?])
-        fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
-        fetching-hakukohteet (subscribe [:state-query [:fetching-hakukohteet]])
         excel-export-mode (subscribe [:application/excel-download-mode])
         set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
@@ -180,15 +188,7 @@
             [excel-download-mode-radio "with-defaults" excel-export-mode set-excel-export-mode]]]
           [:div
            (case @excel-export-mode
-             "ids-only" (if (or @fetching-form-content? (not= @fetching-hakukohteet 0) @fetching-applications?)
-                          [:div
-                           {:style {:display "flex"
-                                    :width "100%"
-                                    :font-size "40px"
-                                    :justify-content "center"
-                                    :margin "50px 0"}}
-                           [:i.zmdi.zmdi-spinner.spin]]
-                          [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
+             "ids-only" [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma]
              "with-defaults" [excel-kirjoita-tunnisteet-content])]
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
