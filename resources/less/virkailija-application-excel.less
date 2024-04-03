@@ -7,18 +7,16 @@
 }
 
 .application-handling__excel-request-button {
+  display: flex;
   color: @white;
   background-color: @link-color;
   border-radius: 3px;
-  box-shadow :none;
-  padding: 5px;
+  box-shadow: none;
+  padding: 5px 15px;
   height: 41px;
-  width: 100%;
-  margin-right: 0;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   border: none;
-  display: flex;
   flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
@@ -34,10 +32,8 @@
   }
 }
 
-.application-handling__excel-request-heading {
-  flex-basis: 95px;
-  display: flex;
-  margin-right: 10px;
+.application-handling__excel-tunnisteet-heading {
+  margin: 6px 0px;
 }
 
 .application-handling__excel-request-popup {
@@ -51,11 +47,14 @@
   top: 50px;
   text-align: start;
   background-color: white;
-  padding: 15px;
   font-size: 13px;
   line-height: 21px;
   min-width: 340px;
   left: -218px;
+}
+
+.application-handling__excel-request-main {
+  margin: 15px;
 }
 
 .application-handling__excel-request-container {
@@ -89,6 +88,9 @@
 
 .application-handling__excel-accordion-group {
   border-bottom: 1px solid @neutral-grey-200;
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 
@@ -96,14 +98,14 @@
   margin: 0px 15px 10px 15px;
 }
 
-.appication-handling__excel-download-mode-radiogroup {
+.application-handling__excel-download-mode-radiogroup {
   display: flex;
   border-bottom: 2px solid @neutral-grey-200;
   gap: 10px;
   flex-wrap: nowrap;
 }
 
-.appication-handling__excel-download-mode-radio-control {
+.application-handling__excel-download-mode-radio-control {
   display: inline-flex;
   align-items: center;
   line-height: 30px;
@@ -122,6 +124,8 @@
   }
 }
 
-.appication-handling__excel-download-valitse-tiedot {
-
+.application-handling__excel-request-actions {
+  display: flex;
+  border-top: 1px solid @neutral-grey-200;
+  padding: 15px;
 }
