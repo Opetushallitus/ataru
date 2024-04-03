@@ -29,7 +29,7 @@
 (defn- accordion-content-id [id] (str "accordion-content_" id))
 (defn- checkbox-name [id] (str "checkbox_" id))
 
-(defn excel-checkbox-on-change [e]
+(defn- excel-checkbox-on-change [e]
   (dispatch [:application/excel-request-filter-changed
              (-> e .-target .-value)]))
 
@@ -171,6 +171,7 @@
   [_ _ _]
   (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
         fetching-applications?     (subscribe [:application/fetching-applications?])
+        fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
         excel-error (subscribe [:state-query [:application :excel-request :error]])
         [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
@@ -211,8 +212,14 @@
                :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
              [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet"]]]]
           [:div
-           (if @fetching-applications?
-             [:i.zmdi.zmdi-spinner.spin]
+           (if @fetching-form-content?
+             [:div
+              {:style {:display "flex"
+                       :width "100%"
+                       :font-size "40px"
+                       :justify-content "center"
+                       :margin "50px 0"}}
+              [:i.zmdi.zmdi-spinner.spin]]
              (case @excel-download-mode
                "valitse-tiedot" [excel-valitse-tiedot-content]
                "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content]))]
