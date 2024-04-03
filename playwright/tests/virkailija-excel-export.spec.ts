@@ -64,7 +64,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     })
 
     const yleisetTiedotExpand = yleisetTiedotHeading.getByRole('button', {
-      name: '6/6 valittu',
+      name: '7/7 valittu',
     })
 
     const yleisetTiedotContent = excelPopup.getByRole('region', {
@@ -79,7 +79,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       { checked: true }
     )
 
-    await expect(yleisetTiedotCheckedCheckboxes).toHaveCount(6)
+    await expect(yleisetTiedotCheckedCheckboxes).toHaveCount(7)
 
     const yleisetTiedotCheckbox = yleisetTiedotHeading.getByLabel(
       'Hakemuksen yleiset tiedot'
@@ -90,7 +90,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
 
     await yleisetTiedotHeading
       .getByRole('button', {
-        name: '0/6 valittu',
+        name: '0/7 valittu',
       })
       .click()
 

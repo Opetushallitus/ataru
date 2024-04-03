@@ -5,9 +5,11 @@
 
 (def hakemuksen-yleiset-tiedot-field-labels
   [{:id        "application-number"
-    :label     (:application-number excel-texts)}
+    :label     (:application-number excel-texts)} 
+   {:id        "application-submitted-time"
+    :label     (:application-submitted excel-texts)}
    {:id        "application-created-time"
-    :label     (:sent-at excel-texts)}
+    :label     (:application-modified excel-texts)} 
    {:id        "application-state"
     :label     (:application-state excel-texts)}
    {:id        "student-number"
