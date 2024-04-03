@@ -799,7 +799,7 @@
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
-                      {include-default-columns :- s/Bool false}
+                      {export-mode :- (s/enum "ids-only" "with-defaults") "ids-only"}
                       {included-ids :- [s/Str] []}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
@@ -809,14 +809,15 @@
             (response/request-entity-too-large
               {:error (str "Cannot create excel for more than " size-limit " applications")})
             (let [included-ids (set included-ids)
+                  include-default-columns (= export-mode "with-defaults")
                   xls          (application-service/get-excel-report-of-applications-by-key
-                                 application-service
-                                 application-keys
-                                 selected-hakukohde
-                                 selected-hakukohderyhma
-                                 included-ids
-                                 include-default-columns
-                                 session)]
+                                application-service
+                                application-keys
+                                selected-hakukohde
+                                selected-hakukohderyhma
+                                included-ids
+                                include-default-columns
+                                session)]
               (if xls
                 {:status  200
                  :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

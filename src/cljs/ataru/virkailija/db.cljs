@@ -97,7 +97,7 @@
                                 :excel-request                   {:fetching? false
                                                                   :visible? false
                                                                   :error nil
-                                                                  :selected-mode "valitse-tiedot"
+                                                                  :selected-mode "ids-only"
                                                                   :included-ids nil
                                                                   :filters {}}}
    :haut                       {}
