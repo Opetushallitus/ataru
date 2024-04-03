@@ -3,7 +3,7 @@
             [ataru.tarjonta.haku :as haku]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as util :refer [collect-ids]]
-            [ataru.virkailija.editor.editor-selectors :refer [db-all-organizations-have-only-opinto-ohjaaja-rights?
+            [ataru.virkailija.editor.editor-selectors :refer [get-all-organizations-have-only-opinto-ohjaaja-rights?
                                                               get-email-template
                                                               get-virkailija-lang]]
             [cljs-time.coerce :as time-coerce]
@@ -585,7 +585,7 @@
 (re-frame/reg-sub
   :editor/all-organizations-have-only-opinto-ohjaaja-rights?
   (fn [db _]
-    (db-all-organizations-have-only-opinto-ohjaaja-rights? db)))
+    (get-all-organizations-have-only-opinto-ohjaaja-rights? db)))
 
 (re-frame/reg-sub
   :editor/autosave-enabled?

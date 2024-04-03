@@ -3,7 +3,7 @@
             [ataru.util :refer [to-vec]]
             [clojure.set :as set]))
 
-(def hakemuksen-yleiset-tiedot-fields
+(def hakemuksen-yleiset-tiedot-field-labels
   [{:id        "application-number"
     :label     (:application-number excel-texts)}
    {:id        "application-created-time"
@@ -17,7 +17,7 @@
    {:id        "turvakielto"
     :label     (:turvakielto excel-texts)}])
 
-(def kasittelymerkinnat-fields
+(def kasittelymerkinnat-field-labels
   [{:id        "hakukohde-handling-state"
     :label     (:hakukohde-handling-state excel-texts)}
    {:id        "kielitaitovaatimus"
