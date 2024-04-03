@@ -605,6 +605,8 @@
     (update application :eligibility-set-automatically
             (partial filter (set selected-hakukohde-oids)))))
 
+(def asc #(compare %1 %2))
+
 (def desc #(compare %2 %1))
 
 (defn export-applications
@@ -618,6 +620,7 @@
    included-ids
    ids-only?
    sort-by-field
+   sort-order
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -683,7 +686,7 @@
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers)
                           (->> applications
-                               (sort-by sort-by-field desc)
+                               (sort-by sort-by-field (if (= sort-order :asc) asc desc))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
