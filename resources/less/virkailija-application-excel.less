@@ -53,8 +53,8 @@
   left: -218px;
 }
 
-.application-handling__excel-request-main {
-  margin: 15px;
+.application-handling__excel-request-margins {
+  padding: 15px 15px 0px 15px;
 }
 
 .application-handling__excel-request-container {
@@ -75,14 +75,22 @@
   align-items: center;
   height: 45px;
   padding: 25px 10px 25px 10px;
+  text-align: left;
   .zmdi {
     font-size: 30px;
     font-weight: light;
     color: @neutral-grey-600
   }
+  .excel-accordion-heading-text {
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .application-handling__excel-accordion-heading-wrapper {
+  display: flex;
   margin: 0;
 }
 
@@ -93,8 +101,9 @@
   }
 }
 
-
 .application-handling__excel-accordion-content {
+  display: flex;
+  column-gap: 15px;
   margin: 0px 15px 10px 15px;
 }
 
@@ -109,7 +118,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 30px;
-  gap: 5px;
+  gap: 7px;
   padding: 0 2px;
   & > * {
     cursor: pointer;
@@ -128,4 +137,37 @@
   display: flex;
   border-top: 1px solid @neutral-grey-200;
   padding: 15px;
+}
+
+.application-handling__excel-checkbox-control {
+  display: inline-flex;
+  align-items: center;
+  line-height: 30px;
+  gap: 7px;
+  & > * {
+    cursor: pointer;
+  }
+  input {
+    margin: 0;
+    accent-color: @link-color;
+  }
+  
+  label {
+    display: inline-block;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.application-handling__excel-accordion-checkbox-col {
+  display: flex;
+  flex-direction: column;
+  column-gap: 15px;
+}
+
+.application-handling__excel-tiedot {
+  max-height: 330px;
+  overflow-y: scroll;
 }
