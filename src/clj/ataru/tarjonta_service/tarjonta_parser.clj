@@ -123,7 +123,7 @@
     {:oid (:oid hakukohde)
      :name (:name hakukohde)
      :tarjoaja-name   (:tarjoaja-name hakukohde)
-     :hakukohderyhmat (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))}))
+     :ryhmaliitokset (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))}))
 
 (defn parse-excel-tarjonta-info-by-haku
   [tarjonta-service organization-service ohjausparametrit-service haku-oid hakukohde-oids]
