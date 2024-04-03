@@ -1,5 +1,8 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.cljs-util :as cljs-util]
+            [ataru.excel-common :refer [hakemuksen-yleiset-tiedot-fields
+                                        kasittelymerkinnat-fields]]
+            [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc?]]
             [ataru.virkailija.application.application-list.virkailija-application-list-view :as application-list]
             [ataru.virkailija.application.application-review-view :as application-review]
@@ -74,8 +77,8 @@
        "aria-expanded" (not folded?)
        "aria-controls" (accordion-content-id id)
        :on-click click-action}
-      [:span.excel-accordion-heading-text 
-       [:span title] 
+      [:span.excel-accordion-heading-text
+       [:span title]
        [:span (str @selected-children-count "/" (count child-ids) " valittu")]]
       [:i
        {:class (classes "zmdi"
@@ -95,22 +98,36 @@
       ^{:key (accordion-content-id id)} content]]))
 
 
-(defn get-form-checkbox-filters
-  ([form-content parent-id level parent-index-acc]
+(defn question-wrapper? [item] (contains? #{"wrapperElement" "questionGroup"} (:fieldClass item)))
+(defn info-element? [item] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass item)))
+
+(defn get-excel-checkbox-filter-defs
+  ([form-content selected-hakukohde selected-hakukohderyhma parent-id level parent-index-acc]
    (if (empty? form-content)
      nil
      (reduce (fn [acc item]
                (let [index-acc (+ parent-index-acc (count acc))
-                     children (get-form-checkbox-filters (:children item) (or parent-id (:id item)) (inc level) (inc index-acc))]
-                 (if (or (= (:fieldClass item) "infoElement")
-                         (and (= (:fieldClass item) "wrapperElement") (empty? children))
-                         (:exclude-from-answers item)
-                         (contains?  #{"hakukohteet" "lupatiedot"} (:id item)))
+                     belongs-to-hakukohteet (:belongs-to-hakukohteet item)
+                     belongs-to-hakukohderyhma (:belongs-to-hakukohderyhma item)
+                     children (get-excel-checkbox-filter-defs (:children item)
+                                                              selected-hakukohde
+                                                              selected-hakukohderyhma
+                                                              (or parent-id (:id item))
+                                                              (inc level)
+                                                              (inc index-acc))]
+                 (if (or (and (question-wrapper? item) (empty? children))
+                         (info-element? item)
+                         (:exclude-from-answers item))
                    acc
-                   (merge acc children (when (or (= level 0) (not-any? #(= (:fieldClass item) %) #{"questionGroup" "wrapperElement"}))
+                   (merge acc children (when (and (or (= level 0) (not (question-wrapper? item)))
+                                                  (or (some nil? [selected-hakukohde belongs-to-hakukohteet])
+                                                      (contains? belongs-to-hakukohteet selected-hakukohde))
+                                                  (or (some nil? [selected-hakukohderyhma belongs-to-hakukohderyhma])
+                                                      (contains? belongs-to-hakukohderyhma selected-hakukohderyhma)))
                                          {(:id item) (-> {:id (:id item)
                                                           :index index-acc
-                                                          :label (:label item)}
+                                                          :label (:label item)
+                                                          :checked true}
                                                          (assoc? :parent-id parent-id)
                                                          (assoc? :child-ids (->> children
                                                                                  (map second)
@@ -118,26 +135,34 @@
                                                                                  (map :id))))})))))
              {}
              form-content)))
-  ([form-content]
-   (get-form-checkbox-filters form-content nil 0 0)))
+  ([form-content selected-hakukohde selected-hakukohderyhma]
+   (get-excel-checkbox-filter-defs form-content selected-hakukohde selected-hakukohderyhma nil 0 0)))
+
+
+(def common-fields
+  [{:id "hakemuksen-yleiset-tiedot"
+    :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
+    :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-fields)}
+   {:id "kasittelymerkinnat"
+    :label (:excel-kasittelymerkinnat virkailija-texts)
+    :children (map #(select-keys % [:id :label]) kasittelymerkinnat-fields)}])
 
 (defn get-label-trans [l lng default]
   (let [label (into {} (filter #(not-empty (second %)) l))]
     (or (get label lng) (get label :fi) (get label :sv) (get label :en) default)))
 
-(defn init-excel-checkbox-filters [form-content]
-  (let [filter-defs (get-form-checkbox-filters form-content)]
-    (dispatch [:application/excel-request-filters-init filter-defs])
-    filter-defs))
-
-(defn- excel-valitse-tiedot-content []
+(defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key @(subscribe [:application/selected-form-key])
         form-content @(subscribe [:state-query [:forms form-key :content]])
-        filters (init-excel-checkbox-filters form-content)
-        top-filters (->> filters
+        filter-defs (get-excel-checkbox-filter-defs
+                     (concat common-fields form-content)
+                     selected-hakukohde
+                     selected-hakukohderyhma)
+        top-filters (->> filter-defs
                          (filter #(not (:parent-id (second %))))
                          (map second)
                          (sort-by :index))]
+    (dispatch [:application/excel-request-filters-init filter-defs])
     (fn []
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
@@ -146,11 +171,11 @@
                     ^{:key (str (:id section) "_section")}
                     [excel-accordion
                      (:id section)
-                     (get-label-trans (:label section) :fi (:id section)) 
+                     (get-label-trans (:label section) :fi (:id section))
                      (:child-ids section)
                      [:div.application-handling__excel-accordion-checkbox-col
                       (map (fn [child-id]
-                             (let [sub-filter (get-in filters [child-id])]
+                             (let [sub-filter (get-in filter-defs [child-id])]
                                ^{:key (str child-id "_checkbox")}
                                [excel-checkbox-control
                                 child-id
@@ -225,7 +250,7 @@
                        :margin "50px 0"}}
               [:i.zmdi.zmdi-spinner.spin]]
              (case @excel-download-mode
-               "valitse-tiedot" [excel-valitse-tiedot-content]
+               "valitse-tiedot" [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma]
                "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content]))]
           (when @excel-error [:span "Tapahtui virhe"])
           [:div.application-handling__excel-request-actions
