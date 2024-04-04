@@ -507,6 +507,10 @@
                                                           (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :value "Hyvä") per-hakukohde-specific-followup-answer)
                                                           (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
+  (it "fails validation when there are multiple errors"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :duplikoitu-followup-hakukohde-oid "MISSING_HAKUKOHDE") (assoc per-hakukohde-specific-followup-answer :duplikoitu-followup-hakukohde-oid "MISSING_HAKUKOHDE"))
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when validating required per-hakukohde followup"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied

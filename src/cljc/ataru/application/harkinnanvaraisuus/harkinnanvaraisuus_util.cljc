@@ -23,7 +23,6 @@
                          (number/->int tutkinto-vuosi)))
         result (boolean (when (some? parsed-vuosi)
                           (>= parsed-vuosi 2017)))]
-    (log/info (str "Should be in sure? " answers ", vuosi " parsed-vuosi ", result " result))
     result))
 
 (defn can-skip-recheck-for-yks-ma-ai
