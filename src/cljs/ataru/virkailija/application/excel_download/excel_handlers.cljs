@@ -31,8 +31,7 @@
    (let [filter (get-in-excel db [:filters id])
          child-ids (:child-ids filter)
          new-checked (not (:checked filter))
-         parent-id (:parent-id filter)
-         sibling-checkeds (get-values-for-child-filters db parent-id)]
+         parent-id (:parent-id filter)]
      (as-> db $
        (assoc-in-excel $ [:filters id :checked] new-checked)
        ; set values for all children
@@ -41,8 +40,8 @@
            (recur (rest cids) (assoc-in-excel acc [:filters (first cids) :checked] new-checked))
            acc))
        ; set parent value according to changed children
-       (if sibling-checkeds
-         (cond (every? true? sibling-checkeds) (assoc-in-excel $ [:filters parent-id :checked] true)
+       (if parent-id
+         (cond (every? true? (get-values-for-child-filters $ parent-id)) (assoc-in-excel $ [:filters parent-id :checked] true)
                :else (assoc-in-excel $ [:filters parent-id :checked] false))
          $)))))
 
