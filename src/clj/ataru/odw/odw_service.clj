@@ -3,6 +3,7 @@
             [ataru.applications.answer-util :as answer-util]
             [ataru.util :as util]
             [clojure.set]
+            [clj-time.core :as t]
             [ataru.tarjonta.haku :as h]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
@@ -75,10 +76,11 @@
                                                                     (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid hakemus-oids))
                                                                 (do (log/warn "ODW Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                                                     {}))))
-                                                 toisen-asteen-yhteishaku-oids))
+                                              toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
                        (try
                          [nil (let [answers (-> application :content :answers util/answers-by-key)
+                                    application-year (-> application :submitted t/year)
                                     haku (get haut (:haku application))
                                     toinen-aste? (h/toisen-asteen-yhteishaku? haku)
                                     hakukohteet (:hakukohde application)
@@ -116,11 +118,10 @@
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData)
-                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) (suoritus-filter/luokkatasot-for-suoritus-filter))
+                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector application-year) (suoritus-filter/luokkatasot-for-suoritus-filter))
                                                lahtoluokka (:luokka luokkatieto)
                                                luokkataso (:luokkataso luokkatieto)
-                                               lahtokoulu-oid (:oppilaitos-oid luokkatieto)
-                                               ]
+                                               lahtokoulu-oid (:oppilaitos-oid luokkatieto)]
                                            {:pohjakoulutus-2nd                 pohjakoulutus
                                             :pohjakoulutus-2nd-suoritusvuosi   suoritusvuosi
                                             :pohjakoulutus-2nd-suorituskieli   opetuskieli
@@ -146,8 +147,7 @@
                                                 (keyword (str "pref" index "_sora"))              nil
                                                 (keyword (str "pref" index "_harkinnanvarainen")) (get harkinnanvaraisuuden-syy :harkinnanvaraisuudenSyy)
                                                 (keyword (str "pref" index "_hakukelpoisuus"))    (get-hakukelpoisuus application hakukohde-oid)
-                                                (keyword (str "pref" index "_maksuvelvollisuus")) (get-maksuvelvollisuus application hakukohde-oid)}))
-                                       ))]
+                                                (keyword (str "pref" index "_maksuvelvollisuus")) (get-maksuvelvollisuus application hakukohde-oid)}))))]
                          (catch Exception e
                            [[e (:key application)] nil])))
                      applications)]

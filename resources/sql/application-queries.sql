@@ -873,6 +873,7 @@ LIMIT 1000;
 --name: yesql-get-applications-by-created-time
 SELECT
   a.key,
+  a.submitted,
   a.haku,
   a.hakukohde,
   a.person_oid AS "person-oid",
@@ -911,6 +912,7 @@ OFFSET :offset;
 --name: yesql-get-applications-by-created-time-between-start-and-end
 SELECT
     a.key,
+    a.submitted,
     a.haku,
     a.hakukohde,
     a.person_oid AS "person-oid",
@@ -950,6 +952,7 @@ OFFSET :offset;
 --name: yesql-get-applications-by-haku
 SELECT
     a.key,
+    a.submitted,
     a.haku,
     a.hakukohde,
     a.person_oid AS "person-oid",
@@ -983,6 +986,7 @@ OFFSET :offset;
 --name: yesql-get-single-odw-application-by-key
 SELECT
     a.key,
+    a.submitted,
     a.haku,
     a.hakukohde,
     a.person_oid AS "person-oid",
