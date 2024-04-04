@@ -1,6 +1,5 @@
 (ns dfreeman.re-frame
-  (:require ;[clj-kondo.hooks-api :as api]
-            [dfreeman.re-frame.db-arg-in-reg-event-fx :as db-arg-in-reg-event-fx]
+  (:require [dfreeman.re-frame.db-arg-in-reg-event-fx :as db-arg-in-reg-event-fx]
             [dfreeman.re-frame.sub-in-event-handler :as sub-in-event-handler]))
 
 (defn reg-event-db

@@ -26,8 +26,7 @@
 
 (defn get-excel-checkbox-filter-defs
   ([form-content form-field-belongs-to parent-id level parent-index-acc]
-   (if (empty? form-content)
-     nil
+   (when (seq form-content)
      (reduce (fn [acc form-field]
                (let [index-acc (+ parent-index-acc (count acc))
                      children (get-excel-checkbox-filter-defs (:children form-field)
@@ -56,3 +55,9 @@
              form-content)))
   ([form-content form-field-belongs-to]
    (get-excel-checkbox-filter-defs form-content form-field-belongs-to nil 0 0)))
+
+(defn get-values-for-child-filters [db filter-id]
+  (when-let [filter (get-in-excel db [:filters filter-id])]
+    (map
+     (fn [sibling-id] (boolean (get-in-excel db [:filters sibling-id :checked])))
+     (:child-ids filter))))

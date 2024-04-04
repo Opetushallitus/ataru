@@ -80,12 +80,7 @@
     (when filters-need-initialization?
       (dispatch [:application/excel-request-filters-init @form-key selected-hakukohde selected-hakukohderyhma]))
     (if filters-initializing?
-      [:div
-       {:style {:display "flex"
-                :width "100%"
-                :font-size "40px"
-                :justify-content "center"
-                :margin "50px 0"}}
+      [:div.application-handling_excel-spinner
        [:i.zmdi.zmdi-spinner.spin]]
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
