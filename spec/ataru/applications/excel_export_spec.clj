@@ -1,32 +1,27 @@
 (ns ataru.applications.excel-export-spec
-  (:require [ataru.applications.excel-export :as j2ee]
-            [ataru.fixtures.excel-fixtures :as fixtures]
-            [ataru.cache.cache-service :as cache-service]
+  (:require [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
-            [clojure.string :as string]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [speclj.core :refer [around should-be-nil should== should= should it describe tags]]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.organization-service.organization-service :as organization-service])
-  (:import [java.io FileOutputStream File]
-           [java.util UUID]
-           [org.apache.poi.ss.usermodel WorkbookFactory]))
-
-(def koodisto-cache (reify cache-service/Cache
-                      (get-from [this key])
-                      (get-many-from [this keys])
-                      (remove-from [this key])
-                      (clear-all [this])))
+            [ataru.test-utils :refer [export-test-excel with-excel-workbook]]
+            [speclj.core :refer [around describe it should should-be-nil
+                                 should= tags]]))
 
 (defn- verify-row
   [sheet row-num expected-values]
   (let [row (.getRow sheet row-num)]
     (if (nil? expected-values)
       (should-be-nil row)
-      (should== expected-values
-                (map (fn [col] (some-> (.getCell row col)
-                                       .getStringCellValue))
-                     (range (.getLastCellNum row)))))))
+      (should= expected-values
+               (map (fn [col] (some-> (.getCell row col)
+                                      .getStringCellValue))
+                    (range (.getLastCellNum row)))))))
+
+(defn- transpose [m] (apply mapv vector m))
+
+(defn- verify-cols
+  [sheet expected-col-values]
+  (doall (map-indexed (fn [row-index expected-row]
+                        (verify-row sheet row-index expected-row))
+                      (transpose expected-col-values))))
 
 (defn- verify-pane-information
   [sheet]
@@ -37,174 +32,450 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
-(defn- format-included-ids [id-string]
-  (set (remove string/blank? (clojure.string/split id-string #"\s+"))))
+(describe
+ "excel export"
+ (tags :unit :excel)
+ (around [spec]
+         (with-redefs [form-store/fetch-by-id (fn [id]
+                                                (case id
+                                                  123 fixtures/form
+                                                  321 fixtures/form-for-hakukohde))
+                       form-store/fetch-by-key (fn [key]
+                                                 (case key
+                                                   "form_123_key" fixtures/form
+                                                   "form_321_key" fixtures/form-for-hakukohde))]
+           (spec)))
 
-(def liiteri-cas-client nil)
+ (it "should export applications for a form without hakukohde or haku"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-form] {:skip-answers? false
+                                                           :ids-only? false})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_9432_key"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Hakukohteen käsittelyn tila" "Käsittelemättä"]
+                                           ["Kielitaitovaatimus" "Tarkastamatta"]
+                                           ["Tutkinnon kelpoisuus" "Täyttyy"]
+                                           ["Hakukelpoisuus" "Ei hakukelpoinen"]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" nil]
+                                           ["Maksuvelvollisuus" "Tarkastamatta"]
+                                           ["Valinnan tila" "Kesken"]
+                                           ["Ehdollinen" "ei"]
+                                           ["Pisteet" "12"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" nil]
+                                           ["Turvakielto" "ei"]
+                                           ["Muistiinpanot" nil]
+                                           ["Kysymys 1" "Vastaus 1"]
+                                           ["Kysymys 2" "Vastaus 2"]
+                                           ["Etunimi" "Lomake-etunimi"]
+                                           ["Kysymys 3" "Vastaus 3"]])
+           (verify-pane-information application-sheet)))))
 
-(defmacro with-excel [input-params bindings & body]
-  `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")
-         applications#     ~(second bindings)]
-     (try
-       (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
-         (->> (j2ee/export-applications liiteri-cas-client
-                                        applications#
-                                        (reduce #(assoc %1 (:key %2) fixtures/application-review)
-                                                {}
-                                                applications#)
-                                        fixtures/application-review-notes
-                                        (~input-params :selected-hakukohde)
-                                        (~input-params :selected-hakukohderyhma)
-                                        (~input-params :skip-answers?)
-                                        (format-included-ids (or (~input-params :included-ids) ""))
-                                        :fi
-                                        {}
-                                        (tarjonta-service/new-tarjonta-service)
-                                        koodisto-cache
-                                        (organization-service/new-organization-service)
-                                        (ohjausparametrit-service/new-ohjausparametrit-service))
-              (.write output#)))
-       ~@body
-       (finally
-         (.delete ~(first bindings))))))
+ (it "should export applications for a hakukohde with haku"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-hakukohde] {:skip-answers? false
+                                                                :ids-only? false})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                           ["Kielitaitovaatimus" "Tarkastamatta"]
+                                           ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" nil]
+                                           ["Maksuvelvollisuus" "Tarkastamatta"]
+                                           ["Valinnan tila" "Hyväksytty"]
+                                           ["Ehdollinen" "ei"]
+                                           ["Pisteet" "12"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                           ["Turvakielto" "kyllä"]
+                                           ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Kysymys 4" "Vastaus 4"]
+                                           ["Etunimi" "Person-etunimi"]
+                                           ["Kysymys 5" "Vastaus 5"]
+                                           ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
 
-(describe "excel export"
-  (tags :unit :excel)
+ (it "should export applications to separate sheets, grouped by form"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde]
+                          {:skip-answers? false
+                           :ids-only? false})
+       (fn [workbook]
+         (let [metadata-sheet              (.getSheetAt workbook 0)
+               form-application-sheet      (.getSheetAt workbook 1)
+               hakukohde-application-sheet (.getSheetAt workbook 2)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
+           (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 3 nil)
+           (verify-cols form-application-sheet [["Hakemusnumero" "application_9432_key"]
+                                                ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                                ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                                ["Hakemuksen tila" "Aktiivinen"]
+                                                ["Hakukohteen käsittelyn tila" "Käsittelemättä"]
+                                                ["Kielitaitovaatimus" "Tarkastamatta"]
+                                                ["Tutkinnon kelpoisuus" "Täyttyy"]
+                                                ["Hakukelpoisuus" "Ei hakukelpoinen"]
+                                                ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                                ["Hylkäyksen syy" nil]
+                                                ["Maksuvelvollisuus" "Tarkastamatta"]
+                                                ["Valinnan tila" "Kesken"]
+                                                ["Ehdollinen" "ei"]
+                                                ["Pisteet" "12"]
+                                                ["Oppijanumero" nil]
+                                                ["Hakijan henkilö-OID" nil]
+                                                ["Turvakielto" "ei"]
+                                                ["Muistiinpanot" nil]
+                                                ["Kysymys 1" "Vastaus 1"]
+                                                ["Kysymys 2" "Vastaus 2"]
+                                                ["Etunimi" "Lomake-etunimi"]
+                                                ["Kysymys 3" "Vastaus 3"]])
+           (verify-cols hakukohde-application-sheet [["Hakemusnumero" "application_3424_key"]
+                                                     ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                                     ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                                     ["Hakemuksen tila" "Aktiivinen"]
+                                                     ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                                     ["Kielitaitovaatimus" "Tarkastamatta"]
+                                                     ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                                     ["Hakukelpoisuus" "Tarkastamatta"]
+                                                     ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                                     ["Hylkäyksen syy" nil]
+                                                     ["Maksuvelvollisuus" "Tarkastamatta"]
+                                                     ["Valinnan tila" "Hyväksytty"]
+                                                     ["Ehdollinen" "ei"]
+                                                     ["Pisteet" "12"]
+                                                     ["Oppijanumero" nil]
+                                                     ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                                     ["Turvakielto" "kyllä"]
+                                                     ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                                     ["Kysymys 4" "Vastaus 4"]
+                                                     ["Etunimi" "Person-etunimi"]
+                                                     ["Kysymys 5" "Vastaus 5"]
+                                                     ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
 
-  (around [spec]
-    (with-redefs [form-store/fetch-by-id (fn [id]
-                                           (case id
-                                             123 fixtures/form
-                                             321 fixtures/form-for-hakukohde))
-                  form-store/fetch-by-key (fn [key]
-                                            (case key
-                                              "form_123_key" fixtures/form
-                                              "form_321_key" fixtures/form-for-hakukohde))]
-      (spec)))
+ (it "should always export answers to special questions"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
+                   form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? true
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
-  (it "should export applications for a form without hakukohde or haku"
-    (with-excel {:skip-answers? false} [file [fixtures/application-for-form]]
-      (let [workbook          (WorkbookFactory/create file)
-            metadata-sheet    (.getSheetAt workbook 0)
-            application-sheet (.getSheetAt workbook 1)]
-        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-        (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
-        (verify-row metadata-sheet 2 nil)
-        (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 1" "Kysymys 2" "Etunimi" "Kysymys 3"])
-        (verify-row application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" nil nil "Tarkastamatta" "Kesken" "ei" "12" nil nil "ei" nil "Vastaus 1" "Vastaus 2" "Lomake-etunimi" "Vastaus 3"])
-        (verify-row application-sheet 2 nil)
-        (verify-pane-information application-sheet))))
+ (it "should not include Kysymys 4 which does not belong to selected-hakukohde"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                   form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? false
+                             :selected-hakukohde "hakukohde.oid"
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Visible from form" nil]
+                                             ["Should be visible because belongs-to-hakukohde is not specified" nil]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
+                                             ["Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Ei"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
-  (it "should export applications for a hakukohde with haku"
-    (with-excel {:skip-answers? false} [file [fixtures/application-for-hakukohde]]
-      (let [workbook          (WorkbookFactory/create file)
-            metadata-sheet    (.getSheetAt workbook 0)
-            application-sheet (.getSheetAt workbook 1)]
-        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-        (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-        (verify-row metadata-sheet 2 nil)
-        (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 4" "Etunimi" "Kysymys 5" "Hakukohteet"])
-        (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
-        (verify-row application-sheet 2 nil))))
+ (it "should include questions when hakukohde belongs to hakukohderyhma"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                   form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers-2]
+                            {:skip-answers? false
+                             :selected-hakukohde "hakukohde-in-ryhma.oid"
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Visible from form 2" nil]
+                                             ["Visible only if belongs to hakukohderyhmä1" nil]
+                                             ["Visible because of parent's hakukohderyhmä" nil]
+                                             ["Should be visible because belongs-to-hakukohde is not specified" nil]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
+                                             ["Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Ei"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde-in-ryhma.oid)"]]))))))
 
-  (it "should export applications to separate sheets, grouped by form"
-    (with-excel {:skip-answers? false} [file [fixtures/application-for-form fixtures/application-for-hakukohde]]
-      (let [workbook                    (WorkbookFactory/create file)
-            metadata-sheet              (.getSheetAt workbook 0)
-            form-application-sheet      (.getSheetAt workbook 1)
-            hakukohde-application-sheet (.getSheetAt workbook 2)]
-        (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-        (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
-        (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-        (verify-row metadata-sheet 3 nil)
-        (verify-row form-application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 1" "Kysymys 2" "Etunimi" "Kysymys 3"])
-        (verify-row form-application-sheet 1 ["application_9432_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelemättä" "Tarkastamatta" "Täyttyy" "Ei hakukelpoinen" nil nil "Tarkastamatta" "Kesken" "ei" "12" nil nil "ei" nil "Vastaus 1" "Vastaus 2" "Lomake-etunimi" "Vastaus 3"])
-        (verify-row form-application-sheet 2 nil)
-        (verify-row hakukohde-application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Kysymys 4" "Etunimi" "Kysymys 5" "Hakukohteet"])
-        (verify-row hakukohde-application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Vastaus 4" "Person-etunimi" "Vastaus 5" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
-        (verify-row hakukohde-application-sheet 2 nil))))
+ (it "should not include questions belonging to hakukohderyhma"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                   form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers-2]
+                            {:skip-answers? false
+                             :selected-hakukohderyhma "1.2.246.562.28.00000000001"
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Visible from form 2" nil]
+                                             ["Visible only if belongs to hakukohderyhmä1" nil]
+                                             ["Visible because of parent's hakukohderyhmä" nil]
+                                             ["Should be visible because belongs-to-hakukohde is not specified" nil]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
+                                             ["Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Ei"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde-in-ryhma.oid)"]]))))))
 
-  (it "should always export answers to special questions"
-    (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
-                  form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
-      (with-excel {:skip-answers? true :included-ids ""} [file [fixtures/application-with-special-answers]]
-        (let [workbook          (WorkbookFactory/create file)
-              metadata-sheet    (.getSheetAt workbook 0)
-              application-sheet (.getSheetAt workbook 1)]
-          (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-          (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-          (verify-row metadata-sheet 2 nil)
-          (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Etunimi" "Hakukohteet"])
-          (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
-          (verify-row application-sheet 2 nil)))))
+ (it "should not include questions for different hakukohderyhma"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                   form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? false
+                             :selected-hakukohderyhma "unknown-hakukohderyhma"
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Should be visible because belongs-to-hakukohde is not specified" nil]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
+                                             ["Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Ei"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
-  (it "should not include Kysymys 4 which does not belong to selected-hakukohde"
-      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
-                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde.oid"} [file [fixtures/application-with-special-answers]]
-          (let [workbook          (WorkbookFactory/create file)
-                metadata-sheet    (.getSheetAt workbook 0)
-                application-sheet (.getSheetAt workbook 1)]
-            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-            (verify-row metadata-sheet 2 nil)
-            (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Visible from form" "Should be visible because belongs-to-hakukohde is not specified"])
-            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil])
-            (verify-row application-sheet 2 nil)))))
+ (it "should not include Kysymys 4 when not including everything"
+     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
+                   form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
+       (with-excel-workbook
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? true
+                             :included-ids #{"joku-kysymys-vaan"}
+                             :ids-only? false})
+         (fn [workbook]
+           (let [metadata-sheet    (.getSheetAt workbook 0)
+                 application-sheet (.getSheetAt workbook 1)]
+             (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+             (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+             (verify-row metadata-sheet 2 nil)
+             (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tila" "Aktiivinen"]
+                                             ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                             ["Kielitaitovaatimus" "Tarkastamatta"]
+                                             ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus" "Tarkastamatta"]
+                                             ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                             ["Hylkäyksen syy" nil]
+                                             ["Maksuvelvollisuus" "Tarkastamatta"]
+                                             ["Valinnan tila" "Hyväksytty"]
+                                             ["Ehdollinen" "ei"]
+                                             ["Pisteet" "12"]
+                                             ["Oppijanumero" nil]
+                                             ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                             ["Turvakielto" "kyllä"]
+                                             ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Etunimi" "Person-etunimi"]
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
-  (it "should include questions when hakukohde belongs to hakukohderyhma"
-      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
-                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde-in-ryhma.oid"} [file [fixtures/application-with-special-answers-2]]
-          (let [workbook          (WorkbookFactory/create file)
-                metadata-sheet    (.getSheetAt workbook 0)
-                application-sheet (.getSheetAt workbook 1)]
-            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-            (verify-row metadata-sheet 2 nil)
-            (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Visible from form 2" "Should be visible because belongs-to-hakukohde is not specified" "Visible only if belongs to hakukohderyhmä1" "Visible because of parent's hakukohderyhmä"])
-            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde-in-ryhma.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil nil nil])
-            (verify-row application-sheet 2 nil)))))
+ (it "should include no applications when ids-only?=true and included-ids empty"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-hakukohde]
+                          {:ids-only? true
+                           :included-ids #{}})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-row application-sheet 0 nil)))))
+ 
+  (it "should export applications to separate sheets when ids-only?=true and included-ids, grouped by form and only with columns valid for each form"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde]
+                          {:skip-answers? false
+                           :ids-only? true
+                           :included-ids #{"application-number"
+                                           "kysymys_5"}})
+       (fn [workbook]
+         (let [metadata-sheet              (.getSheetAt workbook 0)
+               form-application-sheet      (.getSheetAt workbook 1)
+               hakukohde-application-sheet (.getSheetAt workbook 2)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
+           (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 3 nil)
+           (verify-cols form-application-sheet [["Hakemusnumero" "application_9432_key"]])
+           (verify-cols hakukohde-application-sheet [["Hakemusnumero" "application_3424_key"]
+                                                     ["Kysymys 5" "Vastaus 5"]])))))
 
-  (it "should not include questions belonging to hakukohderyhma"
-      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
-                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohderyhma "1.2.246.562.28.00000000001"} [file [fixtures/application-with-special-answers-2]]
-                    (let [workbook          (WorkbookFactory/create file)
-                          metadata-sheet    (.getSheetAt workbook 0)
-                          application-sheet (.getSheetAt workbook 1)]
-                      (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-                      (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-                      (verify-row metadata-sheet 2 nil)
-                      (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Should be visible because belongs-to-hakukohde is not specified" "Visible from form 2" "Visible only if belongs to hakukohderyhmä1" "Visible because of parent's hakukohderyhmä"])
-                      (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde-in-ryhma.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil nil nil])
-                      (verify-row application-sheet 2 nil)))))
-
-  (it "should not include questions for different hakukohderyhma"
-      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
-                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohderyhma "unknown-hakukohderyhma"} [file [fixtures/application-with-special-answers]]
-          (let [workbook          (WorkbookFactory/create file)
-                metadata-sheet    (.getSheetAt workbook 0)
-                application-sheet (.getSheetAt workbook 1)]
-            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-            (verify-row metadata-sheet 2 nil)
-            (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Should be visible because belongs-to-hakukohde is not specified"])
-            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil])
-            (verify-row application-sheet 2 nil)))))
-
-
-  (it "should not include Kysymys 4 when not including everything"
-      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
-                    form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
-        (with-excel {:skip-answers? true :included-ids "joku-kysymys-vaan"} [file [fixtures/application-with-special-answers]]
-                    (let [workbook          (WorkbookFactory/create file)
-                          metadata-sheet    (.getSheetAt workbook 0)
-                          application-sheet (.getSheetAt workbook 1)]
-                      (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-                      (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-                      (verify-row metadata-sheet 2 nil)
-                      (verify-row application-sheet 0 ["Hakemusnumero" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Oppijanumero" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Etunimi" "Hakukohteet"])
-                      (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" nil "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"])
-                      (verify-row application-sheet 2 nil))))))
+ (it "should include only 'included-ids' when ids-only?=true"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-hakukohde]
+                          {:ids-only? true
+                           :included-ids #{"application-number"
+                                           "application-submitted-time"
+                                           "application-modified-time"
+                                           "application-state"
+                                           "student-number"
+                                           "applicant-oid"
+                                           "turvakielto"
+                                           "hakukohde-handling-state"
+                                           "kielitaitovaatimus"
+                                           "tutkinnon-kelpoisuus"
+                                           "hakukelpoisuus"
+                                           "eligibility-set-automatically"
+                                           "ineligibility-reason"
+                                           "maksuvelvollisuus"
+                                           "valinnan-tila"
+                                           "ehdollinen"
+                                           "pisteet"
+                                           "application-review-notes"
+                                           "hakukohteet"}})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                           ["Turvakielto" "kyllä"]
+                                           ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                           ["Kielitaitovaatimus" "Tarkastamatta"]
+                                           ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" nil]
+                                           ["Maksuvelvollisuus" "Tarkastamatta"]
+                                           ["Valinnan tila" "Hyväksytty"]
+                                           ["Ehdollinen" "ei"]
+                                           ["Pisteet" "12"]
+                                           ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))

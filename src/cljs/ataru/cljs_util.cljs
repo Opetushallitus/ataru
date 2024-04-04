@@ -1,5 +1,6 @@
 (ns ataru.cljs-util
   (:require [ataru.translations.translation-util :as tu]
+            [clojure.string :as string]
             [clojure.set :as set]
             [clojure.walk :as walk]
             [cljs.core.match :refer-macros [match]]
@@ -186,3 +187,5 @@
   (if (js/Number.isNaN value)
     value
     (.toLocaleString (js/Number value) "fi")))
+
+(defn classes [& cs] (string/join " " (vec cs)))

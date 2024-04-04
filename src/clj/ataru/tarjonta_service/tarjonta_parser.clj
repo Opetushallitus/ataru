@@ -1,11 +1,12 @@
 (ns ataru.tarjonta-service.tarjonta-parser
-  (:require [clj-time.core :as t]
-            [clojure.string :as string]
-            [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.koodisto.koodisto :refer [get-koodisto-options]]
+  (:require [ataru.koodisto.koodisto :refer [get-koodisto-options]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]))
+            [clj-time.core :as t]
+            [clojure.set :refer [intersection]]
+            [clojure.string :as string]))
 
 (defn- parse-hakukohde
   [_
@@ -23,17 +24,17 @@
      :archived                                                    (:archived hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?                                    (string/starts-with?
-                                                                    (:kohdejoukko-uri haku)
-                                                                    "haunkohdejoukko_12#")
+                                                                   (:kohdejoukko-uri haku)
+                                                                   "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
      :form-key                                                    (:ataru-form-key haku)
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
-                                                                           (throw (new RuntimeException (str "Koulutus " % " not found"))))
-                                                                    (:koulutus-oids hakukohde))
+                                                                             (throw (new RuntimeException (str "Koulutus " % " not found"))))
+                                                                        (:koulutus-oids hakukohde))
      :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
-                                                                    (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
+                                                                          (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))
      :liitteet                                                    (:liitteet hakukohde)
      :liitteet-onko-sama-toimitusosoite?                          (boolean (:liitteet-onko-sama-toimitusosoite? hakukohde))
@@ -58,25 +59,25 @@
    (when haku-oid
      (let [now                               (t/now)
            hakukohderyhmat                   (->> (organization-service/get-hakukohde-groups
-                                                    organization-service)
+                                                   organization-service)
                                                   (map :oid)
                                                   (set))
            haku                              (tarjonta-protocol/get-haku
-                                               tarjonta-service
-                                               haku-oid)
+                                              tarjonta-service
+                                              haku-oid)
            ohjausparametrit                  (ohjausparametrit-protocol/get-parametri
-                                               ohjausparametrit-service
-                                               haku-oid)
+                                              ohjausparametrit-service
+                                              haku-oid)
            pohjakoulutukset-by-vaatimus      (pohjakoulutukset-by-vaatimus
-                                               (concat
-                                                 (get-koodisto-options koodisto-cache
-                                                                       "pohjakoulutusvaatimuskouta"
-                                                                       1
-                                                                       false)
-                                                 (get-koodisto-options koodisto-cache
-                                                                       "pohjakoulutusvaatimuskorkeakoulut"
-                                                                       1
-                                                                       false)))
+                                              (concat
+                                               (get-koodisto-options koodisto-cache
+                                                                     "pohjakoulutusvaatimuskouta"
+                                                                     1
+                                                                     false)
+                                               (get-koodisto-options koodisto-cache
+                                                                     "pohjakoulutusvaatimuskorkeakoulut"
+                                                                     1
+                                                                     false)))
            tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
                                                                                 included-hakukohde-oids)
            tarjonta-koulutukset              (->> tarjonta-hakukohteet
@@ -115,3 +116,33 @@
                                            (tarjonta-protocol/get-haku tarjonta-service)
                                            :hakukohteet)
                                       [])))))
+
+(defn- parse-excel-hakukohde
+  [hakukohderyhmat
+   hakukohde]
+  (when (:oid hakukohde)
+    {:oid (:oid hakukohde)
+     :name (:name hakukohde)
+     :tarjoaja-name (:tarjoaja-name hakukohde)
+     :ryhmaliitokset (intersection hakukohderyhmat (set (:ryhmaliitokset hakukohde)))}))
+
+(defn parse-excel-tarjonta-info-by-haku
+  [tarjonta-service organization-service ohjausparametrit-service haku-oid hakukohde-oids]
+  {:pre [(some? tarjonta-service)
+         (some? organization-service)]}
+  (when haku-oid
+    (let [hakukohderyhmat      (->> (organization-service/get-hakukohde-groups
+                                     organization-service)
+                                    (map :oid)
+                                    (set))
+          ohjausparametrit     (ohjausparametrit-protocol/get-parametri
+                                ohjausparametrit-service
+                                haku-oid)
+          tarjonta-hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service hakukohde-oids)
+          hakukohteet          (map #(parse-excel-hakukohde hakukohderyhmat %)
+                                    tarjonta-hakukohteet)]
+      (when (not-empty hakukohteet)
+        {:tarjonta
+         {:hakukohteet            hakukohteet
+          :prioritize-hakukohteet (get ohjausparametrit :jarjestetytHakutoiveet false)}}))))
+  

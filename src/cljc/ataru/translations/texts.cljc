@@ -1703,6 +1703,24 @@
    :excel-include-all-placeholder                            {:fi "Kaikki tunnisteet"
                                                               :sv "Alla identifikationer"
                                                               :en "All identifiers"}
+   :excel-kasittelymerkinnat                                 {:fi "Käsittelymerkinnät"
+                                                              :sv "Käsittelymerkinnät"
+                                                              :en "Käsittelymerkinnät"}
+   :excel-hakemuksen-yleiset-tiedot                          {:fi "Hakemuksen yleiset tiedot"
+                                                              :sv "Hakemuksen yleiset tiedot"
+                                                              :en "Hakemuksen yleiset tiedot"}
+   :excel-mode-ids-only                                      {:fi "Valitse excelin tiedot"
+                                                              :sv "Valitse excelin tiedot"
+                                                              :en "Valitse excelin tiedot"}
+   :excel-mode-with-defaults                                 {:fi "Kirjoita tunnisteet"
+                                                              :sv "Kirjoita tunnisteet"
+                                                              :en "Kirjoita tunnisteet"}
+   :excel-valitse-kaikki                                     {:fi "Valitse kaikki"
+                                                              :sv "Valitse kaikki"
+                                                              :en "Valitse kaikki"}
+   :excel-poista-valinnat                                    {:fi "Poista valinnat"
+                                                              :sv "Poista valinnat"
+                                                              :en "Poista valinnat"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
@@ -1740,8 +1758,8 @@
                                                               :sv "Skicka:"
                                                               :en "Send:"}
    :single-information-request-message-sent                   {:fi "Viesti lisätty lähetysjonoon!"
-                                                              :sv "Meddelanden har lagts till i utskickskön!"
-                                                              :en "Message has been sent!"}
+                                                               :sv "Meddelanden har lagts till i utskickskön!"
+                                                               :en "Message has been sent!"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}
@@ -2079,8 +2097,8 @@
                                                               :sv "Person OID"
                                                               :en "Person OID"}
    :student-number                                            {:fi "Oppijanumero"
-                                                              :sv "SV: Oppijanumero"
-                                                              :en "Student number"}
+                                                               :sv "SV: Oppijanumero"
+                                                               :en "Student number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
                                                               :sv "matade in ansökan"
                                                               :en "submitted"}
@@ -2429,7 +2447,10 @@
                                                               :en "EN: Hakija on vahvasti tunnistautunut."}
    :ht-eidas-tunnistautunut                                  {:fi "Hakija on eidas-tunnistautunut."
                                                               :sv "SV: Hakija on eidas-tunnistautunut."
-                                                              :en "EN: Hakija on eidas-tunnistautunut."}})
+                                                              :en "EN: Hakija on eidas-tunnistautunut."}
+   :valittu                                                  {:fi "valittu"
+                                                              :sv "valittu"
+                                                              :en "valittu"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2671,10 +2692,13 @@
                               :en "EN: Viimeksi muokattu"}
    :created-by               {:fi "Viimeinen muokkaaja"
                               :sv "Senast bearbetad av"
-                              :en "EN: Viimeinen muokkaaja"}
-   :sent-at                  {:fi "Lähetysaika"
-                              :sv "Sändningstid"
-                              :en "EN: Lähetysaika"}
+                              :en "EN: Viimeinen muokkaaja"} 
+   :application-modified     {:fi "Hakemuksen viimeisimmän muokkauksen aika"
+                              :sv "Hakemuksen viimeisimmän muokkauksen aika"
+                              :en "Hakemuksen viimeisimmän muokkauksen aika"}
+   :application-submitted    {:fi "Hakemuksen tallennusaika"
+                              :sv "Hakemuksen tallennusaika"
+                              :en "Hakemuksen tallennusaika"}
    :application-state        {:fi "Hakemuksen tila"
                               :sv "Ansökans status"
                               :en "EN: Hakemuksen tila"}
