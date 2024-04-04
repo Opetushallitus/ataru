@@ -85,7 +85,8 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [cuerdas.core :as str]
-            [ataru.virkailija.virkailija-application-service :as virkailija-application-service])
+            [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
+            [ataru.background-job.job :as job])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -430,6 +431,15 @@
                 application-id
                 nil)
               (response/ok {}))
+          (response/unauthorized {})))
+      (api/GET "/list-job-statuses" {session :session}
+        (if (get-in session [:identity :superuser])
+          (response/ok (job/get-job-types job-runner))
+          (response/unauthorized {})))
+      (api/POST "/update-job-statuses" {session :session}
+        :body [body s/Any]
+        (if (get-in session [:identity :superuser])
+          (response/ok (job/update-job-types job-runner body))
           (response/unauthorized {}))))
 
     (api/context "/post-process" []
