@@ -6,3 +6,6 @@ INSERT INTO job_types (job_type, enabled) VALUES (:job_type, :enabled) ON CONFLI
 
 -- name: yesql-get-job-types
 SELECT job_type, enabled FROM job_types;
+
+-- name: yesql-update-job-type!
+UPDATE job_types SET enabled=:enabled WHERE job_type=:job_type;

@@ -19,7 +19,12 @@
   (start-job [this connection job-type initial-state]
     "Start a new background job of type <job-type>.
      initial-state is the initial data map needed to start the job
-     (can be anything)"))
+     (can be anything)")
+
+  (get-job-types [this]
+    "List currently configured job-types and whether they are enabled")
+  (update-job-types [this job-type-statuses]
+    "Update enabled status for currently configured job types"))
 
 (def proletarian-enqueue-options
   "Default options for enqueueing work"
@@ -32,13 +37,10 @@
    :proletarian/polling-interval-ms 2000
    :proletarian.retry/failed-job-fn (fn [attrs e] (log/error e "Failed job" attrs))})
 
-(def job-type-statuses
-  "Current status for jobs. The configuration-monitor process will periodically compare this with current configuration and
-   start/stop workers/schedulers to match configuration" (atom nil))
-
 (declare yesql-add-scheduled-job-instance!)
 (declare yesql-add-job-type!)
 (declare yesql-get-job-types)
+(declare yesql-update-job-type!)
 
 (defqueries "sql/scheduled-job-queries.sql")
 
@@ -76,7 +78,10 @@
   (let [schedule (:schedule job-definition)] (when schedule
     (log/info "Scheduling recurring job" (:type job-definition))
     (chime/chime-at
-      (if (vector? schedule) schedule (cron-schedule schedule))
+      (if (vector? schedule)
+        ; also accept a seq of Instants (for tests)
+        schedule
+        (cron-schedule schedule))
       (fn [scheduled-at]
         (jdbc/with-db-transaction
           [connection {:datasource ds}]
@@ -96,7 +101,7 @@
   [job-type job-status]
   (log/info "Shutting down job:" job-type)
   (try
-    (when-let [worker (:worker job-status)] (worker/stop! worker))
+    (when-let [worker (:worker job-status)] (worker/stop! @worker))
     (catch Throwable t
       (log/error t "Error shutting down worker" job-type)))
   (try
@@ -114,48 +119,58 @@
                                                     :enabled true}
                                                    {:connection connection}))))
 
-(defn- start-configuration-monitor
-  "Starts a configuration monitor process that monitors for any configuration changes that need to be loaded from database"
-  [ds job-definitions job-runner]
-  (chime/chime-at
-    (chime/periodic-seq (Instant/now) (Duration/ofSeconds 15))
-    (fn [_]
-      (jdbc/with-db-transaction
-        [connection {:datasource ds}]
-        (let [stored-configuration (into {} (for [job-type (yesql-get-job-types {} {:connection connection})]
-                                                [(:job_type job-type) {:enabled (:enabled job-type)}]))
-              merged-statuses (merge-with (fn [& args] (apply merge args)) job-definitions @job-type-statuses stored-configuration)
-              new-statuses (into {} (for [[job-type job-definition] merged-statuses]
-                                      [job-type
-                                       (case (str (true? (and (:type job-definition) (:enabled job-definition))) ":" (true? (:running job-definition)))
-                                         "true:false" (do (log/info "Starting job:" job-type)
-                                                          (merge job-definition {:running true
-                                                                                 :worker (create-worker ds job-definition job-runner)
-                                                                                 :scheduler (create-scheduler ds job-definition job-runner)}))
-                                         "false:true" (do (shutdown-job job-type job-definition)
-                                                          (merge job-definition {:running false
-                                                                                 :worker nil
-                                                                                 :scheduler nil}))
-                                         job-definition)]))]
-          (reset! job-type-statuses new-statuses))))))
+(defn- reconcile-configuration [ds job-definitions job-runner]
+  (locking job-runner                                       ; only one configuration update at a time, otherwise workers
+                                                            ; and/or schedulers might escape
+    (jdbc/with-db-transaction
+      [connection {:datasource ds}]
+      (let [job-type-statuses (:job-type-statuses job-runner)
+            stored-configuration (into {} (for [job-type (yesql-get-job-types {} {:connection connection})]
+                                            [(:job_type job-type) {:enabled (:enabled job-type)}]))
+            merged-statuses (merge-with (fn [& args] (apply merge args)) job-definitions @job-type-statuses stored-configuration)
+            new-statuses (into {} (for [[job-type job-definition] merged-statuses]
+                                    [job-type
+                                     (case (str (true? (and (:type job-definition) (:enabled job-definition))) ":" (true? (:running job-definition)))
+                                       "true:false" (do (log/info "Starting job:" job-type)
+                                                        (merge job-definition {:running true
+                                                                               ; start worker in separate thread to minimize restart time in local dev
+                                                                               :worker (future (create-worker ds job-definition job-runner))
+                                                                               :scheduler (create-scheduler ds job-definition job-runner)}))
+                                       "false:true" (do (shutdown-job job-type job-definition)
+                                                        (merge job-definition {:running false
+                                                                               :worker nil
+                                                                               :scheduler nil}))
+                                       job-definition)]))]
+        (reset! job-type-statuses new-statuses)
+
+        ; wait for all workers to start (for tests)
+        (into [] (for [[_ v] @job-type-statuses] (when-let [worker (:worker v)] @worker)))))))
 
 (defrecord PersistentJobRunner [job-definitions ds enable-running]
   component/Lifecycle
   (start [this]
     (log/info "Starting Job-Runner")
     (store-job-definitions ds job-definitions)
-    (let [configuration-monitor (when enable-running (start-configuration-monitor ds job-definitions this))]
-      (assoc this :configuration-monitor configuration-monitor)))
+    (let [job-type-statuses (atom nil)  ; Current status for jobs. The configuration-monitor process will
+                                        ; periodically compares this with current configuration and
+                                        ; starts/stops workers/schedulers to match it
+          job-runner (promise)
+          monitor (when enable-running
+                    (chime/chime-at
+                      (chime/periodic-seq (Instant/now) (Duration/ofSeconds 15))
+                      (fn [_]
+                        (reconcile-configuration ds job-definitions @job-runner))))]
+      (deliver job-runner (assoc this :monitor monitor :job-type-statuses job-type-statuses))
+      @job-runner))
 
   (stop [this]
     (try
       (log/info "Shutting down Job-Runner")
-      (doseq [[job-type job-status] @job-type-statuses] (shutdown-job job-type job-status))
-      (when-let [configuration-monitor (:configuration-monitor this)] (.close configuration-monitor))
-      (reset! job-type-statuses nil)
+      (doseq [[job-type job-status] @(:job-type-statuses this)] (shutdown-job job-type job-status))
+      (when-let [monitor (:monitor this)] (.close monitor))
       (catch Exception e
         (log/error e "Error shutting down job JobRunner")))
-    (assoc this :configuration-monitor nil))
+    (assoc this :monitor nil :job-type-statuses nil))
 
   JobRunner
   (start-job [_ connection job-type payload]
@@ -165,12 +180,26 @@
       job-type
       payload
       (merge proletarian-enqueue-options
-             {:proletarian/queue job-type}))))
+             {:proletarian/queue job-type})))
+
+  (get-job-types [_]
+    (jdbc/with-db-transaction [connection {:datasource ds}]
+                              (yesql-get-job-types {} {:connection connection})))
+
+  (update-job-types [this job-types]
+    (jdbc/with-db-transaction [connection {:datasource ds}]
+                              (doseq [job-type job-types]
+                                (yesql-update-job-type! job-type {:connection connection})))
+    ; update configuration instantly (for tests)
+    (reconcile-configuration ds job-definitions this)
+    (get-job-types this)))
 
 (defrecord FakeJobRunner []
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
+  (get-job-types [_])
+  (update-job-types [_ _])
 
   JobRunner
   (start-job [_ _ _ _]))
