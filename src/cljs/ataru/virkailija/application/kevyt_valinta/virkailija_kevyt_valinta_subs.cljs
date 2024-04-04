@@ -312,7 +312,7 @@
             :kevyt-valinta/vastaanotto-tila      :unchecked
             :kevyt-valinta/ilmoittautumisen-tila :unchecked}
 
-           [_ true _ (_ :guard #(not= % "LASNA")) _ _]
+           [_ true _ (_ :guard #(not= % "EI_TEHTY")) _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked

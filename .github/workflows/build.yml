@@ -34,9 +34,9 @@ jobs:
           cache-dependency-path: 'package-lock.json'
 
       - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.3.7
+        uses: ScribeMD/docker-cache@0.5.0
         with:
-          key: docker-${{ runner.os }}-${{ hashFiles('**/workflows/build.yml') }}
+          key: docker-${{ runner.os }}-${{ hashFiles('**/workflows/build.yml', '**/Dockerfile', '**/docker-compose.yml') }}
 
       - name: Npm ci
         run: npm ci
