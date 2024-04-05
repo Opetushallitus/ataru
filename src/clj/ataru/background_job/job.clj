@@ -1,6 +1,7 @@
 (ns ataru.background-job.job
   "Public API of the Background Job system"
   (:require
+    [ataru.aws.cloudwatch :as cloudwatch]
     [ataru.config.core :refer [config]]
     [taoensso.timbre :as log]
     [com.stuartsierra.component :as component]
@@ -24,7 +25,10 @@
   (get-job-types [this]
     "List currently configured job-types and whether they are enabled")
   (update-job-types [this job-type-statuses]
-    "Update enabled status for currently configured job types"))
+    "Update enabled status for currently configured job types")
+
+  (get-queue-lengths [this]
+    "Returns queue lengths for jobs, used for metrics"))
 
 (def proletarian-enqueue-options
   "Default options for enqueueing work"
@@ -41,6 +45,7 @@
 (declare yesql-add-job-type!)
 (declare yesql-get-job-types)
 (declare yesql-update-job-type!)
+(declare yesql-get-queue-lengths)
 
 (defqueries "sql/scheduled-job-queries.sql")
 
@@ -78,8 +83,7 @@
   (let [schedule (:schedule job-definition)] (when schedule
     (log/info "Scheduling recurring job" (:type job-definition))
     (chime/chime-at
-      (if (vector? schedule)
-        ; also accept a seq of Instants (for tests)
+      (if (or (vector? schedule) (seq? schedule))
         schedule
         (cron-schedule schedule))
       (fn [scheduled-at]
@@ -150,10 +154,11 @@
   component/Lifecycle
   (start [this]
     (log/info "Starting Job-Runner")
+    (log/info "REPORT JOB" (:handler (get job-definitions "report-metrics")))
     (store-job-definitions ds job-definitions)
     (let [job-type-statuses (atom nil)  ; Current status for jobs. The configuration-monitor process will
-                                        ; periodically compares this with current configuration and
-                                        ; starts/stops workers/schedulers to match it
+          ; periodically compares this with current configuration and
+          ; starts/stops workers/schedulers to match it
           job-runner (promise)
           monitor (when enable-running
                     (chime/chime-at
@@ -192,7 +197,11 @@
                                 (yesql-update-job-type! job-type {:connection connection})))
     ; update configuration instantly (for tests)
     (reconcile-configuration ds job-definitions this)
-    (get-job-types this)))
+    (get-job-types this))
+
+  (get-queue-lengths [_]
+    (jdbc/with-db-transaction [connection {:datasource ds}]
+                              (yesql-get-queue-lengths {} {:connection connection}))))
 
 (defrecord FakeJobRunner []
   component/Lifecycle
@@ -200,6 +209,7 @@
   (stop [this] this)
   (get-job-types [_])
   (update-job-types [_ _])
+  (get-queue-lengths [_])
 
   JobRunner
   (start-job [_ _ _ _]))
@@ -211,3 +221,24 @@
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeJobRunner)
     (->PersistentJobRunner job-definitions ds enable-running)))
+
+(defn- report-handler [_ job-runner]
+  (log/info "Reporting queue length metrics")
+  (cloudwatch/store-metrics (:amazon-cloudwatch job-runner)
+                            (map (fn [queue]
+                                   {:name "queue-length"
+                                    :value (:length queue)
+                                    :dimensions [{:name "job-type"
+                                                  :value (:job_type queue)}]}) (get-queue-lengths job-runner))))
+
+(defn- shift-schedule
+  "Shifts a cron schedule a given amount of seconds forwards or backwards"
+  [schedule seconds]
+  (map (fn [instant] (.plusSeconds instant seconds)) (cron-schedule schedule)))
+
+(def report-job {:type "report-metrics"
+                 :handler report-handler
+                 :schedule (interleave (shift-schedule "*/1 * * * *" -45)
+                                       (shift-schedule "*/1 * * * *" -30)
+                                       (shift-schedule "*/1 * * * *" -15)
+                                       (shift-schedule "*/1 * * * *" 0))})
