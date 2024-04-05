@@ -10,7 +10,7 @@
 (describe "background job"
           (tags :unit :validator)
           (before-all
-            (log/merge-config! {:ns-filter {:allow #{"*"} :deny #{"org.testcontainers"
+            (log/merge-config! {:ns-filter {:allow #{"*"} :deny #{"org.testcontainers.*"
                                                                   "com.github.dockerjava.*"
                                                                   "com.zaxxer.hikari.*"}}})
             (def container (-> (tc/create {:image-name    "postgres:15.4"
@@ -266,6 +266,25 @@
                 (try
                   (should (= (job/get-job-types job-runner) '({:job_type "queued"
                                                                :enabled true})))
+                  (finally (.stop job-runner)))))
+
+          (it "lists queue lengths"
+              (let [job-runner (.start (job/->PersistentJobRunner
+                                         {"queued" {:handler (fn [_ _])
+                                                    :type "queued"}}
+                                         ds
+                                         true))]
+                (try
+                  (job/update-job-types job-runner [{:job_type "scheduled" :enabled false}])
+                  (should (= (job/get-queue-lengths job-runner) '({:job_type "queued"
+                                                                   :length 0})))
+                  (jdbc/with-db-transaction
+                    [connection {:datasource ds}]
+                    (job/start-job job-runner connection "queued" nil)
+                    (job/start-job job-runner connection "queued" nil)
+                    (job/start-job job-runner connection "queued" nil))
+                  (should (= (job/get-queue-lengths job-runner) '({:job_type "queued"
+                                                                   :length 3})))
                   (finally (.stop job-runner)))))
 
           (after-all
