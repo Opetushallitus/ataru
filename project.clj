@@ -101,6 +101,7 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.12.558"]
                  [com.amazonaws/aws-java-sdk-sns "1.12.558"]
                  [com.amazonaws/aws-java-sdk-sqs "1.12.558"]
+                 [com.amazonaws/aws-java-sdk-cloudwatch "1.12.558"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [com.jcraft/jsch "0.1.55"]
@@ -297,7 +298,9 @@
                                                [lein-kibit "0.1.8"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
-                              :env            {:dev? "true"}}
+                              :env            {:dev? "true"
+                                               "AWS_ACCESS_KEY" "localhost"
+                                               "AWS_SECRET_KEY" "localhost"}}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
