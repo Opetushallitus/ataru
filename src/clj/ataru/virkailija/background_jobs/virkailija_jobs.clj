@@ -8,7 +8,7 @@
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
-            [ataru.background-job.job :refer [report-job]]))
+            [ataru.background-job.job :refer [report-job cleanup-job]]))
 
 (def job-definitions
   {(:type email-job/job-definition)                      email-job/job-definition
@@ -29,4 +29,5 @@
    "clean-old-forms-job" {:handler clean-old-forms/clean-old-forms-job-step
                           :type  "clean-old-forms-job"
                           :schedule "0 3 * * *"}
-   (:type report-job) report-job})
+   (:type report-job) report-job
+   (:type cleanup-job) cleanup-job})
