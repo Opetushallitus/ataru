@@ -416,6 +416,7 @@
   (siirto-applications [this session hakukohde-oid application-keys])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
+  (suoritusrekisteri-person-info [this haku-oid hakukohde-oids offset])
   (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
@@ -763,6 +764,10 @@
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
       (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+
+  (suoritusrekisteri-person-info
+    [_ haku-oid hakukohde-oids offset]
+    (application-store/suoritusrekisteri-person-info haku-oid hakukohde-oids offset))
 
   (suoritusrekisteri-toinenaste-applications
     [_ form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset]

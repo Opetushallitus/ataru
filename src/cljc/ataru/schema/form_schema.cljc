@@ -567,6 +567,11 @@
    :koulutusmarkkinointilupa    s/Bool
    :korkeakoulututkintoVuosi    (s/maybe s/Int)})
 
+(s/defschema ApplicationPersonInfo
+  {:oid       s/Str
+   :ssn       (s/maybe s/Str)
+   :personOid (s/maybe s/Str)})
+
 (s/defschema HakurekisteriHakukohde
   {:oid                            s/Str
    :harkinnanvaraisuus             (apply s/enum harkinnanvaraisuus-types)
