@@ -7,6 +7,13 @@
             [taoensso.timbre :as log])
   (:import java.time.Instant))
 
+(defn- should-eventually [f timeout]
+  (let [timed-out (promise)]
+    (future (Thread/sleep timeout) (deliver timed-out true))
+    (while (not (f))
+      (when (deref timed-out 250 false)
+        (should false)))))
+
 (describe "background job"
           (tags :unit :validator)
           (before-all
@@ -201,7 +208,7 @@
 
           (it "should run when scheduled"
               (let [scheduled-at (.plusMillis (Instant/now) 400)
-                    polling-interval 20
+                    polling-interval 25
                     tolerance-ms (* 2 polling-interval)
                     lower-bound (.toEpochMilli (.minusMillis scheduled-at tolerance-ms))
                     upper-bound (.toEpochMilli (.plusMillis scheduled-at tolerance-ms))
@@ -285,6 +292,36 @@
                     (job/start-job job-runner connection "queued" nil))
                   (should (= (job/get-queue-lengths job-runner) '({:job_type "queued"
                                                                    :length 3})))
+                  (finally (.stop job-runner)))))
+
+          (it "removes old archived jobs"
+              (let [ready (promise)
+                    job-runner (.start (job/->PersistentJobRunner
+                                         {"queued" {:handler (fn [_ _] (deliver ready true))
+                                                    :type "queued"
+                                                    :queue {:proletarian/polling-interval-ms 100}}}
+                                         ds
+                                         true))
+                    archived-jobs-count #(:count
+                                           (nth (jdbc/with-db-transaction
+                                                  [connection {:datasource ds}]
+                                                  (jdbc/query
+                                                    connection
+                                                    "SELECT count(*) AS count FROM proletarian_archived_jobs"))
+                                                0))]
+                (try
+                  (jdbc/with-db-transaction
+                    [connection {:datasource ds}]
+                    (job/start-job job-runner connection "queued" nil))
+
+                  @ready
+                  ; run jobs end up in archived jobs table
+                  (should-eventually #(= 1 (archived-jobs-count)) 2000)
+
+                  (job/cleanup-archived-jobs job-runner 0)
+                  ; which gets cleaned
+                  (should (= 0 (archived-jobs-count)))
+
                   (finally (.stop job-runner)))))
 
           (after-all
