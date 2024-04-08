@@ -49,7 +49,7 @@
                                       (extract-answer-value "guardian-email-secondary" application)])))
         emails           (->> [(extract-answer-value "email" application)]
                               (concat guardian-emails)
-                              (remove nil?))
+                              (remove empty?))
         translations     (translations/get-translations lang)
         subject          (:email-vain-harkinnanvaraisessa-subject translations)
         body             (selmer/render-file template-name translations)]
@@ -189,7 +189,7 @@
                                        (remove-yksiloimattomat-applications applications-not-yksiloity))
         application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
-                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
                                                     valintalaskentakoostepalvelu-service
                                                     application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
