@@ -851,10 +851,11 @@
 (defn- modify-event-changes
   [events change-history event-id]
   (let [modify-events (filter util/modify-event? events)]
-    (some (fn [[event changes]]
-            (when (= event-id (:id event))
-              changes))
-          (map vector modify-events change-history))))
+    (util/keep-non-empty-changes
+     (some (fn [[event changes]]
+             (when (= event-id (:id event))
+               changes))
+           (map vector modify-events change-history)))))
 
 (defn- replace-change-value-with-label
   [change field lang]
