@@ -11,7 +11,7 @@
     [chime.core :as chime]
     [yesql.core :refer [defqueries]]
     [cronstar.core :as cron]
-    [clojure.string :refer [includes?]])
+    [clojure.string :refer [includes? join]])
   (:import java.sql.BatchUpdateException
            java.time.Instant
            java.time.Duration))
@@ -28,7 +28,10 @@
     "Update enabled status for currently configured job types")
 
   (get-queue-lengths [this]
-    "Returns queue lengths for jobs, used for metrics"))
+    "Returns queue lengths for jobs, used for metrics")
+
+  (cleanup-archived-jobs [this seconds]
+    "Cleans up archived jobs older than seconds parameter"))
 
 (def proletarian-enqueue-options
   "Default options for enqueueing work"
@@ -46,6 +49,8 @@
 (declare yesql-get-job-types)
 (declare yesql-update-job-type!)
 (declare yesql-get-queue-lengths)
+(declare yesql-remove-archived-jobs-older-than!)
+
 
 (defqueries "sql/scheduled-job-queries.sql")
 
@@ -154,7 +159,6 @@
   component/Lifecycle
   (start [this]
     (log/info "Starting Job-Runner")
-    (log/info "REPORT JOB" (:handler (get job-definitions "report-metrics")))
     (store-job-definitions ds job-definitions)
     (let [job-type-statuses (atom nil)  ; Current status for jobs. The configuration-monitor process will
           ; periodically compares this with current configuration and
@@ -201,7 +205,22 @@
 
   (get-queue-lengths [_]
     (jdbc/with-db-transaction [connection {:datasource ds}]
-                              (yesql-get-queue-lengths {} {:connection connection}))))
+                              (yesql-get-queue-lengths {} {:connection connection})))
+
+  (cleanup-archived-jobs [_ seconds]
+    (let [timestamp (Instant/now)
+          groups (group-by (fn [job-definition]
+                             (or (:remove-older-than job-definition) seconds))
+                           (for [[_ job-definition] job-definitions] job-definition))]
+      (jdbc/with-db-transaction
+        [connection {:datasource ds}]
+        (doall (for [[seconds job-definitions] groups]
+                 (let [job-types (map (fn [job-definition] (:type job-definition)) job-definitions)]
+                   (log/info "Removing jobs older than" seconds " seconds, groups: " (join " " job-types))
+                   (yesql-remove-archived-jobs-older-than!
+                     {:timestamp (str (.minusSeconds timestamp seconds))
+                      :queues job-types}
+                     {:connection connection}))))))))
 
 (defrecord FakeJobRunner []
   component/Lifecycle
@@ -210,6 +229,7 @@
   (get-job-types [_])
   (update-job-types [_ _])
   (get-queue-lengths [_])
+  (cleanup-archived-jobs [_ _])
 
   JobRunner
   (start-job [_ _ _ _]))
@@ -238,7 +258,10 @@
 
 (def report-job {:type "report-metrics"
                  :handler report-handler
-                 :schedule (interleave (shift-schedule "*/1 * * * *" -45)
-                                       (shift-schedule "*/1 * * * *" -30)
-                                       (shift-schedule "*/1 * * * *" -15)
+                 :remove-older-than 120
+                 :schedule (interleave (shift-schedule "*/1 * * * *" -30)
                                        (shift-schedule "*/1 * * * *" 0))})
+
+(def cleanup-job {:type "cleanup-archived-jobs"
+                 :handler (fn [_ job-runner] (cleanup-archived-jobs job-runner (* 60 60 24 30 2)))
+                 :schedule "0 */1 * * *"})
