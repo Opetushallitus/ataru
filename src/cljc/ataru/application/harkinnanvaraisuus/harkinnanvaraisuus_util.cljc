@@ -9,7 +9,7 @@
                                                                     suoritusvuosi-keys]]
             [taoensso.timbre :as log]))
 
-;Kaikki 2017 tai myöhemmin valmistuneet perusopetukset pitäisi löytyä suoritusrekisteristä.
+;Kaikki 2018 tai myöhemmin valmistuneet perusopetukset pitäisi löytyä suoritusrekisteristä.
 (defn perusopetus-should-be-in-sure [answers pick-value-fn]
   (let [tutkinto-vuosi-key (->> suoritusvuosi-keys
                                 (map keyword)
@@ -22,7 +22,7 @@
                        (when (not-empty tutkinto-vuosi)
                          (number/->int tutkinto-vuosi)))
         result (boolean (when (some? parsed-vuosi)
-                          (>= parsed-vuosi 2017)))]
+                          (>= parsed-vuosi 2018)))]
     result))
 
 (defn can-skip-recheck-for-yks-ma-ai
