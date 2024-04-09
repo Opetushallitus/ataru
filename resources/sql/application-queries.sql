@@ -870,6 +870,26 @@ WHERE a.person_oid IS NOT NULL AND
 ORDER BY a.key
 LIMIT 1000;
 
+--name: yesql-suoritusrekisteri-person-info
+SELECT
+    a.key,
+    a.person_oid,
+    a.ssn
+FROM latest_applications AS a
+         JOIN application_reviews AS ar
+              ON ar.application_key = a.key
+WHERE a.person_oid IS NOT NULL AND
+    a.haku IS NOT NULL AND
+    (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
+    (:hakukohde_oids::varchar[] IS NULL OR a.hakukohde && :hakukohde_oids) AND
+        ar.state <> 'inactivated' AND
+    CASE
+        WHEN :offset::text IS NULL THEN true
+        ELSE a.key > :offset
+        END
+ORDER BY a.key
+LIMIT 200000;
+
 --name: yesql-get-applications-by-created-time
 SELECT
   a.key,

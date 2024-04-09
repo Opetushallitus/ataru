@@ -1011,6 +1011,11 @@
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
+(defn- unwrap-hakurekisteri-person-info
+  [{:keys [key person_oid ssn]}]
+  {:oid       key
+   :personOid person_oid
+   :ssn       ssn})
 
 (def urheilija-fields-with-single-key [:keskiarvo
                                        :peruskoulu
@@ -1159,6 +1164,21 @@
                 (map unwrap-hakurekisteri-application))]
     (merge {:applications as}
            (when-let [a (first (drop 999 as))]
+             {:offset (:oid a)}))))
+
+(defn suoritusrekisteri-person-info
+  [haku-oid hakukohde-oids offset]
+  (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                                         (queries/yesql-suoritusrekisteri-person-info
+                                           {:haku_oid       haku-oid
+                                            :hakukohde_oids (some->> (seq hakukohde-oids)
+                                                                     to-array
+                                                                     (.createArrayOf (:connection connection) "varchar"))
+                                            :offset         offset}
+                                           {:connection connection}))
+                (map unwrap-hakurekisteri-person-info))]
+    (merge {:applications as}
+           (when-let [a (first (drop 199999 as))];todo, set a reasonable limit, in case 200000 is problematic somehow.
              {:offset (:oid a)}))))
 
 (defn suoritusrekisteri-applications-toinenaste
