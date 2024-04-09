@@ -28,6 +28,6 @@
                              :type  "update-person-info-job"}
    "clean-old-forms-job" {:handler clean-old-forms/clean-old-forms-job-step
                           :type  "clean-old-forms-job"
-                          :schedule "0 3 * * *"}
+                          :schedule "0 13 * * *"}
    (:type report-job) report-job
    (:type cleanup-job) cleanup-job})

@@ -21,7 +21,7 @@
                                                                            :delays [10000]})}}
    "start-automatic-eligibility-if-ylioppilas-job-job" {:handler automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
                                                         :type    "start-automatic-eligibility-if-ylioppilas-job-job"
-                                                        :schedule "0 4 * * *"}
+                                                        :schedule "0 14 * * *"}
    "tutkintojen-tunnustaminen-submit-job"              {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
                                                         :type    "tutkintojen-tunnustaminen-submit-job"}
    "tutkintojen-tunnustaminen-edit-job"                {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler
