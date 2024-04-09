@@ -1409,6 +1409,31 @@
                   modifiedAfter
                   offset))))
 
+      (api/POST "/suoritusrekisteri/henkilot" {session :session}
+        :summary "Personoid and hetu from applications"
+        :body-params [{hakuOid :- s/Str nil}
+                      {hakukohdeOids :- [s/Str] nil}
+                      {offset :- s/Str nil}]
+        :return {:applications            [ataru-schema/ApplicationPersonInfo]
+                 (s/optional-key :offset) s/Str}
+        (cond (every? nil? [hakuOid (seq hakukohdeOids)])
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications :edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (application-service/suoritusrekisteri-person-info
+                  application-service
+                  hakuOid
+                  hakukohdeOids
+                  offset))))
+
       (api/POST "/suoritusrekisteri/haku/:haku-oid/toinenaste" {session :session}
         :summary "Toisen asteen hakemukset for suoritusrekisteri"
         :path-params [haku-oid :- (api/describe s/Str "Haun OID")]
