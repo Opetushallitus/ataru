@@ -399,11 +399,12 @@
             :per-hakukohde)))
 
 (defn- followup-of-any? [form-field included-ids form-fields-by-id]
-  (let [previous-question-id (get form-field :followup-of)]
-    (if (nil? previous-question-id)
+  (let [previous-id (or (get form-field :children-of)
+                        (get form-field :followup-of))]
+    (if (nil? previous-id)
       false
-      (or (contains? included-ids previous-question-id)
-          (followup-of-any? (get form-fields-by-id previous-question-id)
+      (or (contains? included-ids previous-id)
+          (followup-of-any? (get form-fields-by-id previous-id)
                             included-ids
                             form-fields-by-id)))))
 
@@ -412,22 +413,23 @@
   (let [should-include?
         (fn [field]
           (let [candidate? (and (not (:exclude-from-answers field))
-                                (util/answerable? field))]
+                                (util/answerable? field))
+                hakukohde? (delay (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field)))
+                always? (answer-to-always-include? (:id field))]
             (and candidate?
                  (if ids-only?
                    (or (contains? included-ids (:id field))
-                       (followup-of-any? field included-ids form-fields-by-id))
-                   (let [always? (answer-to-always-include? (:id field))
-                         hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
-                     (or always?
-                         (and (not always?)
-                              (not skip-answers?)
-                              (or (and (empty? included-ids) hakukohde?)
-                                  (contains? included-ids (:id field))))))))))]
+                       (and (followup-of-any? field included-ids form-fields-by-id)
+                            @hakukohde?))
+                   (and (not (:per-hakukohde field))
+                        (not (is-per-hakukohde-followup? form-fields-by-id field))
+                        (or always?
+                            (and (not always?)
+                                 (not skip-answers?)
+                                 (or (and (empty? included-ids) @hakukohde?)
+                                     (contains? included-ids (:id field))))))))))]
     (->> form-fields
          (filter should-include?)
-         (filter #(not (:per-hakukohde %)))
-         (filter #(not (is-per-hakukohde-followup? form-fields-by-id %)))
          (map #(vector (:id %) (pick-header form-fields-by-id %))))))
 
 (defn- duplicate-header-per-hakukohde
