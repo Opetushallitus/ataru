@@ -936,8 +936,7 @@
                                              :en "EN: Tallenna todistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). "}
    :no-graduation-info                      {:fi "Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "
                                              :sv "Välj den här endast om du har avbrutit den grundläggande utbildningen.\n\nDu söker automatiskt via antagning enligt prövning."
-                                             :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}
-   })
+                                             :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}})
 
 (def base-education-cotinuous-admissions-module-texts
   {:section-title                           {:fi "Pohjakoulutuksesi"
@@ -951,8 +950,7 @@
                                              :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
    :base-education                          {:fi "Perusopetuksen oppimäärä"
                                              :sv "Den grundläggande utbildningens lärokurs"
-                                             :en "EN: Perusopetuksen oppimäärä"}
-   })
+                                             :en "EN: Perusopetuksen oppimäärä"}})
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
@@ -1704,11 +1702,11 @@
                                                               :sv "Alla identifikationer"
                                                               :en "All identifiers"}
    :excel-kasittelymerkinnat                                 {:fi "Käsittelymerkinnät"
-                                                              :sv "Käsittelymerkinnät"
-                                                              :en "Käsittelymerkinnät"}
+                                                              :sv "Behandlingsmarkeringar"
+                                                              :en "Processing notes"}
    :excel-hakemuksen-yleiset-tiedot                          {:fi "Hakemuksen yleiset tiedot"
-                                                              :sv "Hakemuksen yleiset tiedot"
-                                                              :en "Hakemuksen yleiset tiedot"}
+                                                              :sv "Allmänna uppgifter om ansökan"
+                                                              :en "General application information"}
    :excel-mode-ids-only                                      {:fi "Valitse excelin tiedot"
                                                               :sv "Valitse excelin tiedot"
                                                               :en "Valitse excelin tiedot"}
@@ -2449,8 +2447,8 @@
                                                               :sv "SV: Hakija on eidas-tunnistautunut."
                                                               :en "EN: Hakija on eidas-tunnistautunut."}
    :valittu                                                  {:fi "valittu"
-                                                              :sv "valittu"
-                                                              :en "valittu"}})
+                                                              :sv "valda"
+                                                              :en "selected"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2692,16 +2690,16 @@
                               :en "EN: Viimeksi muokattu"}
    :created-by               {:fi "Viimeinen muokkaaja"
                               :sv "Senast bearbetad av"
-                              :en "EN: Viimeinen muokkaaja"} 
+                              :en "EN: Viimeinen muokkaaja"}
    :application-modified     {:fi "Hakemuksen viimeisimmän muokkauksen aika"
-                              :sv "Hakemuksen viimeisimmän muokkauksen aika"
-                              :en "Hakemuksen viimeisimmän muokkauksen aika"}
+                              :sv "Tidpunkten för senaste bearbetning av ansökan"
+                              :en "Time of last modification"}
    :application-submitted    {:fi "Hakemuksen tallennusaika"
-                              :sv "Hakemuksen tallennusaika"
-                              :en "Hakemuksen tallennusaika"}
+                              :sv "Tidpunkten för när ansökan har sparats"
+                              :en "Time of application submission"}
    :application-state        {:fi "Hakemuksen tila"
                               :sv "Ansökans status"
-                              :en "EN: Hakemuksen tila"}
+                              :en "Application status"}
    :hakukohde-handling-state {:fi "Hakukohteen käsittelyn tila"
                               :sv "Status för behandling av ansökningsmålet"
                               :en "EN: Hakukohteen käsittelyn tila"}
@@ -2727,7 +2725,7 @@
                               :sv "Poäng"
                               :en "EN: Pisteet"}
    :student-number           {:fi "Oppijanumero"
-                              :sv "SV: Oppijanumero"
+                              :sv "Studentnummer"
                               :en "Student number"}
    :applicant-oid            {:fi "Hakijan henkilö-OID"
                               :sv "Sökandes person-OID"
@@ -2799,23 +2797,23 @@
   [email preferred-name]
   {:fi
    [:div.application__validation-error-dialog
-   [:div
-        [:p (if (not (string/blank? preferred-name))
-              (str "Hei " preferred-name "!")
-              "Hei!")]
-        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
-         [:strong "Olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+    [:div
+     [:p (if (not (string/blank? preferred-name))
+           (str "Hei " preferred-name "!")
+           "Hei!")]
+     [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+      [:strong "Olet jo lähettänyt hakemuksen"]
+      " tähän hakuun ja siksi et voi lähettää toista hakemusta.
          Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
-        [:p "Jos haluat "
-         [:strong "muuttaa hakemustasi"]
-         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+     [:p "Jos haluat "
+      [:strong "muuttaa hakemustasi"]
+      ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
          tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
-        [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
-         [:strong email]
-         " on varmasti oikein."]
-        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]]
+     [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
+      [:strong email]
+      " on varmasti oikein."]
+     [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]]
    :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
@@ -2880,8 +2878,7 @@
                            :en "The date of birth has to be in the format dd.mm.yyyy."}
    :email-simple          {:fi "Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
                            :sv "Din e-postadress är i fel form. E-postadressen ska anges i formen namn@adress.fi."
-                           :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}
-   })
+                           :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}})
 
 (defn person-info-validation-error [msg-key]
   (when (some? msg-key)
