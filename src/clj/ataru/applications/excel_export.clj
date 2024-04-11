@@ -399,7 +399,8 @@
             :per-hakukohde)))
 
 (defn- followup-of-any? [form-field included-ids form-fields-by-id]
-  (let [previous-question-id (get form-field :followup-of)]
+  (let [previous-question-id (or (get form-field :children-of)
+                                 (get form-field :followup-of))]
     (if (nil? previous-question-id)
       false
       (or (contains? included-ids previous-question-id)
