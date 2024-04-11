@@ -398,38 +398,39 @@
             (get form-fields-by-id)
             :per-hakukohde)))
 
-(defn- followup-of-any? [form-field included-ids form-fields-by-id]
-  (let [previous-question-id (or (get form-field :children-of)
-                                 (get form-field :followup-of))]
-    (if (nil? previous-question-id)
+(defn- followup-of-any? [form-field-or-answer included-ids form-fields-by-id]
+  (let [previous-id (or (get form-field-or-answer :children-of)
+                        (get form-field-or-answer :followup-of)
+                        (get form-field-or-answer :original-question)
+                        (get form-field-or-answer :original-followup))]
+    (if (nil? previous-id)
       false
-      (or (contains? included-ids previous-question-id)
-          (followup-of-any? (get form-fields-by-id previous-question-id)
+      (or (contains? included-ids previous-id)
+          (followup-of-any? (get form-fields-by-id previous-id)
                             included-ids
                             form-fields-by-id)))))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id included-ids ids-only? skip-answers? form-field-belongs-to]
-  (let [should-include?
-        (fn [field]
-          (let [candidate? (and (not (:exclude-from-answers field))
-                                (util/answerable? field))]
-            (and candidate?
-                 (if ids-only?
-                   (or (contains? included-ids (:id field))
-                       (followup-of-any? field included-ids form-fields-by-id))
-                   (let [always? (answer-to-always-include? (:id field))
-                         hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
-                     (or always?
-                         (and (not always?)
-                              (not skip-answers?)
-                              (or (and (empty? included-ids) hakukohde?)
-                                  (contains? included-ids (:id field))))))))))]
-    (->> form-fields
-         (filter should-include?)
-         (filter #(not (:per-hakukohde %)))
-         (filter #(not (is-per-hakukohde-followup? form-fields-by-id %)))
-         (map #(vector (:id %) (pick-header form-fields-by-id %))))))
+  (->> form-fields
+       (filter (fn [field]
+                 (let [candidate? (and (not (:exclude-from-answers field))
+                                       (util/answerable? field)
+                                       (not (:per-hakukohde field))
+                                       (not (is-per-hakukohde-followup? form-fields-by-id field)))
+                       hakukohde? (delay (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field)))
+                       always? (answer-to-always-include? (:id field))]
+                   (and candidate?
+                        (if ids-only?
+                          (or (contains? included-ids (:id field))
+                              (and (followup-of-any? field included-ids form-fields-by-id)
+                                   @hakukohde?))
+                          (or always?
+                              (and (not always?)
+                                   (not skip-answers?)
+                                   (or (and (empty? included-ids) @hakukohde?)
+                                       (contains? included-ids (:id field))))))))))
+       (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- duplicate-header-per-hakukohde
   [form-fields answer application]
@@ -458,13 +459,18 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id included-ids ids-only? skip-answers? applications]
+  [form-fields form-fields-by-id form-field-belongs-to included-ids ids-only? skip-answers? applications]
   (->> applications
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
                     (if ids-only?
-                      (not (contains? included-ids (:key %)))
+                      (let [hakukohde-oid (or (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid %))]
+                        (not (or (contains? included-ids (:key %))
+                                 (and
+                                  (followup-of-any? % included-ids form-fields-by-id)
+                                  ; Luodaan vastauksesta lomakkeen kenttää näyttävä objekti ja tarkistetaan sillä halutaanko se valita hakukohteen perusteella
+                                  (form-field-belongs-to {:belongs-to-hakukohteet (if hakukohde-oid [hakukohde-oid] nil)})))))
                       (and skip-answers?
                            (not (answer-to-always-include? (:key %)))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
@@ -498,6 +504,7 @@
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
+                                             form-field-belongs-to
                                              included-ids
                                              ids-only?
                                              skip-answers?

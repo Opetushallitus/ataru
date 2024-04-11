@@ -160,9 +160,9 @@
                                                                 :first-name  "Person-etunimi"}
                                 :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
                                                                 {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
-                                :answers                       [{:key   "first-name"
-                                                                 :label {:fi "Etunimi"}
-                                                                 :value "Lomake-etunimi"}
+                                :answers                       [{:key       "first-name"
+                                                                 :label     {:fi "Etunimi"}
+                                                                 :value     "Lomake-etunimi"}
                                                                 {:key       "form_field_1_0"
                                                                  :label     {:fi "Kysymys 4"}
                                                                  :value     "Vastaus 4"
