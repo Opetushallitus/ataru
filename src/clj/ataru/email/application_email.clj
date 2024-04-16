@@ -217,7 +217,8 @@
                                               (filter #(or (not (contains? answers-by-key (keyword %)))
                                                            (or (empty? (:value ((keyword %) answers-by-key)))
                                                                (and (coll? (:value ((keyword %) answers-by-key)))
-                                                                    (boolean (not-empty (filter empty? (:value ((keyword %) answers-by-key)))))))))
+                                                                    (boolean (not-empty (filter (fn [value] (and (some? value)
+                                                                                                                 (empty? value))) (:value ((keyword %) answers-by-key)))))))))
                                               set)
          attachments-without-answer      (->> flat-form-fields
                                               (filter #(and (contains? attachment-keys-without-answers (:id %))
