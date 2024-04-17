@@ -114,6 +114,17 @@
                                             :default-option "suomi"}
                           :metadata metadata}]})
 
+(def flat-form-with-question-group
+  [{:id          "G__2",
+    :label       {:fi "kenttä1", :sv ""},
+    :params      {:size "S" :question-group-id "1234"},
+    :validators  ["required"]
+    :fieldType   "singleChoice",
+    :options     [{:value "0",},
+                  {:value "1",}],
+    :fieldClass  "formField"
+    :metadata    metadata}])
+
 (deftest flattens-correctly
   (let [expected [{:id         "G__1",
                    :label      {:fi "osio1", :sv "Avsnitt namn"},
@@ -217,6 +228,15 @@
                     :valid  true
                     :label  {:fi "ulkokenttä", :sv ""}}}
            initial-answers))))
+
+(deftest correct-initial-value-for-single-choice-question-group-field
+  (let [initial-answers (create-initial-answers flat-form-with-question-group nil nil)]
+    (is (=
+          {:G__2 {:valid false,
+                  :value [nil],
+                  :values [nil],
+                  :label {:fi "kenttä1", :sv ""}}}
+          initial-answers))))
 
 (defn check-language-and-validity [initial-answers, lang, valid]
   (is (= {:language {:value  lang

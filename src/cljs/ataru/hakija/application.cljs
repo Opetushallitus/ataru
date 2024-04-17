@@ -135,9 +135,8 @@
             (let [required? (some #(contains? required-validators %)
                                   (:validators field))]
               [(keyword id) {:valid  (not required?)
-                             :value  [[nil]]
-                             :values [[{:value nil
-                                        :valid (not required?)}]]
+                             :value  [nil]
+                             :values [nil]
                              :label  label}])
 
             [{:id         id
