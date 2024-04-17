@@ -437,11 +437,14 @@
   (let [field (first (filter #(= (:id %) (or (:original-question answer) (:original-followup answer))) form-fields))
         hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
         get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))) hakukohteet)))
-        remove-oid-from-hakukohde (fn [hakukohde] (-> hakukohde
-                                                      (string/reverse)
-                                                      (string/split #"\(" 2)
-                                                      (last)
-                                                      (string/reverse)))
+        remove-oid-from-hakukohde (fn [hakukohde]
+                                    (-> hakukohde
+                                        (string/split #"^\(\d+\) ") ; Poistetaan numero alusta, jotta ei tule turhia duplikaatteja
+                                        (last)
+                                        (string/reverse)
+                                        (string/split #"\(" 2)
+                                        (last)
+                                        (string/reverse)))
         label (str (util/non-blank-val (:label field) [:fi :sv :en]) "\n" (remove-oid-from-hakukohde (get-hakukohde-for-answer answer)))]
     (vector (:key answer) label)))
 
