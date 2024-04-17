@@ -460,24 +460,26 @@
 
 (defn- headers-from-applications
   [form-fields form-fields-by-id form-field-belongs-to included-ids ids-only? skip-answers? applications]
-  (->> applications
-       (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
-       (flatten)
-       (remove #(or (contains? form-fields-by-id (:key %))
-                    (if ids-only?
-                      (let [hakukohde-oid (or (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid %))]
-                        (not (or (contains? included-ids (:key %))
-                                 (and
-                                  (followup-of-any? % included-ids form-fields-by-id)
-                                  ; Luodaan vastauksesta lomakkeen kenttää näyttävä objekti ja tarkistetaan sillä halutaanko se valita hakukohteen perusteella
-                                  (form-field-belongs-to {:belongs-to-hakukohteet (if hakukohde-oid [hakukohde-oid] nil)})))))
-                      (and skip-answers?
-                           (not (answer-to-always-include? (:key %)))))))
-       (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
-                           (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
-                           (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
-       (distinct)
-       (sort (application-header-comparator form-fields form-fields-by-id))))
+  (let [indexed-answers (->> applications
+                             (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
+                             (flatten))
+        answers-by-id (into {} (map (fn [answer] [(:key answer) answer]) indexed-answers))]
+    (->> indexed-answers
+         (remove #(or (contains? form-fields-by-id (:key %))
+                      (if ids-only?
+                        (let [hakukohde-oid (or (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid %))]
+                          (not (or (contains? included-ids (:key %))
+                                   (and
+                                    (followup-of-any? % included-ids (merge form-fields-by-id answers-by-id))
+                                    ; Luodaan vastauksesta lomakkeen kenttää näyttävä objekti ja tarkistetaan sillä halutaanko se valita hakukohteen perusteella
+                                    (form-field-belongs-to {:belongs-to-hakukohteet (if hakukohde-oid [hakukohde-oid] nil)})))))
+                        (and skip-answers?
+                             (not (answer-to-always-include? (:key %)))))))
+         (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
+                             (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
+                             (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
+         (distinct)
+         (sort (application-header-comparator form-fields form-fields-by-id)))))
 
 (defn headers-from-meta-fields [included-ids ids-only? lang]
   (->> (if ids-only? application-meta-fields old-application-meta-fields)
