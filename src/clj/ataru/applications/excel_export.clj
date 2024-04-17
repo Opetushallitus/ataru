@@ -433,14 +433,16 @@
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- duplicate-header-per-hakukohde
-  [form-fields answer application]
+  [form-fields answer application ids-only?]
   (let [field (first (filter #(= (:id %) (or (:original-question answer) (:original-followup answer))) form-fields))
         hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
         get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))) hakukohteet)))
         remove-oid-from-hakukohde (fn [hakukohde]
-                                    (-> hakukohde
-                                        (string/split #"^\(\d+\) ") ; Poistetaan numero alusta, jotta ei tule turhia duplikaatteja
-                                        (last)
+                                    (-> (if ids-only?
+                                          (-> hakukohde
+                                              (string/split #"^\(\d+\) ") ; Poistetaan numero alusta, jotta ei tule turhia duplikaatteja. Vanhassa moodissa säilytetään ennallaan.
+                                              (last))
+                                          hakukohde)
                                         (string/reverse)
                                         (string/split #"\(" 2)
                                         (last)
@@ -479,7 +481,7 @@
                         (and skip-answers?
                              (not (answer-to-always-include? (:key %)))))))
          (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
-                             (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
+                             (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)) ids-only?)
                              (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
          (distinct)
          (sort (application-header-comparator form-fields form-fields-by-id)))))
