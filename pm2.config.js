@@ -8,6 +8,10 @@ const virkailijaConfig =
 const hakijaConfig =
   process.env['HAKIJA_CONFIG'] || '../ataru-secrets/hakija-local-dev.edn'
 
+const virkailijaReloaded = process.env['VIRKAILIJARELOADED'] || 'false'
+
+const hakijaReloaded = process.env['HAKIJARELOADED'] || 'false'
+
 module.exports = {
   apps: [
     {
@@ -38,6 +42,7 @@ module.exports = {
       env: {
         APP: 'ataru-hakija',
         CONFIG: hakijaConfig,
+        RELOADED: hakijaReloaded,
       },
       cwd: __dirname,
       log_file: 'logs/pm2/hakija-dev.log',
@@ -59,6 +64,7 @@ module.exports = {
       env: {
         APP: 'ataru-editori',
         CONFIG: virkailijaConfig,
+        RELOADED: virkailijaReloaded,
       },
       cwd: __dirname,
       log_file: 'logs/pm2/virkailija-dev.log',

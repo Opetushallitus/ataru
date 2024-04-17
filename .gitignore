@@ -39,3 +39,4 @@ npm-debug.log*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.testcontainers.properties
