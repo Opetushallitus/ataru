@@ -23,11 +23,13 @@
                     :checked true}}
            (get-excel-checkbox-filter-defs [{:id "asdf" :fieldClass "formField"}]
                                            stub-true))))
+  
   (testing "Hide hidden field"
     (is (= {}
            (get-excel-checkbox-filter-defs [{:id "asdf"
                                              :fieldClass "formField"
                                              :hidden true}] stub-true))))
+  
   (testing "Hide top-level question group with only one infoElement child"
     (is (= {}
            (get-excel-checkbox-filter-defs [{:id "asdf"
@@ -67,6 +69,7 @@
                                              :belongs-to-hakukohteet ["hakukohde.oid.2"]
                                              :fieldClass "formField"}]
                                            (create-belongs-to "hakukohde.oid.1" nil)))))
+  
   (testing "Hide top-level question which doesn't belong to hakukohderyhma"
     (is (= {"eka" {:id "eka"
                    :index 0

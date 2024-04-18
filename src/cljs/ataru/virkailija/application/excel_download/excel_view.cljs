@@ -75,6 +75,7 @@
 
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key (subscribe [:application/selected-form-key])
+        virkailija-lang (subscribe [:editor/virkailija-lang])
         filters-initializing? @(subscribe [:application/excel-request-filters-initializing?])
         filters-need-initialization? @(subscribe [:application/excel-request-filters-need-initialization? @form-key selected-hakukohde selected-hakukohderyhma])]
     (when filters-need-initialization?
@@ -93,7 +94,7 @@
                       ^{:key (str (:id section) "_section")}
                       [excel-accordion
                        (:id section)
-                       (get-filter-trans section :fi)
+                       (get-filter-trans section @virkailija-lang)
                        (:child-ids section)
                        [:div.application-handling__excel-accordion-checkbox-col
                         (map (fn [child-id]
@@ -101,7 +102,7 @@
                                  ^{:key (str child-id "_checkbox")}
                                  [excel-checkbox-control
                                   child-id
-                                  (get-filter-trans sub-filter :fi)]))
+                                  (get-filter-trans sub-filter @virkailija-lang)]))
                              (:child-ids section))]]))))]])))
 
 (defn- excel-kirjoita-tunnisteet-content

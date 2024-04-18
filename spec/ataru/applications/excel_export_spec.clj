@@ -399,7 +399,7 @@
                                              ["Etunimi" "Person-etunimi"]
                                              ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
- (it "should include no applications when ids-only?=true and included-ids empty"
+ (it "should include nothing when ids-only?=true and included-ids empty"
      (with-excel-workbook
        (export-test-excel [fixtures/application-for-hakukohde]
                           {:ids-only? true
