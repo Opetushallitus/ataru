@@ -412,35 +412,38 @@
 
 (defn- headers-from-form
   [form-fields form-fields-by-id included-ids ids-only? skip-answers? form-field-belongs-to]
-  (->> form-fields
-       (filter (fn [field]
-                 (let [candidate? (and (not (:exclude-from-answers field))
-                                       (util/answerable? field)
-                                       (not (:per-hakukohde field))
-                                       (not (is-per-hakukohde-followup? form-fields-by-id field)))
-                       hakukohde? (delay (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field)))
-                       always? (answer-to-always-include? (:id field))]
-                   (and candidate?
-                        (if ids-only?
-                          (or (contains? included-ids (:id field))
-                              (and (followup-of-any? field included-ids form-fields-by-id)
-                                   @hakukohde?))
-                          (or always?
-                              (and (not always?)
-                                   (not skip-answers?)
-                                   (or (and (empty? included-ids) @hakukohde?)
-                                       (contains? included-ids (:id field))))))))))
-       (map #(vector (:id %) (pick-header form-fields-by-id %)))))
+  (let [should-include?
+        (fn [field]
+          (let [candidate? (and (not (:exclude-from-answers field))
+                                (util/answerable? field)
+                                (not (:per-hakukohde field))
+                                (not (is-per-hakukohde-followup? form-fields-by-id field)))
+                hakukohde? (delay (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field)))
+                always? (answer-to-always-include? (:id field))]
+            (and candidate?
+                 (if ids-only?
+                   (or (contains? included-ids (:id field))
+                       (and (followup-of-any? field included-ids form-fields-by-id)
+                            @hakukohde?))
+                   (or always?
+                       (and (not always?)
+                            (not skip-answers?)
+                            (or (and (empty? included-ids) @hakukohde?)
+                                (contains? included-ids (:id field)))))))))]
+    (->> form-fields
+         (filter should-include?)
+         (map #(vector (:id %) (pick-header form-fields-by-id %))))))
 
 (defn- duplicate-header-per-hakukohde
-  [form-fields answer application ids-only?]
+  [form-fields answer application strip-priority-index?]
   (let [field (first (filter #(= (:id %) (or (:original-question answer) (:original-followup answer))) form-fields))
         hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
         get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))) hakukohteet)))
         remove-oid-from-hakukohde (fn [hakukohde]
-                                    (-> (if ids-only?
+                                    ; Poistetaan hakutoiveen järjestysnumero alusta, jotta saadaan karsittua myöhemmin distinct:llä ylimääräiset sarakkeet.
+                                    (-> (if strip-priority-index?
                                           (-> hakukohde
-                                              (string/split #"^\(\d+\) ") ; Poistetaan numero alusta, jotta ei tule turhia duplikaatteja. Vanhassa moodissa säilytetään ennallaan.
+                                              (string/split #"^\(\d+\) ")
                                               (last))
                                           hakukohde)
                                         (string/reverse)
