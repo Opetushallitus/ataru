@@ -61,6 +61,7 @@
        :hakija-base-path "{{ataru_hakija_log_path}}"}
  :siirtotiedostot {:s3-bucket "{{ataru_siirtotiedosto_s3_bucket}}"
                    :aws-region "{{ataru_siirtotiedosto_aws_region}}"
+                   :transferFileTargetRoleArn "{{ataru_siirtotiedosto_transfer_file_target_role}}"
                    :forms-page-size "{{ataru_siirtotiedosto_forms_page_size | default('500')}}"
                    :applications-page-size "{{ataru_siirtotiedosto_applications_page_size | default('25000')}}"}
  :urls {:virkailija-host "{{ataru_virkailija_host}}"

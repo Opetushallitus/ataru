@@ -230,7 +230,8 @@
 
     :siirtotiedosto-client (new SiirtotiedostoPalvelu
                                 (-> config :siirtotiedostot :aws-region)
-                                (-> config :siirtotiedostot :s3-bucket))
+                                (-> config :siirtotiedostot :s3-bucket)
+                                (-> config :siirtotiedostot :transferFileTargetRoleArn))
 
     :application-service (component/using
                            (application-service/new-application-service)

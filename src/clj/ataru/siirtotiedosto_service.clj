@@ -51,7 +51,7 @@
   (let [json (json/generate-string applications)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count applications) "applications as json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream 2)
+    (try (.saveSiirtotiedosto client "ataru" "applications" "" stream 2)
          true
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))
@@ -61,7 +61,7 @@
   (let [json (json/generate-string forms)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count forms) "forms as json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream 2)
+    (try (.saveSiirtotiedosto client "ataru" "forms" "" stream 2)
          true
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))
