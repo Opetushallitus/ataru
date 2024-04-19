@@ -18,7 +18,7 @@
    (:kohdejoukko-uri (tarjonta/get-haku tarjonta-service haku-oid))
    "haunkohdejoukko_12#"))
 
-(defn automatic-payment-obligation-job-step
+(defn automatic-payment-obligation-job-handler
   [{:keys [person-oid]}
    {:keys [person-service tarjonta-service henkilo-cache]}]
   (cache/remove-from henkilo-cache person-oid)
@@ -38,8 +38,7 @@
              (:key application)
              hakukohde-oid
              "payment-obligation"
-             (if finnish-nationality? "not-obligated" "unreviewed")))))))
-  {:transition {:id :final}})
+             (if finnish-nationality? "not-obligated" "unreviewed"))))))))
 
 (defn start-automatic-payment-obligation-job
   [job-runner person-oid]

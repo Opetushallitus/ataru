@@ -1,6 +1,5 @@
 (ns ataru.virkailija.background-jobs.virkailija-jobs
-  (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
-            [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
+  (:require [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.background-job.email-job :as email-job]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-service :as information-request-service]
@@ -8,7 +7,8 @@
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]))
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
+            [ataru.background-job.job :refer [report-job cleanup-job]]))
 
 (def job-definitions
   {(:type email-job/job-definition)                      email-job/job-definition
@@ -16,17 +16,18 @@
    (:type harkinnanvaraisuus-job/job-definition)         harkinnanvaraisuus-job/job-definition
    (:type harkinnanvaraisuus-job/recheck-job-definition) harkinnanvaraisuus-job/recheck-job-definition
    (:type harkinnanvaraisuus-email-job/job-definition)   harkinnanvaraisuus-email-job/job-definition
-   "automatic-eligibility-if-ylioppilas-job"             {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
-                                                          :type  "automatic-eligibility-if-ylioppilas-job"}
-   "automatic-payment-obligation-job"                    {:steps {:initial automatic-payment-obligation/automatic-payment-obligation-job-step}
+   "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                           :type  "automatic-payment-obligation-job"}
-   "mass-information-request-job"                        {:steps {:initial information-request-service/mass-information-request-job-step}
+   "mass-information-request-job"                        {:handler information-request-service/mass-information-request-job-step
                                                           :type  "mass-information-request-job"}
-   "tutkintojen-tunnustaminen-review-state-changed-job"  {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step}
+   "tutkintojen-tunnustaminen-review-state-changed-job"  {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step
                                                           :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
-   "tutkintojen-tunnustaminen-information-request-sent-job" {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-information-request-sent-job-step}
-                                                             :type "tutkintojen-tunnustaminen-information-request-sent-job"}
-   "update-person-info-job"                              {:steps {:initial person-integration/update-person-info-job-step}
-                                                          :type  "update-person-info-job"}
-   "clean-old-forms-job"                                 {:steps {:initial clean-old-forms/clean-old-forms-job-step}
-                                                          :type  "clean-old-forms-job"}})
+   "tutkintojen-tunnustaminen-information-request-sent-job" {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-information-request-sent-job-step
+                                                             :type  "tutkintojen-tunnustaminen-information-request-sent-job"}
+   "update-person-info-job" {:handler person-integration/update-person-info-job-handler
+                             :type  "update-person-info-job"}
+   "clean-old-forms-job" {:handler clean-old-forms/clean-old-forms-job-step
+                          :type  "clean-old-forms-job"
+                          :schedule "0 13 * * *"}
+   (:type report-job) report-job
+   (:type cleanup-job) cleanup-job})

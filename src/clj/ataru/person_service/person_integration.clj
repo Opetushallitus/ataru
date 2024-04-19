@@ -94,8 +94,7 @@
       (log/info "Not adding applicant from application"
                 application-id
                 "to oppijanumerorekisteri")
-      (upsert-and-log-person job-runner person-service application-id application))
-    {:transition {:id :final}}))
+      (upsert-and-log-person job-runner person-service application-id application))))
 
 (defn- update-person-info-as-in-person
   [person-oid person]
@@ -125,15 +124,14 @@
         (log/info "Updated person info of" person-oid
                   "to that on application")))))
 
-(defn update-person-info-job-step
+(defn update-person-info-job-handler
   [{:keys [person-oid]}
    {:keys [henkilo-cache person-service]}]
-  (update-person-info henkilo-cache person-service person-oid)
-  {:transition {:id :final}})
+  (update-person-info henkilo-cache person-service person-oid))
 
 (def job-type (str (ns-name *ns*)))
 
-(def job-definition {:steps {:initial upsert-person}
+(def job-definition {:handler upsert-person
                      :type  job-type})
 
 (defn- parse-henkilo-modified-message

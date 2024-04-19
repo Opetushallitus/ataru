@@ -15,7 +15,10 @@
             [ataru.db.db :as db]
             [ataru.config.core :refer [config]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-            [ataru.person-service.person-service :as person-service]))
+            [ataru.person-service.person-service :as person-service]
+            [clojure.java.jdbc :as jdbc]
+            [chime.core :as chime])
+  (:import java.time.Instant))
 
 (def MAXIMUM_PROCESSES_TO_HANDLE 1000)
 (def DAYS_UNTIL_NEXT_RECHECK (get-in config [:harkinnanvaraisuus :recheck-delay-in-days] 1))
@@ -163,9 +166,9 @@
               (boolean (first (filter #(= application-key (:key %)) applications-not-yksiloity))))
           application-keys))
 
-(defn check-harkinnanvaraisuus-step
+(defn check-harkinnanvaraisuus-handler
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service tarjonta-service person-service] :as job-runner}]
-  (log/debug "Check harkinnanvaraisuus step starting")
+  (log/info "Check harkinnanvaraisuus step starting")
   (let [now       (time/now)
         processes (store/fetch-unprocessed-harkinnanvaraisuus-processes)
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
@@ -198,12 +201,9 @@
     (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
     (handle-yksiloimattomat-processes applications-not-yksiloity now)
-    (log/debug "Check harkinnanvaraisuus step finishing")
-    {:transition      {:id :to-next :step :initial}
-     :updated-state   {:last-run-long (coerce/to-long now)}
-     :next-activation (time/plus now (time/minutes 15))}))
+    (log/info "Check harkinnanvaraisuus step finishing")))
 
-(defn recheck-harkinnanvaraisuus-step
+(defn recheck-harkinnanvaraisuus-handler
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service person-service] :as job-runner}]
   (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
@@ -211,9 +211,7 @@
                                                                         (time/minus (time/days DAYS_UNTIL_NEXT_RECHECK))
                                                                         (time/with-time-at-start-of-day)
                                                                         (time/plus (time/hours 22))))
-        next-activation (if (< (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
-                          (time/with-time-at-start-of-day (time/plus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
-                          (time/plus now (time/minutes 1)))
+        processed-all (<= (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
         applications-to-check (->> processes-to-check
@@ -251,12 +249,16 @@
                    " applications in "
                    (- (coerce/to-long (time/now)) (coerce/to-long now))
                    " ms"))
-    {:transition      {:id :to-next :step :initial}
-     :updated-state   {:last-run-long (coerce/to-long now)}
-     :next-activation next-activation}))
+    (when-not processed-all
+      (chime/chime-at [(.plusSeconds (Instant/now) 60)]
+                      (fn [_]
+                        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                                  (job/start-job job-runner connection "harkinnanvaraisuus-recheck" nil)))))))
 
-(def job-definition {:steps {:initial check-harkinnanvaraisuus-step}
-                     :type  "harkinnanvaraisuus-check"})
+(def job-definition {:handler check-harkinnanvaraisuus-handler
+                     :type    "harkinnanvaraisuus-check"
+                     :schedule "*/15 * * * *"})
 
-(def recheck-job-definition {:steps {:initial recheck-harkinnanvaraisuus-step}
-                             :type "harkinnanvaraisuus-recheck"})
+(def recheck-job-definition {:handler recheck-harkinnanvaraisuus-handler
+                             :type    "harkinnanvaraisuus-recheck"
+                             :schedule "0 12 * * *"})

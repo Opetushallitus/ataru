@@ -6,7 +6,7 @@
             [ataru.db.db :as db]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :refer [check-harkinnanvaraisuus-step recheck-harkinnanvaraisuus-step]]
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :refer [check-harkinnanvaraisuus-handler recheck-harkinnanvaraisuus-handler]]
             [ataru.applications.application-store :as application-store]
             [clj-time.core :as time]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
@@ -110,7 +110,7 @@
 
 (defn- init-with-check [application runner]
   (init application)
-  (check-harkinnanvaraisuus-step {} runner)
+  (check-harkinnanvaraisuus-handler {} runner)
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (->> (jdbc/update! conn :harkinnanvaraisuus_process {:last_checked (time/minus (time/now) (time/days 5))} ["last_checked is not null"]))))
 
@@ -124,7 +124,7 @@
                     (it "skips check if haku is not open"
                         (init (create-application))
                         (let [ops (->MockOhjausparametritServiceWithPast)]
-                          (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "skips check if pohjakoulutus is ulkomailla suoritettu"
@@ -133,7 +133,7 @@
                                                    :value "0"
                                                    :fieldType "singleChoice"}]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
-                          (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "skips check if pohjakoulutus is järjestetty toiminta-alueittain"
@@ -142,19 +142,19 @@
                                                    :value "3"
                                                    :fieldType "singleChoice"}]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
-                          (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "skips check if no lukio or ammatillinen hakukohteita"
                         (init (assoc (create-application) :hakukohde ["1.2.246.562.20.00000000000000024372"]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
-                          (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "checks application"
                         (init (create-application))
                         (let [ops (->MockOhjausparametritServiceWithFuture)
-                              _   (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                               process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -166,7 +166,7 @@
                                                     :value "7"
                                                     :fieldType "singleChoice"}]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)
-                              _   (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service harvlkp :person-service fps})
+                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service harvlkp :person-service fps})
                               process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
@@ -174,7 +174,7 @@
 
                     (it "checks application and sets harkinnanvarainen due to result from valintalaskentakoostepalvelu-servie"
                         (init (create-application))
-                        (check-harkinnanvaraisuus-step {} (runner-with-deps harvlkp))
+                        (check-harkinnanvaraisuus-handler {} (runner-with-deps harvlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
@@ -182,7 +182,7 @@
 
                     (it "checks yksiloimaton application and does not use valintalaskentakoostepalvelu-servie"
                         (init (assoc (create-application) :person-oid "1.2.3.4.5.6"))
-                        (check-harkinnanvaraisuus-step {} (runner-with-deps harvlkp))
+                        (check-harkinnanvaraisuus-handler {} (runner-with-deps harvlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -193,7 +193,7 @@
                                                     :label {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
                                                     :value "7"
                                                     :fieldType "singleChoice"}]))
-                        (check-harkinnanvaraisuus-step {} (runner-with-deps vlkp))
+                        (check-harkinnanvaraisuus-handler {} (runner-with-deps vlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -205,32 +205,22 @@
                                                     :value "7"
                                                     :fieldType "singleChoice"}])
                                       :person-oid "1.2.3.4.5.6"))
-                        (check-harkinnanvaraisuus-step {} (runner-with-deps vlkp))
+                        (check-harkinnanvaraisuus-handler {} (runner-with-deps vlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
-                          (should= false (nil? (:last_checked process)))))
-
-                    (it "sets next check 15 minutes in the future"
-                        (let [now (time/now)
-                              ops (->MockOhjausparametritServiceWithFuture)
-                              _ (init (create-application))
-                              resp (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
-                              next-activation (:next-activation resp)
-                              future (time/minus (time/plus now (time/minutes 15)) (time/seconds 1))]
-                          (should= true (time/after? next-activation future))
-                          (should= false (time/after? next-activation (time/plus future (time/minutes 2)))))))
+                          (should= false (nil? (:last_checked process))))))
 
           (describe "recheck-harkinnanvaraisuus-step"
                     (it "skips recheck if haku is not open"
                         (init-with-check (create-application) (runner-with-deps vlkp))
                         (let [ops (->MockOhjausparametritServiceWithPast)]
-                          (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (recheck-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "rechecks application and sets harkinnanvarainen due to result from valintalaskentakoostepalvelu-servie"
                         (init-with-check (create-application) (runner-with-deps harvlkp))
-                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps harvlkp))
+                        (recheck-harkinnanvaraisuus-handler {} (runner-with-deps harvlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
@@ -238,7 +228,7 @@
 
                     (it "rechecks yksiloimaton application and does not use valintalaskentakoostepalvelu-servie"
                         (init-with-check (assoc (create-application) :person-oid "1.2.3.4.5.6") (runner-with-deps harvlkp))
-                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps harvlkp))
+                        (recheck-harkinnanvaraisuus-handler {} (runner-with-deps harvlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -249,7 +239,7 @@
                                                     :label {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
                                                     :value "7"
                                                     :fieldType "singleChoice"}]) (runner-with-deps harvlkp))
-                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps vlkp))
+                        (recheck-harkinnanvaraisuus-handler {} (runner-with-deps vlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -264,18 +254,8 @@
                                   :person-oid
                                   "1.2.3.4.5.6")
                           (runner-with-deps harvlkp))
-                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps vlkp))
+                        (recheck-harkinnanvaraisuus-handler {} (runner-with-deps vlkp))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
-                          (should= false (nil? (:last_checked process)))))
-
-                    (it "sets next check 1 days in the future"
-                        (let [now (time/now)
-                              ops (->MockOhjausparametritServiceWithFuture)
-                              _ (init-with-check (create-application) (runner-with-deps vlkp))
-                              resp (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
-                              next-activation (:next-activation resp)
-                              future (time/minus (time/with-time-at-start-of-day (time/plus now (time/days 1))) (time/seconds 1))]
-                          (should= true (time/after? next-activation future))
-                          (should= false (time/after? next-activation (time/plus future (time/minutes 2))))))))
+                          (should= false (nil? (:last_checked process)))))))
