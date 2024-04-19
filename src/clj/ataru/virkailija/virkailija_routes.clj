@@ -498,14 +498,15 @@
         :path-params [henkilo-oid :- String]
         :query-params [haku-oid :- String
                        hakemus-datetime :- String]
-        :summary "Returns opiskelija information from suoritusrekisteri"
-        :return ataru-schema/OpiskelijaResponse
-        (let [opiskelija (virkailija-application-service/get-opiskelija henkilo-oid haku-oid hakemus-datetime
-                                                       koodisto-cache tarjonta-service organization-service
-                                                       ohjausparametrit-service person-service suoritus-service)]
-          (if opiskelija
-            (response/ok opiskelija)
-            (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)}))))
+        :summary "Returns opiskelijan luokkatieto information from suoritusrekisteri"
+        :return ataru-schema/OpiskelijaLuokkatietoResponse
+        (let [luokkatieto (virkailija-application-service/get-opiskelijan-luokkatieto
+                            henkilo-oid haku-oid hakemus-datetime
+                            koodisto-cache tarjonta-service organization-service
+                            ohjausparametrit-service person-service suoritus-service)]
+          (if luokkatieto
+            (response/ok luokkatieto)
+            (response/not-found {:error (str "Opiskelijan luokkatieto information not found for henkilo-oid " henkilo-oid)}))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
