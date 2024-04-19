@@ -20,14 +20,14 @@
 
 ; In case of peruskoulun jälkeisen koulutuksen yhteishaku, it's specified
 ; that lähtökoulu information should be based on whatever school the student
-; was in on 1th of June of the application year. In other applications,
+; was in up to 1st of June of the application year. In other applications,
 ; we use application end date.
-(defn- get-lahtokoulu-cutoff-timestamp
+(defn get-lahtokoulu-cutoff-timestamp
   [hakuvuosi tarjonta-info]
   (let [haku-end (get-in tarjonta-info [:tarjonta :hakuaika :end])
-        lahtokoulu-yhteishaku-cutoff-date (time/date-time hakuvuosi 1 6)]
-    (if (haku/toisen-asteen-yhteishaku? tarjonta-info)
-      (coerce/to-long lahtokoulu-yhteishaku-cutoff-date)
+        lahtokoulu-yhteishaku-cutoff-date (time/date-time hakuvuosi 6 1)]
+    (if (haku/toisen-asteen-yhteishaku? (:tarjonta tarjonta-info))
+      (coerce/to-timestamp lahtokoulu-yhteishaku-cutoff-date)
       haku-end)))
 
 (defn get-opiskelija
