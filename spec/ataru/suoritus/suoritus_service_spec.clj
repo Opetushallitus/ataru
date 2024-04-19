@@ -72,7 +72,7 @@
                     (spec)))
 
           (it "returns most recently started student class data filtered by luokkatasot when no cutoff date specified"
-              (let [data (suoritus-service/opiskelija service test-henkilo-oid [test-year] test-luokkatasot nil)]
+              (let [data (suoritus-service/opiskelijan-luokkatieto service test-henkilo-oid [test-year] test-luokkatasot nil)]
                 (should= {:oppilaitos-oid "1.1.111.111.111.111"
                           :luokka "TELMA"
                           :luokkataso "TELMA"
@@ -81,7 +81,7 @@
                          data)))
 
           (it "returns student class data that is ongoing on cutoff date"
-              (let [data (suoritus-service/opiskelija service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2023-03-02T21:00:00.000Z"))]
+              (let [data (suoritus-service/opiskelijan-luokkatieto service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2023-03-02T21:00:00.000Z"))]
                 (should= {:oppilaitos-oid "1.2.222.222.222.222"
                           :luokka "9E"
                           :luokkataso "9"
@@ -92,7 +92,7 @@
           (it "returns latest ongoing student class data by start date on cutoff date"
               (with-redefs [suoritus-client/opiskelijat (stub :opiskelijat
                                                               {:return test-client-response-overlapping})]
-                (let [data (suoritus-service/opiskelija service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2023-03-02T21:00:00.000Z"))]
+                (let [data (suoritus-service/opiskelijan-luokkatieto service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2023-03-02T21:00:00.000Z"))]
                   (should= {:oppilaitos-oid "1.4.444.444.444.444"
                             :luokka "TELMA"
                             :luokkataso "TELMA"
@@ -101,6 +101,6 @@
                            data))))
 
           (it "doesn't return student class data if nothing was ongoing on cutoff date"
-              (let [data (suoritus-service/opiskelija service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2019-08-02T21:00:00.000Z"))]
+              (let [data (suoritus-service/opiskelijan-luokkatieto service test-henkilo-oid [test-year] test-luokkatasot (str->timestamp "2019-08-02T21:00:00.000Z"))]
                 (should= nil
                          data))))
