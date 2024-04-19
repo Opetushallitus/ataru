@@ -30,7 +30,7 @@
       (coerce/to-timestamp lahtokoulu-yhteishaku-cutoff-date)
       haku-end)))
 
-(defn get-opiskelija
+(defn get-opiskelijan-luokkatieto
   [henkilo-oid haku-oid hakemus-datetime koodisto-cache tarjonta-service
    organization-service ohjausparametrit-service person-service suoritus-service]
   (let [hakuvuosi   (->> hakemus-datetime
