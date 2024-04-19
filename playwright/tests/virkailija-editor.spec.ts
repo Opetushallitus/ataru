@@ -526,5 +526,8 @@ test.describe('Editori', () => {
         formKey: lomakkeen2Avain,
       },
     })
+
+    await page.goto('/lomake-editori/editor/' + lomakkeenAvain)
+    await clickRemoveAndConfirm(lomakeosio)
   })
 })
