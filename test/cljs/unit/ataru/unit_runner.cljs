@@ -19,6 +19,7 @@
             [ataru.collections-test]
             [ataru.hakija.handlers-util-test]
             [ataru.application-common.hakukohde-specific-questions-test]
+            [ataru.application-common.application-field-common-test]
             [ataru.hakija.form-tools-test]
             [ataru.liitteet-test]
             [ataru.virkailija.application.excel-download.excel-utils-test]))
@@ -42,6 +43,7 @@
            'ataru.collections-test
            'ataru.hakija.handlers-util-test
            'ataru.application-common.hakukohde-specific-questions-test
+           'ataru.application-common.application-field-common-test
            'ataru.hakija.form-tools-test
            'ataru.liitteet-test
            'ataru.virkailija.application.excel-download.excel-utils-test)
