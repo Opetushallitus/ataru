@@ -1571,11 +1571,15 @@
                             :content
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
-                            flatten-application-answers)]
+                            flatten-application-answers)
+        application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
+        application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])]
   (-> application
-      (dissoc :content)
+      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
+      (assoc :hakukohdeReviews application-hakukohde-reviews)
+      (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn siirto-applications [hakukohde-oid application-keys]
