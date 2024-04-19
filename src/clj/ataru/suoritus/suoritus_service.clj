@@ -20,7 +20,7 @@
   (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
-  (opiskelija [this henkilo-oid vuodet luokkatasot cutoff-timestamp]))
+  (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot cutoff-timestamp]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
@@ -43,7 +43,7 @@
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-luokat-cache cache-key)))
-  (opiskelija [_ henkilo-oid vuodet luokkatasot cutoff-timestamp]
+  (opiskelijan-luokkatieto [_ henkilo-oid vuodet luokkatasot cutoff-timestamp]
               ; If there's a cutoff timestamp given, only consider luokka data still ongoing on that date.
               (let [cutoff-fn (fn [opiskelija]
                                 (let [start-date (coerce/from-string (:alkupaiva opiskelija))

@@ -47,7 +47,7 @@
         cutoff-timestamp (get-lahtokoulu-cutoff-timestamp hakuvuosi tarjonta-info)
         linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
         aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-        opiskelijat (map #(suoritus-service/opiskelija suoritus-service % [hakuvuosi] luokkatasot cutoff-timestamp)
+        opiskelijat (map #(suoritus-service/opiskelijan-luokkatieto suoritus-service % [hakuvuosi] luokkatasot cutoff-timestamp)
                          aliases)]
     (when-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
       (let [[organization] (organization-service/get-organizations-for-oids
