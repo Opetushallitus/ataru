@@ -63,18 +63,44 @@ const componentToolbar = (page: Page | Locator) => {
   return page.getByTestId('component-toolbar')
 }
 
+const componentSubformToolbar = (page: Page | Locator) => {
+  return page.getByTestId('component-subform-toolbar')
+}
+
 const clickComponentToolbar = async (
   loc: Page | Locator,
   component: string
 ) => {
   const toolbar = componentToolbar(loc)
   await toolbar.hover()
-  await page.getByTestId('component-toolbar-' + component).click()
+  await toolbar.getByTestId('component-toolbar-' + component).click()
+}
+
+const clickSubComponentToolbar = async (
+  loc: Page | Locator,
+  component: string
+) => {
+  const toolbar = componentSubformToolbar(loc)
+  await toolbar.hover()
+  await toolbar.getByTestId('component-toolbar-' + component).click()
 }
 
 const clickRemoveAndConfirm = async (component: Locator) => {
   await component.locator('.editor-form__component-button').nth(2).click()
   await component.locator('.editor-form__component-button--confirm').click()
+}
+
+const getInputs = (page: Page, metaClass: string = '') => {
+  return page.locator(
+    '.editor-form__panel-container input:not(#editor-form__copy-question-id-container)' +
+      metaClass
+  )
+}
+
+const getComponentButtons = (page: Page, metaClass: string = '') => {
+  return page.locator(
+    '.editor-form__panel-container .editor-form__component-button' + metaClass
+  )
 }
 
 test.describe('Editori', () => {
@@ -185,6 +211,7 @@ test.describe('Editori', () => {
     await clickRemoveAndConfirm(textarea)
     await expect(textarea).not.toBeVisible()
   })
+
   test('lisää pudotusvalikko', async () => {
     await clickComponentToolbar(page, 'dropdown')
     const dropdown = page.getByTestId('editor-form__dropdown-component-wrapper')
@@ -251,7 +278,11 @@ test.describe('Editori', () => {
     await expect(
       dropdown.getByTestId('editor-form__select-koodisto-dropdown')
     ).toHaveValue('pohjakoulutuseditori')
+
+    await clickRemoveAndConfirm(dropdown)
+    await expect(dropdown).not.toBeVisible()
   })
+
   test('lisää monivalinta', async () => {
     await clickComponentToolbar(page, 'multiple-choice')
     const multipleChoice = page.getByTestId(
@@ -261,11 +292,12 @@ test.describe('Editori', () => {
       .getByTestId('editor-form__multi-options-container')
       .locator('.editor-form__multi-options-wrapper-outer')
     await multipleChoice.locator('.editor-form__add-dropdown-item a').click()
-    await options.last().locator('input').fill('Vaihtoehto 1')
+    await options.nth(0).locator('input').fill('Vaihtoehto 1')
     await multipleChoice.locator('.editor-form__add-dropdown-item a').click()
-    await options.last().locator('input').fill('Vaihtoehto 2')
+    await options.nth(1).locator('input').fill('Vaihtoehto 2')
     await multipleChoice.locator('.editor-form__add-dropdown-item a').click()
-    await options.last().locator('input').fill('Vaihtoehto 3')
+    await options.nth(2).locator('input').fill('Vaihtoehto 3')
+    await multipleChoice.locator('.editor-form__add-dropdown-item a').click()
     await options.nth(1).getByTestId('followup-question-followups').click()
     await clickComponentToolbar(multipleChoice, 'painikkeet-yksi-valittavissa')
     const singleChoice = multipleChoice.getByTestId(
@@ -302,1069 +334,197 @@ test.describe('Editori', () => {
       .nth(2)
       .fill('Jatkokysymys C')
 
+    await expect(options.nth(0).locator('input')).toHaveValue('Vaihtoehto 1')
+    await expect(options.nth(1).locator('input')).toHaveValue('Vaihtoehto 2')
+    await expect(options.nth(4).locator('input')).toHaveValue('Vaihtoehto 3')
+    await expect(options.nth(5).locator('input')).toHaveValue('')
+    await expect(
+      singleChoice.getByTestId('editor-form__singleChoice-label')
+    ).toHaveValue('Oletko punavihervärisokea?')
+    await expect(
+      singleChoice.locator('.editor-form__text-field').nth(1)
+    ).toHaveValue('Kyllä')
+    await expect(
+      singleChoice.locator('.editor-form__text-field').nth(2)
+    ).toHaveValue('En')
+    await expect(
+      adjacentFieldset.locator('.editor-form__text-field').nth(0)
+    ).toHaveValue('Jatkokysymys A')
+    await expect(
+      adjacentFieldset.locator('.editor-form__text-field').nth(1)
+    ).toHaveValue('Jatkokysymys B')
+    await expect(
+      adjacentFieldset.locator('.editor-form__text-field').nth(2)
+    ).toHaveValue('Jatkokysymys C')
+
     await clickRemoveAndConfirm(multipleChoice)
     await expect(multipleChoice).not.toBeVisible()
   })
-  //   describe('multiple choice', () => {
-  //     before(
-  //       clickComponentMenuItem('Lista, monta valittavissa'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(5).find('.editor-form__text-field').eq(0),
-  //         'Viides kysymys'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(5).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(5).find('.editor-form__text-field:last'),
-  //         'Ensimmäinen vaihtoehto'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(5).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(5).find('.editor-form__text-field:last'),
-  //         'Toinen vaihtoehto'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(5).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(5).find('.editor-form__text-field:last'),
-  //         'Kolmas vaihtoehto'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(5).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question:eq(1) a:contains("Lisäkysymykset")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Painikkeet, yksi valittavissa', () =>
-  //         formComponents().eq(5)
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay input.editor-form__text-field'
-  //             ),
-  //         'Oletko punavihervärisokea?'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)'
-  //             ),
-  //         'Kyllä'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)'
-  //             ),
-  //         'En'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:contains("Pakollinen")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Vierekkäiset tekstikentät', () =>
-  //         formComponents().eq(5)
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__text-field'
-  //             )
-  //             .eq(3),
-  //         'Vierekkäinen tekstikenttä monivalinnan jatkokysymyksenä'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(0),
-  //         'Jatkokysymys A'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(0)
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(1),
-  //         'Jatkokysymys B'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(5)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(2),
-  //         'Jatkokysymys C'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(2)
-  //       )
-  //     )
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(6)
-  //       expect(
-  //         formComponents().eq(5).find('.editor-form__text-field:first').val()
-  //       ).to.equal('Viides kysymys')
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find('.editor-form__checkbox-container input')
-  //           .prop('checked')
-  //       ).to.equal(false)
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find('.editor-form__multi-option-wrapper input')
-  //           .not('.editor-form__followup-question-overlay input').length
-  //       ).to.equal(4)
-  //       const options = _.map(
-  //         formComponents()
-  //           .eq(5)
-  //           .find('.editor-form__multi-option-wrapper input')
-  //           .not('.editor-form__followup-question-overlay input'),
-  //         (inputField) => $(inputField).val()
-  //       )
-  //       expect(options).to.eql([
-  //         'Ensimmäinen vaihtoehto',
-  //         'Toinen vaihtoehto',
-  //         'Kolmas vaihtoehto',
-  //         '',
-  //       ])
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__text-field'
-  //           )
-  //           .eq(3)
-  //           .val()
-  //       ).to.equal('Vierekkäinen tekstikenttä monivalinnan jatkokysymyksenä')
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('Jatkokysymys A')
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(1)
-  //           .val()
-  //       ).to.equal('Jatkokysymys B')
-  //       expect(
-  //         formComponents()
-  //           .eq(5)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(2)
-  //           .val()
-  //       ).to.equal('Jatkokysymys C')
-  //     })
-  //   })
-  //
-  //   describe('multiple choice from koodisto', () => {
-  //     before(
-  //       clickComponentMenuItem('Lista, monta valittavissa, koodisto'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(6).find('.editor-form__text-field'),
-  //         'Kuudes kysymys'
-  //       ),
-  //       () => {
-  //         const e = formComponents()
-  //           .eq(6)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //         e.val('tutkinto')
-  //         triggerEvent(e, 'change')
-  //         return
-  //       }
-  //     )
-  //     it('selected correctly', () => {
-  //       expect(formComponents()).to.have.length(7)
-  //       expect(
-  //         formComponents()
-  //           .eq(6)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //           .val()
-  //       ).to.equal('tutkinto')
-  //     })
-  //   })
-  //
-  //   describe('section with contents', () => {
-  //     before(
-  //       clickComponentMenuItem('Lomakeosio'),
-  //       setTextFieldValue(
-  //         () => formSections().eq(0).find('.editor-form__text-field').eq(0),
-  //         'Testiosio'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstialue', () => formSections().eq(0)),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(0)
-  //           .find(
-  //             '.editor-form__checkbox-wrapper label:contains("Pakollinen")'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () => formSections().eq(0).find('.editor-form__text-field').eq(1),
-  //         'Osiokysymys'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(0)
-  //           .find('.editor-form__button-group div:eq(0) label')
-  //       )
-  //     )
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(9)
-  //       expect(
-  //         formSections().eq(0).find('.editor-form__text-field').eq(0).val()
-  //       ).to.equal('Testiosio')
-  //       expect(
-  //         formSections().eq(0).find('.editor-form__text-field').eq(1).val()
-  //       ).to.equal('Osiokysymys')
-  //       expect(
-  //         formSections()
-  //           .eq(0)
-  //           .find('.editor-form__button-group input:checked')
-  //           .val()
-  //       ).to.equal('S')
-  //       expect(
-  //         formSections()
-  //           .eq(0)
-  //           .find('.editor-form__checkbox-container input')
-  //           .prop('checked')
-  //       ).to.equal(true)
-  //     })
-  //   })
-  //
-  //   describe('textfield with info text', () => {
-  //     before(
-  //       clickComponentMenuItem('Tekstikenttä'),
-  //       clickInfoTextCheckbox(() => formComponents().eq(9)),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(9).find('.editor-form__text-field'),
-  //         'Infoteksti'
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(9)
-  //             .find('.editor-form__info-addon-inputs textarea')
-  //             .eq(0),
-  //         'oikeen pitka infoteksti sitten tassa.'
-  //       )
-  //     )
-  //
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(10)
-  //       expect(
-  //         formComponents()
-  //           .eq(9)
-  //           .find('.editor-form__info-addon-checkbox input')
-  //           .prop('checked')
-  //       ).to.equal(true)
-  //       expect(
-  //         formComponents()
-  //           .eq(9)
-  //           .find('.editor-form__info-addon-inputs textarea')
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('oikeen pitka infoteksti sitten tassa.')
-  //     })
-  //   })
-  //
-  //   /*
-  //    * This field is not supposed to be filled in the application tests, they should ignore it and submitting should
-  //    * work because this is optional. This was added because of regression: optional dropdown failed the server-side
-  //    * validation.
-  //    */
-  //   describe('second dropdown from koodisto (optional)', () => {
-  //     before(
-  //       clickComponentMenuItem('Pudotusvalikko, koodisto'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(10).find('.editor-form__text-field'),
-  //         'Viimeinen kysymys'
-  //       ),
-  //       () => {
-  //         const e = formComponents()
-  //           .eq(10)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //         e.val('tutkinto')
-  //         triggerEvent(e, 'change')
-  //         return
-  //       }
-  //     )
-  //     it('selected correctly', () => {
-  //       expect(formComponents()).to.have.length(11)
-  //       expect(
-  //         formComponents()
-  //           .eq(10)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //           .val()
-  //       ).to.equal('tutkinto')
-  //     })
-  //   })
-  //
-  //   describe('semantic radio button', () => {
-  //     before(
-  //       clickComponentMenuItem('Lomakeosio'),
-  //       setTextFieldValue(
-  //         () => formSections().eq(1).find('.editor-form__text-field:first'),
-  //         'Testiosio 2'
-  //       ),
-  //       clickSubComponentMenuItem('Painikkeet, yksi valittavissa', () =>
-  //         formComponents().eq(11)
-  //       ),
-  //       setTextFieldValue(
-  //         () => formSections().eq(1).find('.editor-form__text-field:last'),
-  //         'Lyhyen listan kysymys'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(11)
-  //           .find('.editor-form__checkbox-wrapper label:first')
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(11).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       setTextFieldValue(
-  //         () => formSections().eq(1).find('.editor-form__text-field:last'),
-  //         'Ensimmäinen vaihtoehto'
-  //       ),
-  //       clickElement(() =>
-  //         formSections().eq(1).find('.editor-form__add-dropdown-item a')
-  //       ),
-  //       setTextFieldValue(
-  //         () => formSections().eq(1).find('.editor-form__text-field:last'),
-  //         'Toinen vaihtoehto'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question:eq(0) a:contains("Lisäkysymykset")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Lista, monta valittavissa', () =>
-  //         formSections().eq(1).find('.editor-form__followup-question-overlay')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay input.editor-form__text-field'
-  //             ),
-  //         'Monivalinta jatkokysymyksenä'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:contains("Pakollinen")'
-  //           )
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(0)'
-  //             ),
-  //         'Jatkokysymys A'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__add-dropdown-item a:contains("Lisää")'
-  //           )
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__multi-option-wrapper .editor-form__text-field:eq(1)'
-  //             ),
-  //         'Jatkokysymys B'
-  //       ),
-  //       clickSubComponentMenuItem('Vierekkäiset tekstikentät', () =>
-  //         formSections().eq(1).find('.editor-form__followup-question-overlay')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__text-field'
-  //             )
-  //             .eq(3),
-  //         'Vierekkäinen tekstikenttä painikkeiden jatkokysymyksenä'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formSections()
-  //           .eq(1)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(0),
-  //         'Jatkokysymys A'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(0)
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formSections()
-  //           .eq(1)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(1),
-  //         'Jatkokysymys B'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formSections()
-  //           .eq(1)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formSections()
-  //             .eq(1)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(2),
-  //         'Jatkokysymys C'
-  //       ),
-  //       clickElement(() =>
-  //         formSections()
-  //           .eq(1)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(2)
-  //       )
-  //     )
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(13)
-  //       expect(
-  //         formComponents().eq(11).find('.editor-form__text-field:eq(1)').val()
-  //       ).to.equal('Lyhyen listan kysymys')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find('.editor-form__checkbox-container input')
-  //           .prop('checked')
-  //       ).to.equal(true)
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__multi-options-container > div:nth-child(1) .editor-form__text-field'
-  //           )
-  //           .not('.editor-form__followup-question-overlay input')
-  //           .val()
-  //       ).to.equal('Ensimmäinen vaihtoehto')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__multi-options-container > div:nth-child(2) .editor-form__text-field'
-  //           )
-  //           .not('.editor-form__followup-question-overlay input')
-  //           .val()
-  //       ).to.equal('Toinen vaihtoehto')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__text-field'
-  //           )
-  //           .eq(3)
-  //           .val()
-  //       ).to.equal('Vierekkäinen tekstikenttä painikkeiden jatkokysymyksenä')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('Jatkokysymys A')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(1)
-  //           .val()
-  //       ).to.equal('Jatkokysymys B')
-  //       expect(
-  //         formComponents()
-  //           .eq(11)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(2)
-  //           .val()
-  //       ).to.equal('Jatkokysymys C')
-  //     })
-  //   })
-  //
-  //   describe('adjacent fields', () => {
-  //     before(
-  //       clickComponentMenuItem('Vierekkäiset tekstikentät'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(13).find('.editor-form__text-field'),
-  //         'Vierekkäinen tekstikenttä'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents().eq(13)
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(13)
-  //             .find(
-  //               '.editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             ),
-  //         'Tekstikenttä 1'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents().eq(13)
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(13)
-  //             .find(
-  //               '.editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(1),
-  //         'Tekstikenttä 2'
-  //       )
-  //     )
-  //     it('🌸  is working so wonderfully 🌸', () => {})
-  //   })
-  //
-  //   describe('dropdown with adjacent fields as followup', () => {
-  //     before(
-  //       clickComponentMenuItem('Pudotusvalikko'),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__component-content-wrapper ' +
-  //               '.editor-form__text-field:first'
-  //             ),
-  //         'Päätason pudotusvalikko'
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__multi-options-wrapper-outer .editor-form__text-field'
-  //             )
-  //             .eq(0),
-  //         'Pudotusvalikon 1. kysymys'
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__multi-options-wrapper-outer .editor-form__text-field'
-  //             )
-  //             .eq(1),
-  //         'Pudotusvalikon 2. kysymys'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__multi-options-container a:contains("Lisäkysymykset")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Vierekkäiset tekstikentät', () =>
-  //         formComponents().eq(16)
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__text-field'
-  //             ),
-  //         'Vierekkäinen tekstikenttä jatkokysymyksenä'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__checkbox + label.editor-form__checkbox-label:contains("Vastaaja voi lisätä useita vastauksia")'
-  //           )
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(0),
-  //         'Jatkokysymys A'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(0)
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(1),
-  //         'Jatkokysymys B'
-  //       ),
-  //       clickSubComponentMenuItem('Tekstikenttä', () =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find('.editor-form__adjacent-fieldset-container')
-  //       ),
-  //       setTextFieldValue(
-  //         () =>
-  //           formComponents()
-  //             .eq(16)
-  //             .find(
-  //               '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //             )
-  //             .eq(2),
-  //         'Jatkokysymys C'
-  //       ),
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__checkbox + label:contains("Pakollinen tieto")'
-  //           )
-  //           .eq(2)
-  //       )
-  //     )
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(17)
-  //       expect(
-  //         formComponents().eq(16).find('.editor-form__text-field:first').val()
-  //       ).to.equal('Päätason pudotusvalikko')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__multi-options-wrapper-outer .editor-form__text-field'
-  //           )
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('Pudotusvalikon 1. kysymys')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__multi-options-wrapper-outer .editor-form__text-field'
-  //           )
-  //           .eq(1)
-  //           .val()
-  //       ).to.equal('Pudotusvalikon 2. kysymys')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__text-field'
-  //           )
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('Vierekkäinen tekstikenttä jatkokysymyksenä')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(0)
-  //           .val()
-  //       ).to.equal('Jatkokysymys A')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(1)
-  //           .val()
-  //       ).to.equal('Jatkokysymys B')
-  //       expect(
-  //         formComponents()
-  //           .eq(16)
-  //           .find(
-  //             '.editor-form__followup-question-overlay .editor-form__adjacent-fieldset-container .editor-form__text-field'
-  //           )
-  //           .eq(2)
-  //           .val()
-  //       ).to.equal('Jatkokysymys C')
-  //     })
-  //   })
-  //
-  //   describe('numeric textfield', () => {
-  //     before(
-  //       clickComponentMenuItem('Tekstikenttä'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(17).find('.editor-form__text-field'),
-  //         'Tekstikenttä numeerisilla arvoilla'
-  //       ),
-  //       clickNumericAnswer('Tekstikenttä numeerisilla arvoilla'),
-  //       () => {
-  //         formComponents().eq(17).find('option').eq(4).prop('selected', true)
-  //         triggerEvent(formComponents().eq(17).find('select'), 'change')
-  //       }
-  //     )
-  //     it('has expected contents', () => {
-  //       expect(formComponents()).to.have.length(18)
-  //       expect(
-  //         formComponents().eq(17).find('.editor-form__text-field').val()
-  //       ).to.equal('Tekstikenttä numeerisilla arvoilla')
-  //       expect(
-  //         formComponents()
-  //           .eq(17)
-  //           .find('.editor-form__checkbox-container input')
-  //           .eq(2)
-  //           .prop('checked')
-  //       ).to.equal(true)
-  //       expect(
-  //         formComponents().eq(17).find('select')[0].selectedIndex
-  //       ).to.equal(4)
-  //     })
-  //   })
-  //
-  //   describe('dropdown from koodisto, with invalid options', () => {
-  //     before(
-  //       clickComponentMenuItem('Pudotusvalikko, koodisto'),
-  //       setTextFieldValue(
-  //         () => formComponents().eq(18).find('.editor-form__text-field'),
-  //         'Alasvetovalikko, koodisto, päättyneet'
-  //       ),
-  //       () => {
-  //         const e = formComponents()
-  //           .eq(18)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //         e.val('maatjavaltiot2')
-  //         triggerEvent(e, 'change')
-  //         return
-  //       },
-  //       clickElement(() =>
-  //         formComponents()
-  //           .eq(18)
-  //           .find(
-  //             '.editor-form__checkbox + label:contains("Sisällytä päättyneet koodit")'
-  //           )
-  //       ),
-  //       clickElement(() =>
-  //         formComponents().eq(18).find('.editor-form__show-koodisto-values a')
-  //       ),
-  //       wait.until(() =>
-  //         elementExists(
-  //           formComponents()
-  //             .eq(18)
-  //             .find('.editor-form__koodisto-field:contains("Suomi")')
-  //         )
-  //       )
-  //     )
-  //     it('selected correctly', () => {
-  //       expect(formComponents()).to.have.length(19)
-  //       expect(
-  //         formComponents()
-  //           .eq(18)
-  //           .find('.editor-form__select-koodisto-dropdown')
-  //           .val()
-  //       ).to.equal('maatjavaltiot2')
-  //       expect(
-  //         formComponents()
-  //           .eq(18)
-  //           .find(
-  //             '.editor-form__checkbox + label:contains("Sisällytä päättyneet koodit")'
-  //           )
-  //           .siblings()
-  //           .prop('checked')
-  //       ).to.equal(true)
-  //       expect(
-  //         elementExists(
-  //           formComponents()
-  //             .eq(18)
-  //             .find(
-  //               '.editor-form__koodisto-field:contains("Entinen Neuvostoliitto")'
-  //             )
-  //         )
-  //       ).to.equal(true)
-  //     })
-  //   })
-  //
-  //   describe('locking form', () => {
-  //     before(
-  //       clickLomakeForEdit('Testilomake'),
-  //       wait.forMilliseconds(1000), // wait abit since
-  //       clickLockForm(), // this locking is sometimes so fast that the previous request gets blocked.
-  //       wait.until(() =>
-  //         elementExists(testFrame().find('.editor-form__form-editing-locked'))
-  //       ),
-  //       wait.until(() => {
-  //         return getInputs(':enabled').length === 0
-  //       })
-  //     )
-  //     it('all inputs are locked', () => {
-  //       expect(getInputs(':disabled').length).to.equal(getInputs('').length)
-  //       expect(getInputs(':enabled').length).to.equal(0)
-  //       expect(getRemoveElementButtons(':disabled').length).to.equal(
-  //         getRemoveElementButtons('').length
-  //       )
-  //       expect(getRemoveElementButtons(':enabled').length).to.equal(0)
-  //       expect(
-  //         testFrame().find(
-  //           '.editor-form__add-component-toolbar .plus-component--disabled'
-  //         ).length
-  //       ).to.equal(1)
-  //       expect(
-  //         elementExists(testFrame().find('.editor-form__form-editing-locked'))
-  //       ).to.equal(true)
-  //     })
-  //   })
-  //
-  //   describe('releasing form lock', () => {
-  //     before(
-  //       clickLockForm(),
-  //       wait.until(
-  //         () =>
-  //           !elementExists(
-  //             testFrame().find('.editor-form__form-editing-locked')
-  //           )
-  //       )
-  //     )
-  //     it('all inputs are unlocked', () => {
-  //       expect(getInputs(':disabled').length).to.equal(0)
-  //       expect(getInputs(':enabled').length).to.equal(getInputs('').length)
-  //       expect(
-  //         testFrame().find(
-  //           '.editor-form__add-component-toolbar .plus-component--disabled'
-  //         ).length
-  //       ).to.equal(0)
-  //       expect(
-  //         elementExists(testFrame().find('.editor-form__form-editing-locked'))
-  //       ).to.equal(false)
-  //     })
-  //   })
-  //
-  //   describe('autosave', () => {
-  //     before(
-  //       wait.until(() => {
-  //         const flasher = testFrame().find('.top-banner .flasher')
-  //         return (
-  //           flasher.css('opacity') !== '0' &&
-  //           flasher.find('span:visible').text() ===
-  //           'Kaikki muutokset tallennettu'
-  //         )
-  //       })
-  //     )
-  //     it('notification shows success', () => {
-  //       expect(testFrame().find('.top-banner .flasher span').text()).to.equal(
-  //         'Kaikki muutokset tallennettu'
-  //       )
-  //     })
-  //   })
-  // })
-  //
-  // describe('Copy from a form and paste into another after closing the first form', () => {
-  //   before(
-  //     clickLomakeForEdit('Testilomake'),
-  //     wait.forMilliseconds(1000),
-  //     clickCopyFormComponent('Testiosio'),
-  //     wait.forMilliseconds(1000),
-  //     clickCloseDetailsButton(),
-  //     wait.forMilliseconds(500),
-  //     clickLomakeForEdit('Selaintestilomake4'),
-  //     wait.forMilliseconds(1000),
-  //     clickPasteFormComponent(0),
-  //     wait.forMilliseconds(500)
-  //   )
-  //   it('creates the copy in another form', () => {
-  //     expect(
-  //       formSections().eq(0).find('.editor-form__text-field').eq(0).val()
-  //     ).to.equal('Testiosio 2')
-  //   })
-  // })
-  //
-  // describe('hakukohde specific question', () => {
-  //   const component = () => formComponents().eq(0)
-  //   before(
-  //     clickLomakeForEdit('belongs-to-hakukohteet-test-form'),
-  //     clickElement(() =>
-  //       component().find('.editor-form__component-fold-button')
-  //     ),
-  //     wait.until(() =>
-  //       elementExists(
-  //         component().find('.belongs-to-hakukohteet__modal-toggle')
-  //       )
-  //     ),
-  //     clickElement(() =>
-  //       component().find('.belongs-to-hakukohteet__modal-toggle')
-  //     ),
-  //     clickElement(() =>
-  //       component().find(
-  //         '.hakukohde-and-hakukohderyhma-category-list-item:first'
-  //       )
-  //     )
-  //   )
-  //   it('shows the selected hakukohde', () => {
-  //     expect(
-  //       component().find('.belongs-to-hakukohteet__hakukohde-label').length
-  //     ).to.equal(1)
-  //   })
-  // })
+
+  test('lisää monivalinta koodisto', async () => {
+    await clickComponentToolbar(page, 'multiple-choice-koodisto')
+    const multipleChoiceKoodisto = page.getByTestId(
+      'editor-form__multipleChoice-component-wrapper'
+    )
+    await multipleChoiceKoodisto
+      .getByTestId('editor-form__select-koodisto-dropdown')
+      .selectOption('tutkinto')
+
+    await expect(
+      multipleChoiceKoodisto.getByTestId(
+        'editor-form__select-koodisto-dropdown'
+      )
+    ).toHaveValue('tutkinto')
+
+    await clickRemoveAndConfirm(multipleChoiceKoodisto)
+    await expect(multipleChoiceKoodisto).not.toBeVisible()
+  })
+
+  test('lisää lomakeosio', async () => {
+    await clickComponentToolbar(page, 'lomakeosio')
+    const lomakeosio = page.getByTestId(
+      'editor-form__wrapperElement-component-wrapper'
+    )
+    await lomakeosio.locator('.editor-form__text-field').fill('Testiosio')
+
+    await clickSubComponentToolbar(lomakeosio, 'tekstialue')
+
+    const tekstialue = lomakeosio.getByTestId(
+      'editor-form__text-area-component-wrapper'
+    )
+    await tekstialue.getByTestId('tekstikenttä-kysymys').fill('Osiokysymys')
+    await tekstialue
+      .locator('.editor-form__checkbox-wrapper')
+      .getByLabel('Pakollinen')
+      .click()
+
+    await expect(
+      lomakeosio.locator('.editor-form__text-field').nth(0)
+    ).toHaveValue('Testiosio')
+    await expect(tekstialue.getByTestId('tekstikenttä-kysymys')).toHaveValue(
+      'Osiokysymys'
+    )
+    await expect(
+      tekstialue
+        .locator('.editor-form__checkbox-wrapper')
+        .getByLabel('Pakollinen')
+    ).toBeChecked()
+
+    await clickRemoveAndConfirm(lomakeosio)
+    await expect(lomakeosio).not.toBeVisible()
+  })
+
+  test('lisää numeerinen tekstikenttä', async () => {
+    await clickComponentToolbar(page, 'tekstikenttä')
+    const textfield = page.getByTestId(
+      'editor-form__text-field-component-wrapper'
+    )
+    await textfield
+      .getByTestId('tekstikenttä-valinta-kenttään-vain-numeroita')
+      .click()
+    await textfield
+      .locator('.editor-form__decimal-places-selector')
+      .selectOption('2')
+    await textfield.locator('.editor-form__range-input').nth(0).fill('1')
+    await textfield.locator('.editor-form__range-input').nth(1).fill('10')
+
+    await expect(
+      textfield.getByTestId('tekstikenttä-valinta-kenttään-vain-numeroita')
+    ).toBeChecked()
+    await expect(
+      textfield.locator('.editor-form__decimal-places-selector')
+    ).toHaveValue('2')
+    await expect(
+      textfield.locator('.editor-form__range-input').nth(0)
+    ).toHaveValue('1')
+    await expect(
+      textfield.locator('.editor-form__range-input').nth(1)
+    ).toHaveValue('10')
+
+    await clickRemoveAndConfirm(textfield)
+    await expect(textfield).not.toBeVisible()
+  })
+
+  test('pudotusvalikko koodisto päättyneillä koodeilla', async () => {
+    await clickComponentToolbar(page, 'dropdown-koodisto')
+    const dropdownKoodisto = page.getByTestId(
+      'editor-form__dropdown-component-wrapper'
+    )
+
+    await dropdownKoodisto
+      .getByTestId('editor-form__select-koodisto-dropdown')
+      .selectOption('maatjavaltiot2')
+
+    await dropdownKoodisto.getByLabel('Sisällytä päättyneet koodit').click()
+    await dropdownKoodisto
+      .locator('.editor-form__show-koodisto-values a')
+      .click()
+
+    await expect(
+      dropdownKoodisto.locator('[title="Entinen Neuvostoliitto"]')
+    ).toBeVisible()
+
+    await clickRemoveAndConfirm(dropdownKoodisto)
+    await expect(dropdownKoodisto).not.toBeVisible()
+  })
+
+  test('lomakkeen lukitseminen ja lukituksen avaaminen', async () => {
+    await page.locator('#lock-form').click()
+
+    await expect(getInputs(page, ':enabled')).toHaveCount(0)
+    await expect(getInputs(page, ':disabled')).toHaveCount(
+      await getInputs(page).count()
+    )
+
+    await expect(getComponentButtons(page, ':enabled')).toHaveCount(0)
+    await expect(getComponentButtons(page, ':disabled')).toHaveCount(
+      await getComponentButtons(page).count()
+    )
+
+    await page.locator('#lock-form').click()
+
+    await expect(getInputs(page, ':disabled')).toHaveCount(1)
+    await expect(getInputs(page, ':enabled')).toHaveCount(
+      (await getInputs(page).count()) - 1
+    )
+
+    await expect(getComponentButtons(page, ':disabled')).toHaveCount(0)
+    await expect(getComponentButtons(page, ':enabled')).toHaveCount(
+      await getComponentButtons(page).count()
+    )
+  })
+
+  test('kopioi kysymys toiseen lomakkeeseen', async ({ request }) => {
+    await clickComponentToolbar(page, 'lomakeosio')
+    const lomakeosio = page.getByTestId(
+      'editor-form__wrapperElement-component-wrapper'
+    )
+    await lomakeosio
+      .locator('.editor-form__text-field')
+      .fill('Kopioitava testiosio')
+    await lomakeosio.locator('.editor-form__component-button').nth(1).click()
+    await page.locator('.close-details-button').click()
+
+    const lomake2 = await lisaaLomake(page)
+    const lomakkeen2Avain = unsafeFoldOption(lomake2.lomakkeenAvain)
+
+    await page
+      .locator('.editor-form__drag_n_drop_spacer_container_for_component')
+      .last()
+      .hover()
+    await page
+      .locator('.editor-form__drag_n_drop_spacer_container_for_component')
+      .locator('.editor-form__component-button')
+      .click()
+
+    await expect(lomakeosio.locator('.editor-form__text-field')).toHaveValue(
+      'Kopioitava testiosio'
+    )
+
+    await request.delete(getLomakkeenPoistamisenOsoite(), {
+      data: {
+        formKey: lomakkeen2Avain,
+      },
+    })
+  })
 })

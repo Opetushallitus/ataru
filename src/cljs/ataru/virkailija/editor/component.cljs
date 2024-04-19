@@ -48,6 +48,7 @@
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-header])
                             "questionGroup"  @(subscribe [:editor/virkailija-translation :group-header]))]
     [:div.editor-form__component-wrapper
+     {:data-test-id (str "editor-form__" (:fieldClass content) "-component-wrapper")}
      [text-header-component/text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
      [component-content/component-content

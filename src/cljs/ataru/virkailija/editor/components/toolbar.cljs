@@ -24,7 +24,8 @@
    [:multiple-choice-koodisto (fn [metadata]
                                 (assoc (component/multiple-choice metadata)
                                        :koodisto-source {:uri "" :title "" :version 1}
-                                       :options []))]
+                                       :options []))
+    {:data-test-id "component-toolbar-multiple-choice-koodisto"}]
    [:text-field component/text-field {:data-test-id "component-toolbar-tekstikenttä"}]
    [:text-area component/text-area {:data-test-id "component-toolbar-tekstialue"}]
    [:adjacent-fieldset component/adjacent-fieldset {:data-test-id "component-toolbar-adjacent-fieldset"}]
