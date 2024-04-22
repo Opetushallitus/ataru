@@ -70,6 +70,34 @@
          (should= "Synteettistä hakemuslomaketta ei voi avata muokattavaksi" result)))))
 
 (describe
+  "update-form-payment-info"
+  (tags :unit)
+
+  (it "Should not be able to update payment info as a non-superuser"
+      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]
+        (let [tarjonta-service (mts/->MockTarjontaService)
+              organization-service (os/->FakeOrganizationService)
+              non-superuser-session (update session :identity assoc :superuser false)
+              result (try (fac/update-form-payment-info "test-field-id-change-form" "payment-type-astu" nil 100
+                                                       non-superuser-session tarjonta-service organization-service nil)
+                          (catch Throwable e
+                            (.getMessage e)))]
+          (should= "Vain rekisterinpitäjä voi muokata lomakkeen maksutietoja." result))))
+
+  (it "Should fail to update payment info if form already has applications"
+      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)
+                    form-store/form-has-applications (fn [form-key]
+                                                       (= "test-field-id-change-form" form-key))]
+        (let [tarjonta-service (mts/->MockTarjontaService)
+              organization-service (os/->FakeOrganizationService)
+              superuser-session (update session :identity assoc :superuser true)
+              failure-reason (try (fac/update-form-payment-info "test-field-id-change-form" "payment-type-astu" nil 100
+                                                                superuser-session tarjonta-service organization-service nil)
+                                  (catch Throwable e
+                                    (.getMessage e)))]
+          (should= "Lomakkeella test-field-id-change-form on hakemuksia." failure-reason)))))
+
+(describe
   "get-forms-for-editor"
   (tags :unit)
 

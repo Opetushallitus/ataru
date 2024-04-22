@@ -341,3 +341,7 @@
                  :fieldType "dropdown"
                  :fieldClass "formField"
                  :validators ["required"]}]})
+
+(def payment-properties-test-form
+  (merge minimal-form
+         {:key "payment-properties-test-form"}))
