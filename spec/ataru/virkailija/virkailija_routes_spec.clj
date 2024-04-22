@@ -163,6 +163,14 @@
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
 
+(defn- update-payment-info [key payment-info]
+  (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/update-payment-info")
+                    (json/generate-string payment-info))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (declare resp)
 
 (describe "GET /lomake-editori"
@@ -509,5 +517,59 @@
                                                              synthetic-application-fixtures/synthetic-application-malformed
                                                              synthetic-application-fixtures/synthetic-application-foreign]
                           (check-synthetic-applications resp 3 #{1})))))
+
+(describe "update-payment-info"
+          (tags :unit :api-forms)
+
+          (around [spec]
+                  (db/init-db-fixture fixtures/payment-properties-test-form)
+                  (spec)
+                  (db/nuke-old-fixture-forms-with-key (:key fixtures/payment-properties-test-form)))
+
+          (defn check-for-db-form-payment-info
+            [form-key payment-info]
+            (let [form (form-store/fetch-by-key form-key)
+                  properties (:properties form)]
+              (should-not-be-nil form)
+              (should= payment-info properties)))
+
+          (it "should set TUTU payment information"
+              (let [response (update-payment-info
+                               (:key fixtures/payment-properties-test-form)
+                               {:paymentType :payment-type-tutu :processingFee 100})
+                    status (:status response)]
+                (should= 200 status)
+                (check-for-db-form-payment-info
+                  (:key fixtures/payment-properties-test-form)
+                  {:payment-type "payment-type-tutu" :processing-fee 100 :decision-fee nil})))
+
+          (it "should set ASTU payment information"
+              (let [response (update-payment-info
+                               (:key fixtures/payment-properties-test-form)
+                               {:paymentType :payment-type-astu :decisionFee 150})
+                    status (:status response)]
+                (should= 200 status)
+                (check-for-db-form-payment-info
+                  (:key fixtures/payment-properties-test-form)
+                  {:payment-type "payment-type-astu" :processing-fee nil :decision-fee 150})))
+
+          (it "should set KK payment information, forcing a hardcoded processing fee"
+              (let [response (update-payment-info
+                               (:key fixtures/payment-properties-test-form)
+                               {:paymentType :payment-type-kk :processingFee 1234})
+                    status (:status response)]
+                (should= 200 status)
+                (check-for-db-form-payment-info
+                  (:key fixtures/payment-properties-test-form)
+                  {:payment-type "payment-type-kk" :processing-fee 100 :decision-fee nil})))
+
+          (it "should fail setting payment information when payment type is not valid"
+              (let [response (update-payment-info
+                               (:key fixtures/payment-properties-test-form)
+                               {:paymentType :payment-type-foobar :processingFee 1234})
+                    status (:status response)]
+                (should= 400 status)
+                (check-for-db-form-payment-info
+                  (:key fixtures/payment-properties-test-form) {}))))
 
 (run-specs)
