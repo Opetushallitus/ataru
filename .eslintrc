@@ -20,5 +20,19 @@
   "parserOptions": {
     "ecmaVersion": 6,
     "sourceType": "module"
-  }
+  },
+  "overrides": [
+    {
+      "files": "./playwright/*.ts",
+      "extends": "plugin:playwright/recommended",
+      "parserOptions": {
+        "tsconfigRootDir": "__dirname",
+        "parser": "@typescript-eslint/parser"
+      },
+      "rules": {
+        "playwright/expect-expect": "off",
+        "@typescript-eslint/no-floating-promises": "error"
+      }
+    }
+  ]
 }
