@@ -106,8 +106,7 @@
 
                  ;Tässä nojataan siihen, että Valintalaskentakoostepalvelun HarkinnanvaraisuusResourcen päättely yliajaa
                  ;tämän tiedon jos suresta löytyy suoritus
-                 (and perusopetus-should-be-in-sure
-                      (= targeted-reason (:none harkinnanvaraisuus-reasons)))
+                 perusopetus-should-be-in-sure
                  (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
 
                  :else
