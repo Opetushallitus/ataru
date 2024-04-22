@@ -19,6 +19,9 @@
   (ataru-db/exec :db yesql-delete-fixture-application! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-form! {:id form-id}))
 
+(defn nuke-old-fixture-forms-with-key [form-key]
+  (ataru-db/exec :db yesql-delete-fixture-forms-with-key! {:key form-key}))
+
 (defn init-db-form-fixture
   [form-fixture]
   (let [{:keys [id] :as form}
