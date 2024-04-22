@@ -185,7 +185,10 @@
    (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
    (s/optional-key :demo-validity-start)              (s/maybe s/Str)
    (s/optional-key :demo-validity-end)                (s/maybe s/Str)
-   (s/optional-key :closed)                           s/Bool})
+   (s/optional-key :closed)                           s/Bool
+   (s/optional-key :payment-type)                     (s/maybe s/Str)
+   (s/optional-key :processing-fee)                   (s/maybe s/Int)
+   (s/optional-key :decision-fee)                     (s/maybe s/Int)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -970,3 +973,8 @@
 
    :toisenAsteenSuoritus    s/Str
    :toisenAsteenSuoritusmaa (s/maybe s/Str)})
+
+(s/defschema FormPaymentInfo
+  {:paymentType                    (s/maybe s/Str)
+   (s/optional-key :processingFee) s/Int
+   (s/optional-key :decisionFee)   s/Int})

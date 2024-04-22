@@ -307,6 +307,18 @@
       (access-controlled-form/update-field-id-in-form form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger)
       (ok {}))
 
+    (api/PUT "/forms/:form-key/update-payment-info" {session :session}
+      :summary "Sets the payment type and amount(s) for the form."
+      :path-params [form-key :- s/Str]
+      :body [payment-info ataru-schema/FormPaymentInfo]
+      (access-controlled-form/update-form-payment-info
+        form-key
+        (:paymentType payment-info)
+        (:processingFee payment-info)
+        (:decisionFee payment-info)
+        session tarjonta-service organization-service audit-logger)
+      (ok {}))
+
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
