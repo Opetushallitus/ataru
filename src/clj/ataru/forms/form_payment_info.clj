@@ -2,17 +2,18 @@
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.config.core :refer [config]]))
 
-; TODO: should these come from eg. koodisto as discussed? And if so, why?
+; TODO: should these come from eg. koodisto as discussed before? And if so, why?
 (def form-payment-types
     #{:payment-type-tutu
       :payment-type-kk
       :payment-type-astu
       nil})
 
-; TODO: move to configuration, placeholder amount
-(def kk-processing-fee 100)
+(def kk-processing-fee
+  (get-in config [:form-payment-info :kk-processing-fee]))
 
 (defn- requires-higher-education-application-fee? [haku]
   ; TODO: "kohdejoukon tarkenne on joko tyhjä tai "siirtohaku"

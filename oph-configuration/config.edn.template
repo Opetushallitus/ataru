@@ -23,6 +23,7 @@
                                                            :verify-certificate true
                                                            :path               "{{ataru_tutkintojen_tunnustaminen_ftp_path}}"
                                                            :timeout-seconds    {{ataru_tutkintojen_tunnustaminen_ftp_timeout_seconds | default('300')}}}}
+ :form-payment-info {:kk-processing-fee {{ataru_form_payment_info_kk_processing_fee | default('100')}}}
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
  :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
