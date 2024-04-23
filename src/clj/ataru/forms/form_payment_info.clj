@@ -1,6 +1,8 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]))
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 ; TODO: should these come from eg. koodisto as discussed? And if so, why?
 (def form-payment-types
@@ -15,17 +17,44 @@
 (defn- requires-higher-education-application-fee? [haku]
   ; TODO: "kohdejoukon tarkenne on joko tyhjä tai "siirtohaku"
   ; TODO: "kyseessä tutkintoon johtava koulutus"
-  (clojure.string/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#"))
+  (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#"))
 
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
-  (cond
-    ; (or (and (some? processing-fee) (< 0 processing-fee))
-    ;    (and (some? decision-fee) (< 0 decision-fee))) false
-    ; (and (= :payment-type-kk payment-type)
-    ; (or (not= processing-fee kk-processing-fee)
-    ;    (some? decision-fee))) false
-    :else true))
+  (let [fee-nonpositive? (fn [amount] (and (some? amount) (<= amount 0)))
+        incorrect-kk-fee? (fn [payment-type processing-fee decision-fee]
+                            (and (= :payment-type-kk payment-type)
+                                 (or (not= processing-fee kk-processing-fee)
+                                     (some? decision-fee))))
+        incorrect-tutu-fee? (fn [payment-type processing-fee decision-fee]
+                              (and (= :payment-type-tutu payment-type)
+                                   (or (nil? processing-fee)
+                                       (some? decision-fee))))
+        incorrect-astu-fee? (fn [payment-type processing-fee _]
+                              (and (= :payment-type-astu payment-type)
+                                   (some? processing-fee)))]
+    (cond
+      (fee-nonpositive? processing-fee)
+      (do (log/warn "Nonpositive processing fee: " processing-fee)
+          false)
+
+      (fee-nonpositive? decision-fee)
+      (do (log/warn "Nonpositive decision fee: " processing-fee)
+          false)
+
+      (incorrect-kk-fee? payment-type processing-fee decision-fee)
+      (do (log/warn "Incorrect kk fees: " [payment-type processing-fee decision-fee])
+          false)
+
+      (incorrect-tutu-fee? payment-type processing-fee decision-fee)
+      (do (log/warn "Incorrect TUTU fees: " [payment-type processing-fee decision-fee])
+          false)
+
+      (incorrect-astu-fee? payment-type processing-fee decision-fee)
+      (do (log/warn "Incorrect ASTU fees: " [payment-type processing-fee decision-fee])
+          false)
+
+      :else true)))
 
 (defn- set-payment-type
   "Adds the payment type info to a form"

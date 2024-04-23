@@ -533,43 +533,67 @@
               (should-not-be-nil form)
               (should= payment-info properties)))
 
+          (defn update-and-check
+            [updated-payment-info expected-payment-info expected-status]
+            (let [response (update-payment-info
+                             (:key fixtures/payment-properties-test-form)
+                             updated-payment-info)
+                  status (:status response)]
+              (should= expected-status status)
+              (check-for-db-form-payment-info
+                (:key fixtures/payment-properties-test-form) expected-payment-info)))
+
           (it "should set TUTU payment information"
-              (let [response (update-payment-info
-                               (:key fixtures/payment-properties-test-form)
-                               {:paymentType :payment-type-tutu :processingFee 100})
-                    status (:status response)]
-                (should= 200 status)
-                (check-for-db-form-payment-info
-                  (:key fixtures/payment-properties-test-form)
-                  {:payment-type "payment-type-tutu" :processing-fee 100 :decision-fee nil})))
+              (update-and-check
+                {:paymentType :payment-type-tutu :processingFee 100}
+                {:payment-type "payment-type-tutu" :processing-fee 100 :decision-fee nil}
+                200))
+
+          (it "should fail when trying to set a fixed decision fee for TUTU"
+              (update-and-check
+                {:paymentType :payment-type-tutu :processingFee 100 :decisionFee 100}
+                {} 400))
 
           (it "should set ASTU payment information"
-              (let [response (update-payment-info
-                               (:key fixtures/payment-properties-test-form)
-                               {:paymentType :payment-type-astu :decisionFee 150})
-                    status (:status response)]
-                (should= 200 status)
-                (check-for-db-form-payment-info
-                  (:key fixtures/payment-properties-test-form)
-                  {:payment-type "payment-type-astu" :processing-fee nil :decision-fee 150})))
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee 150}
+                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee 150}
+                200))
+
+          (it "should fail when trying to set a processing fee for ASTU"
+              (update-and-check
+                {:paymentType :payment-type-astu :processingFee 100 :decisionFee 100}
+                {} 400))
 
           (it "should set KK payment information, forcing a hardcoded processing fee"
-              (let [response (update-payment-info
-                               (:key fixtures/payment-properties-test-form)
-                               {:paymentType :payment-type-kk :processingFee 1234})
-                    status (:status response)]
-                (should= 200 status)
-                (check-for-db-form-payment-info
-                  (:key fixtures/payment-properties-test-form)
-                  {:payment-type "payment-type-kk" :processing-fee 100 :decision-fee nil})))
+              (update-and-check
+                {:paymentType :payment-type-kk :processingFee 1234}
+                {:payment-type "payment-type-kk" :processing-fee 100 :decision-fee nil}
+                200))
+
+          (it "should fail when trying to set a decision fee for KK"
+              (update-and-check
+                {:paymentType :payment-type-kk :processingFee 100 :decisionFee 100}
+                {} 400))
 
           (it "should fail setting payment information when payment type is not valid"
-              (let [response (update-payment-info
-                               (:key fixtures/payment-properties-test-form)
-                               {:paymentType :payment-type-foobar :processingFee 1234})
-                    status (:status response)]
-                (should= 400 status)
-                (check-for-db-form-payment-info
-                  (:key fixtures/payment-properties-test-form) {}))))
+              (update-and-check
+                {:paymentType :payment-type-foobar :processingFee 1234}
+                {} 400))
+
+          (it "should fail trying to set a negative fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee -1}
+                {} 400))
+
+          (it "should fail trying to set a zero fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee 0}
+                {} 400))
+
+          (it "should fail trying to set a bird fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "bird"}
+                {} 400)))
 
 (run-specs)
