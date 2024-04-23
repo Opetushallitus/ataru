@@ -27,6 +27,7 @@
                                                            :verify-certificate false
                                                            :path               "/"
                                                            :timeout-seconds    10}}
+ :form-payment-info {:kk-processing-fee 100}
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :application-delete-key    {:secret-key "vT6+TMbTwsJx5J&T"}
  :yksiloimattomat {:allow false}
