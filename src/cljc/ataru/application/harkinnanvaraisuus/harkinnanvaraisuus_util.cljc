@@ -44,7 +44,6 @@
                                                     (filter #(seq (pick-value-fn answers %)))
                                                     first)
         perusopetus-should-be-in-sure (perusopetus-should-be-in-sure answers pick-value-fn)]
-    (log/info (str "perusopetus should be in sure: " perusopetus-should-be-in-sure))
     (cond
       (and base-education-value
            (= (:ulkomailla-suoritettu-value base-education-option-values-affecting-harkinnanvaraisuus)
