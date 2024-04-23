@@ -166,7 +166,7 @@ test.describe('Editori', () => {
       textfield.getByTestId('tekstikenttä-valinta-kenttään-vain-numeroita')
     ).not.toBeChecked()
     await clickRemoveAndConfirm(textfield)
-    await expect(textfield).not.toBeVisible()
+    await expect(textfield).toBeHidden()
   })
 
   test('lisää tekstialue', async () => {
@@ -209,7 +209,7 @@ test.describe('Editori', () => {
       textarea.getByTestId('tekstialue-max-merkkimaara')
     ).toHaveValue('2000')
     await clickRemoveAndConfirm(textarea)
-    await expect(textarea).not.toBeVisible()
+    await expect(textarea).toBeHidden()
   })
 
   test('lisää pudotusvalikko', async () => {
@@ -265,7 +265,7 @@ test.describe('Editori', () => {
       'Jatkokysymys'
     )
     await clickRemoveAndConfirm(dropdown)
-    await expect(dropdown).not.toBeVisible()
+    await expect(dropdown).toBeHidden()
   })
 
   test('lisää pudotusvalikko koodisto', async () => {
@@ -280,7 +280,7 @@ test.describe('Editori', () => {
     ).toHaveValue('pohjakoulutuseditori')
 
     await clickRemoveAndConfirm(dropdown)
-    await expect(dropdown).not.toBeVisible()
+    await expect(dropdown).toBeHidden()
   })
 
   test('lisää monivalinta', async () => {
@@ -358,7 +358,7 @@ test.describe('Editori', () => {
     ).toHaveValue('Jatkokysymys C')
 
     await clickRemoveAndConfirm(multipleChoice)
-    await expect(multipleChoice).not.toBeVisible()
+    await expect(multipleChoice).toBeHidden()
   })
 
   test('lisää monivalinta koodisto', async () => {
@@ -377,7 +377,7 @@ test.describe('Editori', () => {
     ).toHaveValue('tutkinto')
 
     await clickRemoveAndConfirm(multipleChoiceKoodisto)
-    await expect(multipleChoiceKoodisto).not.toBeVisible()
+    await expect(multipleChoiceKoodisto).toBeHidden()
   })
 
   test('lisää lomakeosio', async () => {
@@ -411,7 +411,7 @@ test.describe('Editori', () => {
     ).toBeChecked()
 
     await clickRemoveAndConfirm(lomakeosio)
-    await expect(lomakeosio).not.toBeVisible()
+    await expect(lomakeosio).toBeHidden()
   })
 
   test('lisää numeerinen tekstikenttä', async () => {
@@ -442,7 +442,7 @@ test.describe('Editori', () => {
     ).toHaveValue('10')
 
     await clickRemoveAndConfirm(textfield)
-    await expect(textfield).not.toBeVisible()
+    await expect(textfield).toBeHidden()
   })
 
   test('pudotusvalikko koodisto päättyneillä koodeilla', async () => {
@@ -465,7 +465,7 @@ test.describe('Editori', () => {
     ).toBeVisible()
 
     await clickRemoveAndConfirm(dropdownKoodisto)
-    await expect(dropdownKoodisto).not.toBeVisible()
+    await expect(dropdownKoodisto).toBeHidden()
   })
 
   test('lomakkeen lukitseminen ja lukituksen avaaminen', async () => {

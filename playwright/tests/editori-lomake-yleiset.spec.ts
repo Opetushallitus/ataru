@@ -77,7 +77,7 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
 
   test('Demolinkkiä ei näytetä', async () => {
     const linkkiDemoon = haeLinkkiDemoon(page)
-    await expect(linkkiDemoon).not.toBeVisible()
+    await expect(linkkiDemoon).toBeHidden()
   })
 
   test('Demon aikavälin asettaminen toimii', async () => {

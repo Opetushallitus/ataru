@@ -17,9 +17,10 @@ const avaaHaunHakemuksetVirkailijanNakymassa = async (
   await page.goto(haeHaunHakemusListausOsoite(hakuOid))
 }
 
-test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten käsittelyä varten', async () => {
+test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten käsittelyä varten', () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
+
     await page.route(
       '**/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus/?hakemusOid=*',
       (route) => route.fulfill({ json: [] })

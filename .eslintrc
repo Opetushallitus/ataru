@@ -23,11 +23,11 @@
   },
   "overrides": [
     {
-      "files": "./playwright/*.ts",
+      "files": ["./playwright/*.ts", "./playwright/tests/*.ts"],
       "extends": "plugin:playwright/recommended",
       "parserOptions": {
-        "tsconfigRootDir": "__dirname",
-        "parser": "@typescript-eslint/parser"
+        "parser": "@typescript-eslint/parser",
+        "project": ["./tsconfig.json"]
       },
       "rules": {
         "playwright/expect-expect": "off",

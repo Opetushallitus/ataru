@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 
 import {
