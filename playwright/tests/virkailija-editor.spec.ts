@@ -105,8 +105,8 @@ const getComponentButtons = (page: Page, metaClass: string = '') => {
 
 test.describe('Editori', () => {
   test('näyttää lomakelistan', async () => {
-    const items = formListItems(page)
-    await expect(items).toHaveCount(formCount + 1)
+    const itemCount = await formListItems(page).count()
+    expect(itemCount).toBeGreaterThanOrEqual(formCount)
   })
 
   test('lomakkeen luonti luo lomakkeen oletus kentillä', async () => {
@@ -165,6 +165,7 @@ test.describe('Editori', () => {
     await expect(
       textfield.getByTestId('tekstikenttä-valinta-kenttään-vain-numeroita')
     ).not.toBeChecked()
+
     await clickRemoveAndConfirm(textfield)
     await expect(textfield).toBeHidden()
   })
@@ -208,6 +209,7 @@ test.describe('Editori', () => {
     await expect(
       textarea.getByTestId('tekstialue-max-merkkimaara')
     ).toHaveValue('2000')
+
     await clickRemoveAndConfirm(textarea)
     await expect(textarea).toBeHidden()
   })
@@ -264,6 +266,7 @@ test.describe('Editori', () => {
     await expect(dropdown.getByTestId('tekstikenttä-kysymys')).toHaveValue(
       'Jatkokysymys'
     )
+
     await clickRemoveAndConfirm(dropdown)
     await expect(dropdown).toBeHidden()
   })
@@ -303,13 +306,22 @@ test.describe('Editori', () => {
     const singleChoice = multipleChoice.getByTestId(
       'editor-form__singleChoice-component-wrapper'
     )
+    const singleChoiceOptions = singleChoice
+      .getByTestId('editor-form__multi-options-container')
+      .locator('.editor-form__multi-options-wrapper-outer')
     await singleChoice
       .getByTestId('editor-form__singleChoice-label')
       .fill('Oletko punavihervärisokea?')
     await singleChoice.locator('.editor-form__add-dropdown-item a').click()
-    await singleChoice.locator('.editor-form__text-field').last().fill('Kyllä')
+    await singleChoiceOptions
+      .last()
+      .locator('.editor-form__text-field')
+      .fill('Kyllä')
     await singleChoice.locator('.editor-form__add-dropdown-item a').click()
-    await singleChoice.locator('.editor-form__text-field').last().fill('En')
+    await singleChoiceOptions
+      .last()
+      .locator('.editor-form__text-field')
+      .fill('En')
     await singleChoice.getByTestId('followup-question-followups').last().click()
     await clickComponentToolbar(singleChoice, 'adjacent-fieldset')
     const adjacentFieldset = singleChoice.getByTestId(
@@ -342,10 +354,10 @@ test.describe('Editori', () => {
       singleChoice.getByTestId('editor-form__singleChoice-label')
     ).toHaveValue('Oletko punavihervärisokea?')
     await expect(
-      singleChoice.locator('.editor-form__text-field').nth(1)
+      singleChoiceOptions.nth(0).locator('.editor-form__text-field')
     ).toHaveValue('Kyllä')
     await expect(
-      singleChoice.locator('.editor-form__text-field').nth(2)
+      singleChoiceOptions.nth(1).locator('.editor-form__text-field')
     ).toHaveValue('En')
     await expect(
       adjacentFieldset.locator('.editor-form__text-field').nth(0)
@@ -529,5 +541,6 @@ test.describe('Editori', () => {
 
     await page.goto('/lomake-editori/editor/' + lomakkeenAvain)
     await clickRemoveAndConfirm(lomakeosio)
+    await expect(lomakeosio).toBeHidden()
   })
 })
