@@ -543,57 +543,63 @@
               (check-for-db-form-payment-info
                 (:key fixtures/payment-properties-test-form) expected-payment-info)))
 
-          (it "should set TUTU payment information"
+          (it "should fail trying to set a bird fee (sanity check)"
               (update-and-check
-                {:paymentType :payment-type-tutu :processingFee 100}
-                {:payment-type "payment-type-tutu" :processing-fee 100 :decision-fee nil}
+                {:paymentType :payment-type-astu :decisionFee "bird"}
+                {} 400))
+
+          (it "should set TUTU payment information, forcing a hardcoded processing fee"
+              (update-and-check
+                {:paymentType :payment-type-tutu :processingFee "100.00"}
+                {:payment-type "payment-type-tutu" :processing-fee "70.00" :decision-fee nil}
                 200))
 
           (it "should fail when trying to set a fixed decision fee for TUTU"
               (update-and-check
-                {:paymentType :payment-type-tutu :processingFee 100 :decisionFee 100}
+                {:paymentType :payment-type-tutu :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
           (it "should set ASTU payment information"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee 150}
-                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee 150}
+                {:paymentType :payment-type-astu :decisionFee "150.00"}
+                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "150.00"}
                 200))
 
           (it "should fail when trying to set a processing fee for ASTU"
               (update-and-check
-                {:paymentType :payment-type-astu :processingFee 100 :decisionFee 100}
+                {:paymentType :payment-type-astu :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
           (it "should set KK payment information, forcing a hardcoded processing fee"
               (update-and-check
-                {:paymentType :payment-type-kk :processingFee 1234}
-                {:payment-type "payment-type-kk" :processing-fee 100 :decision-fee nil}
+                {:paymentType :payment-type-kk :processingFee "1234.00"}
+                {:payment-type "payment-type-kk" :processing-fee "100.00" :decision-fee nil}
                 200))
 
           (it "should fail when trying to set a decision fee for KK"
               (update-and-check
-                {:paymentType :payment-type-kk :processingFee 100 :decisionFee 100}
+                {:paymentType :payment-type-kk :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
           (it "should fail setting payment information when payment type is not valid"
               (update-and-check
-                {:paymentType :payment-type-foobar :processingFee 1234}
+                {:paymentType :payment-type-foobar :processingFee "1234.00"}
                 {} 400))
 
           (it "should fail trying to set a negative fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee -1}
+                {:paymentType :payment-type-astu :decisionFee "-1.00"}
                 {} 400))
 
           (it "should fail trying to set a zero fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee 0}
+                {:paymentType :payment-type-astu :decisionFee "0.00"}
                 {} 400))
 
-          (it "should fail trying to set a bird fee"
+          (it "should successfully set a fractional fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "bird"}
-                {} 400)))
+                {:paymentType :payment-type-astu :decisionFee "1.9"}
+                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}
+                200)))
 
 (run-specs)
