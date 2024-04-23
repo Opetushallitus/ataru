@@ -13,6 +13,7 @@ let page: Page
 let formCount: number
 let lomakkeenId: number
 let lomakkeenAvain: string
+let lomakkeen2Avain: string
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
@@ -48,6 +49,13 @@ test.afterAll(async ({ request }) => {
       formKey: lomakkeenAvain,
     },
   })
+  if (lomakkeen2Avain) {
+    await request.delete(getLomakkeenPoistamisenOsoite(), {
+      data: {
+        formKey: lomakkeen2Avain,
+      },
+    })
+  }
   await page.close()
 })
 
@@ -334,14 +342,17 @@ test.describe('Editori', () => {
     await componentToolbar(adjacentFieldset).hover()
     await componentToolbar(adjacentFieldset).locator('li').click()
     await adjacentFieldset
+      .locator('.editor-form__adjacent-fieldset-container')
       .locator('.editor-form__text-field')
       .nth(0)
       .fill('Jatkokysymys A')
     await adjacentFieldset
+      .locator('.editor-form__adjacent-fieldset-container')
       .locator('.editor-form__text-field')
       .nth(1)
       .fill('Jatkokysymys B')
     await adjacentFieldset
+      .locator('.editor-form__adjacent-fieldset-container')
       .locator('.editor-form__text-field')
       .nth(2)
       .fill('Jatkokysymys C')
@@ -360,13 +371,22 @@ test.describe('Editori', () => {
       singleChoiceOptions.nth(1).locator('.editor-form__text-field')
     ).toHaveValue('En')
     await expect(
-      adjacentFieldset.locator('.editor-form__text-field').nth(0)
+      adjacentFieldset
+        .locator('.editor-form__adjacent-fieldset-container')
+        .locator('.editor-form__text-field')
+        .nth(0)
     ).toHaveValue('Jatkokysymys A')
     await expect(
-      adjacentFieldset.locator('.editor-form__text-field').nth(1)
+      adjacentFieldset
+        .locator('.editor-form__adjacent-fieldset-container')
+        .locator('.editor-form__text-field')
+        .nth(1)
     ).toHaveValue('Jatkokysymys B')
     await expect(
-      adjacentFieldset.locator('.editor-form__text-field').nth(2)
+      adjacentFieldset
+        .locator('.editor-form__adjacent-fieldset-container')
+        .locator('.editor-form__text-field')
+        .nth(2)
     ).toHaveValue('Jatkokysymys C')
 
     await clickRemoveAndConfirm(multipleChoice)
@@ -506,7 +526,7 @@ test.describe('Editori', () => {
     )
   })
 
-  test('kopioi kysymys toiseen lomakkeeseen', async ({ request }) => {
+  test('kopioi kysymys toiseen lomakkeeseen', async () => {
     await clickComponentToolbar(page, 'lomakeosio')
     const lomakeosio = page.getByTestId(
       'editor-form__wrapperElement-component-wrapper'
@@ -518,7 +538,7 @@ test.describe('Editori', () => {
     await page.locator('.close-details-button').click()
 
     const lomake2 = await lisaaLomake(page)
-    const lomakkeen2Avain = unsafeFoldOption(lomake2.lomakkeenAvain)
+    lomakkeen2Avain = unsafeFoldOption(lomake2.lomakkeenAvain)
 
     await page
       .locator('.editor-form__drag_n_drop_spacer_container_for_component')
@@ -532,12 +552,6 @@ test.describe('Editori', () => {
     await expect(lomakeosio.locator('.editor-form__text-field')).toHaveValue(
       'Kopioitava testiosio'
     )
-
-    await request.delete(getLomakkeenPoistamisenOsoite(), {
-      data: {
-        formKey: lomakkeen2Avain,
-      },
-    })
 
     await page.goto('/lomake-editori/editor/' + lomakkeenAvain)
     await clickRemoveAndConfirm(lomakeosio)
