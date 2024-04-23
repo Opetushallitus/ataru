@@ -314,12 +314,12 @@ test.describe('Editori', () => {
       .fill('Oletko punavihervärisokea?')
     await singleChoice.locator('.editor-form__add-dropdown-item a').click()
     await singleChoiceOptions
-      .last()
+      .nth(0)
       .locator('.editor-form__text-field')
       .fill('Kyllä')
     await singleChoice.locator('.editor-form__add-dropdown-item a').click()
     await singleChoiceOptions
-      .last()
+      .nth(1)
       .locator('.editor-form__text-field')
       .fill('En')
     await singleChoice.getByTestId('followup-question-followups').last().click()
