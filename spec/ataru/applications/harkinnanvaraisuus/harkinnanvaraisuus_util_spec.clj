@@ -26,6 +26,13 @@
                     (it "returns nil when yksilollistetty-matikka-aikka value is something else than 'yes'"
                         (should-be-nil (hu/get-common-harkinnanvaraisuus-reason {:matematiikka-ja-aidinkieli-yksilollistetty_1 "0"} pick-value-fn)))
 
+                    (it "returns nil when yksilollistetty-matikka-aikka value is 'yes' but perusopetuksen suoritusvuosi is after 2018"
+                        (should-be-nil (hu/get-common-harkinnanvaraisuus-reason {:matematiikka-ja-aidinkieli-yksilollistetty_1 "1" :suoritusvuosi-perusopetus "2020"} pick-value-fn)))
+
+                    (it "returns yksilollistetty-matikka-aikka when yksilollistetty-matikka-aikka value is 'yes' and perusopetuksen suoritusvuosi is before 2018"
+                        (should= (:ataru-yks-mat-ai harkinnanvaraisuus-reasons)
+                         (hu/get-common-harkinnanvaraisuus-reason {:matematiikka-ja-aidinkieli-yksilollistetty_1 "1" :suoritusvuosi-perusopetus "2016"} pick-value-fn)))
+
                     (it "returns ulkomailla-opiskelu"
                         (should= (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
                                  (hu/get-common-harkinnanvaraisuus-reason {:base-education-2nd "0"} pick-value-fn)))

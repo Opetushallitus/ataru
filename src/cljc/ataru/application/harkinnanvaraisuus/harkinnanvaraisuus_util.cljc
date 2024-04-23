@@ -42,7 +42,9 @@
         key-affecting-harkinnanvaraisuus-value (->> yksilollistetty-key-values-affecting-harkinnanvaraisuus
                                                     keys
                                                     (filter #(seq (pick-value-fn answers %)))
-                                                    first)]
+                                                    first)
+        perusopetus-should-be-in-sure (perusopetus-should-be-in-sure answers pick-value-fn)]
+    (log/info (str "perusopetus should be in sure: " perusopetus-should-be-in-sure))
     (cond
       (and base-education-value
            (= (:ulkomailla-suoritettu-value base-education-option-values-affecting-harkinnanvaraisuus)
@@ -54,7 +56,8 @@
               base-education-value))
       (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
 
-      (and key-affecting-harkinnanvaraisuus-value
+      (and (not perusopetus-should-be-in-sure)
+            key-affecting-harkinnanvaraisuus-value
            (= (key-affecting-harkinnanvaraisuus-value yksilollistetty-key-values-affecting-harkinnanvaraisuus)
               (pick-value-fn answers key-affecting-harkinnanvaraisuus-value)))
       (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
@@ -101,13 +104,13 @@
                  (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
                  targeted-reason
 
-                 (not (nil? common-reason))
-                 common-reason
-
                  ;Tässä nojataan siihen, että Valintalaskentakoostepalvelun HarkinnanvaraisuusResourcen päättely yliajaa
                  ;tämän tiedon jos suresta löytyy suoritus
                  perusopetus-should-be-in-sure
                  (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+
+                 (not (nil? common-reason))
+                 common-reason
 
                  :else
                  targeted-reason)]
