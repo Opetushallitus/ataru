@@ -188,8 +188,8 @@
    (s/optional-key :demo-validity-end)                (s/maybe s/Str)
    (s/optional-key :closed)                           s/Bool
    (s/optional-key :payment-type)                     (s/maybe s/Str)
-   (s/optional-key :processing-fee)                   (s/maybe s/Int)
-   (s/optional-key :decision-fee)                     (s/maybe s/Int)})
+   (s/optional-key :processing-fee)                   (s/maybe s/Str)
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -990,5 +990,5 @@
 
 (s/defschema FormPaymentInfo
   {:paymentType                    (s/maybe s/Str)
-   (s/optional-key :processingFee) s/Int
-   (s/optional-key :decisionFee)   s/Int})
+   (s/optional-key :processingFee) s/Str
+   (s/optional-key :decisionFee)   s/Str})
