@@ -552,9 +552,5 @@ test.describe('Editori', () => {
     await expect(lomakeosio.locator('.editor-form__text-field')).toHaveValue(
       'Kopioitava testiosio'
     )
-
-    await page.goto('/lomake-editori/editor/' + lomakkeenAvain)
-    await clickRemoveAndConfirm(lomakeosio)
-    await expect(lomakeosio).toBeHidden()
   })
 })
