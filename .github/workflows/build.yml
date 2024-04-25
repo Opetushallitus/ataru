@@ -137,7 +137,7 @@ jobs:
       application: ataru-hakija
       base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
-      jarfile: ataru.jar
+      jarfile: ataru
     secrets: 
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
   
@@ -148,6 +148,6 @@ jobs:
       application: ataru-editori
       base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
-      jarfile: ataru.jar
+      jarfile: ataru
     secrets: 
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
