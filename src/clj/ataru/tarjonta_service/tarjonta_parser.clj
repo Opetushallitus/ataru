@@ -105,6 +105,7 @@
            :hakuaika                         (hakuaika/haun-hakuaika now haku ohjausparametrit)
            :can-submit-multiple-applications (:can-submit-multiple-applications haku)
            :kohdejoukko-uri                  (:kohdejoukko-uri haku)
+           :kohdejoukon-tarkenne-uri         (:kohdejoukon-tarkenne-uri haku)
            :hakutapa-uri                     (:hakutapa-uri haku)
            :yhteishaku                       (:yhteishaku haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]

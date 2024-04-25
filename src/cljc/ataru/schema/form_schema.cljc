@@ -265,7 +265,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
    (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
-   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime) 
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema FormTarjontaMetadata
@@ -277,6 +277,7 @@
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
    :kohdejoukko-uri                    s/Str
+   :kohdejoukon-tarkenne-uri           (s/maybe s/Str)
    :hakutapa-uri                       s/Str
    :yhteishaku                         (s/maybe s/Bool)})
 
@@ -287,6 +288,7 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
    :kohdejoukko-uri                            s/Str
    :hakutapa-uri                               s/Str
+   :kohdejoukon-tarkenne-uri                   (s/maybe s/Str)
    :yhteishaku                                 s/Bool
    :prioritize-hakukohteet                     s/Bool
    :can-submit-multiple-applications           s/Bool
@@ -333,6 +335,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
    (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?)     (s/maybe s/Bool)
+   (s/optional-key :tutkintoon-johtava?)                                         s/Bool
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema HakukohdeSearchResult
