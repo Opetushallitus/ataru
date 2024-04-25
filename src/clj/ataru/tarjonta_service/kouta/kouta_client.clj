@@ -51,6 +51,7 @@
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
       :haun-tiedot-url                            (url-helper/resolve-url :kouta-app.haku (:oid haku))
       :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
+      :kohdejoukon-tarkenne-uri                   (:kohdejoukonTarkenneKoodiUri haku)
       :name                                       (:nimi haku)
       :oid                                        (:oid haku)
       :prioritize-hakukohteet                     (get ohjausparametrit :jarjestetytHakutoiveet false)
@@ -126,9 +127,10 @@
                                                                           (parse-liite-toimitusosoite))
      :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteetOnkoSamaToimitusaika hakukohde))
      :liitteiden-toimitusaika                                     (some-> hakukohde
-                                                                          :liitteidenToimitusaika
-                                                                          (hakuaika/basic-date-time-str->date-time)
-                                                                          (hakuaika/date-time->localized-date-time)) 
+                                                                    :liitteidenToimitusaika
+                                                                    (hakuaika/basic-date-time-str->date-time)
+                                                                    (hakuaika/date-time->localized-date-time))
+     :tutkintoon-johtava?                                         (boolean (:johtaaTutkintoon hakukohde))
      :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?     (boolean (:voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita hakukohde))
      :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
    (if (:kaytetaanHaunAikataulua hakukohde)
