@@ -188,4 +188,18 @@
     value
     (.toLocaleString (js/Number value) "fi")))
 
+(defn keep-non-empty-changes
+  [changes]
+  (when (some? changes)
+    (let [is-non-empty-value? (fn [value] (and (some? value)
+                                               (or (number? value) (seq value))))
+          keep-if-non-empty-change (fn [[id change]]
+                                     (when (or (is-non-empty-value? (:new change))
+                                               (is-non-empty-value? (:old change)))
+                                       [id change]))]
+      (->> changes
+           (map keep-if-non-empty-change)
+           (remove nil?)
+           (into {})))))
+
 (defn classes [& cs] (string/join " " (vec cs)))
