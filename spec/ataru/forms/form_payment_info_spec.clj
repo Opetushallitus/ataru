@@ -4,6 +4,7 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [clj-time.core :as t]
     [speclj.core :refer [describe it should= should-be tags]]
+    [speclj.core :refer [describe it should= should-be-nil tags]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (def expected-payment-info
