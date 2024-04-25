@@ -87,6 +87,7 @@
           :koulutustyyppikoodi                                         nil
           :hakukelpoisuusvaatimus-uris                                 (:hakukelpoisuusvaatimusUris hakukohde)
           :ylioppilastutkinto-antaa-hakukelpoisuuden?                  (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))
+          :tutkintoon-johtava?                                         (boolean (:tutkintoonJohtava hakukohde))
           :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))
           :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
          (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
@@ -118,6 +119,7 @@
     :hakukohteet                                (:hakukohdeOids haku)
     :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden haku))
     :kohdejoukko-uri                            (:kohdejoukkoUri haku)
+    :kohdejoukon-tarkenne-uri                   (:kohdejoukonTarkenne haku)
     :hakutapa-uri                               (:hakutapaUri haku)
     :hakukausi-vuosi                            (:hakukausiVuosi haku)
     :yhteishaku                                 (= (:hakutapaUri haku) "hakutapa_01#1")
