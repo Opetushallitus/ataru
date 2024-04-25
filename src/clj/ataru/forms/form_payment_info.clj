@@ -5,7 +5,6 @@
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]))
 
-; TODO: should these come from eg. koodisto as discussed before? And if so, why?
 (def form-payment-types
     #{:payment-type-tutu
       :payment-type-kk
@@ -18,10 +17,19 @@
 (def tutu-processing-fee
   (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))
 
-(defn- requires-higher-education-application-fee? [haku]
-  ; TODO: "kohdejoukon tarkenne on joko tyhjä tai "siirtohaku"
-  ; TODO: "kyseessä tutkintoon johtava koulutus"
-  (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#"))
+(defn- requires-higher-education-application-fee?
+  [tarjonta-service haku]
+  (let [hakukohteet (tarjonta/get-hakukohteet tarjonta-service (:hakukohteet haku))]
+    (and
+      haku
+      hakukohteet
+      ; Kohdejoukko must be korkeakoulutus
+      (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#")
+      ; "Kohdejoukon tarkenne must be empty or siirtohaku
+      (or (nil? (:kohdejoukon-tarkenne-uri haku))
+          (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
+      ; Must be tutkintoon johtava
+      (some true? (map #(:tutkintoon-johtava? %) hakukohteet)))))
 
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
@@ -68,7 +76,7 @@
     (throw (user-feedback-exception (str "Maksutyyppi ei tuettu: " payment-type)))))
 
 (defn- set-fees
-  "Sets fees amount for form"
+  "Sets fees amounts for form. Forces hardcoded values for specific payment types."
   [form payment-type processing-fee decision-fee]
   (let [final-processing-fee (cond
                                (= :payment-type-kk payment-type) kk-processing-fee
@@ -96,14 +104,14 @@
         (set-payment-type payment-type-kw)
         (set-fees payment-type-kw processing-fee-num decision-fee-num))))
 
-; TODO: this should be triggered as part of form updates / whenever a form is attached to haku?
+; TODO: this should be triggered as part of form updates / whenever a form is attached to haku
 (defn set-payment-info-if-higher-education
-  "Set payment type and amount based on if form is
-   attached to one or more matching higher education admissions"
+  "Set payment info if form is attached to one or more matching higher education admissions"
   [tarjonta-service form]
-  (let [haut (tarjonta/hakus-by-form-key tarjonta-service (:key form))
-        application-fee-required? (some true? (map requires-higher-education-application-fee? haut))]
+  (let [hakus (tarjonta/hakus-by-form-key tarjonta-service (:key form))
+        application-fee-required? (some true?
+                                        (map #(requires-higher-education-application-fee? tarjonta-service %)
+                                             hakus))]
     (if application-fee-required?
       (set-payment-info form :payment-type-kk kk-processing-fee nil)
       form)))
-
