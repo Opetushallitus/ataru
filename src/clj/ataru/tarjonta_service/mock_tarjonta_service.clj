@@ -196,7 +196,21 @@
                                                 :kohdejoukkoUri   toisen-asteen-yhteishaku-kohdejokko
                                                 :hakutapaUri      yhteishaku-hakutapa
                                                 :ataruLomakeAvain "form-access-control-test-yhteishaku-form"
-                                                :hakukohdeOids    ["form-access-control-test-hakukohde"]})})
+                                                :hakukohdeOids    ["form-access-control-test-hakukohde"]})
+
+   :payment-info-test-kk-haku (merge
+                                base-haku
+                                {:oid                         "payment-info-test-kk-haku"
+                                 :kohdejoukkoUri              "haunkohdejoukko_12#1"
+                                 :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+
+   :payment-info-test-non-kk-haku (merge
+                                    base-haku
+                                    {:oid                         "payment-info-test-non-kk-haku"
+                                     :kohdejoukkoUri              "haunkohdejoukko_11#1"
+                                     :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
+                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522           base-hakukohde
@@ -314,7 +328,17 @@
    :form-access-control-test-hakukohde (merge
                                            base-hakukohde
                                            {:oid          "form-access-control-test-hakukohde"
-                                            :tarjoajaOids ["form-access-control-test-oppilaitos"]})})
+                                            :tarjoajaOids ["form-access-control-test-oppilaitos"]})
+
+   :payment-info-test-kk-hakukohde     (merge
+                                         base-hakukohde
+                                         {:oid          "payment-info-test-kk-hakukohde"
+                                          :tutkintoonJohtava true})
+
+   :payment-info-test-non-kk-hakukohde     (merge
+                                             base-hakukohde
+                                             {:oid          "payment-info-test-kk-hakukohde"
+                                              :tutkintoonJohtava true})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid                  "1.2.246.562.17.74335799461"
@@ -401,6 +425,12 @@
                "form-access-control-test-yhteishaku-form"
                "form-access-control-test-yhteishaku-haku"
 
+               "payment-info-test-kk-form"
+               "payment-info-test-kk-haku"
+
+               "payment-info-test-non-kk-form"
+               "payment-info-test-non-kk-haku"
+
                nil)]
       [(.get-haku this haku-key)]
       []))
@@ -416,6 +446,27 @@
     (into {} (keep #(when-let [v (get koulutus (keyword %))]
                       [% v])
                    koulutus-oids))))
+
+(def base-kouta-haku
+  {:tila                                                 "julkaistu",
+   :hakulomaketyyppi                                     "ataru"
+   :hakulomakeAtaruId                                    "41101b4f-1762-49af-9db0-e3603adae3ad",
+   :koulutuksenAlkamisVuosi                              2024,
+   :hakutapaKoodiUri                                     "hakutapa_02#1",
+   :modified                                             "2024-04-16T10:12:10",
+   :nimi                                                 {:fi "testing2"},
+   :oid                                                  "1.2.246.562.29.65950024185",
+   :hakukohdeOids                                        ["1.2.246.562.20.49028196522"],
+   :organisaatioOid                                      "1.2.246.562.10.73539475928",
+   :alkamiskausiKoodiUri                                 "kausi_s",
+   :alkamisvuosi                                         "2024",
+   :hakuvuosi                                            2024,
+   :hakukausi                                            "kausi_k#1",
+   :kohdejoukkoKoodiUri                                  "haunkohdejoukko_10#1",
+   :muokkaaja                                            "1.2.246.562.24.70906349358",
+   :hakuajat                                             [{:alkaa "2024-03-13T08:00:00",
+                                                           :paattyy "2024-04-30T15:00:00"}],
+   :canSubmitMultipleApplications                        true})
 
 (def base-kouta-hakukohde
   {:kaytetaanHaunAikataulua true
@@ -454,15 +505,54 @@
    :painotetutArvosanat []})
 
 (def kouta-hakukohdes {
-                       :1.2.246.562.20.00000000000000024371 (merge base-kouta-hakukohde {
-                                                                                   :oid "1.2.246.562.20.00000000000000024371"
-                                                                                   :koulutustyyppikoodi "koulutustyyppi_26"
-                                                                                   :nimi {:fi "Ajoneuvoalan perustutkinto"}})
-                       :1.2.246.562.20.00000000000000024372 (merge base-kouta-hakukohde {
-                                                                                   :oid "1.2.246.562.20.00000000000000024372"
-                                                                                   :koulutustyyppikoodi "koulutustyyppi_3"
-                                                                                   :nimi {:fi "Ei tarvi tarkistaa harkinnanvaraisuutta"}})
-                       })
+                       :1.2.246.562.20.00000000000000024371 (merge base-kouta-hakukohde
+                                                                   {
+                                                                    :oid "1.2.246.562.20.00000000000000024371"
+                                                                    :koulutustyyppikoodi "koulutustyyppi_26"
+                                                                    :nimi {:fi "Ajoneuvoalan perustutkinto"}})
+                       :1.2.246.562.20.00000000000000024372 (merge base-kouta-hakukohde
+                                                                   {
+                                                                    :oid "1.2.246.562.20.00000000000000024372"
+                                                                    :koulutustyyppikoodi "koulutustyyppi_3"
+                                                                    :nimi {:fi "Ei tarvi tarkistaa harkinnanvaraisuutta"}})
+                       :payment-info-test-kk-hakukohde     (merge
+                                                             base-kouta-hakukohde
+                                                             {:oid          "payment-info-test-kk-hakukohde"
+                                                              :johtaaTutkintoon true})
+                       :payment-info-test-kk-no-tutkinto-hakukohde (merge
+                                                                     base-kouta-hakukohde
+                                                                     {:oid          "payment-info-test-kk-no-tutkinto-hakukohde"
+                                                                      :johtaaTutkintoon false})
+                       :payment-info-test-non-kk-hakukohde (merge
+                                                             base-kouta-hakukohde
+                                                             {:oid          "payment-info-test-non-kk-hakukohde"
+                                                              :johtaaTutkintoon true})})
+
+(def kouta-haut
+  {:payment-info-test-kk-haku (merge
+                                base-kouta-haku
+                                {:oid                         "payment-info-test-kk-haku"
+                                 :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                 :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+   :payment-info-test-kk-no-tutkinto-haku (merge
+                                             base-kouta-haku
+                                             {:oid                         "payment-info-test-kk-haku"
+                                              :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                              :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                              :hakukohdeOids               ["payment-info-test-kk-no-tutkinto-hakukohde"]})
+    :payment-info-test-kk-jatko-haku (merge
+                                        base-kouta-haku
+                                        {:oid                         "payment-info-test-kk-haku"
+                                         :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                         :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_3#1"
+                                         :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+   :payment-info-test-non-kk-haku (merge
+                                    base-kouta-haku
+                                    {:oid                         "payment-info-test-non-kk-haku"
+                                     :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
+                                     :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
 
 (defrecord MockTarjontaKoutaService []
   component/Lifecycle
@@ -497,9 +587,9 @@
                          :1.2.246.562.20.49028196524
                          :1.2.246.562.20.49028196525]))))
 
-  (get-haku [_ haku-oid]
-    (when-let [h ((keyword haku-oid) haut)]
-      (kouta-client/parse-haku h [] [])))
+  (get-haku [this haku-oid]
+    (when-let [h ((keyword haku-oid) kouta-haut)]
+      (kouta-client/parse-haku h (.get-hakukohteet this (:hakukohdeOids h)) [])))
 
   (hakus-by-form-key [this form-key]
     (if-let [haku-key
@@ -521,6 +611,18 @@
 
                "form-access-control-test-yhteishaku-form"
                "form-access-control-test-yhteishaku-haku"
+
+               "payment-info-test-kk-form"
+               "payment-info-test-kk-haku"
+
+               "payment-info-test-non-kk-form"
+               "payment-info-test-non-kk-haku"
+
+               "payment-info-test-kk-no-tutkinto-form"
+               "payment-info-test-kk-no-tutkinto-haku"
+
+               "payment-info-test-kk-jatko-form"
+               "payment-info-test-kk-jatko-haku"
 
                nil)]
       [(.get-haku this haku-key)]
