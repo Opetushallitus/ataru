@@ -570,15 +570,9 @@
                 {:paymentType :payment-type-astu :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
-          (it "should set KK payment information, forcing a hardcoded processing fee"
+          (it "should not allow setting hakemusmaksu / kk payment information manually"
               (update-and-check
                 {:paymentType :payment-type-kk :processingFee "1234.00"}
-                {:payment-type "payment-type-kk" :processing-fee "100.00" :decision-fee nil}
-                200))
-
-          (it "should fail when trying to set a decision fee for KK"
-              (update-and-check
-                {:paymentType :payment-type-kk :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
           (it "should fail setting payment information when payment type is not valid"
