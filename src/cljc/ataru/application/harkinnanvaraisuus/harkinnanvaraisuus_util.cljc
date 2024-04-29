@@ -103,13 +103,14 @@
                  (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
                  targeted-reason
 
-                 ;Tässä nojataan siihen, että Valintalaskentakoostepalvelun HarkinnanvaraisuusResourcen päättely yliajaa
-                 ;tämän tiedon jos suresta löytyy suoritus
-                 perusopetus-should-be-in-sure
-                 (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
-
                  (not (nil? common-reason))
                  common-reason
+
+                 ;Tässä nojataan siihen, että Valintalaskentakoostepalvelun HarkinnanvaraisuusResourcen päättely yliajaa
+                 ;tämän tiedon jos suresta löytyy suoritus
+                 (and perusopetus-should-be-in-sure
+                      (= targeted-reason (:none harkinnanvaraisuus-reasons)))
+                 (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
 
                  :else
                  targeted-reason)]

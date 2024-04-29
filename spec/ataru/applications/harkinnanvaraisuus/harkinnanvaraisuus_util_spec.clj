@@ -213,4 +213,27 @@
                     (it "assocs ei-harkinnanvarainen-hakukohde"
                         (let [hakukohde (make-hakukohde "1.2.3.4" :no-harkinnanvaraisuus true)]
                           (should= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
-                                   (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 {:value "0"}} hakukohde)))))))
+                                   (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 {:value "0"}} hakukohde))))))
+
+          (describe "decide-reason"
+                    (it "returns always ei-harkinnanvarainen-hakukohde as targeted reason for ei-harkinnanvarainen hakukohde"
+                        (should= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
+                                 (hu/decide-reason
+                                  (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+                                  (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
+                                  true)))
+                    (it "returns common reason if there is both common reason and targeted reason for hakukohde"
+                        (should= (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
+                                 (hu/decide-reason
+                                  (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
+                                  (:ataru-sosiaaliset-syyt harkinnanvaraisuus-reasons)
+                                  false)))
+                    (it "returns ataru-ei-paattotodistusta (to be overridden) if info should be in sure and there is no reason"
+                        (should= (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+                                 (hu/decide-reason nil (:none harkinnanvaraisuus-reasons) true)))
+                    (it "returns ei-harkinnanvarainen targeted reason if info is not in sure and there is no common or targeted reason"
+                        (should= (:none harkinnanvaraisuus-reasons)
+                                 (hu/decide-reason nil (:none harkinnanvaraisuus-reasons) false)))
+                    (it "returns targeted reason if info is not in sure and there is a targeted reason"
+                        (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
+                                 (hu/decide-reason nil (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons) false)))))
