@@ -11,7 +11,6 @@
             [ataru.applications.excel-export :as excel]
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
-            [ataru.background-job.job :as job]
             [ataru.email.application-email-jobs :as email]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
@@ -84,9 +83,13 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
+            [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [cuerdas.core :as str]
-            [ataru.virkailija.virkailija-application-service :as virkailija-application-service])
+            [clj-time.format :as f]
+            [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
+            [ataru.background-job.job :as job])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -431,6 +434,15 @@
                 application-id
                 nil)
               (response/ok {}))
+          (response/unauthorized {})))
+      (api/GET "/list-job-statuses" {session :session}
+        (if (get-in session [:identity :superuser])
+          (response/ok (job/get-job-types job-runner))
+          (response/unauthorized {})))
+      (api/POST "/update-job-statuses" {session :session}
+        :body [body s/Any]
+        (if (get-in session [:identity :superuser])
+          (response/ok (job/update-job-types job-runner body))
           (response/unauthorized {}))))
 
     (api/context "/post-process" []
@@ -1899,22 +1911,6 @@
   [system]
   (api/context "/status" []
     :tags ["status-api"]
-    (api/GET "/background-jobs" []
-      :return {s/Keyword {:total   {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :failed  {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :errored {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :queued  s/Int
-                          :late    s/Int}}
-      (let [status (job/status)]
-        (cond-> (dissoc status :ok)
-                (:ok status) response/ok
-                (not (:ok status)) response/internal-server-error)))
     (api/GET "/caches" []
       :return s/Any
       (response/ok
