@@ -68,15 +68,15 @@
 
       :else true)))
 
-(defn- set-payment-type
-  "Adds the payment type info to a form"
+(defn- add-payment-type
+  "Adds the payment type info to a form if valid"
   [form payment-type]
   (if (contains? form-payment-types payment-type)
     (assoc-in form [:properties :payment-type] payment-type)
     (throw (user-feedback-exception (str "Maksutyyppi ei tuettu: " payment-type)))))
 
-(defn- set-fees
-  "Sets fees amounts for form. Forces hardcoded values for specific payment types."
+(defn- add-fees
+  "Adds fee amounts for form if valid. Forces hardcoded values for specific payment types."
   [form payment-type processing-fee decision-fee]
   (let [final-processing-fee (cond
                                (= :payment-type-kk payment-type) kk-processing-fee
@@ -89,29 +89,39 @@
       (throw (user-feedback-exception
                (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee]))))))
 
-(defn set-payment-info
-  "Sets the payment amount for the form. Input and output fees are decimal strings."
+(defn- add-payment-info-to-form
   [form payment-type processing-fee decision-fee]
   (let [payment-type-kw    (keyword payment-type)
         coerce-bigdec-fn   (fn [fee]
                              (when fee
                                (try (bigdec fee)
                                     (catch Exception _
-                                      (throw (user-feedback-exception (str "Maksuarvo ei numero: " fee)))))))
+                                      (throw (user-feedback-exception (str "Maksusumma ei numero: " fee)))))))
         processing-fee-num (coerce-bigdec-fn processing-fee)
         decision-fee-num   (coerce-bigdec-fn decision-fee)]
     (-> form
-        (set-payment-type payment-type-kw)
-        (set-fees payment-type-kw processing-fee-num decision-fee-num))))
+        (add-payment-type payment-type-kw)
+        (add-fees payment-type-kw processing-fee-num decision-fee-num))))
 
-; TODO: this should be triggered as part of form updates / whenever a form is attached to haku
-(defn set-payment-info-if-higher-education
-  "Set payment info if form is attached to one or more matching higher education admissions"
-  [tarjonta-service form]
-  (let [hakus (tarjonta/hakus-by-form-key tarjonta-service (:key form))
-        application-fee-required? (some true?
-                                        (map #(requires-higher-education-application-fee? tarjonta-service %)
-                                             hakus))]
-    (if application-fee-required?
-      (set-payment-info form :payment-type-kk kk-processing-fee nil)
-      form)))
+(defn- add-payment-info-if-higher-education
+  "Set payment info if form is attached to one or more matching higher education admissions."
+  [tarjonta-service form haku]
+    (if (requires-higher-education-application-fee? tarjonta-service haku)
+      (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil)
+      form))
+
+(defn set-payment-info
+  "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
+  [form payment-type processing-fee decision-fee]
+  (if (= :payment-type-kk (keyword payment-type))
+    (throw (user-feedback-exception
+             (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
+    (add-payment-info-to-form form payment-type processing-fee decision-fee)))
+
+(defn get-payment-info
+  "Gets payment info for form. Should be always used to get payment info rather than querying
+   properties directly, because type and fees may be set and overridden dynamically."
+  [tarjonta-service form haku]
+  (let [form-with-possible-kk-fees (add-payment-info-if-higher-education tarjonta-service form haku)
+        properties (:properties form-with-possible-kk-fees)]
+    (select-keys properties [:payment-type :processing-fee :decision-fee])))
