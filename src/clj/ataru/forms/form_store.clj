@@ -19,6 +19,8 @@
 (declare yesql-fetch-latest-version-by-id)
 (declare yesql-fetch-latest-version-by-id-lock-for-update)
 (declare yesql-get-by-id)
+(declare yesql-get-by-ids)
+(declare yesql-get-siirtotiedosto-form-ids)
 (declare yesql-form-by-key-has-applications)
 (declare yesql-fetch-latest-version-by-key)
 (declare yesql-latest-id-by-key)
@@ -53,6 +55,10 @@
                             (assoc :content {:content (or content [])})
                             (languages->obj))]
     form))
+
+(defn assoc-flattened-content [form]
+  (assoc form :flat-content (util/flatten-form-fields (:content form))))
+
 
 (defn- postprocess [result]
   (->> (if (or (seq? result) (list? result) (vector? result)) result [result])
@@ -96,6 +102,12 @@
 
 (defn fetch-by-id [id & [conn]]
   (first (execute yesql-get-by-id {:id id} conn)))
+
+(defn fetch-forms-by-ids [ids]
+  (log/info "Fetching forms for" (count ids) "ids.")
+  (->> (execute yesql-get-by-ids {:ids ids} nil)
+       ;(map assoc-flattened-content)
+       ))
 
 (def fetch-form fetch-latest-version)
 
@@ -192,3 +204,8 @@
   (->> application
        :form_id
        fetch-by-id))
+
+(defn siirtotiedosto-form-ids [{:keys [modified-before modified-after] :as params}]
+  (log/info "Fetching changed form ids for siirtotiedosto with params" params)
+  (execute-with-db :db yesql-get-siirtotiedosto-form-ids {:modified_before modified-before
+                                                          :modified_after modified-after}))

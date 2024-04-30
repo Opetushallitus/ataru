@@ -1561,6 +1561,22 @@
            (partition partition-size partition-size nil)
            (mapcat fetch)))))
 
+(defn- unwrap-siirtotiedosto-application [application]
+  (let [attachments (->> application
+                         :content
+                         :answers
+                         (filter #(="attachment" (:fieldType %)))
+                         flatten-application-answers)
+        keyword-values (->> application
+                            :content
+                            :answers
+                            (filter #(not= "hakukohteet" (:key %)))
+                            flatten-application-answers)]
+    (-> application
+         (assoc :attachments attachments)
+        (assoc :keyValues keyword-values)
+        (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
+
 (defn- unwrap-siirto-application [application]
   (let [attachments (->> application
                          :content
@@ -1583,6 +1599,15 @@
                                                        :application_keys (cons "" application-keys)})
        (map unwrap-siirto-application)))
 
+(defn siirtotiedosto-applications-for-ids [ids]
+  (log/info "Fetching applications for" (count ids) "ids.")
+  (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications-for-ids {:ids ids})
+       (map unwrap-siirtotiedosto-application)))
+
+(defn siirtotiedosto-application-ids [{:keys [modified-before modified-after] :as params}]
+  (log/info "Siirtotiedosto-forms-paged" params)
+  (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:modified_before modified-before
+                                                                 :modified_after modified-after}))
 (defn kouta-application-count-for-hakukohde [hakukohde-oid]
   (->> (exec-db :db queries/yesql-kouta-application-count-for-hakukohde {:hakukohde_oid    hakukohde-oid})
        (map #(:application_count %))
