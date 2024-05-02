@@ -1541,6 +1541,13 @@
            (partition partition-size partition-size nil)
            (mapcat fetch)))))
 
+(defn get-raw-key-values [answers]
+  (reduce
+    (fn [acc {:keys [key value]}]
+      (into acc [[key value]]))
+    {}
+    answers))
+
 (defn- unwrap-siirtotiedosto-application [application]
   (let [attachments (->> application
                          :content
@@ -1551,7 +1558,7 @@
                             :content
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
-                            flatten-application-answers)]
+                            get-raw-key-values)]
     (-> application
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
