@@ -1292,6 +1292,7 @@ SELECT
     a.form_id                           AS form,
     a.created_time,
     a.submitted,
+    a.modified_time,
     (SELECT content
      FROM answers_as_content
      WHERE application_id = a.id) AS content,
