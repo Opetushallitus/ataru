@@ -20,24 +20,24 @@ $$ language plpgsql;
 
 create trigger set_application_modified_time_on_hakukohde_review_update
     after insert or update or delete
-    on ataru.public.application_hakukohde_reviews
+    on application_hakukohde_reviews
     for each row
 execute procedure update_application_modified_time();
 
 create trigger set_application_modified_time_on_application_event_update
     after insert or update or delete
-    on ataru.public.application_events
+    on application_events
     for each row
 execute procedure update_application_modified_time();
 
 create trigger set_application_modified_time_on_review_notes_update
     after insert or update or delete
-    on ataru.public.application_review_notes
+    on application_review_notes
     for each row
 execute procedure update_application_modified_time();
 
 create trigger set_application_modified_time_on_attachment_review_update
     after insert or update or delete
-    on ataru.public.application_hakukohde_attachment_reviews
+    on application_hakukohde_attachment_reviews
     for each row
 execute procedure update_application_modified_time();
