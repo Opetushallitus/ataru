@@ -207,8 +207,7 @@
                 (assoc
                   :db
                   (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count))))
-      {:db   (update db :valinta-tulos-service dissoc application-key)
-       :http {:method              :get
+      {:http {:method              :get
               :path                (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus?hakemusOid=" application-key)
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
