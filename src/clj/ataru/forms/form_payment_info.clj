@@ -21,15 +21,15 @@
   [tarjonta-service haku]
   (let [hakukohteet (tarjonta/get-hakukohteet tarjonta-service (:hakukohteet haku))]
     (and
-      haku
-      hakukohteet
+      (boolean haku)
+      (boolean hakukohteet)
       ; Kohdejoukko must be korkeakoulutus
       (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#")
       ; "Kohdejoukon tarkenne must be empty or siirtohaku
       (or (nil? (:kohdejoukon-tarkenne-uri haku))
           (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
       ; Must be tutkintoon johtava
-      (some true? (map #(:tutkintoon-johtava? %) hakukohteet)))))
+      (boolean (some true? (map #(:tutkintoon-johtava? %) hakukohteet))))))
 
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
@@ -125,3 +125,9 @@
   (let [form-with-possible-kk-fees (add-payment-info-if-higher-education tarjonta-service form haku)
         properties (:properties form-with-possible-kk-fees)]
     (select-keys properties [:payment-type :processing-fee :decision-fee])))
+
+(defn add-admission-payment-info-for-haku
+  "Adds info about admission payment requirement to a haku object"
+  [tarjonta-service haku]
+  (let [admission-payment-required? (requires-higher-education-application-fee? tarjonta-service haku)]
+    (assoc haku :admission-payment-required? admission-payment-required?)))
