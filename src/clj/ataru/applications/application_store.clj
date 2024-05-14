@@ -1614,6 +1614,7 @@
 
 ;yesql-get-siirtotiedosto-application-ids-for-haku
 (defn siirtotiedosto-application-ids [{:keys [modified-before modified-after haku-oid] :as params}]
+  (log/info "Fetching application ids for params:" params)
   (if (some? haku-oid)
     (exec-db :db queries/yesql-get-siirtotiedosto-application-ids-for-haku {:haku_oid haku-oid})
     (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:modified_before modified-before
