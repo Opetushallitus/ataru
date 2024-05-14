@@ -1671,16 +1671,19 @@
       (api/POST "/siirtotiedosto" {session :session}
         :summary "Create siirtotiedostos containing appications and forms from a time period"
         :query-params [{modifiedAfter :- s/Str nil}
-                       {modifiedBefore :- s/Str nil}]
+                       {modifiedBefore :- s/Str nil}
+                       {hakuOid :- s/Str nil}]
         :return s/Any
         (if (and (nil? modifiedBefore)
-                 (nil? modifiedAfter))
-          (response/bad-request {:error "Either modifiedAfter or modifiedBefore param required!"})
+                 (nil? modifiedAfter)
+                 (nil? hakuOid))
+          (response/bad-request {:error "Either modifiedAfter, modifiedBefore or haku param required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:modified-after  modifiedAfter
                                          :modified-before (or modifiedBefore (.format
                                                                                (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
-                                                                               (Date.)))}]
+                                                                               (Date.)))
+                                         :haku-oid hakuOid}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
                     {applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
@@ -1689,6 +1692,24 @@
                 (match combined-result
                        {:success true}
                        (response/ok combined-result) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+                       {:success false}
+                       (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
+      (api/POST "/siirtotiedosto/hakemukset/:haku-oid" {session :session}
+        :summary "Create siirtotiedostos containing appications for haku"
+        :path-params [haku-oid :- String]
+        :return s/Any
+        (if (nil? haku-oid)
+          (response/bad-request {:error "Either modifiedAfter, modifiedBefore or haku param required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:haku-oid haku-oid}]
+              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+              (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto success" applications-success)
+                (match applications-success
+                       {:success true}
+                       (response/ok {:success true}) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
                        {:success false}
                        (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
