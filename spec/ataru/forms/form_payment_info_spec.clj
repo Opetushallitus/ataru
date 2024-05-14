@@ -35,6 +35,39 @@
 (def test-non-kk-form-with-existing-payment-info
   (merge test-non-kk-form {:properties test-payment-info}))
 
+(describe "add-admission-payment-info-for-haku"
+          (tags :unit)
+
+          (it "sets payment needed as true with higher education"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 1"}
+                          :oid "payment-info-test-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-kk-hakukohde"] }
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= true(:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as false for non higher education"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 2" }
+                          :oid "payment-info-test-non-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_11#1"
+                          :hakukohteet ["payment-info-test-non-kk-hakukohde"] }
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= false (:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as false for unknown haku"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 2" }
+                          :oid "payment-info-test-unknown-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-unknown-hakukohde"] }
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= false (:admission-payment-required? haku-with-payment-flag)))))
+
 (describe "get-payment-info"
           (tags :unit)
 
