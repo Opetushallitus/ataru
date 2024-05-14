@@ -44,7 +44,7 @@
 
 (defn- selected-hakukohde-increase-priority
   [hakukohde-oid priority-number disabled?]
-  (let [increase-disabled? (= priority-number 1)
+  (let [increase-disabled? (or disabled? (= priority-number 1))
         lang               @(subscribe [:application/form-language])]
     [:span.application__selected-hakukohde-row--priority-increase
      (if increase-disabled?
@@ -60,7 +60,7 @@
 (defn- selected-hakukohde-decrease-priority
   [hakukohde-oid priority-number disabled?]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        decrease-disabled?   (= priority-number (count selected-hakukohteet))
+        decrease-disabled?   (or disabled? (= priority-number (count selected-hakukohteet)))
         lang                 @(subscribe [:application/form-language])]
     [:span.application__selected-hakukohde-row--priority-decrease
      (if decrease-disabled?
