@@ -1,6 +1,5 @@
 (ns ataru.hakija.application-hakukohde-2nd-component
   (:require [reagent.core :as r]
-            [goog.dom :as gdom]
             [re-frame.core :refer [dispatch subscribe]]
             [ataru.application-common.components.button-component :as btn]
             [ataru.util :as u]
@@ -60,24 +59,27 @@
                 ^{:key uri}
                 [koulutustyyppi-filter-row label is-selected on-select]))])]))))
 
-(defn set-focus! [element-id]
-  (let [element (gdom/getElement element-id)]
-    (when element
-          (-> element .-focus))))
+(defn hide-toast-after-delay []
+  (dispatch [:application/hide-toast]))
+
+(defn- start-toast-hide-timer []
+  (js/setTimeout hide-toast-after-delay 3500))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid idx]
   (let [aria-header-id (str "hakukohde-search-hit-header-" hakukohde-oid)
         select-fn #(do
-                     (set-focus! "valitut-hakukohteet")
                      (dispatch [:application/hakukohde-query-process (atom "") idx])
                      (dispatch [:application/set-active-hakukohde-search nil])
-                     (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx]))]
+                     (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx])
+                     (dispatch [:application/show-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
+                     (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
+                     (start-toast-hide-timer)
+                    )]
     [:div.application__search-hit-hakukohde-row-2nd
      {:on-mouse-down #(.preventDefault %)
       :tab-index 0
       :role "button"
-      :aria-pressed "false"
       :on-key-up #(when (a11y/is-enter-or-space? %)
                        (select-fn))
       :on-click select-fn}
@@ -86,9 +88,7 @@
        {:id aria-header-id}
        [:span.application__search-hit-hakukohde-row-2nd-span
         ^{:key :i.zmdi.zmdi-chevron-right} [:i.zmdi.zmdi-chevron-right]]
-        @(subscribe [:application/hakukohde-label hakukohde-oid])
-       ]]]))
-
+        @(subscribe [:application/hakukohde-label hakukohde-oid])]]]))
 (defn- hakukohde-selection [idx]
   (let [search-input (r/atom "")
         hakukohde-hits (subscribe [:application/koulutustyyppi-filtered-hakukohde-hits idx])
@@ -97,10 +97,11 @@
     (fn []
       [:div.application__hakukohde-2nd-row__hakukohde
        [:input.application__form-text-input-in-box
-        {:on-change   #(do (reset! search-input (.-value (.-target %)))
+        {:auto-focus (> idx 0)
+         :on-change   #(do (reset! search-input (.-value (.-target %)))
                            (dispatch [:application/hakukohde-query-change search-input idx])
-                           (dispatch [:application/set-active-hakukohde-search idx]))
-         :lang "fi-FI"
+                           (dispatch [:application/set-active-hakukohde-search idx])
+                        )
          :placeholder (translations/get-hakija-translation :search-application-options-or-education @lang)
          :value       @search-input}]
        (when (= idx @active-hakukohde-selection)
@@ -198,7 +199,6 @@
 
 (defn- hakukohde-row [idx hakukohde-oid hakukohteet-count]
   [:div.application__hakukohde-2nd-row
-   {:role "list-item"}
    [hakukohde-priority idx hakukohde-oid hakukohteet-count]
    [:div.application__hakukohde-2nd-row__right
     (if hakukohde-oid
@@ -220,7 +220,8 @@
                 (= 1 remaining-hakukohteet) single-label
                 (< 1 remaining-hakukohteet) (str n-label1 remaining-hakukohteet n-label2))]
     (when (int? remaining-hakukohteet)
-      [:span.application__hakukohde-2nd-max-amount-msg
+      [:div.application__hakukohde-2nd-max-amount-msg 
+       {:tab-index 0}
        label])))
 
 (defn- lisaa-hakukohde-button [remaining-hakukohteet]
@@ -247,16 +248,20 @@
         hakukohteet-full? (subscribe [:application/hakukohteet-full?])
         max-hakukohteet (subscribe [:application/max-hakukohteet])
         editable? (subscribe [:application/hakukohteet-editable?])
-        lang @(subscribe [:application/form-language])]
+        lang @(subscribe [:application/form-language])
+        toast (subscribe [:application/toast])
+        {:keys [visible message]} @toast]
     [:div.application__wrapper-element
-     {:lang "fi-FI"}
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
+      [:div
+       {:role "alert"
+       :aria-live "polite"
+       :class  (if visible "show-valitut-hakukohteet" "hide-valitut-hakukohteet")}
+       (str (translations/get-hakija-translation :application-study-programm-added lang) message)]
       [:div.application__form-field
-       {:lang "fi-FI"}
        [:div.application__hakukohde-selected-list
         {:id "valitut-hakukohteet"
          :tab-index 0
-         :lang "fi-FI"
          :aria-label (str (translations/get-hakija-translation :application-selected-study-programms lang)  (str hakukohteet-count))}
         (for [idx (range (max hakukohteet-count 1))]
           (let [hakukohde-oid (nth @selected-hakukohteet idx nil)

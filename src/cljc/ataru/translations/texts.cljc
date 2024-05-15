@@ -77,6 +77,9 @@
    :application-selected-study-programms       {:fi "Valitut hakukohteet, lisätty "
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Selected study programms"}
+   :application-study-programm-added            {:fi "Hakukohde lisätty: "
+                                                 :sv "Ansökningsmål tillagt: "
+                                                 :en "Study programm added: "}
    :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
                                                  :sv "Du kan inte söka till detta ansökningsmål, eftersom du redan söker till följande ansökningsmål:"
                                                  :en "You can't apply to this study programme because you are applying to the following study programme:"}
