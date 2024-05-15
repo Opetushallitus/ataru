@@ -382,3 +382,15 @@
                    new-idx idx}
           filters' (s/rename-keys filters changes)]
       (assoc-in db [:application :hakukohde-koulutustyyppi-filters] filters'))))
+
+(reg-event-db
+  :application/show-toast
+ [check-schema-interceptor]
+ (fn[db [_ message]]
+   (assoc-in db [:hakukohde-lisatty-toast] {:visible true :message message})))
+
+(reg-event-db
+ :application/hide-toast
+ [check-schema-interceptor]
+ (fn[db [_]]
+   (assoc-in db [:hakukohde-lisatty-toast] {:visible false :message ""})))
