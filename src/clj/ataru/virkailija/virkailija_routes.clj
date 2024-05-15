@@ -1699,11 +1699,7 @@
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto success" applications-success)
-                (match applications-success
-                       {:success true}
-                       (response/ok {:success true}) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
-                       {:success false}
-                       (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+                (response/ok {:success applications-success})))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}
