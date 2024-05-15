@@ -957,6 +957,6 @@
         element))))
 
 (re-frame/reg-sub
- :application/toast
+ :application/hakukohde-lisatty-toast
  (fn [db _]
    (:hakukohde-lisatty-toast db)))
