@@ -384,13 +384,13 @@
       (assoc-in db [:application :hakukohde-koulutustyyppi-filters] filters'))))
 
 (reg-event-db
-  :application/show-toast
+  :application/show-hakukohde-toast
  [check-schema-interceptor]
  (fn[db [_ message]]
    (assoc-in db [:hakukohde-lisatty-toast] {:visible true :message message})))
 
 (reg-event-db
- :application/hide-toast
+ :application/hide-hakukohde-toast
  [check-schema-interceptor]
  (fn[db [_]]
    (assoc-in db [:hakukohde-lisatty-toast] {:visible false :message ""})))

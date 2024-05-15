@@ -60,7 +60,7 @@
                 [koulutustyyppi-filter-row label is-selected on-select]))])]))))
 
 (defn hide-toast-after-delay []
-  (dispatch [:application/hide-toast]))
+  (dispatch [:application/hide-hakukohde-toast]))
 
 (defn- start-toast-hide-timer []
   (js/setTimeout hide-toast-after-delay 3500))
@@ -72,7 +72,7 @@
                      (dispatch [:application/hakukohde-query-process (atom "") idx])
                      (dispatch [:application/set-active-hakukohde-search nil])
                      (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx])
-                     (dispatch [:application/show-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
+                     (dispatch [:application/show-hakukohde-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
                      (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
                      (start-toast-hide-timer)
                     )]
@@ -249,15 +249,15 @@
         max-hakukohteet (subscribe [:application/max-hakukohteet])
         editable? (subscribe [:application/hakukohteet-editable?])
         lang @(subscribe [:application/form-language])
-        toast (subscribe [:application/toast])
+        toast (subscribe [:application/hakukohde-lisatty-toast])
         {:keys [visible message]} @toast]
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
-      [:div
+      [:div.application__toast-hakukohde-lisatty
        {:role "alert"
        :aria-live "polite"
        :class  (if visible "show-valitut-hakukohteet" "hide-valitut-hakukohteet")}
-       (str (translations/get-hakija-translation :application-study-programm-added lang) message)]
+       (str (translations/get-hakija-translation :application-study-program-added lang) message)]
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
         {:id "valitut-hakukohteet"
