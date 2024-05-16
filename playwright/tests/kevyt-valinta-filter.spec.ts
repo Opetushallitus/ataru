@@ -7,7 +7,7 @@ let page: Page
 
 test.describe.configure({ mode: 'serial' })
 
-test.describe('Hakemusten filtteröinti kevyt-valinnan tiedoilla', async () => {
+test.describe('Hakemusten filtteröinti kevyt-valinnan tiedoilla', () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage()
 

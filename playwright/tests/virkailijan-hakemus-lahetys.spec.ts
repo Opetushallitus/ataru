@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 
 import {
@@ -33,8 +33,6 @@ test.beforeAll(async ({ browser }) => {
     page,
     lomakkeenTunnisteet.lomakkeenId,
     async () => {
-      // FIXME: Jos lomakkeen nimen syöttää liian aikaisin, automaattitallennus ei triggeröidy! https://jira.eduuni.fi/browse/OY-4642
-      await page.waitForTimeout(800)
       const nameInput = page.getByTestId('form-name-input')
       await nameInput.fill('Testilomake')
     }

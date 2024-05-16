@@ -14,19 +14,21 @@
                                      (assoc (component/single-choice-button metadata)
                                             :koodisto-source {:uri "" :title "" :version 1}
                                             :options []))]
-   [:dropdown component/dropdown]
+   [:dropdown component/dropdown {:data-test-id "component-toolbar-dropdown"}]
    [:dropdown-koodisto (fn [metadata]
                          (assoc (component/dropdown metadata)
                                 :koodisto-source {:uri "" :title "" :version 1}
-                                :options []))]
-   [:multiple-choice component/multiple-choice]
+                                :options []))
+    {:data-test-id "component-toolbar-dropdown-koodisto"}]
+   [:multiple-choice component/multiple-choice {:data-test-id "component-toolbar-multiple-choice"}]
    [:multiple-choice-koodisto (fn [metadata]
                                 (assoc (component/multiple-choice metadata)
                                        :koodisto-source {:uri "" :title "" :version 1}
-                                       :options []))]
+                                       :options []))
+    {:data-test-id "component-toolbar-multiple-choice-koodisto"}]
    [:text-field component/text-field {:data-test-id "component-toolbar-tekstikenttä"}]
    [:text-area component/text-area {:data-test-id "component-toolbar-tekstialue"}]
-   [:adjacent-fieldset component/adjacent-fieldset]
+   [:adjacent-fieldset component/adjacent-fieldset {:data-test-id "component-toolbar-adjacent-fieldset"}]
    [:attachment component/attachment]
    [:question-group component/question-group]
    [:info-element component/info-element]
