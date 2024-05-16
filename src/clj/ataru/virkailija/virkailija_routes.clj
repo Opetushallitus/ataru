@@ -84,13 +84,12 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
-            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [cuerdas.core :as str]
             [clj-time.format :as f]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
             [ataru.background-job.job :as job])
+
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -293,7 +292,7 @@
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
-      :summary "Get content for form" 
+      :summary "Get content for form"
       (ok (form-store/fetch-form id)))
 
     (api/PUT "/forms/:id" {session :session}
@@ -514,29 +513,15 @@
         :path-params [henkilo-oid :- String]
         :query-params [haku-oid :- String
                        hakemus-datetime :- String]
-        :summary "Returns opiskelija information from suoritusrekisteri"
-        :return ataru-schema/OpiskelijaResponse
-        (let [hakuvuosi   (->> hakemus-datetime
-                               (f/parse (:date-time f/formatters))
-                               (suoritus-filter/year-for-suoritus-filter))
-              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
-              tarjonta-info (when haku-oid
-                              (tarjonta-parser/parse-tarjonta-info-by-haku
-                               koodisto-cache
-                               tarjonta-service
-                               organization-service
-                               ohjausparametrit-service
-                               haku-oid))
-              haku-end    (get-in tarjonta-info [:tarjonta :hakuaika :end])
-              linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
-              aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % [hakuvuosi] luokkatasot haku-end) aliases)]
-          (if-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
-            (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
-              (response/ok
-                {:oppilaitos-name (:name organization)
-                 :luokka          (:luokka opiskelija)}))
-            (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)}))))
+        :summary "Returns opiskelijan luokkatieto information from suoritusrekisteri"
+        :return ataru-schema/OpiskelijaLuokkatietoResponse
+        (let [luokkatieto (virkailija-application-service/get-opiskelijan-luokkatieto
+                            henkilo-oid haku-oid hakemus-datetime
+                            koodisto-cache tarjonta-service organization-service
+                            ohjausparametrit-service person-service suoritus-service)]
+          (if luokkatieto
+            (response/ok luokkatieto)
+            (response/not-found {:error (str "Opiskelijan luokkatieto information not found for henkilo-oid " henkilo-oid)}))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings

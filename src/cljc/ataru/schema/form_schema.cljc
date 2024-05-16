@@ -930,7 +930,7 @@
    :yo-amm-autom-hakukelpoisuus                                s/Bool
    s/Any                                                       s/Any})
 
-(s/defschema OpiskelijaResponse
+(s/defschema OpiskelijaLuokkatietoResponse
   {:oppilaitos-name localized-schema/LocalizedStringOptional
    :luokka s/Str})
 
