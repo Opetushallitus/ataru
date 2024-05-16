@@ -295,7 +295,8 @@
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int
    (s/optional-key :valinnat-estetty-time-window) (s/maybe {:dateStart (s/maybe s/Int)
-                                                            :dateEnd   (s/maybe s/Int)})})
+                                                            :dateEnd   (s/maybe s/Int)})
+   (s/optional-key :admission-payment-required?) s/Bool})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
