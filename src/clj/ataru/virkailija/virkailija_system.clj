@@ -4,6 +4,7 @@
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sns :as sns]
             [ataru.aws.sqs :as sqs]
+            [ataru.aws.cloudwatch :as cloudwatch]
             [ataru.cas.client :as cas]
             [ataru.cache.redis-cache :as redis-cache]
             [ataru.cache.two-layer-cache :as two-layer-cache]
@@ -292,7 +293,9 @@
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
-                                            hakija-jobs/job-definitions))
+                                            hakija-jobs/job-definitions)
+                                     (db/get-datasource :db)
+                                     true)
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache
@@ -304,7 +307,8 @@
                   :hakukohderyhma-settings-cache
                   :valintalaskentakoostepalvelu-service
                   :audit-logger
-                  :liiteri-cas-client])
+                  :liiteri-cas-client
+                  :amazon-cloudwatch])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -318,6 +322,10 @@
                          (s3-temp-file-store/new-store)
                          [:s3-client])
                        (filesystem-temp-file-store/new-store))
+
+    :amazon-cloudwatch (component/using
+                  (cloudwatch/map->AmazonCloudwatch {:namespace (str (-> config :public-config :environment-name) "-ataru")})
+                  [:credentials-provider])
     
     :amazon-sqs (component/using
                  (sqs/map->AmazonSQS {})

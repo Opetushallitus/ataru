@@ -98,7 +98,7 @@ test-browser-integration() {
 run-migrations() {
     echo "Running migrations"
     start_fake_deps_server
-    time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
+    time ./bin/lein with-profile dev run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
     stop_fake_deps_server
 }
 
