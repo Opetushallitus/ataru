@@ -21,6 +21,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
+            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -278,6 +279,7 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
+    ; TODO MAKSUT: do we need to also insert hakemusmaksu data here?
     (api/GET "/forms/latest-by-haku/:haku-oid" []
       :path-params [haku-oid :- s/Str]
       :return ataru-schema/FormWithContent
@@ -1151,9 +1153,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
+              hakus-with-payment-flag (map
+                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
+                                        hakus)]
+        (-> hakus-with-payment-flag
             response/ok
-            (header "Cache-Control" "public, max-age=300")))
+            (header "Cache-Control" "public, max-age=300"))))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
