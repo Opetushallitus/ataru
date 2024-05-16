@@ -125,6 +125,13 @@
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
 
+(defn- get-haku [form-key]
+  (-> (mock/request :get (str "/lomake-editori/api/tarjonta/haku") {:form-key form-key})
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-form [id]
   (-> (mock/request :get (str "/lomake-editori/api/forms/" id))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
@@ -595,5 +602,25 @@
                 {:paymentType :payment-type-astu :decisionFee "1.9"}
                 {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}
                 200)))
+
+(describe "GET /tarjonta/haku payment info"
+          (tags :unit)
+
+          (it "should return admission-payment-required? true for matching higher education admission"
+              (let [resp (get-haku "payment-info-test-kk-form")
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 200 status)
+                (should= 1 (count body))
+                (should= true (:admission-payment-required? (first body)) )))
+
+          (it "should return admission-payment-required? false for non higher education admission"
+              (let [resp (get-haku "payment-info-test-non-kk-form")
+                    status (:status resp)
+                    body (:body resp)
+                    _ (println "BODY" body)]
+                (should= 200 status)
+                (should= 1 (count body))
+                (should= false (:admission-payment-required? (first body))))))
 
 (run-specs)
