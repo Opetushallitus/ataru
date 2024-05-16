@@ -86,7 +86,6 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [cuerdas.core :as str]
-            [clj-time.format :as f]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
             [ataru.background-job.job :as job])
 
