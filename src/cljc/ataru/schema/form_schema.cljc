@@ -696,7 +696,13 @@
    :hakuOid     (s/maybe s/Str)
    :hakutoiveet [s/Str]
    :attachments {s/Str Value}
-   :keyValues   {s/Str Value}})
+   :keyValues   {s/Str Value}
+   :hakukohdeReviews             [{:requirement   s/Str
+                                   :state         s/Str
+                                   :hakukohde     s/Str}]
+   :hakukohdeAttachmentReviews   [{:attachment    s/Str
+                                   :state         s/Str
+                                   :hakukohde     s/Str}]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

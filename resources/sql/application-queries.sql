@@ -1131,7 +1131,17 @@ SELECT
    FROM answers_as_content
    WHERE application_id = a.id) AS content,
   a.lang,
-  lf.organization_oid AS "organization-oid"
+  lf.organization_oid AS "organization-oid",
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews",
+  (SELECT json_agg(json_build_object('attachment', attachment_key,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_attachment_reviews ahar
+   WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 JOIN forms AS f ON form_id = f.id
