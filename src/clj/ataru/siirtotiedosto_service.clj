@@ -47,21 +47,22 @@
                                               (s/optional-key :person_oid) (s/maybe s/Str)})
 (s/defschema SiirtotiedostoInactivatedApplicationSchema {:hakemusOid s/Str
                                                          :state "inactivated"})
-(defn- save-applications-to-s3 [^SiirtotiedostoPalvelu client applications start-time additional-info]
+
+(defn- save-applications-to-s3 [^SiirtotiedostoPalvelu client applications execution-id file-count additional-info]
   (let [json (json/generate-string applications)
         stream (input-stream (.getBytes json))]
-    (log/info "Saving" (count applications) "applications as json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client "ataru" "hakemus" additional-info stream 2)
+    (log/info "Saving" (count applications) "applications as json to s3 in siirtotiedosto! Execution id " execution-id)
+    (try (.saveSiirtotiedosto client "ataru" "hakemus" additional-info execution-id file-count stream 2)
          true
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))
            false))))
 
-(defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms start-time]
+(defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms execution-id file-count additional-info]
   (let [json (json/generate-string forms)
         stream (input-stream (.getBytes json))]
-    (log/info "Saving" (count forms) "forms as json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client "ataru" "lomake" "" stream 2)
+    (log/info "Saving" (count forms) "forms as json to s3 in siirtotiedosto! Execution id " execution-id)
+    (try (.saveSiirtotiedosto client "ataru" "lomake" additional-info execution-id file-count stream 2)
          true
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))
@@ -79,7 +80,8 @@
       (let [chunk-results (doall (for [application-ids partitions]
                                           (let [start (System/currentTimeMillis)
                                                 applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)
-                                                success? (save-applications-to-s3 siirtotiedosto-client applications-chunk (:modified-after params) (or (:haku-oid params) ""))]
+                                                {:keys [execution-id haku-oid]} params
+                                                success? (save-applications-to-s3 siirtotiedosto-client applications-chunk execution-id (inc @done) (or haku-oid ""))]
                                             (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
                                             success?)))]
         (log/info "application-chunk results" chunk-results)
@@ -96,7 +98,8 @@
       (let [chunk-results (doall (for [form-ids partitions]
                                     (let [start (System/currentTimeMillis)
                                           forms-chunk (form-store/fetch-forms-by-ids form-ids)
-                                          success? (save-forms-to-s3 siirtotiedosto-client forms-chunk (:modified-after params))]
+                                          {:keys [execution-id haku-oid]} params
+                                          success? (save-forms-to-s3 siirtotiedosto-client forms-chunk execution-id (inc @done) (or haku-oid ""))]
                                       (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
                                       success?)))]
         (log/info "form-chunk results" chunk-results)
