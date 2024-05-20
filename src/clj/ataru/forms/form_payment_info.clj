@@ -118,13 +118,12 @@
              (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
     (add-payment-info-to-form form payment-type processing-fee decision-fee)))
 
-(defn get-payment-info
-  "Gets payment info for form. Should be always used to get payment info rather than querying
+(defn get-form-with-payment-info
+  "Adds payment info for form. Should be always used to get payment info rather than querying
    properties directly, because type and fees may be set and overridden dynamically."
   [tarjonta-service form haku]
-  (let [form-with-possible-kk-fees (add-payment-info-if-higher-education tarjonta-service form haku)
-        properties (:properties form-with-possible-kk-fees)]
-    (select-keys properties [:payment-type :processing-fee :decision-fee])))
+  (let [form-with-possible-kk-fees (add-payment-info-if-higher-education tarjonta-service form haku)]
+    form-with-possible-kk-fees))
 
 (defn add-admission-payment-info-for-haku
   "Adds info about admission payment requirement to a haku object"
