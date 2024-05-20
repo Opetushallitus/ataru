@@ -97,7 +97,8 @@
            org.joda.time.format.DateTimeFormat
            java.time.format.DateTimeFormatter
            (java.text SimpleDateFormat)
-           (java.util Date)))
+           (java.util Date)
+           (java.util UUID)))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -1683,7 +1684,8 @@
                                          :modified-before (or modifiedBefore (.format
                                                                                (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                                                                (Date.)))
-                                         :haku-oid hakuOid}]
+                                         :haku-oid hakuOid
+                                         :execution-id (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
                     {applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
@@ -1703,7 +1705,8 @@
         (if (nil? haku-oid)
           (response/bad-request {:error "Either modifiedAfter, modifiedBefore or haku param required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:haku-oid haku-oid}]
+            (let [siirtotiedosto-params {:haku-oid haku-oid
+                                         :execution-id (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto success" applications-success)
