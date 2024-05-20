@@ -74,77 +74,87 @@
           (describe "with old tarjonta-service (basic sanity checks)"
                     (it "returns existing payment info when no haku given"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-non-kk-form-with-existing-payment-info nil)]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-non-kk-form-with-existing-payment-info nil)
+                              payment-info (:properties form-with-payment-info)]
                           (should= test-payment-info payment-info)))
 
                     (it "sets payment info dynamically if higher education"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-kk-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-kk-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should= expected-payment-info payment-info)))
 
                     (it "doesn't set payment info dynamically if not higher education"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-non-kk-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-non-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-non-kk-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-non-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should-be empty? payment-info))))
 
           (describe "with kouta tarjonta-service"
                     (it "returns existing payment info when no haku given"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-non-kk-form-with-existing-payment-info nil)]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-non-kk-form-with-existing-payment-info nil)
+                              payment-info (:properties form-with-payment-info)]
                           (should= test-payment-info payment-info)))
 
                     (it "returns existing payment info when hakemusmaksu criteria is not met"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-non-kk-form-with-existing-payment-info
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-non-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-non-kk-form-with-existing-payment-info
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-non-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should= test-payment-info payment-info)))
 
                     (it "sets payment info dynamically if higher education"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-kk-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-kk-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should= expected-payment-info payment-info)))
 
                     (it "doesn't set payment info dynamically if not higher education"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-non-kk-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-non-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-non-kk-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-non-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should-be empty? payment-info)))
 
                     (it "doesn't set payment info dynamically if not tutkintoon johtava"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-kk-no-tutkinto-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-kk-no-tutkinto-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-kk-no-tutkinto-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-kk-no-tutkinto-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should-be empty? payment-info)))
 
                     (it "doesn't set payment info dynamically if non-siirtohaku"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-kk-jatko-form
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-kk-jatko-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-kk-jatko-form
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-kk-jatko-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should-be empty? payment-info)))
 
                     (it "overrides payment info on the form when hakemusmaksu criteria is met"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              payment-info (payment-info/get-payment-info
-                                             tarjonta-service test-kk-form-with-existing-payment-info
-                                             (tarjonta-service/get-haku tarjonta-service
-                                                                        "payment-info-test-kk-haku"))]
+                              form-with-payment-info (payment-info/get-form-with-payment-info
+                                                       tarjonta-service test-kk-form-with-existing-payment-info
+                                                       (tarjonta-service/get-haku tarjonta-service
+                                                                                  "payment-info-test-kk-haku"))
+                              payment-info (:properties form-with-payment-info)]
                           (should= expected-payment-info payment-info)))))
