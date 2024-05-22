@@ -617,8 +617,7 @@
           (it "should return admission-payment-required? false for non higher education admission"
               (let [resp (get-haku "payment-info-test-non-kk-form")
                     status (:status resp)
-                    body (:body resp)
-                    _ (println "BODY" body)]
+                    body (:body resp)]
                 (should= 200 status)
                 (should= 1 (count body))
                 (should= false (:admission-payment-required? (first body))))))

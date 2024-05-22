@@ -18,13 +18,16 @@
   (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))
 
 (defn- requires-higher-education-application-fee?
-  [tarjonta-service haku]
-  (let [hakukohteet (tarjonta/get-hakukohteet tarjonta-service (:hakukohteet haku))]
+  [tarjonta-service haku hakukohde-oids]
+  (let [hakukohteet (tarjonta/get-hakukohteet
+                      tarjonta-service
+                      (remove nil? hakukohde-oids))]
     (and
       (boolean haku)
       (boolean hakukohteet)
       ; Kohdejoukko must be korkeakoulutus
-      (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#")
+      (and (string? (:kohdejoukko-uri haku))
+           (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#"))
       ; "Kohdejoukon tarkenne must be empty or siirtohaku
       (or (nil? (:kohdejoukon-tarkenne-uri haku))
           (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
@@ -72,7 +75,7 @@
   "Adds the payment type info to a form if valid"
   [form payment-type]
   (if (contains? form-payment-types payment-type)
-    (assoc-in form [:properties :payment-type] payment-type)
+    (assoc-in form [:properties :payment-type] (name payment-type))
     (throw (user-feedback-exception (str "Maksutyyppi ei tuettu: " payment-type)))))
 
 (defn- add-fees
@@ -105,8 +108,8 @@
 
 (defn- add-payment-info-if-higher-education
   "Set payment info if form is attached to one or more matching higher education admissions."
-  [tarjonta-service form haku]
-    (if (requires-higher-education-application-fee? tarjonta-service haku)
+  [form tarjonta-service haku hakukohde-oids]
+    (if (requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
       (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil)
       form))
 
@@ -118,15 +121,25 @@
              (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
     (add-payment-info-to-form form payment-type processing-fee decision-fee)))
 
-(defn get-form-with-payment-info
+(defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying
    properties directly, because type and fees may be set and overridden dynamically."
-  [tarjonta-service form haku]
-  (let [form-with-possible-kk-fees (add-payment-info-if-higher-education tarjonta-service form haku)]
+  [form tarjonta-service haku]
+  ; This should work with both full tarjonta data with extended hakukohde data and normal hakus with just OIDs so...
+  (let [hakukohde-oids (or (->> (:hakukohteet haku)
+                                (map #(:oid %))
+                                (filter some?)
+                                (not-empty))
+                           (:hakukohteet haku))
+        form-with-possible-kk-fees (add-payment-info-if-higher-education
+                                     form tarjonta-service haku hakukohde-oids)]
     form-with-possible-kk-fees))
 
 (defn add-admission-payment-info-for-haku
   "Adds info about admission payment requirement to a haku object"
   [tarjonta-service haku]
-  (let [admission-payment-required? (requires-higher-education-application-fee? tarjonta-service haku)]
+  (let [admission-payment-required? (requires-higher-education-application-fee?
+                                      tarjonta-service
+                                      haku
+                                      (:hakukohteet haku))]
     (assoc haku :admission-payment-required? admission-payment-required?)))

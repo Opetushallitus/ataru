@@ -295,6 +295,26 @@
           (should= (map :id (filter cannot-view? fields))
                    [])))))
 
+  (it "should get form with dynamic kk payment info as hakija"
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+        (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
+           (should= 200 (:status resp))
+           (let [properties (->> resp :body :properties)]
+             (should-not (empty? properties))
+             (should= "payment-type-kk" (:payment-type properties))
+             (should= "100.00" (:processing-fee properties))
+             (should= nil (:decision-fee properties))))))
+
+  (it "should get form with dynamic kk payment info as virkailija without henkilo"
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+        (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
+           (should= 200 (:status resp))
+           (let [properties (->> resp :body :properties)]
+             (should-not (empty? properties))
+             (should= "payment-type-kk" (:payment-type properties))
+             (should= "100.00" (:processing-fee properties))
+             (should= nil (:decision-fee properties))))))
+
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
