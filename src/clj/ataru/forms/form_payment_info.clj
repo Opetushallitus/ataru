@@ -51,7 +51,7 @@
           false)
 
       (fee-nonpositive? decision-fee)
-      (do (log/warn "Nonpositive decision fee: " processing-fee)
+      (do (log/warn "Nonpositive decision fee: " decision-fee)
           false)
 
       (incorrect-kk-fee? payment-type processing-fee decision-fee)
