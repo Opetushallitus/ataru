@@ -6,7 +6,7 @@
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (def expected-payment-info
-  {:payment-type :payment-type-kk,
+  {:payment-type "payment-type-kk",
    :processing-fee (str payment-info/kk-processing-fee),
    :decision-fee nil})
 
@@ -68,21 +68,22 @@
                                              tarjonta-service haku)]
                 (should= false (:admission-payment-required? haku-with-payment-flag)))))
 
-(describe "get-payment-info"
+(describe "populate-form-with-payment-info"
           (tags :unit)
 
           (describe "with old tarjonta-service (basic sanity checks)"
                     (it "returns existing payment info when no haku given"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-non-kk-form-with-existing-payment-info nil)
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-non-kk-form-with-existing-payment-info tarjonta-service nil)
                               payment-info (:properties form-with-payment-info)]
                           (should= test-payment-info payment-info)))
 
                     (it "sets payment info dynamically if higher education"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-kk-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-kk-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -90,8 +91,9 @@
 
                     (it "doesn't set payment info dynamically if not higher education"
                         (let [tarjonta-service (mts/->MockTarjontaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-non-kk-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-non-kk-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-non-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -100,15 +102,18 @@
           (describe "with kouta tarjonta-service"
                     (it "returns existing payment info when no haku given"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-non-kk-form-with-existing-payment-info nil)
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-non-kk-form-with-existing-payment-info
+                                                       tarjonta-service
+                                                       nil)
                               payment-info (:properties form-with-payment-info)]
                           (should= test-payment-info payment-info)))
 
                     (it "returns existing payment info when hakemusmaksu criteria is not met"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-non-kk-form-with-existing-payment-info
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-non-kk-form-with-existing-payment-info
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-non-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -116,8 +121,9 @@
 
                     (it "sets payment info dynamically if higher education"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-kk-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-kk-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -125,8 +131,9 @@
 
                     (it "doesn't set payment info dynamically if not higher education"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-non-kk-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-non-kk-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-non-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -134,8 +141,9 @@
 
                     (it "doesn't set payment info dynamically if not tutkintoon johtava"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-kk-no-tutkinto-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-kk-no-tutkinto-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-kk-no-tutkinto-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -143,8 +151,9 @@
 
                     (it "doesn't set payment info dynamically if non-siirtohaku"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-kk-jatko-form
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-kk-jatko-form
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-kk-jatko-haku"))
                               payment-info (:properties form-with-payment-info)]
@@ -152,8 +161,9 @@
 
                     (it "overrides payment info on the form when hakemusmaksu criteria is met"
                         (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/get-form-with-payment-info
-                                                       tarjonta-service test-kk-form-with-existing-payment-info
+                              form-with-payment-info (payment-info/populate-form-with-payment-info
+                                                       test-kk-form-with-existing-payment-info
+                                                       tarjonta-service
                                                        (tarjonta-service/get-haku tarjonta-service
                                                                                   "payment-info-test-kk-haku"))
                               payment-info (:properties form-with-payment-info)]
