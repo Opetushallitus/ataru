@@ -118,12 +118,14 @@
    :1.2.246.562.29.65950024186               (merge
                                                base-haku
                                                {:oid              "1.2.246.562.29.65950024186"
+                                                :kohdejoukkoUri              "haunkohdejoukko_12#1"
+                                                :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
                                                 :usePriority      true
                                                 :ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
                                                 :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                                    "1.2.246.562.20.49028196524"
                                                                    "1.2.246.562.20.49028196525"
-                                                                   "1.2.246.562.20.49028196526"]})
+                                                                   "1.2.246.562.20.11111111111"]})
    :1.2.246.562.29.65950024187               (merge
                                                base-haku
                                                {:oid              "1.2.246.562.29.65950024187"
@@ -338,7 +340,12 @@
    :payment-info-test-non-kk-hakukohde     (merge
                                              base-hakukohde
                                              {:oid          "payment-info-test-kk-hakukohde"
-                                              :tutkintoonJohtava true})})
+                                              :tutkintoonJohtava true})
+
+   :1.2.246.562.20.11111111111 (merge
+                                 base-hakukohde
+                                 {:oid          "1.2.246.562.20.11111111111"
+                                  :tutkintoonJohtava true})})
 
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid                  "1.2.246.562.17.74335799461"
