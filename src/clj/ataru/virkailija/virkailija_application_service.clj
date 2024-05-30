@@ -25,7 +25,7 @@
 (defn get-lahtokoulu-cutoff-timestamp
   [hakuvuosi tarjonta-info]
   (let [haku-end (get-in tarjonta-info [:tarjonta :hakuaika :end])
-        lahtokoulu-yhteishaku-cutoff-date (time/date-time hakuvuosi 6 1)]
+        lahtokoulu-yhteishaku-cutoff-date (time/date-time hakuvuosi 5 30)]
     (if (haku/toisen-asteen-yhteishaku? (:tarjonta tarjonta-info))
       (coerce/to-timestamp lahtokoulu-yhteishaku-cutoff-date)
       haku-end)))
