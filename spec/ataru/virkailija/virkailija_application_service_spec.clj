@@ -33,7 +33,7 @@
 
           (it "should return timestamp for 1st of June on haku year for yhteishaku"
               (should=
-                (str->timestamp "2016-06-01T00:00:00.000Z")
+                (str->timestamp "2016-05-30T00:00:00.000Z")
                 (application-service/get-lahtokoulu-cutoff-timestamp 2016 yhteishaku-tarjonta)))
 
           (it "should return nil, eg. no cutoff, when tarjonta data is completely missing"
