@@ -407,6 +407,7 @@
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
   (payment-triggered-processing-state-change [this session application-key message payment-url state])
   (payment-poller-processing-state-change [this application-key state])
+  (kk-application-payment-processing-state-change [this application-key state])
   (send-modify-application-link-email [this application-key payment-url session])
   (add-review-note [this session note])
   (add-review-notes [this session review-notes])
@@ -623,6 +624,19 @@
              state
              nil
              audit-logger)))
+
+  (kk-application-payment-processing-state-change
+    [_ application-key state]
+    (let [hakukohde   "form"
+          requirement "kk-payment-state"]
+      (log/info "Changing form application" application-key " kk-payment-state to " state)
+      (application-store/save-application-hakukohde-review
+        application-key
+        hakukohde
+        requirement
+        state
+        nil
+        audit-logger)))
 
   (mass-update-application-states
     [_ session application-keys hakukohde-oids from-state to-state]
