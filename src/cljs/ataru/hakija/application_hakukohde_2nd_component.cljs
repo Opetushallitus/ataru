@@ -254,8 +254,9 @@
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
       [:div.application__toast-hakukohde-lisatty
-       {:role "alert"
-       :aria-live "polite"
+       {:role "alertdialog"
+       :aria-modal "true" 
+       :aria-labelledby "valitut-hakukohteet"
        :class  (if visible "show-valitut-hakukohteet" "hide-valitut-hakukohteet")}
        (str (translations/get-hakija-translation :application-study-program-added lang) message)]
       [:div.application__form-field
