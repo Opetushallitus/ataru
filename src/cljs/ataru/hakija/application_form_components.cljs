@@ -682,7 +682,7 @@
           (merge {:id        option-id
                   :tab-index 0
                   :type      "checkbox"
-                  :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?) 
+                  :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
                   :on-change #(toggle-value-fn (.. % -target -value))
@@ -696,8 +696,9 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :aria-label (str "Dima " label)
-                     :on-key-up #(when (a11y/is-enter-or-space? %)
+                     :aria-label (if checked? (str "Valittu " label) label)
+                     :aria-live "polite"
+                     :on-key-up #(when (a11y/is-enter-or-space? %) 
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
