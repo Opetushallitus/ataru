@@ -696,7 +696,7 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :aria-label (if checked? (str "Valittu " label) label)
+                     :aria-label (if checked? (str (tu/get-hakija-translation :selected @lang) label) label)
                      :aria-live "polite"
                      :on-key-up #(when (a11y/is-enter-or-space? %) 
                                 (toggle-value-fn option-value))})

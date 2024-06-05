@@ -587,6 +587,9 @@
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
                                                  :en "(mandatory information)"}
+   :selected                                    {:fi "Valittu: "
+                                                 :sv "Godkänd: "
+                                                 :en "Selected: "}
    :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
                                                  :sv "Ändring i antagningssättet i den gemensamma ansökan"
                                                  :en "EN: Muutos yhteishaun valintatapaan"}
