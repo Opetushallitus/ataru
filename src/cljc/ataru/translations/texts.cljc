@@ -2651,7 +2651,7 @@
                            :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
                            :en "You can pay the decision fee and view the details of your payment through the following link."}
    :decision-text-3       {:fi "Jos et suorita päätösmaksua 14 vuorokauden sisällä, lähetämme sinulle päätösmaksusta erillisen laskun. Maksu on ulosottokelpoinen ilman tuomiota tai päätöstä (valtion maksuperustelaki (150/1992) 11§ 1.mom.)."
-                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften får indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
                            :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
 
    :decision-info         {:fi "Lisätietoja päätöksistä ja maksuista on nettisivuillamme:"
