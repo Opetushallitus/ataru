@@ -24,9 +24,7 @@
    ["processing-fee-paid" (:processing-fee-paid state-translations)]
    ["decision-fee-outstanding" (:decision-fee-outstanding state-translations)]
    ["decision-fee-overdue" (:decision-fee-overdue state-translations)]
-   ["decision-fee-paid" (:decision-fee-paid state-translations)]
-   ["kk-processing-fee-outstanding" (:kk-processing-fee-outstanding state-translations)]
-   ["kk-processing-fee-paid" (:kk-processing-fee-paid state-translations)]])
+   ["decision-fee-paid" (:decision-fee-paid state-translations)]])
 
 (def tutu-processing-state
   #{"processing-fee-overdue"
@@ -34,11 +32,6 @@
     "decision-fee-outstanding"
     "decision-fee-overdue"
     "decision-fee-paid"})
-
-; TODO: these may need to be filtered out from lists in some cases as well
-(def kk-fee-processing-states
-  #{"kk-processing-fee-outstanding"
-    "kk-processing-fee-paid"})
 
 (def application-hakukohde-processing-states-normal
   (reduce (fn [acc [k v]]
