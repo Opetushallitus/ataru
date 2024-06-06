@@ -2625,12 +2625,6 @@
    :decision-fee-paid      {:fi "Päätös maksettu"
                             :sv "Päätös maksettu (sv) TODO"
                             :en "Päätös maksettu (en) TODO"}
-   :kk-processing-fee-outstanding {:fi "Odottaa hakemusmaksua"
-                                   :sv "Odottaa hakemusmaksua (sv) TODO"
-                                   :en "Odottaa hakemusmaksua (en) TODO"}
-   :kk-processing-fee-paid {:fi "Hakemusmaksu maksettu"
-                            :sv "Hakemusmaksu maksettu (sv) TODO"
-                            :en "Hakemusmaksu maksettu (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
                             :en "Multiple values"}
