@@ -955,3 +955,8 @@
                   visible @(re-frame/subscribe [:application/visible? id])]
             :when visible]
         element))))
+
+(re-frame/reg-sub
+ :application/hakukohde-lisatty-toast
+ (fn [db _]
+   (:hakukohde-lisatty-toast db)))
