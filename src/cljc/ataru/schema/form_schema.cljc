@@ -655,7 +655,8 @@
                                    (s/optional-key :suoritusvuosi) s/Int}]
    :pohjakoulutus_kk_ulk_country (s/maybe s/Str)
    :hakutoiveet                  [{:hakukohde_oid (s/maybe s/Str)
-                                   :sija          s/Int}]})
+                                   :sija          s/Int
+                                   :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
 
 (s/defschema ValintaApplication
   {:hakemusOid          s/Str

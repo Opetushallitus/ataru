@@ -1614,6 +1614,7 @@
         (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
                                                                                                 session
                                                                                                 tarjonta-service
+                                                                                                valintalaskentakoostepalvelu-service
                                                                                                 hakuOid
                                                                                                 hakukohdeOid)]
           (response/ok applications)
