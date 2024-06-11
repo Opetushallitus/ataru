@@ -11,7 +11,8 @@
     [chime.core :as chime]
     [yesql.core :refer [defqueries]]
     [cronstar.core :as cron]
-    [clojure.string :refer [includes? join]])
+    [clojure.string :refer [includes? join]]
+    [ataru.background-job.serializer :refer [create-serializer]])
   (:import java.sql.BatchUpdateException
            java.time.Instant
            java.time.Duration))
@@ -33,13 +34,18 @@
   (cleanup-archived-jobs [this seconds]
     "Cleans up archived jobs older than seconds parameter"))
 
+(def serializer (create-serializer))
+
 (def proletarian-enqueue-options
   "Default options for enqueueing work"
-  {:proletarian/job-table "proletarian_jobs"})
+  {:proletarian/job-table "proletarian_jobs"
+   :proletarian/serializer serializer})
+
 (def proletarian-worker-options
   "Default options for creating Proletarian workers"
   {:proletarian/log (fn [event payload] (if (includes? event "polling") (log/debug event payload) (log/info event payload)))
    :proletarian/job-table "proletarian_jobs"
+   :proletarian/serializer serializer
    :proletarian/archived-job-table "proletarian_archived_jobs"
    :proletarian/polling-interval-ms 2000
    :proletarian.retry/failed-job-fn (fn [attrs e] (log/error e "Failed job" attrs))})
