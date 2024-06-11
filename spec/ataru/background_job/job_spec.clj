@@ -5,7 +5,8 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log])
-  (:import java.time.Instant))
+  (:import (java.time Instant)
+           (org.joda.time DateTime)))
 
 (defn- should-eventually [f timeout]
   (let [timed-out (promise)]
@@ -96,6 +97,42 @@
                     (job/start-job job-runner connection "queued" "test payload"))
 
                   (should (= "test payload" (deref ready 300 false))) ; payload equals supplied
+                  (finally (.stop job-runner)))))
+
+          (it "payload can contain joda DateTime"
+              (let [ready (promise)
+                    job-runner (.start
+                                 (job/->PersistentJobRunner
+                                   {"queued" {:handler (fn [payload _] (deliver ready payload))
+                                              :type "queued"
+                                              :queue {:proletarian/polling-interval-ms 100}}}
+                                   ds
+                                   true))]
+                (try
+                  (let [payload {:time (DateTime.)}]
+                    (jdbc/with-db-transaction
+                      [connection {:datasource ds}]
+                      (job/start-job job-runner connection "queued" payload))
+
+                    (should (= payload (deref ready 300 false)))) ; payload equals supplied
+                  (finally (.stop job-runner)))))
+
+          (it "payload can contain java.time.Instant"
+              (let [ready (promise)
+                    job-runner (.start
+                                 (job/->PersistentJobRunner
+                                   {"queued" {:handler (fn [payload _] (deliver ready payload))
+                                              :type "queued"
+                                              :queue {:proletarian/polling-interval-ms 100}}}
+                                   ds
+                                   true))]
+                (try
+                  (let [payload {:time (Instant/ofEpochMilli (.getMillis (DateTime.)))}]
+                    (jdbc/with-db-transaction
+                      [connection {:datasource ds}]
+                      (job/start-job job-runner connection "queued" payload))
+
+                    (should (= payload (deref ready 300 false)))) ; payload equals supplied
                   (finally (.stop job-runner)))))
 
           (it "gets JobRunner as second parameter"
