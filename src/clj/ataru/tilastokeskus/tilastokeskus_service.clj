@@ -10,6 +10,7 @@
             [ataru.tarjonta.haku :as h]
             [ataru.util :as util]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
+            [clojure.set]
             [taoensso.timbre :as log]))
 
 (defn- hakutoiveet
