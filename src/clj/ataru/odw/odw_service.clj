@@ -28,10 +28,14 @@
     "obligated" "REQUIRED"
     "not-obligated" "NOT_REQUIRED"))
 
+(defn get-yksiloimaton-tai-aidinkieleton-henkilo-oids
+  [persons]
+  (set (map :oidHenkilo (filter (fn [person] (or (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))
+                                                 (empty? (get-in person [:aidinkieli :kieliKoodi]))))
+                                (vals persons)))))
+
 (defn- filter-applications-for-koostedata [toinen-aste-applications persons]
-  (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (set (map :oidHenkilo (filter (fn [person] (or (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))
-                                                                                                   (empty? (get-in person [:aidinkieli :kieliKoodi]))))
-                                                                                  (vals persons))))
+  (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (get-yksiloimaton-tai-aidinkieleton-henkilo-oids persons)
         persons-from-applications (set (map :person-oid toinen-aste-applications))
         dropped-oids (clojure.set/intersection yksiloimaton-tai-aidinkieleton-henkilo-oids persons-from-applications)
         wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:person-oid %))) toinen-aste-applications)]

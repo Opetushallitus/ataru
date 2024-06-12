@@ -644,19 +644,23 @@
    :idTunnus     (s/maybe s/Str)})
 
 (s/defschema TilastokeskusApplication
-  {:hakemus_oid                  s/Str
-   :hakemus_tila                 s/Str
-   :haku_oid                     s/Str
-   :henkilo_oid                  s/Str
-   :hakukohde_oids               [s/Str]
-   :kotikunta                    (s/maybe s/Str)
-   :asuinmaa                     (s/maybe s/Str)
-   :pohjakoulutus_kk             [{:pohjakoulutuskklomake          s/Str
-                                   (s/optional-key :suoritusvuosi) s/Int}]
-   :pohjakoulutus_kk_ulk_country (s/maybe s/Str)
-   :hakutoiveet                  [{:hakukohde_oid (s/maybe s/Str)
-                                   :sija          s/Int
-                                   :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
+  {:hakemus_oid                       s/Str
+   :hakemus_tila                      s/Str
+   :haku_oid                          s/Str
+   :henkilo_oid                       s/Str
+   :hakukohde_oids                    [s/Str]
+   :kotikunta                         (s/maybe s/Str)
+   :asuinmaa                          (s/maybe s/Str)
+   :submitted                         org.joda.time.DateTime
+   :pohjakoulutus_kk                  [{:pohjakoulutuskklomake          s/Str
+                                        (s/optional-key :suoritusvuosi) s/Int}]
+   :pohjakoulutus_kk_ulk_country      (s/maybe s/Str)
+   :pohjakoulutus_2aste               (s/maybe s/Str)
+   :pohjakoulutus_2aste_suorituskieli (s/maybe s/Str)
+   :pohjakoulutus_2aste_lahtokoulu_oid (s/maybe s/Str)
+   :hakutoiveet                       [{:hakukohde_oid (s/maybe s/Str)
+                                        :sija          s/Int
+                                        :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
 
 (s/defschema ValintaApplication
   {:hakemusOid          s/Str

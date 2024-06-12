@@ -359,14 +359,14 @@
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset to-date haku-oid application-key)))
 
-(defn get-applications-for-tilastokeskus [organization-service session tarjonta-service valintalaskentakoostepalvelu-service haku-oid hakukohde-oid]
+(defn get-applications-for-tilastokeskus [organization-service session person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(tilastokeskus-service/get-application-info-for-tilastokeskus tarjonta-service valintalaskentakoostepalvelu-service haku-oid hakukohde-oid)))
+    #(tilastokeskus-service/get-application-info-for-tilastokeskus person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid)))
 
 (defn get-applications-for-valintapiste [organization-service session haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
