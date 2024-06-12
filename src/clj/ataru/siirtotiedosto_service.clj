@@ -3,7 +3,6 @@
             [ataru.forms.form-store :as form-store]
             [cheshire.core :as json]
             [taoensso.timbre :as log]
-            [schema.core :as s]
             [clojure.java.io :refer [input-stream]]
             [ataru.config.core :refer [config]])
   (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)))
@@ -14,39 +13,6 @@
 
 (def applications-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :applications-page-size)) (catch Exception _ nil)) 10000))
 (def forms-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :forms-page-size)) (catch Exception _ nil)) 500))
-
-(s/defschema SiirtotiedostoFormSchema {:properties        s/Any
-                                        :deleted          (s/maybe s/Bool)
-                                        :key              s/Str
-                                        :flat-content          [{:fieldClass s/Str
-                                                            :id         s/Str
-                                                            :fieldType  s/Str
-                                                            s/Any       s/Any}]
-                                        :content          {s/Any s/Any}
-                                        :name             {s/Any s/Str}
-                                        :organization-oid s/Str
-                                        :created-by       s/Str
-                                        :created-time     org.joda.time.DateTime
-                                        :languages        [s/Str]})
-
-;Todo fixme Hakemuksen henkilöoid-kentän kanssa voi olla ongelma sikäli, että henkilöOidin lisääminen hakemuksen tallentamisen jälkeen ei päivitä hakemuksen muokkaushetkeä
-;eli jälkikäteen lisätty person_oid ei välttämättä päädy mihinkään siirtotiedostoon
-(s/defschema SiirtotiedostoApplicationSchema {:hakemusOid s/Str
-                                              :state s/Any
-                                              (s/optional-key :form_key) s/Str
-                                              (s/optional-key :keyValues) {s/Any s/Any}
-                                              (s/optional-key :attachments) {s/Any s/Any}
-                                              (s/optional-key :created_time) org.joda.time.DateTime
-                                              (s/optional-key :eligibility-set-automatically) s/Any
-                                              (s/optional-key :submitted) org.joda.time.DateTime
-                                              (s/optional-key :lang) s/Str
-                                              (s/optional-key :id) s/Str
-                                              (s/optional-key :application_hakukohde_reviews) s/Any
-                                              (s/optional-key :hakuOid) (s/maybe s/Str)
-                                              (s/optional-key :form) s/Num
-                                              (s/optional-key :person_oid) (s/maybe s/Str)})
-(s/defschema SiirtotiedostoInactivatedApplicationSchema {:hakemusOid s/Str
-                                                         :state "inactivated"})
 
 (defn- save-applications-to-s3 [^SiirtotiedostoPalvelu client applications execution-id file-count additional-info]
   (let [json (json/generate-string applications)
