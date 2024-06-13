@@ -15,13 +15,16 @@
 
 (defn- hakutoiveet
   [hakukohteet harkinnanvaraisuudet]
-  (mapv
-   (fn [i h]
-     {:hakukohde_oid h
-      :sija          i
-      :harkinnanvaraisuuden_syy (get harkinnanvaraisuudet h)})
-   (range 1 7)
-   hakukohteet))
+  (let [harkinnanvaraisuudet-map (into {} (map (fn [{:keys [hakukohdeOid harkinnanvaraisuudenSyy]}]
+                                                 [hakukohdeOid harkinnanvaraisuudenSyy])
+                                               harkinnanvaraisuudet))]
+    (mapv
+    (fn [i h]
+      {:hakukohde_oid h
+       :sija          i
+       :harkinnanvaraisuuden_syy (get harkinnanvaraisuudet-map h)})
+    (range 1 7)
+    hakukohteet)))
 
 (defn- first-string [v]
   (cond
@@ -93,7 +96,7 @@
         kooste-data-toinen-aste (get-koostedata-for-applications toisen-asteen-yhteishaku-oids applications-for-koostedata valintalaskentakoostepalvelu-service)
         results      (map (fn [application]
                             (try
-                              (let [hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus [(:key application) :hakutoiveet] [])
+                              (let [hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus [(:hakemus_oid application) :hakutoiveet] [])
                                     haku (get haut (:haku_oid application))
                                     application-koostedata (get kooste-data-toinen-aste (keyword (:henkilo_oid application)))
                                      enriched-application (enrich-application-data haku application hakutoiveiden-harkinnanvaraisuudet application-koostedata suoritus-service)]
