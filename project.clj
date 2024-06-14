@@ -25,7 +25,7 @@
                          [org.mozilla/rhino "1.7.14"]
                          [org.scala-lang/scala-library "2.12.18"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]]
-  :dependencies [[org.clojure/clojure "1.11.1"]
+  :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.11.121" :exclusions [com.cognitect/transit-java]]
@@ -81,7 +81,7 @@
                  [environ "1.2.0"]
                  [org.clojure/core.async "1.6.681"]
                  [org.clojure/java.jdbc "0.7.12"]
-                 [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
+                 [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
                  [clj-time "0.15.2"]
                  [cheshire/cheshire "5.12.0"]
                  [selmer "1.12.59"]
