@@ -235,6 +235,10 @@ Before transfering data between environments one can anonymize the data by runni
 CONFIG=path-to-application-config.edn lein anonymize-data fake-person-file.txt
 ```
 
+## Updating dependencies
+
+Because vulnerability scanning tools don't work well with clojure, pom.xml is used for scanning. If you update dependencies to project.clj, run `lein pom` to update pom.xml accordingly
+
 ## Troubleshooting
 
 ### `make start` hangs in container creation
