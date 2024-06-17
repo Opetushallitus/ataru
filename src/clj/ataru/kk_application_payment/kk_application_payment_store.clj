@@ -13,12 +13,12 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
-(defn create-or-update-kk-application-payment-state
+(defn create-or-update-kk-application-payment-state!
   [person-oid, start-term, start-year, state]
-  (first (exec-db :db yesql-upsert-kk-application-payment-state<! {:person_oid person-oid
+  (exec-db :db yesql-upsert-kk-application-payment-state<! {:person_oid person-oid
                                                                    :start_term start-term
                                                                    :start_year start-year
-                                                                   :state      state})))
+                                                                   :state      state}))
 
 (defn get-kk-application-payment-states
   [person-oids start-term start-year]
@@ -27,7 +27,7 @@
                                                                         :start_year  start-year}))
 
 ; TODO does this need "first"?
-(defn create-kk-application-payment-event
+(defn create-kk-application-payment-event!
   [payment-state-id, new-state, event-type, virkailija-oid, message]
   (first (exec-db :db yesql-add-kk-application-payment-event<! {:kk_application_payment_state_id payment-state-id
                                                                 :new_state                       new-state
