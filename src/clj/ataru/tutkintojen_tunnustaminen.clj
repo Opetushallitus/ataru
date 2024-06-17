@@ -268,7 +268,7 @@
   [job-runner application-id]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
     (log/info "Started tutkintojen tunnustaminen submit job with job id"
-              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+              (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                 (job/start-job job-runner
                                connection
                                "tutkintojen-tunnustaminen-submit-job"
@@ -278,7 +278,7 @@
   [job-runner application-id]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
     (log/info "Started tutkintojen tunnustaminen edit job with job id"
-              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+              (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                 (job/start-job job-runner
                                connection
                                "tutkintojen-tunnustaminen-edit-job"
@@ -288,7 +288,7 @@
   [job-runner event-id]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
     (log/info "Started tutkintojen tunnustaminen review state changed job with job id"
-              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+              (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                 (job/start-job job-runner
                                connection
                                "tutkintojen-tunnustaminen-review-state-changed-job"
@@ -298,7 +298,7 @@
   [job-runner information-request]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
     (log/info "Started tutkintojen tunnustaminen information request sent job with job id"
-              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+              (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                 (job/start-job job-runner
                                connection
                                "tutkintojen-tunnustaminen-information-request-sent-job"
