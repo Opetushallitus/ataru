@@ -1655,13 +1655,11 @@
       (api/POST "/siirtotiedosto" {session :session}
         :summary "Create siirtotiedostos containing appications and forms from a time period"
         :query-params [{modifiedAfter :- s/Str nil}
-                       {modifiedBefore :- s/Str nil}
-                       {hakuOid :- s/Str nil}]
+                       {modifiedBefore :- s/Str nil}]
         :return s/Any
-        (if (and (nil? modifiedBefore)
-                 (nil? modifiedAfter)
-                 (nil? hakuOid))
-          (response/bad-request {:error "Either modifiedAfter, modifiedBefore or haku param required!"})
+        (if (or (nil? modifiedBefore)
+                 (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:modified-after  modifiedAfter
                                          :modified-before (or modifiedBefore (.format
@@ -1681,12 +1679,52 @@
                        (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
 
+      (api/POST "/siirtotiedosto/hakemukset" {session :session}
+        :summary "Create siirtotiedostos containing appications for a time period"
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
+        :return s/Any
+        (if (or (nil? modifiedBefore)
+                (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before modifiedBefore
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for applications: " siirtotiedosto-params)
+              (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto applications success" applications-success)
+                (if applications-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
+      (api/POST "/siirtotiedosto/lomakkeet" {session :session}
+        :summary "Create siirtotiedostos containing forms for a time period"
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
+        :return s/Any
+        (if (or (nil? modifiedBefore)
+                (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before modifiedBefore
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for forms: " siirtotiedosto-params)
+              (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto forms success" forms-success)
+                (if forms-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
       (api/POST "/siirtotiedosto/hakemukset/:haku-oid" {session :session}
         :summary "Create siirtotiedostos containing appications for haku"
         :path-params [haku-oid :- String]
         :return s/Any
         (if (nil? haku-oid)
-          (response/bad-request {:error "Either modifiedAfter, modifiedBefore or haku param required!"})
+          (response/bad-request {:error "Haku oid param required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:haku-oid haku-oid
                                          :execution-id (str (UUID/randomUUID))}]
