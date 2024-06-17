@@ -1320,7 +1320,7 @@ WHERE
     la.modified_time <= :modified_before::timestamptz;
 
 -- name: yesql-get-siirtotiedosto-application-ids-for-haku
--- Get list of ids for applications to be included in siirtotiedosto
+-- Get list of ids for applications in haku to be included in siirtotiedosto
 SELECT
     la.id
 FROM latest_applications as la
