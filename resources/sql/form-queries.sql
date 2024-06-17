@@ -62,7 +62,7 @@ SELECT
 FROM forms
 WHERE id = :id;
 
--- name: yesql-get-by-ids
+-- name: yesql-get-forms-by-ids
 SELECT
     id,
     key,
@@ -82,8 +82,9 @@ SELECT
     id
 FROM forms f
 WHERE
-    (:modified_after::TEXT IS NULL OR f.created_time >= :modified_after::timestamptz)
-  AND (:modified_before::TEXT IS NULL OR f.created_time <= :modified_before::timestamptz)
+    f.created_time >= :modified_after::timestamptz
+  AND
+    f.created_time <= :modified_before::timestamptz
 ORDER BY f.id;
 
 -- name: yesql-fetch-latest-version-by-id

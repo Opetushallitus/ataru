@@ -1315,8 +1315,9 @@ SELECT
     la.id
 FROM latest_applications as la
 WHERE
-    (:modified_after::TEXT IS NULL OR la.modified_time >= :modified_after::timestamptz)
-  AND (:modified_before::TEXT IS NULL OR la.modified_time <= :modified_before::timestamptz);
+    la.modified_time >= :modified_after::timestamptz
+  AND
+    la.modified_time <= :modified_before::timestamptz;
 
 -- name: yesql-get-siirtotiedosto-application-ids-for-haku
 -- Get list of ids for applications to be included in siirtotiedosto

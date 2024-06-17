@@ -1615,8 +1615,6 @@
   (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications-for-ids {:ids ids})
        (map unwrap-siirtotiedosto-application)))
 
-
-;yesql-get-siirtotiedosto-application-ids-for-haku
 (defn siirtotiedosto-application-ids [{:keys [modified-before modified-after haku-oid] :as params}]
   (log/info "Fetching application ids for params:" params)
   (if (some? haku-oid)

@@ -677,9 +677,6 @@
   {:kieliKoodi  s/Str
    :kieliTyyppi s/Str})
 
-(s/defschema SiirtotiedostoApplication
-  {s/Any s/Any})
-
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
    :person      {:oidHenkilo    s/Str

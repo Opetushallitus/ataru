@@ -19,7 +19,7 @@
 (declare yesql-fetch-latest-version-by-id)
 (declare yesql-fetch-latest-version-by-id-lock-for-update)
 (declare yesql-get-by-id)
-(declare yesql-get-by-ids)
+(declare yesql-get-forms-by-ids)
 (declare yesql-get-siirtotiedosto-form-ids)
 (declare yesql-form-by-key-has-applications)
 (declare yesql-fetch-latest-version-by-key)
@@ -105,7 +105,7 @@
 
 (defn fetch-forms-by-ids [ids]
   (log/info "Fetching forms for" (count ids) "ids.")
-  (->> (execute yesql-get-by-ids {:ids ids} nil)
+  (->> (execute yesql-get-forms-by-ids {:ids ids} nil)
        ;(map assoc-flattened-content)
        ))
 
