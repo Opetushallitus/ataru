@@ -1665,7 +1665,6 @@
                                          :modified-before (or modifiedBefore (.format
                                                                                (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                                                                (Date.)))
-                                         :haku-oid hakuOid
                                          :execution-id (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
