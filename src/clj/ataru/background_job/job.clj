@@ -195,6 +195,7 @@
       job-type
       payload
       (merge proletarian-enqueue-options
+             {:process-in (:process-in (get job-definitions job-type))}
              {:proletarian/queue job-type})))
 
   (get-job-types [_]
