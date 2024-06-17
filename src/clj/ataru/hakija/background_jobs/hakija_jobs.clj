@@ -4,7 +4,8 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]))
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen])
+  (:import  (java.time Duration)))
 
 (def job-definitions
   {(:type email-job/job-definition)                    email-job/job-definition
@@ -23,6 +24,12 @@
                                                         :type    "start-automatic-eligibility-if-ylioppilas-job-job"
                                                         :schedule "0 14 * * *"}
    "tutkintojen-tunnustaminen-submit-job"              {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
-                                                        :type    "tutkintojen-tunnustaminen-submit-job"}
+                                                        :type    "tutkintojen-tunnustaminen-submit-job"
+                                                        ; 30s viive jotta liitteet ehtivät skannautua
+                                                        :process-in (Duration/ofSeconds 30)
+                                                        ; yritetään tarvittaessa uudelleen jos yhteydessä on ongelma
+                                                        :queue {:proletarian/retry-strategy-fn
+                                                                (fn [_ _] {:retries 3
+                                                                           :delays [30000]})}}
    "tutkintojen-tunnustaminen-edit-job"                {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler
                                                         :type    "tutkintojen-tunnustaminen-edit-job"}})

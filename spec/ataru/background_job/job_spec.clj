@@ -5,7 +5,7 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log])
-  (:import (java.time Instant)
+  (:import (java.time Instant Duration)
            (org.joda.time DateTime)))
 
 (defn- should-eventually [f timeout]
@@ -46,7 +46,7 @@
                                           DROP TABLE proletarian_archived_jobs;
                                           DROP TABLE job_types;"])))
 
-          (it "should run (nearly) immediately when queued"
+          (it "should run (nearly) immediately when queued with no delay"
               (let [ready (promise)
                     job-runner (.start
                                  (job/->PersistentJobRunner
@@ -61,6 +61,25 @@
                     (job/start-job job-runner connection "queued" nil))
 
                   (should (deref ready 300 false))       ; job marked ready
+                  (finally (.stop job-runner)))))
+
+          (it "should run after delay when queued with delay"
+              (let [ready (promise)
+                    job-runner (.start
+                                 (job/->PersistentJobRunner
+                                   {"queued" {:handler (fn [_ _] (deliver ready true))
+                                              :type "queued"
+                                              :process-in (Duration/ofMillis 1000)  ;set delay of 1000ms
+                                              :queue {:proletarian/polling-interval-ms 100}}}
+                                   ds
+                                   true))]
+                (try
+                  (jdbc/with-db-transaction
+                    [connection {:datasource ds}]
+                    (job/start-job job-runner connection "queued" nil))
+
+                  (should (not (deref ready 800 false)))    ; job not marked reade before delay spent
+                  (should (deref ready 400 false))          ; job not marked ready after delay
                   (finally (.stop job-runner)))))
 
           (it "should not block current thread"
