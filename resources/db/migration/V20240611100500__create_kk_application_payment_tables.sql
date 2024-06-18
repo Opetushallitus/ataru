@@ -16,7 +16,7 @@ CREATE TABLE kk_application_payment_events
 (
     id                               bigserial PRIMARY KEY,
     kk_application_payment_state_id  bigint REFERENCES kk_application_payment_states (id),
-    new_state                        text NOT NULL,
+    new_state                        text,
     event_type                       text NOT NULL,
     virkailija_oid                   text REFERENCES virkailija(oid),
     message                          text,
