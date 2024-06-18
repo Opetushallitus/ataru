@@ -9,6 +9,7 @@
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.tarjonta.haku :as haku]
+    [ataru.forms.form-payment-info :as payment-info]
     [taoensso.timbre :as log]))
 
 (def synthetic-application-permalock-user "synteettinen_hakemus")
@@ -119,6 +120,19 @@
          :created-by (-> session :identity :username))
         session
         audit-logger)))))
+
+(defn update-form-payment-info
+  [form-key payment-type processing-fee decision-fee session tarjonta-service organization-service audit-logger]
+  (log/info (str "New payment info for form " form-key ": " [payment-type processing-fee decision-fee]))
+  (let [form (form-store/fetch-by-key form-key)
+        superuser? (-> session :identity :superuser)
+        has-applications? (form-store/form-has-applications form-key)]
+    (when (not superuser?) (throw (user-feedback-exception "Vain rekisterinpitäjä voi muokata lomakkeen maksutietoja.")))
+    (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
+    (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " form-key " on hakemuksia."))))
+    (let [updated-form (payment-info/set-payment-info form payment-type processing-fee decision-fee)]
+      (log/info (str "Saving new payment info for " form-key))
+      (post-form updated-form session tarjonta-service organization-service audit-logger))))
 
 (defn- validate-form-field-id-change [form old-field-id new-field-id superuser? has-applications?]
   (when (not superuser?) (throw (user-feedback-exception "Ei oikeuksia muokata lomakkeen kentän id:tä.")))

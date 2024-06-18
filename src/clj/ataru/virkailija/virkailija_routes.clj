@@ -20,6 +20,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
+            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -274,6 +275,7 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
+    ; TODO: do we need to also insert hakemusmaksu data here? Only used for virkailija hakemus browsing.
     (api/GET "/forms/latest-by-haku/:haku-oid" []
       :path-params [haku-oid :- s/Str]
       :return ataru-schema/FormWithContent
@@ -302,6 +304,18 @@
       :query-params [old-field-id :- s/Str
                     new-field-id :- s/Str]
       (access-controlled-form/update-field-id-in-form form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger)
+      (ok {}))
+
+    (api/PUT "/forms/:form-key/update-payment-info" {session :session}
+      :summary "Sets the payment type and amount(s) for the form."
+      :path-params [form-key :- s/Str]
+      :body [payment-info ataru-schema/FormPaymentInfo]
+      (access-controlled-form/update-form-payment-info
+        form-key
+        (:paymentType payment-info)
+        (:processingFee payment-info)
+        (:decisionFee payment-info)
+        session tarjonta-service organization-service audit-logger)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -1135,9 +1149,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
+              hakus-with-payment-flag (map
+                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
+                                        hakus)]
+        (-> hakus-with-payment-flag
             response/ok
-            (header "Cache-Control" "public, max-age=300")))
+            (header "Cache-Control" "public, max-age=300"))))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
