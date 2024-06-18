@@ -9,8 +9,10 @@
 (def test-term-fall "kausi_s")
 (def test-year "2025")
 (def test-year-2 "2026")
-(def test-state-pending "kk-application-payment-pending")
-(def test-state-paid "kk-application-payment-paid")
+(def test-state-pending "payment-pending")
+(def test-state-paid "payment-paid")
+(def test-event-updated "state-updated")
+(def test-event-comment "comment")
 
 (defn- delete-states-and-events! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -63,9 +65,9 @@
               (let [state-id (:id (store/create-or-update-kk-application-payment-state!
                                     test-person-oid test-term-spring test-year-2 test-state-pending))
                     event-1-id (store/create-kk-application-payment-event!
-                              state-id test-state-paid "state-updated" nil nil)
+                              state-id test-state-paid test-event-updated nil nil)
                     event-2-id (store/create-kk-application-payment-event!
-                              state-id nil "comment" nil "Kommentti")
+                              state-id nil test-event-comment nil "Kommentti")
                     events (store/get-kk-application-payment-events [state-id])]
                 (should-not-be-nil event-1-id)
                 (should-not-be-nil event-2-id)
