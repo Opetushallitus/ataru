@@ -88,7 +88,8 @@
 (defn- inform-about-harkinnanvarainen
   [job-runner connection app checked-time]
   (store/update-harkinnanvaraisuus-process (:id app) (:sure-harkinnanvarainen-only? app) checked-time)
-  (start-email-job job-runner connection app))
+  (jdbc/with-db-transaction [conn connection]
+                            (start-email-job job-runner conn app)))
 
 (defn- handle-harkinnanvaraisuus-processes-to-save
   [job-runner applications-with-harkinnanvaraisuus checked-time]
