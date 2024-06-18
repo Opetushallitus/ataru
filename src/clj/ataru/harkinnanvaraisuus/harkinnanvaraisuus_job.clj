@@ -260,4 +260,4 @@
 
 (def recheck-job-definition {:handler recheck-harkinnanvaraisuus-handler
                              :type    "harkinnanvaraisuus-recheck"
-                             :schedule "0 12 * * *"})
+                             :schedule "10 8 * * *"})
