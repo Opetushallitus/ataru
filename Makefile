@@ -6,6 +6,9 @@ TOOL_VERSIONS := node:8.11 npm:6 docker-compose:1.21 lein:2.9
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
 
+VIRKAILIJA_RELOADED ?= false
+HAKIJA_RELOADED ?= false
+
 FIGWHEEL=ataru-figwheel
 CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
@@ -146,7 +149,7 @@ stop-fake-deps-server:
 # Database initialization
 # ----------------
 init-test-db: run-fake-deps-server
-	lein with-profile test run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
+	lein with-profile test run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
 
 nuke-test-db:
 	lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
