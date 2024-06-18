@@ -209,9 +209,7 @@
   (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
         processes (store/fetch-checked-harkinnanvaraisuus-processes (-> now
-                                                                        (time/minus (time/days DAYS_UNTIL_NEXT_RECHECK))
-                                                                        (time/with-time-at-start-of-day)
-                                                                        (time/plus (time/hours 22))))
+                                                                        (time/minus (time/days DAYS_UNTIL_NEXT_RECHECK))))
         processed-all (<= (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
