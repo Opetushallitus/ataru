@@ -6,41 +6,53 @@
   (:require [ataru.kk-application-payment.kk-application-payment-store :as store]
             [taoensso.timbre :as log]))
 
+; TODO: application payments are only charged for hakus starting after 1.1.2025 AND targeting kausi_s 2025
+
 (def application-payment-start-year
   "Application payments are charged from studies starting on 2025 or later."
   2025)
 
-(def terms
+(def valid-terms
   "Semesters / terms for kk application payments: one payment is required per starting term."
   #{:kausi_k :kausi_s})
 
-(def payment-states
+(def valid-payment-states
   #{:payment-not-required
     :payment-pending
     :payment-paid})
 
-(def event-types
+(def valid-event-types
   #{:state-updated})
+
+(defn start-term-valid?
+  "Payments are only ever charged from Autumn 2025 onwards"
+  [term year]
+  (let [year-int (Integer/parseInt year)
+        term-kw  (keyword term)]
+    (or
+      (and (contains? valid-terms term-kw) (> year-int application-payment-start-year))
+      (and (= term-kw :kausi_s) (= year-int application-payment-start-year) ))))
 
 (defn- set-payment-state
   [person-oid term year new-state virkailija-oid message]
-  (if (and (contains? terms (keyword term))
-           (contains? payment-states (keyword new-state))
-           (>= (Integer/parseInt year) application-payment-start-year))
+  (if (and (contains? valid-payment-states (keyword new-state))
+           (start-term-valid? term year))
     (let [state-id (:id (store/create-or-update-kk-application-payment-state!
-                          person-oid term year new-state))
-          _ (store/create-kk-application-payment-event!
-              state-id new-state "state-updated" virkailija-oid message)]
+                          person-oid term year new-state))]
+      (store/create-kk-application-payment-event! state-id new-state "state-updated" virkailija-oid message)
       (log/info
         (str "Set payment state of person " person-oid " for term " term " " year " to " new-state))
       state-id)
     (throw (ex-info "Parameter validation failed while setting payment state"
                     {:person-oid person-oid :term term :year year :state new-state}))))
 
-(defn get-payment-state
-  [person-oid term year]
-  (first (store/get-kk-application-payment-states
-           [person-oid] term year)))
+(defn get-payment-states
+  [person-oids term year]
+  (store/get-kk-application-payment-states person-oids term year))
+
+(defn get-payment-events
+  [state-ids]
+  (store/get-kk-application-payment-events state-ids))
 
 (defn set-application-fee-required
   "Sets kk processing fee required for the target term."
