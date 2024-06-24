@@ -655,9 +655,9 @@
    :pohjakoulutus_kk                  [{:pohjakoulutuskklomake          s/Str
                                         (s/optional-key :suoritusvuosi) s/Int}]
    :pohjakoulutus_kk_ulk_country      (s/maybe s/Str)
-   :pohjakoulutus_2aste               (s/maybe s/Str)
-   :pohjakoulutus_2aste_suorituskieli (s/maybe s/Str)
-   :pohjakoulutus_2aste_lahtokoulu_oid (s/maybe s/Str)
+   (s/optional-key :pohjakoulutus_2aste)               (s/maybe s/Str)
+   (s/optional-key :pohjakoulutus_2aste_suorituskieli) (s/maybe s/Str)
+   (s/optional-key :pohjakoulutus_2aste_lahtokoulu_oid) (s/maybe s/Str)
    :hakutoiveet                       [{:hakukohde_oid (s/maybe s/Str)
                                         :sija          s/Int
                                         :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
