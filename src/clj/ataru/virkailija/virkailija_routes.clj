@@ -1599,7 +1599,10 @@
         :return [ataru-schema/TilastokeskusApplication]
         (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
                                                                                                 session
+                                                                                                person-service
                                                                                                 tarjonta-service
+                                                                                                valintalaskentakoostepalvelu-service
+                                                                                                suoritus-service
                                                                                                 hakuOid
                                                                                                 hakukohdeOid)]
           (response/ok applications)

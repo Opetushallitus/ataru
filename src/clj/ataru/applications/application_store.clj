@@ -1453,7 +1453,7 @@
       (->kebab-case-kw)))
 
 (defn- unwrap-tilastokeskus-application
-  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content hakemus-tila]}]
+  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content hakemus-tila lahetysaika]}]
   (let [answers (answers-by-key (:answers content))]
     {:hakemus_oid    hakemus-oid
      :hakemus_tila   hakemus-tila
@@ -1462,7 +1462,8 @@
      :hakukohde_oids hakukohde-oids
      :content        content
      :kotikunta      (-> answers :home-town :value)
-     :asuinmaa       (-> answers :country-of-residence :value)}))
+     :asuinmaa       (-> answers :country-of-residence :value)
+     :submitted      lahetysaika}))
 
 (defn get-application-info-for-tilastokeskus [haku-oid hakukohde-oid]
   (->> (exec-db :db queries/yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})

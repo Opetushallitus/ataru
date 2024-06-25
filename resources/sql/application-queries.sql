@@ -1064,7 +1064,8 @@ SELECT
   (SELECT content
    FROM answers_as_content
    WHERE application_id = la.id) AS "content",
-  state AS "hakemus-tila"
+  state AS "hakemus-tila",
+  submitted AS "lahetysaika"
 FROM latest_applications AS la
 JOIN application_reviews ON application_key = la.key
 WHERE person_oid IS NOT NULL
