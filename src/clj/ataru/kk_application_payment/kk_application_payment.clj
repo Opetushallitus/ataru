@@ -6,7 +6,7 @@
   (:require [ataru.kk-application-payment.kk-application-payment-store :as store]
             [taoensso.timbre :as log]))
 
-; TODO: application payments are only charged for hakus starting after 1.1.2025 AND targeting kausi_s 2025
+; TODO: application payments should be only charged for hakus starting on or after 1.1.2025
 
 (def application-payment-start-year
   "Application payments are charged from studies starting on 2025 or later."
@@ -27,11 +27,10 @@
 (defn start-term-valid?
   "Payments are only ever charged from Autumn 2025 onwards"
   [term year]
-  (let [year-int (Integer/parseInt year)
-        term-kw  (keyword term)]
+  (let [term-kw  (keyword term)]
     (or
-      (and (contains? valid-terms term-kw) (> year-int application-payment-start-year))
-      (and (= term-kw :kausi_s) (= year-int application-payment-start-year) ))))
+      (and (contains? valid-terms term-kw) (> year application-payment-start-year))
+      (and (= term-kw :kausi_s) (= year application-payment-start-year) ))))
 
 (defn- set-payment-state
   [person-oid term year new-state virkailija-oid message]
