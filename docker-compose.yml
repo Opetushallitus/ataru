@@ -16,6 +16,12 @@ services:
       - "16379:6379"
     networks:
       - ataru-test-network
+  ataru-dev-localstack:
+    image: localstack/localstack:3.0.1
+    ports:
+      - "127.0.0.1:4566:4566"
+    networks:
+      - ataru-test-network
   ataru-test-db:
     build: ./test-postgres
     environment:

@@ -13,7 +13,8 @@
         (assoc this :connection-opts {:pool (carcon/conn-pool nil)
                                       :spec {:uri uri}}))
       this))
-  (stop [this]
-    (when (some? connection-opts)
-      (.close (:pool connection-opts)))
-    (assoc this :connection-opts nil)))
+  (stop [_]
+    ; Redis connection pool cannot be closed because carmine memoizes pool creation
+    ; and will thus return the same (closed) pool when using reloaded.repl workflow.
+    ; Thus, when changing the redis component or configuration a JVM restart is needed.
+    ))

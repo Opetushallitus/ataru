@@ -124,7 +124,7 @@
 (defn mass-information-request-job-step
   [state job-runner]
   (if (empty? (:application-keys state))
-    {:transition {:id :final}}
+    nil
     (let [[now later] (split-at 100 (:application-keys state))]
       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
         (doseq [key now]
@@ -132,9 +132,8 @@
                        (assoc (:information-request state)
                               :application-key key)
                        job-runner
-                       connection)))
-      {:transition    {:id :to-next :step :initial}
-       :updated-state (assoc state :application-keys later)})))
+                       connection))
+        (job/start-job job-runner connection "mass-information-request-job" later)))))
 
 (defn mass-store
   [information-request application-keys virkailija-oid job-runner]

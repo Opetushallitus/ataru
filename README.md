@@ -652,9 +652,26 @@ Application logs are in /tmp folder.
 
 Build/compilation logs are in logs/pm2 folder.
 
-## Backend Hot Reloading and Breakpoints
+## Reloaded repl
 
-Hot reloading for backends can be enabled in IntelliJ by creating and running a "Clojure REPL -> Remote" run configuration (port 3333 for lomake-editori, port 3339 for hakija).
+Ataru backends use Component to wire up the system. User.clj also has reloaded.repl imported which means you can use
+the reloaded pattern to restart backends in about one second (first start takes longer) using the following workflow:
+
+1. Run the application with and/or backend specific environment variables (HAKIJARELOADED, VIRKAILIJARELOADED) set to true,
+e.g. to run hakija with the reloaded functionality run:
+
+```
+make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-local-dev.edn HAKIJA_CONFIG=../ataru-secrets/hakija-local-dev.edn HAKIJARELOADED=true
+```
+
+2. Run (in IntelliJ) a "Clojure REPL -> Remote" run configuration (port 3333 for lomake-editori, port 3335 for hakija).
+3. To start and subsequently restart the backend, run in REPL:
+
+```
+(reset)
+```
+
+## Breakpoints
 
 Backend breakpoints (using debug-repl library) can be used with the following steps:
 

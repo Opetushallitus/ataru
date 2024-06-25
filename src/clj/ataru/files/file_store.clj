@@ -31,9 +31,11 @@
 (defn get-file [cas-client key]
   (let [url  (resolve-url :liiteri.file key)
         resp (cas/cas-authenticated-get-as-stream cas-client url)]
-    (when (= (:status resp) 200)
+    (if (= (:status resp) 200)
       {:body                (:body resp)
-       :content-disposition (-> resp :headers :content-disposition)})))
+       :content-disposition (-> resp :headers :content-disposition)}
+      (do (log/error "failed to get file " key " from url " url ", response " + resp)
+          nil))))
 
 (defn- generate-filename [filename counter]
   (let [name (str (str/join "." (butlast (str/split filename #"\."))))

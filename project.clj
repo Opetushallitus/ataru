@@ -101,6 +101,7 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.12.558"]
                  [com.amazonaws/aws-java-sdk-sns "1.12.558"]
                  [com.amazonaws/aws-java-sdk-sqs "1.12.558"]
+                 [com.amazonaws/aws-java-sdk-cloudwatch "1.12.558"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [com.jcraft/jsch "0.1.55"]
@@ -109,7 +110,10 @@
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
                  [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava]]
                  [com.google.guava/guava "31.1-jre"]
-                 [funcool/cuerdas "2.2.0"]]
+                 [funcool/cuerdas "2.2.0"]
+                 [msolli/proletarian "1.0.68-alpha"]
+                 [jarohen/chime "0.3.3"]
+                 [cronstar "1.0.2"]]
 
   :min-lein-version "2.5.3"
 
@@ -161,7 +165,7 @@
 
   :main ataru.core
 
-  :aot [com.stuartsierra.dependency com.stuartsierra.component ataru.db.migrations]
+  :aot [ataru.db.migrations]
 
   :cljsbuild {:builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -283,22 +287,29 @@
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                               [reloaded.repl "0.2.4"]
+                                               [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
+                                               [org.clojure/tools.namespace "1.5.0"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
-                                               [com.gfredericks/debug-repl "0.0.12"]]
+                                               [com.gfredericks/debug-repl "0.0.12"]
+                                               [clj-test-containers "0.7.4"]]
                               :plugins        [[lein-cljfmt "0.6.7"]
                                                [lein-kibit "0.1.8"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
-                              :env            {:dev? "true"}}
+                              :env            {:dev? "true"
+                                               "AWS_ACCESS_KEY" "localhost"
+                                               "AWS_SECRET_KEY" "localhost"}}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                               [reloaded.repl "0.2.4"]
+                                               [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
+                                               [org.clojure/tools.namespace "1.5.0"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
-                                               [criterium "0.4.6"]]
+                                               [criterium "0.4.6"]
+                                               [com.gfredericks/debug-repl "0.0.12"]
+                                               [clj-test-containers "0.7.4"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"
