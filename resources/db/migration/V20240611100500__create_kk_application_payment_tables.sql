@@ -3,7 +3,7 @@ CREATE TABLE kk_application_payment_states
     id            bigserial PRIMARY KEY,
     person_oid    text NOT NULL,
     start_term    text NOT NULL,
-    start_year    text NOT NULL,
+    start_year    smallint NOT NULL,
     state         text NOT NULL,
     created_time  timestamp with time zone DEFAULT now(),
     modified_time timestamp with time zone DEFAULT now(),
