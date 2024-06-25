@@ -6,7 +6,7 @@
   (:require [ataru.kk-application-payment.kk-application-payment-store :as store]
             [taoensso.timbre :as log]))
 
-; TODO: application payments should be only charged for hakus starting on or after 1.1.2025
+; TODO: application payments should be only charged for hakus starting on or after 1.1.2025 -> scoped to OK-556
 
 (def application-payment-start-year
   "Application payments are charged from studies starting on 2025 or later."
