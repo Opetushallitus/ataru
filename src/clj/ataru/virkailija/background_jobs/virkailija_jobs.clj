@@ -10,24 +10,41 @@
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
             [ataru.background-job.job :refer [report-job cleanup-job]]))
 
+(def default-retry-strategy {:proletarian/retry-strategy-fn
+                    (fn [_ _] {:retries 20
+                               :delays [5000 10000 30000 60000 120000]})})
+
 (def job-definitions
-  {(:type email-job/job-definition)                      email-job/job-definition
-   (:type information-request-job/job-definition)        information-request-job/job-definition
-   (:type harkinnanvaraisuus-job/job-definition)         harkinnanvaraisuus-job/job-definition
-   (:type harkinnanvaraisuus-job/recheck-job-definition) harkinnanvaraisuus-job/recheck-job-definition
-   (:type harkinnanvaraisuus-email-job/job-definition)   harkinnanvaraisuus-email-job/job-definition
+  {(:type email-job/job-definition)                      (merge email-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type information-request-job/job-definition)        (merge information-request-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type harkinnanvaraisuus-job/job-definition)         (merge harkinnanvaraisuus-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type harkinnanvaraisuus-job/recheck-job-definition) (merge harkinnanvaraisuus-job/recheck-job-definition
+                                                                {:queue default-retry-strategy})
+   (:type harkinnanvaraisuus-email-job/job-definition)   (merge harkinnanvaraisuus-email-job/job-definition
+                                                                {:queue default-retry-strategy})
    "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
-                                                          :type  "automatic-payment-obligation-job"}
+                                                          :type    "automatic-payment-obligation-job"
+                                                          :queue   default-retry-strategy}
    "mass-information-request-job"                        {:handler information-request-service/mass-information-request-job-step
-                                                          :type  "mass-information-request-job"}
+                                                          :type    "mass-information-request-job"
+                                                          :queue   default-retry-strategy}
    "tutkintojen-tunnustaminen-review-state-changed-job"  {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step
-                                                          :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
+                                                          :type    "tutkintojen-tunnustaminen-review-state-changed-job"
+                                                          :queue   default-retry-strategy}
    "tutkintojen-tunnustaminen-information-request-sent-job" {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-information-request-sent-job-step
-                                                             :type  "tutkintojen-tunnustaminen-information-request-sent-job"}
+                                                             :type    "tutkintojen-tunnustaminen-information-request-sent-job"
+                                                             :queue   default-retry-strategy}
    "update-person-info-job" {:handler person-integration/update-person-info-job-handler
-                             :type  "update-person-info-job"}
-   "clean-old-forms-job" {:handler clean-old-forms/clean-old-forms-job-step
-                          :type  "clean-old-forms-job"
-                          :schedule "0 3 * * *"}
-   (:type report-job) report-job
-   (:type cleanup-job) cleanup-job})
+                             :type    "update-person-info-job"
+                             :queue   default-retry-strategy}
+   "clean-old-forms-job" {:handler  clean-old-forms/clean-old-forms-job-step
+                          :type     "clean-old-forms-job"
+                          :schedule "0 3 * * *"
+                          :queue    default-retry-strategy}
+   (:type report-job) (merge report-job
+                             {:queue default-retry-strategy})
+   (:type cleanup-job) (merge cleanup-job
+                              {:queue default-retry-strategy})})

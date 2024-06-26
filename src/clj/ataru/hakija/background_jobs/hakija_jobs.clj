@@ -7,29 +7,36 @@
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen])
   (:import  (java.time Duration)))
 
+(def default-retry-strategy {:proletarian/retry-strategy-fn
+                    (fn [_ _] {:retries 20
+                               :delays [5000 10000 30000 60000 120000]})})
+
 (def job-definitions
-  {(:type email-job/job-definition)                    email-job/job-definition
-   person-integration/job-type                         person-integration/job-definition
+  {(:type email-job/job-definition)                    (merge email-job/job-definition
+                                                              {:queue default-retry-strategy})
+   person-integration/job-type                         (merge person-integration/job-definition
+                                                              {:queue default-retry-strategy})
    "update-person-info-job"                            {:handler person-integration/update-person-info-job-handler
-                                                        :type    "update-person-info-job"}
+                                                        :type    "update-person-info-job"
+                                                        :queue   default-retry-strategy}
    "automatic-payment-obligation-job"                  {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
-                                                        :type    "automatic-payment-obligation-job"}
+                                                        :type    "automatic-payment-obligation-job"
+                                                        :queue   default-retry-strategy}
    (:type attachment-finalizer-job/job-definition)     attachment-finalizer-job/job-definition
    "automatic-eligibility-if-ylioppilas-job"           {:handler automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
                                                         :type    "automatic-eligibility-if-ylioppilas-job"
-                                                        :queue {:proletarian/retry-strategy-fn
-                                                                (fn [_ _] {:retries 3
-                                                                           :delays [10000]})}}
-   "start-automatic-eligibility-if-ylioppilas-job-job" {:handler automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
-                                                        :type    "start-automatic-eligibility-if-ylioppilas-job-job"
-                                                        :schedule "0 4 * * *"}
-   "tutkintojen-tunnustaminen-submit-job"              {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
-                                                        :type    "tutkintojen-tunnustaminen-submit-job"
+                                                        :queue   default-retry-strategy}
+   "start-automatic-eligibility-if-ylioppilas-job-job" {:handler  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
+                                                        :type     "start-automatic-eligibility-if-ylioppilas-job-job"
+                                                        :schedule "0 4 * * *"
+                                                        :queue    default-retry-strategy}
+   "tutkintojen-tunnustaminen-submit-job"              {:handler    tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
+                                                        :type       "tutkintojen-tunnustaminen-submit-job"
                                                         ; 30s viive jotta liitteet ehtivät skannautua
                                                         :process-in (Duration/ofSeconds 30)
-                                                        ; yritetään tarvittaessa uudelleen jos yhteydessä on ongelma
-                                                        :queue {:proletarian/retry-strategy-fn
-                                                                (fn [_ _] {:retries 3
-                                                                           :delays [30000]})}}
-   "tutkintojen-tunnustaminen-edit-job"                {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler
-                                                        :type    "tutkintojen-tunnustaminen-edit-job"}})
+                                                        :queue      default-retry-strategy}
+   "tutkintojen-tunnustaminen-edit-job"                {:handler    tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler
+                                                        :type       "tutkintojen-tunnustaminen-edit-job"
+                                                        ; 30s viive jotta liitteet ehtivät skannautua
+                                                        :process-in (Duration/ofSeconds 30)
+                                                        :queue      default-retry-strategy}})
