@@ -13,7 +13,7 @@
 
 (def exemption-form-field-name
   "Unique id / field name for form field that indicates exemption from application fee"
-  ; TODO: field name and format TBD
+  ; TODO: field name and format TBD -> OK-581
   :field-name-here)
 
 (def application-payment-start-year
@@ -78,7 +78,7 @@
   (set-payment-state person-oid term year "payment-paid" virkailija-oid message))
 
 ; TODO: where should we check this?
-(defn- haku-valid?
+(defn haku-valid?
   "Application payments are only collected for admissions starting on or after 1.1.2025"
   [haku]
   (when-let [hakuaika-start (some-> haku :hakuaika :start coerce/from-long)]
@@ -116,13 +116,13 @@
   [application]
   (let [answers (-> application :content :answers util/answers-by-key)]
     (when (contains? answers exemption-form-field-name)
-      ; TODO need to define field format before we can parse exemptions
+      ; TODO need to define field format before we can parse exemptions -> OK-581
       ())))
 
 (defn- exempt-via-applications?
   "Returns true if there is an exemption reason attached to one or more of the applications for the term.
    Also returns true, in case the person has no applications."
-  [person-oids term year]
+  [_ _ _]
   ; TODO get person's applications by starting term and year
   (let [applications ()]
     (some true? (map exemption-in-application? applications))))
