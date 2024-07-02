@@ -100,6 +100,9 @@
   (let [[uri version] (str/split koodisto-uri #"#")]
     (condp = uri
 
+      "valtioryhmat" (add-within "maatjavaltiot2"
+                                 (get-koodisto uri version))
+
       "AmmatillisetOPSperustaiset" (get-vocational-degree-options version)
 
       "oppilaitostyyppi" (get-vocational-institutions version)
