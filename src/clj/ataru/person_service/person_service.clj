@@ -145,6 +145,8 @@
                       :kutsumanimi "Ari"
                       :sukunimi    "Vatanen"
                       :hetu         "141196-933S"})
+      "1.2.3.4.5.303" (merge fake-onr-person
+                             {:kansalaisuus [{:kansalaisuusKoodi "784"}]})
       (merge fake-onr-person
              {:oidHenkilo oid})))
 
