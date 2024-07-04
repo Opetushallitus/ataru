@@ -558,7 +558,7 @@
           (it "should set TUTU payment information, forcing a hardcoded processing fee"
               (update-and-check
                 {:paymentType :payment-type-tutu :processingFee "100.00"}
-                {:payment-type "payment-type-tutu" :processing-fee "70.00" :decision-fee nil}
+                {:payment {:type "payment-type-tutu" :processing-fee "70.00" :decision-fee nil}}
                 200))
 
           (it "should fail when trying to set a fixed decision fee for TUTU"
@@ -569,7 +569,7 @@
           (it "should set ASTU payment information"
               (update-and-check
                 {:paymentType :payment-type-astu :decisionFee "150.00"}
-                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "150.00"}
+                {:payment {:type "payment-type-astu" :processing-fee nil :decision-fee "150.00"}}
                 200))
 
           (it "should fail when trying to set a processing fee for ASTU"
@@ -600,7 +600,7 @@
           (it "should successfully set a fractional fee"
               (update-and-check
                 {:paymentType :payment-type-astu :decisionFee "1.9"}
-                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}
+                {:payment {:type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}}
                 200)))
 
 (describe "GET /tarjonta/haku payment info"
