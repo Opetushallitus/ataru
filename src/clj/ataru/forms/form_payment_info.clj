@@ -83,8 +83,8 @@
                                :else processing-fee)]
     (if (valid-fees? payment-type final-processing-fee decision-fee)
       (-> form
-        (assoc-in [:properties :processing-fee] (when final-processing-fee (str final-processing-fee)))
-        (assoc-in [:properties :decision-fee] (when decision-fee (str decision-fee))))
+        (assoc-in [:properties :payment :processing-fee] (when final-processing-fee (str final-processing-fee)))
+        (assoc-in [:properties :payment :decision-fee] (when decision-fee (str decision-fee))))
       (throw (user-feedback-exception
                (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee]))))))
 
