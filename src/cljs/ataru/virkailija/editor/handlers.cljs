@@ -1620,15 +1620,18 @@
     (let [path (db/current-form-properties-path db [:payment])
           value (get-in db path)]
       (if (not-empty value)
-        (-> db
-            (assoc-in path {}))
-        (assoc-in db path {:type "payment-type-tutu"})))))
+        (assoc-in db path {})
+        (assoc-in db path {:type "payment-type-tutu"
+                           :decision-fee nil
+                           :processing-fee nil})))))
 
 (reg-event-db
   :editor/change-maksutyyppi
-  (fn [{db :db} [_ maksutyyppi]]
-    (let [path (db/current-form-properties-path db [:payment :type])]
-      (assoc-in db path maksutyyppi))))
+  (fn [db [_ maksutyyppi]]
+    (let [path (db/current-form-properties-path db [:payment])]
+      (assoc-in db path {:type maksutyyppi
+                         :decision-fee nil
+                         :processing-fee nil}))))
 
 (reg-event-db
   :editor/toggle-close-form

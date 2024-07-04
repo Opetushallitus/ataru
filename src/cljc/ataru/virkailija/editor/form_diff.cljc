@@ -158,12 +158,11 @@
       (throw (user-feedback-exception "Poistettavasta osiosta oli uudempi versio.")))))
 
 (defn- apply-update-form-details [latest-form {:keys [old-form new-form]}]
-  (let [current-form (form-details latest-form)
-        ]
+  (let [current-form (form-details latest-form)]
     (if (= old-form current-form)
       #?(:clj (-> latest-form
                   (merge (assoc-in new-form [:properties :payment] nil))
-                  (set-payment-info (:proerties :payment new-form)))
+                  (set-payment-info (get-in new-form [:properties :payment])))
          :cljs (merge latest-form new-form))
 
       (throw (user-feedback-exception "Lomakkeen tiedoista oli uudempi versio.")))))

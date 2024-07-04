@@ -35,15 +35,16 @@
   (let [fee-nonpositive? (fn [amount] (and (some? amount) (<= amount 0.00M)))
         incorrect-kk-fee? (fn [payment-type processing-fee decision-fee]
                             (and (= :payment-type-kk payment-type)
-                                 (or (not= processing-fee kk-processing-fee)
+                                 (or (and processing-fee (not= processing-fee kk-processing-fee))
                                      (some? decision-fee))))
         incorrect-tutu-fee? (fn [payment-type processing-fee decision-fee]
                               (and (= :payment-type-tutu payment-type)
-                                   (or (not= processing-fee tutu-processing-fee)
+                                   (or (and processing-fee (not= processing-fee tutu-processing-fee))
                                        (some? decision-fee))))
         incorrect-astu-fee? (fn [payment-type processing-fee _]
                               (and (= :payment-type-astu payment-type)
-                                   (some? processing-fee)))]
+                                   (some? processing-fee)
+                                   (some? decision-fee)))]
     (cond
       (fee-nonpositive? processing-fee)
       (do (log/warn "Nonpositive processing fee: " processing-fee)
@@ -77,16 +78,12 @@
 (defn- add-fees
   "Adds fee amounts for form if valid. Forces hardcoded values for specific payment types."
   [form payment-type processing-fee decision-fee]
-  (let [final-processing-fee (cond
-                               (= :payment-type-kk payment-type) kk-processing-fee
-                               (= :payment-type-tutu payment-type) tutu-processing-fee
-                               :else processing-fee)]
-    (if (valid-fees? payment-type final-processing-fee decision-fee)
-      (-> form
-        (assoc-in [:properties :payment :processing-fee] (when final-processing-fee (str final-processing-fee)))
-        (assoc-in [:properties :payment :decision-fee] (when decision-fee (str decision-fee))))
-      (throw (user-feedback-exception
-               (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee]))))))
+  (if (valid-fees? payment-type processing-fee decision-fee)
+    (-> form
+        (assoc-in [:properties :payment :processing-fee] processing-fee)
+        (assoc-in [:properties :payment :decision-fee] decision-fee))
+    (throw (user-feedback-exception
+             (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee])))))
 
 (defn- add-payment-info-to-form
   [form payment-type processing-fee decision-fee]
@@ -123,13 +120,15 @@
 (defn set-payment-info
   "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
   [form payment-properties]
-  (let [payment-type (:type payment-properties)
-        processing-fee (:processing-fee payment-properties)
-        decision-fee (:decision-fee payment-properties)]
-    (if (= :payment-type-kk (keyword payment-type))
-      (throw (user-feedback-exception
-               (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
-      (add-payment-info-to-form form payment-type processing-fee decision-fee))))
+  (if (empty? payment-properties)
+    (assoc-in form [:properties :payment] {})
+    (let [payment-type (:type payment-properties)
+          processing-fee (:processing-fee payment-properties)
+          decision-fee (:decision-fee payment-properties)]
+      (if (= :payment-type-kk (keyword payment-type))
+        (throw (user-feedback-exception
+                 (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
+        (add-payment-info-to-form form payment-type processing-fee decision-fee)))))
 
 (defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying

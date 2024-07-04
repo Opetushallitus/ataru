@@ -401,7 +401,7 @@
   []
   (let [id                      "toggle-lomakkeeseen-liittyy-maksutoiminto"
         maksutiedot             @(subscribe [:editor/maksutiedot])
-        maksutoiminto?          (not-empty maksutiedot)
+        maksutoiminto?          (not (empty? maksutiedot))
         disabled?               @(subscribe [:editor/form-locked?])]
     [:div
      [:div.editor-form__checkbox-with-label
@@ -410,7 +410,7 @@
         :checked   maksutoiminto?
         :type      "checkbox"
         :disabled  disabled?
-        :on-change #(do (dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto]))}]
+        :on-change #(dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto])}]
       [:label.editor-form__checkbox-label
        {:for id}
        @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
