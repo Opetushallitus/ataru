@@ -180,7 +180,7 @@
    :groups [CreateMoveElement]})
 
 (s/defschema PaymentProperties
-  {(s/optional-key :payment-type)                     (s/maybe s/Str)
+  {(s/optional-key :type)                             (s/maybe s/Str)
    (s/optional-key :processing-fee)                   (s/maybe s/Str)
    (s/optional-key :decision-fee)                     (s/maybe s/Str)})
 
