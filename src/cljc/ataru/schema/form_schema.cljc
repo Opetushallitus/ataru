@@ -179,6 +179,11 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
+(s/defschema PaymentProperties
+  {(s/optional-key :payment-type)                     (s/maybe s/Str)
+   (s/optional-key :processing-fee)                   (s/maybe s/Str)
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
+
 (s/defschema FormProperties
   {(s/optional-key :auto-expand-hakukohteet)          s/Bool
    (s/optional-key :allow-only-yhteishaut)            s/Bool
@@ -186,9 +191,7 @@
    (s/optional-key :demo-validity-start)              (s/maybe s/Str)
    (s/optional-key :demo-validity-end)                (s/maybe s/Str)
    (s/optional-key :closed)                           s/Bool
-   (s/optional-key :payment-type)                     (s/maybe s/Str)
-   (s/optional-key :processing-fee)                   (s/maybe s/Str)
-   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
+   (s/optional-key :payment)                          PaymentProperties})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional

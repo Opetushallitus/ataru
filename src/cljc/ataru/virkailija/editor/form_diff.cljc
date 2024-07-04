@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.form-diff
-  (:require [clojure.set]))
+  (:require [clojure.set]
+            #?(:clj [ataru.forms.form-payment-info :refer [set-payment-info]])))
 
 (defn- user-feedback-exception
   [message]
@@ -159,7 +160,11 @@
 (defn- apply-update-form-details [latest-form {:keys [old-form new-form]}]
   (let [current-form (form-details latest-form)]
     (if (= old-form current-form)
-      (merge latest-form new-form)
+      #?(:clj (-> latest-form
+                  (merge (dissoc new-form :payment))
+                  (set-payment-info (:payment new-form)))
+         :cljs (merge latest-form new-form))
+
       (throw (user-feedback-exception "Lomakkeen tiedoista oli uudempi versio.")))))
 
 (defn- apply-operation [latest-form operation]
