@@ -1257,6 +1257,7 @@
    :hakeminen-tunnistautuneena-allowed-on-form               {:fi "Lomakkeella voi hakea tunnistautuneena"
                                                               :sv "SV: Lomakkeella voi hakea tunnistautuneena"
                                                               :en "EN: Lomakkeella voi hakea tunnistautuneena"}
+   :lomakkeeseen-liittyy-maksutoiminto                       {:fi "Lomakkeeseen liittyy maksutoiminto"}
    :close-form                                               {:fi "Sulje lomake"
                                                               :sv "Stänga blanketten"
                                                               :en "Close form"}

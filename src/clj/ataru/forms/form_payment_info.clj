@@ -71,7 +71,7 @@
   "Adds the payment type info to a form if valid"
   [form payment-type]
   (if (contains? form-payment-types payment-type)
-    (assoc-in form [:properties :payment-type] (name payment-type))
+    (assoc-in form [:properties :payment :type] (name payment-type))
     (throw (user-feedback-exception (str "Maksutyyppi ei tuettu: " payment-type)))))
 
 (defn- add-fees
@@ -122,11 +122,14 @@
       form)))
 (defn set-payment-info
   "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
-  [form payment-type processing-fee decision-fee]
-  (if (= :payment-type-kk (keyword payment-type))
-    (throw (user-feedback-exception
-             (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
-    (add-payment-info-to-form form payment-type processing-fee decision-fee)))
+  [form payment-properties]
+  (let [payment-type (:type payment-properties)
+        processing-fee (:processing-fee payment-properties)
+        decision-fee (:decision-fee payment-properties)]
+    (if (= :payment-type-kk (keyword payment-type))
+      (throw (user-feedback-exception
+               (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
+      (add-payment-info-to-form form payment-type processing-fee decision-fee))))
 
 (defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying

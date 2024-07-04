@@ -8,7 +8,7 @@
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (def expected-payment-info
-  {:payment-type "payment-type-kk",
+  {:type "payment-type-kk",
    :processing-fee (str payment-info/kk-processing-fee),
    :decision-fee nil})
 
@@ -29,7 +29,7 @@
    :organization-oid "1.2.246.562.10.1234334543"})
 
 (def test-payment-info
-  {:payment-type :payment-type-tutu :processing-fee 100 :decision-fee nil})
+  {:type :payment-type-tutu :processing-fee 100 :decision-fee nil})
 
 (def test-kk-form-with-existing-payment-info
   (merge test-kk-form {:properties test-payment-info}))

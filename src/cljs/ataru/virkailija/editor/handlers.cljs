@@ -1615,6 +1615,22 @@
     (assoc-in db path value))))
 
 (reg-event-db
+  :editor/toggle-lomakkeeseen-liittyy-maksutoiminto
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:payment])
+          value (get-in db path)]
+      (if (not-empty value)
+        (-> db
+            (assoc-in path {}))
+        (assoc-in db path {:type "payment-type-tutu"})))))
+
+(reg-event-db
+  :editor/change-maksutyyppi
+  (fn [{db :db} [_ maksutyyppi]]
+    (let [path (db/current-form-properties-path db [:payment :type])]
+      (assoc-in db path maksutyyppi))))
+
+(reg-event-db
   :editor/toggle-close-form
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:closed])

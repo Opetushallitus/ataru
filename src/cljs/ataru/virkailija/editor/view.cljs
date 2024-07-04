@@ -397,6 +397,50 @@
     {:for id}
     @(subscribe [:editor/virkailija-translation :only-yhteishaku])]]))
 
+(defn- lomakkeeseen-liittyy-maksutoiminto-component
+  []
+  (let [id                      "toggle-lomakkeeseen-liittyy-maksutoiminto"
+        maksutiedot             @(subscribe [:editor/maksutiedot])
+        maksutoiminto?          (not-empty maksutiedot)
+        disabled?               @(subscribe [:editor/form-locked?])]
+    [:div
+     [:div.editor-form__checkbox-with-label
+      [:input.editor-form__checkbox
+       {:id        id
+        :checked   maksutoiminto?
+        :type      "checkbox"
+        :disabled  disabled?
+        :on-change #(do (dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto]))}]
+      [:label.editor-form__checkbox-label
+       {:for id}
+       @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
+     (when maksutoiminto?
+       [:div.editor-form__button-group
+        [:div
+         [:input.editor-form__button
+          {:type      "radio"
+           :value     "payment-type-tutu"
+           :checked   (= {:type maksutiedot} "payment-type-tutu")
+           :name      "maksutyyppi-radio-group"
+           :id        "maksutyyppi-tutu-radio"
+           :disabled  disabled?
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])}]
+         [:label.editor-form__button-label
+          {:for   "maksutyyppi-tutu-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
+        [:div
+         [:input.editor-form__button
+          {:type      "radio"
+           :value     "payment-type-astu"
+           :checked   (= {:type maksutiedot} "payment-type-astu")
+           :name      "maksutyyppi-radio-group"
+           :id        "maksutyyppi-astu-radio"
+           :disabled  disabled?
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])}]
+         [:label.editor-form__button-label
+          {:for   "maksutyyppi-astu-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]])]))
+
 (defn- close-form-component
   []
   (let [id           "toggle-close-form"
@@ -422,6 +466,7 @@
     [:div.editor-form__module-fields
      [allow-only-yhteishaku-component]
      [allow-hakeminen-tunnistautuneena-component]
+     [lomakkeeseen-liittyy-maksutoiminto-component]
      [close-form-component]]]
    (when @(subscribe [:editor/show-demo-config])
     [:div.editor-form__component-content-wrapper
