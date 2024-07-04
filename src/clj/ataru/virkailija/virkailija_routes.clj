@@ -6,6 +6,7 @@
             [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
+            [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
             [ataru.applications.excel-export :as excel]
@@ -91,7 +92,10 @@
            java.time.ZonedDateTime
            org.joda.time.DateTime
            org.joda.time.format.DateTimeFormat
-           java.time.format.DateTimeFormatter))
+           java.time.format.DateTimeFormatter
+           (java.text SimpleDateFormat)
+           (java.util Date)
+           (java.util UUID)))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -218,6 +222,7 @@
                           get-haut-cache
                           audit-logger
                           application-service
+                          siirtotiedosto-service
                           suoritus-service
                           valinta-laskenta-service
                           valinta-tulos-service
@@ -1658,6 +1663,87 @@
                                                                                                hakukohdeOid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
+      (api/POST "/siirtotiedosto" {session :session}
+        :summary "Create siirtotiedostos containing appications and forms from a time period"
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
+        :return s/Any
+        (if (or (nil? modifiedBefore)
+                 (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before (or modifiedBefore (.format
+                                                                               (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
+                                                                               (Date.)))
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+              (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
+                    {applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
+                    combined-result {:success (and forms-success applications-success)}]
+                (log/info "Siirtotiedosto success" (:success combined-result))
+                (match combined-result
+                       {:success true}
+                       (response/ok combined-result) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+                       {:success false}
+                       (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
+      (api/POST "/siirtotiedosto/hakemukset" {session :session}
+        :summary "Create siirtotiedostos containing appications for a time period"
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
+        :return s/Any
+        (if (or (nil? modifiedBefore)
+                (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before modifiedBefore
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for applications: " siirtotiedosto-params)
+              (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto applications success" applications-success)
+                (if applications-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
+      (api/POST "/siirtotiedosto/lomakkeet" {session :session}
+        :summary "Create siirtotiedostos containing forms for a time period"
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
+        :return s/Any
+        (if (or (nil? modifiedBefore)
+                (nil? modifiedAfter))
+          (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before modifiedBefore
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for forms: " siirtotiedosto-params)
+              (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto forms success" forms-success)
+                (if forms-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
+
+      (api/POST "/siirtotiedosto/hakemukset/:haku-oid" {session :session}
+        :summary "Create siirtotiedostos containing appications for haku"
+        :path-params [haku-oid :- String]
+        :return s/Any
+        (if (nil? haku-oid)
+          (response/bad-request {:error "Haku oid param required!"})
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:haku-oid haku-oid
+                                         :execution-id (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+              (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
+                (log/info "Siirtotiedosto success" applications-success)
+                (response/ok {:success applications-success})))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
