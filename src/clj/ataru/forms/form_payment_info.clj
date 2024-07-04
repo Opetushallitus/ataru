@@ -37,10 +37,9 @@
                             (and (= :payment-type-kk payment-type)
                                  (or (and processing-fee (not= processing-fee kk-processing-fee))
                                      (some? decision-fee))))
-        incorrect-tutu-fee? (fn [payment-type processing-fee decision-fee]
+        incorrect-tutu-fee? (fn [payment-type decision-fee]
                               (and (= :payment-type-tutu payment-type)
-                                   (or (and processing-fee (not= processing-fee tutu-processing-fee))
-                                       (some? decision-fee))))
+                                   (some? decision-fee)))
         incorrect-astu-fee? (fn [payment-type processing-fee _]
                               (and (= :payment-type-astu payment-type)
                                    (or (some? processing-fee)
@@ -58,7 +57,7 @@
       (do (log/warn "Incorrect kk fees: " [payment-type processing-fee decision-fee])
           false)
 
-      (incorrect-tutu-fee? payment-type processing-fee decision-fee)
+      (incorrect-tutu-fee? payment-type decision-fee)
       (do (log/warn "Incorrect TUTU fees: " [payment-type processing-fee decision-fee])
           false)
 
