@@ -415,29 +415,29 @@
        {:for id}
        @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
      (when maksutoiminto?
-       [:div.editor-form__button-group
-        [:div
-         [:input.editor-form__button
+       [:div
+        [:div.editor-form__checkbox-with-label
+         [:input.editor-form__radio
           {:type      "radio"
            :value     "payment-type-tutu"
-           :checked   (= {:type maksutiedot} "payment-type-tutu")
+           :checked   (= (:type maksutiedot) "payment-type-tutu")
            :name      "maksutyyppi-radio-group"
            :id        "maksutyyppi-tutu-radio"
            :disabled  disabled?
            :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])}]
-         [:label.editor-form__button-label
+         [:label.editor-form__checkbox-label
           {:for   "maksutyyppi-tutu-radio"}
           @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
-        [:div
-         [:input.editor-form__button
+        [:div.editor-form__checkbox-with-label
+         [:input
           {:type      "radio"
            :value     "payment-type-astu"
-           :checked   (= {:type maksutiedot} "payment-type-astu")
+           :checked   (= (:type maksutiedot) "payment-type-astu")
            :name      "maksutyyppi-radio-group"
            :id        "maksutyyppi-astu-radio"
            :disabled  disabled?
            :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])}]
-         [:label.editor-form__button-label
+         [:label.editor-form__checkbox-label
           {:for   "maksutyyppi-astu-radio"}
           @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]])]))
 
