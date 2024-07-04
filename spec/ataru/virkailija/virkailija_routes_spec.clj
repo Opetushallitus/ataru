@@ -588,18 +588,18 @@
 
           (it "should fail trying to set a negative fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "-1.00"}
+                {:paymentType :payment-type-tutu :processing-fee "-1.00"}
                 {} 400))
 
           (it "should fail trying to set a zero fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "0.00"}
+                {:paymentType :payment-type-tutu :processing-fee "0.00"}
                 {} 400))
 
           (it "should successfully set a fractional fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "1.9"}
-                {:payment {:type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}}
+                {:paymentType :payment-type-tutu :processing-fee "1.9"}
+                {:payment {:type "payment-type-astu" :processing-fee "1.9" :decision-fee nil}}
                 200)))
 
 (describe "GET /tarjonta/haku payment info"
