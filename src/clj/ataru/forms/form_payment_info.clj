@@ -80,8 +80,12 @@
   [form payment-type processing-fee decision-fee]
   (if (valid-fees? payment-type processing-fee decision-fee)
     (-> form
-        (assoc-in [:properties :payment :processing-fee] processing-fee)
-        (assoc-in [:properties :payment :decision-fee] decision-fee))
+        (assoc-in [:properties :payment :processing-fee] (if processing-fee
+                                                           (str processing-fee)
+                                                           nil))
+        (assoc-in [:properties :payment :decision-fee] (if decision-fee
+                                                         (str decision-fee)
+                                                         nil)))
     (throw (user-feedback-exception
              (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee])))))
 
