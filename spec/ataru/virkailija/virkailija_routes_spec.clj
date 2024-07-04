@@ -599,7 +599,7 @@
           (it "should successfully set a fractional fee"
               (update-and-check
                 {:paymentType :payment-type-tutu :processingFee "1.9"}
-                {:payment {:type "payment-type-astu" :processing-fee "1.9" :decision-fee nil}}
+                {:payment {:type "payment-type-tutu" :processing-fee "1.9" :decision-fee nil}}
                 200)))
 
 (describe "GET /tarjonta/haku payment info"
