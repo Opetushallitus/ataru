@@ -43,8 +43,8 @@
                                        (some? decision-fee))))
         incorrect-astu-fee? (fn [payment-type processing-fee _]
                               (and (= :payment-type-astu payment-type)
-                                   (some? processing-fee)
-                                   (some? decision-fee)))]
+                                   (or (some? processing-fee)
+                                       (some? decision-fee))))]
     (cond
       (fee-nonpositive? processing-fee)
       (do (log/warn "Nonpositive processing fee: " processing-fee)
