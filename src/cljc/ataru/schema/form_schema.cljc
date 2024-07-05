@@ -192,7 +192,7 @@
    (s/optional-key :demo-validity-start)              (s/maybe s/Str)
    (s/optional-key :demo-validity-end)                (s/maybe s/Str)
    (s/optional-key :closed)                           s/Bool
-   (s/optional-key :payment)                          PaymentProperties})
+   (s/optional-key :payment)                          (s/maybe PaymentProperties)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional

@@ -124,7 +124,7 @@
   "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
   [form payment-properties]
   (if (empty? payment-properties)
-    (assoc-in form [:properties :payment] {})
+    (assoc-in form [:properties :payment] payment-properties)
     (let [payment-type (:type payment-properties)
           processing-fee (:processing-fee payment-properties)
           decision-fee (:decision-fee payment-properties)]
