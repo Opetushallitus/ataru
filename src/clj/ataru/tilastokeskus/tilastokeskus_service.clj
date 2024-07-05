@@ -32,15 +32,23 @@
     (not (vector? v)) nil
     :else (first-string (first v))))
 
-(defn batch-call
-  ;Calls a function in chunks of the given size, passing additional parameters before the chunk.
-  [service function batch-size items & additional-params]
-  (let [chunks (partition-all batch-size additional-params items)]
-    (reduce (fn [acc chunk]
-              (let [result (apply function service additional-params chunk)]
-                (merge acc result))) ; Merge results, adjust as needed based on the actual structure of your results
-            {}
-            chunks)))
+(defn apply-in-batches
+  "Applies a function f to a list of items in batches of size batch-size.
+   The function f can take 3 parameters (f service arg items) or 2 parameters (f service items).
+   Returns a single list of results."
+  ([f service items batch-size]
+   (apply-in-batches f service nil items batch-size))
+  ([f service arg items batch-size]
+   (letfn [(process-batch [acc remaining-items]
+                          (if (empty? remaining-items)
+                            acc
+                            (let [batch (take batch-size remaining-items)
+                                  rest-items (drop batch-size remaining-items)
+                                  batch-result (if arg
+                                                 (f service arg batch)
+                                                 (f service batch))]
+                              (recur (concat acc batch-result) rest-items))))]
+     (process-batch [] items))))
 
 (defn- filter-applications-for-koostedata [toinen-aste-applications persons]
   (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (odw-service/get-yksiloimaton-tai-aidinkieleton-henkilo-oids persons)
@@ -57,11 +65,8 @@
                                                                                applications-for-koostedata))))]
                                 (if (not-empty hakemus-oids)
                                   (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
-                                    (batch-call valintalaskentakoostepalvelu-service
-                                                  valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
-                                                  5000
-                                                  hakemus-oids
-                                                  hakuOid))
+                                    (apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
+                                     valintalaskentakoostepalvelu-service hakuOid hakemus-oids 5000))
                                    ; (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid hakemus-oids))
                                   (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
@@ -105,15 +110,19 @@
         toisen-asteen-yhteishakujen-hakemukset (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku_oid application))) applications)
         toisen-asteen-yhteishakujen-hakemusten-oidit (map :hakemus_oid toisen-asteen-yhteishakujen-hakemukset)
         batch-size 5000
+        harkinnanvaraisuus-by-hakemus1 (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
+                                        (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
+                                         {})
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
-                                        (batch-call valintalaskentakoostepalvelu-service
-                                                      valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
-                                                      batch-size
-                                                      toisen-asteen-yhteishakujen-hakemusten-oidit)
+                                        (apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                          valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit batch-size)
                                         {})
         applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)
         kooste-data-toinen-aste (get-koostedata-for-applications toisen-asteen-yhteishaku-oids applications-for-koostedata valintalaskentakoostepalvelu-service)
         results      (map (fn [application]
+                            (log/info "toisen-asteen-yhteishakujen-hakemusten-oidit size" (count toisen-asteen-yhteishakujen-hakemusten-oidit))
+                            (log/info "harkinnanvaraisuus-by-hakemus size" (count harkinnanvaraisuus-by-hakemus))
+                            (log/info "harkinnanvaraisuus-by-hakemus1 size" (count harkinnanvaraisuus-by-hakemus1))
                             (try
                               (let [hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus [(:hakemus_oid application) :hakutoiveet] [])
                                     haku (get haut (:haku_oid application))
