@@ -1712,3 +1712,8 @@
                                               %))
                                          application-keys)))]
     (remove nil? (vec (flatten not-deleted-keys)))))
+
+(defn get-latest-applications-for-kk-payment-processing
+  [person-oids haku-oids]
+  (exec-db :db queries/yesql-get-latest-applications-for-kk-payment-processing {:person_oids person-oids
+                                                                                :haku_oids (vec haku-oids)}))
