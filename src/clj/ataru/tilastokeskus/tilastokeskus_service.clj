@@ -33,9 +33,6 @@
     :else (first-string (first v))))
 
 (defn apply-in-batches
-  "Applies a function f to a list of items in batches of size batch-size.
-   The function f can take 3 parameters (f service arg items) or 2 parameters (f service items).
-   Returns a single list of results."
   ([f service items batch-size]
    (apply-in-batches f service nil items batch-size))
   ([f service arg items batch-size]
