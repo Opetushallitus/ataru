@@ -9,6 +9,14 @@
                              :date "2018-03-22T07:55:08Z"
                              :name "Teppo Testinen"}})
 
+(def application-with-hakemusmaksu-exemption
+  {:form       909909,
+   :lang       "fi"
+   :haku       "payment-info-test-kk-haku"
+   :id         1
+   :person-oid "1.2.3.4.5.303"
+   :answers    [{:key "vapautus_hakemusmaksusta" :value "0" :fieldType "dropdown"}]})
+
 (def application-with-koodisto-form
   {:form       981230123,
    :lang       "fi"
