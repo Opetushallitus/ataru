@@ -1367,3 +1367,19 @@ FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
 WHERE a.id in (:ids);
+
+--name: yesql-get-latest-applications-for-kk-payment-processing
+SELECT
+  la.key,
+  la.submitted,
+  la.haku,
+  la.hakukohde,
+  la.person_oid AS "person-oid",
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = la.id) AS content
+FROM latest_applications AS la
+LEFT JOIN application_reviews AS ar ON ar.application_key = la.key
+WHERE la.haku in (:haku_oids) AND
+      la.person_oid in (:person_oids) AND
+      ar.state <> 'inactivated';

@@ -458,15 +458,14 @@
   {:tila                                                 "julkaistu",
    :hakulomaketyyppi                                     "ataru"
    :hakulomakeAtaruId                                    "41101b4f-1762-49af-9db0-e3603adae3ad",
-   :koulutuksenAlkamisVuosi                              2024,
    :hakutapaKoodiUri                                     "hakutapa_02#1",
    :modified                                             "2024-04-16T10:12:10",
    :nimi                                                 {:fi "testing2"},
    :oid                                                  "1.2.246.562.29.65950024185",
    :hakukohdeOids                                        ["1.2.246.562.20.49028196522"],
    :organisaatioOid                                      "1.2.246.562.10.73539475928",
-   :alkamiskausiKoodiUri                                 "kausi_s",
-   :alkamisvuosi                                         "2024",
+   :alkamiskausiKoodiUri                                 "kausi_s#1",
+   :alkamisvuosi                                         2025,
    :hakuvuosi                                            2024,
    :hakukausi                                            "kausi_k#1",
    :kohdejoukkoKoodiUri                                  "haunkohdejoukko_10#1",
@@ -541,7 +540,9 @@
                                 {:oid                         "payment-info-test-kk-haku"
                                  :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                 :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
+                                                                :paattyy "2025-01-01T15:00:00"}]})
    :payment-info-test-kk-no-tutkinto-haku (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku"
@@ -630,6 +631,9 @@
 
                "payment-info-test-kk-jatko-form"
                "payment-info-test-kk-jatko-haku"
+
+               "payment-exemption-test-form"
+               "payment-info-test-kk-haku"
 
                nil)]
       [(.get-haku this haku-key)]
