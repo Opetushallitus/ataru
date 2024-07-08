@@ -47,6 +47,8 @@
     (merge
      {:can-submit-multiple-applications           (get ohjausparametrit :useitaHakemuksia false)
       :hakuajat                                   hakuajat
+      :alkamiskausi                               (:alkamiskausiKoodiUri haku)
+      :alkamisvuosi                               (:alkamisvuosi haku)
       :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
       :haun-tiedot-url                            (url-helper/resolve-url :kouta-app.haku (:oid haku))
