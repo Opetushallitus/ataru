@@ -696,8 +696,8 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :aria-label (if checked? (str (tu/get-hakija-translation :selected @lang) label) label)
-                     :aria-live "polite"
+                     :aria-label  label
+                     :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                      :on-key-up #(when (a11y/is-enter-or-space? %) 
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))

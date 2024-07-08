@@ -161,12 +161,26 @@
      (when @editable?
        [remove-hakukohde idx])]))
 
+(defn hide-alert-after-delay []
+  (dispatch [:application/hide-hakukohde-siirretty-alert]))
+
+(defn- start-alert-hide-timer []
+  (js/setTimeout hide-alert-after-delay 3500))
+
 (defn- hakukohde-priority [idx hakukohde-oid hakukohteet-count]
   (let [editable? (subscribe [:application/hakukohteet-editable?])
+        lang @(subscribe [:application/form-language])
+        hakukohteen-nimi @(subscribe [:application/hakukohde-label hakukohde-oid])
+        hakukohde-siirretty-alas (str hakukohteen-nimi " " (translations/get-hakija-translation :siirretty-alas lang))
+        hakukohde-siirretty-ylos (str hakukohteen-nimi " " (translations/get-hakija-translation :siirretty-ylos lang))
         increase-disabled (or (not @editable?) (= idx 0))
         decrease-disabled (or (not @editable?) (= idx (max 0 (dec hakukohteet-count))))
-        change-priority-fn (fn [acc] (dispatch [:application/change-hakukohde-priority hakukohde-oid acc idx]))
-        lang @(subscribe [:application/form-language])]
+        change-priority-fn (fn [acc]
+                             (dispatch [:application/change-hakukohde-priority hakukohde-oid acc idx])
+                             (if (= acc 1)
+                               (dispatch [:application/show-hakukohde-siirretty-alas-alert hakukohde-siirretty-alas])
+                               (dispatch [:application/show-hakukohde-siirretty-ylos-alert hakukohde-siirretty-ylos]))
+                             (start-alert-hide-timer))]
     [:div.application__hakukohde-2nd-row__hakukohde-order
      [:span
       [:i.zmdi.zmdi-caret-up.zmdi-hc-2x
@@ -250,15 +264,26 @@
         editable? (subscribe [:application/hakukohteet-editable?])
         lang @(subscribe [:application/form-language])
         toast (subscribe [:application/hakukohde-lisatty-toast])
-        {:keys [visible message]} @toast]
+        {:keys [visible message]} @toast
+        hakukohde-siirretty-alert (subscribe [:application/hakukohde-siirretty-alert])
+        {:keys [alert_visible alert_message]} @hakukohde-siirretty-alert]
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
-      [:div.application__toast-hakukohde-lisatty
+      [:div.application__toast-message
        {:role "alertdialog"
-       :aria-modal "true" 
-       :aria-labelledby "valitut-hakukohteet"
-       :class  (if visible "show-valitut-hakukohteet" "hide-valitut-hakukohteet")}
-       (str (translations/get-hakija-translation :application-study-program-added lang) message)]
+        :aria-modal "true" 
+        :aria-labelledby "valitut-hakukohteet"
+        :aria-live "assertive"
+        :tab-index -1
+        :class  (if visible "show-message" "hide-message")}
+        (str (translations/get-hakija-translation :application-study-program-added lang) message)]
+      [:div.application__toast-message
+       {:role "alertdialog"
+        :aria-modal "true"
+        :aria-labelledby "valitut-hakukohteet"
+        :aria-live "assertive"
+        :tab-index -1
+        :class  (if alert_visible "show-message" "hide-message")} alert_message]
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
         {:id "valitut-hakukohteet"
