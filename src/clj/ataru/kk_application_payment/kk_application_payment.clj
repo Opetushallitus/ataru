@@ -3,18 +3,22 @@
    non-exempt non-EU native applicants should be charged an application fee once per semester.
    NB! Semester is defined here by the start date of the actual first higher education semester,
    not the application date."
-  (:require [ataru.kk-application-payment.kk-application-payment-store :as store]
+  (:require [ataru.haku.haku-service :as haku-service]
+            [ataru.kk-application-payment.kk-application-payment-store :as store]
+            [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [clj-time.coerce :as coerce]
             [clj-time.core :as time]))
 
 (def exemption-form-field-name
   "Unique id / field name for form field that indicates exemption from application fee"
-  ; TODO: field name and format TBD -> OK-581
-  :field-name-here)
+  :vapautus_hakemusmaksusta)
+
+(def exemption-field-ok-values
+  "Any of these values should be considered as exemption to payment"
+  #{"0" "1" "2" "3" "4" "5" "6"})
 
 (def application-payment-start-year
   "Application payments are charged from studies starting in (Autumn) 2025 or later."
@@ -77,13 +81,13 @@
   [person-oid term year virkailija-oid message]
   (set-payment-state person-oid term year "payment-paid" virkailija-oid message))
 
-; TODO: where should we check this?
 (defn haku-valid?
   "Application payments are only collected for admissions starting on or after 1.1.2025"
   [haku]
-  (when-let [hakuaika-start (some-> haku :hakuaika :start coerce/from-long)]
-    (not (time/before? (coerce/from-long hakuaika-start)
-                       first-application-payment-hakuaika-start))))
+  (when-let [hakuajat-start (map :start (:hakuajat haku))]
+    (some
+      #(not (time/before? % first-application-payment-hakuaika-start))
+      hakuajat-start)))
 
 (defn- is-eu-citizen? [person-service koodisto-cache oid]
   (let [person (person-service/get-person person-service oid)
@@ -114,17 +118,18 @@
 
 (defn- exemption-in-application?
   [application]
-  (let [answers (-> application :content :answers util/answers-by-key)]
-    (when (contains? answers exemption-form-field-name)
-      ; TODO need to define field format before we can parse exemptions -> OK-581
-      ())))
+  (let [answers (util/application-answers-by-key application)]
+    (if-let [exemption-answer (exemption-form-field-name answers)]
+      (contains? exemption-field-ok-values (:value exemption-answer))
+      (throw (ex-info "Missing exemption answer" {:application application})))))
 
 (defn- exempt-via-applications?
   "Returns true if there is an exemption reason attached to one or more of the applications for the term.
    Also returns true, in case the person has no applications."
-  [_ _ _]
-  ; TODO get person's applications by starting term and year
-  (let [applications ()]
+  [person-oids hakus]
+  (let [haku-oids (map :oid hakus)
+        applications (when (and (not-empty person-oids) (not-empty haku-oids))
+                       (application-store/get-latest-applications-for-kk-payment-processing person-oids haku-oids))]
     (some true? (map exemption-in-application? applications))))
 
 (defn resolve-payment-status
@@ -138,11 +143,14 @@
 (defn update-payment-status
   "Infers and sets new payment status for person according to their personal data and applications for term.
   Does not poll payments, never updates status to paid. Returns state id."
-  [person-service koodisto-cache person-oid term year virkailija-oid]
-  (let [linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
+  [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
+  (let [hakus (haku-service/get-haut-for-kk-application-payments haku-cache tarjonta-service term year)
+        valid-hakus (filter haku-valid? hakus)
+        linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
         aliases (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
         payment-state (resolve-actual-payment-state (get-payment-states aliases term year))]
+    ; TODO: when no applications for valid hakus, this should not do anything.
     (cond
       ; Treat paid as terminal state that will not be modified automatically any more
       (= (keyword (:state payment-state)) :payment-paid)
@@ -151,7 +159,7 @@
       (is-eu-citizen? person-service koodisto-cache master-oid)
       (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
-      (exempt-via-applications? aliases term year)
+      (exempt-via-applications? aliases valid-hakus)
       (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
       :else
