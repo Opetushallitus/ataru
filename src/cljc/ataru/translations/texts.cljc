@@ -581,6 +581,12 @@
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "Eller använd"
                                                  :en "EN: Tai käytä"}
+   :siirretty-ylos                              {:fi "siirretty ylös"
+                                                 :sv "flyttad upp"
+                                                 :en "moved up"}
+   :siirretty-alas                              {:fi "siirretty alas"
+                                                 :sv "flyttad ner"
+                                                 :en "moved down"}
    :archived                                    {:fi "Arkistoitu"
                                                  :sv "Arkiverad"
                                                  :en "Archived"}
