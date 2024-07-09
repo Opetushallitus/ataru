@@ -1,9 +1,8 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [clojure.string :as str]
             [taoensso.timbre :as log]
-            [ataru.config.core :refer [config]]))
+            [ataru.config.core :refer [config]]
+            [ataru.kk-application-payment.utils :as utils]))
 
 (def form-payment-types
     #{:payment-type-tutu
@@ -16,23 +15,6 @@
 
 (def tutu-processing-fee
   (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))
-
-(defn- requires-higher-education-application-fee?
-  [tarjonta-service haku hakukohde-oids]
-  (let [hakukohteet (tarjonta/get-hakukohteet
-                      tarjonta-service
-                      (remove nil? hakukohde-oids))]
-    (and
-      (boolean haku)
-      (boolean hakukohteet)
-      ; Kohdejoukko must be korkeakoulutus
-      (and (string? (:kohdejoukko-uri haku))
-           (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#"))
-      ; "Kohdejoukon tarkenne must be empty or siirtohaku
-      (or (nil? (:kohdejoukon-tarkenne-uri haku))
-          (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
-      ; Must be tutkintoon johtava
-      (boolean (some true? (map #(:tutkintoon-johtava? %) hakukohteet))))))
 
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
@@ -109,7 +91,7 @@
 (defn- add-payment-info-if-higher-education
   "Set payment info if form is attached to one or more matching higher education admissions."
   [form tarjonta-service haku hakukohde-oids]
-    (if (requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
+    (if (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
       (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil)
       form))
 
@@ -138,7 +120,7 @@
 (defn add-admission-payment-info-for-haku
   "Adds info about admission payment requirement to a haku object"
   [tarjonta-service haku]
-  (let [admission-payment-required? (requires-higher-education-application-fee?
+  (let [admission-payment-required? (utils/requires-higher-education-application-fee?
                                       tarjonta-service
                                       haku
                                       (:hakukohteet haku))]
