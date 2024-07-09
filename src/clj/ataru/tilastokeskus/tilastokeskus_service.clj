@@ -9,6 +9,7 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.tarjonta.haku :as h]
             [ataru.util :as util]
+            [ataru.util.apply-in-batches :as a]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [clojure.set]
             [taoensso.timbre :as log]))
@@ -32,21 +33,6 @@
     (not (vector? v)) nil
     :else (first-string (first v))))
 
-(defn apply-in-batches
-  ([f service items batch-size]
-   (apply-in-batches f service nil items batch-size))
-  ([f service arg items batch-size]
-   (letfn [(process-batch [acc remaining-items]
-                          (if (empty? remaining-items)
-                            acc
-                            (let [batch (take batch-size remaining-items)
-                                  rest-items (drop batch-size remaining-items)
-                                  batch-result (if arg
-                                                 (f service arg batch)
-                                                 (f service batch))]
-                              (recur (concat acc batch-result) rest-items))))]
-     (process-batch [] items))))
-
 (defn- filter-applications-for-koostedata [toinen-aste-applications persons]
   (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (odw-service/get-yksiloimaton-tai-aidinkieleton-henkilo-oids persons)
         persons-from-applications (set (map :henkilo_oid toinen-aste-applications))
@@ -62,8 +48,8 @@
                                                                                applications-for-koostedata))))]
                                 (if (not-empty hakemus-oids)
                                   (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
-                                    (apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
-                                     valintalaskentakoostepalvelu-service hakuOid hakemus-oids 5000))
+                                    (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
+                                     hakemus-oids 5000 valintalaskentakoostepalvelu-service hakuOid :items))
                                   (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
                 toisen-asteen-yhteishaku-oids)))
@@ -107,8 +93,9 @@
         toisen-asteen-yhteishakujen-hakemusten-oidit (map :hakemus_oid toisen-asteen-yhteishakujen-hakemukset)
         batch-size 5000
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
-                                        (into {} (apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
-                                                          valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit batch-size))
+                                        (into {}
+                                              (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
+                                                                     toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service :items))
                                         {})
         applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)
         kooste-data-toinen-aste (get-koostedata-for-applications toisen-asteen-yhteishaku-oids applications-for-koostedata valintalaskentakoostepalvelu-service)
