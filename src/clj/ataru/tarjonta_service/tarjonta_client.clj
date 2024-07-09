@@ -116,6 +116,8 @@
    {:oid                                        (:oid haku)
     :name                                       (localized-names (:nimi haku))
     :hakukohteet                                (:hakukohdeOids haku)
+    :alkamiskausi                               (:koulutuksenAlkamiskausiUri haku)
+    :alkamisvuosi                               (:koulutuksenAlkamisVuosi haku)
     :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden haku))
     :kohdejoukko-uri                            (:kohdejoukkoUri haku)
     :kohdejoukon-tarkenne-uri                   (:kohdejoukonTarkenne haku)

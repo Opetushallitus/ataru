@@ -271,7 +271,9 @@
    :kohdejoukko-uri                    s/Str
    :kohdejoukon-tarkenne-uri           (s/maybe s/Str)
    :hakutapa-uri                       s/Str
-   :yhteishaku                         (s/maybe s/Bool)})
+   :yhteishaku                         (s/maybe s/Bool)
+   (s/optional-key :alkamiskausi)      (s/maybe s/Str)
+   (s/optional-key :alkamisvuosi)      (s/maybe s/Int)})
 
 (s/defschema Haku
   {:oid                                        s/Str
