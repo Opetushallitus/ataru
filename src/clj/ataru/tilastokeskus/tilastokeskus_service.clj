@@ -49,7 +49,7 @@
                                 (if (not-empty hakemus-oids)
                                   (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                     (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
-                                     hakemus-oids 5000 valintalaskentakoostepalvelu-service hakuOid :items))
+                                     hakemus-oids 5000 valintalaskentakoostepalvelu-service hakuOid))
                                   (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
                 toisen-asteen-yhteishaku-oids)))
@@ -95,7 +95,7 @@
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         (into {}
                                               (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
-                                                                     toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service :items))
+                                                                     toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service))
                                         {})
         applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)
         kooste-data-toinen-aste (get-koostedata-for-applications toisen-asteen-yhteishaku-oids applications-for-koostedata valintalaskentakoostepalvelu-service)
