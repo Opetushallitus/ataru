@@ -164,6 +164,10 @@ e.g.
 lein with-profile test spec spec/ataru/applications/answer_util_spec.clj
 ```
 
+Hint: you can also run only individual tests in a file by 
+temporarily naming them with `focus-it` instead of `it`, see: 
+[http://micahmartin.com/speclj/speclj.core.html#var-focus-it](http://micahmartin.com/speclj/speclj.core.html#var-focus-it)
+
 ### ClojureScript unit tests
 
 ```
