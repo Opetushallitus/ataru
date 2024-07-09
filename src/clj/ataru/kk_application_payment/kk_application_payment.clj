@@ -12,10 +12,12 @@
             [taoensso.timbre :as log]
             [clj-time.core :as time]))
 
+; TODO: when the exact field is defined, make sure this is the final agreed id
 (def exemption-form-field-name
   "Unique id / field name for form field that indicates exemption from application fee"
   :vapautus_hakemusmaksusta)
 
+; TODO: when the exact field is defined, check that these are correct
 (def exemption-field-ok-values
   "Any of these values should be considered as exemption to payment"
   #{"0" "1" "2" "3" "4" "5" "6"})
@@ -123,15 +125,6 @@
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
 
-(defn- exempt-via-applications?
-  "Returns true if there is an exemption reason attached to one or more of the applications for the term.
-   Also returns true, in case the person has no applications."
-  [person-oids hakus]
-  (let [haku-oids (map :oid hakus)
-        applications (when (and (not-empty person-oids) (not-empty haku-oids))
-                       (application-store/get-latest-applications-for-kk-payment-processing person-oids haku-oids))]
-    (some true? (map exemption-in-application? applications))))
-
 (defn resolve-payment-status
   "Determines a single payment status out of the statuses attached to possible aliases of the person.
    Returns full state data."
@@ -146,12 +139,18 @@
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
   (let [hakus (haku-service/get-haut-for-kk-application-payments haku-cache tarjonta-service term year)
         valid-hakus (filter haku-valid? hakus)
+        valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
         aliases (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
-        payment-state (resolve-actual-payment-state (get-payment-states aliases term year))]
-    ; TODO: when no applications for valid hakus, this should not do anything.
+        payment-state (resolve-actual-payment-state (get-payment-states aliases term year))
+        applications (when (and (not-empty aliases) (not-empty valid-haku-oids))
+                       (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
     (cond
+      ; If there are no applications, no need to set state either.
+      (= 0 (count applications))
+      nil
+
       ; Treat paid as terminal state that will not be modified automatically any more
       (= (keyword (:state payment-state)) :payment-paid)
       (:id payment-state)
@@ -159,7 +158,7 @@
       (is-eu-citizen? person-service koodisto-cache master-oid)
       (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
-      (exempt-via-applications? aliases valid-hakus)
+      (some true? (map exemption-in-application? applications))
       (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
       :else
