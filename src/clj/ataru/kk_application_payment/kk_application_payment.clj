@@ -13,11 +13,13 @@
             [clj-time.core :as time]))
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
+; TODO: -> before the main feature branch gets merged to master
 (def exemption-form-field-name
   "Unique id / field name for form field that indicates exemption from application fee"
   :vapautus_hakemusmaksusta)
 
 ; TODO: when the exact field is defined, check that these are correct
+; TODO: -> before the main feature branch gets merged to master
 (def exemption-field-ok-values
   "Any of these values should be considered as exemption to payment"
   #{"0" "1" "2" "3" "4" "5" "6"})
