@@ -10,7 +10,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [clj-time.core :as time]))
+            [clj-time.core :as time]
+            [ataru.kk-application-payment.utils :as utils]))
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
 ; TODO: -> before the main feature branch gets merged to master
@@ -41,7 +42,7 @@
     :payment-pending
     :payment-paid})
 
-(defn start-term-valid?
+(defn- start-term-valid?
   "Payments are only charged starting from term Autumn 2025"
   [term year]
   (let [term-kw  (keyword term)]
@@ -85,13 +86,20 @@
   [person-oid term year virkailija-oid message]
   (set-payment-state person-oid term year "payment-paid" virkailija-oid message))
 
-(defn haku-valid?
-  "Application payments are only collected for admissions starting on or after 1.1.2025"
-  [haku]
-  (when-let [hakuajat-start (map :start (:hakuajat haku))]
-    (some
-      #(not (time/before? % first-application-payment-hakuaika-start))
-      hakuajat-start)))
+(defn- haku-valid?
+  "Application payments are only collected for admissions starting on or after 1.1.2025
+   and for hakus with specific properties."
+  [tarjonta-service haku]
+  (let [hakukohde-oids (or (->> (:hakukohteet haku)
+                                (map #(:oid %))
+                                (filter some?)
+                                (not-empty))
+                           (:hakukohteet haku))
+        hakuajat-start (map :start (:hakuajat haku))]
+    (and
+      (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
+      (some #(not (time/before? % first-application-payment-hakuaika-start))
+            hakuajat-start))))
 
 (defn- is-eu-citizen? [person-service koodisto-cache oid]
   (let [person (person-service/get-person person-service oid)
@@ -140,7 +148,7 @@
   Does not poll payments, never updates status to paid. Returns state id."
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
   (let [hakus (haku-service/get-haut-for-kk-application-payments haku-cache tarjonta-service term year)
-        valid-hakus (filter haku-valid? hakus)
+        valid-hakus (filter (partial haku-valid? tarjonta-service) hakus)
         valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
