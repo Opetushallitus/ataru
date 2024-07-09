@@ -2,6 +2,7 @@
   (:require
     [ataru.forms.form-payment-info :as payment-info]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [clj-time.core :as t]
     [speclj.core :refer [describe it should= should-be tags]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
@@ -43,17 +44,25 @@
                     haku {:name { :fi "Testihaku 1"}
                           :oid "payment-info-test-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
-                          :hakukohteet ["payment-info-test-kk-hakukohde"] }
+                          :hakukohteet ["payment-info-test-kk-hakukohde"]
+                          :hakuajat [{:start (t/date-time 2025 10 14)
+                                      :end   (t/date-time 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
                                              tarjonta-service haku)]
-                (should= true(:admission-payment-required? haku-with-payment-flag))))
+                (should= true (:admission-payment-required? haku-with-payment-flag))))
 
           (it "sets payment needed as false for non higher education"
               (let [tarjonta-service (mts/->MockTarjontaKoutaService)
                     haku {:name { :fi "Testihaku 2" }
                           :oid "payment-info-test-non-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_11#1"
-                          :hakukohteet ["payment-info-test-non-kk-hakukohde"] }
+                          :hakukohteet ["payment-info-test-non-kk-hakukohde"]
+                          :hakuajat [{:start (t/date-time 2025 10 14)
+                                      :end   (t/date-time 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
                                              tarjonta-service haku)]
                 (should= false (:admission-payment-required? haku-with-payment-flag))))
@@ -63,7 +72,39 @@
                     haku {:name { :fi "Testihaku 2" }
                           :oid "payment-info-test-unknown-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
-                          :hakukohteet ["payment-info-test-unknown-hakukohde"] }
+                          :hakukohteet ["payment-info-test-unknown-hakukohde"]
+                          :hakuajat [{:start (t/date-time 2025 10 14)
+                                      :end   (t/date-time 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= false (:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as false with higher education haku starting before 2025"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 1"}
+                          :oid "payment-info-test-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-kk-hakukohde"]
+                          :hakuajat [{:start (t/date-time 2024 10 14)
+                                      :end   (t/date-time 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= false (:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as false with higher education studies starting before fall 2025"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 1"}
+                          :oid "payment-info-test-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-kk-hakukohde"]
+                          :hakuajat [{:start (t/date-time 2025 10 14)
+                                      :end   (t/date-time 2025 10 15)}]
+                          :alkamiskausi "kausi_k#1"
+                          :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
                                              tarjonta-service haku)]
                 (should= false (:admission-payment-required? haku-with-payment-flag)))))
