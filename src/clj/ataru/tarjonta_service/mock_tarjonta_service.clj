@@ -1,5 +1,7 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
-  (:require [com.stuartsierra.component :as component]
+  (:require [clj-time.coerce :as coerce]
+            [clj-time.core :as t]
+            [com.stuartsierra.component :as component]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]))
@@ -14,7 +16,6 @@
    :maksumuuriKaytossa                                   false,
    :korkeakouluHaku                                      false,
    :tarjoajaOids                                         ["1.2.246.562.10.73539475928"],
-   :koulutuksenAlkamisVuosi                              2016,
    :sisaltyvatHaut                                       [],
    :hakutapaUri                                          "hakutapa_02#1",
    :tunnistusKaytossa                                    false,
@@ -37,6 +38,7 @@
    :modifiedBy                                           "1.2.246.562.24.70906349358",
    :koulutuksenAlkamiskausiUri                           "kausi_s#1",
    :hakukausiVuosi                                       2016,
+   :koulutuksenAlkamisVuosi                              2016,
    :hakuaikas                                            [{:hakuaikaId "10291885",
                                                            :alkuPvm    (- (System/currentTimeMillis)
                                                                           86400000),
@@ -125,7 +127,13 @@
                                                 :hakukohdeOids    ["1.2.246.562.20.49028196523"
                                                                    "1.2.246.562.20.49028196524"
                                                                    "1.2.246.562.20.49028196525"
-                                                                   "1.2.246.562.20.11111111111"]})
+                                                                   "1.2.246.562.20.11111111111"]
+                                                :hakukausiVuosi              2025
+                                                :koulutuksenAlkamisVuosi     2025
+                                                :hakuaikas                   [{:hakuaikaId "10291885",
+                                                                               :alkuPvm    (coerce/to-long (t/date-time 2025 1 1 8 0)),
+                                                                               :loppuPvm   (coerce/to-long (t/date-time 2025 2 8 0 0)),
+                                                                               :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})
    :1.2.246.562.29.65950024187               (merge
                                                base-haku
                                                {:oid              "1.2.246.562.29.65950024187"
@@ -205,122 +213,134 @@
                                 {:oid                         "payment-info-test-kk-haku"
                                  :kohdejoukkoUri              "haunkohdejoukko_12#1"
                                  :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
-                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                 :hakukausiVuosi              2025,
+                                 :koulutuksenAlkamisVuosi     2025,
+                                 :hakuaikas                   [{:hakuaikaId "10291885",
+                                                                :alkuPvm    (coerce/to-long (t/date-time 2025 1 1 8 0)),
+                                                                :loppuPvm   (coerce/to-long (t/date-time 2025 2 8 0 0)),
+                                                                :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})
 
-   :payment-info-test-non-kk-haku (merge
-                                    base-haku
-                                    {:oid                         "payment-info-test-non-kk-haku"
-                                     :kohdejoukkoUri              "haunkohdejoukko_11#1"
-                                     :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
-                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
+   :payment-info-test-non-kk-haku            (merge
+                                               base-haku
+                                               {:oid                 "payment-info-test-non-kk-haku"
+                                                :kohdejoukkoUri      "haunkohdejoukko_11#1"
+                                                :kohdejoukonTarkenne "haunkohdejoukontarkenne_1#1"
+                                                :hakukohdeOids       ["payment-info-test-non-kk-hakukohde"]
+                                                :hakukausiVuosi              2025,
+                                                :koulutuksenAlkamisVuosi     2025,
+                                                :hakuaikas                   [{:hakuaikaId "10291885",
+                                                                               :alkuPvm    (coerce/to-long (t/date-time 2025 1 1 8 0)),
+                                                                               :loppuPvm   (coerce/to-long (t/date-time 2025 2 8 0 0)),
+                                                                               :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})})
 
 (def hakukohde
-  {:1.2.246.562.20.49028196522           base-hakukohde
+  {:1.2.246.562.20.49028196522             base-hakukohde
 
-   :hakukohde.oid                        (merge base-hakukohde
-                                           {:oid     "hakukohde.oid"
-                                            :hakuOid "haku.oid"})
+   :hakukohde.oid                          (merge base-hakukohde
+                                                  {:oid     "hakukohde.oid"
+                                                   :hakuOid "haku.oid"})
 
-   :hakukohde_oid                        base-hakukohde
+   :hakukohde_oid                          base-hakukohde
 
-   :hakukohde-in-ryhma.oid               (merge base-hakukohde
-                                           {:oid            "hakukohde-in-ryhma.oid"
-                                            :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}]
-                                            :hakuOid        "haku.oid"})
-   :1.2.246.562.20.49028196523           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain          "41101b4f-1762-49af-9db0-e3603adae3ae"
-                                            :oid                       "1.2.246.562.20.49028196523"
-                                            :hakuOid                   "1.2.246.562.29.65950024186"
-                                            :koulutukset               [{:oid "1.2.246.562.17.74335799462"}]
-                                            :josYoEiMuitaLiitepyyntoja true
-                                            :hakukohteenNimet
-                                                                       {:kieli_fi "Testihakukohde 1"
-                                                                        :kieli_sv "sv Testihakukohde 1"}})
-   :1.2.246.562.20.49028196524           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
-                                            :oid              "1.2.246.562.20.49028196524"
-                                            :hakuOid          "1.2.246.562.29.65950024186"
-                                            :koulutukset      [{:oid "1.2.246.562.17.74335799463"}]
-                                            :hakukohteenNimet
-                                                              {:kieli_fi "Testihakukohde 2"
-                                                               :kieli_sv "sv Testihakukohde 2"}})
+   :hakukohde-in-ryhma.oid                 (merge base-hakukohde
+                                                  {:oid            "hakukohde-in-ryhma.oid"
+                                                   :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}]
+                                                   :hakuOid        "haku.oid"})
+   :1.2.246.562.20.49028196523             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain          "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                              :oid                       "1.2.246.562.20.49028196523"
+                                              :hakuOid                   "1.2.246.562.29.65950024186"
+                                              :koulutukset               [{:oid "1.2.246.562.17.74335799462"}]
+                                              :josYoEiMuitaLiitepyyntoja true
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Testihakukohde 1"
+                                               :kieli_sv "sv Testihakukohde 1"}})
+   :1.2.246.562.20.49028196524             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                              :oid              "1.2.246.562.20.49028196524"
+                                              :hakuOid          "1.2.246.562.29.65950024186"
+                                              :koulutukset      [{:oid "1.2.246.562.17.74335799463"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Testihakukohde 2"
+                                               :kieli_sv "sv Testihakukohde 2"}})
 
-   :1.2.246.562.20.49028196525           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
-                                            :oid              "1.2.246.562.20.49028196525"
-                                            :hakuOid          "1.2.246.562.29.65950024186"
-                                            :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
-                                            :hakukohteenNimet
-                                                              {:kieli_fi "Testihakukohde 3"
-                                                               :kieli_sv "sv Testihakukohde 3"}})
-   :1.2.246.562.20.49028100001           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain                     "hakija-hakukohteen-hakuaika-test-form"
-                                            :oid                                  "1.2.246.562.20.49028100001"
-                                            :hakuOid                              "1.2.246.562.29.65950024187"
-                                            :kaytetaanHakukohdekohtaistaHakuaikaa true
-                                            :hakuaikaAlkuPvm                      (- (System/currentTimeMillis)
-                                                                                    86400000)
-                                            :hakuaikaLoppuPvm                     (- (System/currentTimeMillis)
-                                                                                    16400000)
-                                            :koulutukset                          [{:oid "1.2.246.562.17.74335799465"}]
-                                            :ryhmaliitokset                       [{:ryhmaOid "1.2.246.562.28.00000000001"}]
-                                            :hakukohteenNimet
-                                                                                  {:kieli_fi "Aikaloppu 1"
-                                                                                   :kieli_sv "sv Aikaloppu 1"}})
-   :1.2.246.562.20.49028100002           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain                     "hakija-hakukohteen-hakuaika-test-form"
-                                            :oid                                  "1.2.246.562.20.49028100002"
-                                            :hakuOid                              "1.2.246.562.29.65950024187"
-                                            :kaytetaanHakukohdekohtaistaHakuaikaa true
-                                            :hakuaikaAlkuPvm                      (- (System/currentTimeMillis)
-                                                                                    86400000)
-                                            :hakuaikaLoppuPvm                     (+ (System/currentTimeMillis)
-                                                                                    86400000)
-                                            :koulutukset                          [{:oid "1.2.246.562.17.74335799465"}]
-                                            :hakukohteenNimet
-                                                                                  {:kieli_fi "Aikaa jäljellä 2"
-                                                                                   :kieli_sv "sv Aikaa jäljellä 2"}})
-   :1.2.246.562.20.49028100003           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
-                                            :oid              "1.2.246.562.20.49028100003"
-                                            :hakuOid          "1.2.246.562.29.65950024187"
-                                            :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
-                                            :ryhmaliitokset   [{:ryhmaOid "1.2.246.562.28.00000000001"}
-                                                               {:ryhmaOid "1.2.246.562.28.00000000002"}]
-                                            :hakukohteenNimet
-                                                              {:kieli_fi "Aikaa loputtomasti 3"
-                                                               :kieli_sv "sv Aikaa loputtomasti 3"}})
-   :1.2.246.562.20.490281000035          (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
-                                            :oid              "1.2.246.562.20.490281000035"
-                                            :hakuOid          "1.2.246.562.29.65950024187"
-                                            :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
-                                            :ryhmaliitokset   [{:ryhmaOid "1.2.246.562.28.00000000001"}
-                                                               {:ryhmaOid "1.2.246.562.28.00000000002"}]
-                                            :hakukohteenNimet
-                                                              {:kieli_fi "Aikaa loputtomasti 3.5"
-                                                               :kieli_sv "sv Aikaa loputtomasti 3.5"}})
-   :1.2.246.562.20.49028100004           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "hakukohteen-organisaatiosta-form"
-                                            :oid              "1.2.246.562.20.49028100004"
-                                            :hakuOid          "1.2.246.562.29.65950024188"
-                                            :tarjoajaOids     ["1.2.246.562.10.10826252480"]
-                                            :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
-                                            :hakukohteenNimet {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
-                                                               :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})
+   :1.2.246.562.20.49028196525             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                              :oid              "1.2.246.562.20.49028196525"
+                                              :hakuOid          "1.2.246.562.29.65950024186"
+                                              :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Testihakukohde 3"
+                                               :kieli_sv "sv Testihakukohde 3"}})
+   :1.2.246.562.20.49028100001             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain                     "hakija-hakukohteen-hakuaika-test-form"
+                                              :oid                                  "1.2.246.562.20.49028100001"
+                                              :hakuOid                              "1.2.246.562.29.65950024187"
+                                              :kaytetaanHakukohdekohtaistaHakuaikaa true
+                                              :hakuaikaAlkuPvm                      (- (System/currentTimeMillis)
+                                                                                       86400000)
+                                              :hakuaikaLoppuPvm                     (- (System/currentTimeMillis)
+                                                                                       16400000)
+                                              :koulutukset                          [{:oid "1.2.246.562.17.74335799465"}]
+                                              :ryhmaliitokset                       [{:ryhmaOid "1.2.246.562.28.00000000001"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Aikaloppu 1"
+                                               :kieli_sv "sv Aikaloppu 1"}})
+   :1.2.246.562.20.49028100002             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain                     "hakija-hakukohteen-hakuaika-test-form"
+                                              :oid                                  "1.2.246.562.20.49028100002"
+                                              :hakuOid                              "1.2.246.562.29.65950024187"
+                                              :kaytetaanHakukohdekohtaistaHakuaikaa true
+                                              :hakuaikaAlkuPvm                      (- (System/currentTimeMillis)
+                                                                                       86400000)
+                                              :hakuaikaLoppuPvm                     (+ (System/currentTimeMillis)
+                                                                                       86400000)
+                                              :koulutukset                          [{:oid "1.2.246.562.17.74335799465"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Aikaa jäljellä 2"
+                                               :kieli_sv "sv Aikaa jäljellä 2"}})
+   :1.2.246.562.20.49028100003             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                              :oid              "1.2.246.562.20.49028100003"
+                                              :hakuOid          "1.2.246.562.29.65950024187"
+                                              :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                              :ryhmaliitokset   [{:ryhmaOid "1.2.246.562.28.00000000001"}
+                                                                 {:ryhmaOid "1.2.246.562.28.00000000002"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Aikaa loputtomasti 3"
+                                               :kieli_sv "sv Aikaa loputtomasti 3"}})
+   :1.2.246.562.20.490281000035            (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "hakija-hakukohteen-hakuaika-test-form"
+                                              :oid              "1.2.246.562.20.490281000035"
+                                              :hakuOid          "1.2.246.562.29.65950024187"
+                                              :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                              :ryhmaliitokset   [{:ryhmaOid "1.2.246.562.28.00000000001"}
+                                                                 {:ryhmaOid "1.2.246.562.28.00000000002"}]
+                                              :hakukohteenNimet
+                                              {:kieli_fi "Aikaa loputtomasti 3.5"
+                                               :kieli_sv "sv Aikaa loputtomasti 3.5"}})
+   :1.2.246.562.20.49028100004             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "hakukohteen-organisaatiosta-form"
+                                              :oid              "1.2.246.562.20.49028100004"
+                                              :hakuOid          "1.2.246.562.29.65950024188"
+                                              :tarjoajaOids     ["1.2.246.562.10.10826252480"]
+                                              :koulutukset      [{:oid "1.2.246.562.17.74335799465"}]
+                                              :hakukohteenNimet {:kieli_fi "Hakukohde johon käyttäjällä on organisaatio"
+                                                                 :kieli_sv "sv Hakukohde johon käyttäjällä on organisaatio"}})
 
-   :1.2.246.562.20.49028100005           (merge
-                                           base-hakukohde
-                                           {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
-                                            :oid              "1.2.246.562.20.49028100005"
+   :1.2.246.562.20.49028100005             (merge
+                                             base-hakukohde
+                                             {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
+                                              :oid              "1.2.246.562.20.49028100005"
                                             :hakuOid          "1.2.246.562.29.65950024189"
                                             :koulutukset      [{:oid "1.2.246.562.17.74335799464"}]
                                             :hakukohteenNimet

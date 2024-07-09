@@ -10,7 +10,6 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [clj-time.core :as time]
             [ataru.kk-application-payment.utils :as utils]))
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
@@ -25,35 +24,15 @@
   "Any of these values should be considered as exemption to payment"
   #{"0" "1" "2" "3" "4" "5" "6"})
 
-(def application-payment-start-year
-  "Application payments are charged from studies starting in (Autumn) 2025 or later."
-  2025)
-
-(def first-application-payment-hakuaika-start
-  "Application payments are only charged from admissions starting in 2025 or later"
-  (time/date-time 2025 1 1))
-
-(def valid-terms
-  "Semesters / terms for kk application payments: one payment is required per starting term."
-  #{:kausi_k :kausi_s})
-
 (def valid-payment-states
   #{:payment-not-required
     :payment-pending
     :payment-paid})
 
-(defn- start-term-valid?
-  "Payments are only charged starting from term Autumn 2025"
-  [term year]
-  (let [term-kw  (keyword term)]
-    (or
-      (and (contains? valid-terms term-kw) (> year application-payment-start-year))
-      (and (= term-kw :kausi_s) (= year application-payment-start-year)))))
-
 (defn- set-payment-state
   [person-oid term year new-state virkailija-oid message]
   (if (and (contains? valid-payment-states (keyword new-state))
-           (start-term-valid? term year))
+           (utils/start-term-valid? term year))
     (let [state-id (:id (store/create-or-update-kk-application-payment-state!
                           person-oid term year new-state))]
       (store/create-kk-application-payment-event! state-id new-state "state-updated" virkailija-oid message)
@@ -94,12 +73,8 @@
                                 (map #(:oid %))
                                 (filter some?)
                                 (not-empty))
-                           (:hakukohteet haku))
-        hakuajat-start (map :start (:hakuajat haku))]
-    (and
-      (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
-      (some #(not (time/before? % first-application-payment-hakuaika-start))
-            hakuajat-start))))
+                           (:hakukohteet haku))]
+    (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)))
 
 (defn- is-eu-citizen? [person-service koodisto-cache oid]
   (let [person (person-service/get-person person-service oid)
