@@ -346,7 +346,7 @@
     (when (not-empty cannot-edit-fields)
       (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
     (when (not-empty hakeminen-tunnistautuneena-validation-errors)
-      (log/error "Error(s) when validating fields from oppija-session: " (pr-str hakeminen-tunnistautuneena-validation-errors)))
+      (log/error "Error(s) when validating fields from oppija-session" oppija-session ":" (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
       (not-empty hakeminen-tunnistautuneena-validation-errors)
       {:passed? false
