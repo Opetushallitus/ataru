@@ -17,6 +17,14 @@
    :person-oid "1.2.3.4.5.303"
    :answers    [{:key "vapautus_hakemusmaksusta" :value "0" :fieldType "dropdown"}]})
 
+(def application-without-hakemusmaksu-exemption
+  {:form       909909,
+   :lang       "fi"
+   :haku       "payment-info-test-kk-haku"
+   :id         1
+   :person-oid "1.2.3.4.5.303"
+   :answers    [{:key "foo" :value "1" :fieldType "dropdown"}]})
+
 (def application-with-koodisto-form
   {:form       981230123,
    :lang       "fi"
