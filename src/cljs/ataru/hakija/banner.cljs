@@ -23,9 +23,11 @@
     (fn []
       (when (seq (:invalid-fields @valid-status))
         [:div.application__invalid-field-status
+         {:aria-hidden "true"}
          [:span.application__invalid-field-status-title
-          {:role "status"
-           :aria-atomic "true"
+          {;:role "status"
+           ;:aria-atomic "true"
+           :aria-hidden "true"
            :on-click toggle-show-details}
           (first (translations/get-hakija-translation :check-answers @lang))
           [:b (count (:invalid-fields @valid-status))]
