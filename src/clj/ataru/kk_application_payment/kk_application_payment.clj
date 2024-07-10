@@ -122,7 +122,7 @@
   "Infers and sets new payment status for person according to their personal data and applications for term.
   Does not poll payments, never updates status to paid. Returns state id."
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
-  (let [hakus (haku-service/get-haut-for-kk-application-payments haku-cache tarjonta-service term year)
+  (let [hakus (haku-service/get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
         valid-hakus (filter (partial haku-valid? tarjonta-service) hakus)
         valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
