@@ -319,7 +319,7 @@
            :hakukohteet      hakukohteet-with-kevyt-valinta
            :hakukohderyhmat  hakukohderyhmat}))
 
-(defn get-haut-for-kk-application-payments
+(defn get-haut-for-start-term-and-year
   "Get hakus according to study start term and year. Only for internal use, does not do authorization."
   [get-haut-cache tarjonta-service start-term start-year]
   (->> (cache/get-from get-haut-cache :haut)
