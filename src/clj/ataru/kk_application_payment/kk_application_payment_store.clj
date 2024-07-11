@@ -1,5 +1,7 @@
 (ns ataru.kk-application-payment.kk-application-payment-store
   (:require [ataru.db.db :as db]
+            [camel-snake-kebab.core :refer [->kebab-case-keyword]]
+            [camel-snake-kebab.extras :refer [transform-keys]]
             [yesql.core :refer [defqueries]]))
 
 (defqueries "sql/kk-application-payment-queries.sql")
@@ -8,6 +10,8 @@
 (declare yesql-upsert-kk-application-payment-state<!)
 (declare yesql-add-kk-application-payment-event<!)
 (declare yesql-get-kk-application-payment-events)
+
+(def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
 (defn- exec-db
   [ds-key query params]
@@ -22,9 +26,10 @@
 
 (defn get-kk-application-payment-states
   [person-oids start-term start-year]
-  (exec-db :db yesql-get-kk-application-payment-states-for-person-oids {:person_oids person-oids
-                                                                        :start_term  start-term
-                                                                        :start_year  start-year}))
+  (->> (exec-db :db yesql-get-kk-application-payment-states-for-person-oids {:person_oids person-oids
+                                                                             :start_term  start-term
+                                                                             :start_year  start-year})
+       (map ->kebab-case-kw)))
 
 (defn create-kk-application-payment-event!
   [payment-state-id, new-state, event-type, virkailija-oid, message]
@@ -36,5 +41,6 @@
 
 (defn get-kk-application-payment-events
   [payment-state-ids]
-  (exec-db :db yesql-get-kk-application-payment-events
-           {:kk_application_payment_state_ids payment-state-ids}))
+  (->> (exec-db :db yesql-get-kk-application-payment-events
+                {:kk_application_payment_state_ids payment-state-ids})
+       (map ->kebab-case-kw)))
