@@ -46,11 +46,11 @@
 
 (defn- should-be-matching-state
   [example state]
-  (should= example (dissoc state :id :created_time :modified_time)))
+  (should= example (dissoc state :id :created-time :modified-time)))
 
 (defn- should-be-matching-event
   [example event]
-  (should= example (dissoc event :id :created_time)))
+  (should= example (dissoc event :id :created-time)))
 
 (declare spec)
 
@@ -105,8 +105,8 @@
                               state (first (payment/get-payment-states [linked-oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-paid} state)))
+                          (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-paid} state)))
 
                     (it "should set payment status for eu citizen as not required"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
@@ -120,8 +120,8 @@
                               state (first (payment/get-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-not-required} state)))
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))
 
                     (it "should set payment status for non eu citizen without exemption as required"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
@@ -135,8 +135,8 @@
                                 state (first (payment/get-payment-states [oid] term-fall year-ok))]
                             (should-not-be-nil id)
                             (should-not-be-nil state)
-                            (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                       :start_year year-ok, :state state-pending} state)))))
+                            (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                       :start-year year-ok, :state state-pending} state)))))
 
           (describe "with exemption"
                     (before-all
@@ -154,8 +154,8 @@
                               state (first (payment/get-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-not-required} state)))))
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))))
 
 (describe "resolve-payment-status"
           (tags :unit :kk-application-payment)
@@ -172,8 +172,8 @@
               (let [oid "1.2.3.4.5.7"
                     _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
                     state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-pending}
+                (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                           :start-year year-ok, :state state-pending}
                                           state)))
 
           (it "should resolve a simple single state for linked oid"
@@ -181,8 +181,8 @@
                     linked-oid (str oid "2")                ; See FakePersonService
                     _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
                     state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-paid}
+                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
+                                           :start-year year-ok, :state state-paid}
                                           state)))
 
           (it "should resolve a possible paid state with linked oids and conflicting states"
@@ -191,8 +191,8 @@
                     _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
                     _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
                     state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-paid}
+                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
+                                           :start-year year-ok, :state state-paid}
                                           state)))
 
           (it "should resolve a possible not required state with linked oids, conflicting states and no paid state"
@@ -201,8 +201,8 @@
                     _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
                     _ (payment/set-application-fee-not-required linked-oid term-fall year-ok nil nil)
                     state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-not-required}
+                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
+                                           :start-year year-ok, :state state-not-required}
                                           state)))
 
           (it "should resolve a required state with linked oids whenever no paid or not required states found"
@@ -211,8 +211,8 @@
                     _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
                     _ (payment/set-application-fee-required linked-oid term-fall year-ok nil nil)
                     state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-pending}
+                (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                           :start-year year-ok, :state state-pending}
                                           state))))
 
 (defn save-and-check-single-state-and-event
@@ -224,9 +224,9 @@
         event    (first events)]
     (should= 1 (count states))
     (should= 1 (count events))
-    (should-be-matching-state {:person_oid oid, :start_term term, :start_year year, :state desired-state} state)
-    (should-be-matching-event {:kk_application_payment_state_id state-id, :new_state desired-state,
-                               :event_type event-updated, :virkailija_oid nil, :message nil} event)))
+    (should-be-matching-state {:person-oid oid, :start-term term, :start-year year, :state desired-state} state)
+    (should-be-matching-event {:kk-application-payment-state-id state-id, :new-state desired-state,
+                               :event-type event-updated, :virkailija-oid nil, :message nil} event)))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)

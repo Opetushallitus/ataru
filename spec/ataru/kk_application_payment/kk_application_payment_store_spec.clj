@@ -48,12 +48,12 @@
                                          test-person-oid test-term-fall test-year test-state-paid))
                     spring-state (first (store/get-kk-application-payment-states [test-person-oid] test-term-spring test-year))
                     fall-state (first (store/get-kk-application-payment-states [test-person-oid] test-term-fall test-year))
-                    expected-spring-state {:id spring-state-id :person_oid test-person-oid :start_term test-term-spring
-                                           :start_year test-year :state test-state-pending}
-                    expected-fall-state {:id fall-state-id :person_oid test-person-oid :start_term test-term-fall
-                                         :start_year test-year :state test-state-paid}]
-                (should= expected-spring-state (dissoc spring-state :created_time :modified_time))
-                (should= expected-fall-state (dissoc fall-state :created_time :modified_time)))))
+                    expected-spring-state {:id spring-state-id :person-oid test-person-oid :start-term test-term-spring
+                                           :start-year test-year :state test-state-pending}
+                    expected-fall-state {:id fall-state-id :person-oid test-person-oid :start-term test-term-fall
+                                         :start-year test-year :state test-state-paid}]
+                (should= expected-spring-state (dissoc spring-state :created-time :modified-time))
+                (should= expected-fall-state (dissoc fall-state :created-time :modified-time)))))
 
 (describe "kk application payment events"
           (tags :unit :kk-application-payment)
