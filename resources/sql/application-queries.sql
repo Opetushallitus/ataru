@@ -1335,9 +1335,9 @@ SELECT
     a.key,
     a.lang,
     a.form_id                           AS form,
-    a.created_time,
-    a.submitted,
-    a.modified_time,
+    a.created_time::text,
+    a.submitted::text,
+    a.modified_time::text,
     (SELECT content
      FROM answers_as_content
      WHERE application_id = a.id) AS content,
