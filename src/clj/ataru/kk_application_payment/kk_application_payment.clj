@@ -3,12 +3,14 @@
    non-exempt non-EU native applicants should be charged an application fee once per semester.
    NB! Semester is defined here by the start date of the actual first higher education semester,
    not the application date."
-  (:require [ataru.haku.haku-service :as haku-service]
+  (:require [ataru.cache.cache-service :as cache]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]))
 
@@ -110,6 +112,16 @@
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
 
+(defn- get-haut-for-start-term-and-year
+  "Get hakus according to study start term and year. Only for internal use, does not do authorization."
+  [get-haut-cache tarjonta-service start-term start-year]
+  (->> (cache/get-from get-haut-cache :haut)
+       (map :haku)
+       distinct
+       (keep #(tarjonta/get-haku tarjonta-service %))
+       (filter #(and (= start-year (:alkamisvuosi %))
+                     (str/starts-with? (:alkamiskausi %) start-term)))))
+
 (defn resolve-payment-status
   "Determines a single payment status out of the statuses attached to possible aliases of the person.
    Returns full state data."
@@ -122,7 +134,7 @@
   "Infers and sets new payment status for person according to their personal data and applications for term.
   Does not poll payments, never updates status to paid. Returns state id."
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
-  (let [hakus (haku-service/get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
+  (let [hakus (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
         valid-hakus (filter (partial haku-valid? tarjonta-service) hakus)
         valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -148,3 +160,4 @@
 
       :else
       (set-application-fee-required person-oid term year virkailija-oid nil))))
+
