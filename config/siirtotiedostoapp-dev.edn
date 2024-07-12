@@ -1,0 +1,35 @@
+{:server          {:allow-db-clear? false}
+ :db              {:database-name "ataru"
+                   :pool-name     "ataru-pool"
+                   :username      "app"
+                   :password      "ophoph"
+                   :server-name   "localhost"
+                   :port-number   25431
+                   :schema        "public"
+                   :maximum-pool-size 2
+                   :minimum-idle 1}
+ :aws             {:region "eu-west-1"
+                   :henkilo-modified-queue {:enabled?      false
+                                            :drain-failed? false
+                                            :queue-url     ""}}
+ :siirtotiedostot {:s3-bucket "mock_bucket"
+                   :aws-region "mock_region"
+                   :transferFileTargetRoleArn "mock_role_arn"
+                   :forms-page-size "50"
+                   :applications-page-size "1000"}
+ :public-config   {:virkailija-caller-id                "1.2.246.562.10.00000000001.ataru-editori.frontend"
+                   :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
+                   :applicant                           {:service_url "http://localhost:8351"}
+                   :virkailija                          {:service_url "http://localhost:8350/lomake-editori/"}
+                   :konfo                               {:service_url "http://localhost:8351"}
+                   :environment-name                    "test"
+                   :local-dev-logout                    true
+                   :secret-link-valid-days              14
+                   :tutu-payment-form-keys              ""
+                   :attachment-file-max-size-bytes      10485760
+                   :attachment-file-part-max-size-bytes 5242880
+                   :job-failure-alert-recipients        "testi@example.org"
+                   :send-job-failure-alert-emails        true
+                   :features {:schema-validation true}}
+ :temp-files      {:filesystem {:base-path "/tmp"}}
+ :dev             {:fake-dependencies true}}

@@ -346,7 +346,13 @@
                                                        :repl false}}
              :opintopolku-local-hakija {:figwheel {:server-ip "ataru-figwheel-hakija.kehittajan-oma-kone.testiopintopolku.fi"
                                                    :server-port 3450
-                                                   :repl false}}}
+                                                   :repl false}}
+             :siirtotiedostot {:main ataru.siirtotiedosto-app
+                               :aot [ataru.siirtotiedosto-app]
+                               :target-path "ovara-ataru"
+                               :env            {:dev? "true"
+                                                :config "config/siirtotiedostoapp-dev.edn"}
+                               :uberjar-name "ovara-ataru.jar"}}
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
