@@ -91,7 +91,7 @@
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
         toisen-asteen-yhteishakujen-hakemukset (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku_oid application))) applications)
         toisen-asteen-yhteishakujen-hakemusten-oidit (map :hakemus_oid toisen-asteen-yhteishakujen-hakemukset)
-        batch-size 500
+        batch-size 5000
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         (into {}
                                               (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
