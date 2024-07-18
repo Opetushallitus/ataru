@@ -49,7 +49,7 @@
                                 (if (not-empty hakemus-oids)
                                   (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                     (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
-                                     hakemus-oids 5000 valintalaskentakoostepalvelu-service hakuOid))
+                                     hakemus-oids 1000 valintalaskentakoostepalvelu-service hakuOid))
                                   (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
                 toisen-asteen-yhteishaku-oids)))
