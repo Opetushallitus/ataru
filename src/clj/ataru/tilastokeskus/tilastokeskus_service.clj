@@ -37,7 +37,7 @@
   (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (odw-service/get-yksiloimaton-tai-aidinkieleton-henkilo-oids persons)
         persons-from-applications (set (map :henkilo_oid toinen-aste-applications))
         dropped-oids (clojure.set/intersection yksiloimaton-tai-aidinkieleton-henkilo-oids persons-from-applications)
-        wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:person-oid %))) toinen-aste-applications)]
+        wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:henkilo_oid %))) toinen-aste-applications)]
     (when (not-empty dropped-oids)
       (log/info (str "Tilastokeskus: Ei haeta koosteDataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
     wanted-applications))
