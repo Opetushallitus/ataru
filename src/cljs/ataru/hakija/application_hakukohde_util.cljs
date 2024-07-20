@@ -3,6 +3,15 @@
    [ataru.util :as util]
    [clojure.string :as string]))
 
+
+(defn options-comparator [a b]
+  (let [a-user-trans (first a)
+        b-user-trans (first b)]
+    (cond (= a-user-trans b-user-trans) (compare a b)
+          (nil? a-user-trans) 1
+          (nil? b-user-trans) -1
+          :else (compare a b))))
+
 (defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field]
   (let [non-archived-hakukohteet (filter #(not (:archived %)) tarjonta-hakukohteet)
         non-archived-hakukohteet-oids (set (map :oid non-archived-hakukohteet))
@@ -12,12 +21,14 @@
                                  (remove #(:on (:hakuaika %)))
                                  (map :oid)
                                  set))
+        order-user-lang-first #(get-in % [:label lang])
         order-by-name #(util/non-blank-val (:label %) [lang :fi :sv :en])
         hakukohde-options (->> hakukohteet-field
                                :options
                                (filter #(contains? non-archived-hakukohteet-oids (:value %)))
-                               (sort-by (juxt (comp order-by-hakuaika :value)
-                                              order-by-name)))
+                               (sort-by (juxt order-user-lang-first
+                                              order-by-name
+                                              (comp order-by-hakuaika :value)) options-comparator))
         query-parts (map string/lower-case (string/split hakukohde-query #"\s+"))
         results (if (or (string/blank? hakukohde-query)
                         (< (count hakukohde-query) 2))
