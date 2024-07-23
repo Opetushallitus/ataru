@@ -37,7 +37,7 @@
   (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (odw-service/get-yksiloimaton-tai-aidinkieleton-henkilo-oids persons)
         persons-from-applications (set (map :henkilo_oid toinen-aste-applications))
         dropped-oids (clojure.set/intersection yksiloimaton-tai-aidinkieleton-henkilo-oids persons-from-applications)
-        wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:person-oid %))) toinen-aste-applications)]
+        wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:henkilo_oid %))) toinen-aste-applications)]
     (when (not-empty dropped-oids)
       (log/info (str "Tilastokeskus: Ei haeta koosteDataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
     wanted-applications))
@@ -49,7 +49,7 @@
                                 (if (not-empty hakemus-oids)
                                   (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                     (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
-                                     hakemus-oids 5000 valintalaskentakoostepalvelu-service hakuOid))
+                                     hakemus-oids 1000 valintalaskentakoostepalvelu-service hakuOid))
                                   (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
                 toisen-asteen-yhteishaku-oids)))
@@ -94,7 +94,7 @@
         batch-size 5000
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         (into {}
-                                              (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
+                                              (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                                      toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service))
                                         {})
         applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)

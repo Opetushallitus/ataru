@@ -8,8 +8,8 @@
 ;todo maybe only add csrf cookie to PUT POST DELETE?
 (defn enrich-with-mandatory-headers-and-common-settings [opts]
   (-> opts
-      (update :connection-timeout (fnil identity 60000))
-      (update :socket-timeout (fnil identity 60000))
+      (update :connection-timeout (fnil identity 300000))
+      (update :socket-timeout (fnil identity 300000))
       (assoc  :throw-exceptions false)
       (update :headers merge
               {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
