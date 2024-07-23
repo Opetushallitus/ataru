@@ -1569,6 +1569,12 @@
       (update-in db form-path not))))
 
 (reg-event-db
+ :editor/toggle-order-hakukohteet-by-opetuskieli
+ (fn [db _]
+   (let [form-path (db/current-form-properties-path db [:order-hakukohteet-by-opetuskieli])]
+     (update-in db form-path not))))
+
+(reg-event-db
   :editor/add-invalid-value-validator
   (fn [db [_ option-value parent-path]]
     (-> db

@@ -3,16 +3,16 @@
    [ataru.util :as util]
    [clojure.string :as string]))
 
-
 (defn options-comparator [a b]
   (let [a-user-trans (first a)
         b-user-trans (first b)]
     (cond (= a-user-trans b-user-trans) (compare a b)
-          (nil? a-user-trans) 1
-          (nil? b-user-trans) -1
+          (empty? a-user-trans) 1
+          (empty? b-user-trans) -1
           :else (compare a b))))
 
-(defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field]
+; TODO: Mistä saan tänne jokaisen hakukohteen opetuskielen?
+(defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field order-hakukohteet-by-opetuskieli?]
   (let [non-archived-hakukohteet (filter #(not (:archived %)) tarjonta-hakukohteet)
         non-archived-hakukohteet-oids (set (map :oid non-archived-hakukohteet))
         order-by-hakuaika (if virkailija?
@@ -21,14 +21,15 @@
                                  (remove #(:on (:hakuaika %)))
                                  (map :oid)
                                  set))
-        order-user-lang-first #(get-in % [:label lang])
+        order-user-lang-first (fn [item] (get-in item [:label lang]))
         order-by-name #(util/non-blank-val (:label %) [lang :fi :sv :en])
         hakukohde-options (->> hakukohteet-field
                                :options
                                (filter #(contains? non-archived-hakukohteet-oids (:value %)))
-                               (sort-by (juxt order-user-lang-first
-                                              order-by-name
-                                              (comp order-by-hakuaika :value)) options-comparator))
+                               (sort-by (apply juxt (concat (if order-hakukohteet-by-opetuskieli? [order-user-lang-first] [])
+                                                            [order-by-name
+                                                             (comp order-by-hakuaika :value)]))
+                                        (if order-hakukohteet-by-opetuskieli? options-comparator nil)))
         query-parts (map string/lower-case (string/split hakukohde-query #"\s+"))
         results (if (or (string/blank? hakukohde-query)
                         (< (count hakukohde-query) 2))
