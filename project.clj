@@ -55,7 +55,6 @@
                  ;clojure
                  [com.rpl/specter "1.1.4"]
                  [compojure "1.7.0"]
-                 [com.github.fge/json-patch "1.9"]
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"]
                  [aleph "0.6.3"]
