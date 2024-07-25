@@ -72,7 +72,6 @@
                  [ring/ring-json "0.5.1"]
                  [ring-ratelimit "0.2.3"]
                  [bk/ring-gzip "0.3.0"]
-                 [buddy/buddy-auth "3.0.323"]
                  [yesql "0.5.3"]
                  [com.layerware/hugsql "0.5.3"]
                  ; Flyway 4 breaks our migrations
