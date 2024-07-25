@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>92bb59cf17b032dd1e0c08abf9fb5e0badd9a07c</tag>
+    <tag>df083cd50809a0b83e32c4474b49dd0404cd9517</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -497,11 +497,6 @@
       <groupId>bk</groupId>
       <artifactId>ring-gzip</artifactId>
       <version>0.3.0</version>
-    </dependency>
-    <dependency>
-      <groupId>buddy</groupId>
-      <artifactId>buddy-auth</artifactId>
-      <version>3.0.323</version>
     </dependency>
     <dependency>
       <groupId>yesql</groupId>
