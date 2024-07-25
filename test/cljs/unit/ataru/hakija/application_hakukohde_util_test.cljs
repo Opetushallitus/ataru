@@ -8,11 +8,11 @@
     (is (= (query-hakukohteet "auto" :fi false [] {} true)
            {:hakukohde-hits [] :rest-results [] :hakukohde-query "auto"})))
   (testing "Show hakukohteet with english first when user language is english"
-    (is (= (query-hakukohteet "" :en false [{:oid "1"}
-                                            {:oid "2"}
-                                            {:oid "3"}
-                                            {:oid "4"}
-                                            {:oid "5"}]
+    (is (= (query-hakukohteet "" :en false [{:oid "1" :opetuskieli-koodi-urit ["oppilaitoksenopetuskieli_1"]}
+                                            {:oid "2" :opetuskieli-koodi-urit ["oppilaitoksenopetuskieli_4"]}
+                                            {:oid "3" :opetuskieli-koodi-urit ["oppilaitoksenopetuskieli_4"]}
+                                            {:oid "4" :opetuskieli-koodi-urit ["oppilaitoksenopetuskieli_4"]}
+                                            {:oid "5" :opetuskieli-koodi-urit ["oppilaitoksenopetuskieli_1"]}]
                               {:options [{:value "1"
                                           :label {:fi "eka suomeksi"}}
                                          {:value "2"
