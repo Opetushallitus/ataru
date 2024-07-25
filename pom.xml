@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>df083cd50809a0b83e32c4474b49dd0404cd9517</tag>
+    <tag>617379268b78db7154c67ef5ee7653a4fdd01ea7</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -660,11 +660,6 @@
       <groupId>org.clojure</groupId>
       <artifactId>data.xml</artifactId>
       <version>0.0.8</version>
-    </dependency>
-    <dependency>
-      <groupId>com.jcraft</groupId>
-      <artifactId>jsch</artifactId>
-      <version>0.1.55</version>
     </dependency>
     <dependency>
       <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
