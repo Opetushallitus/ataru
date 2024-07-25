@@ -256,7 +256,8 @@
    (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
    (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
-   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)})
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime) 
+   (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
@@ -322,7 +323,8 @@
    (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
    (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
-   (s/optional-key :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?)      (s/maybe s/Bool)})
+   (s/optional-key :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?)     (s/maybe s/Bool)
+   (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))

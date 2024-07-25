@@ -85,7 +85,6 @@
     (flatten (recursively-get-labels component))))
 
 (defn hakukohteet-module [_ path]
-
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])
         component-locked (subscribe [:editor/component-locked? path])]
