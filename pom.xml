@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>408d62c3bd95c077ab13bc7107e7ba0c1a91206c</tag>
+    <tag>92bb59cf17b032dd1e0c08abf9fb5e0badd9a07c</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -606,11 +606,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>pandect</groupId>
-      <artifactId>pandect</artifactId>
-      <version>1.0.2</version>
-    </dependency>
-    <dependency>
       <groupId>hikari-cp</groupId>
       <artifactId>hikari-cp</artifactId>
       <version>3.0.1</version>
@@ -657,6 +652,11 @@
       <version>1.12.558</version>
     </dependency>
     <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-cloudwatch</artifactId>
+      <version>1.12.558</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
       <version>3.1.8</version>
@@ -670,6 +670,11 @@
       <groupId>com.jcraft</groupId>
       <artifactId>jsch</artifactId>
       <version>0.1.55</version>
+    </dependency>
+    <dependency>
+      <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
+      <artifactId>dokumenttipalvelu</artifactId>
+      <version>6.12-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.fzakaria</groupId>
@@ -708,6 +713,21 @@
       <version>31.1-jre</version>
     </dependency>
     <dependency>
+      <groupId>msolli</groupId>
+      <artifactId>proletarian</artifactId>
+      <version>1.0.68-alpha</version>
+    </dependency>
+    <dependency>
+      <groupId>jarohen</groupId>
+      <artifactId>chime</artifactId>
+      <version>0.3.3</version>
+    </dependency>
+    <dependency>
+      <groupId>cronstar</groupId>
+      <artifactId>cronstar</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+    <dependency>
       <groupId>cider</groupId>
       <artifactId>piggieback</artifactId>
       <version>0.5.3</version>
@@ -735,6 +755,18 @@
       <groupId>reloaded.repl</groupId>
       <artifactId>reloaded.repl</artifactId>
       <version>0.2.4</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>tools.namespace</artifactId>
+          <groupId>org.clojure</groupId>
+        </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>tools.namespace</artifactId>
+      <version>1.5.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -753,6 +785,12 @@
       <groupId>com.gfredericks</groupId>
       <artifactId>debug-repl</artifactId>
       <version>0.0.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>clj-test-containers</groupId>
+      <artifactId>clj-test-containers</artifactId>
+      <version>0.7.4</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
