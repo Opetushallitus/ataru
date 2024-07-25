@@ -6,6 +6,7 @@
   },
   "license": "EUPL-1.1",
   "scripts": {
+    "prepare": "husky",
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
     "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser chrome --headless",
@@ -15,11 +16,6 @@
     "lint:js:lint-staged": "eslint",
     "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
     "tsc:type-check": "./bin/type-check.sh"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "cypress/**/*.ts": [
@@ -33,37 +29,37 @@
     ]
   },
   "devDependencies": {
-    "@playwright/test": "^1.41.0",
-    "@types/node": "^20.14.11",
-    "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0",
-    "chai": "4.2.0",
+    "@playwright/test": "^1.45.3",
+    "@types/node": "^20.14.12",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
+    "chai": "^4.4.1",
     "child-process": "^1.0.2",
-    "clj-kondo": "^2023.7.13",
-    "cypress": "4.11.0",
+    "clj-kondo": "^2024.2.12",
+    "cypress": "^4.12.1",
     "eslint": "8.56.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-chai-friendly": "0.7.2",
-    "eslint-plugin-cypress": "2.15.1",
+    "eslint-plugin-chai-friendly": "1.0.0",
+    "eslint-plugin-cypress": "3.4.0",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-playwright": "^1.6.0",
+    "eslint-plugin-playwright": "^1.6.2",
     "eslint-plugin-prefer-arrow": "1.2.3",
-    "eslint-plugin-prettier": "5.1.2",
-    "fp-ts": "2.6.3",
-    "http-server": "^0.12.3",
-    "husky": "4.2.5",
-    "karma": "5.1.0",
+    "eslint-plugin-prettier": "5.2.1",
+    "fp-ts": "2.16.8",
+    "http-server": "^14.1.1",
+    "husky": "9.1.1",
+    "karma": "^5.2.3",
     "karma-chai": "0.1.0",
-    "karma-chrome-launcher": "3.1.0",
+    "karma-chrome-launcher": "3.2.0",
     "karma-cljs-test": "0.1.0",
     "karma-mocha": "2.0.1",
     "less": "^4.2.0",
-    "lint-staged": "10.2.9",
-    "mocha": "8.0.1",
+    "lint-staged": "15.2.7",
+    "mocha": "^8.4.0",
     "pm2": "5.4.2",
-    "prettier": "3.1.1",
-    "puppeteer": "3.3.0",
-    "typescript": "^5.3.3"
+    "prettier": "3.3.3",
+    "puppeteer": "^4.0.1",
+    "typescript": "^5.5.4"
   }
 }
