@@ -298,8 +298,8 @@
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"
-                                               "AWS_ACCESS_KEY" "localhost"
-                                               "AWS_SECRET_KEY" "localhost"}}
+                                               :aws-access-key "localhost"
+                                               :aws-secret-key "localhost"}}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
