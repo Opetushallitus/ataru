@@ -15,7 +15,7 @@
     "lint:js": "eslint '**/*.{ts,js}'",
     "lint:js:lint-staged": "eslint",
     "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
-    "tsc:type-check": "./bin/type-check.sh"
+    "tsc:type-check": "tsc"
   },
   "lint-staged": {
     "cypress/**/*.ts": [
