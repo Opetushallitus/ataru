@@ -933,11 +933,6 @@
     (haku/toisen-asteen-yhteishaku? (get-in db [:form :tarjonta]))))
 
 (re-frame/reg-sub
-  :application/demo?
-  (fn [db]
-    (demo/demo? db)))
-
-(re-frame/reg-sub
   :application/modal-info-elements
   (fn [_ _]
     (re-frame/subscribe [:application/flat-form-content]))

@@ -122,14 +122,15 @@
      :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
      :liitteet-onko-sama-toimitusosoite?                          (boolean (:liitteetOnkoSamaToimitusosoite hakukohde))
      :liitteiden-toimitusosoite                                   (some-> hakukohde
-                                                                    :liitteidenToimitusosoite
-                                                                    (parse-liite-toimitusosoite))
+                                                                          :liitteidenToimitusosoite
+                                                                          (parse-liite-toimitusosoite))
      :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteetOnkoSamaToimitusaika hakukohde))
      :liitteiden-toimitusaika                                     (some-> hakukohde
-                                                                    :liitteidenToimitusaika
-                                                                    (hakuaika/basic-date-time-str->date-time)
-                                                                    (hakuaika/date-time->localized-date-time))
-     :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?     (boolean (:voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita hakukohde))}
+                                                                          :liitteidenToimitusaika
+                                                                          (hakuaika/basic-date-time-str->date-time)
+                                                                          (hakuaika/date-time->localized-date-time)) 
+     :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?     (boolean (:voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita hakukohde))
+     :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
