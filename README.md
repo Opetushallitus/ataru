@@ -63,7 +63,7 @@ When Playwright is updated or installed for the first time, it needs some depend
 
 Start the service locally with make start command
 
-    make start VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
+    make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
 
 Then run all Playwright tests 
 
@@ -79,7 +79,7 @@ You can also use Playwright [VSCode-extension](https://playwright.dev/docs/getti
 
 Start the service locally with make start command
 
-    make start VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
+    make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
 
 Then either open Cypress with command
 
