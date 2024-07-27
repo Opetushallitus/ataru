@@ -1,7 +1,7 @@
 (ns ataru.hakija.application-hakukohde-util
-  (:require
-   [ataru.util :as util]
-   [clojure.string :as string]))
+  (:require [ataru.util :as util]
+            [clojure.string :as string]
+            [medley.core :refer [index-by map-vals]]))
 
 (defn opetuskielet-to-lang-codes [opetuskielet]
   (set (mapcat #(case %
@@ -12,26 +12,26 @@
                   []) opetuskielet)))
 
 (defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field order-hakukohteet-by-opetuskieli?]
-  (let [non-archived-hakukohteet (filter #(not (:archived %)) tarjonta-hakukohteet)
-        non-archived-hakukohteet-by-oids (zipmap (map :oid non-archived-hakukohteet) non-archived-hakukohteet)
-        order-by-hakuaika (if virkailija?
-                            #{}
-                            (->> non-archived-hakukohteet
-                                 (remove #(:on (:hakuaika %)))
-                                 (map :oid)
-                                 set))
-        order-by-opetuskieli (fn [item]
-                               (let [opetuskielet (some-> (get non-archived-hakukohteet-by-oids (:value item))
-                                                          :opetuskieli-koodi-urit
-                                                          opetuskielet-to-lang-codes)]
-                                 (not (contains? opetuskielet lang))))
-        order-by-name #(util/non-blank-val (:label %) [lang :fi :sv :en])
+  (let [non-archived-hakukohteet-by-oid (->> tarjonta-hakukohteet
+                                             (remove :archived)
+                                             (index-by :oid))
+        hakuaika-kaynnissa-mask (map-vals #(:on (:hakuaika %)) non-archived-hakukohteet-by-oid)
+        matching-opetuskieli-mask (map-vals #(-> (get non-archived-hakukohteet-by-oid (:oid %))
+                                                 :opetuskieli-koodi-urit
+                                                 opetuskielet-to-lang-codes
+                                                 (contains? lang))
+                                            non-archived-hakukohteet-by-oid)
+        ; sort-by järjestää falset ennen true-arvoja, joten negatoidaan maskien arvot
+        order-hakuaika-kaynnissa-first (comp not hakuaika-kaynnissa-mask :value)
+        order-opetuskieli-matches-first (comp not matching-opetuskieli-mask :value)
+        order-by-label #(util/non-blank-val (:label %) [lang :fi :sv :en])
+        options-order (apply juxt (concat (when (not virkailija?) [order-hakuaika-kaynnissa-first])
+                                          (when order-hakukohteet-by-opetuskieli? [order-opetuskieli-matches-first])
+                                          [order-by-label]))
         hakukohde-options (->> hakukohteet-field
                                :options
-                               (filter #(contains? non-archived-hakukohteet-by-oids (:value %)))
-                               (sort-by (apply juxt (concat (if order-hakukohteet-by-opetuskieli? [order-by-opetuskieli] [])
-                                                            [order-by-name
-                                                             (comp order-by-hakuaika :value)]))))
+                               (filter #(contains? non-archived-hakukohteet-by-oid (:value %)))
+                               (sort-by options-order))
         query-parts (map string/lower-case (string/split hakukohde-query #"\s+"))
         results (if (or (string/blank? hakukohde-query)
                         (< (count hakukohde-query) 2))
