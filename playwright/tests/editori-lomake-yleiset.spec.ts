@@ -1,9 +1,9 @@
 import { test, expect, Page } from '@playwright/test'
 import { unsafeFoldOption } from '../playwright-utils'
 import {
-  getLomakkeenPoistamisenOsoite,
   kirjauduVirkailijanNakymaan,
   lisaaLomake,
+  poistaLomake,
   teeJaOdotaLomakkeenTallennusta,
 } from '../playwright-ataru-utils'
 
@@ -45,11 +45,7 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async ({ request }) => {
-  await request.delete(getLomakkeenPoistamisenOsoite(), {
-    data: {
-      formKey: lomakkeenAvain,
-    },
-  })
+  await poistaLomake(request, lomakkeenAvain)
   await page.close()
 })
 
