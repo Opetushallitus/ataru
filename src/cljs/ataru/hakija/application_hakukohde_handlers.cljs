@@ -33,7 +33,7 @@
           tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
           {:keys [hakukohde-query
                   hakukohde-hits
-                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field order-hakukohteet-by-opetuskieli?)]
+                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? order-hakukohteet-by-opetuskieli? tarjonta-hakukohteet hakukohteet-field)]
       (-> db
           (assoc-in [:application :hakukohde-query] hakukohde-query)
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
