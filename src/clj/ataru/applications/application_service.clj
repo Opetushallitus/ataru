@@ -37,8 +37,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
-    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
-    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment])
+    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -398,24 +397,6 @@
      session
      application-keys
      [:view-applications :edit-applications])))
-
-(defn- add-kk-application-payment-data
-  "Adds higher education application fee related info to application"
-  [person-service application haku add-events]
-  (let [person-oid         (:person-oid application)
-        studies-start-term (:alkamiskausi haku)
-        studies-start-year (:alkamisvuosi haku)
-        payment-status     (when (and person-oid haku studies-start-term studies-start-year)
-                             (kk-application-payment/resolve-payment-status person-service person-oid
-                                                                            studies-start-term studies-start-year))
-        payment-events     (when (and payment-status add-events)
-                             (kk-application-payment/get-payment-events (:id payment-status)))]
-    (cond-> application
-            payment-status (assoc :payment-status
-                                  (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
-            payment-events (assoc :payment-events
-                                  (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
-                                       payment-events)))))
 
 (defprotocol ApplicationService
   (get-person [this application])

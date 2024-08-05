@@ -10,7 +10,6 @@
     [ataru.hakukohde.hakukohde-store :as hakukohde-store]
     [clj-time.core :as t]
     [clj-time.coerce :as c]
-    [clojure.string :as str]
     [taoensso.timbre :as log]
     [ataru.tarjonta.haku :as haku]
     [ataru.user-rights :as user-rights]
