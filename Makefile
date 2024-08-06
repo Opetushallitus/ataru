@@ -29,7 +29,7 @@ STOP_ONLY=stop pm2.config.js --only
 
 DOCKER_SUDO ?=
 DOCKER=$(if $(DOCKER_SUDO),sudo )docker
-DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
+DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker compose
 
 NODE_MODULES=node_modules
 
