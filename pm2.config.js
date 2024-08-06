@@ -40,6 +40,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
       env: {
+        'dev?': 'true',
         APP: 'ataru-hakija',
         CONFIG: hakijaConfig,
         RELOADED: hakijaReloaded,
@@ -62,6 +63,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
       env: {
+        'dev?': 'true',
         APP: 'ataru-editori',
         CONFIG: virkailijaConfig,
         RELOADED: virkailijaReloaded,

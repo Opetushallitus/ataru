@@ -300,10 +300,7 @@
                               :plugins        [[lein-cljfmt "0.6.7"]
                                                [lein-kibit "0.1.8"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
-                              :resource-paths ["dev-resources"]
-                              :env            {:dev? "true"
-                                               :aws-access-key "localhost"
-                                               :aws-secret-key "localhost"}}
+                              :resource-paths ["dev-resources"]}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
