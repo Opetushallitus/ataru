@@ -25,6 +25,8 @@
    :amount s/Str
    :status PaymentStatus
    :due_date s/Str
+   :origin s/Str
+   :reference s/Str
    (s/optional-key :secret) s/Str
    (s/optional-key :paid_at) s/Str})
 
