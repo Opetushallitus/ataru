@@ -1,7 +1,7 @@
 # Project-specific configuration
-EXECUTABLES = lein docker docker-compose npm lftp
+EXECUTABLES = lein docker npm lftp
 PORTS=15432 16379 15433 1221 16380 16381 8350 8351 8352 8353
-TOOL_VERSIONS := node:8.11 npm:6 docker-compose:1.21 lein:2.9
+TOOL_VERSIONS := node:8.11 npm:6 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
@@ -29,7 +29,7 @@ STOP_ONLY=stop pm2.config.js --only
 
 DOCKER_SUDO ?=
 DOCKER=$(if $(DOCKER_SUDO),sudo )docker
-DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
+DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker compose
 
 NODE_MODULES=node_modules
 

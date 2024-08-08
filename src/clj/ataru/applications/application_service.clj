@@ -548,7 +548,7 @@
                                                                        selected-hakukohderyhma
                                                                        skip-answers-to-preserve-memory?
                                                                        included-ids
-                                                                       ids-only? 
+                                                                       ids-only?
                                                                        (keyword sort-by-field)
                                                                        (keyword sort-order)
                                                                        lang

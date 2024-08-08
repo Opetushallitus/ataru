@@ -3,12 +3,14 @@
    non-exempt non-EU native applicants should be charged an application fee once per semester.
    NB! Semester is defined here by the start date of the actual first higher education semester,
    not the application date."
-  (:require [ataru.haku.haku-service :as haku-service]
+  (:require [ataru.cache.cache-service :as cache]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]))
 
@@ -27,6 +29,7 @@
 (def valid-payment-states
   #{:payment-not-required
     :payment-pending
+    :payment-paid-for-linked-oid
     :payment-paid})
 
 (defn- set-payment-state
@@ -64,6 +67,11 @@
   "Sets kk processing fee paid for the target term."
   [person-oid term year virkailija-oid message]
   (set-payment-state person-oid term year "payment-paid" virkailija-oid message))
+
+(defn set-application-fee-paid-for-alias
+  "Sets kk processing fee paid via another alias for the target term."
+  [person-oid term year virkailija-oid message]
+  (set-payment-state person-oid term year "payment-paid-for-linked-oid" virkailija-oid message))
 
 (defn- haku-valid?
   "Application payments are only collected for admissions starting on or after 1.1.2025
@@ -110,6 +118,16 @@
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
 
+(defn- get-haut-for-start-term-and-year
+  "Get hakus according to study start term and year. Only for internal use, does not do authorization."
+  [get-haut-cache tarjonta-service start-term start-year]
+  (->> (cache/get-from get-haut-cache :haut)
+       (map :haku)
+       distinct
+       (keep #(tarjonta/get-haku tarjonta-service %))
+       (filter #(and (= start-year (:alkamisvuosi %))
+                     (str/starts-with? (:alkamiskausi %) start-term)))))
+
 (defn resolve-payment-status
   "Determines a single payment status out of the statuses attached to possible aliases of the person.
    Returns full state data."
@@ -120,31 +138,37 @@
 
 (defn update-payment-status
   "Infers and sets new payment status for person according to their personal data and applications for term.
-  Does not poll payments, never updates status to paid. Returns state id."
+  Does not poll payments. Returns state id."
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
-  (let [hakus (haku-service/get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
+  (let [hakus (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
         valid-hakus (filter (partial haku-valid? tarjonta-service) hakus)
         valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
         aliases (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
-        payment-state (resolve-actual-payment-state (get-payment-states aliases term year))
+        original-state (first (get-payment-states [person-oid] term year))
+        resolved-state (resolve-actual-payment-state (get-payment-states aliases term year))
         applications (when (and (not-empty aliases) (not-empty valid-haku-oids))
                        (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
-    (cond
-      ; If there are no applications, no need to set state either.
-      (= 0 (count applications))
-      nil
+    ; No need to do updates if the state wouldn't change, there are no applications or application fee already paid
+    (println "Original state " original-state ", resolved state " resolved-state)
+    (if (or
+          (= 0 (count applications))
+          (= (keyword (:state original-state)) :payment-paid))
+      (:id original-state)
+      (cond
+        ; If a payment was made via linked oid, mark "paid by proxy" so the state can change if linking changes
+        (= (keyword (:state resolved-state)) :payment-paid)
+        (if (= (keyword (:state original-state)) :payment-paid)
+          (:id original-state)
+          (set-application-fee-paid-for-alias person-oid term year virkailija-oid nil))
 
-      ; Treat paid as terminal state that will not be modified automatically any more
-      (= (keyword (:state payment-state)) :payment-paid)
-      (:id payment-state)
+        (is-eu-citizen? person-service koodisto-cache master-oid)
+        (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
-      (is-eu-citizen? person-service koodisto-cache master-oid)
-      (set-application-fee-not-required person-oid term year virkailija-oid nil)
+        (some true? (map exemption-in-application? applications))
+        (set-application-fee-not-required person-oid term year virkailija-oid nil)
 
-      (some true? (map exemption-in-application? applications))
-      (set-application-fee-not-required person-oid term year virkailija-oid nil)
+        :else
+        (set-application-fee-required person-oid term year virkailija-oid nil)))))
 
-      :else
-      (set-application-fee-required person-oid term year virkailija-oid nil))))
