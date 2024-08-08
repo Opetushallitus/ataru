@@ -7,7 +7,7 @@ echo "Generating nginx configuration"
 ./bin/generate-nginx-conf.sh || exit 1
 
 echo "Starting Docker containers for integration tests"
-docker-compose up -d ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
+docker compose up -d ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
 ./bin/wait-for.sh localhost:8354 -t 20 || exit 1
 
 echo "Running ClojureScript build for integration tests"
@@ -31,8 +31,8 @@ RESULT=$?
 
 echo "Stopping processes used by integration tests"
 npx pm2 kill
-docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
-docker-compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
+docker compose kill ataru-cypress-test-db ataru-cypress-http-proxy
+docker compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
 
 if [ $RESULT != 0 ]; then
   echo "Integration tests failed! Please see logs for more info"
