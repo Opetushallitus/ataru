@@ -125,6 +125,13 @@
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
 
+(defn- get-haku [form-key]
+  (-> (mock/request :get (str "/lomake-editori/api/tarjonta/haku") {:form-key form-key})
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-form [id]
   (-> (mock/request :get (str "/lomake-editori/api/forms/" id))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
@@ -162,6 +169,14 @@
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
+
+(defn- update-payment-info [key payment-info]
+  (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/update-payment-info")
+                    (json/generate-string payment-info))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (declare resp)
 
@@ -509,5 +524,102 @@
                                                              synthetic-application-fixtures/synthetic-application-malformed
                                                              synthetic-application-fixtures/synthetic-application-foreign]
                           (check-synthetic-applications resp 3 #{1})))))
+
+(describe "update-payment-info"
+          (tags :unit :api-forms)
+
+          (around [spec]
+                  (db/init-db-fixture fixtures/payment-properties-test-form)
+                  (spec)
+                  (db/nuke-old-fixture-forms-with-key (:key fixtures/payment-properties-test-form)))
+
+          (defn check-for-db-form-payment-info
+            [form-key payment-info]
+            (let [form (form-store/fetch-by-key form-key)
+                  properties (:properties form)]
+              (should-not-be-nil form)
+              (should= payment-info properties)))
+
+          (defn update-and-check
+            [updated-payment-info expected-payment-info expected-status]
+            (let [response (update-payment-info
+                             (:key fixtures/payment-properties-test-form)
+                             updated-payment-info)
+                  status (:status response)]
+              (should= expected-status status)
+              (check-for-db-form-payment-info
+                (:key fixtures/payment-properties-test-form) expected-payment-info)))
+
+          (it "should fail trying to set a bird fee (sanity check)"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "bird"}
+                {} 400))
+
+          (it "should set TUTU payment information, forcing a hardcoded processing fee"
+              (update-and-check
+                {:paymentType :payment-type-tutu :processingFee "100.00"}
+                {:payment-type "payment-type-tutu" :processing-fee "70.00" :decision-fee nil}
+                200))
+
+          (it "should fail when trying to set a fixed decision fee for TUTU"
+              (update-and-check
+                {:paymentType :payment-type-tutu :processingFee "100.00" :decisionFee "100.00"}
+                {} 400))
+
+          (it "should set ASTU payment information"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "150.00"}
+                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "150.00"}
+                200))
+
+          (it "should fail when trying to set a processing fee for ASTU"
+              (update-and-check
+                {:paymentType :payment-type-astu :processingFee "100.00" :decisionFee "100.00"}
+                {} 400))
+
+          (it "should not allow setting hakemusmaksu / kk payment information manually"
+              (update-and-check
+                {:paymentType :payment-type-kk :processingFee "1234.00"}
+                {} 400))
+
+          (it "should fail setting payment information when payment type is not valid"
+              (update-and-check
+                {:paymentType :payment-type-foobar :processingFee "1234.00"}
+                {} 400))
+
+          (it "should fail trying to set a negative fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "-1.00"}
+                {} 400))
+
+          (it "should fail trying to set a zero fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "0.00"}
+                {} 400))
+
+          (it "should successfully set a fractional fee"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "1.9"}
+                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}
+                200)))
+
+(describe "GET /tarjonta/haku payment info"
+          (tags :unit)
+
+          (it "should return admission-payment-required? true for matching higher education admission"
+              (let [resp (get-haku "payment-info-test-kk-form")
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 200 status)
+                (should= 1 (count body))
+                (should= true (:admission-payment-required? (first body)) )))
+
+          (it "should return admission-payment-required? false for non higher education admission"
+              (let [resp (get-haku "payment-info-test-non-kk-form")
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 200 status)
+                (should= 1 (count body))
+                (should= false (:admission-payment-required? (first body))))))
 
 (run-specs)
