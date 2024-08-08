@@ -8,32 +8,45 @@
     [ataru.config.core :refer [config]]
     [clojure.string :as string]
     [clojure.set :as set]
-    [ataru.constants :refer [hakutapa-jatkuva-haku hakutapa-joustava-haku]]))
+    [ataru.constants :refer [hakutapa-jatkuva-haku hakutapa-joustava-haku]])
+  (:import (java.util Locale)
+           (java.time Instant ZoneId)
+           (java.time.format DateTimeFormatter)))
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
-(defn new-formatter [fmt-str]
-  (f/formatter fmt-str (t/time-zone-for-id "Europe/Helsinki")))
 
-(def finnish-format (new-formatter "d.M.yyyy 'klo' HH:mm"))
-(def swedish-format (new-formatter "d.M.yyyy 'kl.' HH:mm z"))
-(def english-format (new-formatter "MMM. d, yyyy 'at' hh:mm a z"))
+(defn get-formatter [fmt-str locale]
+  (-> (DateTimeFormatter/ofPattern fmt-str)
+      (.withZone (ZoneId/of "Europe/Helsinki"))
+      (.withLocale locale)))
+
+(defn get-formatted-date [formatter clj-datetime]
+  (-> (.format formatter (Instant/ofEpochMilli (c/to-long clj-datetime)))
+      (string/replace " GMT+" " UTC+")                      ; speksin mukaan halutaan UTC, ja ero GMT:n ja UTC:n
+                                                            ; välillä pitäisi olla <1s
+      (string/replace " am " " AM ")                        ; jostain syystä am pm tulee pienellä
+      (string/replace " pm " " PM ")))                      ; vaikka javadocit sanoo muuta
+
+(def finnish-formatter (get-formatter "d.M.yyyy 'klo' HH:mm" (Locale. "fi" "FI")))
+(def swedish-formatter (get-formatter "d.M.yyyy 'kl.' HH:mm O" (Locale. "se" "FI")))
+(def english-formatter (get-formatter "MMM. d, yyyy 'at' hh:mm a O" (Locale. "en" "US")))
 
 (defn date-timez->localized-date-time [datetime lang]
   (match (keyword lang)
-    :fi (f/unparse finnish-format datetime)
-    :sv (f/unparse swedish-format datetime)
-    :else (f/unparse english-format datetime)))
+         :fi (get-formatted-date finnish-formatter datetime)
+         :sv (get-formatted-date swedish-formatter datetime)
+         :else (get-formatted-date english-formatter datetime)))
 
-(def finnish-time-format (new-formatter "'klo' HH:mm"))
-(def swedish-time-format (new-formatter "'kl.' HH:mm z"))
-(def english-time-format (new-formatter "'at' hh:mm a z"))
+(def finnish-time-formatter (get-formatter "'klo' HH:mm" (Locale. "fi" "FI")))
+(def swedish-time-formatter (get-formatter "'kl.' HH:mm O" (Locale. "se" "FI")))
+(def english-time-formatter (get-formatter "'at' hh:mm a O" (Locale. "en" "US")))
 
 (defn date-timez->localized-time [datetime lang]
   (match (keyword lang)
-         :fi (f/unparse finnish-time-format datetime)
-         :sv (f/unparse swedish-time-format datetime)
-         :else (f/unparse english-time-format datetime)))
+         :fi (get-formatted-date finnish-time-formatter datetime)
+         :sv (get-formatted-date swedish-time-formatter datetime)
+         :else (get-formatted-date english-time-formatter datetime)))
 
 (defn str->date-time
   [str]
@@ -128,6 +141,9 @@
              #{}
              field-hakukohde-and-group-oids)
      uniques)))
+
+(defn new-formatter [fmt-str]
+  (f/formatter fmt-str (t/time-zone-for-id "Europe/Helsinki")))
 
 ; TODO: poista tämä häkki kun ihmiskunta on tullut järkiinsä ja tuhonnut kesäajan
 (defn- winter-summertime-nullification-adjustment
