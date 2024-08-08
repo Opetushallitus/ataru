@@ -42,6 +42,7 @@
 (def state-pending "payment-pending")
 (def state-not-required "payment-not-required")
 (def state-paid "payment-paid")
+(def state-paid-via-linked-oid "payment-paid-for-linked-oid")
 (def event-updated "state-updated")
 
 (defn- should-be-matching-state
@@ -107,6 +108,39 @@
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
                                                      :start-year year-ok, :state state-paid} state)))
+
+                    (it "should set paid via linked oid status"
+                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                      (merge
+                                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                                        {:person-oid "1.2.3.4.5.123"}) nil)
+                        (let [oid "1.2.3.4.5.123"
+                              linked-oid (str oid "2")                ; See FakePersonService
+                              _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
+                              id (payment/update-payment-status fake-person-service fake-tarjonta-service
+                                                                fake-koodisto-cache fake-haku-cache
+                                                                oid term-fall year-ok nil)
+                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                          (should-not-be-nil id)
+                          (should-not-be-nil state)
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-paid-via-linked-oid} state)))
+
+                    (it "should reset paid via linked oid status when the linking has been removed"
+                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                      (merge
+                                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                                        {:person-oid "1.2.3.4.5.300"}) nil)
+                        (let [oid "1.2.3.4.5.300"
+                              _ (payment/set-application-fee-paid-for-alias oid term-fall year-ok nil nil)
+                              id (payment/update-payment-status fake-person-service fake-tarjonta-service
+                                                                fake-koodisto-cache fake-haku-cache
+                                                                oid term-fall year-ok nil)
+                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                          (should-not-be-nil id)
+                          (should-not-be-nil state)
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))
 
                     (it "should set payment status for eu citizen as not required"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
