@@ -23,7 +23,7 @@
    :haku       "payment-info-test-kk-haku"
    :id         543211
    :person-oid "1.2.3.4.5.303"
-   :answers    [{:key "foo" :value "1" :fieldType "dropdown"}]})
+   :answers    [{:key "vapautus_hakemusmaksusta" :value "12345" :fieldType "dropdown"}]})
 
 (def application-with-koodisto-form
   {:form       981230123,
