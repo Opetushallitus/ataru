@@ -24,7 +24,7 @@
             [ataru.temp-file-storage.s3-client :as s3-client]
             [ataru.temp-file-storage.filesystem-temp-file-store :as filesystem-temp-file-store]
             [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]
-            [ataru.valinta-tulos-service.valintatulosservice_service :as valinta-tulos-service]
+            [ataru.valinta-tulos-service.valintatulosservice-service :as valinta-tulos-service]
             [ataru.applications.application-service :as application-service]
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]))
 

@@ -85,7 +85,6 @@
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
-            [cuerdas.core :as str]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
             [ataru.background-job.job :as job])
   (:import java.util.Locale
@@ -1440,7 +1439,7 @@
                       {offset :- s/Str nil}]
         :return {:applications [ataru-schema/HakurekisteriApplicationToinenAste]
                  (s/optional-key :offset) s/Str}
-        (cond (str/empty-or-nil? haku-oid)
+        (cond (clojure.string/blank? haku-oid)
               (response/bad-request {:error "No haku-oid path parameter given"})
               (session-orgs/run-org-authorized
                 session

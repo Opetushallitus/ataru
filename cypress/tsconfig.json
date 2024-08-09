@@ -4,6 +4,7 @@
     "module": "commonjs",
     "target": "ES6",
     "types": ["cypress", "node"],
+    "noEmit": true
   },
   "include": [
     "./**/*.ts"

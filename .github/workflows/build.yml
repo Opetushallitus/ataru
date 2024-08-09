@@ -9,6 +9,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  HUSKY: 0
+
 jobs:
   test-integration:
     runs-on: ubuntu-latest

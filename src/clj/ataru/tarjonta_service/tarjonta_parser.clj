@@ -4,6 +4,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
+            [ataru.util :refer [koodi-uri-base]]
             [clj-time.core :as t]
             [clojure.set :refer [intersection]]
             [clojure.string :as string]))
@@ -34,13 +35,14 @@
      :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
-                                                                          (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
+                                                                          (map koodi-uri-base (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))
      :liitteet                                                    (:liitteet hakukohde)
      :liitteet-onko-sama-toimitusosoite?                          (boolean (:liitteet-onko-sama-toimitusosoite? hakukohde))
      :liitteiden-toimitusosoite                                   (:liitteiden-toimitusosoite hakukohde)
      :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteet-onko-sama-toimitusaika? hakukohde))
-     :liitteiden-toimitusaika                                     (:liitteiden-toimitusaika hakukohde)}))
+     :liitteiden-toimitusaika                                     (:liitteiden-toimitusaika hakukohde)
+     :opetuskieli-koodi-urit                                      (map koodi-uri-base (:opetuskieli-koodi-urit hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
   [pohjakoulutusvaatimuskorkeakoulut]

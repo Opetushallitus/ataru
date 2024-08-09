@@ -607,6 +607,13 @@
     (get form-properties :auto-expand-hakukohteet)))
 
 (re-frame/reg-sub
+ :editor/order-hakukohteet-by-opetuskieli
+ (fn [_ _]
+   (re-frame/subscribe [:editor/form-properties]))
+ (fn [form-properties]
+   (get form-properties :order-hakukohteet-by-opetuskieli)))
+
+(re-frame/reg-sub
   :editor/today
   (fn [db _]
     (-> db

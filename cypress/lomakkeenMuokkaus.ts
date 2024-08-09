@@ -78,12 +78,6 @@ export const haeLomakkeenEsikatseluLinkki = () =>
 export const valitseKoodisto = (koodistonNimi: string) =>
   koodistonValitsin().select(koodistonNimi)
 
-export const hakukohteet = {
-  haeOtsikko: () => cy.get('[data-test-id=hakukohteet-header-label]:visible'),
-
-  haeCheckbox: () => cy.get('[data-test-id=hakukohteet-auto-expand-toggle]'),
-}
-
 export const yleisetAsetukset = {
   haeOtsikko: () => cy.get('[data-test-id=properties-header]:visible'),
 

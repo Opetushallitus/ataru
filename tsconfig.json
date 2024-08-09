@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "strict": true,
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["./playwright/**/*.ts"]
 }

@@ -1,14 +1,12 @@
 (ns ataru.hakija.application-hakukohde-handlers
-  (:require
-    [clojure.string :as string]
-    [clojure.set :as s]
-    [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
-    [ataru.util :as util]
-    [ataru.hakija.handlers-util :as handlers-util]
-    [ataru.hakija.application-handlers :refer [set-field-visibilities
-                                               set-validator-processing
-                                               check-schema-interceptor]]))
-
+  (:require [ataru.hakija.application-hakukohde-util :refer [query-hakukohteet]]
+            [ataru.hakija.application-handlers :refer [check-schema-interceptor
+                                                       set-field-visibilities
+                                                       set-validator-processing]]
+            [ataru.hakija.handlers-util :as handlers-util]
+            [ataru.util :as util]
+            [clojure.set :as s]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
 (defn hakukohteet-field [db]
   (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
@@ -17,38 +15,6 @@
 (defn- toggle-hakukohde-search
   [db]
   (update-in db [:application :show-hakukohde-search] not))
-
-(defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field]
-  (let [non-archived-hakukohteet (filter #(not (:archived %)) tarjonta-hakukohteet)
-        non-archived-hakukohteet-oids (set (map :oid non-archived-hakukohteet))
-        order-by-hakuaika (if virkailija?
-                            #{}
-                            (->> non-archived-hakukohteet
-                                 (remove #(:on (:hakuaika %)))
-                                 (map :oid)
-                                 set))
-        order-by-name #(util/non-blank-val (:label %) [lang :fi :sv :en])
-        hakukohde-options (->> hakukohteet-field
-                               :options
-                               (filter #(contains? non-archived-hakukohteet-oids (:value %)))
-                               (sort-by (juxt (comp order-by-hakuaika :value)
-                                              order-by-name)))
-        query-parts (map string/lower-case (string/split hakukohde-query #"\s+"))
-        results (if (or (string/blank? hakukohde-query)
-                        (< (count hakukohde-query) 2))
-                  (map :value hakukohde-options)
-                  (->> hakukohde-options
-                       (filter
-                         (fn [option]
-                           (let [haystack (string/lower-case
-                                            (str (get-in option [:label lang] (get-in option [:label :fi] ""))
-                                                 (get-in option [:description lang] "")))]
-                             (every? #(string/includes? haystack %) query-parts))))
-                       (map :value)))
-        [hakukohde-hits rest-results] (split-at 15 results)]
-    {:hakukohde-hits  hakukohde-hits
-     :rest-results    rest-results
-     :hakukohde-query hakukohde-query}))
 
 (reg-event-db
   :application/hakukohde-search-toggle
@@ -62,11 +28,12 @@
     (let [hakukohde-query @hakukohde-query-atom
           lang (-> db :form :selected-language)
           virkailija? (some? (get-in db [:application :virkailija-secret]))
+          order-hakukohteet-by-opetuskieli? (get-in db [:form :properties :order-hakukohteet-by-opetuskieli])
           hakukohteet-field (hakukohteet-field db)
           tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
           {:keys [hakukohde-query
                   hakukohde-hits
-                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field)]
+                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? order-hakukohteet-by-opetuskieli? tarjonta-hakukohteet hakukohteet-field)]
       (-> db
           (assoc-in [:application :hakukohde-query] hakukohde-query)
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)

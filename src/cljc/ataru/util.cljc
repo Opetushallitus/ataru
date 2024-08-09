@@ -382,3 +382,5 @@
   "Get value wrapped into vector, if it's not a vector"
   [val] 
   (if (vector? val) val [val]))
+
+(defn koodi-uri-base [koodi-uri] (-> koodi-uri (string/split #"#") first))

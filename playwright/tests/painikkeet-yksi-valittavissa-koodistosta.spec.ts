@@ -6,9 +6,9 @@ import {
   getHakemuksenLahettamisenOsoite,
   getHakijanNakymanOsoite,
   getLomakkeenHaunOsoite,
-  getLomakkeenPoistamisenOsoite,
   kirjauduVirkailijanNakymaan,
   lisaaLomake,
+  poistaLomake,
   taytaHenkilotietomoduuli,
   teeJaOdotaLomakkeenTallennusta,
 } from '../playwright-ataru-utils'
@@ -64,11 +64,7 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async ({ request }) => {
-  await request.delete(getLomakkeenPoistamisenOsoite(), {
-    data: {
-      formKey: lomakkeenTunnisteet.lomakkeenAvain,
-    },
-  })
+  await poistaLomake(request, lomakkeenTunnisteet.lomakkeenAvain)
   await page.close()
 })
 

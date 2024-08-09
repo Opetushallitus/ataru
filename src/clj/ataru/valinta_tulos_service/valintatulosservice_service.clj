@@ -1,4 +1,4 @@
-(ns ataru.valinta-tulos-service.valintatulosservice_service
+(ns ataru.valinta-tulos-service.valintatulosservice-service
   (:require [ataru.valinta-tulos-service.valintatulosservice-client :as client]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :refer [ValintaTulosService]]
             [clojure.set :refer [union]]))

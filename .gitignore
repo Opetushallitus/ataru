@@ -33,7 +33,7 @@ npm-debug.log*
 /docker/ataru-cypress-http-proxy/etc/nginx/nginx.conf
 .clj-kondo/.cache
 .java
-.lsp
+.lsp/.cache
 .calva/
 /test-results/
 /playwright-report/

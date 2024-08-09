@@ -22,7 +22,8 @@
             [ataru.application-common.application-field-common-test]
             [ataru.hakija.form-tools-test]
             [ataru.liitteet-test]
-            [ataru.virkailija.application.excel-download.excel-utils-test]))
+            [ataru.virkailija.application.excel-download.excel-utils-test] 
+            [ataru.hakija.application-hakukohde-util-test]))
 
 (doo-tests 'ataru.application-common.option-visibility-test
            'ataru.hakija.oppija-session-test
@@ -46,4 +47,5 @@
            'ataru.application-common.application-field-common-test
            'ataru.hakija.form-tools-test
            'ataru.liitteet-test
-           'ataru.virkailija.application.excel-download.excel-utils-test)
+           'ataru.virkailija.application.excel-download.excel-utils-test
+           'ataru.hakija.application-hakukohde-util-test)

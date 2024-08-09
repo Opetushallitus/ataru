@@ -19,9 +19,7 @@ export const waitForResponse = (
 export const getJsonResponseKey = async <T>(res: Response, key: string) => {
   try {
     const body = await res.json()
-    return Record.hasOwnProperty(key, body)
-      ? Option.some(body[key] as T)
-      : Option.none
+    return Record.has(key, body) ? Option.some(body[key] as T) : Option.none
   } catch (e) {
     return Option.none
   }

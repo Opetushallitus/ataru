@@ -1,9 +1,8 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 if grep lockfileVersion package-lock.json | grep -qx '  "lockfileVersion": 2,'; then
-    # kaikki hyvin
+    # package-lock kunnossa
+    npx lint-staged
 else
     echo 'package-lock.json file format version is not 2!'
     exit 1
 fi
+

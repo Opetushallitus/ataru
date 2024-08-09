@@ -1236,6 +1236,9 @@
    :auto-expand-hakukohteet                                  {:fi "Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                               :sv "SV: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                               :en "EN: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"}
+   :order-hakukohteet-by-opetuskieli                        {:fi "Järjestä hakukohteet opetuskielen mukaan"
+                                                              :sv "SV: Järjestä hakukohteet opetuskielen mukaan"
+                                                              :en "EN: Järjestä hakukohteet opetuskielen mukaan"}
    :properties                                               {:fi "Yleiset asetukset"
                                                               :sv "SV: Yleiset asetukset"
                                                               :en "EN: Yleiset asetukset"}

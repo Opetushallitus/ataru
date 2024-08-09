@@ -11,7 +11,7 @@ export default defineConfig({
     timeout: process.env.CI ? 8 * 1000 : 10 * 1000,
   },
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: Boolean(process.env.CI),
   /* Retry on CI only */

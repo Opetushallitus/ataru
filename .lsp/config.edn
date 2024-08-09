@@ -1,0 +1,1 @@
+{:source-paths-ignore-regex ["target.*", "resources.*", "target-virkailija.*", "target-hakija.*"]}

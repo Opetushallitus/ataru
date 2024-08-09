@@ -23,7 +23,7 @@
                             "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
                             "SUPERUSER" "1.2.246.562.11.44444444444"
                             "1.2.246.562.11.11111111111")
-            unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
+            unique-ticket (str (System/currentTimeMillis) "-" (rand-int Integer/MAX_VALUE))]
         [username unique-ticket])))
 
 (defn auth-routes [{:keys [login-cas-client
