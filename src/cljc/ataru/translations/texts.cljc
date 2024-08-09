@@ -74,6 +74,12 @@
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Study programmes are in an invalid order of preference"}
+   :application-selected-study-programms        {:fi "Valitut hakukohteet "
+                                                 :sv "Valda ansökningsmål"
+                                                 :en "Selected study programmes"}
+   :application-study-program-added             {:fi "Hakukohde lisätty: "
+                                                 :sv "Ansökningsmål har lagts till: "
+                                                 :en "Study programme added: "}
    :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
                                                  :sv "Du kan inte söka till detta ansökningsmål, eftersom du redan söker till följande ansökningsmål:"
                                                  :en "You can't apply to this study programme because you are applying to the following study programme:"}
@@ -575,12 +581,21 @@
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "Eller använd"
                                                  :en "EN: Tai käytä"}
+   :siirretty-ylos                              {:fi "siirretty ylös"
+                                                 :sv "flyttad upp"
+                                                 :en "moved up"}
+   :siirretty-alas                              {:fi "siirretty alas"
+                                                 :sv "flyttad ner"
+                                                 :en "moved down"}
    :archived                                    {:fi "Arkistoitu"
                                                  :sv "Arkiverad"
                                                  :en "Archived"}
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
                                                  :en "(mandatory information)"}
+   :selected                                    {:fi "Valittu: "
+                                                 :sv "Godkänd: "
+                                                 :en "Selected: "}
    :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
                                                  :sv "Ändring i antagningssättet i den gemensamma ansökan"
                                                  :en "EN: Muutos yhteishaun valintatapaan"}
