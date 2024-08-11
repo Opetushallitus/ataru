@@ -151,3 +151,57 @@
               (let [end (t/date-time 2024 10 30 9)
                     hakuajat {:attachment-modify-grace-period-days 200 :end (coerce/to-long end)}]
                 (should= (t/minus (t/plus end (t/days 200)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat)))))
+
+(describe "Localized datetime"
+          (tags :unit)
+
+          (it "Returns datetime in expected format for fi during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "30.10.2024 klo 11:00" (hakuaika/date-timez->localized-date-time datetime :fi))))
+
+          (it "Returns datetime in expected format for fi during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "30.6.2024 klo 12:00" (hakuaika/date-timez->localized-date-time datetime :fi))))
+
+          (it "Returns datetime in expected format for se during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "30.10.2024 kl. 11:00 UTC+2" (hakuaika/date-timez->localized-date-time datetime :sv))))
+
+          (it "Returns datetime in expected format for se during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "30.6.2024 kl. 12:00 UTC+3" (hakuaika/date-timez->localized-date-time datetime :sv))))
+
+          (it "Returns datetime in expected format for en during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "Oct. 30, 2024 at 11:00 AM UTC+2" (hakuaika/date-timez->localized-date-time datetime :en))))
+
+          (it "Returns datetime in expected format for en during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "Jun. 30, 2024 at 12:00 PM UTC+3" (hakuaika/date-timez->localized-date-time datetime :en)))))
+
+(describe "Localized time"
+          (tags :unit)
+
+          (it "Returns datetime in expected format for fi during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "klo 11:00" (hakuaika/date-timez->localized-time datetime :fi))))
+
+          (it "Returns datetime in expected format for fi during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "klo 12:00" (hakuaika/date-timez->localized-time datetime :fi))))
+
+          (it "Returns datetime in expected format for se during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "kl. 11:00 UTC+2" (hakuaika/date-timez->localized-time datetime :sv))))
+
+          (it "Returns datetime in expected format for se during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "kl. 12:00 UTC+3" (hakuaika/date-timez->localized-time datetime :sv))))
+
+          (it "Returns datetime in expected format for en during Winter time"
+              (let [datetime (t/date-time 2024 10 30 9)]
+                (should= "at 11:00 AM UTC+2" (hakuaika/date-timez->localized-time datetime :en))))
+
+          (it "Returns datetime in expected format for en during Summer time"
+              (let [datetime (t/date-time 2024 6 30 9)]
+                (should= "at 12:00 PM UTC+3" (hakuaika/date-timez->localized-time datetime :en)))))
