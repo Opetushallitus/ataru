@@ -128,14 +128,6 @@
        (filter #(and (= start-year (:alkamisvuosi %))
                      (str/starts-with? (:alkamiskausi %) start-term)))))
 
-(defn resolve-payment-status
-  "Determines a single payment status out of the statuses attached to possible aliases of the person.
-   Returns full state data."
-  [person-service person-oid term year]
-  (let [linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
-        aliases (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))]
-    (resolve-actual-payment-state (get-payment-states aliases term year))))
-
 (defn update-payment-status
   "Infers and sets new payment status for person according to their personal data, possible OID linkings
   and applications for term. Does not poll payments, they should be updated separately. Returns state id."
