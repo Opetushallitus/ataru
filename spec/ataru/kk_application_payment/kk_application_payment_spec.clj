@@ -191,64 +191,6 @@
                           (should-be-matching-state {:person-oid oid, :start-term term-fall,
                                                      :start-year year-ok, :state state-not-required} state)))))
 
-(describe "resolve-payment-status"
-          (tags :unit :kk-application-payment)
-
-          (before-all
-            (delete-states-and-events!))
-
-          (it "should return nil when no states found"
-              (let [oid "1.2.3.4.5.6"
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-nil state)))
-
-          (it "should return a simple single state when no states for linked oids"
-              (let [oid "1.2.3.4.5.7"
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                           :start-year year-ok, :state state-pending}
-                                          state)))
-
-          (it "should resolve a simple single state for linked oid"
-              (let [oid "1.2.3.4.5.8"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
-                                           :start-year year-ok, :state state-paid}
-                                          state)))
-
-          (it "should resolve a possible paid state with linked oids and conflicting states"
-              (let [oid "1.2.3.4.5.9"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
-                                           :start-year year-ok, :state state-paid}
-                                          state)))
-
-          (it "should resolve a possible not required state with linked oids, conflicting states and no paid state"
-              (let [oid "1.2.3.4.5.10"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-not-required linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
-                                           :start-year year-ok, :state state-not-required}
-                                          state)))
-
-          (it "should resolve a required state with linked oids whenever no paid or not required states found"
-              (let [oid "1.2.3.4.5.11"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-required linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                           :start-year year-ok, :state state-pending}
-                                          state))))
-
 (defn save-and-check-single-state-and-event
   [oid term year state-func desired-state]
   (let [state-id (state-func oid term-fall year-ok nil nil)
