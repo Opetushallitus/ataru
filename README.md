@@ -247,7 +247,7 @@ Because vulnerability scanning tools don't work well with clojure, pom.xml is us
 
 ### `make start` hangs in container creation
 
-If your build gets stuck in the phase where all containers are listed by `docker-compose` like so:
+If your build gets stuck in the phase where all containers are listed by `docker compose` like so:
 
 ```bash
 Step 6/7 : RUN chmod a=,u=rw /etc/ssl/private/pure-ftpd.pem
@@ -258,7 +258,7 @@ Step 7/7 : CMD /run.sh -l puredb:/etc/pure-ftpd/pureftpd.pdb -E -j -R -P $PUBLIC
  ---> 1818a90a9990
 Successfully built 1818a90a9990
 Successfully tagged ataru_ataru-test-ftpd:latest
-COMPOSE_PARALLEL_LIMIT=8 docker-compose up -d
+COMPOSE_PARALLEL_LIMIT=8 docker compose up -d
 Creating network "ataru_ataru-test-network" with the default driver
 Creating network "ataru_cypress-http-proxy-network" with driver "bridge"
 Creating ataru_ataru-dev-db_1 ...
@@ -281,7 +281,7 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 try running Docker Compose manually with
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 If everything starts, run `make stop` and now `make start` should work as expected. Why? Who knows...
