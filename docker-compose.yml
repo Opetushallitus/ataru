@@ -1,7 +1,9 @@
-version: "3"
 services:
   ataru-dev-db:
-    build: ./test-postgres
+    build: 
+      context: ./test-postgres
+      args:
+      - POSTGRESQL_VERSION=${POSTGRESQL_VERSION}
     environment:
       - POSTGRES_DB=ataru-dev
       - POSTGRES_PASSWORD=oph
@@ -11,19 +13,22 @@ services:
     networks:
       - ataru-test-network
   ataru-dev-redis:
-    image: "docker.io/library/redis:latest"
+    image: docker.io/library/redis:${REDIS_VERSION}
     ports:
       - "16379:6379"
     networks:
       - ataru-test-network
   ataru-dev-localstack:
-    image: localstack/localstack:3.0.1
+    image: localstack/localstack:${LOCALSTACK_VERSION}
     ports:
       - "127.0.0.1:4566:4566"
     networks:
       - ataru-test-network
   ataru-test-db:
-    build: ./test-postgres
+    build: 
+      context: ./test-postgres
+      args:
+      - POSTGRESQL_VERSION=${POSTGRESQL_VERSION}
     environment:
       - POSTGRES_DB=ataru-test
       - POSTGRES_PASSWORD=oph
@@ -33,7 +38,10 @@ services:
     networks:
       - ataru-test-network
   ataru-cypress-test-db:
-    build: ./test-postgres
+    build: 
+      context: ./test-postgres
+      args:
+      - POSTGRESQL_VERSION=${POSTGRESQL_VERSION}
     command: -p 5435
     environment:
       - POSTGRES_DB=ataru-test
@@ -44,7 +52,7 @@ services:
     networks:
       - ataru-test-network
   ataru-cypress-http-proxy:
-    image: docker.io/library/nginx
+    image: docker.io/library/nginx:${NGINX_VERSION}
     ports:
       - "8354:8354"
     volumes:
@@ -59,13 +67,13 @@ services:
     networks:
       - ataru-test-network
   ataru-test-redis:
-    image: "docker.io/library/redis:latest"
+    image: docker.io/library/redis:${REDIS_VERSION}
     ports:
       - "16380:6379"
     networks:
       - ataru-test-network
   ataru-cypress-test-redis:
-    image: "docker.io/library/redis:latest"
+    image: docker.io/library/redis:${REDIS_VERSION}
     ports:
       - "16381:6379"
     networks:
