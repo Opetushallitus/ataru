@@ -708,11 +708,6 @@
       <version>31.1-jre</version>
     </dependency>
     <dependency>
-      <groupId>funcool</groupId>
-      <artifactId>cuerdas</artifactId>
-      <version>2.2.0</version>
-    </dependency>
-    <dependency>
       <groupId>cider</groupId>
       <artifactId>piggieback</artifactId>
       <version>0.5.3</version>

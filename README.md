@@ -497,7 +497,6 @@ Output should be like this:
        [net.cgrand/regex "1.1.0" :scope "test"]
      [net.cgrand/sjacket "0.1.1" :scope "test" :exclusions [[org.clojure/clojure] [net.cgrand/parsley]]]
    [suspendable "0.1.1" :scope "test" :exclusions [[org.clojure/clojure] [com.stuartsierra/component]]]
- [funcool/cuerdas "2.2.0"]
  [hikari-cp "3.0.1"]
    [com.zaxxer/HikariCP "5.0.1"]
  [markdown-clj "1.11.7"]
