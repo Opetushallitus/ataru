@@ -19,6 +19,9 @@ export const getLomakkeenHaunOsoite = (lomakkeenAvain: string) =>
 
 export const getHakemuksenLahettamisenOsoite = () => '/hakemus/api/application'
 
+const getLomakkeenEsikatseluOsoite = (lomakkeenAvain: string) =>
+  `/lomake-editori/api/preview/form/${lomakkeenAvain}?lang=fi`
+
 export const clickLisaaLomakeButton = async (page: Page) =>
   await page.getByTestId('add-form-button').click()
 
@@ -112,4 +115,20 @@ export const poistaLomake = async (
       formKey: lomakkeenAvain,
     },
   })
+}
+
+export const expectUusiLomakeValid = async (
+  page: Page,
+  lomakkeenAvain: string,
+  nimi: string
+) => {
+  await expect(page).toHaveURL(new RegExp(`${lomakkeenAvain}$`))
+  await expect(page.getByTestId('form-name-input')).toHaveValue(nimi)
+
+  const esikatseluLinkki = page.getByTestId('application-preview-link-fi')
+  await expect(esikatseluLinkki).toHaveText('FI')
+  await expect(esikatseluLinkki).toHaveAttribute(
+    'href',
+    getLomakkeenEsikatseluOsoite(lomakkeenAvain)
+  )
 }
