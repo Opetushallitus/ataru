@@ -92,7 +92,6 @@
                  [org.clojure/core.cache "1.0.225"]
                  [nrepl "1.0.0"]
                  [com.taoensso/carmine "3.2.0" :exclusions [io.aviso/pretty]]
-                 [pandect "1.0.2"]
                  [hikari-cp "3.0.1"]
                  [ring/ring-mock "0.4.0"]
                  [speclj "3.4.3"]
