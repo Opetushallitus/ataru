@@ -11,7 +11,8 @@
                   "oppilaitoksenopetuskieli_4" [:en]
                   []) opetuskielet)))
 
-(defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field order-hakukohteet-by-opetuskieli?]
+(defn query-hakukohteet
+  [hakukohde-query lang virkailija? order-hakukohteet-by-opetuskieli? tarjonta-hakukohteet hakukohteet-field]
   (let [non-archived-hakukohteet-by-oid (->> tarjonta-hakukohteet
                                              (remove :archived)
                                              (index-by :oid))
@@ -40,8 +41,8 @@
                        (filter
                         (fn [option]
                           (let [haystack (string/lower-case
-                                          (str (get-in option [:label lang] (get-in option [:label :fi] ""))
-                                               (get-in option [:description lang] "")))]
+                                          (str (util/non-blank-val (:label option) [lang :fi :sv :en])
+                                               (util/non-blank-val (:description option) [lang :fi :sv :en])))]
                             (every? #(string/includes? haystack %) query-parts))))
                        (map :value)))
         [hakukohde-hits rest-results] (split-at 15 results)]
