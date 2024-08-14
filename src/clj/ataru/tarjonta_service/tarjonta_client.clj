@@ -87,7 +87,8 @@
           :koulutustyyppikoodi                                         nil
           :hakukelpoisuusvaatimus-uris                                 (:hakukelpoisuusvaatimusUris hakukohde)
           :ylioppilastutkinto-antaa-hakukelpoisuuden?                  (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))
-          :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))}
+          :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))
+          :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
          (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
            {:hakuajat [(merge {:start (new DateTime
                                            (:hakuaikaAlkuPvm hakukohde)
