@@ -1634,6 +1634,12 @@
                          :processing-fee nil}))))
 
 (reg-event-db
+  :editor/change-processing-fee
+  (fn [db [_ processing-fee]]
+    (let [path (db/current-form-properties-path db [:payment :processing-fee])]
+      (assoc-in db path processing-fee))))
+
+(reg-event-db
   :editor/toggle-close-form
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:closed])

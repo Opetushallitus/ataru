@@ -402,7 +402,10 @@
   (let [id                      "toggle-lomakkeeseen-liittyy-maksutoiminto"
         maksutiedot             @(subscribe [:editor/maksutiedot])
         maksutoiminto?          (not (empty? maksutiedot))
-        disabled?               @(subscribe [:editor/form-locked?])]
+        superuser?              @(subscribe [:editor/superuser?])
+        disabled?               (or @(subscribe [:editor/form-locked?])
+                                    (not superuser?)
+                                    (= (:type maksutiedot) "payment-type-kk"))]
     [:div
      [:div.editor-form__checkbox-with-label
       [:input.editor-form__checkbox
@@ -410,24 +413,33 @@
         :checked   maksutoiminto?
         :type      "checkbox"
         :disabled  disabled?
-        :on-change #(dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto])}]
+        :on-change #(dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto])
+        :data-test-id "toggle-maksutoiminto"}]
       [:label.editor-form__checkbox-label
        {:for id}
        @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
      (when maksutoiminto?
        [:div
-        [:div.editor-form__checkbox-with-label
-         [:input.editor-form__radio
-          {:type      "radio"
-           :value     "payment-type-tutu"
-           :checked   (= (:type maksutiedot) "payment-type-tutu")
-           :name      "maksutyyppi-radio-group"
-           :id        "maksutyyppi-tutu-radio"
-           :disabled  disabled?
-           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])}]
-         [:label.editor-form__checkbox-label
-          {:for   "maksutyyppi-tutu-radio"}
-          @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
+        [:div
+         [:div.editor-form__checkbox-with-label
+          [:input.editor-form__radio
+           {:type      "radio"
+            :value     "payment-type-tutu"
+            :checked   (= (:type maksutiedot) "payment-type-tutu")
+            :name      "maksutyyppi-radio-group"
+            :id        "maksutyyppi-tutu-radio"
+            :disabled  disabled?
+            :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])
+            :data-test-id "maksutyyppi-tutu-radio"}]
+          [:label.editor-form__checkbox-label
+           {:for   "maksutyyppi-tutu-radio"}
+           @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
+         [:input.editor-form__form-name-input
+          {:data-test-id "tutu-processing-fee-input"
+           :type         "text"
+           :value        (:processing-fee maksutiedot)
+           :disabled     disabled?
+           :on-change    #(dispatch [:editor/change-processing-fee (.-value (.-target %))])}]]
         [:div.editor-form__checkbox-with-label
          [:input
           {:type      "radio"
@@ -436,7 +448,8 @@
            :name      "maksutyyppi-radio-group"
            :id        "maksutyyppi-astu-radio"
            :disabled  disabled?
-           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])}]
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])
+           :data-test-id "maksutyyppi-astu-radio"}]
          [:label.editor-form__checkbox-label
           {:for   "maksutyyppi-astu-radio"}
           @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]])]))

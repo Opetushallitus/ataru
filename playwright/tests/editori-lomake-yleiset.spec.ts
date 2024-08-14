@@ -53,6 +53,12 @@ const haeOtsikko = (page: Page) => page.getByTestId('properties-header')
 const haeDemoAlkaa = (page: Page) => page.getByTestId('demo-validity-start')
 const haeDemoPaattyy = (page: Page) => page.getByTestId('demo-validity-end')
 const haeLinkkiDemoon = (page: Page) => page.getByTestId('demo-link')
+const haeTogglePayment = (page: Page) =>
+  page.getByTestId('toggle-maksutoiminto')
+const haeTutuPaymentRadio = (page: Page) =>
+  page.getByTestId('maksutyyppi-tutu-radio')
+const haeAstuPaymentRadio = (page: Page) =>
+  page.getByTestId('maksutyyppi-astu-radio')
 
 test.describe('Lomake-editori Yleiset asetukset -osio', () => {
   test('Näyttää Yleiset asetukset', async () => {
@@ -84,5 +90,17 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
     await demoPaattyy.fill('2021-12-31')
     await expect(demoAlkaa).toHaveValue('2021-01-01')
     await expect(demoPaattyy).toHaveValue('2021-12-31')
+  })
+
+  test('Asettaa oletuksena tutu-maksun, maksutyyppiä voi vaihtaa', async () => {
+    const togglePayment = haeTogglePayment(page)
+    const tutuRadio = haeTutuPaymentRadio(page)
+    const astuRadio = haeAstuPaymentRadio(page)
+
+    await togglePayment.click()
+    await expect(tutuRadio).toBeChecked()
+    await astuRadio.click()
+    await expect(astuRadio).toBeChecked()
+    await expect(tutuRadio).not.toBeChecked()
   })
 })
