@@ -92,15 +92,9 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
     await expect(demoPaattyy).toHaveValue('2021-12-31')
   })
 
-  test('Asettaa oletuksena tutu-maksun, maksutyyppiä voi vaihtaa', async () => {
+  test('Maksutietojen muuttamiseen tarvitsee rekisterinpitäjän oikeudet', async () => {
     const togglePayment = haeTogglePayment(page)
-    const tutuRadio = haeTutuPaymentRadio(page)
-    const astuRadio = haeAstuPaymentRadio(page)
 
-    await togglePayment.click()
-    await expect(tutuRadio).toBeChecked()
-    await astuRadio.click()
-    await expect(astuRadio).toBeChecked()
-    await expect(tutuRadio).not.toBeChecked()
+    await expect(togglePayment).toBeDisabled()
   })
 })
