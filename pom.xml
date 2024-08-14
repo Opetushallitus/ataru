@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>617379268b78db7154c67ef5ee7653a4fdd01ea7</tag>
+    <tag>6929664dcadda12fd2260db8730f1e2a97a09529</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -382,11 +382,6 @@
       <groupId>compojure</groupId>
       <artifactId>compojure</artifactId>
       <version>1.7.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.fge</groupId>
-      <artifactId>json-patch</artifactId>
-      <version>1.9</version>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
