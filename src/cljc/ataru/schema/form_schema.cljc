@@ -181,6 +181,7 @@
 
 (s/defschema FormProperties
   {(s/optional-key :auto-expand-hakukohteet)          s/Bool
+   (s/optional-key :order-hakukohteet-by-opetuskieli) s/Bool
    (s/optional-key :allow-only-yhteishaut)            s/Bool
    (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
    (s/optional-key :demo-validity-start)              (s/maybe s/Str)

@@ -1,28 +1,28 @@
 (ns ataru.virkailija.editor.component
   (:require
-    [ataru.application-common.application-field-common :refer [copy-link]]
-    [ataru.cljs-util :as util]
-    [ataru.component-data.person-info-module :as pm]
-    [ataru.virkailija.editor.components.toolbar :as toolbar]
-    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
-    [cljs.core.match :refer-macros [match]]
-    [goog.string :as s]
-    [cljs-time.core :as t]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.core :as r]
-    [ataru.component-data.module.module-spec :as module-spec]
-    [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
-    [ataru.virkailija.editor.components.component-content :as component-content]
-    [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
-    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
-    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
-    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
-    [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
-    [ataru.virkailija.editor.components.text-component :as text-component]
-    [ataru.virkailija.editor.components.text-header-component :as text-header-component]
-    [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
-    [clojure.string :as string]
-    [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
+   [ataru.application-common.application-field-common :refer [copy-link]]
+   [ataru.cljs-util :as util]
+   [ataru.component-data.person-info-module :as pm]
+   [ataru.virkailija.editor.components.toolbar :as toolbar]
+   [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
+   [cljs.core.match :refer-macros [match]]
+   [goog.string :as s]
+   [cljs-time.core :as t]
+   [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+   [reagent.core :as r]
+   [ataru.component-data.module.module-spec :as module-spec]
+   [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
+   [ataru.virkailija.editor.components.component-content :as component-content]
+   [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
+   [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+   [ataru.virkailija.editor.components.input-field-component :as input-field-component]
+   [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
+   [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
+   [ataru.virkailija.editor.components.text-component :as text-component]
+   [ataru.virkailija.editor.components.text-header-component :as text-header-component]
+   [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
+   [clojure.string :as string]
+   [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -57,12 +57,12 @@
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header header-label-text]
         (input-fields-with-lang-component/input-fields-with-lang
-          (fn [lang]
-            [input-field-component/input-field {:path        path
-                                                :lang        lang
-                                                :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                              (-> % .-target .-value)
-                                                                              path :label lang])}])
+         (fn [lang]
+           [input-field-component/input-field {:path        path
+                                               :lang        lang
+                                               :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                             (-> % .-target .-value)
+                                                                             path :label lang])}])
          languages
          :header? true)]
        [:div.editor-form__wrapper-element-well
@@ -85,9 +85,9 @@
     (flatten (recursively-get-labels component))))
 
 (defn hakukohteet-module [_ path]
+
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])
-        checkbox-id     "hakukohteet-show-hakukohde-in-hakukohde-questions"
         component-locked (subscribe [:editor/component-locked? path])]
     (fn [content path]
       [:div.editor-form__component-wrapper
@@ -102,7 +102,7 @@
          [:div.editor-form__text-field-checkbox-wrapper
           [:div.editor-form__checkbox-container
            [:input.editor-form__checkbox
-            {:id           checkbox-id
+            {:id           "hakukohteet-show-hakukohde-in-hakukohde-questions"
              :type         "checkbox"
              :disabled     @component-locked
              :data-test-id "hakukohteet-auto-expand-toggle"
@@ -111,8 +111,21 @@
                              (.preventDefault event)
                              (dispatch [:editor/toggle-auto-expand-hakukohteet]))}]
            [:label.editor-form__checkbox-label
-            {:for checkbox-id}
-            @(subscribe [:editor/virkailija-translation :auto-expand-hakukohteet])]]]
+            {:for "hakukohteet-show-hakukohde-in-hakukohde-questions"}
+            @(subscribe [:editor/virkailija-translation :auto-expand-hakukohteet])]]
+          [:div.editor-form__checkbox-container
+           [:input.editor-form__checkbox
+            {:id           "hakukohteet-order-by-opetuskieli-in-hakukohde-questions"
+             :type         "checkbox"
+             :disabled     @component-locked
+             :data-test-id "hakukohteet-order-by-opetuskieli-toggle"
+             :checked      @(subscribe [:editor/order-hakukohteet-by-opetuskieli])
+             :on-change    (fn [event]
+                             (.preventDefault event)
+                             (dispatch [:editor/toggle-order-hakukohteet-by-opetuskieli]))}]
+           [:label.editor-form__checkbox-label
+            {:for "hakukohteet-order-by-opetuskieli-in-hakukohde-questions"}
+            @(subscribe [:editor/virkailija-translation :order-hakukohteet-by-opetuskieli])]]]
          @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
@@ -256,20 +269,20 @@
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
           [text-component/text-component-type-selector (:id content) path {:adjacent-text-field? true
                                                                            :allow-decimals?      true}]]
-        [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
+         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [_ path]
-(let [checked?                   (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-      mail-attachment?           (subscribe [:editor/get-component-value path :params :mail-attachment?])
-      fetch-info-from-kouta?     (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
-      selected-attachment-type?  (subscribe [:editor/get-component-value path :params :attachment-type])
-      attachment-types-koodisto? (subscribe [:editor/get-attachment-types-koodisto])
-      collapse?                  (subscribe [:editor/get-component-value path :params :info-text-collapse])
-      languages                  (subscribe [:editor/languages])
-      lang                       (subscribe [:editor/virkailija-lang])
-      is-per-hakukohde-allowed   (subscribe [:editor/is-per-hakukohde-allowed path])
-      component-locked?          (subscribe [:editor/component-locked? path])
-      has-parent-per-hakukohde   (subscribe [:editor/has-parent-per-hakukohde path])]
+  (let [checked?                   (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        mail-attachment?           (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        fetch-info-from-kouta?     (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
+        selected-attachment-type?  (subscribe [:editor/get-component-value path :params :attachment-type])
+        attachment-types-koodisto? (subscribe [:editor/get-attachment-types-koodisto])
+        collapse?                  (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages                  (subscribe [:editor/languages])
+        lang                       (subscribe [:editor/virkailija-lang])
+        is-per-hakukohde-allowed   (subscribe [:editor/is-per-hakukohde-allowed path])
+        component-locked?          (subscribe [:editor/component-locked? path])
+        has-parent-per-hakukohde   (subscribe [:editor/has-parent-per-hakukohde path])]
     (fn [initial-content path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -305,10 +318,10 @@
                   @is-per-hakukohde-allowed
                   @mail-attachment?)
          [checkbox-component/checkbox path initial-content :per-hakukohde
-            (fn [] (dispatch [:editor/set-component-value false path :params :fetch-info-from-kouta?]))])
+          (fn [] (dispatch [:editor/set-component-value false path :params :fetch-info-from-kouta?]))])
        (when (and @mail-attachment?
-               (or (-> initial-content :per-hakukohde boolean)
-                 @has-parent-per-hakukohde))
+                  (or (-> initial-content :per-hakukohde boolean)
+                      @has-parent-per-hakukohde))
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
             [:input {:id        id
@@ -322,8 +335,7 @@
             [:label
              {:for  id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-             @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]
-            ]))
+             @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]]))
        (when (and @fetch-info-from-kouta?
                   (seq @attachment-types-koodisto?))
          (let [id (util/new-uuid)]
@@ -345,11 +357,10 @@
               (when (string/blank? @selected-attachment-type?)
                 [:option {:value @selected-attachment-type?} ""])
               (doall (for [{:keys [uri label]} @attachment-types-koodisto?]
-                ^{:key (str "attachment-type-" id "-" uri)}
-                [:option {:value uri} (get label @lang)]))]
+                       ^{:key (str "attachment-type-" id "-" uri)}
+                       [:option {:value uri} (get label @lang)]))]
              [:div.editor-form__select-koodisto-dropdown-arrow
-              [:i.zmdi.zmdi-chevron-down]]
-            ]]))
+              [:i.zmdi.zmdi-chevron-down]]]]))
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
@@ -413,9 +424,9 @@
                            (let [value    (-> event .-target .-value)
                                  deadline (deadline-date value)]
                              (cond
-                              (string/blank? value) (update-value value nil true)
-                              (and value deadline) (update-value value deadline true)
-                              :else (update-value value nil false))))]
+                               (string/blank? value) (update-value value nil true)
+                               (and value deadline) (update-value value deadline true)
+                               :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)

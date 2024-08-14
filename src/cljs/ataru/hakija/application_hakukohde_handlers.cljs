@@ -28,11 +28,12 @@
     (let [hakukohde-query @hakukohde-query-atom
           lang (-> db :form :selected-language)
           virkailija? (some? (get-in db [:application :virkailija-secret]))
+          order-hakukohteet-by-opetuskieli? (get-in db [:form :properties :order-hakukohteet-by-opetuskieli])
           hakukohteet-field (hakukohteet-field db)
           tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
           {:keys [hakukohde-query
                   hakukohde-hits
-                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field)]
+                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field order-hakukohteet-by-opetuskieli?)]
       (-> db
           (assoc-in [:application :hakukohde-query] hakukohde-query)
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)

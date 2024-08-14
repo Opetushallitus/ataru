@@ -5,7 +5,7 @@
 
 (deftest query-hakukohteet-test
   (testing "Empty"
-    (is (= (query-hakukohteet "auto" :fi false [] {})
+    (is (= (query-hakukohteet "auto" :fi false [] {} true)
            {:hakukohde-hits [] :rest-results [] :hakukohde-query "auto"})))
   (testing "Show hakukohteet with english first when user language is english"
     (is (= (query-hakukohteet "" :en false [{:oid "1"}
@@ -22,6 +22,6 @@
                                          {:value "4"
                                           :label {:en "fourth in english "}}
                                          {:value "5"
-                                          :label {:fi "5. suomeksi"}}]})
+                                          :label {:fi "5. suomeksi"}}]} true)
            {:hakukohde-hits ["4" "2" "3" "5" "1"] :rest-results [] :hakukohde-query ""}))))
 
