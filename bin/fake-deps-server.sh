@@ -20,7 +20,7 @@ function start() {
     wait ${AJOSSA_OLEVA_PID} || true
   fi
 
-  npx http-server -p ${PORTTI} ${DATAHAKEMISTO} &
+  npx http-server ${DATAHAKEMISTO} -p ${PORTTI} &
   FAKE_SERVER_PID=$!
   echo ${FAKE_SERVER_PID} > ${PIDFILE}
   echo "Käynnistettiin prosessi $FAKE_SERVER_PID ja tallennettiin pid tiedostoon $PIDFILE ."

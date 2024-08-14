@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from '@playwright/test'
+import { Page, Locator, expect, APIRequestContext } from '@playwright/test'
 import { getJsonResponseKey, waitForResponse } from './playwright-utils'
 import * as Option from 'fp-ts/lib/Option'
 
@@ -18,6 +18,9 @@ export const getLomakkeenHaunOsoite = (lomakkeenAvain: string) =>
   `/hakemus/api/form/${lomakkeenAvain}?role=hakija`
 
 export const getHakemuksenLahettamisenOsoite = () => '/hakemus/api/application'
+
+const getLomakkeenEsikatseluOsoite = (lomakkeenAvain: string) =>
+  `/lomake-editori/api/preview/form/${lomakkeenAvain}?lang=fi`
 
 export const clickLisaaLomakeButton = async (page: Page) =>
   await page.getByTestId('add-form-button').click()
@@ -87,7 +90,6 @@ export const taytaHenkilotietomoduuli = async (
   inputFieldValues = defaultHenkiloInputFieldValues
 ) => {
   // Henkilötietomoduulin täyttäminen
-
   for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
     const loc = page.getByTestId(`${idPrefix}-input`)
     if (idPrefix === 'home-town') {
@@ -99,6 +101,34 @@ export const taytaHenkilotietomoduuli = async (
     }
 
     // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
+    // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(100)
   }
+}
+
+export const poistaLomake = async (
+  request: APIRequestContext,
+  lomakkeenAvain: string
+) => {
+  await request.delete(getLomakkeenPoistamisenOsoite(), {
+    data: {
+      formKey: lomakkeenAvain,
+    },
+  })
+}
+
+export const expectUusiLomakeValid = async (
+  page: Page,
+  lomakkeenAvain: string,
+  nimi: string
+) => {
+  await expect(page).toHaveURL(new RegExp(`${lomakkeenAvain}$`))
+  await expect(page.getByTestId('form-name-input')).toHaveValue(nimi)
+
+  const esikatseluLinkki = page.getByTestId('application-preview-link-fi')
+  await expect(esikatseluLinkki).toHaveText('FI')
+  await expect(esikatseluLinkki).toHaveAttribute(
+    'href',
+    getLomakkeenEsikatseluOsoite(lomakkeenAvain)
+  )
 }
