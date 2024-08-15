@@ -18,6 +18,8 @@
 (declare yesql-delete-fixture-form!)
 (declare yesql-delete-fixture-forms-with-key!)
 (declare yesql-set-form-id!)
+(declare yesql-delete-kk-payment-events!)
+(declare yesql-delete-kk-payment-states!)
 
 (defqueries "sql/dev-form-queries.sql")
 
@@ -33,6 +35,10 @@
 
 (defn nuke-old-fixture-forms-with-key [form-key]
   (ataru-db/exec :db yesql-delete-fixture-forms-with-key! {:key form-key}))
+
+(defn nuke-kk-payment-data []
+  (ataru-db/exec :db yesql-delete-kk-payment-events! {})
+  (ataru-db/exec :db yesql-delete-kk-payment-states! {}))
 
 (defn init-db-form-fixture
   [form-fixture]
@@ -64,7 +70,8 @@
        (:key stored-application) hakukohde review-requirement review-state {} audit-logger))
     (doseq [review application-reviews-fixture]
       (application-store/save-application-review
-        (merge review {:application-key (:key stored-application)}) {} audit-logger))))
+        (merge review {:application-key (:key stored-application)}) {} audit-logger))
+    application-id))
 
 (defn init-db-fixture
   ([form-fixture]
