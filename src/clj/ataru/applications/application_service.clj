@@ -37,7 +37,8 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
-    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
+    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -113,6 +114,27 @@
           (contains? m :virkailija-organizations)
           (update :virkailija-organizations
                   (partial organization-service/get-organizations-for-oids organization-service))))
+
+(defn- get-kk-payment-state
+  "Adds higher education application fee related info to application. If add-events is truthy, also returns
+   specific processing events."
+  [application haku return-payment-events]
+  (let [tarjonta           (:tarjonta haku)
+        person-oid         (:person-oid application)
+        studies-start-term (:alkamiskausi tarjonta)
+        studies-start-year (:alkamisvuosi tarjonta)
+        payment-status     (when (and person-oid studies-start-term studies-start-year)
+                             (first
+                               (kk-application-payment/get-payment-states
+                                 [person-oid] studies-start-term studies-start-year)))
+        payment-events     (when (and payment-status return-payment-events)
+                             (kk-application-payment/get-payment-events (:id payment-status)))]
+    (cond-> {}
+            payment-status (assoc :status
+                                  (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
+            payment-events (assoc :events
+                                  (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
+                                       payment-events)))))
 
 (defn- get-application-events
   [organization-service application-key]
@@ -489,6 +511,7 @@
             hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
             attachment-reviews    (future (parse-application-attachment-reviews application-key))
             events                (future (get-application-events organization-service application-key))
+            kk-payment-state      (future (get-kk-payment-state application tarjonta-info true))
             review                (future (application-store/get-application-review application-key))
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
@@ -509,6 +532,7 @@
                                  :events                @events
                                  :review                @review
                                  :review-notes          @review-notes
+                                 :kk-payment            @kk-payment-state
                                  :information-requests  @information-requests
                                  :master-oid            @master-oid}))))
 

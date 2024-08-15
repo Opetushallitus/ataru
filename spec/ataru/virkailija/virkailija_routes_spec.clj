@@ -11,6 +11,7 @@
             [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
             [ataru.forms.form-store :as form-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
+            [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
@@ -32,6 +33,7 @@
             [yesql.core :as sql]))
 
 (declare yesql-get-latest-application-by-key)
+(declare yesql-get-application-by-id)
 (sql/defqueries "sql/application-queries.sql")
 
 (defn- parse-body
@@ -46,6 +48,9 @@
 
 (defn- get-latest-application-by-key [key]
   (first (ataru-db/exec :db yesql-get-latest-application-by-key {:application_key key})))
+
+(defn- get-application-by-id [id]
+  (first (ataru-db/exec :db yesql-get-application-by-id {:application_id id})))
 
 (defn- hakuaika-ongoing
   [_ _ _ _]
@@ -85,7 +90,9 @@
                                  [:organization-service
                                   :tarjonta-service
                                   :audit-logger
-                                  :person-service])
+                                  :koodisto-cache
+                                  :person-service
+                                  :ohjausparametrit-service])
           :virkailija-routes (component/using
                                (v/new-handler)
                                [:organization-service
@@ -124,6 +131,13 @@
   `(with ~name (-> (mock/request :get ~path)
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
+
+(defn- get-application-details [application-key]
+  (-> (mock/request :get (str "/lomake-editori/api/applications/" application-key))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- get-haku [form-key]
   (-> (mock/request :get (str "/lomake-editori/api/tarjonta/haku") {:form-key form-key})
@@ -620,5 +634,33 @@
                 (should= 200 status)
                 (should= 1 (count body))
                 (should= false (:admission-payment-required? (first body))))))
+
+(describe "GET kk application payment info"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return payment information and events for an application"
+              (let [person-oid "1.2.3.4.5.303"
+                    term "kausi_s"
+                    year 2025
+                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                                       nil)
+                    application (get-application-by-id application-id)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (get-application-details (:key application))
+                    status (:status resp)
+                    body (:body resp)
+                    payment-data (:kk-payment body)
+                    state (get-in payment-data [:status :state])
+                    events (sort-by :created-time (:events payment-data))]
+                (should= 200 status)
+                (should-not-be-nil payment-data)
+                (should= "payment-pending" state)
+                (should= 2 (count events))
+                (should= ["payment-not-required" "payment-pending"] (map :new-state events)))))
 
 (run-specs)
