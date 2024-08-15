@@ -47,7 +47,8 @@
 
 (defn get-payment-states
   [person-oids term year]
-  (store/get-kk-application-payment-states person-oids term year))
+  (let [simplified-term (first (str/split term #"#"))]
+    (store/get-kk-application-payment-states person-oids simplified-term year)))
 
 (defn get-payment-events
   [state-ids]

@@ -18,7 +18,9 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]])
+  #?(:clj (:import [org.joda.time DateTime])))
+
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -1003,3 +1005,23 @@
   {:paymentType                    (s/maybe s/Str)
    (s/optional-key :processingFee) s/Str
    (s/optional-key :decisionFee)   s/Str})
+
+(s/defschema PaymentStatus
+  {:person-oid   s/Str
+   :start-term   s/Str
+   :start-year   s/Int
+   :state        s/Str
+   :created-time #?(:clj  (s/maybe DateTime)
+                    :cljs (s/maybe s/Str)) })
+
+(s/defschema PaymentEvent
+  {:new-state      (s/maybe s/Str)
+   :event-type     s/Str
+   :virkailija-oid (s/maybe s/Str)
+   :message        (s/maybe s/Str)
+   :created-time   #?(:clj  (s/maybe DateTime)
+                      :cljs (s/maybe s/Str)) })
+
+(s/defschema KkPaymentState
+  {(s/optional-key :status) PaymentStatus
+   (s/optional-key :events) [PaymentEvent]})
