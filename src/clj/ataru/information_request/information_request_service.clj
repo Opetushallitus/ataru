@@ -125,7 +125,7 @@
   [state job-runner]
   (if (empty? (:application-keys state))
     nil
-    (let [[now later] (split-at 100 (:application-keys state))]
+    (let [[now later] (split-at 500 (:application-keys state))]
       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
         (doseq [key now]
           (store-in-tx {:identity {:oid (:virkailija-oid state)}}
@@ -133,7 +133,7 @@
                               :application-key key)
                        job-runner
                        connection))
-        (job/start-job job-runner connection "mass-information-request-job" later)))))
+        (job/start-job job-runner connection "mass-information-request-job" (assoc state :application-keys later))))))
 
 (defn mass-store
   [information-request application-keys virkailija-oid job-runner]
