@@ -18,6 +18,7 @@
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
                                                       http post put]]
+            [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
@@ -1621,17 +1622,27 @@
           value (get-in db path)]
       (if (not-empty value)
         (assoc-in db path {})
-        (assoc-in db path {:type "payment-type-tutu"
-                           :decision-fee nil
-                           :processing-fee nil})))))
+        (assoc-in
+          db
+          path
+          {:type "payment-type-tutu"
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])})))))
 
 (reg-event-db
   :editor/change-maksutyyppi
   (fn [db [_ maksutyyppi]]
     (let [path (db/current-form-properties-path db [:payment])]
-      (assoc-in db path {:type maksutyyppi
-                         :decision-fee nil
-                         :processing-fee nil}))))
+      (assoc-in
+        db
+        path
+        {:type maksutyyppi
+         :decision-fee nil
+         :processing-fee (if (= maksutyyppi "payment-type-tutu")
+                           (config/get-public-config
+                             [:tutu-default-processing-fee])
+                           nil)}))))
 
 (reg-event-db
   :editor/change-processing-fee

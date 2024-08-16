@@ -14,7 +14,7 @@
                              :attachment-total-size-limit {{ataru_tutkintojen_tunnustaminen_size_limit}}
                              :maksut                      {:enabled?                {{ataru_tutkintojen_tunnustaminen_maksut_enabled | default('false')}}
                                                            :poll-interval-minutes   {{ataru_tutkintojen_tunnustaminen_maksut_poll_interval | default('5')}}
-                                                           :decision-amount         "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('70.00')}}"
+                                                           :decision-amount         "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"
                                                            :form-keys      			"{{ataru_tutkintojen_tunnustaminen_maksut_form_key}}"}
                              :ftp                         {:host               "{{ataru_tutkintojen_tunnustaminen_ftp_host}}"
                                                            :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
