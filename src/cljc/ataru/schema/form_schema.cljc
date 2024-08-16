@@ -297,7 +297,7 @@
                                                  (s/optional-key :end) org.joda.time.DateTime}]
    :haun-tiedot-url                            s/Str
    (s/optional-key :alkamiskausi)              (s/maybe s/Str)
-   (s/optional-key :alkamisvuosi)              (s/maybe s/Int)
+   (s/optional-key :alkamisvuosi)              (s/maybe s/Str)
    (s/optional-key :hakukausi-vuosi)           s/Int
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int
