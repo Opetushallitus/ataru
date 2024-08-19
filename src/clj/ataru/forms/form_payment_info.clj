@@ -1,6 +1,7 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
             [ataru.kk-application-payment.utils :as utils]))

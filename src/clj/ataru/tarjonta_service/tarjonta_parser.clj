@@ -106,7 +106,6 @@
            :can-submit-multiple-applications (:can-submit-multiple-applications haku)
            :kohdejoukko-uri                  (:kohdejoukko-uri haku)
            :kohdejoukon-tarkenne-uri         (:kohdejoukon-tarkenne-uri haku)
-           :kohdejoukon-tarkenne-uri         (:kohdejoukon-tarkenne-uri haku)
            :alkamiskausi                     (:alkamiskausi haku)
            :alkamisvuosi                     (:alkamisvuosi haku)
            :hakutapa-uri                     (:hakutapa-uri haku)
