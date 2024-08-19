@@ -35,18 +35,18 @@
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
   (let [fee-nonpositive? (fn [amount] (and (some? amount) (<= amount 0.00M)))
-        incorrect-kk-fee? (fn [payment-type processing-fee decision-fee]
+        incorrect-kk-fee? (fn [payment-type processing decision]
                             (and (= :payment-type-kk payment-type)
-                                 (or (and processing-fee (not= processing-fee kk-processing-fee))
-                                     (some? decision-fee))))
-        incorrect-tutu-fee? (fn [payment-type decision-fee]
+                                 (or (and processing (not= processing kk-processing-fee))
+                                     (some? decision))))
+        incorrect-tutu-fee? (fn [payment-type processing decision]
                               (and (= :payment-type-tutu payment-type)
-                                   (nil? processing-fee)
-                                   (some? decision-fee)))
-        incorrect-astu-fee? (fn [payment-type processing-fee _]
+                                   (or (nil? processing)
+                                       (some? decision))))
+        incorrect-astu-fee? (fn [payment-type processing decision]
                               (and (= :payment-type-astu payment-type)
-                                   (or (some? processing-fee)
-                                       (some? decision-fee))))]
+                                   (or (some? processing)
+                                       (some? decision))))]
     (cond
       (fee-nonpositive? processing-fee)
       (do (log/warn "Nonpositive processing fee: " processing-fee)
@@ -60,7 +60,7 @@
       (do (log/warn "Incorrect kk fees: " [payment-type processing-fee decision-fee])
           false)
 
-      (incorrect-tutu-fee? payment-type decision-fee)
+      (incorrect-tutu-fee? payment-type processing-fee decision-fee)
       (do (log/warn "Incorrect TUTU fees: " [payment-type processing-fee decision-fee])
           false)
 
