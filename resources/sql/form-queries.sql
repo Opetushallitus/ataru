@@ -69,7 +69,7 @@ SELECT
     name,
     content,
     created_by,
-    created_time,
+    created_time::text,
     languages,
     deleted,
     organization_oid,
@@ -82,9 +82,9 @@ SELECT
     id
 FROM forms f
 WHERE
-    f.created_time >= :modified_after::timestamptz
+    f.created_time >= :window_start::timestamptz
   AND
-    f.created_time <= :modified_before::timestamptz
+    f.created_time <= :window_end::timestamptz
 ORDER BY f.id;
 
 -- name: yesql-fetch-latest-version-by-id
