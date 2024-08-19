@@ -41,6 +41,7 @@
                                      (some? decision-fee))))
         incorrect-tutu-fee? (fn [payment-type decision-fee]
                               (and (= :payment-type-tutu payment-type)
+                                   (nil? processing-fee)
                                    (some? decision-fee)))
         incorrect-astu-fee? (fn [payment-type processing-fee _]
                               (and (= :payment-type-astu payment-type)
