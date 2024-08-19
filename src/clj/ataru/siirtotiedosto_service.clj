@@ -39,11 +39,12 @@
   (let [all-successful (and (:success applications-result) (:success forms-result))
         error (or
                 (:error applications-result)
-                (:error forms-result))
-        ]
+                (:error forms-result))]
     (-> applications-result
         (assoc :success all-successful)
-        (assoc :error error))))
+        (assoc :error-message error)
+        (assoc :info {:applications (:total-count applications-result)
+                      :forms        (:total-count forms-result)}))))
 
 
 (defrecord CommonSiirtotiedostoService [siirtotiedosto-client]
@@ -51,7 +52,8 @@
   (siirtotiedosto-applications
     [_ params]
     (let [execution-id (:id params)
-          done (atom 0)
+          chunks-done (atom 0)
+          total-count (atom 0)
           changed-ids (->> (application-store/siirtotiedosto-application-ids params)
                            (map :id))
           partitions (partition applications-page-size applications-page-size nil changed-ids)]
@@ -59,17 +61,20 @@
       (let [chunk-results (doall (for [application-ids partitions]
                                           (let [start (System/currentTimeMillis)
                                                 applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)
-                                                success? (save-applications-to-s3 siirtotiedosto-client applications-chunk execution-id (inc @done) (or (:haku-oid params) ""))]
-                                            (log/info execution-id "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                                success? (save-applications-to-s3 siirtotiedosto-client applications-chunk execution-id (inc @chunks-done) (or (:haku-oid params) ""))]
+                                            (log/info execution-id "Applications-chunk" (str (swap! chunks-done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                            (when success? (swap! total-count (fn [acc amt] (+ acc amt)) (count application-ids)))
                                             success?)))]
         (log/info execution-id "application-chunk results" chunk-results)
         (-> params
-            (assoc :success (every? boolean chunk-results))))))
+            (assoc :success (every? boolean chunk-results))
+            (assoc :total-count @total-count)))))
 
   ;todo wrap try-catch
   (siirtotiedosto-forms
     [_ params]
-    (let [done (atom 0)
+    (let [chunks-done (atom 0)
+          total-count (atom 0)
           changed-ids (->> (form-store/siirtotiedosto-form-ids params)
                            (map :id))
           partitions (partition forms-page-size forms-page-size nil changed-ids)]
@@ -78,17 +83,19 @@
                                     (let [start (System/currentTimeMillis)
                                           forms-chunk (form-store/fetch-forms-by-ids form-ids)
                                           {:keys [execution-id haku-oid]} params
-                                          success? (save-forms-to-s3 siirtotiedosto-client forms-chunk execution-id (inc @done) (or haku-oid ""))]
-                                      (log/info (:id params) "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                          success? (save-forms-to-s3 siirtotiedosto-client forms-chunk execution-id (inc @chunks-done) (or haku-oid ""))]
+                                      (log/info (:id params) "Forms-chunk" (str (swap! chunks-done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                      (when success? (swap! total-count (fn [acc amt] (+ acc amt)) (count form-ids)))
                                       success?)))]
         (log/info (:id params) "form-chunk results" chunk-results)
         (-> params
-            (assoc :success (every? boolean chunk-results))))))
+            (assoc :success (every? boolean chunk-results))
+            (assoc :total-count @total-count)))))
 
   (siirtotiedosto-everything
-    [_ params]
-    (let [applications-result (siirtotiedosto-applications _ params)
-          forms-result (siirtotiedosto-forms _ params)]
+    [this params]
+    (let [applications-result (siirtotiedosto-applications this params)
+          forms-result        (siirtotiedosto-forms this params)]
       (combine-results applications-result forms-result))))
 
 (defn new-siirtotiedosto-service [] (->CommonSiirtotiedostoService nil))

@@ -1620,8 +1620,8 @@
   (log/info "Fetching application ids for params:" params)
   (if (some? haku-oid)
     (exec-db :db queries/yesql-get-siirtotiedosto-application-ids-for-haku {:haku_oid haku-oid})
-    (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:modified_before window_end
-                                                                   :modified_after window_start})))
+    (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:window_start window_start
+                                                                   :window_end window_end})))
 (defn kouta-application-count-for-hakukohde [hakukohde-oid]
   (->> (exec-db :db queries/yesql-kouta-application-count-for-hakukohde {:hakukohde_oid    hakukohde-oid})
        (map #(:application_count %))
