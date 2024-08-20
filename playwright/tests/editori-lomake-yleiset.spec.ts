@@ -55,10 +55,6 @@ const haeDemoPaattyy = (page: Page) => page.getByTestId('demo-validity-end')
 const haeLinkkiDemoon = (page: Page) => page.getByTestId('demo-link')
 const haeTogglePayment = (page: Page) =>
   page.getByTestId('toggle-maksutoiminto')
-const haeTutuPaymentRadio = (page: Page) =>
-  page.getByTestId('maksutyyppi-tutu-radio')
-const haeAstuPaymentRadio = (page: Page) =>
-  page.getByTestId('maksutyyppi-astu-radio')
 
 test.describe('Lomake-editori Yleiset asetukset -osio', () => {
   test('Näyttää Yleiset asetukset', async () => {
