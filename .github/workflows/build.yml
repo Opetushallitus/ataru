@@ -133,6 +133,22 @@ jobs:
           path: target
           key: ${{ github.sha }}
 
+  build-ovara:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare-clojure-env
+
+      - name: Build
+        run: ./bin/cibuild.sh create-ovara-uberjar
+
+      - uses: actions/cache@v4
+        id: restore-build
+        with:
+          path: target
+          key: ${{ github.sha }}
+
   build-and-deploy-ataru-hakija:
     needs: [test-integration, test-spec-and-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
@@ -154,3 +170,14 @@ jobs:
       jarfile: ataru
     secrets: 
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+
+  build-and-deploy-ovara-ataru:
+    needs: [ test-integration, test-spec-and-mocha, build-ovara ]
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    with:
+      application: ovara-ataru
+      base-image: baseimage-fatjar-openjdk17:master
+      configfolder: oph-configuration
+      jarfile: ovara-ataru
+    secrets:
+      AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}

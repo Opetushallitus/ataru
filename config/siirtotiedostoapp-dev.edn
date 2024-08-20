@@ -12,6 +12,7 @@
                    :henkilo-modified-queue {:enabled?      false
                                             :drain-failed? false
                                             :queue-url     ""}}
+ :cas             {}
  :siirtotiedostot {:s3-bucket "mock_bucket"
                    :aws-region "mock_region"
                    :transferFileTargetRoleArn "mock_role_arn"
@@ -32,4 +33,15 @@
                    :send-job-failure-alert-emails        true
                    :features {:schema-validation true}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
- :dev             {:fake-dependencies true}}
+ :dev             {:fake-dependencies true}
+ :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.dev.edn-tiedostosta"
+                   :hakija-host                         "toimimaton.hakija-host-arvo.dev.edn-tiedostosta"
+                   :valinta-tulos-service-base-url      "http://localhost:55443"
+                   :organisaatio-service-base-url       "http://localhost:55443"
+                   :koodisto-service-base-url           "http://localhost:55443"
+                   :ohjausparametrit-service-base-url   "http://localhost:55443"
+                   :valintalaskenta-ui-service-base-url "http://localhost:55443"
+                   :editor-url                          "http://localhost:8350/lomake-editori"
+                   :liiteri-url                         ""
+                   :cas-oppija-url                      ""
+                   :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/oppija"}}

@@ -141,6 +141,13 @@ create-uberjar() {
     time ./bin/lein uberjar
 }
 
+create-ovara-uberjar() {
+    clean
+    process-resources
+    echo "Creating uberjar"
+    time ./bin/lein with-profile ovara uberjar
+}
+
 run-tests() {
     echo "Starting test run"
     clean
@@ -237,6 +244,9 @@ case "$command" in
         ;;
     "create-uberjar" )
         create-uberjar
+        ;;
+    "create-ovara-uberjar" )
+        create-ovara-uberjar
         ;;
     "create-db-schema" )
         create-db-schema
