@@ -55,7 +55,8 @@
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}
                  :attachment-preview-pages-to-display {{liiteri_attachment_preview_pages_to_display}}
                  :job-failure-alert-recipients "{{ataru_job_failure_alert_recipients}}"
-                 :send-job-failure-alert-emails {{ataru_send_job_failure_alert_emails | default('true')}}}
+                 :send-job-failure-alert-emails {{ataru_send_job_failure_alert_emails | default('true')}}
+                 :tutu-default-processing-fee "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
