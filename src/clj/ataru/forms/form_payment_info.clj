@@ -1,7 +1,5 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
             [ataru.kk-application-payment.utils :as utils]))
@@ -17,20 +15,6 @@
 
 (def tutu-processing-fee
   (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))
-
-(defn- requires-higher-education-application-fee?
-  [tarjonta-service haku]
-  (let [hakukohteet (tarjonta/get-hakukohteet tarjonta-service (:hakukohteet haku))]
-    (and
-      haku
-      hakukohteet
-      ; Kohdejoukko must be korkeakoulutus
-      (str/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_12#")
-      ; "Kohdejoukon tarkenne must be empty or siirtohaku
-      (or (nil? (:kohdejoukon-tarkenne-uri haku))
-          (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
-      ; Must be tutkintoon johtava
-      (some true? (map #(:tutkintoon-johtava? %) hakukohteet)))))
 
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
@@ -112,8 +96,6 @@
       (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil)
       form))
 
-; TODO: this should be triggered as part of form updates / whenever a form is attached to haku
-
 (defn set-payment-info
   "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
   [form payment-properties]
@@ -126,19 +108,6 @@
         (throw (user-feedback-exception
                  (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
         (add-payment-info-to-form form payment-type processing-fee decision-fee)))))
-
-(defn set-payment-info-if-higher-education
-  "Set payment info if form is attached to one or more matching higher education admissions"
-  [tarjonta-service form]
-  (let [hakus (tarjonta/hakus-by-form-key tarjonta-service (:key form))
-        application-fee-required? (some true?
-                                        (map #(requires-higher-education-application-fee? tarjonta-service %)
-                                             hakus))]
-    (if application-fee-required?
-      (set-payment-info form {:type :payment-type-kk
-                              :processing-fee kk-processing-fee
-                              :decision-fee nil})
-      form)))
 
 (defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying
