@@ -4,12 +4,13 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [clj-time.core :as t]
     [speclj.core :refer [describe it should= should-be tags]]
+    [speclj.core :refer [describe it should= should-be-nil tags]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (def expected-payment-info
-  {:payment-type "payment-type-kk",
-   :processing-fee (str payment-info/kk-processing-fee),
-   :decision-fee nil})
+  {:payment {:type "payment-type-kk",
+             :processing-fee (str payment-info/kk-processing-fee),
+             :decision-fee nil}})
 
 (def test-kk-form
   {:key              "payment-info-test-kk-form"
@@ -28,7 +29,7 @@
    :organization-oid "1.2.246.562.10.1234334543"})
 
 (def test-payment-info
-  {:payment-type :payment-type-tutu :processing-fee 100 :decision-fee nil})
+  {:payment {:type :payment-type-tutu :processing-fee 100 :decision-fee nil}})
 
 (def test-kk-form-with-existing-payment-info
   (merge test-kk-form {:properties test-payment-info}))

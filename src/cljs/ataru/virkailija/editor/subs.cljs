@@ -661,6 +661,13 @@
     (get form-properties :allow-hakeminen-tunnistautuneena false)))
 
 (re-frame/reg-sub
+  :editor/maksutiedot
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :payment)))
+
+(re-frame/reg-sub
   :editor/form-closed?
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))
