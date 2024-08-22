@@ -19,17 +19,18 @@
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
   (let [fee-nonpositive? (fn [amount] (and (some? amount) (<= amount 0.00M)))
-        incorrect-kk-fee? (fn [payment-type processing-fee decision-fee]
+        incorrect-kk-fee? (fn [payment-type processing decision]
                             (and (= :payment-type-kk payment-type)
-                                 (or (not= processing-fee kk-processing-fee)
-                                     (some? decision-fee))))
-        incorrect-tutu-fee? (fn [payment-type processing-fee decision-fee]
+                                 (or (and processing (not= processing kk-processing-fee))
+                                     (some? decision))))
+        incorrect-tutu-fee? (fn [payment-type processing decision]
                               (and (= :payment-type-tutu payment-type)
-                                   (or (not= processing-fee tutu-processing-fee)
-                                       (some? decision-fee))))
-        incorrect-astu-fee? (fn [payment-type processing-fee _]
+                                   (or (nil? processing)
+                                       (some? decision))))
+        incorrect-astu-fee? (fn [payment-type processing decision]
                               (and (= :payment-type-astu payment-type)
-                                   (some? processing-fee)))]
+                                   (or (some? processing)
+                                       (some? decision))))]
     (cond
       (fee-nonpositive? processing-fee)
       (do (log/warn "Nonpositive processing fee: " processing-fee)
@@ -57,22 +58,22 @@
   "Adds the payment type info to a form if valid"
   [form payment-type]
   (if (contains? form-payment-types payment-type)
-    (assoc-in form [:properties :payment-type] (name payment-type))
+    (assoc-in form [:properties :payment :type] (name payment-type))
     (throw (user-feedback-exception (str "Maksutyyppi ei tuettu: " payment-type)))))
 
 (defn- add-fees
   "Adds fee amounts for form if valid. Forces hardcoded values for specific payment types."
   [form payment-type processing-fee decision-fee]
-  (let [final-processing-fee (cond
-                               (= :payment-type-kk payment-type) kk-processing-fee
-                               (= :payment-type-tutu payment-type) tutu-processing-fee
-                               :else processing-fee)]
-    (if (valid-fees? payment-type final-processing-fee decision-fee)
-      (-> form
-        (assoc-in [:properties :processing-fee] (when final-processing-fee (str final-processing-fee)))
-        (assoc-in [:properties :decision-fee] (when decision-fee (str decision-fee))))
-      (throw (user-feedback-exception
-               (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee]))))))
+  (if (valid-fees? payment-type processing-fee decision-fee)
+    (-> form
+        (assoc-in [:properties :payment :processing-fee] (if processing-fee
+                                                           (str processing-fee)
+                                                           nil))
+        (assoc-in [:properties :payment :decision-fee] (if decision-fee
+                                                         (str decision-fee)
+                                                         nil)))
+    (throw (user-feedback-exception
+             (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee])))))
 
 (defn- add-payment-info-to-form
   [form payment-type processing-fee decision-fee]
@@ -97,11 +98,16 @@
 
 (defn set-payment-info
   "Sets the payment amount for the form. Input and output fees are decimal strings in form \"1234.56\"."
-  [form payment-type processing-fee decision-fee]
-  (if (= :payment-type-kk (keyword payment-type))
-    (throw (user-feedback-exception
-             (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
-    (add-payment-info-to-form form payment-type processing-fee decision-fee)))
+  [form payment-properties]
+  (if (empty? payment-properties)
+    (assoc-in form [:properties :payment] payment-properties)
+    (let [payment-type (:type payment-properties)
+          processing-fee (:processing-fee payment-properties)
+          decision-fee (:decision-fee payment-properties)]
+      (if (= :payment-type-kk (keyword payment-type))
+        (throw (user-feedback-exception
+                 (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
+        (add-payment-info-to-form form payment-type processing-fee decision-fee)))))
 
 (defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying
