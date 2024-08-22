@@ -555,10 +555,10 @@
                 {:paymentType :payment-type-astu :decisionFee "bird"}
                 {} 400))
 
-          (it "should set TUTU payment information, forcing a hardcoded processing fee"
+          (it "should set TUTU payment information"
               (update-and-check
                 {:paymentType :payment-type-tutu :processingFee "100.00"}
-                {:payment-type "payment-type-tutu" :processing-fee "70.00" :decision-fee nil}
+                {:payment {:type "payment-type-tutu" :processing-fee "100.00" :decision-fee nil}}
                 200))
 
           (it "should fail when trying to set a fixed decision fee for TUTU"
@@ -566,15 +566,14 @@
                 {:paymentType :payment-type-tutu :processingFee "100.00" :decisionFee "100.00"}
                 {} 400))
 
-          (it "should set ASTU payment information"
-              (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "150.00"}
-                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "150.00"}
-                200))
-
           (it "should fail when trying to set a processing fee for ASTU"
               (update-and-check
                 {:paymentType :payment-type-astu :processingFee "100.00" :decisionFee "100.00"}
+                {} 400))
+
+          (it "should fail when trying to set a fixed decision fee for ASTU"
+              (update-and-check
+                {:paymentType :payment-type-astu :decisionFee "150.00"}
                 {} 400))
 
           (it "should not allow setting hakemusmaksu / kk payment information manually"
@@ -589,18 +588,18 @@
 
           (it "should fail trying to set a negative fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "-1.00"}
+                {:paymentType :payment-type-tutu :processingFee "-1.00"}
                 {} 400))
 
           (it "should fail trying to set a zero fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "0.00"}
+                {:paymentType :payment-type-tutu :processingFee "0.00"}
                 {} 400))
 
           (it "should successfully set a fractional fee"
               (update-and-check
-                {:paymentType :payment-type-astu :decisionFee "1.9"}
-                {:payment-type "payment-type-astu" :processing-fee nil :decision-fee "1.9"}
+                {:paymentType :payment-type-tutu :processingFee "1.9"}
+                {:payment {:type "payment-type-tutu" :processing-fee "1.9" :decision-fee nil}}
                 200)))
 
 (describe "GET /tarjonta/haku payment info"
