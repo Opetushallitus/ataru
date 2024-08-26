@@ -1672,11 +1672,11 @@
                 (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [params {:window_start modifiedAfter
-                          :window_end   (or modifiedBefore (.format
+            (let [params {:window-start modifiedAfter
+                          :window-end   (or modifiedBefore (.format
                                                              (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                                              (Date.)))
-                          :execution-id (str (UUID/randomUUID))}]
+                          :execution-uuidid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " params)
               (let [combined-result (siirtotiedosto-service/siirtotiedosto-everything siirtotiedosto-service params)]
                 (log/info "Siirtotiedosto result" combined-result)
@@ -1696,9 +1696,9 @@
                 (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:window_start modifiedAfter
-                                         :window_end   modifiedBefore
-                                         :execution-id (str (UUID/randomUUID))}]
+            (let [siirtotiedosto-params {:window-start modifiedAfter
+                                         :window-end   modifiedBefore
+                                         :execution-uuid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params for applications: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto applications success" applications-success)
@@ -1716,9 +1716,9 @@
                 (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:window_start modifiedAfter
-                                         :window_end   modifiedBefore
-                                         :execution-id (str (UUID/randomUUID))}]
+            (let [siirtotiedosto-params {:window-start modifiedAfter
+                                         :window-end   modifiedBefore
+                                         :execution-uuid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params for forms: " siirtotiedosto-params)
               (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto forms success" forms-success)
