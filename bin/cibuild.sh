@@ -144,7 +144,7 @@ create-uberjar() {
 create-ovara-uberjar() {
     clean
     process-resources
-    echo "Creating uberjar"
+    echo "Creating ovara-uberjar"
     time ./bin/lein with-profile ovara uberjar
 }
 
@@ -309,6 +309,7 @@ case "$command" in
 * ui-compile
 * prepare-ui-tests
 * create-uberjar
+* create-ovara-uberjar
 * run-tests
 * run-tests-and-create-uberjar
 * run-clojure-tests

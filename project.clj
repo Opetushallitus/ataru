@@ -348,10 +348,12 @@
                                                    :server-port 3450
                                                    :repl false}}
              :ovara {:main ataru.siirtotiedosto-app
-                     :target-path "ovara-ataru"
-                     :resource-paths ["resources"]
-                     :env            {:dev? "true"
-                                      :config "config/siirtotiedostoapp-dev.edn"}
+                     :aot :all
+                     :target-path "ataru"
+                     :source-paths ["src/clj" "src/cljc"]
+                     :test-paths ["spec"]
+                     :resource-paths ["src/sql" "resources"]
+                     :env            {:config "config/siirtotiedostoapp-dev.edn"}
                      :uberjar-name "ovara-ataru.jar"}}
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
