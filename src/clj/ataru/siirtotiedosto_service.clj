@@ -7,9 +7,7 @@
             [ataru.config.core :refer [config]]
             [ataru.siirtotiedosto.siirtotiedosto-store :as siirtotiedosto-store])
   (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)
-           (java.util UUID)
-           (java.text SimpleDateFormat)
-           (java.util Date)))
+           (java.util UUID)))
 
 (defprotocol SiirtotiedostoService
   (siirtotiedosto-applications [this params])
@@ -22,15 +20,11 @@
 (defn create-new-siirtotiedosto-data [last-siirtotiedosto-data execution-id]
   (log/info "Creating new data, last data" last-siirtotiedosto-data ", exec id" execution-id)
   (if (:success last-siirtotiedosto-data)
-    (let [current-datetime (.format
-                                 (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSSZZZ")
-                                 (Date.))]
-      {:window-start (:window-end last-siirtotiedosto-data)
-       :window-end current-datetime
-       :execution-uuid execution-id
-       :info {}
-       :success nil
-       :error-message nil})
+    {:window-start (:window-end last-siirtotiedosto-data)
+     :execution-uuid execution-id
+     :info {}
+     :success nil
+     :error-message nil}
     (throw (RuntimeException. "Edellistä onnistunutta operaatiota ei löytynyt."))))
 
 (defn update-siirtotiedosto-data [base-data operation-results]
@@ -141,8 +135,8 @@
         (let [siirtotiedosto-data-after-operation (->> (siirtotiedosto-everything this new-siirtotiedosto-data)
                                                        (update-siirtotiedosto-data new-siirtotiedosto-data))]
           (if (:success siirtotiedosto-data-after-operation)
-            (log/info (str execution-id "Created siirtotiedostot " siirtotiedosto-data-after-operation))
-            (log/error (str execution-id "Siirtotiedosto operation failed: " siirtotiedosto-data-after-operation)))
+            (log/info execution-id "Created siirtotiedostot" siirtotiedosto-data-after-operation)
+            (log/error execution-id "Siirtotiedosto operation failed:" siirtotiedosto-data-after-operation))
           (siirtotiedosto-store/update-siirtotiedosto-operation siirtotiedosto-data-after-operation)
           siirtotiedosto-data-after-operation)
         (catch Exception e
