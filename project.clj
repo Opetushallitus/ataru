@@ -340,6 +340,19 @@
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
+             :ataru-main {:main ataru.core
+                          :target-path "ataru"
+                          :source-paths ["src/clj" "src/cljc"]
+                          :test-paths ["spec"]
+                          :uberjar-name "ataru.jar"}
+
+             :ovara {:main ataru.siirtotiedosto-app
+                     :target-path "ataru"
+                     :source-paths ["src/clj" "src/cljc"]
+                     :test-paths ["spec"]
+                     :env            {:config "config/siirtotiedostoapp-dev.edn"}
+                     :uberjar-name "ovara-ataru.jar"}}
+
              :opintopolku-local {:local-repo "/m2-home/.m2/repository"}
              :opintopolku-local-virkailija {:figwheel {:server-ip "ataru-figwheel-virkailija.kehittajan-oma-kone.testiopintopolku.fi"
                                                        :server-port 3449
@@ -347,14 +360,6 @@
              :opintopolku-local-hakija {:figwheel {:server-ip "ataru-figwheel-hakija.kehittajan-oma-kone.testiopintopolku.fi"
                                                    :server-port 3450
                                                    :repl false}}
-             :ovara {:main ataru.siirtotiedosto-app
-                     :aot :all
-                     :target-path "ataru"
-                     :source-paths ["src/clj" "src/cljc"]
-                     :test-paths ["spec"]
-                     :resource-paths ["src/sql" "resources"]
-                     :env            {:config "config/siirtotiedostoapp-dev.edn"}
-                     :uberjar-name "ovara-ataru.jar"}}
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
