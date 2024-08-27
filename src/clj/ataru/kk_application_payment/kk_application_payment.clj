@@ -168,3 +168,23 @@
 
         :else
         (set-application-fee-required person-oid term year virkailija-oid nil))))
+
+(defn get-kk-payment-state
+  "Adds higher education application fee related info to application. If add-events is truthy, also returns
+   specific processing events."
+  [application tarjonta-data return-payment-events]
+  (let [tarjonta           (:tarjonta tarjonta-data)
+        person-oid         (:person-oid application)
+        studies-start-term (:alkamiskausi tarjonta)
+        studies-start-year (:alkamisvuosi tarjonta)
+        payment-status     (when (and person-oid studies-start-term studies-start-year)
+                             (first (get-payment-states
+                                      [person-oid] studies-start-term studies-start-year)))
+        payment-events     (when (and payment-status return-payment-events)
+                             (get-payment-events (:id payment-status)))]
+    (cond-> {}
+            payment-status (assoc :status
+                                  (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
+            payment-events (assoc :events
+                                  (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
+                                       payment-events)))))
