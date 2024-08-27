@@ -574,7 +574,7 @@
       (merge {:form       909909,
               :lang       "fi"
               :haku       "payment-info-test-kk-haku"
-              :hakukohde  "payment-info-test-kk-hakukohde"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
               :id         543210
               :person-oid "1.2.3.4.5.303"})
       (update :answers
@@ -586,12 +586,10 @@
       (merge {:form       909909,
               :lang       "fi"
               :haku       "payment-info-test-kk-haku"
-              :hakukohde  "payment-info-test-kk-hakukohde"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
               :id         543211
               :person-oid "1.2.3.4.5.303"})
       (update
         :answers
         (comp vec concat)
         [{:key "vapautus_hakemusmaksusta" :value "12345" :fieldType "dropdown"}])))
-
-

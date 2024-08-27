@@ -494,6 +494,26 @@
    (s/optional-key :ssn)         s/Str
    (s/optional-key :minor)       s/Bool})
 
+(s/defschema PaymentStatus
+  {:person-oid   s/Str
+   :start-term   s/Str
+   :start-year   s/Int
+   :state        s/Str
+   :created-time #?(:clj  (s/maybe DateTime)
+                    :cljs (s/maybe s/Str)) })
+
+(s/defschema PaymentEvent
+  {:new-state      (s/maybe s/Str)
+   :event-type     s/Str
+   :virkailija-oid (s/maybe s/Str)
+   :message        (s/maybe s/Str)
+   :created-time   #?(:clj  (s/maybe DateTime)
+                      :cljs (s/maybe s/Str)) })
+
+(s/defschema KkPaymentState
+  {(s/optional-key :status) PaymentStatus
+   (s/optional-key :events) [PaymentEvent]})
+
 (s/defschema ApplicationWithPerson
   (-> Application
       (st/dissoc :person-oid)
@@ -501,14 +521,15 @@
       (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
-(s/defschema ApplicationWithPersonAndForm
+(s/defschema ApplicationWithPersonFormAndPayment
   {:application (-> Application
                     (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
                     (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
-                               :else FormWithContent)})
+                               :else FormWithContent)
+   :kk-payment  KkPaymentState})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
@@ -1005,23 +1026,3 @@
   {:paymentType                    (s/maybe s/Str)
    (s/optional-key :processingFee) s/Str
    (s/optional-key :decisionFee)   s/Str})
-
-(s/defschema PaymentStatus
-  {:person-oid   s/Str
-   :start-term   s/Str
-   :start-year   s/Int
-   :state        s/Str
-   :created-time #?(:clj  (s/maybe DateTime)
-                    :cljs (s/maybe s/Str)) })
-
-(s/defschema PaymentEvent
-  {:new-state      (s/maybe s/Str)
-   :event-type     s/Str
-   :virkailija-oid (s/maybe s/Str)
-   :message        (s/maybe s/Str)
-   :created-time   #?(:clj  (s/maybe DateTime)
-                      :cljs (s/maybe s/Str)) })
-
-(s/defschema KkPaymentState
-  {(s/optional-key :status) PaymentStatus
-   (s/optional-key :events) [PaymentEvent]})
