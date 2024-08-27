@@ -270,7 +270,7 @@
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
       [:div.application__toast-message
-       {:role "alertdialog"
+       {:role "alert"
         :aria-modal "true" 
         :aria-labelledby "valitut-hakukohteet"
         :aria-live "assertive"
@@ -278,7 +278,7 @@
         :class  (if visible "show-message" "hide-message")}
         (str (translations/get-hakija-translation :application-study-program-added lang) message)]
       [:div.application__toast-message
-       {:role "alertdialog"
+       {:role "alert"
         :aria-modal "true"
         :aria-labelledby "valitut-hakukohteet"
         :aria-live "assertive"
