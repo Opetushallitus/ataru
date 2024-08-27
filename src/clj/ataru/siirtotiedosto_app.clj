@@ -37,7 +37,10 @@
 (defn -main [& _]
   (run-migrations!)
   (log/info "Ovara-ataru up, creating client and service")
-  (let [siirtotiedosto-client (create-siirtotiedosto-client config)
-        siirtotiedosto-service (CommonSiirtotiedostoService. siirtotiedosto-client)
-        result (siirtotiedosto-service/form-next-siirtotiedosto siirtotiedosto-service)]
-    (log/info "ready!" result)))
+  (try
+    (let [siirtotiedosto-client (create-siirtotiedosto-client config)
+          siirtotiedosto-service (CommonSiirtotiedostoService. siirtotiedosto-client)
+          result (siirtotiedosto-service/form-next-siirtotiedosto siirtotiedosto-service)]
+      (log/info "Ready!" result))
+    (catch Throwable t
+      (log/error "Siirtotiedosto operation failed unexpectedly:" t))))
