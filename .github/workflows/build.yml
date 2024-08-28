@@ -161,7 +161,7 @@ jobs:
     with:
       application: ovara-ataru
       base-image: baseimage-fatjar-openjdk17:master
-      configfolder: oph-configuration
+      configfolder: ovara-configuration
       jarfile: ovara-ataru
     secrets:
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
