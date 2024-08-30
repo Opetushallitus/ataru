@@ -957,6 +957,11 @@
    (:hakukohde-lisatty-toast db)))
 
 (re-frame/reg-sub
+ :application/hakukohde-poistettu-toast
+ (fn [db _]
+   (:hakukohde-poistettu-toast db)))
+
+(re-frame/reg-sub
  :application/hakukohde-siirretty-alert
  (fn [db _]
    (:hakukohde-siirretty-alert db)))

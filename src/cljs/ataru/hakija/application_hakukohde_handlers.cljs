@@ -363,6 +363,18 @@
    (assoc-in db [:hakukohde-lisatty-toast] {:visible false :message ""})))
 
 (reg-event-db
+ :application/show-hakukohde-poistettu-toast
+ [check-schema-interceptor]
+ (fn [db [_ message]]
+   (assoc-in db [:hakukohde-poistettu-toast] {:visible? true :poistettu_message message})))
+
+(reg-event-db
+ :application/hide-hakukohde-poistettu-toast
+ [check-schema-interceptor]
+ (fn [db [_]]
+   (assoc-in db [:hakukohde-poistettu-toast] {:visible? false :poistettu_message ""})))
+
+(reg-event-db
  :application/show-hakukohde-siirretty-alas-alert
  [check-schema-interceptor]
  (fn [db [_ message]]
