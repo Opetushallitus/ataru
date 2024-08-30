@@ -62,8 +62,14 @@
 (defn hide-toast-after-delay []
   (dispatch [:application/hide-hakukohde-toast]))
 
+(defn hide-poistettu-toast-after-delay []
+  (dispatch [:application/hide-hakukohde-poistettu-toast]))
+
 (defn- start-toast-hide-timer []
   (js/setTimeout hide-toast-after-delay 3500))
+
+(defn- start-poistettu-toast-hide-timer []
+  (js/setTimeout hide-poistettu-toast-after-delay 3500))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid idx]
@@ -114,7 +120,11 @@
   (let [cannot-remove? (and (nil? hakukohde-oid) (zero? hakukohteet-count))
         lang @(subscribe [:application/form-language])
         label (translations/get-hakija-translation :remove lang)
-        on-click-fn #(when-not cannot-remove? (dispatch [:application/hakukohde-remove-by-idx idx]))]
+        on-click-fn #(when-not cannot-remove? 
+                       (dispatch [:application/show-hakukohde-poistettu-toast (str (translations/get-hakija-translation :application-study-program-removed lang))])
+                       (start-poistettu-toast-hide-timer)
+                       (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
+                       (dispatch [:application/hakukohde-remove-by-idx idx]))]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    label
                   :on-click on-click-fn}
@@ -264,6 +274,8 @@
         editable? (subscribe [:application/hakukohteet-editable?])
         lang @(subscribe [:application/form-language])
         toast (subscribe [:application/hakukohde-lisatty-toast])
+        poistettu-toast (subscribe [:application/hakukohde-poistettu-toast])
+        {:keys [visible? poistettu_message]} @poistettu-toast
         {:keys [visible message]} @toast
         hakukohde-siirretty-alert (subscribe [:application/hakukohde-siirretty-alert])
         {:keys [alert_visible alert_message]} @hakukohde-siirretty-alert]
@@ -271,7 +283,7 @@
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
       [:div.application__toast-message
        {:role "alert"
-        :aria-modal "true" 
+        :aria-modal "true"
         :aria-labelledby "valitut-hakukohteet"
         :aria-live "assertive"
         :tab-index -1
@@ -284,6 +296,13 @@
         :aria-live "assertive"
         :tab-index -1
         :class  (if alert_visible "show-message" "hide-message")} alert_message]
+      [:div.application__toast-message
+       {:role "alert"
+        :aria-modal "true"
+        :aria-labelledby "valitut-hakukohteet"
+        :aria-live "assertive"
+        :tab-index -1
+        :class  (if visible? "show-message" "hide-message")} poistettu_message]
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
         {:id "valitut-hakukohteet"
