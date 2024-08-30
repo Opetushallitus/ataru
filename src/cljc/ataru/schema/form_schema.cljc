@@ -463,7 +463,8 @@
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
    :eligibility-set-automatically                   [s/Str]
-   (s/optional-key :tunnistautuminen)                 (s/maybe s/Str)})
+   (s/optional-key :tunnistautuminen)               (s/maybe s/Str)
+   (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
