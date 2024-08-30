@@ -1,4 +1,5 @@
-(ns ataru.util.apply-in-batches)
+(ns ataru.util.apply-in-batches
+  (:require [taoensso.timbre :as log]))
 
 (defn apply-in-batches
   "Kutsuu funktiota joka ottaa parametrina listan osissa niin,
@@ -8,7 +9,9 @@
    Palauttaa yhdistetyn paluuarvon."
   [f items batch-size & args]
   (let [batches (partition-all batch-size items)
-        apply-to-batch (fn [batch] (apply f (concat args [batch])))]
-    (->> batches
-         (map apply-to-batch)
+        apply-to-batch (fn [index batch]
+                         (log/info (str "Apply to batch, kutsu batchille nro: " (inc index)))
+                         (apply f (concat args [batch])))]
+  (->> batches
+         (map-indexed apply-to-batch)
          (apply concat))))
