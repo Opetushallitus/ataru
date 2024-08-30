@@ -45,12 +45,12 @@
     (throw (ex-info "Parameter validation failed while setting payment state"
                     {:person-oid person-oid :term term :year year :state new-state}))))
 
-(defn get-payment-states
+(defn get-raw-payment-states
   [person-oids term year]
   (let [simplified-term (first (str/split term #"#"))]
     (store/get-kk-application-payment-states person-oids simplified-term year)))
 
-(defn get-payment-events
+(defn get-raw-payment-events
   [state-ids]
   (store/get-kk-application-payment-events state-ids))
 
@@ -139,8 +139,8 @@
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
         aliases (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
-        original-state (first (get-payment-states [person-oid] term year))
-        resolved-state (resolve-actual-payment-state (get-payment-states aliases term year))
+        original-state (first (get-raw-payment-states [person-oid] term year))
+        resolved-state (resolve-actual-payment-state (get-raw-payment-states aliases term year))
         applications (when (and (not-empty aliases) (not-empty valid-haku-oids))
                        (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
       (cond
@@ -169,22 +169,31 @@
         :else
         (set-application-fee-required person-oid term year virkailija-oid nil))))
 
-(defn get-kk-payment-state
-  "Adds higher education application fee related info to application. If add-events is truthy, also returns
-   specific processing events."
-  [application tarjonta-data return-payment-events]
-  (let [tarjonta           (:tarjonta tarjonta-data)
-        person-oid         (:person-oid application)
+(defn get-kk-payment-states
+  "Returns higher education application fee related info to application list belonging to same haku."
+  [applications tarjonta]
+  (let [person-oids        (keep :person-oid applications)
         studies-start-term (:alkamiskausi tarjonta)
         studies-start-year (:alkamisvuosi tarjonta)
-        payment-status     (when (and person-oid studies-start-term studies-start-year)
-                             (first (get-payment-states
-                                      [person-oid] studies-start-term studies-start-year)))
-        payment-events     (when (and payment-status return-payment-events)
-                             (get-payment-events (:id payment-status)))]
-    (cond-> {}
-            payment-status (assoc :status
-                                  (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
-            payment-events (assoc :events
-                                  (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
-                                       payment-events)))))
+        payment-states     (when (and person-oids studies-start-term studies-start-year)
+                             (get-raw-payment-states
+                               person-oids studies-start-term studies-start-year))]
+    (into {}
+          (map #(vector (:person-oid %) %) payment-states))))
+
+(defn get-kk-payment-state
+  "Returns higher education application fee related info to single application.
+  If return-payment-events is truthy, also returns specific processing events."
+  [application tarjonta-data return-payment-events]
+  (if-let [person-oid (:person-oid application)]
+    (let [payment-status (when (and application tarjonta-data)
+                           (get (get-kk-payment-states [application] (:tarjonta tarjonta-data)) person-oid))
+          payment-events (when (and payment-status return-payment-events)
+                           (get-raw-payment-events (:id payment-status)))]
+      (cond-> {}
+              payment-status (assoc :status
+                                    (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
+              payment-events (assoc :events
+                                    (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
+                                         payment-events))))
+    {}))

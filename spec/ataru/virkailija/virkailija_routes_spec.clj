@@ -10,6 +10,7 @@
             [ataru.fixtures.form :as fixtures]
             [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
             [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.koodisto.koodisto :as koodisto]
@@ -437,7 +438,25 @@
                 body         (:body resp)
                 applications (:applications body)]
             (should= 200 status)
-            (should= 1 (count applications))))))
+            (should= 1 (count applications)))))
+
+  (it "Should fetch payment status with application"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc :option-answers [{:key "nationality" :options ["246"]}]))
+            application-id (db/init-db-fixture
+                             fixtures/person-info-form-with-more-questions
+                             (assoc application-fixtures/person-info-form-application-with-more-answers
+                               :form (:id fixtures/person-info-form-with-more-questions))
+                             [])
+            application (application-store/get-application application-id)
+            _ (payment/set-application-fee-not-required (:person-oid application) "kausi_s" 2025 nil nil)
+            resp         (post-applications-list query)
+            status       (:status resp)
+            body         (:body resp)
+            applications (:applications body)]
+        (should= 200 status)
+        (should= 1 (count applications))
+        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state])))))
 
 (describe "Submitting mass review notes"
           (tags :unit :mass-notes)
