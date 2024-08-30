@@ -203,6 +203,28 @@
 
 (defn ->and-query [& queries] (apply merge queries))
 
+(defn- populate-haku-applications-with-kk-payment-status
+  [applications haku]
+  (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku)]
+    (map (fn [application]
+           (if-let [kk-payment-state (get-in payment-states-by-person-oid [(:person-oid application) :state])]
+             (assoc application :kk-payment-state kk-payment-state)
+             application))
+         applications)))
+
+(defn- populate-applications-with-kk-payment-status
+  "Adds kk payment data to applications that have person oid and haku"
+  [tarjonta-service applications]
+  (let [applications-with-person-oid (filter #(some? (:person-oid %)) applications)
+        applications-by-haku (dissoc (group-by :haku applications-with-person-oid) nil)
+        haku-oids (keys applications-by-haku)
+        hakus-by-oid (into {}
+                           (map #(vector % (tarjonta-service/get-haku tarjonta-service %)) haku-oids))]
+    (flatten (map
+               #(populate-haku-applications-with-kk-payment-status
+                  (get applications-by-haku %) (get hakus-by-oid %))
+               haku-oids))))
+
 (defn- populate-applications-with-person-data
   [person-service applications]
   (let [persons (person-service/get-persons
@@ -336,7 +358,8 @@
      sort
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
-                                       (map remove-irrelevant-application_hakukohde_reviews))
+                                       (map remove-irrelevant-application_hakukohde_reviews)
+                                       (populate-applications-with-kk-payment-status tarjonta-service))
           authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications

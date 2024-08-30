@@ -77,7 +77,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                fake-koodisto-cache fake-haku-cache
                                                                oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-be-nil state)
                           (should-be-nil id)))
 
@@ -103,7 +103,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 linked-oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [linked-oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [linked-oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
@@ -120,7 +120,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid oid, :start-term term-fall,
@@ -136,7 +136,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid oid, :start-term term-fall,
@@ -151,7 +151,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid oid, :start-term term-fall,
@@ -166,7 +166,7 @@
                                 id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                   fake-koodisto-cache fake-haku-cache
                                                                   oid term-fall year-ok nil)
-                                state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                                state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                             (should-not-be-nil id)
                             (should-not-be-nil state)
                             (should-be-matching-state {:person-oid oid, :start-term term-fall,
@@ -185,7 +185,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
                           (should-be-matching-state {:person-oid oid, :start-term term-fall,
@@ -194,8 +194,8 @@
 (defn save-and-check-single-state-and-event
   [oid term year state-func desired-state]
   (let [state-id (state-func oid term-fall year-ok nil nil)
-        states   (payment/get-payment-states [oid] term year)
-        events   (payment/get-payment-events [state-id])
+        states   (payment/get-raw-payment-states [oid] term year)
+        events   (payment/get-raw-payment-events [state-id])
         state    (first states)
         event    (first events)]
     (should= 1 (count states))
