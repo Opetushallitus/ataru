@@ -39,7 +39,7 @@
         dropped-oids (clojure.set/intersection yksiloimaton-tai-aidinkieleton-henkilo-oids persons-from-applications)
         wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:henkilo_oid %))) toinen-aste-applications)]
     (when (not-empty dropped-oids)
-      (log/info (str "Tilastokeskus: Ei haeta koosteDataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
+      (log/info (str "Tilastokeskus: Ei haeta koostedataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
     wanted-applications))
 
 (defn- get-koostedata-for-applications
@@ -47,10 +47,10 @@
   (into {} (map (fn [hakuOid] (let [hakemus-oids (vec (doall (map :hakemus_oid (filter (fn [application] (= hakuOid (:haku_oid application)))
                                                                                applications-for-koostedata))))]
                                 (if (not-empty hakemus-oids)
-                                  (do (log/info "Tilastokeskus: Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
+                                  (do (log/info "Tilastokeskus: Haetaan koostedata haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                     (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
                                      hakemus-oids 1000 valintalaskentakoostepalvelu-service hakuOid))
-                                  (do (log/warn "Tilastokeskus: Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
+                                  (do (log/warn "Tilastokeskus: Ei haeta koostedataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                     {}))))
                 toisen-asteen-yhteishaku-oids)))
 
@@ -93,9 +93,11 @@
         toisen-asteen-yhteishakujen-hakemusten-oidit (map :hakemus_oid toisen-asteen-yhteishakujen-hakemukset)
         batch-size 5000
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
-                                        (into {}
-                                              (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
-                                                                     toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service))
+                                        (do
+                                          (log/info "Haetaan toisen asteen yhteishaun hakemusten harkinnanvaraisuustiedot batcheissa")
+                                          (into {}
+                                              (a/apply-in-batches valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
+                                                                     toisen-asteen-yhteishakujen-hakemusten-oidit batch-size valintalaskentakoostepalvelu-service)))
                                         {})
         applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)
         kooste-data-toinen-aste (get-koostedata-for-applications toisen-asteen-yhteishaku-oids applications-for-koostedata valintalaskentakoostepalvelu-service)
