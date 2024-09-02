@@ -29,28 +29,24 @@
                         (case key
                           :haut             (application-store/get-haut)
                           :direct-form-haut (application-store/get-direct-form-haut))))
-      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-get-haut] 3) TimeUnit/DAYS]
-      :refresh-after [5 TimeUnit/MINUTES]})]
+      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-get-haut] 5) TimeUnit/MINUTES]})]
    [:organizations-hierarchy-cache
     (in-memory/map->InMemoryCache
      {:name          "in-memory-organizations-hierarchy"
       :loader        (cache/->FunctionCacheLoader
                       (fn [key] (organization-client/get-organizations key)))
-      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-organizations-hierarchy] 3) TimeUnit/DAYS]
-      :refresh-after [60 TimeUnit/MINUTES]})]
+      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-organizations-hierarchy] 60) TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
      {:name          "in-memory-all-organization-groups"
       :loader        (cache/->FunctionCacheLoader
                       (fn [_] (organization-client/get-groups)))
-      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-all-organization-groups] 3) TimeUnit/DAYS]
-      :refresh-after [5 TimeUnit/MINUTES]})]
+      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-all-organization-groups] 5) TimeUnit/MINUTES]})]
    [:localizations-cache
     (in-memory/map->InMemoryCache
      {:name          "in-memory-localizations"
       :loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
-      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-localizations] 3) TimeUnit/DAYS]
-      :refresh-after [5 TimeUnit/MINUTES]})]
+      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-localizations] 5) TimeUnit/MINUTES]})]
 
    [:kouta-hakukohde-cache-loader
     (component/using
@@ -73,8 +69,7 @@
     (component/using
      (redis/map->Cache
       {:name          "hakukohde"
-       :ttl           [(get-in config [:cache :ttl-amounts :hakukohde] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :hakukohde] 15) TimeUnit/MINUTES]
        :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :hakukohde-union-cache-loader})]
@@ -82,8 +77,7 @@
     (component/using
       (redis/map->Cache
         {:name          "hakukohderyhma-settings"
-         :ttl           [(get-in config [:cache :ttl-amounts :hakukohderyhma-settings] 3) TimeUnit/DAYS]
-         :refresh-after [15 TimeUnit/MINUTES]
+         :ttl           [(get-in config [:cache :ttl-amounts :hakukohderyhma-settings] 15) TimeUnit/MINUTES]
          :lock-timeout  [20 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :hakukohderyhma-settings-cache-loader})]
@@ -97,8 +91,7 @@
     (component/using
       (redis/map->Cache
         {:name          "oppilaitoksenopiskelijat"
-         :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenopiskelijat] 3) TimeUnit/DAYS]
-         :refresh-after [1 TimeUnit/HOURS]
+         :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenopiskelijat] 1) TimeUnit/HOURS]
          :lock-timeout  [60 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :oppilaitoksen-opiskelijat-cache-loader})]
@@ -110,8 +103,7 @@
     (component/using
       (redis/map->Cache
         {:name          "oppilaitoksenluokat"
-         :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenluokat] 3) TimeUnit/DAYS]
-         :refresh-after [1 TimeUnit/HOURS]
+         :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenluokat] 1) TimeUnit/HOURS]
          :lock-timeout  [60 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :oppilaitoksen-luokat-cache-loader})]
@@ -120,8 +112,7 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-hakukohde"
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-hakukohde] 3) TimeUnit/DAYS]
-       :refresh-after       [5 TimeUnit/MINUTES]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-hakukohde] 5) TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
 
    [:kouta-internal-cas-client
@@ -141,8 +132,7 @@
     (component/using
      (redis/map->Cache
       {:name          "haku"
-       :ttl           [(get-in config [:cache :ttl-amounts :haku] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :haku] 15) TimeUnit/MINUTES]
        :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :haku-union-cache-loader})]
@@ -150,8 +140,7 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-haku"
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-haku] 3) TimeUnit/DAYS]
-       :refresh-after       [5 TimeUnit/MINUTES]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-haku] 5) TimeUnit/MINUTES]})
      {:redis-cache :haku-redis-cache})]
 
    [:kouta-hakus-by-form-key-cache-loader
@@ -162,8 +151,7 @@
     (component/using
      (redis/map->Cache
       {:name          "kouta-hakus-by-form-key"
-       :ttl           [(get-in config [:cache :ttl-amounts :kouta-hakus-by-form-key] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :kouta-hakus-by-form-key] 15) TimeUnit/MINUTES]
        :lock-timeout  [10 TimeUnit/SECONDS]})
      {:loader :kouta-hakus-by-form-key-cache-loader
       :redis  :redis})]
@@ -171,16 +159,14 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-kouta-hakus-by-form-key"
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-kouta-hakus-by-form-key] 3) TimeUnit/DAYS]
-       :refresh-after       [5 TimeUnit/MINUTES]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-kouta-hakus-by-form-key] 5) TimeUnit/MINUTES]})
      {:redis-cache :kouta-hakus-by-form-key-redis-cache})]
 
    [:forms-in-use-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "forms-in-use"
-       :ttl           [(get-in config [:cache :ttl-amounts :forms-in-use] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :forms-in-use] 15) TimeUnit/MINUTES]
        :lock-timeout  [20 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)})
      [:redis])]
@@ -189,16 +175,14 @@
      (two-layer/map->Cache
       {:name                "in-memory-forms-in-use"
        :size                10
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-forms-in-use] 3) TimeUnit/DAYS]
-       :refresh-after       [5 TimeUnit/MINUTES]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-forms-in-use] 5) TimeUnit/MINUTES]})
      {:redis-cache :forms-in-use-redis-cache})]
 
    [:ohjausparametrit-cache
     (component/using
      (redis/map->Cache
       {:name          "ohjausparametrit"
-       :ttl           [(get-in config [:cache :ttl-amounts :ohjausparametrit] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :ohjausparametrit] 15) TimeUnit/MINUTES]
        :lock-timeout  [10 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)})
      [:redis])]
@@ -213,8 +197,7 @@
     (component/using
      (redis/map->Cache
       {:name          "koulutus"
-       :ttl           [(get-in config [:cache :ttl-amounts :koulutus] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :koulutus] 15) TimeUnit/MINUTES]
        :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :koulutus-union-cache-loader})]
@@ -222,16 +205,14 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-koulutus"
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-koulutus] 3) TimeUnit/DAYS]
-       :refresh-after       [7 TimeUnit/MINUTES]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-koulutus] 7) TimeUnit/MINUTES]})
      {:redis-cache :koulutus-redis-cache})]
 
    [:henkilo-redis-cache
     (component/using
      (redis/map->Cache
       {:name          "henkilo"
-       :ttl           [(get-in config [:cache :ttl-amounts :henkilo] 3) TimeUnit/DAYS]
-       :refresh-after [1 TimeUnit/DAYS]
+       :ttl           [(get-in config [:cache :ttl-amounts :henkilo] 1) TimeUnit/DAYS]
        :lock-timeout  [10 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :henkilo-cache-loader})]
@@ -240,8 +221,7 @@
      (two-layer/map->Cache
       {:name                "in-memory-henkilo"
        :size                200000
-       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-henkilo] 3) TimeUnit/DAYS]
-       :refresh-after       [1 TimeUnit/SECONDS]})
+       :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-henkilo] 5) TimeUnit/SECONDS]}) ; TODO: pitäisikö olla vielä matalampi
      {:redis-cache :henkilo-redis-cache})]
 
    [:kouta-hakukohde-search-cache-loader
@@ -261,8 +241,7 @@
     (component/using
      (redis/map->Cache
       {:name          "hakukohde-search"
-       :ttl           [(get-in config [:cache :ttl-amounts :hakukohde-search] 3) TimeUnit/DAYS]
-       :refresh-after [15 TimeUnit/MINUTES]
+       :ttl           [(get-in config [:cache :ttl-amounts :hakukohde-search] 15) TimeUnit/MINUTES]
        :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :hakukohde-search-union-cache-loader})]
@@ -295,7 +274,7 @@
     (component/using
      (redis/map->Cache
       {:name          "koodisto"
-       :ttl           [(get-in config [:cache :ttl-amounts :koodisto] 3) TimeUnit/DAYS]
+       :ttl           [(get-in config [:cache :ttl-amounts :koodisto] 15) TimeUnit/MINUTES]
        :refresh-after [15 TimeUnit/MINUTES]
        :lock-timeout  [60 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
@@ -314,14 +293,12 @@
       :loader        (cache/->FunctionCacheLoader
                       (fn [key] (form-store/fetch-by-id (Integer/valueOf key))))
       :size          10
-      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-form-by-id] 3) TimeUnit/DAYS]
-      :refresh-after [1 TimeUnit/DAYS]})]
+      :expires-after [(get-in config [:cache :ttl-amounts :in-memory-form-by-id] 1) TimeUnit/DAYS]})]
    [:form-by-haku-oid-str-cache
     (component/using
      (redis/map->Cache
       {:name          "form-by-haku-oid-str"
-       :ttl           [(get-in config [:cache :ttl-amounts :form-by-haku-oid-str] 3) TimeUnit/DAYS]
-       :refresh-after [5 TimeUnit/SECONDS]
+       :ttl           [(get-in config [:cache :ttl-amounts :form-by-haku-oid-str] 1) TimeUnit/MINUTES]
        :lock-timeout  [1 TimeUnit/MINUTES]})
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]])

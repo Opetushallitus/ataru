@@ -28,7 +28,6 @@
                   name
                   size
                   expire-after-access
-                  refresh-after
                   ^LoadingCache caffeine]
   component/Lifecycle
   (start [this]
@@ -38,7 +37,6 @@
                                         (.maximumSize size))
                                 (.recordStats)
                                 (.expireAfterAccess (first expire-after-access) (second expire-after-access))
-                                (.refreshAfterWrite (first refresh-after) (second refresh-after))
                                 (.build (->redis-loader redis-cache))))
       this))
   (stop [this]
