@@ -349,3 +349,45 @@
                    new-idx idx}
           filters' (s/rename-keys filters changes)]
       (assoc-in db [:application :hakukohde-koulutustyyppi-filters] filters'))))
+
+(reg-event-db
+  :application/show-hakukohde-toast
+ [check-schema-interceptor]
+ (fn[db [_ message]]
+   (assoc-in db [:hakukohde-lisatty-toast] {:visible true :message message})))
+
+(reg-event-db
+ :application/hide-hakukohde-toast
+ [check-schema-interceptor]
+ (fn[db [_]]
+   (assoc-in db [:hakukohde-lisatty-toast] {:visible false :message ""})))
+
+(reg-event-db
+ :application/show-hakukohde-poistettu-toast
+ [check-schema-interceptor]
+ (fn [db [_ message]]
+   (assoc-in db [:hakukohde-poistettu-toast] {:visible? true :poistettu_message message})))
+
+(reg-event-db
+ :application/hide-hakukohde-poistettu-toast
+ [check-schema-interceptor]
+ (fn [db [_]]
+   (assoc-in db [:hakukohde-poistettu-toast] {:visible? false :poistettu_message ""})))
+
+(reg-event-db
+ :application/show-hakukohde-siirretty-alas-alert
+ [check-schema-interceptor]
+ (fn [db [_ message]]
+   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible true :alert_message message})))
+
+(reg-event-db
+ :application/show-hakukohde-siirretty-ylos-alert
+ [check-schema-interceptor]
+ (fn [db [_ message]]
+   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible true :alert_message message})))
+
+(reg-event-db
+ :application/hide-hakukohde-siirretty-alert
+ [check-schema-interceptor]
+ (fn [db [_]]
+   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible false :alert_message ""})))
