@@ -215,15 +215,17 @@
 (defn- populate-applications-with-kk-payment-status
   "Adds kk payment data to applications that have person oid and haku"
   [tarjonta-service applications]
-  (let [applications-with-person-oid (filter #(some? (:person-oid %)) applications)
-        applications-by-haku (dissoc (group-by :haku applications-with-person-oid) nil)
+  (let [applications-with-person-oid-and-haku (filter #(and (some? (:person-oid %)) (some? (:haku %))) applications)
+        remaining-applications (remove #(and (some? (:person-oid %)) (some? (:haku %))) applications)
+        applications-by-haku (group-by :haku applications-with-person-oid-and-haku)
         haku-oids (keys applications-by-haku)
         hakus-by-oid (into {}
                            (map #(vector % (tarjonta-service/get-haku tarjonta-service %)) haku-oids))]
-    (flatten (map
-               #(populate-haku-applications-with-kk-payment-status
-                  (get applications-by-haku %) (get hakus-by-oid %))
-               haku-oids))))
+    (->> haku-oids
+         (map #(populate-haku-applications-with-kk-payment-status
+                 (get applications-by-haku %) (get hakus-by-oid %)))
+         flatten
+         (concat remaining-applications))))
 
 (defn- populate-applications-with-person-data
   [person-service applications]
