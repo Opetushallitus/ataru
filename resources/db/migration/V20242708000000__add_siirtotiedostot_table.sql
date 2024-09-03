@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS siirtotiedosto (
-    id varchar not null,
+    id serial not null,
     execution_uuid varchar,
     window_start timestamp with time zone not null,
     window_end timestamp with time zone not null not null,
