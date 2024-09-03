@@ -80,14 +80,14 @@
                      (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx])
                      (dispatch [:application/show-hakukohde-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
                      (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
-                     (start-toast-hide-timer)
-                    )]
+                     (start-toast-hide-timer))]
+
     [:div.application__search-hit-hakukohde-row-2nd
      {:on-mouse-down #(.preventDefault %)
       :tab-index 0
       :role "button"
       :on-key-up #(when (a11y/is-enter-or-space? %)
-                       (select-fn))
+                    (select-fn))
       :on-click select-fn}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
@@ -106,8 +106,7 @@
         {:auto-focus (> idx 0)
          :on-change   #(do (reset! search-input (.-value (.-target %)))
                            (dispatch [:application/hakukohde-query-change search-input idx])
-                           (dispatch [:application/set-active-hakukohde-search idx])
-                        )
+                           (dispatch [:application/set-active-hakukohde-search idx]))
          :placeholder (translations/get-hakija-translation :search-application-options-or-education @lang)
          :value       @search-input}]
        (when (= idx @active-hakukohde-selection)
@@ -120,7 +119,7 @@
   (let [cannot-remove? (and (nil? hakukohde-oid) (zero? hakukohteet-count))
         lang @(subscribe [:application/form-language])
         label (translations/get-hakija-translation :remove lang)
-        on-click-fn #(when-not cannot-remove? 
+        on-click-fn #(when-not cannot-remove?
                        (dispatch [:application/show-hakukohde-poistettu-toast (str (translations/get-hakija-translation :application-study-program-removed lang))])
                        (start-poistettu-toast-hide-timer)
                        (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
@@ -212,7 +211,7 @@
           :aria-label (translations/get-hakija-translation :decrease-priority lang)
           :on-key-up #(when (a11y/is-enter-or-space? %)
                         (change-priority-fn 1))
-          :on-click #(change-priority-fn 1 )})]]]))
+          :on-click #(change-priority-fn 1)})]]]))
 
 (defn- select-hakukohde [idx hakukohde-oid hakukohteet-count]
   [:div
@@ -244,7 +243,7 @@
                 (= 1 remaining-hakukohteet) single-label
                 (< 1 remaining-hakukohteet) (str n-label1 remaining-hakukohteet n-label2))]
     (when (int? remaining-hakukohteet)
-      [:div.application__hakukohde-2nd-max-amount-msg 
+      [:div.application__hakukohde-2nd-max-amount-msg
        {:tab-index 0}
        label])))
 
@@ -265,6 +264,15 @@
       (not hakukohteet-full?) [lisaa-hakukohde-button remaining-hakukohteet]
       :else nil)))
 
+(defn toast-component [visible? message]
+  (when visible?
+    [:div.application__toast-message
+     {:role "alert"
+      :aria-modal "true"
+      :aria-labelledby "valitut-hakukohteet"
+      :aria-live "assertive"
+      :tab-index -1}
+     message ]))
 (defn hakukohteet
   [_ _]
   (let [selected-hakukohteet (subscribe [:application/selected-hakukohteet])
@@ -273,36 +281,18 @@
         max-hakukohteet (subscribe [:application/max-hakukohteet])
         editable? (subscribe [:application/hakukohteet-editable?])
         lang @(subscribe [:application/form-language])
-        toast (subscribe [:application/hakukohde-lisatty-toast])
+        lisatty-toast (subscribe [:application/hakukohde-lisatty-toast])
         poistettu-toast (subscribe [:application/hakukohde-poistettu-toast])
-        {:keys [visible? poistettu_message]} @poistettu-toast
-        {:keys [visible message]} @toast
+        {:keys [poistettu-visible? poistettu-message]} @poistettu-toast
+        {:keys [lisatty-visible? hakukohde-nimi]} @lisatty-toast
         hakukohde-siirretty-alert (subscribe [:application/hakukohde-siirretty-alert])
-        {:keys [alert_visible alert_message]} @hakukohde-siirretty-alert]
+        {:keys [siirretty-alert-visible? siirretty-alert-message]} @hakukohde-siirretty-alert
+        lisatty-hakukonde-nimi-message (str (translations/get-hakija-translation :application-study-program-added lang) hakukohde-nimi)]
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
-      [:div.application__toast-message
-       {:role "alert"
-        :aria-modal "true"
-        :aria-labelledby "valitut-hakukohteet"
-        :aria-live "assertive"
-        :tab-index -1
-        :class  (if visible "show-message" "hide-message")}
-        (str (translations/get-hakija-translation :application-study-program-added lang) message)]
-      [:div.application__toast-message
-       {:role "alert"
-        :aria-modal "true"
-        :aria-labelledby "valitut-hakukohteet"
-        :aria-live "assertive"
-        :tab-index -1
-        :class  (if alert_visible "show-message" "hide-message")} alert_message]
-      [:div.application__toast-message
-       {:role "alert"
-        :aria-modal "true"
-        :aria-labelledby "valitut-hakukohteet"
-        :aria-live "assertive"
-        :tab-index -1
-        :class  (if visible? "show-message" "hide-message")} poistettu_message]
+      (toast-component lisatty-visible? lisatty-hakukonde-nimi-message)
+      (toast-component siirretty-alert-visible? siirretty-alert-message)
+      (toast-component poistettu-visible? poistettu-message)
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
         {:id "valitut-hakukohteet"

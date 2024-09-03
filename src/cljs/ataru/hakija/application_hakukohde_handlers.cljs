@@ -353,41 +353,41 @@
 (reg-event-db
   :application/show-hakukohde-toast
  [check-schema-interceptor]
- (fn[db [_ message]]
-   (assoc-in db [:hakukohde-lisatty-toast] {:visible true :message message})))
+ (fn[db [_ nimi]]
+   (assoc-in db [:hakukohde-lisatty-toast] {:lisatty-visible? true :hakukohde-nimi nimi})))
 
 (reg-event-db
  :application/hide-hakukohde-toast
  [check-schema-interceptor]
  (fn[db [_]]
-   (assoc-in db [:hakukohde-lisatty-toast] {:visible false :message ""})))
+   (assoc-in db [:hakukohde-lisatty-toast] {:lisatty-visible false :hakukohde-nimi ""})))
 
 (reg-event-db
  :application/show-hakukohde-poistettu-toast
  [check-schema-interceptor]
  (fn [db [_ message]]
-   (assoc-in db [:hakukohde-poistettu-toast] {:visible? true :poistettu_message message})))
+   (assoc-in db [:hakukohde-poistettu-toast] {:poistettu-visible? true :poistettu-message message})))
 
 (reg-event-db
  :application/hide-hakukohde-poistettu-toast
  [check-schema-interceptor]
  (fn [db [_]]
-   (assoc-in db [:hakukohde-poistettu-toast] {:visible? false :poistettu_message ""})))
+   (assoc-in db [:hakukohde-poistettu-toast] {:poistettu-visible? false :poistettu-message ""})))
 
 (reg-event-db
  :application/show-hakukohde-siirretty-alas-alert
  [check-schema-interceptor]
  (fn [db [_ message]]
-   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible true :alert_message message})))
+   (assoc-in db [:hakukohde-siirretty-alert] {:siirretty-alert-visible? true :siirretty-alert-message message})))
 
 (reg-event-db
  :application/show-hakukohde-siirretty-ylos-alert
  [check-schema-interceptor]
  (fn [db [_ message]]
-   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible true :alert_message message})))
+   (assoc-in db [:hakukohde-siirretty-alert] {:siirretty-alert-visible? true :siirretty-alert-message message})))
 
 (reg-event-db
  :application/hide-hakukohde-siirretty-alert
  [check-schema-interceptor]
  (fn [db [_]]
-   (assoc-in db [:hakukohde-siirretty-alert] {:alert_visible false :alert_message ""})))
+   (assoc-in db [:hakukohde-siirretty-alert] {:siirretty-alert-visible? false :siirretty-alert-message ""})))
