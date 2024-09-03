@@ -1443,6 +1443,31 @@ th.application__readonly-adjacent--header {
   }
 }
 
+.application__toast-message {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 30px;
+  background-color: @primary-green-700;
+  color: @white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  display: block;
+  animation: fadein 0.5s, fadeout 0.5s 4.0s; /* Fade in for 0.5s, then fade out after 2.5s */
+}
+
+@keyframes fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+
 .application__hakukohde-2nd-row {
   width: 100%;
   display: flex;
@@ -1520,7 +1545,7 @@ th.application__readonly-adjacent--header {
 .application__hakukohde-2nd-row__hakukohde-hits {
   background: #fff;
   position: relative;
-  z-index: 100;
+  z-index: 99;
   border-radius: 4px;
   box-shadow: @modal-shadow;
   margin-top: 5px;
@@ -1542,6 +1567,10 @@ th.application__readonly-adjacent--header {
     cursor: pointer;
     background: @primary-green-100;
   }
+}
+
+.application__search-hit-hakukohde-row-2nd-span {
+  font-size: 0; 
 }
 
 .application__hakukohde-2nd-row__selected-button-wrapper {

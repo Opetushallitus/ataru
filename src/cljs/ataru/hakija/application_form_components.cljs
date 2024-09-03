@@ -583,6 +583,7 @@
 
 (defn- multi-choice-followups [followups question-group-idx]
   [:div.application__form-multi-choice-followups-outer-container
+   {:tab-index 0}
    [:div.application__form-multi-choice-followups-indicator]
    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
          (for [followup followups]
@@ -679,7 +680,9 @@
          {:key option-id}
          [:input
           (merge {:id        option-id
+                  :tab-index 0
                   :type      "checkbox"
+                  :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
                   :on-change #(toggle-value-fn (.. % -target -value))
@@ -693,7 +696,9 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :on-key-up #(when (a11y/is-enter-or-space? %)
+                     :aria-label  label
+                     :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
+                     :on-key-up #(when (a11y/is-enter-or-space? %) 
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
