@@ -47,7 +47,7 @@
   (into {} (map (fn [hakuOid] (let [hakemus-oids (vec (doall (map :hakemus_oid (filter (fn [application] (= hakuOid (:haku_oid application)))
                                                                                applications-for-koostedata))))]
                                 (if (not-empty hakemus-oids)
-                                  (do (log/info (str "Tilastokeskus: Haetaan koostedata haulle" hakuOid ", hakemusOids " hakemus-oids))
+                                  (do (log/info (str "Tilastokeskus: Haetaan koostedata haulle" hakuOid ", hakemuksia " (count hakemus-oids)))
                                     (a/apply-in-batches valintalaskentakoostepalvelu/opiskelijoiden-suoritukset
                                      hakemus-oids 1000 valintalaskentakoostepalvelu-service hakuOid))
                                   (do (log/warn "Tilastokeskus: Ei haeta koostedataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
