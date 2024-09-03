@@ -4,7 +4,8 @@
             [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [cheshire.generate :refer [add-encoder]]
             [clojure.tools.logging :as log]
-            [ataru.config.core :refer [config]])
+            [ataru.config.core :refer [config]]
+            [taoensso.timbre :as timbre])
   (:import java.time.ZonedDateTime
            java.time.format.DateTimeFormatter
            (ataru.siirtotiedosto_service CommonSiirtotiedostoService)
@@ -36,6 +37,7 @@
 
 (defn -main [& _]
   (run-migrations!)
+  (timbre/set-min-level! :info)
   (log/info "Ovara-ataru up, creating client and service")
   (try
     (let [siirtotiedosto-client (create-siirtotiedosto-client config)
