@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.tutu-payment.tutu-payment-subs
+(ns ataru.virkailija.application.payment.payment-subs
   (:require [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
                                                                         get-tutu-payment-amount-input
                                                                         get-tutu-payment-note-input]]
@@ -7,36 +7,49 @@
             [clojure.string :as string]
             [re-frame.core :as re-frame]))
 
-(re-frame.core/reg-sub
- :tutu-payment/tutu-form?
- (fn [_ [_ key]]
-   (get-tutu-form? key)))
+(re-frame/reg-sub
+  :payment/tutu-form?
+  (fn [[_ key]]
+   [(re-frame/subscribe [:application/form key])])
+  (fn [[form]]
+   (or
+     (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+     (get-tutu-form? (:key form)))))
 
-(re-frame.core/reg-sub
- :tutu-payment/show-review-ui?
- (fn [db _]
-   (let [current-form (get-in db [:application :selected-application-and-form :form :key])
-         tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
-     (boolean
-       (and
-         (not-empty tutu-forms)
-         (some #(= current-form %) tutu-forms))))))
+(re-frame/reg-sub
+  :payment/astu-form?
+  (fn [[_ key]]
+    [(re-frame/subscribe [:application/form key])])
+  (fn [[form]]
+    (= "payment-type-astu" (get-in form [:properties :payment :type]))))
 
-(re-frame.core/reg-sub
- :tutu-payment/tutu-form-selected?
- (fn [db _]
-   (let [selected-form (get-in db [:application :selected-form-key])
-         tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
-     (boolean
-       (and
-         (not-empty tutu-forms)
-         (some #(= selected-form %) tutu-forms))))))
+(re-frame/reg-sub
+  :payment/tutu-form-selected?
+  (fn [_ _]
+   [(re-frame/subscribe [:application/selected-form])])
+  (fn [[form]]
+   (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+       (get-tutu-form? (:key form)))))
+
+(re-frame/reg-sub
+  :payment/astu-form-selected?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-form])])
+  (fn [[form]]
+    (= "payment-type-astu" (get-in form [:properties :payment :type]))))
+
+(re-frame/reg-sub
+  :payment/show-review-ui?
+  (fn [_ _]
+    [(re-frame/subscribe [:payment/astu-form-selected?])
+     (re-frame/subscribe [:payment/tutu-form-selected?])])
+  (fn [[astu-form? tutu-form?]]
+    (or astu-form? tutu-form?)))
 
 (re-frame/reg-sub
  :tutu-payment/note-input
  (fn [db [_ application-key]]
-   (get-tutu-payment-note-input db application-key)
- ))
+   (get-tutu-payment-note-input db application-key)))
 
 (re-frame/reg-sub
   :tutu-payment/duedate-input
