@@ -28,7 +28,7 @@
 
 (def valid-payment-states
   #{:payment-not-required
-    :payment-pending
+    :awaiting-payment
     :payment-ok-via-linked-oid
     :payment-paid})
 
@@ -57,7 +57,7 @@
 (defn set-application-fee-required
   "Sets kk processing fee required for the target term."
   [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year "payment-pending" virkailija-oid message))
+  (set-payment-state person-oid term year "awaiting-payment" virkailija-oid message))
 
 (defn set-application-fee-not-required
   "Sets kk processing fee required for the target term."
@@ -110,7 +110,7 @@
         (= 1 (count state-set))                     (first states)
         (contains? state-set :payment-paid)         (get-state-data :payment-paid)
         (contains? state-set :payment-not-required) (get-state-data :payment-not-required)
-        :else                                       (get-state-data :payment-pending)))))
+        :else                                       (get-state-data :awaiting-payment)))))
 
 (defn- exemption-in-application?
   [application]
