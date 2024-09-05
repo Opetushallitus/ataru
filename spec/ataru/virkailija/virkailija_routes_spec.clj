@@ -678,8 +678,8 @@
                     events (sort-by :created-time (:events payment-data))]
                 (should= 200 status)
                 (should-not-be-nil payment-data)
-                (should= "payment-pending" state)
+                (should= "awaiting-payment" state)
                 (should= 2 (count events))
-                (should= ["payment-not-required" "payment-pending"] (map :new-state events)))))
+                (should= ["payment-not-required" "awaiting-payment"] (map :new-state events)))))
 
 (run-specs)
