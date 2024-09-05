@@ -39,7 +39,7 @@
 (def term-error "kausi_a")
 (def year-ok 2025)
 (def year-error 2024)
-(def state-pending "payment-pending")
+(def state-pending "awaiting-payment")
 (def state-not-required "payment-not-required")
 (def state-paid "payment-paid")
 (def state-ok-via-linked-oid "payment-ok-via-linked-oid")
