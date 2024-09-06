@@ -11,6 +11,7 @@
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.schema.params-schema :as params-schema]
             [ataru.schema.pohjakoulutus-ristiriita-schema :as pohjakoulutus-ristiriita-schema]
+            [ataru.schema.koski-tutkinnot-schema :as tutkinnot-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -117,6 +118,7 @@
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
+   #(= "tutkinnot" (:fieldClass %)) tutkinnot-schema/Tutkinnot
    #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
    :else info-element-schema/InfoElement))
 

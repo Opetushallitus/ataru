@@ -14,6 +14,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
+            [ataru.hakija.tutkinnot :as tutkinnot]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -884,7 +885,8 @@
          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
          {:fieldClass "modalInfoElement"} [modal-info-element field-descriptor idx]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]
+         {:fieldClass "tutkinnot" :fieldType "tutkinnot"} [tutkinnot/tutkinnot field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
   (when (and field-descriptor (not (:duplikoitu-kysymys-hakukohde-oid field-descriptor)))
