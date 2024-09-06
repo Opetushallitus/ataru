@@ -329,6 +329,9 @@
    :harkinnanvaraisuus-reason-3                 {:fi "Riittämätön tutkintokielen taito"
                                                  :sv "Otillräcklig språkkunskap i examensspråket"
                                                  :en ""}
+   :tutkinnot-label                             {:fi "Suoritetut tutkinnot"
+                                                 :sv "SV: Suoritetut tutkinnot"
+                                                 :en ""}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
@@ -2578,7 +2581,10 @@
                                                               :en "EN: Hakija on eidas-tunnistautunut."}
    :valittu                                                  {:fi "valittu"
                                                               :sv "valda"
-                                                              :en "selected"}})
+                                                              :en "selected"}
+   :hakijan-tutkinnot                                        {:fi "Hakijan suoritetut tutkinnot"
+                                                              :sv "SV: Hakijan suoritetut tutkinnot"
+                                                              :en "EN: Hakijan suoritetut tutkinnot"}} )
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"
