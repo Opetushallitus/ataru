@@ -99,6 +99,10 @@
   []
   (boolean (:dev? env)))
 
+(defn- dev-env-and-fake-oppija-auth?
+  []
+  (and (is-dev-env?) (-> config :dev :fake-oppija-auth)))
+
 (defn- render-file-in-dev
   ([filename]
    (render-file-in-dev filename {}))
@@ -145,6 +149,17 @@
   (not (clojure.string/blank? x)))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
+
+(defn- url-of-itself-with-ticket
+  [request]
+  (str
+    "http://"
+    (:server-name request)
+    ":"
+    (:server-port request)
+    (:uri request)
+    "?ticket=ST-111-f6hAYnLk0VHNUhRYIq-po4ygDTg-ip-0-0-0-0&"
+    (:query-string request)))
 
 (defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []

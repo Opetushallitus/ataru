@@ -332,6 +332,9 @@
    :harkinnanvaraisuus-reason-3                 {:fi "Riittämätön tutkintokielen taito"
                                                  :sv "Otillräcklig språkkunskap i examensspråket"
                                                  :en ""}
+   :tutkinnot-label                             {:fi "Suoritetut tutkinnot"
+                                                 :sv "SV: Suoritetut tutkinnot"
+                                                 :en ""}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
