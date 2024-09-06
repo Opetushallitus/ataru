@@ -779,7 +779,9 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
+          person-oid (get-in session-data [:person-oid])
           tutkinto-fetch-needed (and (tutkinnot-in-form? db)
+                                     person-oid
                                      (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
