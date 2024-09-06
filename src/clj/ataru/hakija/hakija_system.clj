@@ -26,7 +26,8 @@
             [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]
             [ataru.valinta-tulos-service.valintatulosservice-service :as valinta-tulos-service]
             [ataru.applications.application-service :as application-service]
-            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]))
+            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]
+            [ataru.koski.koski-service :as koski-service]))
 
 (defn new-system
   ([audit-logger]
@@ -145,6 +146,12 @@
                             :job-runner
                             :form-by-id-cache])
 
+    :koski-client (cas/new-client "/koski" "cas/virkailija" "koskiUser"
+                                  "1.2.246.562.10.00000000001.ataru-hakija.frontend")
+    :koski-service (component/using
+                     (koski-service/map->IntegratedKoskiTutkintoService {})
+                     {:koski-cas-client :koski-client})
+
     :handler (component/using
                (handler/new-handler)
                (into [:tarjonta-service
@@ -157,6 +164,7 @@
                       :temp-file-store
                       :amazon-sqs
                       :application-service
+                      :koski-service
                       :audit-logger]
                      (map first caches)))
 

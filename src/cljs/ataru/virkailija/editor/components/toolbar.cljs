@@ -41,7 +41,8 @@
    [:lupatiedot-kk component/lupatiedot-kk]
    [:lupatiedot-toinen-aste component/lupatiedot-toinen-aste]
    [:guardian-contact-information component/huoltajan-yhteystiedot]
-   [:harkinnanvaraisuus component/harkinnanvaraisuus]])
+   [:harkinnanvaraisuus component/harkinnanvaraisuus]
+   [:tutkinnot component/tutkinnot]])
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -89,7 +90,8 @@
 (defn- component-toolbar [_ _ _]
   (fn [path elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
-          pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
+          pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])
+          tutkinnot-component-exists? (subscribe [:editor/tutkinnot-component-exists?])]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn {:keys [data-test-id]}] elements
                   :when (and (not (and (vector? path)
@@ -98,7 +100,9 @@
                              (not (and @base-education-module-exists?
                                        (contains? #{:base-education-module :kk-base-education-module :base-education-module-2nd} component-name)))
                              (not (and @pohjakoulutusristiriita-exists?
-                                       (= :pohjakoulutusristiriita component-name))))]
+                                       (= :pohjakoulutusristiriita component-name)))
+                             (not (and @tutkinnot-component-exists?
+                                       (= :tutkinnot component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
