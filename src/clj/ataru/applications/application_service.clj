@@ -748,7 +748,7 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
-  ; TODO OK-623
+  ; TODO OK-623 DO NOT FILTER HERE?
   (omatsivut-applications
     [_ session person-oid]
     (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -757,14 +757,14 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications-non-filtered (aac/get-applications-for-valintalaskenta
-                                         organization-service
-                                         session
-                                         hakukohde-oid
-                                         application-keys)]
-      (let [applications    (filter-out-unpaid-kk-applications
-                              tarjonta-service applications-non-filtered :personOid :hakuOid)
-            henkilot        (->> applications
+    (if-let [applications (filter-out-unpaid-kk-applications tarjonta-service
+                            (aac/get-applications-for-valintalaskenta
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                             :personOid :hakuOid)]
+      (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
                                  (person-service/get-persons person-service))
