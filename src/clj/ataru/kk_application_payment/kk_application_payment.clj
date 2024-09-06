@@ -47,8 +47,10 @@
 
 (defn get-raw-payment-states
   [person-oids term year]
-  (let [simplified-term (first (str/split term #"#"))]
-    (store/get-kk-application-payment-states person-oids simplified-term year)))
+  (if (and (not-empty person-oids) term year)
+    (let [simplified-term (first (str/split term #"#"))]
+      (store/get-kk-application-payment-states person-oids simplified-term year))
+    []))
 
 (defn get-raw-payment-events
   [state-ids]
@@ -171,15 +173,17 @@
 
 (defn get-kk-payment-states
   "Returns higher education application fee related info to application list belonging to same haku."
-  [applications tarjonta]
-  (let [person-oids        (keep :person-oid applications)
-        studies-start-term (:alkamiskausi tarjonta)
-        studies-start-year (:alkamisvuosi tarjonta)
-        payment-states     (when (and person-oids studies-start-term studies-start-year)
-                             (get-raw-payment-states
-                               person-oids studies-start-term studies-start-year))]
-    (into {}
-          (map #(vector (:person-oid %) %) payment-states))))
+  ([applications tarjonta person-oid-key]
+   (let [person-oids        (keep person-oid-key applications)
+         studies-start-term (:alkamiskausi tarjonta)
+         studies-start-year (:alkamisvuosi tarjonta)
+         payment-states     (when (and person-oids studies-start-term studies-start-year)
+                              (get-raw-payment-states
+                                person-oids studies-start-term studies-start-year))]
+     (into {}
+           (map #(vector (:person-oid %) %) payment-states))))
+  ([applications tarjonta]
+   (get-kk-payment-states applications tarjonta :person-oid)))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
