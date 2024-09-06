@@ -203,6 +203,34 @@
 
 (defn ->and-query [& queries] (apply merge queries))
 
+(defn- filter-out-unpaid-kk-haku-applications
+  [applications haku person-oid-key]
+  (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku person-oid-key)]
+    (remove (fn [application]
+              (let [kk-payment-state (get-in payment-states-by-person-oid [(person-oid-key application) :state])]
+                (= kk-payment-state "awaiting-payment")))
+         applications)))
+
+(defn- filter-out-unpaid-kk-applications
+  "Filters out applications by persons that have not yet paid a mandatory fee for the particular starting period.
+   All applications should include haku oid and person oid in the fields with respective parametrized names."
+  [tarjonta-service applications person-oid-key haku-oid-key]
+  (let [applications-with-person-oid-and-haku (filter
+                                                #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
+                                                applications)
+        remaining-applications (remove
+                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
+                                 applications)
+        applications-by-haku (group-by haku-oid-key applications-with-person-oid-and-haku)
+        haku-oids (keys applications-by-haku)
+        hakus-by-oid (into {}
+                           (map #(vector % (tarjonta-service/get-haku tarjonta-service %)) haku-oids))]
+    (->> haku-oids
+         (map #(filter-out-unpaid-kk-haku-applications
+                 (get applications-by-haku %) (get hakus-by-oid %) person-oid-key))
+         flatten
+         (concat remaining-applications))))
+
 (defn- populate-haku-applications-with-kk-payment-status
   [applications haku]
   (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku)]
@@ -720,6 +748,7 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
+  ; TODO OK-623
   (omatsivut-applications
     [_ session person-oid]
     (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -728,12 +757,14 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications (aac/get-applications-for-valintalaskenta
-                            organization-service
-                            session
-                            hakukohde-oid
-                            application-keys)]
-      (let [henkilot        (->> applications
+    (if-let [applications-non-filtered (aac/get-applications-for-valintalaskenta
+                                         organization-service
+                                         session
+                                         hakukohde-oid
+                                         application-keys)]
+      (let [applications    (filter-out-unpaid-kk-applications
+                              tarjonta-service applications-non-filtered :personOid :hakuOid)
+            henkilot        (->> applications
                                  (map :personOid)
                                  distinct
                                  (person-service/get-persons person-service))
@@ -754,6 +785,7 @@
          :applications    enriched-applications})
       {:unauthorized nil}))
 
+  ; TODO OK-623
   (siirto-applications
     [_ session hakukohde-oid application-keys]
     (if-let [applications (aac/siirto-applications
@@ -777,6 +809,7 @@
          :applications    (map (partial add-henkilo henkilot) applications)})
       {:unauthorized nil}))
 
+  ; TODO OK-623
   (kouta-application-count-for-hakukohde
     [_ session hakukohde-oid]
     (if-let [application-count (aac/kouta-application-count-for-hakukohde
@@ -787,16 +820,19 @@
       {:applicationCount application-count}
       {:unauthorized nil}))
 
+  ; TODO OK-623
   (suoritusrekisteri-applications
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
       (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
 
+  ; TODO OK-623
   (suoritusrekisteri-person-info
     [_ haku-oid hakukohde-oids offset]
     (application-store/suoritusrekisteri-person-info haku-oid hakukohde-oids offset))
 
+  ; TODO OK-623
   (suoritusrekisteri-toinenaste-applications
     [_ form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset]
     (let [form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
