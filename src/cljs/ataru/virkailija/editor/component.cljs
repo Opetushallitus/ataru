@@ -460,3 +460,32 @@
              [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]])
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
          [attachment-textarea content path]]]])))
+
+;;TODO Muokkaa UI -speksin mukaiseksi
+(defn tutkinnot
+  [_ _]
+  (let [languages (subscribe [:editor/languages])]
+    (fn [initial-content path]
+      [:div.editor-form__component-wrapper
+       [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
+       [component-content/component-content
+        path ;(:id initial-content)
+        [:div
+         [:div.editor-form__component-row-wrapper
+          [:div.editor-form__text-field-wrapper
+           [:div.infoelement
+            (->> (input-fields-with-lang-component/input-fields-with-lang
+                   (fn [lang]
+                     [input-field-component/input-field {:path        path
+                                                         :lang        lang
+                                                         :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                       (-> % .-target .-value)
+                                                                                       path :text lang])
+                                                         :value-fn    (fn [component] (get-in component [:text lang]))
+                                                         :tag         :textarea}])
+                   @languages
+                   :header? true)
+                 (map (fn [field]
+                        (into field [[:div.editor-form__markdown-anchor
+                                      (markdown-help-component/markdown-help)]])))
+                 doall)]]]]]])))
