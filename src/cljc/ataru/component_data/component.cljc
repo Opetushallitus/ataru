@@ -348,3 +348,14 @@
     :label    (:harkinnanvaraisuus-topic texts/translation-mapping)
     :children [(harkinnanvaraisuus-info metadata)
                (harkinnanvaraisuus-question metadata)]))
+
+(defn tutkinnot [metadata]
+  {:id                   "tutkinnot"
+   :fieldClass           "tutkinnot"
+   :fieldType            "tutkinnot"
+   :exclude-from-answers true
+   :params               {:deny-submit false}
+   :metadata             metadata
+   :validators           ["required"]
+   :label                (:tutkinnot-label texts/translation-mapping)
+   :text                 (:hakijan-tutkinnot texts/virkailija-texts)})
