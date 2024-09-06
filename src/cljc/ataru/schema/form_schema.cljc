@@ -142,6 +142,7 @@
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
+   #(= "tutkinnot" (:fieldClass %)) tutkinnot-schema/Tutkinnot
    #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
    #(= "formPropertyField" (:fieldClass %)) FormPropertyField
    :else info-element-schema/InfoElement))
