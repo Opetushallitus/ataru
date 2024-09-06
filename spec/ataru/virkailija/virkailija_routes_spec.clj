@@ -133,6 +133,14 @@
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
 
+(defn- post-valintalaskenta-application-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-application-details [application-key]
   (-> (mock/request :get (str "/lomake-editori/api/applications/" application-key))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
@@ -681,5 +689,41 @@
                 (should= "awaiting-payment" state)
                 (should= 2 (count events))
                 (should= ["payment-not-required" "awaiting-payment"] (map :new-state events)))))
+
+(describe "valintalaskenta"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [person-oid "1.2.3.4.5.303"
+                    term "kausi_s"
+                    year 2025
+                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                                       nil)
+                    application (get-application-by-id application-id)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 200 status)
+                (should= 1 (count body))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [person-oid "1.2.3.4.5.303"
+                    term "kausi_s"
+                    year 2025
+                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                                       nil)
+                    application (get-application-by-id application-id)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 200 status)
+                (should= 0 (count body)))))
 
 (run-specs)
