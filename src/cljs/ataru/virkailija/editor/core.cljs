@@ -84,6 +84,10 @@
                     :fieldType  "hakukohteet"}
                    [ec/hakukohteet-module content path]
 
+                   {:fieldClass "tutkinnot"
+                    :fieldType  "tutkinnot"}
+                   [ec/tutkinnot content path]
+
                    :else (do
                            (log/error content)
                            (throw (new js/Error (str "Unknown component type " content)))))]
