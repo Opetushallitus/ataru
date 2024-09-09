@@ -22,7 +22,7 @@
     (format/unparse fi-formatter date)))
 
 (defn- date-picker [application-key]
-  (let [value     (subscribe [:tutu-payment/duedate-input application-key])
+  (let [value     (subscribe [:payment/duedate-input application-key])
         on-change (fn [value]
                     (dispatch [:tutu-payment/set-duedate application-key value]))]
     [date-time-picker/date-picker
@@ -34,7 +34,7 @@
      on-change]))
 
 (defn- decision-payment-note [application-key]
-  (let [value       (subscribe [:tutu-payment/note-input application-key])]
+  (let [value       (subscribe [:payment/note-input application-key])]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
        [:textarea.application-handling__review-note-input
@@ -46,7 +46,7 @@
 
 (defn- amount-input
   [application-key placeholder disabled?]
-  (let [amount @(subscribe [:tutu-payment/amount-input application-key])]
+  (let [amount @(subscribe [:payment/amount-input application-key])]
     [(if disabled?
        :div.question-search-search-input.question-search-search-input--disabled
        :div.question-search-search-input)
@@ -109,7 +109,7 @@
              @(subscribe [:editor/virkailija-translation :tutu-kasittelymaksu-button]))]]))
 
 (defn- send-decision-invoice-button [application-key decision-pay-status]
-  (let [filled?           (subscribe [:tutu-payment/inputs-filled? application-key])
+  (let [filled?           (subscribe [:payment/inputs-filled? application-key])
         loading?          (subscribe [:state-query [:request-handles :send-decision-invoice]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__tutu-payment-send-button.application-handling__button
@@ -283,7 +283,7 @@
      ]))
 
 (defn application-payment-status []
-  (let [payments   @(subscribe [:tutu-payment/payments])
+  (let [payments   @(subscribe [:payment/payments])
         tutu-form? @(subscribe [:payment/tutu-form-selected?])
         astu-form? @(subscribe [:payment/astu-form-selected?])]
     (cond

@@ -47,12 +47,12 @@
     (or astu-form? tutu-form?)))
 
 (re-frame/reg-sub
- :tutu-payment/note-input
- (fn [db [_ application-key]]
+  :payment/note-input
+  (fn [db [_ application-key]]
    (get-tutu-payment-note-input db application-key)))
 
 (re-frame/reg-sub
-  :tutu-payment/duedate-input
+  :payment/duedate-input
   (fn [db [_ application-key]]
     (or
       (get-in db [:tutu-payment :inputs application-key :due_date])
@@ -61,17 +61,17 @@
         (format/unparse (format/formatters :date) date)))))
 
 (re-frame/reg-sub
- :tutu-payment/amount-input
- (fn [db [_ application-key]]
+  :payment/amount-input
+  (fn [db [_ application-key]]
   (get-tutu-payment-amount-input db application-key)))
 
 (re-frame/reg-sub
- :tutu-payment/inputs-filled?
- (fn [[_ application-key]]
+  :payment/inputs-filled?
+  (fn [[_ application-key]]
    [(re-frame/subscribe [:state-query [:tutu-payment :inputs application-key]])
     (re-frame/subscribe [:state-query [:tutu-payment :applications application-key :decision :amount]])
-    (re-frame/subscribe [:tutu-payment/duedate-input])])
- (fn [[{:keys [note amount]} decision-amount due_date]]
+    (re-frame/subscribe [:payment/duedate-input])])
+  (fn [[{:keys [note amount]} decision-amount due_date]]
    (let [amount (or amount decision-amount)]
      (and
         (string? amount)
@@ -81,7 +81,7 @@
         (some? due_date)))))
 
 (re-frame/reg-sub
- :tutu-payment/payments
- (fn [db [_ application-key]]
+  :payment/payments
+  (fn [db [_ application-key]]
    (get-in db [:tutu-payment :applications application-key])))
 

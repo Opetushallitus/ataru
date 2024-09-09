@@ -50,7 +50,8 @@
     "invited-to-exam"
     "evaluating"
     "valintaesitys"
-    "decision-fee-invoiced"})
+    "decision-fee-invoiced"
+    "decision-fee-paid"})
 
 (def application-hakukohde-processing-states-astu
   (reduce (fn [acc [k v]]
