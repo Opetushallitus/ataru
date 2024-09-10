@@ -2340,7 +2340,7 @@
    :maksupyynto-due-label                                    {:fi "Eräpäivä"
                                                               :sv ""
                                                               :en ""}
-   :maksupyynto-maksupyynto-header                           {:fi "Maksupyyntö"
+   :maksupyynto-header                                       {:fi "Maksupyyntö"
                                                               :sv ""
                                                               :en ""}
    :maksupyynto-processing-header                            {:fi "Käsittelymaksu:"

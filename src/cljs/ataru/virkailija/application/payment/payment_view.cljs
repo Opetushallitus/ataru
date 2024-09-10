@@ -24,7 +24,7 @@
 (defn- date-picker [application-key]
   (let [value     (subscribe [:payment/duedate-input application-key])
         on-change (fn [value]
-                    (dispatch [:tutu-payment/set-duedate application-key value]))]
+                    (dispatch [:payment/set-duedate application-key value]))]
     [date-time-picker/date-picker
      (str "application-handling__tutu-payment-duedate-input-"
           application-key)
@@ -40,7 +40,7 @@
        [:textarea.application-handling__review-note-input
         {:type      "text"
          :value     @value
-         :on-change #(dispatch [:tutu-payment/set-note-input
+         :on-change #(dispatch [:payment/set-note-input
                                 application-key
                                 (.. % -target -value)])}]])))
 
@@ -57,7 +57,7 @@
        :pattern     "[0-9]{1,4}"
        :title       @(subscribe [:editor/virkailija-translation :maksupyynto-amount-input-placeholder])
        :disabled    disabled?
-       :on-change   #(dispatch [:tutu-payment/set-amount
+       :on-change   #(dispatch [:payment/set-amount
                                 application-key
                                 (.. % -target -value)])}]
      [:span (str "€")]
@@ -106,15 +106,15 @@
                        " application-handling__send-information-request-button--cursor-pointer"))}
      [:div (if @loading?
              [:span [:i.zmdi.zmdi-spinner.spin]]
-             @(subscribe [:editor/virkailija-translation :tutu-kasittelymaksu-button]))]]))
+             @(subscribe [:editor/virkailija-translation :maksupyynto-kasittelymaksu-button]))]]))
 
-(defn- send-decision-invoice-button [application-key decision-pay-status]
+(defn- send-decision-invoice-button [application-key decision-pay-status payment-type]
   (let [filled?           (subscribe [:payment/inputs-filled? application-key])
         loading?          (subscribe [:state-query [:request-handles :send-decision-invoice]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__tutu-payment-send-button.application-handling__button
-     {:on-click #(dispatch [:payment/send-decision-invoice application-key])
-      :disabled (or @loading? (not @filled?) (not @can-edit?))
+     {:on-click #(dispatch [:payment/send-decision-invoice application-key payment-type])
+      :disabled  false                                           ;(or @loading? (not @filled?) (not @can-edit?))
       :class    (if (and @filled? @can-edit? (not @loading?))
                   "application-handling__send-information-request-button--enabled application-handling__send-information-request-button--cursor-pointer"
                   "application-handling__send-information-request-button--disabled application-handling__send-information-request-button--cursor-default")
@@ -135,10 +135,10 @@
         decision-pay-status  (keyword (:status decision))
         state                (or (keyword processing-state) :unprocessed)
         amount-label         (case state
-                               :unprocessed @(subscribe [:editor/virkailija-translation :tutu-amount-label])
-                               :processing-fee-paid @(subscribe [:editor/virkailija-translation :tutu-amount-label])
-                               :processing @(subscribe [:editor/virkailija-translation :tutu-amount-label])
-                               :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                               :unprocessed @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :processing-fee-paid @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :processing @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
                                :decision-fee-paid @(subscribe [:editor/virkailija-translation :maksupyynto-total-paid-label])
                                nil)
         amount-value         (case state
@@ -206,7 +206,7 @@
            [:div @(subscribe [:editor/virkailija-translation :maksupyynto-message])]
            [decision-payment-note application-key]
 
-           [send-decision-invoice-button application-key decision-pay-status]
+           [send-decision-invoice-button application-key decision-pay-status "tutu"]
            ])])
      ]))
 
@@ -219,8 +219,8 @@
         decision-pay-status  (keyword (:status decision))
         state                (or (keyword processing-state) :processing)
         amount-label         (case state
-                               :processing @(subscribe [:editor/virkailija-translation :tutu-amount-label])
-                               :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                               :processing @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
                                :decision-fee-paid @(subscribe [:editor/virkailija-translation :maksupyynto-total-paid-label])
                                nil)
         amount-value         (case state
@@ -279,7 +279,7 @@
                 (= :overdue decision-pay-status) false
                 (#{:processing :decision-fee-outstanding} state) true)
           [:<>
-           [send-decision-invoice-button application-key decision-pay-status]])])
+           [send-decision-invoice-button application-key decision-pay-status "astu"]])])
      ]))
 
 (defn application-payment-status []

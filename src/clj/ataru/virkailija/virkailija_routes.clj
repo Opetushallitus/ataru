@@ -1045,10 +1045,10 @@
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
 
       (api/POST "/maksupyynto" {session :session}
-        :body [input maksut-schema/TutuLaskuCreate]
+        :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [application-key locale message]} input
+        (let [{:keys [reference locale message]} input
               lasku-input (-> input
                               (dissoc :message)
                               (dissoc :locale))
@@ -1060,7 +1060,7 @@
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
                             session
-                            application-key
+                            reference
                             message
                             payment-url
                             "decision-fee-outstanding")]
@@ -1068,7 +1068,7 @@
               (log/warn "Review result" result)
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
-                                                (:application-key application-key)
+                                                (:application-key reference)
                                                 " käsittely ei ole sallittu")})))))
 
     (api/context "/tulos-service" []
