@@ -13,7 +13,7 @@
   (siirtotiedosto-applications [this params])
   (siirtotiedosto-forms [this params])
   (siirtotiedosto-everything [this siirtotiedosto-data])
-  (form-next-siirtotiedosto [this]))
+  (create-next-siirtotiedosto [this]))
 
 (def applications-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :applications-page-size)) (catch Exception _ nil)) 10000))
 (def forms-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :forms-page-size)) (catch Exception _ nil)) 500))
@@ -125,7 +125,7 @@
           forms-result        (siirtotiedosto-forms this params)]
       (combine-results applications-result forms-result)))
 
-  (form-next-siirtotiedosto
+  (create-next-siirtotiedosto
     [this]
     (let [execution-id            (str (UUID/randomUUID))
           previous-success        (siirtotiedosto-store/get-latest-successful-data)

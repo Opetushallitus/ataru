@@ -48,7 +48,7 @@
                     mocked-error-message "Surprising fail for testing purposes!"
                     siirtotiedosto-client (create-mock-siirtotiedosto-client-that-always-fails config mocked-error-message)
                     siirtotiedosto-service (CommonSiirtotiedostoService. siirtotiedosto-client)
-                    result (siirtotiedosto-service/form-next-siirtotiedosto siirtotiedosto-service)]
+                    result (siirtotiedosto-service/create-next-siirtotiedosto siirtotiedosto-service)]
                 (should= false (:success result))
                 (should= (:window-end previous-success) (:window-start result))
                 (should= (:error-message result) mocked-error-message)))
@@ -56,7 +56,7 @@
               (let [previous-success (siirtotiedosto-store/get-latest-successful-data)
                     siirtotiedosto-client (create-mock-siirtotiedosto-client config)
                     siirtotiedosto-service (CommonSiirtotiedostoService. siirtotiedosto-client)
-                    result (siirtotiedosto-service/form-next-siirtotiedosto siirtotiedosto-service)]
+                    result (siirtotiedosto-service/create-next-siirtotiedosto siirtotiedosto-service)]
                 (should= true (:success result))
                 (should= (:window-end previous-success) (:window-start result))
                 (should= (get-in result [:info :applications]) 5) ;these amounts depend on initial fixture contents
