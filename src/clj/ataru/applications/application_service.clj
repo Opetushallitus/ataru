@@ -330,6 +330,7 @@
   [henkilot application]
   (let [person         (get henkilot (:personOid application))
         kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
+        aidinkieli     (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi])
         asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
@@ -351,8 +352,8 @@
                                      :sukunimi
                                      :sukupuoli
                                      :turvakielto
-                                     :aidinkieli
                                      :kutsumanimi]))
+        (assoc-in [:person :aidinkieli] aidinkieli)
         (assoc-in [:person :asiointiKieli] (select-keys asiointikieli
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
@@ -788,12 +789,15 @@
   ; TODO OK-623
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (aac/siirto-applications
-                           tarjonta-service
-                           organization-service
-                           session
-                           hakukohde-oid
-                           application-keys)]
+    (if-let [applications (filter-out-unpaid-kk-applications
+                            tarjonta-service
+                            (aac/siirto-applications
+                              tarjonta-service
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                            :personOid :hakuOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
