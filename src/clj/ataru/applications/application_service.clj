@@ -786,7 +786,6 @@
          :applications    enriched-applications})
       {:unauthorized nil}))
 
-  ; TODO OK-623
   (siirto-applications
     [_ session hakukohde-oid application-keys]
     (if-let [applications (filter-out-unpaid-kk-applications
@@ -828,8 +827,10 @@
   (suoritusrekisteri-applications
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
-                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
+          applications (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)
+          update-fn    (partial filter-out-unpaid-kk-applications tarjonta-service)]
+      (update applications :applications update-fn :personOid :applicationSystemId)))
 
   ; TODO OK-623
   (suoritusrekisteri-person-info
