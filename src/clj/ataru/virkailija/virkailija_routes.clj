@@ -1669,22 +1669,20 @@
                        {modifiedBefore :- s/Str nil}]
         :return s/Any
         (if (or (nil? modifiedBefore)
-                 (nil? modifiedAfter))
+                (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:modified-after  modifiedAfter
-                                         :modified-before (or modifiedBefore (.format
-                                                                               (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
-                                                                               (Date.)))
-                                         :execution-id (str (UUID/randomUUID))}]
-              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
-              (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
-                    {applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
-                    combined-result {:success (and forms-success applications-success)}]
-                (log/info "Siirtotiedosto success" (:success combined-result))
+            (let [params {:window-start modifiedAfter
+                          :window-end   (or modifiedBefore (.format
+                                                             (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
+                                                             (Date.)))
+                          :execution-uuidid (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params: " params)
+              (let [combined-result (siirtotiedosto-service/siirtotiedosto-everything siirtotiedosto-service params)]
+                (log/info "Siirtotiedosto result" combined-result)
                 (match combined-result
                        {:success true}
-                       (response/ok combined-result) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+                       (response/ok combined-result)        ;todo, what do we actually want to return here? Maybe some timestamp information at least.
                        {:success false}
                        (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
@@ -1698,9 +1696,9 @@
                 (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:modified-after  modifiedAfter
-                                         :modified-before modifiedBefore
-                                         :execution-id (str (UUID/randomUUID))}]
+            (let [siirtotiedosto-params {:window-start modifiedAfter
+                                         :window-end   modifiedBefore
+                                         :execution-uuid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params for applications: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto applications success" applications-success)
@@ -1718,9 +1716,9 @@
                 (nil? modifiedAfter))
           (response/bad-request {:error "Both modifiedAfter and modifiedBefore params are required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:modified-after  modifiedAfter
-                                         :modified-before modifiedBefore
-                                         :execution-id (str (UUID/randomUUID))}]
+            (let [siirtotiedosto-params {:window-start modifiedAfter
+                                         :window-end   modifiedBefore
+                                         :execution-uuid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params for forms: " siirtotiedosto-params)
               (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto forms success" forms-success)
@@ -1736,7 +1734,7 @@
         (if (nil? haku-oid)
           (response/bad-request {:error "Haku oid param required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:haku-oid haku-oid
+            (let [siirtotiedosto-params {:haku-oid     haku-oid
                                          :execution-id (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]

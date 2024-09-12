@@ -30,7 +30,6 @@
                          [io.undertow/undertow-core "2.3.15.Final"]
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
-                         [io.netty/netty-codec-http2 "4.1.100.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
                          [org.jboss.xnio/xnio-nio "3.8.14.Final"]]
   :dependencies [[org.clojure/clojure "1.11.2"]
@@ -109,7 +108,7 @@
                  [com.amazonaws/aws-java-sdk-cloudwatch "1.12.763"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
-                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT" :exclusions [io.netty/netty-codec-http2]]
+                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
@@ -340,13 +339,26 @@
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
+             :ataru-main {:main ataru.core
+                          :target-path "ataru"
+                          :source-paths ["src/clj" "src/cljc"]
+                          :test-paths ["spec"]
+                          :uberjar-name "ataru.jar"}
+
+             :ovara {:main ataru.siirtotiedosto-app
+                     :target-path "ataru"
+                     :source-paths ["src/clj" "src/cljc"]
+                     :test-paths ["spec"]
+                     :env            {:config "config/siirtotiedostoapp-dev.edn"}
+                     :uberjar-name "ovara-ataru.jar"}}
+
              :opintopolku-local {:local-repo "/m2-home/.m2/repository"}
              :opintopolku-local-virkailija {:figwheel {:server-ip "ataru-figwheel-virkailija.kehittajan-oma-kone.testiopintopolku.fi"
                                                        :server-port 3449
                                                        :repl false}}
              :opintopolku-local-hakija {:figwheel {:server-ip "ataru-figwheel-hakija.kehittajan-oma-kone.testiopintopolku.fi"
                                                    :server-port 3450
-                                                   :repl false}}}
+                                                   :repl false}}
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]

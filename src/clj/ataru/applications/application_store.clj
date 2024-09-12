@@ -1616,12 +1616,12 @@
   (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications-for-ids {:ids ids})
        (map unwrap-siirtotiedosto-application)))
 
-(defn siirtotiedosto-application-ids [{:keys [modified-before modified-after haku-oid] :as params}]
+(defn siirtotiedosto-application-ids [{:keys [window-start window-end haku-oid] :as params}]
   (log/info "Fetching application ids for params:" params)
   (if (some? haku-oid)
     (exec-db :db queries/yesql-get-siirtotiedosto-application-ids-for-haku {:haku_oid haku-oid})
-    (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:modified_before modified-before
-                                                                   :modified_after modified-after})))
+    (exec-db :db queries/yesql-get-siirtotiedosto-application-ids {:window_start window-start
+                                                                   :window_end window-end})))
 (defn kouta-application-count-for-hakukohde [hakukohde-oid]
   (->> (exec-db :db queries/yesql-kouta-application-count-for-hakukohde {:hakukohde_oid    hakukohde-oid})
        (map #(:application_count %))

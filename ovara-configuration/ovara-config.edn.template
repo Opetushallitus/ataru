@@ -1,0 +1,16 @@
+; Configuration template for remote deployments
+{:db {:database-name "{{ataru_db_name}}"
+       :pool-name "ataru-pool"
+       :username "{{postgres_app_user}}"
+       :password "{{ataru_db_app_password}}"
+       :server-name "{{ataru_db_host}}"
+       :port-number {{ataru_db_port}}
+       :schema "public"
+       :minimum-idle {{ataru_db_max_pool_size}}
+       :maximum-pool-size {{ataru_db_max_pool_size}}}
+
+ :siirtotiedostot {:s3-bucket "{{ovara_siirtotiedosto_s3_bucket}}"
+                   :aws-region "{{aws_region}}"
+                   :transferFileTargetRoleArn "{{ovara_siirtotiedosto_s3_target_role_arn}}"
+                   :forms-page-size "{{ataru_siirtotiedosto_forms_page_size | default('500')}}"
+                   :applications-page-size "{{ataru_siirtotiedosto_applications_page_size | default('25000')}}"}}
