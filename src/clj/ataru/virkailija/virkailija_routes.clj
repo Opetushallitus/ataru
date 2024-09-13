@@ -1524,7 +1524,8 @@
               (response/unauthorized {:error "Unauthorized"})
               :else
               (response/ok
-                (application-store/valinta-tulos-service-applications
+                (application-service/valinta-tulos-service-applications
+                  application-service
                   hakuOid
                   hakukohdeOid
                   hakemusOids
@@ -1560,18 +1561,11 @@
                                  (conj (application-service/->person-oid-query henkiloOid))
                                  true
                                  seq)]
-          (if-let [applications (access-controlled-application/valinta-ui-applications
-                                  organization-service
-                                  tarjonta-service
-                                  person-service
+          (if-let [applications (application-service/valinta-ui-applications
+                                  application-service
                                   session
                                   (reduce application-service/->and-query queries))]
-            (response/ok
-              (->> applications
-                   (map #(dissoc % :hakukohde))
-                   (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
-                                                     :person-oid    :personOid
-                                                     :asiointikieli :asiointiKieli}))))
+            (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
 

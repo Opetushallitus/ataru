@@ -476,7 +476,9 @@
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
   (get-ensisijainen-application-counts-for-haku [this haku-oid])
-  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete]))
+  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete])
+  (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
+  (valinta-ui-applications [this session query]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -749,7 +751,7 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
-  ; TODO OK-623 DO NOT FILTER HERE?
+  ; TODO this doesn't currently filter out unpaid kk applications, should it? Probably not...
   (omatsivut-applications
     [_ session person-oid]
     (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -812,7 +814,6 @@
          :applications    (map (partial add-henkilo henkilot) applications)})
       {:unauthorized nil}))
 
-  ; TODO OK-623
   (kouta-application-count-for-hakukohde
     [_ session hakukohde-oid]
     (if-let [application-count (aac/kouta-application-count-for-hakukohde
@@ -823,7 +824,6 @@
       {:applicationCount application-count}
       {:unauthorized nil}))
 
-  ; TODO OK-623
   (suoritusrekisteri-applications
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
@@ -832,12 +832,10 @@
           update-fn    (partial filter-out-unpaid-kk-applications tarjonta-service)]
       (update applications :applications update-fn :personOid :applicationSystemId)))
 
-  ; TODO OK-623
   (suoritusrekisteri-person-info
     [_ haku-oid hakukohde-oids offset]
     (application-store/suoritusrekisteri-person-info haku-oid hakukohde-oids offset))
 
-  ; TODO OK-623
   (suoritusrekisteri-toinenaste-applications
     [_ form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset]
     (let [form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
@@ -859,6 +857,33 @@
         questions
         urheilija-amm-hakukohdes
         haun-hakukohteet)))
+
+  (valinta-tulos-service-applications
+    [_ haku-oid hakukohde-oid hakemus-oids offset]
+    (let [applications (application-store/valinta-tulos-service-applications
+                         haku-oid
+                         hakukohde-oid
+                         hakemus-oids
+                         offset)
+          update-fn    (partial filter-out-unpaid-kk-applications tarjonta-service)]
+      (update applications :applications update-fn :henkiloOid :hakuOid)))
+
+  (valinta-ui-applications
+    [_ session query]
+      (let [applications (filter-out-unpaid-kk-applications
+                           tarjonta-service
+                           (aac/valinta-ui-applications
+                             organization-service
+                             tarjonta-service
+                             person-service
+                             session
+                             query)
+                           :person-oid :haku-oid)]
+        (->> applications
+             (map #(dissoc % :hakukohde))
+             (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
+                                               :person-oid    :personOid
+                                               :asiointikieli :asiointiKieli})))))
 
   (get-applications-paged
     [_ session params]
