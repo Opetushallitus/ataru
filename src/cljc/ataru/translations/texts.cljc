@@ -332,9 +332,6 @@
    :harkinnanvaraisuus-reason-3                 {:fi "Riittämätön tutkintokielen taito"
                                                  :sv "Otillräcklig språkkunskap i examensspråket"
                                                  :en ""}
-   :tutkinnot-label                             {:fi "Suoritetut tutkinnot"
-                                                 :sv "SV: Suoritetut tutkinnot"
-                                                 :en ""}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
@@ -2935,6 +2932,20 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}})
+
+(def koski-tutkinnot-texts
+  {:section-label            {:fi "Tutkinnot"
+                              :sv "SV: Tutkinnot"
+                              :en ""}
+   :section-description      {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                              :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                              :en ""}
+   :info-label               {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                              :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                              :en ""}
+   :hakijan-tutkinnot        {:fi "Hakijan suoritetut tutkinnot"
+                              :sv "SV: Hakijan suoritetut tutkinnot"
+                              :en "EN: Hakijan suoritetut tutkinnot"}})
 
 (defn email-applied-error
   [email preferred-name]
