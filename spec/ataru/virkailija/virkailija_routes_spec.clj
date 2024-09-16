@@ -133,6 +133,13 @@
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
 
+(defn- get-tilastokeskus-application-query [query]
+  (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-valinta-ui-application-query [query]
   (-> (mock/request :get "/lomake-editori/api/external/valinta-ui" query)
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
@@ -954,6 +961,54 @@
                                           nil)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "tilastokeskus"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
+                                          application-fixtures/application-without-hakemusmaksu-exemption
+                                          nil)
+                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (println applications)))
+
+          (it "should return an application with kk payment data"
+              (let [person-oid "1.2.3.4.5.303"
+                    term "kausi_s"
+                    year 2025
+                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
+                                          application-fixtures/application-without-hakemusmaksu-exemption
+                                          nil)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [person-oid "1.2.3.4.5.303"
+                    term "kausi_s"
+                    year 2025
+                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
+                                          application-fixtures/application-without-hakemusmaksu-exemption
+                                          nil)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
