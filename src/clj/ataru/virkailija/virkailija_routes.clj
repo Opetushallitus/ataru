@@ -1624,6 +1624,7 @@
                                 application-key)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/GET "/tilastokeskus" {session :session}
         :summary "Get application info for tilastokeskus"
         :query-params [hakuOid :- s/Str
