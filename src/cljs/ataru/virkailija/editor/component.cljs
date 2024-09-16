@@ -49,6 +49,7 @@
 (defn component-group [content path children]
   (let [id (:id content)
         languages @(subscribe [:editor/languages])
+        virkailija-lang   @(subscribe [:editor/virkailija-lang])
         value @(subscribe [:editor/get-component-value path])
         group-header-text (case (:fieldClass content)
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-element])
@@ -66,6 +67,11 @@
       path                                                  ;id
       [:div
        [:div.editor-form__text-field-wrapper
+        (when (some? (:description content))
+          [:span.editor-form__component-item-header (get-in content [:description virkailija-lang]) [:br]]
+          )
+        ;;(when (:show-child-component-names content)
+        ;;  [(get-content-list nil value)])
         [:header.editor-form__component-item-header header-label-text]
         (input-fields-with-lang-component/input-fields-with-lang
           (fn [lang]
@@ -465,31 +471,38 @@
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
          [attachment-textarea content path]]]])))
 
-;;TODO Muokkaa UI -speksin mukaiseksi
-(defn tutkinnot
-  [_ _]
-  (let [languages (subscribe [:editor/languages])]
-    (fn [initial-content path]
-      [:div.editor-form__component-wrapper
-       [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
-       [component-content/component-content
-        path ;(:id initial-content)
-        [:div
-         [:div.editor-form__component-row-wrapper
-          [:div.editor-form__text-field-wrapper
-           [:div.infoelement
-            (->> (input-fields-with-lang-component/input-fields-with-lang
-                   (fn [lang]
-                     [input-field-component/input-field {:path        path
-                                                         :lang        lang
-                                                         :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                       (-> % .-target .-value)
-                                                                                       path :text lang])
-                                                         :value-fn    (fn [component] (get-in component [:text lang]))
-                                                         :tag         :textarea}])
-                   @languages
-                   :header? true)
-                 (map (fn [field]
-                        (into field [[:div.editor-form__markdown-anchor
-                                      (markdown-help-component/markdown-help)]])))
-                 doall)]]]]]])))
+(defn tutkinnot-wrapper [content path children]
+  (let [id                (:id content)
+        languages         @(subscribe [:editor/languages])
+        virkailija-lang   @(subscribe [:editor/virkailija-lang])
+        value             @(subscribe [:editor/get-component-value path])
+        group-header-text @(subscribe [:editor/virkailija-translation :wrapper-element])
+        header-label-text @(subscribe [:editor/virkailija-translation :wrapper-header])]
+    [:div.editor-form__component-wrapper
+     {:data-test-id "tutkinnot-wrapper"}
+     [text-header-component/text-header id group-header-text path (:metadata content)
+      :sub-header (:label value)]
+     [component-content/component-content
+      path ;id
+      [:div
+       [:div.editor-form__text-field-wrapper
+        (when (some? (:description content))
+          [:span.editor-form__component-item-header (get-in content [:description virkailija-lang]) [:br]]
+          )
+        ;;(when (:show-child-component-names content)
+        ;;  [(get-content-list nil value)])
+        [:header.editor-form__component-item-header header-label-text]
+        (input-fields-with-lang-component/input-fields-with-lang
+          (fn [lang]
+            [input-field-component/input-field {:path        path
+                                                :lang        lang
+                                                :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                              (-> % .-target .-value)
+                                                                              path :label lang])}])
+          languages
+          :header? true)]
+       [:div.editor-form__wrapper-element-well
+        children]
+       [dnd/drag-n-drop-spacer (conj path :children (count children))]
+       (when-not @(subscribe [:editor/component-locked? path])
+         [toolbar/add-component (conj path :children (count children)) false])]]]))
