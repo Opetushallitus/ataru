@@ -201,3 +201,31 @@
                                     (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
                                          payment-events))))
     {}))
+
+(defn- filter-out-unpaid-kk-haku-applications
+  [applications haku person-oid-key]
+  (let [payment-states-by-person-oid (get-kk-payment-states applications haku person-oid-key)]
+    (remove (fn [application]
+              (let [kk-payment-state (get-in payment-states-by-person-oid [(person-oid-key application) :state])]
+                (= kk-payment-state "awaiting-payment")))
+            applications)))
+
+(defn filter-out-unpaid-kk-applications
+  "Filters out applications by persons that have not yet paid a mandatory fee for the particular starting period.
+   All applications should include haku oid and person oid in the fields with respective parametrized names."
+  [tarjonta-service applications person-oid-key haku-oid-key]
+  (let [applications-with-person-oid-and-haku (filter
+                                                #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
+                                                applications)
+        remaining-applications (remove
+                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
+                                 applications)
+        applications-by-haku (group-by haku-oid-key applications-with-person-oid-and-haku)
+        haku-oids (keys applications-by-haku)
+        hakus-by-oid (into {}
+                           (map #(vector % (tarjonta/get-haku tarjonta-service %)) haku-oids))]
+    (->> haku-oids
+         (map #(filter-out-unpaid-kk-haku-applications
+                 (get applications-by-haku %) (get hakus-by-oid %) person-oid-key))
+         flatten
+         (concat remaining-applications))))
