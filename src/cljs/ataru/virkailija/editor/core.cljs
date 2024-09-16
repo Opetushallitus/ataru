@@ -39,6 +39,10 @@
                     :fieldType  "adjacentfieldset"}
                    [ec/adjacent-fieldset content path children]
 
+                   {:fieldClass "wrapperElement"
+                    :fieldType  "tutkinnot"}
+                   [ec/tutkinnot-wrapper content path children]
+
                    {:fieldClass "wrapperElement"}
                    [ec/component-group content path children]
 
@@ -83,10 +87,6 @@
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}
                    [ec/hakukohteet-module content path]
-
-                   {:fieldClass "tutkinnot"
-                    :fieldType  "tutkinnot"}
-                   [ec/tutkinnot content path]
 
                    :else (do
                            (log/error content)
