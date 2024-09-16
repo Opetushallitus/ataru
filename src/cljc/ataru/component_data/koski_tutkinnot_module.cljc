@@ -152,7 +152,6 @@
         :description (:tutkintotaso-description koski-tutkinnot-texts)
         :options (tutkinto-tasot metadata))])
 
-
 (defn koski-tutkinnot-module [metadata]
   (assoc (component/form-section metadata)
     :fieldType "tutkinnot"
