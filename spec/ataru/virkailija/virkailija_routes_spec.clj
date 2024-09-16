@@ -735,6 +735,17 @@
                 (should= 2 (count events))
                 (should= ["payment-not-required" "awaiting-payment"] (map :new-state events)))))
 
+(defn- init-and-get-kk-fixtures []
+  (let [person-oid "1.2.3.4.5.303"
+        term "kausi_s"
+        year 2025
+        application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                           application-fixtures/application-without-hakemusmaksu-exemption
+                                           nil)
+        application (get-application-by-id application-id)
+        haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)]
+    [person-oid term year application haku-oid]))
+
 (describe "valintalaskenta"
           (tags :unit)
 
@@ -742,45 +753,30 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
                     resp (post-valintalaskenta-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count body))))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (post-valintalaskenta-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count body))))
+                (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (post-valintalaskenta-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 0 (count body)))))
+                (should= 0 (count applications)))))
 
 (describe "siirto"
           (tags :unit)
@@ -789,45 +785,30 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
                     resp (post-siirto-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count body))))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (post-siirto-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count body))))
+                (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    application-id (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    application (get-application-by-id application-id)
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (post-siirto-application-query [(:key application)])
                     status (:status resp)
-                    body (:body resp)]
+                    applications (:body resp)]
                 (should= 200 status)
-                (should= 0 (count body)))))
+                (should= 0 (count applications)))))
 
 (describe "suoritusrekisteri"
           (tags :unit)
@@ -836,25 +817,15 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (post-sure-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
                 (should= 200 status)
-                (should= 1 (count applications))
-                (println applications)))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (post-sure-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -863,13 +834,7 @@
                 (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                                       application-fixtures/application-without-hakemusmaksu-exemption
-                                                       nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (post-sure-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -884,25 +849,15 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (post-vts-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
                 (should= 200 status)
-                (should= 1 (count applications))
-                (println applications)))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (post-vts-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -911,13 +866,7 @@
                 (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (post-vts-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -932,25 +881,15 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count applications))
-                (println applications)))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -959,13 +898,7 @@
                 (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -980,25 +913,15 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count applications))
-                (println applications)))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -1007,13 +930,7 @@
                 (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -1028,25 +945,15 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [_ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (get-valintapiste-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count applications))
-                (println applications)))
+                (should= 1 (count applications))))
 
           (it "should return an application with kk payment data"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-not-required person-oid term year nil nil)
                     resp (get-valintapiste-application-query {:hakuOid haku-oid})
                     status (:status resp)
@@ -1055,13 +962,7 @@
                 (should= 1 (count applications))))
 
           (it "should not return an application awaiting kk payment"
-              (let [person-oid "1.2.3.4.5.303"
-                    term "kausi_s"
-                    year 2025
-                    haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)
-                    _ (db/init-db-fixture fixtures/payment-exemption-test-form
-                                          application-fixtures/application-without-hakemusmaksu-exemption
-                                          nil)
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required person-oid term year nil nil)
                     resp (get-valintapiste-application-query {:hakuOid haku-oid})
                     status (:status resp)
