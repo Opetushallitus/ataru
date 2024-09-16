@@ -32,6 +32,12 @@
     :payment-ok-via-linked-oid
     :payment-paid})
 
+(def valid-not-awaiting-states
+  #{nil
+    :payment-not-required
+    :payment-ok-via-linked-oid
+    :payment-paid})
+
 (defn- set-payment-state
   [person-oid term year new-state virkailija-oid message]
   (if (and (contains? valid-payment-states (keyword new-state))
@@ -202,18 +208,21 @@
                                          payment-events))))
     {}))
 
-(defn- filter-out-unpaid-kk-haku-applications
-  [applications haku person-oid-key]
+(defn- filter-kk-haku-applications-by-state
+  [applications haku person-oid-key filter-states]
   (let [payment-states-by-person-oid (get-kk-payment-states applications haku person-oid-key)]
-    (remove (fn [application]
-              (let [kk-payment-state (get-in payment-states-by-person-oid [(person-oid-key application) :state])]
-                (= kk-payment-state "awaiting-payment")))
+    (filter (fn [application]
+              (let [kk-payment-state (get-in payment-states-by-person-oid
+                                             [(person-oid-key application) :state])]
+                (contains? filter-states (keyword kk-payment-state))))
             applications)))
 
-(defn filter-out-unpaid-kk-applications
-  "Filters out applications by persons that have not yet paid a mandatory fee for the particular starting period.
-   All applications should include haku oid and person oid in the fields with respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key]
+; TODO: requires-higher-education-application-fee filtering?
+(defn filter-application-list-by-kk-payment-state
+  "Filters an application list by kk payment state. Add nil to states-to-keep if you want to also include applications
+   with no payment data. Applications should include haku oid and person oid in the fields with
+   respective parametrized names."
+  [tarjonta-service applications person-oid-key haku-oid-key states-to-keep]
   (let [applications-with-person-oid-and-haku (filter
                                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
                                                 applications)
@@ -225,7 +234,16 @@
         hakus-by-oid (into {}
                            (map #(vector % (tarjonta/get-haku tarjonta-service %)) haku-oids))]
     (->> haku-oids
-         (map #(filter-out-unpaid-kk-haku-applications
-                 (get applications-by-haku %) (get hakus-by-oid %) person-oid-key))
+         (map #(filter-kk-haku-applications-by-state
+                 (get applications-by-haku %) (get hakus-by-oid %)
+                 person-oid-key states-to-keep))
          flatten
          (concat remaining-applications))))
+
+(defn filter-out-unpaid-kk-applications
+  "Filters out applications by persons that have not yet paid a mandatory fee for the application haku's starting period.
+   Applications should include haku oid and person oid in the fields with respective parametrized names."
+  [tarjonta-service applications person-oid-key haku-oid-key]
+  (filter-application-list-by-kk-payment-state tarjonta-service applications
+                                               person-oid-key haku-oid-key
+                                               valid-not-awaiting-states))
