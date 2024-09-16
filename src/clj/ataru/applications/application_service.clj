@@ -203,34 +203,6 @@
 
 (defn ->and-query [& queries] (apply merge queries))
 
-(defn- filter-out-unpaid-kk-haku-applications
-  [applications haku person-oid-key]
-  (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku person-oid-key)]
-    (remove (fn [application]
-              (let [kk-payment-state (get-in payment-states-by-person-oid [(person-oid-key application) :state])]
-                (= kk-payment-state "awaiting-payment")))
-         applications)))
-
-(defn- filter-out-unpaid-kk-applications
-  "Filters out applications by persons that have not yet paid a mandatory fee for the particular starting period.
-   All applications should include haku oid and person oid in the fields with respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key]
-  (let [applications-with-person-oid-and-haku (filter
-                                                #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                                applications)
-        remaining-applications (remove
-                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                 applications)
-        applications-by-haku (group-by haku-oid-key applications-with-person-oid-and-haku)
-        haku-oids (keys applications-by-haku)
-        hakus-by-oid (into {}
-                           (map #(vector % (tarjonta-service/get-haku tarjonta-service %)) haku-oids))]
-    (->> haku-oids
-         (map #(filter-out-unpaid-kk-haku-applications
-                 (get applications-by-haku %) (get hakus-by-oid %) person-oid-key))
-         flatten
-         (concat remaining-applications))))
-
 (defn- populate-haku-applications-with-kk-payment-status
   [applications haku]
   (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku)]
@@ -760,7 +732,7 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications (filter-out-unpaid-kk-applications tarjonta-service
+    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service
                             (aac/get-applications-for-valintalaskenta
                               organization-service
                               session
@@ -790,7 +762,7 @@
 
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (filter-out-unpaid-kk-applications
+    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications
                             tarjonta-service
                             (aac/siirto-applications
                               tarjonta-service
@@ -829,7 +801,7 @@
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
           applications (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)
-          update-fn    (partial filter-out-unpaid-kk-applications tarjonta-service)]
+          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
       (update applications :applications update-fn :personOid :applicationSystemId)))
 
   (suoritusrekisteri-person-info
@@ -865,12 +837,12 @@
                          hakukohde-oid
                          hakemus-oids
                          offset)
-          update-fn    (partial filter-out-unpaid-kk-applications tarjonta-service)]
+          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
       (update applications :applications update-fn :henkiloOid :hakuOid)))
 
   (valinta-ui-applications
     [_ session query]
-      (let [applications (filter-out-unpaid-kk-applications
+      (let [applications (kk-application-payment/filter-out-unpaid-kk-applications
                            tarjonta-service
                            (aac/valinta-ui-applications
                              organization-service
