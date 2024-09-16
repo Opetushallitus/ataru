@@ -118,28 +118,32 @@
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
-   #(= "tutkinnot" (:fieldClass %)) tutkinnot-schema/Tutkinnot
    #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
-                             :id                                         s/Str
-                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                   [(s/conditional
-                                                                            #(or (= "wrapperElement" (:fieldClass %))
-                                                                                 (= "questionGroup" (:fieldClass %)))
-                                                                            (s/recursive #'WrapperElement)
-                                                                            :else
-                                                                            BasicElement)]
-                             :metadata                                   element-metadata-schema/ElementMetadata
-                             (s/optional-key :version)                   s/Str
-                             (s/optional-key :child-validator)           child-validator-schema/ChildValidator
-                             (s/optional-key :params)                    params-schema/Params
-                             (s/optional-key :label)                     localized-schema/LocalizedString
-                             (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module)                    module-schema/Module
-                             (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                             (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
+(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
+                             :id                                          s/Str
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot"])
+                             :children                                    [(s/conditional
+                                                                             #(or (= "wrapperElement" (:fieldClass %))
+                                                                                  (= "questionGroup" (:fieldClass %)))
+                                                                             (s/recursive #'WrapperElement)
+                                                                             :else
+                                                                             BasicElement)]
+                             :metadata                                    element-metadata-schema/ElementMetadata
+                             (s/optional-key :version)                    s/Str
+                             (s/optional-key :child-validator)            child-validator-schema/ChildValidator
+                             (s/optional-key :params)                     params-schema/Params
+                             (s/optional-key :label)                      localized-schema/LocalizedString
+                             (s/optional-key :label-amendment)            localized-schema/LocalizedString ; Additional info which can be displayed next to the label
+                             (s/optional-key :module)                     module-schema/Module
+                             (s/optional-key :belongs-to-hakukohteet)     [s/Str]
+                             (s/optional-key :belongs-to-hakukohderyhma)  [s/Str]})
+
+(s/defschema WrapperElement
+  (s/conditional
+   #(= "tutkinnot" (:fieldType %)) (merge WrapperBase tutkinnot-schema/Tutkinnot)
+   :else WrapperBase))
 
 (def Content (s/if (comp some? :children) WrapperElement BasicElement))
 
@@ -150,11 +154,11 @@
 
 (s/defschema SelectionLimit
   {:question-id s/Str
-   :answer-id s/Str})
+   :answer-id   s/Str})
 
 (s/defschema FormSelectionLimit
   {(s/optional-key :selection-id) s/Str
-   :limit-reached                [SelectionLimit]})
+   :limit-reached                 [SelectionLimit]})
 
 (s/defschema FormWithContent
   (merge form-schema/Form
@@ -164,12 +168,12 @@
           (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 
 (s/defschema UpdateElementOperation
-  {:type (s/eq "update")
+  {:type        (s/eq "update")
    :old-element (s/if (comp some? :children) WrapperElement BasicElement)
    :new-element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema DeleteElementOperation
-  {:type (s/eq "delete")
+  {:type    (s/eq "delete")
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema CreateMoveElement

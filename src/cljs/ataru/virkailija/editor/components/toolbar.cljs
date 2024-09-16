@@ -5,7 +5,8 @@
             [ataru.component-data.base-education-continuous-admissions-module :refer [base-education-continuous-admissions-module]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [ataru.component-data.arvosanat-module :as arvosanat]))
+            [ataru.component-data.arvosanat-module :as arvosanat]
+            [ataru.component-data.koski-tutkinnot-module :refer [koski-tutkinnot-module]]))
 
 (defn- toolbar-elements []
   [[:form-section component/form-section {:data-test-id "component-toolbar-lomakeosio"}]
@@ -42,7 +43,7 @@
    [:lupatiedot-toinen-aste component/lupatiedot-toinen-aste]
    [:guardian-contact-information component/huoltajan-yhteystiedot]
    [:harkinnanvaraisuus component/harkinnanvaraisuus]
-   [:tutkinnot component/tutkinnot]])
+   [:tutkinnot koski-tutkinnot-module]])
 
 (def followup-toolbar-element-names
   #{:text-field
