@@ -1672,6 +1672,7 @@
         :return [ataru-schema/ValintapisteApplication]
         (if-let [applications (access-controlled-application/get-applications-for-valintapiste organization-service
                                                                                                session
+                                                                                               tarjonta-service
                                                                                                hakuOid
                                                                                                hakukohdeOid)]
           (response/ok applications)

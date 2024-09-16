@@ -368,14 +368,14 @@
     (constantly nil)
     #(tilastokeskus-service/get-application-info-for-tilastokeskus person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid)))
 
-(defn get-applications-for-valintapiste [organization-service session haku-oid hakukohde-oid]
+(defn get-applications-for-valintapiste [organization-service session tarjonta-service haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(valintapiste-service/get-application-info-for-valintapiste haku-oid hakukohde-oid)))
+    #(valintapiste-service/get-application-info-for-valintapiste tarjonta-service haku-oid hakukohde-oid)))
 
 (defn get-applications-for-valintalaskenta [organization-service session hakukohde-oid application-keys]
   (session-orgs/run-org-authorized
