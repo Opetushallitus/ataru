@@ -24,7 +24,7 @@
      {:db (assoc-in db [:payment :applications application-key] payments)})))
 
 (re-frame/reg-event-fx
-  :payment/fetch-payments
+  :payment/fetch-payments-for-application
   (fn [_ [_ application-key]]
    {:payment/fetch-payments
     {:application-key application-key}}))
@@ -58,7 +58,7 @@
 
      {:dispatch-n [[:application/update-review-field state-name state-value]
                    [:application/review-updated response]
-                   [:payment/fetch-payments application-key]]})))
+                   [:payment/fetch-payments-for-application application-key]]})))
 
 
 (re-frame/reg-event-fx

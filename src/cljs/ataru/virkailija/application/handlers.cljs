@@ -679,7 +679,7 @@
                                        (when (not (get-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                          [:liitepyynto-information-request/get-deadlines application-key])
                                        (when (get-tutu-form? form-key)
-                                         [:payment/fetch-payments application-key])
+                                         [:payment/fetch-payments-for-application application-key])
                                        [:application/get-application-change-history application-key]]
                                       (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                       [(hyvaksynnan-ehto-hakemukselle-dispatch db)]

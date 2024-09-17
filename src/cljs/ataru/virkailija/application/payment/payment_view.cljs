@@ -114,7 +114,7 @@
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__tutu-payment-send-button.application-handling__button
      {:on-click #(dispatch [:payment/send-decision-invoice application-key payment-type])
-      :disabled  false                                           ;(or @loading? (not @filled?) (not @can-edit?))
+      :disabled (or @loading? (not @filled?) (not @can-edit?))
       :class    (if (and @filled? @can-edit? (not @loading?))
                   "application-handling__send-information-request-button--enabled application-handling__send-information-request-button--cursor-pointer"
                   "application-handling__send-information-request-button--disabled application-handling__send-information-request-button--cursor-default")

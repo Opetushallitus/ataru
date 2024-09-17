@@ -2370,6 +2370,9 @@
    :maksupyynto-invoice-notfound                             {:fi "Maksun tietoja ei löydy"
                                                               :sv ""
                                                               :en ""}
+   :maksupyynto-not-sent                                     {:fi "Maksupyyntöä ei ole lähetetty"
+                                                              :sv "SV: Maksupyyntöä ei ole lähetetty"
+                                                              :en "EN: Maksupyyntöä ei ole lähetetty"}
    :maksupyynto-payment-active                               {:fi "Avoin"
                                                               :sv ""
                                                               :en ""}
