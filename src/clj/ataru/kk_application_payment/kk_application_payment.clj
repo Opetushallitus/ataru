@@ -223,7 +223,8 @@
    with no payment data. Applications should include haku oid and person oid in the fields with
    respective parametrized names."
   [tarjonta-service applications person-oid-key haku-oid-key states-to-keep]
-  (let [applications-with-person-oid-and-haku (filter
+  (let [states-kw (set (map keyword states-to-keep))
+        applications-with-person-oid-and-haku (filter
                                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
                                                 applications)
         remaining-applications (remove
@@ -236,7 +237,7 @@
     (->> haku-oids
          (map #(filter-kk-haku-applications-by-state
                  (get applications-by-haku %) (get hakus-by-oid %)
-                 person-oid-key states-to-keep))
+                 person-oid-key states-kw))
          flatten
          (concat remaining-applications))))
 
