@@ -509,7 +509,43 @@
             applications (:applications body)]
         (should= 200 status)
         (should= 1 (count applications))
-        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state])))))
+        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state]))))
+
+  (it "Should include application with matching payment state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["awaiting-payment"]))
+            application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
+                                  :form (:id fixtures/person-info-form-with-more-questions))
+            application-id (db/init-db-fixture
+                             fixtures/person-info-form-with-more-questions
+                             application-fixture
+                             [])
+            application (application-store/get-application application-id)
+            _ (payment/set-application-fee-required (:person-oid application) "kausi_s" 2025 nil nil)
+            resp         (post-applications-list query)
+            status       (:status resp)
+            body         (:body resp)
+            applications (:applications body)]
+        (should= 200 status)
+        (should= 1 (count applications))))
+
+  (it "Should filter out application with non-matching payment state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["payment-not-required"]))
+            application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
+                                  :form (:id fixtures/person-info-form-with-more-questions))
+            application-id (db/init-db-fixture
+                             fixtures/person-info-form-with-more-questions
+                             application-fixture
+                             [])
+            application (application-store/get-application application-id)
+            _ (payment/set-application-fee-required (:person-oid application) "kausi_s" 2025 nil nil)
+            resp         (post-applications-list query)
+            status       (:status resp)
+            body         (:body resp)
+            applications (:applications body)]
+        (should= 200 status)
+        (should= 0 (count applications)))))
 
 (describe "Submitting mass review notes"
           (tags :unit :mass-notes)
