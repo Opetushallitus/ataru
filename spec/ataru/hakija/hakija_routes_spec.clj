@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes-spec
   (:require [ataru.applications.field-deadline :as field-deadline]
+            [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.util :as util]
             [ataru.log.audit-log :as audit-log]
             [ataru.koodisto.koodisto :as koodisto]
@@ -518,9 +519,22 @@
         (should= 200 (:status resp))
         (should (-> (get-in resp [:body :application])
                   (get-answer "87834771-34da-40a4-a9f6-sensitive")
-                  nil?)))))
+                  nil?))))
 
-  (describe "PUT application"
+    (it "should get application's kk payment data"
+        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+          (with-get-response "12345" resp
+            (let [application-id (get-in resp [:body :application :id])]
+              (store/add-person-oid application-id "1.2.3.4.5.6")
+              (payment/set-application-fee-required "1.2.3.4.5.6" "kausi_s" 2025 nil nil)
+              (with-get-response "12345" resp
+                (should= 200 (:status resp))
+                (should= {:person-oid "1.2.3.4.5.6", :start-term "kausi_s", :start-year 2025, :state "awaiting-payment"}
+                         (select-keys
+                           (get-in resp [:body :kk-payment :status])
+                           [:person-oid :start-term :start-year :state]))))))))
+
+          (describe "PUT application"
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)

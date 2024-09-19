@@ -18,7 +18,9 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]])
+  #?(:clj (:import [org.joda.time DateTime])))
+
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -455,7 +457,8 @@
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
    :eligibility-set-automatically                   [s/Str]
-   (s/optional-key :tunnistautuminen)                 (s/maybe s/Str)})
+   (s/optional-key :tunnistautuminen)               (s/maybe s/Str)
+   (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
@@ -492,6 +495,26 @@
    (s/optional-key :ssn)         s/Str
    (s/optional-key :minor)       s/Bool})
 
+(s/defschema PaymentStatus
+  {:person-oid   s/Str
+   :start-term   s/Str
+   :start-year   s/Int
+   :state        s/Str
+   :created-time #?(:clj  (s/maybe DateTime)
+                    :cljs (s/maybe s/Str)) })
+
+(s/defschema PaymentEvent
+  {:new-state      (s/maybe s/Str)
+   :event-type     s/Str
+   :virkailija-oid (s/maybe s/Str)
+   :message        (s/maybe s/Str)
+   :created-time   #?(:clj  (s/maybe DateTime)
+                      :cljs (s/maybe s/Str)) })
+
+(s/defschema KkPaymentState
+  {(s/optional-key :status) PaymentStatus
+   (s/optional-key :events) [PaymentEvent]})
+
 (s/defschema ApplicationWithPerson
   (-> Application
       (st/dissoc :person-oid)
@@ -499,14 +522,15 @@
       (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
-(s/defschema ApplicationWithPersonAndForm
+(s/defschema ApplicationWithPersonFormAndPayment
   {:application (-> Application
                     (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
                     (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
-                               :else FormWithContent)})
+                               :else FormWithContent)
+   :kk-payment  KkPaymentState})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
@@ -930,7 +954,8 @@
                                            :attachment-states-to-include        [s/Str]
                                            :processing-states-to-include        [s/Str]
                                            (s/optional-key :school-filter)      (s/maybe s/Str)
-                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])}})
+                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])
+                                           (s/optional-key :kk-payment-states-to-include) (s/maybe [s/Str])}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort

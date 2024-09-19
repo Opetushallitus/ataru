@@ -106,6 +106,10 @@
    :1.2.246.562.29.93102260101               (merge
                                                base-haku
                                                {:oid "1.2.246.562.29.93102260101"
+                                                :hakukausiVuosi 2025,
+                                                :koulutuksenAlkamisVuosi 2025,
+                                                :kohdejoukkoUri "haunkohdejoukko_12#1"
+                                                :kohdejoukonTarkenne "haunkohdejoukontarkenne_1#1"
                                                 :ataruLomakeAvain "synthetic-application-test-form"})
    :haku.oid                                 (merge
                                                base-haku

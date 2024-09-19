@@ -39,18 +39,19 @@
 (def term-error "kausi_a")
 (def year-ok 2025)
 (def year-error 2024)
-(def state-pending "payment-pending")
+(def state-pending "awaiting-payment")
 (def state-not-required "payment-not-required")
 (def state-paid "payment-paid")
+(def state-ok-via-linked-oid "payment-ok-via-linked-oid")
 (def event-updated "state-updated")
 
 (defn- should-be-matching-state
   [example state]
-  (should= example (dissoc state :id :created_time :modified_time)))
+  (should= example (dissoc state :id :created-time :modified-time)))
 
 (defn- should-be-matching-event
   [example event]
-  (should= example (dissoc event :id :created_time)))
+  (should= example (dissoc event :id :created-time)))
 
 (declare spec)
 
@@ -76,7 +77,7 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                fake-koodisto-cache fake-haku-cache
                                                                oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-be-nil state)
                           (should-be-nil id)))
 
@@ -102,11 +103,44 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 linked-oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [linked-oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [linked-oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-paid} state)))
+                          (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-paid} state)))
+
+                    (it "should set ok via linked oid status when linked oid has payment info"
+                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                      (merge
+                                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                                        {:person-oid "1.2.3.4.5.123"}) nil)
+                        (let [oid "1.2.3.4.5.123"
+                              linked-oid (str oid "2")                ; See FakePersonService
+                              _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
+                              id (payment/update-payment-status fake-person-service fake-tarjonta-service
+                                                                fake-koodisto-cache fake-haku-cache
+                                                                oid term-fall year-ok nil)
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
+                          (should-not-be-nil id)
+                          (should-not-be-nil state)
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-ok-via-linked-oid} state)))
+
+                    (it "should reset paid via linked oid status when the linking has been removed"
+                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                      (merge
+                                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                                        {:person-oid "1.2.3.4.5.300"}) nil)
+                        (let [oid "1.2.3.4.5.300"
+                              _ (payment/set-application-fee-ok-via-linked-oid oid term-fall year-ok nil nil)
+                              id (payment/update-payment-status fake-person-service fake-tarjonta-service
+                                                                fake-koodisto-cache fake-haku-cache
+                                                                oid term-fall year-ok nil)
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
+                          (should-not-be-nil id)
+                          (should-not-be-nil state)
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))
 
                     (it "should set payment status for eu citizen as not required"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
@@ -117,11 +151,11 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-not-required} state)))
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))
 
                     (it "should set payment status for non eu citizen without exemption as required"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
@@ -132,11 +166,11 @@
                                 id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                   fake-koodisto-cache fake-haku-cache
                                                                   oid term-fall year-ok nil)
-                                state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                                state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                             (should-not-be-nil id)
                             (should-not-be-nil state)
-                            (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                       :start_year year-ok, :state state-pending} state)))))
+                            (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                       :start-year year-ok, :state state-pending} state)))))
 
           (describe "with exemption"
                     (before-all
@@ -151,82 +185,24 @@
                               id (payment/update-payment-status fake-person-service fake-tarjonta-service
                                                                 fake-koodisto-cache fake-haku-cache
                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-payment-states [oid] term-fall year-ok))]
+                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
                           (should-not-be-nil id)
                           (should-not-be-nil state)
-                          (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                                     :start_year year-ok, :state state-not-required} state)))))
-
-(describe "resolve-payment-status"
-          (tags :unit :kk-application-payment)
-
-          (before-all
-            (delete-states-and-events!))
-
-          (it "should return nil when no states found"
-              (let [oid "1.2.3.4.5.6"
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-nil state)))
-
-          (it "should return a simple single state when no states for linked oids"
-              (let [oid "1.2.3.4.5.7"
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-pending}
-                                          state)))
-
-          (it "should resolve a simple single state for linked oid"
-              (let [oid "1.2.3.4.5.8"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-paid}
-                                          state)))
-
-          (it "should resolve a possible paid state with linked oids and conflicting states"
-              (let [oid "1.2.3.4.5.9"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-paid}
-                                          state)))
-
-          (it "should resolve a possible not required state with linked oids, conflicting states and no paid state"
-              (let [oid "1.2.3.4.5.10"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-not-required linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid linked-oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-not-required}
-                                          state)))
-
-          (it "should resolve a required state with linked oids whenever no paid or not required states found"
-              (let [oid "1.2.3.4.5.11"
-                    linked-oid (str oid "2")                ; See FakePersonService
-                    _ (payment/set-application-fee-required oid term-fall year-ok nil nil)
-                    _ (payment/set-application-fee-required linked-oid term-fall year-ok nil nil)
-                    state (payment/resolve-payment-status fake-person-service oid term-fall year-ok)]
-                (should-be-matching-state {:person_oid oid, :start_term term-fall,
-                                           :start_year year-ok, :state state-pending}
-                                          state))))
+                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                     :start-year year-ok, :state state-not-required} state)))))
 
 (defn save-and-check-single-state-and-event
   [oid term year state-func desired-state]
   (let [state-id (state-func oid term-fall year-ok nil nil)
-        states   (payment/get-payment-states [oid] term year)
-        events   (payment/get-payment-events [state-id])
+        states   (payment/get-raw-payment-states [oid] term year)
+        events   (payment/get-raw-payment-events [state-id])
         state    (first states)
         event    (first events)]
     (should= 1 (count states))
     (should= 1 (count events))
-    (should-be-matching-state {:person_oid oid, :start_term term, :start_year year, :state desired-state} state)
-    (should-be-matching-event {:kk_application_payment_state_id state-id, :new_state desired-state,
-                               :event_type event-updated, :virkailija_oid nil, :message nil} event)))
+    (should-be-matching-state {:person-oid oid, :start-term term, :start-year year, :state desired-state} state)
+    (should-be-matching-event {:kk-application-payment-state-id state-id, :new-state desired-state,
+                               :event-type event-updated, :virkailija-oid nil, :message nil} event)))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)
