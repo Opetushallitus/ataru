@@ -302,6 +302,7 @@
   [henkilot application]
   (let [person         (get henkilot (:personOid application))
         kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
+        aidinkieli     (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi])
         asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
@@ -323,8 +324,8 @@
                                      :sukunimi
                                      :sukupuoli
                                      :turvakielto
-                                     :aidinkieli
                                      :kutsumanimi]))
+        (assoc-in [:person :aidinkieli] aidinkieli)
         (assoc-in [:person :asiointiKieli] (select-keys asiointikieli
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
@@ -447,7 +448,9 @@
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
   (get-ensisijainen-application-counts-for-haku [this haku-oid])
-  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete]))
+  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete])
+  (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
+  (valinta-ui-applications [this session query]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -720,6 +723,7 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
+  ; TODO this doesn't currently filter out unpaid kk applications, should it? Probably not...
   (omatsivut-applications
     [_ session person-oid]
     (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -728,11 +732,13 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications (aac/get-applications-for-valintalaskenta
-                            organization-service
-                            session
-                            hakukohde-oid
-                            application-keys)]
+    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service
+                            (aac/get-applications-for-valintalaskenta
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                             :personOid :hakuOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -756,12 +762,15 @@
 
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (aac/siirto-applications
-                           tarjonta-service
-                           organization-service
-                           session
-                           hakukohde-oid
-                           application-keys)]
+    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications
+                            tarjonta-service
+                            (aac/siirto-applications
+                              tarjonta-service
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                            :personOid :hakuOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -790,8 +799,10 @@
   (suoritusrekisteri-applications
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
-                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
+          applications (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)
+          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
+      (update applications :applications update-fn :personOid :applicationSystemId)))
 
   (suoritusrekisteri-person-info
     [_ haku-oid hakukohde-oids offset]
@@ -818,6 +829,33 @@
         questions
         urheilija-amm-hakukohdes
         haun-hakukohteet)))
+
+  (valinta-tulos-service-applications
+    [_ haku-oid hakukohde-oid hakemus-oids offset]
+    (let [applications (application-store/valinta-tulos-service-applications
+                         haku-oid
+                         hakukohde-oid
+                         hakemus-oids
+                         offset)
+          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
+      (update applications :applications update-fn :henkiloOid :hakuOid)))
+
+  (valinta-ui-applications
+    [_ session query]
+      (let [applications (kk-application-payment/filter-out-unpaid-kk-applications
+                           tarjonta-service
+                           (aac/valinta-ui-applications
+                             organization-service
+                             tarjonta-service
+                             person-service
+                             session
+                             query)
+                           :person-oid :haku-oid)]
+        (->> applications
+             (map #(dissoc % :hakukohde))
+             (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
+                                               :person-oid    :personOid
+                                               :asiointikieli :asiointiKieli})))))
 
   (get-applications-paged
     [_ session params]

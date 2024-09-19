@@ -9,7 +9,7 @@
 (def test-term-fall "kausi_s")
 (def test-year 2025)
 (def test-year-2 2026)
-(def test-state-pending "payment-pending")
+(def test-state-pending "awaiting-payment")
 (def test-state-paid "payment-paid")
 (def test-event-updated "state-updated")
 (def test-event-comment "comment")

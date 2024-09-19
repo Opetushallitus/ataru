@@ -133,6 +133,59 @@
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes))
                    ((deref virkailija-routes)))))
 
+(defn- get-valintapiste-application-query [query]
+  (-> (mock/request :get "/lomake-editori/api/external/valintapiste" query)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- get-tilastokeskus-application-query [query]
+  (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- get-valinta-ui-application-query [query]
+  (-> (mock/request :get "/lomake-editori/api/external/valinta-ui" query)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-vts-application-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/valinta-tulos-service"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-sure-application-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/suoritusrekisteri"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-siirto-application-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/siirto"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-valintalaskenta-application-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-application-details [application-key]
   (-> (mock/request :get (str "/lomake-editori/api/applications/" application-key))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
@@ -456,7 +509,43 @@
             applications (:applications body)]
         (should= 200 status)
         (should= 1 (count applications))
-        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state])))))
+        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state]))))
+
+  (it "Should include application with matching payment state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["awaiting-payment"]))
+            application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
+                                  :form (:id fixtures/person-info-form-with-more-questions))
+            application-id (db/init-db-fixture
+                             fixtures/person-info-form-with-more-questions
+                             application-fixture
+                             [])
+            application (application-store/get-application application-id)
+            _ (payment/set-application-fee-required (:person-oid application) "kausi_s" 2025 nil nil)
+            resp         (post-applications-list query)
+            status       (:status resp)
+            body         (:body resp)
+            applications (:applications body)]
+        (should= 200 status)
+        (should= 1 (count applications))))
+
+  (it "Should filter out application with non-matching payment state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["payment-not-required"]))
+            application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
+                                  :form (:id fixtures/person-info-form-with-more-questions))
+            application-id (db/init-db-fixture
+                             fixtures/person-info-form-with-more-questions
+                             application-fixture
+                             [])
+            application (application-store/get-application application-id)
+            _ (payment/set-application-fee-required (:person-oid application) "kausi_s" 2025 nil nil)
+            resp         (post-applications-list query)
+            status       (:status resp)
+            body         (:body resp)
+            applications (:applications body)]
+        (should= 200 status)
+        (should= 0 (count applications)))))
 
 (describe "Submitting mass review notes"
           (tags :unit :mass-notes)
@@ -678,8 +767,243 @@
                     events (sort-by :created-time (:events payment-data))]
                 (should= 200 status)
                 (should-not-be-nil payment-data)
-                (should= "payment-pending" state)
+                (should= "awaiting-payment" state)
                 (should= 2 (count events))
-                (should= ["payment-not-required" "payment-pending"] (map :new-state events)))))
+                (should= ["payment-not-required" "awaiting-payment"] (map :new-state events)))))
+
+(defn- init-and-get-kk-fixtures []
+  (let [person-oid "1.2.3.4.5.303"
+        term "kausi_s"
+        year 2025
+        application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                           application-fixtures/application-without-hakemusmaksu-exemption
+                                           nil)
+        application (get-application-by-id application-id)
+        haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)]
+    [person-oid term year application haku-oid]))
+
+(describe "valintalaskenta"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "siirto"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-siirto-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (post-siirto-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (post-siirto-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "suoritusrekisteri"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (post-sure-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (post-sure-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (post-sure-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "valinta-tulos-service"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (post-vts-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (post-vts-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (post-vts-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "valinta-ui"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (get-valinta-ui-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (get-valinta-ui-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (get-valinta-ui-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "tilastokeskus"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
+
+(describe "valintapiste"
+          (tags :unit)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (get-valintapiste-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should return an application with kk payment data"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-not-required person-oid term year nil nil)
+                    resp (get-valintapiste-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))))
+
+          (it "should not return an application awaiting kk payment"
+              (let [[person-oid term year _ haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required person-oid term year nil nil)
+                    resp (get-valintapiste-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications)))))
 
 (run-specs)
