@@ -2364,7 +2364,7 @@
    :maksupyynto-again-button                                 {:fi "Lähetä uudelleen"
                                                               :sv ""
                                                               :en ""}
-   :tutu-kasittelymaksu-button                               {:fi "Uudelleenlähetä käsittelymaksu"
+   :maksupyynto-kasittelymaksu-button                        {:fi "Uudelleenlähetä käsittelymaksu"
                                                               :sv ""
                                                               :en ""}
    :maksupyynto-invoice-notfound                             {:fi "Maksun tietoja ei löydy"

@@ -662,11 +662,16 @@
      (-> application :person :oid)
      (:created-time application)]))
 
+(defn- form-has-payments? [form]
+  (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+      (= "payment-type-astu" (get-in form [:properties :payment :type]))
+      (get-tutu-form? (:key form))))
+
 (reg-event-fx
  :application/handle-fetch-application
  (fn [{:keys [db]} [_ response]]
    (let [application-key            (-> response :application :key)
-         form-key                   (-> response :form :key)
+         form                       (:form response)
          response-with-parsed-times (parse-application-times response)
          db                         (-> db
                                         (update-application-details response-with-parsed-times)
@@ -678,8 +683,8 @@
                                          [:application/start-autosave])
                                        (when (not (get-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                          [:liitepyynto-information-request/get-deadlines application-key])
-                                       (when (get-tutu-form? form-key)
-                                         [:payment/fetch-payments-for-application application-key])
+                                       (when (form-has-payments? form)
+                                         [:payment/fetch-payments application-key])
                                        [:application/get-application-change-history application-key]]
                                       (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                       [(hyvaksynnan-ehto-hakemukselle-dispatch db)]

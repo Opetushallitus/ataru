@@ -31,11 +31,7 @@
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.payment.payment-view :refer [application-payment-status]]))
-
-
-
-
+            [ataru.virkailija.application.payment.payment-view :refer [application-tutu-payment-status application-astu-payment-status]]))
 
 (defn- application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
@@ -1028,7 +1024,8 @@
          (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
                tutu-form?                       @(subscribe [:payment/tutu-form-selected?])
                astu-form?                       @(subscribe [:payment/astu-form-selected?])
-               application-key @(subscribe [:state-query [:application :review :application-key]])
+               application-key                  @(subscribe [:state-query [:application :review :application-key]])
+               payments                         @(subscribe [:payment/payments application-key])
                attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
                                                      (map (fn [liitepyynto]
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
@@ -1097,8 +1094,9 @@
                   [:div.application-handling__review-row
                    [:span.hakukohde-review-rights-alert
                     @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]))
-              (when (or tutu-form? astu-form?)
-                [application-payment-status])
+              (cond
+                tutu-form? [application-tutu-payment-status payments]
+                astu-form? [application-astu-payment-status payments])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
               [application-review-inputs]

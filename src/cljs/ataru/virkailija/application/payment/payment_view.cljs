@@ -165,7 +165,7 @@
 
     [:div.application-handling__tutu-payment-maksupyynto-box
      [:span.application-handling__tutu-payment--span-2
-      [:b @(subscribe [:editor/virkailija-translation :maksupyynto-maksupyynto-header])]]
+      [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
 
      (if loading?
        [:div.application-handling__tutu-payment-maksupyynto-spinner
@@ -281,11 +281,3 @@
           [:<>
            [send-decision-invoice-button application-key decision-pay-status "astu"]])])
      ]))
-
-(defn application-payment-status []
-  (let [payments   @(subscribe [:payment/payments])
-        tutu-form? @(subscribe [:payment/tutu-form-selected?])
-        astu-form? @(subscribe [:payment/astu-form-selected?])]
-    (cond
-      tutu-form? (application-tutu-payment-status payments)
-      astu-form? (application-astu-payment-status payments))))
