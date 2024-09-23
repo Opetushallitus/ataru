@@ -19,7 +19,8 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
+            [ataru.schema.form-properties-schema :refer [FormProperties]]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -113,12 +114,32 @@
     :else
     TextField))
 
+(s/defschema FormPropertyField
+  {:id                            s/Str
+   :fieldClass                    (s/eq "formPropertyField")
+   :fieldType                     (apply s/enum ["multipleChoice"])
+   :category                      s/Str
+   :exclude-from-answers          (s/eq true)
+   :metadata                      element-metadata-schema/ElementMetadata
+   :label                         localized-schema/LocalizedStringOptional
+   (s/optional-key :description)  localized-schema/LocalizedStringOptional
+   (s/optional-key :options)      [{:id                               s/Str
+                                    :label                            localized-schema/LocalizedStringOptional
+                                    (s/optional-key :default-value)   s/Bool
+                                    (s/optional-key :description)     localized-schema/LocalizedStringOptional
+                                    (s/optional-key :forced)          s/Bool
+                                    (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
+                                    (s/optional-key :followups)       [(s/if (comp some? :children)
+                                                                         (s/recursive #'WrapperElement)
+                                                                         (s/recursive #'BasicElement))]}]})
+
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
+   #(= "formPropertyField" (:fieldClass %)) FormPropertyField
    :else info-element-schema/InfoElement))
 
 (s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
@@ -184,15 +205,6 @@
 (s/defschema CreateMoveGroupOperation
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
-
-(s/defschema FormProperties
-  {(s/optional-key :auto-expand-hakukohteet)          s/Bool
-   (s/optional-key :order-hakukohteet-by-opetuskieli) s/Bool
-   (s/optional-key :allow-only-yhteishaut)            s/Bool
-   (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
-   (s/optional-key :demo-validity-start)              (s/maybe s/Str)
-   (s/optional-key :demo-validity-end)                (s/maybe s/Str)
-   (s/optional-key :closed)                           s/Bool})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
