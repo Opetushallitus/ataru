@@ -476,25 +476,31 @@
    job-runner
    application-id))
 
+(defn- tutu-form? [form]
+  (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+      (let [tutu-keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")]
+        (boolean
+          (and (some? tutu-keys) (some #(= (:key form) %) tutu-keys))))))
+
 (defn- handle-tutu-form [form-by-id-cache id application]
   (let [app-key    (-> (application-store/get-application id) :key)
-        form       (:form application)
-        tutu-keys   (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")
-        form-key   (when (some? form)
-                         (-> (cache/get-from form-by-id-cache (str form)) :key))
-        tutu-form? (boolean
-                     (and (some? tutu-keys) (some #(= form-key %) tutu-keys)))
-
+        form-id    (:form application)
+        form       (when (some? form-id)
+                     (-> (cache/get-from form-by-id-cache (str form-id))))
         get-field  (fn [key] (->> (:answers application)
                                   (filter #(= key (:key %)))
                                   (map :value)
                                   first))
-        req-fn     (fn [] {:application-key app-key
+        amount     (or (get-in form [:properties :payment :processing-fee])
+                       (-> config :tutkintojen-tunnustaminen :maksut :decision-amount))
+        req-fn     (fn [] {:reference app-key
+                           :origin "tutu"
+                           :due-days 14
                            :first-name (get-field "first-name")
                            :last-name (get-field "last-name")
                            :email (get-field "email")
-                           :amount (-> config :tutkintojen-tunnustaminen :maksut :decision-amount)})]
-    {:tutu-form? tutu-form?
+                           :amount amount})]
+    {:tutu-form? (tutu-form? form)
      :req-fn     req-fn
      :lang       (:lang application)}))
 

@@ -1086,7 +1086,7 @@
    :or-use                                                   {:fi ". Tai käytä: "
                                                               :sv ". Eller använda: "
                                                               :en ". Or use: "}
-   :return-latest                                           {:fi "Palautettava viimeistään"
+   :return-latest                                            {:fi "Palautettava viimeistään"
                                                              :sv "Sista leveransdatum"
                                                              :en "Deadline in"}
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
@@ -1254,7 +1254,7 @@
    :auto-expand-hakukohteet                                  {:fi "Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                               :sv "SV: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                               :en "EN: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"}
-   :order-hakukohteet-by-opetuskieli                        {:fi "Järjestä hakukohteet opetuskielen mukaan"
+   :order-hakukohteet-by-opetuskieli                         {:fi "Järjestä hakukohteet opetuskielen mukaan"
                                                               :sv "SV: Järjestä hakukohteet opetuskielen mukaan"
                                                               :en "EN: Järjestä hakukohteet opetuskielen mukaan"}
    :properties                                               {:fi "Yleiset asetukset"
@@ -1781,7 +1781,7 @@
    :single-information-request-send                          {:fi "Lähetä"
                                                               :sv "Skicka:"
                                                               :en "Send:"}
-   :single-information-request-message-sent                   {:fi "Viesti lisätty lähetysjonoon!"
+   :single-information-request-message-sent                  {:fi "Viesti lisätty lähetysjonoon!"
                                                                :sv "Meddelanden har lagts till i utskickskön!"
                                                                :en "Message has been sent!"}
    :max-characters                                           {:fi "Max. merkkimäärä"
@@ -2120,7 +2120,7 @@
    :person-oid                                               {:fi "Henkilö-OID"
                                                               :sv "Person OID"
                                                               :en "Person OID"}
-   :student-number                                            {:fi "Oppijanumero"
+   :student-number                                           {:fi "Oppijanumero"
                                                                :sv "SV: Oppijanumero"
                                                                :en "Student number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
@@ -2349,61 +2349,64 @@
    :attachments-tab-header                                   {:fi "Toimitettavat liitteet"
                                                               :sv ""
                                                               :en ""}
-   :tutu-amount-label                                        {:fi "Maksun määrä"
+   :maksupyynto-amount-label                                 {:fi "Maksun määrä"
                                                               :sv ""
                                                               :en ""}
-   :tutu-total-paid-label                                    {:fi "Yhteissumma"
+   :maksupyynto-total-paid-label                             {:fi "Yhteissumma"
                                                               :sv ""
                                                               :en ""}
-   :tutu-due-label                                           {:fi "Eräpäivä"
+   :maksupyynto-due-label                                    {:fi "Eräpäivä"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-header                                  {:fi "Maksupyyntö"
+   :maksupyynto-header                                       {:fi "Maksupyyntö"
                                                               :sv ""
                                                               :en ""}
-   :tutu-processing-header                                   {:fi "Käsittelymaksu:"
+   :maksupyynto-processing-header                            {:fi "Käsittelymaksu:"
                                                               :sv ""
                                                               :en ""}
-   :tutu-decision-header                                     {:fi "Päätösmaksu:"
+   :maksupyynto-decision-header                              {:fi "Päätösmaksu:"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-recipient                               {:fi "Vastaanottaja:"
+   :maksupyynto-recipient                                    {:fi "Vastaanottaja:"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-amount                                  {:fi "Summa"
+   :maksupyynto-amount                                       {:fi "Summa"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-message                                 {:fi "Viesti:"
+   :maksupyynto-message                                      {:fi "Viesti:"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-send-button                             {:fi "Lähetä maksupyyntö"
+   :maksupyynto-send-button                                  {:fi "Lähetä maksupyyntö"
                                                               :sv ""
                                                               :en ""}
-   :tutu-maksupyynto-again-button                            {:fi "Lähetä uudelleen"
+   :maksupyynto-again-button                                 {:fi "Lähetä uudelleen"
                                                               :sv ""
                                                               :en ""}
-   :tutu-kasittelymaksu-button                               {:fi "Uudelleenlähetä käsittelymaksu"
+   :maksupyynto-kasittelymaksu-button                        {:fi "Uudelleenlähetä käsittelymaksu"
                                                               :sv ""
                                                               :en ""}
-   :tutu-invoice-notfound                                    {:fi "Maksun tietoja ei löydy"
+   :maksupyynto-invoice-notfound                             {:fi "Maksun tietoja ei löydy"
                                                               :sv ""
                                                               :en ""}
-   :tutu-payment-active                                      {:fi "Avoin"
+   :maksupyynto-not-sent                                     {:fi "Maksupyyntöä ei ole lähetetty"
+                                                              :sv "SV: Maksupyyntöä ei ole lähetetty"
+                                                              :en "EN: Maksupyyntöä ei ole lähetetty"}
+   :maksupyynto-payment-active                               {:fi "Avoin"
                                                               :sv ""
                                                               :en ""}
-   :tutu-payment-paid                                        {:fi "Maksettu"
+   :maksupyynto-payment-paid                                 {:fi "Maksettu"
                                                               :sv ""
                                                               :en ""}
-   :tutu-payment-overdue                                     {:fi "Eräpäivä ylitetty"
+   :maksupyynto-payment-overdue                              {:fi "Eräpäivä ylitetty"
                                                               :sv ""
                                                               :en ""}
-   :tutu-payment-unknown                                     {:fi "Maksun tilaa ei tiedetä"
+   :maksupyynto-payment-unknown                              {:fi "Maksun tilaa ei tiedetä"
                                                               :sv ""
                                                               :en ""}
-   :tutu-amount-input-placeholder                            {:fi "Anna summa muodossa 123 tai 123.00"
+   :maksupyynto-amount-input-placeholder                     {:fi "Anna summa muodossa 123 tai 123.00"
                                                               :sv ""
                                                               :en ""}
-   :tutu-payment-download-receipt                            {:fi "Lataa kuitti"
+   :maksupyynto-payment-download-receipt                     {:fi "Lataa kuitti"
                                                               :sv "Lataa kuitti"
                                                               :en "Lataa kuitti"}
    :prevent-submission                                       {:fi "Valinta estää hakemuksen lähettämisen"
@@ -2477,186 +2480,189 @@
                                                               :en "selected"}})
 
 (def state-translations
-  {:active                 {:fi "Aktiivinen"
-                            :sv "Aktiv"
-                            :en "Active"}
-   :passive                {:fi "Passiivinen"
-                            :sv "Passiv"
-                            :en "Inactive"}
-   :unprocessed            {:fi "Käsittelemättä"
-                            :sv "Obehandlad"
-                            :en "Unprocessed"}
-   :processing             {:fi "Käsittelyssä"
-                            :sv "Under behandling"
-                            :en "Under process"}
-   :invited-to-interview   {:fi "Kutsuttu haast."
-                            :sv "Kallad till intervju"
-                            :en "Invited to interview"}
-   :invited-to-exam        {:fi "Kutsuttu valintak."
-                            :sv "Kallad till urvalsprov"
-                            :en "Invited to entrance examination"}
-   :evaluating             {:fi "Arvioinnissa"
-                            :sv "Under bedömning"
-                            :en "Under evaluation"}
-   :valintaesitys          {:fi "Valintaesitys"
-                            :sv "Antagningsförslag"
-                            :en "Admission proposal"}
-   :processed              {:fi "Käsitelty"
-                            :sv "Behandlad"
-                            :en "Processed"}
-   :information-request    {:fi "Täydennyspyyntö"
-                            :sv "Begäran om komplettering"
-                            :en "Information request"}
-   :incomplete             {:fi "Kesken"
-                            :sv "Inte färdig"
-                            :en "Incomplete"}
-   :not-done               {:fi "Ei tehty"
-                            :sv "Inte gjort"
-                            :en "Not done"}
-   :selection-proposal     {:fi "Valintaesitys"
-                            :sv "Antagningsförslag"
-                            :en "Selected (pending)"}
-   :reserve                {:fi "Varalla"
-                            :sv "På reserv"
-                            :en "On reserve place"}
-   :cancelled              {:fi "Peruuntunut"
-                            :sv "Inställd"
-                            :en "Cancelled"}
-   :selected               {:fi "Hyväksytty"
-                            :sv "Godkänd"
-                            :en "Selected"}
-   :accepted               {:fi "Hyväksytty"
-                            :sv "Accepterad"
-                            :en "Accepted"}
-   :rejected               {:fi "Hylätty"
-                            :sv "Underkänd"
-                            :en "Rejected"}
-   :accepted-from-reserve  {:fi "Varasijalta hyväksytty"
-                            :sv "Godkänd från reservplats"
-                            :en "Accepted from reserve"}
-   :bindingly-received     {:fi "Vastaanottanut sitovasti"
-                            :sv "Mottagit bindande"}
-   :present-whole-academic-year {:fi "Läsnä koko lukuvuoden"
-                                 :sv "Närvarande hela läsåret"
-                                 :en "Present whole academic year"}
-   :away-whole-acedemic-year {:fi "Poissa koko lukuvuoden"
-                              :sv "Frånvarande hela läsåret"
-                              :en "Away whole academic year"}
-   :cancelled-by-someone   {:fi "Peruutettu"
-                            :sv "Annullerats"}
-   :cancelled-by-applicant {:fi "Perunut"
-                            :sv "Annullerad"
-                            :en "Cancelled by applicant"}
-   :present-autumn         {:fi "Läsnä syksyn"
-                            :sv "Närvarande hösten"
-                            :en "Present during autumn"}
-   :away-autumn            {:fi "Poissa syksyn"
-                            :sv "Frånvarande hösten"
-                            :en "Away during autumn"}
-   :present-spring         {:fi "Läsnä kevään"
-                            :sv "Närvarande våren"
-                            :en "Present during spring"}
-   :away-spring            {:fi "Poissa kevään"
-                            :sv "Frånvarande våren"
-                            :en "Away during spring"}
+  {:active                       {:fi "Aktiivinen"
+                                  :sv "Aktiv"
+                                  :en "Active"}
+   :passive                      {:fi "Passiivinen"
+                                  :sv "Passiv"
+                                  :en "Inactive"}
+   :unprocessed                  {:fi "Käsittelemättä"
+                                  :sv "Obehandlad"
+                                  :en "Unprocessed"}
+   :processing                   {:fi "Käsittelyssä"
+                                  :sv "Under behandling"
+                                  :en "Under process"}
+   :invited-to-interview         {:fi "Kutsuttu haast."
+                                  :sv "Kallad till intervju"
+                                  :en "Invited to interview"}
+   :invited-to-exam              {:fi "Kutsuttu valintak."
+                                  :sv "Kallad till urvalsprov"
+                                  :en "Invited to entrance examination"}
+   :evaluating                   {:fi "Arvioinnissa"
+                                  :sv "Under bedömning"
+                                  :en "Under evaluation"}
+   :valintaesitys                {:fi "Valintaesitys"
+                                  :sv "Antagningsförslag"
+                                  :en "Admission proposal"}
+   :processed                    {:fi "Käsitelty"
+                                  :sv "Behandlad"
+                                  :en "Processed"}
+   :information-request          {:fi "Täydennyspyyntö"
+                                  :sv "Begäran om komplettering"
+                                  :en "Information request"}
+   :incomplete                   {:fi "Kesken"
+                                  :sv "Inte färdig"
+                                  :en "Incomplete"}
+   :not-done                     {:fi "Ei tehty"
+                                  :sv "Inte gjort"
+                                  :en "Not done"}
+   :selection-proposal           {:fi "Valintaesitys"
+                                  :sv "Antagningsförslag"
+                                  :en "Selected (pending)"}
+   :reserve                      {:fi "Varalla"
+                                  :sv "På reserv"
+                                  :en "On reserve place"}
+   :cancelled                    {:fi "Peruuntunut"
+                                  :sv "Inställd"
+                                  :en "Cancelled"}
+   :selected                     {:fi "Hyväksytty"
+                                  :sv "Godkänd"
+                                  :en "Selected"}
+   :accepted                     {:fi "Hyväksytty"
+                                  :sv "Accepterad"
+                                  :en "Accepted"}
+   :rejected                     {:fi "Hylätty"
+                                  :sv "Underkänd"
+                                  :en "Rejected"}
+   :accepted-from-reserve        {:fi "Varasijalta hyväksytty"
+                                  :sv "Godkänd från reservplats"
+                                  :en "Accepted from reserve"}
+   :bindingly-received           {:fi "Vastaanottanut sitovasti"
+                                  :sv "Mottagit bindande"}
+   :present-whole-academic-year  {:fi "Läsnä koko lukuvuoden"
+                                  :sv "Närvarande hela läsåret"
+                                  :en "Present whole academic year"}
+   :away-whole-acedemic-year     {:fi "Poissa koko lukuvuoden"
+                                  :sv "Frånvarande hela läsåret"
+                                  :en "Away whole academic year"}
+   :cancelled-by-someone         {:fi "Peruutettu"
+                                  :sv "Annullerats"}
+   :cancelled-by-applicant       {:fi "Perunut"
+                                  :sv "Annullerad"
+                                  :en "Cancelled by applicant"}
+   :present-autumn               {:fi "Läsnä syksyn"
+                                  :sv "Närvarande hösten"
+                                  :en "Present during autumn"}
+   :away-autumn                  {:fi "Poissa syksyn"
+                                  :sv "Frånvarande hösten"
+                                  :en "Away during autumn"}
+   :present-spring               {:fi "Läsnä kevään"
+                                  :sv "Närvarande våren"
+                                  :en "Present during spring"}
+   :away-spring                  {:fi "Poissa kevään"
+                                  :sv "Frånvarande våren"
+                                  :en "Away during spring"}
    :accepted-harkinnanvaraisesti {:fi "Harkinnanvaraisesti hyväksytty"
                                   :sv "Godkänd enligt prövning"}
-   :not-enrolled           {:fi "Ei ilmoittautunut"
-                            :sv "Ej anmält sig"
-                            :en "Not enrolled"}
-   :not-received-during-period {:fi "Ei vastaanotettu määrä-aikana"
-                                :sv "Ej mottagit inom utsatt tid"}
-   :received-another       {:fi "Ottanut vastaan toisen paikan"
-                            :sv "Tagit emot annan plats"}
-   :conditionally-received {:fi "Ehdollisesti vastaanottanut"
-                            :sv "Mottagit villkorligt"}
-   :unreviewed             {:fi "Tarkastamatta"
-                            :sv "Inte granskad"
-                            :en "Unreviewed"}
-   :fulfilled              {:fi "Täyttyy"
-                            :sv "Fylls"
-                            :en "Meets requirement"}
-   :unfulfilled            {:fi "Ei täyty"
-                            :sv "Fylls inte"
-                            :en "Does nor meet requirement"}
-   :eligible               {:fi "Hakukelpoinen"
-                            :sv "Ansökningsbehörig"
-                            :en "Eligible"}
-   :uneligible             {:fi "Ei hakukelpoinen"
-                            :sv "Inte ansökningsbehörig"
-                            :en "Not eligible"}
-   :conditionally-eligible {:fi "Ehdollisesti hakukelpoinen"
-                            :sv "Villkorligt ansökningsbehörig"
-                            :en "Conditionally eligible"}
-   :obligated              {:fi "Velvollinen"
-                            :sv "Förpliktad"
-                            :en "Obligated"}
-   :not-obligated          {:fi "Ei velvollinen"
-                            :sv "Inte förpliktad"
-                            :en "Not obligated"}
-   :processing-state       {:fi "Käsittelyvaihe"
-                            :sv "Behandlingsskede"
-                            :en "State of processing"}
-   :language-requirement   {:fi "Kielitaitovaatimus"
-                            :sv "Språkkunskapskrav"
-                            :en "Language requirement"}
-   :only-edited-hakutoiveet {:fi "Muokatut hakutoiveet"
-                             :sv "Bearbetad ansökningsönskemål"
-                             :en "Edited study program"}
-   :degree-requirement     {:fi "Tutkinnon kelpoisuus"
-                            :sv "Examens behörighet"
-                            :en "Degree requirement"}
-   :eligibility-state      {:fi "Hakukelpoisuus"
-                            :sv "Ansökningsbehörighet"
-                            :en "Eligibility"}
-   :payment-obligation     {:fi "Maksuvelvollisuus"
-                            :sv "Betalningsskyldighet"
-                            :en "Obligated to pay"}
-   :selection-state        {:fi "Valinta"
-                            :sv "Antagning"
-                            :en "Selection"}
-   :not-checked            {:fi "Tarkastamatta"
-                            :sv "Inte granskad"
-                            :en "Not checked"}
-   :checked                {:fi "Tarkistettu"
-                            :sv "Granskad"
-                            :en "Checked"}
-   :incomplete-answer      {:fi "Puutteellinen"
-                            :sv "Bristfällig"
-                            :en "Incomplete"}
-   :overdue                {:fi "Myöhässä"
-                            :sv "Försenad"
-                            :en "Overdue"}
-   :no-attachment-required {:fi "Ei liitepyyntöä"
-                            :sv "Ingen begäran om bilagor"
-                            :en "No attachment requirement"}
-   :incomplete-attachment  {:fi "Puutteellinen liite"
-                            :sv "Bristfällig bilaga"
-                            :en "Insufficient attachment"}
-   :attachment-missing     {:fi "Liite puuttuu"
-                            :sv "Bilaga fattas"
-                            :en "Attachment missing"}
-   :processing-fee-overdue {:fi "Käsittely maksamatta"
-                            :sv "Käsittely maksamatta (sv) TODO"
-                            :en "Käsittely maksamatta (en) TODO"}
-   :processing-fee-paid    {:fi "Käsittely maksettu"
-                            :sv "Käsittely maksettu (sv) TODO"
-                            :en "Käsittely maksettu (en) TODO"}
-   :decision-fee-outstanding {:fi "Päätösmaksu avoin"
-                              :sv "Päätösmaksu avoin (sv) TODO"
-                              :en "Päätösmaksu avoin (en) TODO"}
-   :decision-fee-overdue   {:fi "Päätös maksamatta"
-                            :sv "Päätös maksamatta (sv) TODO"
-                            :en "Päätös maksamatta (en) TODO"}
-   :decision-fee-paid      {:fi "Päätös maksettu"
-                            :sv "Päätös maksettu (sv) TODO"
-                            :en "Päätös maksettu (en) TODO"}
-   :multiple-values        {:fi "Monta arvoa"
-                            :sv "Multipla värden"
-                            :en "Multiple values"}
-   :attachments-tab-info   {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
-                            :sv "Alla uppgifter om bilagor syns nödvändigtvis inte om läroanstalten inte sparat uppgifterna."
-                            :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}})
+   :not-enrolled                 {:fi "Ei ilmoittautunut"
+                                  :sv "Ej anmält sig"
+                                  :en "Not enrolled"}
+   :not-received-during-period   {:fi "Ei vastaanotettu määrä-aikana"
+                                  :sv "Ej mottagit inom utsatt tid"}
+   :received-another             {:fi "Ottanut vastaan toisen paikan"
+                                  :sv "Tagit emot annan plats"}
+   :conditionally-received       {:fi "Ehdollisesti vastaanottanut"
+                                  :sv "Mottagit villkorligt"}
+   :unreviewed                   {:fi "Tarkastamatta"
+                                  :sv "Inte granskad"
+                                  :en "Unreviewed"}
+   :fulfilled                    {:fi "Täyttyy"
+                                  :sv "Fylls"
+                                  :en "Meets requirement"}
+   :unfulfilled                  {:fi "Ei täyty"
+                                  :sv "Fylls inte"
+                                  :en "Does nor meet requirement"}
+   :eligible                     {:fi "Hakukelpoinen"
+                                  :sv "Ansökningsbehörig"
+                                  :en "Eligible"}
+   :uneligible                   {:fi "Ei hakukelpoinen"
+                                  :sv "Inte ansökningsbehörig"
+                                  :en "Not eligible"}
+   :conditionally-eligible       {:fi "Ehdollisesti hakukelpoinen"
+                                  :sv "Villkorligt ansökningsbehörig"
+                                  :en "Conditionally eligible"}
+   :obligated                    {:fi "Velvollinen"
+                                  :sv "Förpliktad"
+                                  :en "Obligated"}
+   :not-obligated                {:fi "Ei velvollinen"
+                                  :sv "Inte förpliktad"
+                                  :en "Not obligated"}
+   :processing-state             {:fi "Käsittelyvaihe"
+                                  :sv "Behandlingsskede"
+                                  :en "State of processing"}
+   :language-requirement         {:fi "Kielitaitovaatimus"
+                                  :sv "Språkkunskapskrav"
+                                  :en "Language requirement"}
+   :only-edited-hakutoiveet      {:fi "Muokatut hakutoiveet"
+                                  :sv "Bearbetad ansökningsönskemål"
+                                  :en "Edited study program"}
+   :degree-requirement           {:fi "Tutkinnon kelpoisuus"
+                                  :sv "Examens behörighet"
+                                  :en "Degree requirement"}
+   :eligibility-state            {:fi "Hakukelpoisuus"
+                                  :sv "Ansökningsbehörighet"
+                                  :en "Eligibility"}
+   :payment-obligation           {:fi "Maksuvelvollisuus"
+                                  :sv "Betalningsskyldighet"
+                                  :en "Obligated to pay"}
+   :selection-state              {:fi "Valinta"
+                                  :sv "Antagning"
+                                  :en "Selection"}
+   :not-checked                  {:fi "Tarkastamatta"
+                                  :sv "Inte granskad"
+                                  :en "Not checked"}
+   :checked                      {:fi "Tarkistettu"
+                                  :sv "Granskad"
+                                  :en "Checked"}
+   :incomplete-answer            {:fi "Puutteellinen"
+                                  :sv "Bristfällig"
+                                  :en "Incomplete"}
+   :overdue                      {:fi "Myöhässä"
+                                  :sv "Försenad"
+                                  :en "Overdue"}
+   :no-attachment-required       {:fi "Ei liitepyyntöä"
+                                  :sv "Ingen begäran om bilagor"
+                                  :en "No attachment requirement"}
+   :incomplete-attachment        {:fi "Puutteellinen liite"
+                                  :sv "Bristfällig bilaga"
+                                  :en "Insufficient attachment"}
+   :attachment-missing           {:fi "Liite puuttuu"
+                                  :sv "Bilaga fattas"
+                                  :en "Attachment missing"}
+   :processing-fee-overdue       {:fi "Käsittely maksamatta"
+                                  :sv "Käsittely maksamatta (sv) TODO"
+                                  :en "Käsittely maksamatta (en) TODO"}
+   :processing-fee-paid          {:fi "Käsittely maksettu"
+                                  :sv "Käsittely maksettu (sv) TODO"
+                                  :en "Käsittely maksettu (en) TODO"}
+   :decision-fee-outstanding     {:fi "Päätösmaksu avoin"
+                                  :sv "Päätösmaksu avoin (sv) TODO"
+                                  :en "Päätösmaksu avoin (en) TODO"}
+   :decision-fee-overdue         {:fi "Päätös maksamatta"
+                                  :sv "Päätös maksamatta (sv) TODO"
+                                  :en "Päätös maksamatta (en) TODO"}
+   :decision-fee-invoiced        {:fi "Päätös laskutuksessa"
+                                  :sv "Päätös laskutuksessa (sv) TODO"
+                                  :en "Päätös laskutuksessa (en) TODO"}
+   :decision-fee-paid            {:fi "Päätös maksettu"
+                                  :sv "Päätös maksettu (sv) TODO"
+                                  :en "Päätös maksettu (en) TODO"}
+   :multiple-values              {:fi "Monta arvoa"
+                                  :sv "Multipla värden"
+                                  :en "Multiple values"}
+   :attachments-tab-info         {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
+                                  :sv "Alla uppgifter om bilagor syns nödvändigtvis inte om läroanstalten inte sparat uppgifterna."
+                                  :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}})
 
 (def tutu-decision-email
   {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"
