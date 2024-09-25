@@ -24,18 +24,38 @@
    ["processing-fee-paid" (:processing-fee-paid state-translations)]
    ["decision-fee-outstanding" (:decision-fee-outstanding state-translations)]
    ["decision-fee-overdue" (:decision-fee-overdue state-translations)]
+   ["decision-fee-invoiced" (:decision-fee-invoiced state-translations)]
    ["decision-fee-paid" (:decision-fee-paid state-translations)]])
 
-(def tutu-processing-state
+(def normal-processing-state-removals
   #{"processing-fee-overdue"
     "processing-fee-paid"
     "decision-fee-outstanding"
     "decision-fee-overdue"
+    "decision-fee-invoiced"
     "decision-fee-paid"})
 
 (def application-hakukohde-processing-states-normal
   (reduce (fn [acc [k v]]
-            (if (tutu-processing-state k)
+            (if (normal-processing-state-removals k)
+              acc
+              (conj acc [k v])))
+          []
+          application-hakukohde-processing-states))
+
+(def astu-processing-state-removals
+  #{"processing-fee-overdue"
+    "processing-fee-paid"
+    "invited-to-interview"
+    "invited-to-exam"
+    "evaluating"
+    "valintaesitys"
+    "decision-fee-invoiced"
+    "decision-fee-paid"})
+
+(def application-hakukohde-processing-states-astu
+  (reduce (fn [acc [k v]]
+            (if (astu-processing-state-removals k)
               acc
               (conj acc [k v])))
           []
@@ -135,6 +155,14 @@
 
 (def hakukohde-review-types-normal
   [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states-normal]
+   [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
+   [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
+   [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
+   [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
+   [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
+
+(def hakukohde-review-types-astu
+  [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states-astu]
    [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
    [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
    [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
