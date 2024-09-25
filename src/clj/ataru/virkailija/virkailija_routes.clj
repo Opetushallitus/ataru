@@ -1068,7 +1068,7 @@
               (log/warn "Review result" result)
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
-                                                (:application-key reference)
+                                                reference
                                                 " käsittely ei ole sallittu")})))))
 
     (api/context "/tulos-service" []
