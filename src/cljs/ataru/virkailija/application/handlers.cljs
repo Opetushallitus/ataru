@@ -349,15 +349,27 @@
       (clj-string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
+(defn- tutu-form? [form]
+  (or
+    (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+    (get-tutu-form? (:key form))))
+
+(defn- astu-form? [form]
+  (= "payment-type-astu" (get-in form [:properties :payment :type])))
+
 (reg-event-db
  :application/set-filters-from-query
  (fn [db [_ form-key]]
    (let [query-params    (cljs-util/extract-query-params)
          ensisijaisesti? (= "true" (:ensisijaisesti query-params))
-         tutu-form?      (get-tutu-form? form-key)
-         processing-states (if tutu-form?
-                             review-states/application-hakukohde-processing-states
-                             review-states/application-hakukohde-processing-states-normal)]
+         form            (get-in db [:forms form-key])
+         tutu-form?      (tutu-form? form)
+         astu-form?      (astu-form? form)
+         processing-states (cond
+                             tutu-form? review-states/application-hakukohde-processing-states
+                             astu-form? review-states/application-hakukohde-processing-states-astu
+                             :else      review-states/application-hakukohde-processing-states-normal)]
+     (print form)
      (-> db
          (assoc-in [:application :attachment-state-filter]
                    (extract-unselected-review-states-from-query
@@ -663,8 +675,8 @@
      (:created-time application)]))
 
 (defn- form-has-payments? [form]
-  (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
-      (= "payment-type-astu" (get-in form [:properties :payment :type]))
+  (or (tutu-form? form)
+      (astu-form? form)
       (get-tutu-form? (:key form))))
 
 (reg-event-fx
