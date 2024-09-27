@@ -30,7 +30,8 @@
   #{:payment-not-required
     :awaiting-payment
     :payment-ok-via-linked-oid
-    :payment-paid})
+    :payment-paid
+    :payment-overdue})
 
 (def valid-not-awaiting-states
   #{nil
@@ -81,6 +82,11 @@
   "Sets kk processing fee paid or exempt via another alias for the target term."
   [person-oid term year virkailija-oid message]
   (set-payment-state person-oid term year "payment-ok-via-linked-oid" virkailija-oid message))
+
+(defn set-application-fee-overdue
+  "Sets kk processing fee overdue for the target term."
+  [person-oid term year virkailija-oid message]
+  (set-payment-state person-oid term year "payment-overdue" virkailija-oid message))
 
 (defn- haku-valid?
   "Application payments are only collected for admissions starting on or after 1.1.2025

@@ -42,6 +42,7 @@
 (def state-pending "awaiting-payment")
 (def state-not-required "payment-not-required")
 (def state-paid "payment-paid")
+(def state-overdue "payment-overdue")
 (def state-ok-via-linked-oid "payment-ok-via-linked-oid")
 (def event-updated "state-updated")
 
@@ -234,4 +235,8 @@
 
                     (it "should set and get application fee paid for a person with oid"
                         (save-and-check-single-state-and-event
-                          "1.2.3.4.5.8" term-fall year-ok payment/set-application-fee-paid state-paid))))
+                          "1.2.3.4.5.8" term-fall year-ok payment/set-application-fee-paid state-paid))
+
+                    (it "should set and get application fee overdue for a person with oid"
+                        (save-and-check-single-state-and-event
+                          "1.2.3.4.5.9" term-fall year-ok payment/set-application-fee-overdue state-overdue))))
