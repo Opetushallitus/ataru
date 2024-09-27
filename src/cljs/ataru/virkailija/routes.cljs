@@ -120,7 +120,11 @@
     (common-actions)
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
-    (dispatch [:application/set-filters-from-query key])
+    (dispatch-after-state
+      :predicate
+        (fn [db]
+          (not-empty (get-in db [:forms key])))
+      :handler #(dispatch [:application/set-filters-from-query key]))
     (dispatch [:application/select-form key]))
 
   (defroute #"^/lomake-editori/virhe?"
