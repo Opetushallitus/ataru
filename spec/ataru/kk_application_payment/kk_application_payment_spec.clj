@@ -171,6 +171,23 @@
                             (should-not-be-nil id)
                             (should-not-be-nil state)
                             (should-be-matching-state {:person-oid oid, :start-term term-fall,
+                                                       :start-year year-ok, :state state-pending} state))))
+
+                    (it "should set payment status for non eu citizen with existing linked overdue payment as required"
+                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                      application-fixtures/application-without-hakemusmaksu-exemption
+                                                      nil)
+                        (with-redefs [payment/exemption-in-application? (constantly false)]
+                          (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
+                                linked-oid (str oid "2")                ; See FakePersonService
+                                _ (payment/set-application-fee-overdue linked-oid term-fall year-ok nil nil)
+                                id (payment/update-payment-status fake-person-service fake-tarjonta-service
+                                                                  fake-koodisto-cache fake-haku-cache
+                                                                  oid term-fall year-ok nil)
+                                state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
+                            (should-not-be-nil id)
+                            (should-not-be-nil state)
+                            (should-be-matching-state {:person-oid oid, :start-term term-fall,
                                                        :start-year year-ok, :state state-pending} state)))))
 
           (describe "with exemption"
