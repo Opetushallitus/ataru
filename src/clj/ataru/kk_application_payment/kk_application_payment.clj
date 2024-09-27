@@ -124,7 +124,8 @@
         (= 1 (count state-set))                     (first states)
         (contains? state-set :payment-paid)         (get-state-data :payment-paid)
         (contains? state-set :payment-not-required) (get-state-data :payment-not-required)
-        :else                                       (get-state-data :awaiting-payment)))))
+        (contains? state-set :awaiting-payment)     (get-state-data :awaiting-payment)
+        :else                                       (get-state-data :payment-overdue)))))
 
 (defn- exemption-in-application?
   [application]
