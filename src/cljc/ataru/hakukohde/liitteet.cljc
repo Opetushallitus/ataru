@@ -57,8 +57,13 @@
 (defn format-attachment-address
   [lang address]
   (let [street-address (util/from-multi-lang (:osoite address) lang)
-        postal-code    (:koodiUri (:postinumero address))
-        post-office    (util/from-multi-lang (:nimi (:postinumero address)) lang)]
+        postinumero-kielistetty (nil? (:koodiUri (:postinumero address))) ; quick fix related to OY-4948
+        postal-code    (if postinumero-kielistetty
+                         (:koodiUri (util/from-multi-lang (:postinumero address) lang))
+                         (:koodiUri (:postinumero address)))
+        post-office    (if postinumero-kielistetty
+                         (:koodiUri (util/from-multi-lang (:postinumero address) lang))
+                         (util/from-multi-lang (:nimi (:postinumero address)) lang))]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (lang (:toimitusosoite texts/translation-mapping)) ": "
