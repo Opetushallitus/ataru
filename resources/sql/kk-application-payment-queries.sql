@@ -31,3 +31,13 @@ SELECT
   created_time
 FROM kk_application_payment_events
 WHERE kk_application_payment_state_id IN (:kk_application_payment_state_ids);
+
+-- name: yesql-get-open-kk-application-payment-states
+SELECT
+  id,
+  person_oid,
+  start_term,
+  start_year,
+  state
+FROM kk_application_payment_states
+WHERE state = 'awaiting-payment';
