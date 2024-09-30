@@ -10,6 +10,7 @@
 (declare yesql-upsert-kk-application-payment-state<!)
 (declare yesql-add-kk-application-payment-event<!)
 (declare yesql-get-kk-application-payment-events)
+(declare yesql-get-open-kk-application-payment-states)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
@@ -43,4 +44,9 @@
   [payment-state-ids]
   (->> (exec-db :db yesql-get-kk-application-payment-events
                 {:kk_application_payment_state_ids payment-state-ids})
+       (map ->kebab-case-kw)))
+
+(defn get-open-kk-application-payment-states
+  []
+  (->> (exec-db :db yesql-get-open-kk-application-payment-states {})
        (map ->kebab-case-kw)))
