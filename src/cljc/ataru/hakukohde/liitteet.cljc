@@ -54,16 +54,21 @@
   (when (:liitteet-onko-sama-toimitusaika? hakukohde)
     (:liitteiden-toimitusaika hakukohde)))
 
+(defn- get-postal-code-for-formatting [postinumero lang]
+  ; quick fix related to OY-4948
+  (or (:koodiUri postinumero)
+      (:koodiUri (util/from-multi-lang postinumero lang))))
+
+(defn- get-post-office-for-formatting [postinumero lang]
+  ; quick fix related to OY-4948
+  (or (util/from-multi-lang (:nimi postinumero) lang)
+      (:nimi (util/from-multi-lang postinumero lang))))
+
 (defn format-attachment-address
   [lang address]
   (let [street-address (util/from-multi-lang (:osoite address) lang)
-        postinumero-kielistetty (nil? (:koodiUri (:postinumero address))) ; quick fix related to OY-4948
-        postal-code    (if postinumero-kielistetty
-                         (:koodiUri (util/from-multi-lang (:postinumero address) lang))
-                         (:koodiUri (:postinumero address)))
-        post-office    (if postinumero-kielistetty
-                         (:koodiUri (util/from-multi-lang (:postinumero address) lang))
-                         (util/from-multi-lang (:nimi (:postinumero address)) lang))]
+        postal-code    (get-postal-code-for-formatting (:postinumero address) lang)
+        post-office    (get-post-office-for-formatting (:postinumero address) lang)]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (lang (:toimitusosoite texts/translation-mapping)) ": "
