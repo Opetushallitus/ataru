@@ -224,11 +224,17 @@
    :tutkintonimike-names      [localized-schema/LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
+(s/defschema PostinumeroJaPaikka
+  {(s/optional-key :koodiUri) (s/maybe s/Str)
+   (s/optional-key :nimi)     (s/maybe  s/Str)})
+
 (s/defschema Toimitusosoite
   {(s/optional-key :osoite)      (s/maybe localized-schema/LocalizedStringOptional)
-   (s/optional-key :postinumero) (s/maybe {(s/optional-key :koodiUri) (s/maybe s/Str)
-                                           (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})
+   (s/optional-key :postinumero) (s/maybe {(s/optional-key :fi) (s/maybe PostinumeroJaPaikka)
+                                           (s/optional-key :sv) (s/maybe PostinumeroJaPaikka)
+                                           (s/optional-key :en) (s/maybe PostinumeroJaPaikka)})
    (s/optional-key :verkkosivu)   (s/maybe s/Str)})
+
 
 (s/defschema HakukohdeLiite
   {(s/optional-key :tyyppi)                (s/maybe s/Str)
