@@ -123,17 +123,19 @@
 
 (defn mass-information-request-job-step
   [state job-runner]
-  (if (empty? (:application-keys state))
-    nil
-    (let [[now later] (split-at 500 (:application-keys state))]
-      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-        (doseq [key now]
-          (store-in-tx {:identity {:oid (:virkailija-oid state)}}
-                       (assoc (:information-request state)
-                              :application-key key)
-                       job-runner
-                       connection))
-        (job/start-job job-runner connection "mass-information-request-job" (assoc state :application-keys later))))))
+  (let [keys (:application-keys state)]
+    (jdbc/with-db-transaction
+      [connection {:datasource (db/get-datasource :db)}]
+      (if (< 1 (count keys))
+        ; splitataan hakemukset omiin jobeihin, näin nähdään hakemuskohtaisesti onko lisätietopyyntö onnistunut
+        (doseq [key keys]
+          (job/start-job job-runner connection "mass-information-request-job" (assoc state :application-keys [key])))
+        ; ajetaan jobi yhdelle hakemukselle
+        (store-in-tx {:identity {:oid (:virkailija-oid state)}}
+                     (assoc (:information-request state)
+                       :application-key (first keys))
+                     job-runner
+                     connection)))))
 
 (defn mass-store
   [information-request application-keys virkailija-oid job-runner]
