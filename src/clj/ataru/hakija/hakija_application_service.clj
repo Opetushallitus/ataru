@@ -330,6 +330,12 @@
                                           form
                                           cannot-edit-fields)
                                         final-application)
+        ; halutaan että kahdessa kohtaa (juuressa, answers-osioissa) olevien hakukohteiden järjestys on aina synkassa
+        ; koska answer-osion muutokset validoidaan käytetään sitä masterina
+        hakukohteet-answer-values     (:value (first (filter #(= (:key %) "hakukohteet") (:answers final-application))))
+        final-application             (if hakukohteet-answer-values
+                                        (merge final-application {:hakukohde hakukohteet-answer-values})
+                                        final-application)
         hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application)) oppija-session)
         validation-result             (validator/valid-application?
                                        koodisto-cache
