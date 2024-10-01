@@ -13,8 +13,8 @@
    :toimitusaika         deadline-1,
    :toimitetaan-erikseen true,
    :toimitusosoite       {:osoite      {:fi "Hiushalkojantie 4"},
-                          :postinumero {:koodiUri "posti_00100#2",
-                                        :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
+                          :postinumero {:fi {:koodiUri "posti_00100#2", :nimi "HELSINKI"}
+                                        :sv {:koodiUri "posti_00100#2", :nimi "HELSINGFORS"}},
                           :verkkosivu  "https://liite-hius.fi"}})
 
 (def deadline-2
@@ -27,8 +27,8 @@
    :toimitusaika         deadline-2,
    :toimitetaan-erikseen true,
    :toimitusosoite       {:osoite      {:fi "Hiuskatu 2"},
-                          :postinumero {:koodiUri "posti_00500#2",
-                                        :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
+                          :postinumero {:fi {:koodiUri "posti_00500#2", :nimi "HELSINKI"}
+                                        :sv {:koodiUri "posti_00500#2", :nimi "HELSINGFORS"}},
                           :verkkosivu  "https://tupee-liitteena.fi"}})
 
 (def liite-with-swedish
@@ -39,15 +39,15 @@
    :toimitetaan-erikseen true,
    :toimitusosoite       {:osoite      {:fi "Hiuskatu 2"
                                         :sv "Hårgatan 2"},
-                          :postinumero {:koodiUri "posti_00500#2",
-                                        :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
+                          :postinumero {:fi {:koodiUri "posti_00500#2", :nimi "HELSINKI"}
+                                        :sv {:koodiUri "posti_00500#2", :nimi "HELSINGFORS"}},
                           :verkkosivu  "https://tupee-liitteena.fi"}})
 
 (def hakukohde-with-common-attachment-address
   {:liitteet-onko-sama-toimitusosoite? true
    :liitteiden-toimitusosoite          {:osoite      {:fi "Toimisto\nElintie 5"},
-                                        :postinumero {:koodiUri "posti_00100#2",
-                                                      :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
+                                        :postinumero {:fi {:koodiUri "posti_00100#2", :nimi "HELSINKI"}
+                                                      :sv {:koodiUri "posti_00100#2", :nimi "HELSINGFORS"}},
                                         :verkkosivu  "https://elintie-liite.fi"}
    :liitteet                           [liite-1 liite-2]})
 
