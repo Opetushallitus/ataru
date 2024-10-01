@@ -515,6 +515,18 @@
     height: 0;
     overflow: hidden;
   }
+
+  &--no-indent {
+    padding: 12px 12px 12px 0;
+  }
+}
+
+.editor-form__tutkinto-field-wrapper {
+  padding-right: 14px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-flow: column nowrap;
+  flex: initial;
 }
 
 .fade-out {
@@ -1750,4 +1762,64 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 .editor-form__payment-amount-wrapper input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.editor-form__single-choice-button-container {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  margin-left: -5px;
+}
+
+.editor-form__radio {
+  display: none;
+}
+
+.editor-form__radio + label{
+  display: flex;
+  flex-flow: row nowrap;
+  color: @blue-text-color;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.editor-form__radio--unchecked {
+  content: "";
+  height: 20px;
+  width: 20px;
+  min-width: 19px;
+  background-size: 20px 20px;
+  background-image: url('/lomake-editori/images/radio-button-grey-unchecked.png');
+  background-repeat: no-repeat;
+  margin-right: 6px;
+}
+
+.editor-form__radio + label::before {
+  .editor-form__radio--unchecked
+}
+
+.editor-form__radio:disabled + label::before {
+  .editor-form__radio--unchecked;
+  cursor: not-allowed;
+}
+
+.editor-form__radio--checked {
+  content: "";
+  height: 20px;
+  width: 20px;
+  min-width: 19px;
+  background-size: 20px 20px;
+  background-image: url('/lomake-editori/images/radio-button-grey-checked.png');
+  background-repeat: no-repeat;
+  margin-right: 6px;
+}
+
+.editor-form__radio:checked + label::before {
+  .editor-form__radio--checked
+}
+
+.editor-form__radio:checked:disabled + label::before {
+  .editor-form__radio--checked;
+  cursor: not-allowed;
 }
