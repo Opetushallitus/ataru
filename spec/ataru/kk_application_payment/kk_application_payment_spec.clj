@@ -41,12 +41,12 @@
 (def term-error "kausi_a")
 (def year-ok 2025)
 (def year-error 2024)
-(def state-pending "awaiting-payment")
-(def state-not-required "payment-not-required")
-(def state-paid "payment-paid")
-(def state-overdue "payment-overdue")
-(def state-ok-via-linked-oid "payment-ok-via-linked-oid")
-(def event-updated "state-updated")
+(def state-pending (:awaiting payment/all-states))
+(def state-not-required (:not-required payment/all-states))
+(def state-paid (:paid payment/all-states))
+(def state-overdue (:overdue payment/all-states))
+(def state-ok-via-linked-oid (:ok-via-linked-oid payment/all-states))
+(def event-updated (:updated payment/all-event-types))
 
 (defn- should-be-matching-state
   [example state]

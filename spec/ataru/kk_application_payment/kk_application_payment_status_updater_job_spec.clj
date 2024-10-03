@@ -92,5 +92,6 @@
                 runner)
               (let [state-data (first (payment/get-raw-payment-states [test-person-oid] test-term test-year))]
                 (should=
-                  {:person-oid "1.2.3.4.5.303" :start-term "kausi_s" :start-year 2025 :state "awaiting-payment"}
+                  {:person-oid "1.2.3.4.5.303" :start-term "kausi_s" :start-year 2025
+                   :state (:awaiting payment/all-states)}
                   (dissoc state-data :id :created-time :modified-time)))))

@@ -509,11 +509,11 @@
             applications (:applications body)]
         (should= 200 status)
         (should= 1 (count applications))
-        (should= "payment-not-required" (get-in (first applications) [:kk-payment-state]))))
+        (should= (:not-required payment/all-states) (get-in (first applications) [:kk-payment-state]))))
 
   (it "Should include application with matching payment state"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
-                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["awaiting-payment"]))
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include] [(:awaiting payment/all-states)]))
             application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
                                   :form (:id fixtures/person-info-form-with-more-questions))
             application-id (db/init-db-fixture
@@ -531,7 +531,8 @@
 
   (it "Should filter out application with non-matching payment state"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
-                      (assoc-in [:states-and-filters :kk-payment-states-to-include] ["payment-not-required"]))
+                      (assoc-in [:states-and-filters :kk-payment-states-to-include]
+                                [(:not-required payment/all-states)]))
             application-fixture (assoc application-fixtures/person-info-form-application-with-more-answers
                                   :form (:id fixtures/person-info-form-with-more-questions))
             application-id (db/init-db-fixture
@@ -767,9 +768,10 @@
                     events (sort-by :created-time (:events payment-data))]
                 (should= 200 status)
                 (should-not-be-nil payment-data)
-                (should= "awaiting-payment" state)
+                (should= (:awaiting payment/all-states) state)
                 (should= 2 (count events))
-                (should= ["payment-not-required" "awaiting-payment"] (map :new-state events)))))
+                (should= [(:not-required payment/all-states)
+                          (:awaiting payment/all-states)] (map :new-state events)))))
 
 (defn- init-and-get-kk-fixtures []
   (let [person-oid "1.2.3.4.5.303"
