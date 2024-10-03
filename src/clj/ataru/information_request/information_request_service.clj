@@ -102,15 +102,15 @@
                              (-> session :identity :oid)
                              connection)
           information-request-with-add-update-link (assoc information-request :add-update-link add-update-link)]
-    (start-email-job job-runner connection information-request-with-add-update-link)
+    (when false (start-email-job job-runner connection information-request-with-add-update-link))
     (audit-log/log (:audit-logger job-runner)
                    {:new       information-request
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})
-    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
+    (when false (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
       job-runner
-      information-request)
+      information-request))
     information-request))
 
 (defn store [session information-request job-runner]
