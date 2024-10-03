@@ -136,6 +136,20 @@
                              :value     "Kyllä"
                              :fieldType "singleChoice"})
 
+(def hakukohde-answer-ordered {:key "hakukohteet"
+                       :label {:en ""
+                               :fi "Hakukohteet"
+                               :sv ""}
+                       :value ["1.2.246.562.20.352373851710, 1.2.246.562.20.352373851711"]
+                       :fieldType "hakukohteet"})
+
+(def hakukohde-answer-ordered-inverted {:key "hakukohteet"
+                               :label {:en ""
+                                       :fi "Hakukohteet"
+                                       :sv ""}
+                               :value ["1.2.246.562.20.352373851711, 1.2.246.562.20.352373851710"]
+                               :fieldType "hakukohteet"})
+
 (defn- has-never-applied [] (async/go false))
 
 (defn- set-can-submit-multiple-applications
@@ -516,6 +530,19 @@
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                       (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer per-hakukohde-specific-followup-answer)
                                                       (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "passes validation when hakukohteet in answers section and under :hakukohteet are in sync"
+      (print (update (update a :answers conj hakukohde-answer) :hakukohde conj (:value hakukohde-answer)))
+      (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                      (assoc (update a :answers conj hakukohde-answer-ordered) :hakukohde (:value hakukohde-answer-ordered))
+                                                      (update f :content conj hakukohde-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "passes validation when hakukohteet in answers section and under :hakukohteet are not in sync"
+      (print (update (update a :answers conj hakukohde-answer) :hakukohde conj (:value hakukohde-answer)))
+      (should (not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                      (assoc (update a :answers conj hakukohde-answer-ordered) :hakukohde (:value hakukohde-answer-ordered-inverted))
+                                                      (update f :content conj hakukohde-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))
+
 
   (it "fails validation when validating fields from oppija-session when locked field has changed"
       (should= '("Hakemus-answer '020202A0202' does not equal session-answer '120997-9998' for key :ssn" "Hakemus-answer 'Eemil' does not equal session-answer 'Timo' for key :first-name")
