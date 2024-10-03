@@ -6,6 +6,9 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]))
 
+(defn- create-payment-and-send-email
+  [_ _ _])                                                  ; TODO
+
 (defn update-kk-payment-status-handler
   "Updates payment requirement status for a single (person oid, term, year). Creates payments and
   sends e-mails when necessary. Marking status as paid/overdue is done separately via
@@ -17,9 +20,9 @@
                                                                      person_oid term year nil)]
     (when-not (= old-state new-state)
       (cond
-        (= "awaiting-payment" new-state) ()                 ; TODO: Trigger payment + payment email
-        (= "payment-ok-via-linked-oid" new-state) ()        ; TODO: Do we need any further actions here?
-        (= "payment-not-required" new-state) ()             ; TODO: Do we need any further actions here?
+        (= (:awaiting payment/all-states) new-state) (create-payment-and-send-email person_oid term year)
+        (= (:ok-via-linked-oid payment/all-states) new-state) ()        ; TODO: Do we need any further actions here?
+        (= (:not-required payment/all-states) new-state) ()             ; TODO: Do we need any further actions here?
         ))))
 
 (declare conn)                                              ; To keep linter happy

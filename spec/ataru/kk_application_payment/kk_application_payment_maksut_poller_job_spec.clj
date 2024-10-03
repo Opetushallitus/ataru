@@ -76,10 +76,10 @@
 
 (def comparison-states
   "Some states that should hold after each and every job run."
-  [["1.2.246.562.24.333333"  "kausi_s" 2025 "payment-not-required" 1 1]
-   ["1.2.246.562.24.444444"  "kausi_s" 2025 "payment-overdue" 1 1]
-   ["1.2.246.562.24.555555"  "kausi_s" 2025 "payment-paid" 1 1]
-   ["1.2.246.562.24.5123456" "kausi_s" 2025 "payment-paid" 1 2]])
+  [["1.2.246.562.24.333333"  "kausi_s" 2025 (:not-required payment/all-states) 1 1]
+   ["1.2.246.562.24.444444"  "kausi_s" 2025 (:overdue payment/all-states) 1 1]
+   ["1.2.246.562.24.555555"  "kausi_s" 2025 (:paid payment/all-states) 1 1]
+   ["1.2.246.562.24.5123456" "kausi_s" 2025 (:paid payment/all-states) 1 2]])
 
 (defn check-state-and-event [oid term year state-name state-count event-count]
   (let [states (payment/get-raw-payment-states [oid] term year)
@@ -116,26 +116,26 @@
               (let [[oid term year] state-with-no-status
                     _ (create-not-required-status [oid term year])
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year "payment-not-required" 1 1)
+                (check-state-and-event oid term year (:not-required payment/all-states) 1 1)
                 (check-comparison-states)))
 
           (it "does not change status if yet active payment returned from maksut"
               (let [[oid term year] state-with-active-status
                     _ (create-awaiting-status [oid term year])
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year "awaiting-payment" 1 1)
+                (check-state-and-event oid term year (:awaiting payment/all-states) 1 1)
                 (check-comparison-states)))
 
           (it "changes the status of paid payment as paid"
               (let [[oid term year] state-with-paid-status
                     _ (create-awaiting-status [oid term year])
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year "payment-paid" 1 2)
+                (check-state-and-event oid term year (:paid payment/all-states) 1 2)
                 (check-comparison-states)))
 
           (it "changes the status of overdue payment as overdue"
               (let [[oid term year] state-with-overdue-status
                     _ (create-awaiting-status [oid term year])
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year "payment-overdue" 1 2)
+                (check-state-and-event oid term year (:overdue payment/all-states) 1 2)
                 (check-comparison-states))))

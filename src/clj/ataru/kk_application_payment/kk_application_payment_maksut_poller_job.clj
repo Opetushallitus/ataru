@@ -7,6 +7,8 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]))
 
+(def kk-application-payment-origin "kkhakemusmaksu")
+
 (defn- payment-state-to-key
   "Payment references for hakemusmaksu are like 1.2.246.562.24.123456-kausi_s-2025"
   [{:keys [person-oid start-term start-year]}]
@@ -33,13 +35,14 @@
       (doseq [item items]
         (let [{:keys [origin ataru-status maksut-status ataru-data]} item
               {:keys [person-oid start-term start-year]} ataru-data
-              response (if (= "kkhakemusmaksu" origin)
+              awaiting-status (:awaiting payment/all-states)
+              response (if (= kk-application-payment-origin origin)
                          (match [ataru-status maksut-status]
                                 ; TODO can an overdue payment still be paid?
-                                ["awaiting-payment" "paid"]
+                                [awaiting-status "paid"]
                                 (payment/set-application-fee-paid person-oid start-term start-year nil nil)
 
-                                ["awaiting-payment" "overdue"]
+                                [awaiting-status "overdue"]
                                 (payment/set-application-fee-overdue person-oid start-term start-year nil nil)
 
                                 :else (log/debug "Invalid kk payment state combo, will not do anything" item))
