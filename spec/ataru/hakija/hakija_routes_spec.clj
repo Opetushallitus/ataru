@@ -529,7 +529,8 @@
               (payment/set-application-fee-required "1.2.3.4.5.6" "kausi_s" 2025 nil nil)
               (with-get-response "12345" resp
                 (should= 200 (:status resp))
-                (should= {:person-oid "1.2.3.4.5.6", :start-term "kausi_s", :start-year 2025, :state "awaiting-payment"}
+                (should= {:person-oid "1.2.3.4.5.6", :start-term "kausi_s", :start-year 2025,
+                          :state (:awaiting payment/all-states)}
                          (select-keys
                            (get-in resp [:body :kk-payment :status])
                            [:person-oid :start-term :start-year :state]))))))))
