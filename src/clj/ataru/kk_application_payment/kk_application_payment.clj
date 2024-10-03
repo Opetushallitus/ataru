@@ -88,7 +88,7 @@
   [person-oid term year virkailija-oid message]
   (set-payment-state person-oid term year "payment-overdue" virkailija-oid message))
 
-(defn- haku-valid?
+(defn- haku-valid-for-kk-payments?
   "Application payments are only collected for admissions starting on or after 1.1.2025
    and for hakus with specific properties."
   [tarjonta-service haku]
@@ -134,22 +134,38 @@
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
 
-(defn- get-haut-for-start-term-and-year
-  "Get hakus according to study start term and year. Only for internal use, does not do authorization."
-  [get-haut-cache tarjonta-service start-term start-year]
+(defn- get-haut-with-tarjonta-data
+  [get-haut-cache tarjonta-service]
   (->> (cache/get-from get-haut-cache :haut)
        (map :haku)
        distinct
-       (keep #(tarjonta/get-haku tarjonta-service %))
+       (keep #(tarjonta/get-haku tarjonta-service %))))
+
+(defn- get-haut-for-start-term-and-year
+  "Get hakus according to study start term and year. Only for internal use, does not do authorization."
+  [get-haut-cache tarjonta-service start-term start-year]
+  (->> (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
        (filter #(and (= start-year (:alkamisvuosi %))
                      (str/starts-with? (:alkamiskausi %) start-term)))))
 
+(defn get-haut-for-update
+  "Get hakus that should have their kk payment status checked and updated at call time."
+  [get-haut-cache tarjonta-service]
+  (let [hakus (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
+        valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
+        active-hakus (filter utils/haku-active-for-updating valid-hakus)]
+    (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
+    active-hakus))
+
 (defn update-payment-status
-  "Infers and sets new payment status for person according to their personal data, possible OID linkings
-  and applications for term. Does not poll payments, they should be updated separately. Returns state id."
+  "- Infers and sets new payment status for person according to their personal data, possible OID linkings
+     and applications for term.
+   - Does not poll payments, they should be updated separately.
+   - Does not send notification e-mails, so please use via eg. status updater job.
+   - Returns a map with state id and old + new state names."
   [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
   (let [hakus (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
-        valid-hakus (filter (partial haku-valid? tarjonta-service) hakus)
+        valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
         valid-haku-oids (map :oid valid-hakus)
         linked-oids (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid (:master-oid linked-oids)
@@ -161,28 +177,42 @@
       (cond
         ; No need to do updates if there are no applications or application fee already paid
         (= 0 (count applications))
-        (:id original-state)
+        {:id (:id original-state)
+         :old-state (:state original-state)
+         :new-state (:state original-state)}
 
         (= (keyword (:state original-state)) :payment-paid)
-        (:id original-state)
+        {:id (:id original-state)
+         :old-state (:state original-state)
+         :new-state (:state original-state)}
 
         ; If a payment was made via linked oid, use separate state that can change if linking changes
         (= :payment-paid (keyword (:state resolved-state)))
         (if (= (:state original-state) (:state resolved-state))
-          (:id original-state)
-          (set-application-fee-ok-via-linked-oid person-oid term year virkailija-oid
-                                                 (str "Linked OID: " (:person-oid resolved-state))))
+          {:id (:id original-state)
+           :old-state (:state original-state)
+           :new-state (:state resolved-state)}
+          {:id (set-application-fee-ok-via-linked-oid person-oid term year virkailija-oid
+                                                      (str "Linked OID: " (:person-oid resolved-state)))
+           :old-state (:state original-state)
+           :new-state "payment-ok-via-linked-oid"})
 
         ; EU citizens get a free pass
         (is-eu-citizen? person-service koodisto-cache master-oid)
-        (set-application-fee-not-required person-oid term year virkailija-oid nil)
+        {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
+         :old-state (:state original-state)
+         :new-state "payment-not-required"}
 
         ; If any of the linked OIDs has an exemption in application, all of them are naturally exempt.
         (some true? (map exemption-in-application? applications))
-        (set-application-fee-not-required person-oid term year virkailija-oid nil)
+        {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
+         :old-state (:state original-state)
+         :new-state "payment-not-required"}
 
         :else
-        (set-application-fee-required person-oid term year virkailija-oid nil))))
+        {:id (set-application-fee-required person-oid term year virkailija-oid nil)
+         :old-state (:state original-state)
+         :new-state "awaiting-payment"})))
 
 (defn get-kk-payment-states
   "Returns higher education application fee related info to application list belonging to same haku."
