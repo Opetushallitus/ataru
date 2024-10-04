@@ -250,6 +250,7 @@
     (->PersistentJobRunner job-definitions ds enable-running)))
 
 (defn- report-handler [_ job-runner]
+  (throw (RuntimeException.))
   (log/info "Reporting queue length metrics")
   (cloudwatch/store-metrics (:amazon-cloudwatch job-runner)
                             (map (fn [queue]
