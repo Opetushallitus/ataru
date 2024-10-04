@@ -44,7 +44,5 @@
                           :type     "clean-old-forms-job"
                           :schedule "0 3 * * *"
                           :queue    default-retry-strategy}
-   (:type report-job) (merge report-job
-                             {:queue default-retry-strategy})
-   (:type cleanup-job) (merge cleanup-job
-                              {:queue default-retry-strategy})})
+   (:type report-job) report-job
+   (:type cleanup-job) cleanup-job})
