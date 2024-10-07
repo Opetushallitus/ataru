@@ -298,7 +298,9 @@
   (let [
         answers-hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
         hakukohteet (:hakukohde application)]
-    (or (empty? hakukohteet) (= answers-hakukohteet hakukohteet))))
+    (or (empty? hakukohteet)                                ; tämä tekee yksikkötesteistä yksinkertaisempia kun
+                                                            ; hakukohteita ei tarvitse määritellä kahteen paikkaan
+        (= answers-hakukohteet hakukohteet))))
 
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
