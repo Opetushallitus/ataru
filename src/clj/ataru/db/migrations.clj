@@ -63,8 +63,7 @@
 
 (defmigration
   migrate-dob-into-dd-mm-yyyy-format "1.71"
-  "Update date of birth from application answers to dd.mm.yyyy format"
-  ((requiring-resolve 'ataru.db.migration-implementations/dob->dd-mm-yyyy-format) connection))
+  "Update date of birth from application answers to dd.mm.yyyy format")
 
 (defmigration
   migrate-camel-case-content-keys "1.72"
@@ -93,8 +92,7 @@
 
 (defmigration
   migrate-start-attachment-finalizer-jobs "1.82"
-  "Start attachment finalizer job for all applications"
-  ((requiring-resolve 'ataru.db.migration-implementations/start-attachment-finalizer-job-for-all-applications) connection))
+  "Start attachment finalizer job for all applications")
 
 (defmigration
   migrate-kotikunta-from-text-to-a-code "1.86"
@@ -128,10 +126,8 @@
 
 (defmigration
   add-harkinnanvaraisuus-checks "20230125094000"
-  "Infinite harkinnanvaraisuus job that checks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot"
-  ((requiring-resolve 'ataru.db.migration-implementations/migrate-add-harkinnanvaraisuus-checks) connection))
+  "Infinite harkinnanvaraisuus job that checks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot")
 
 (defmigration
   add-harkinnanvaraisuus-rechecks "20230201150700"
-  "Infinite harkinnanvaraisuus job that rechecks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot"
-  ((requiring-resolve 'ataru.db.migration-implementations/migrate-add-harkinnanvaraisuus-rechecks) connection))
+  "Infinite harkinnanvaraisuus job that rechecks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot")

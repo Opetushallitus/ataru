@@ -1,21 +1,17 @@
 (ns ataru.db.migration-implementations
   (:require [ataru.application.review-states :as review-states]
             [ataru.applications.application-store :as application-store]
-            [ataru.background-job.job-store :as job-store]
             [ataru.cas.client :as cas]
             [ataru.component-data.person-info-module :as person-info-module]
-            [ataru.component-data.value-transformers :as t]
             [ataru.config.core :refer [config]]
             [ataru.db.db :refer [get-datasource]]
             [ataru.db.migrations.application-migration-store :as migration-app-store]
             [ataru.db.migrations.form-migration-store :as migration-form-store]
             [ataru.forms.form-store :as store]
-            [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
             [ataru.person-service.person-service :as person-service]
-            [ataru.person-service.person-integration :as person-integration]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.util :as util]
             [ataru.util.random :as c]
@@ -29,8 +25,7 @@
             [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
-            [medley.core :refer [find-first]]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job])
+            [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (defonce migration-session {:user-agent "migration"})
@@ -259,56 +254,6 @@
   (doseq [application (migration-app-store/get-all-applications)]
     (create-new-review-state application)))
 
-(defn dob->dd-mm-yyyy-format [connection]
-  (with-db-transaction [conn {:connection connection}]
-    (letfn [(invalid-dob-format? [[day month _]]
-              (and (some? day)
-                   (some? month)
-                   (or (< (count day) 2)
-                       (< (count month) 2))))
-            (application-with-invalid-dob-format? [application]
-              (->> application
-                   :content
-                   :answers
-                   (filter (fn [answer]
-                             (and (= (:key answer) "birth-date")
-                                  (not (clojure.string/blank? (:value answer))))))
-                   (eduction (map :value)
-                             (map #(clojure.string/split % #"\.")))
-                   (first)
-                   (invalid-dob-format?)))
-            (->dd-mm-yyyy-format [application]
-              (update-in application [:content :answers] (partial map (fn [answer]
-                                                                        (cond-> answer
-                                                                          (= (:key answer) "birth-date")
-                                                                          (update :value t/birth-date))))))
-            (->applications [applications application]
-              (if-let [application-key (:key application)]
-                (-> applications
-                    (update application-key (fnil identity []))
-                    (update application-key conj application))
-                applications))
-            (latest-application-id [applications]
-              (->> applications
-                   (sort-by :created-time)
-                   (last)
-                   :id))]
-      (let [applications (->> (migration-app-store/get-all-applications)
-                              (filter application-with-invalid-dob-format?)
-                              (map ->dd-mm-yyyy-format)
-                              (reduce ->applications {}))]
-        (doseq [[application-key applications] applications]
-          (doseq [application applications]
-            (log/info (str "Updating date of birth answer of application " (:id application)))
-            (migration-app-store/update-application-content (:id application) (:content application)))
-          (when-let [application-id (latest-application-id applications)]
-            (log/info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
-            (job-store/store-new conn
-                                 (:type person-integration/job-definition)
-                                 {:application-id application-id}))))))
-
-  )
-
 (defn camel-case-content-keys []
   (doseq [application (migration-app-store/get-all-applications)]
     (let [camel-cased-content (transform-keys ->camelCaseKeyword
@@ -352,28 +297,6 @@
           (when (not= new-application-state state)
             (println "Updating application review state" key (:id application) state "->" new-application-state)
             (migration-app-store/set-application-state key new-application-state)))))))
-
-(defn start-attachment-finalizer-job-for-all-applications
-  [connection]
-  (with-db-transaction [conn {:connection connection}]
-    (doseq [application-id (migration-app-store/get-ids-of-latest-applications)]
-      (job-store/store-new conn
-                           (:type attachment-finalizer-job/job-definition)
-                           {:application-id application-id}))))
-
-(defn migrate-add-harkinnanvaraisuus-checks
-  [connection]
-  (with-db-transaction [conn {:connection connection}]
-    (job-store/store-new conn
-                         (:type harkinnanvaraisuus-job/job-definition)
-                         {})))
-
-(defn migrate-add-harkinnanvaraisuus-rechecks
-  [connection]
-  (with-db-transaction [conn {:connection connection}]
-    (job-store/store-new conn
-                         (:type harkinnanvaraisuus-job/recheck-job-definition)
-                         {})))
 
 (defn- update-home-town
   [new-home-town-component form]
