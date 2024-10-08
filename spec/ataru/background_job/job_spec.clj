@@ -15,6 +15,15 @@
       (when (deref timed-out 250 false)
         (should false)))))
 
+(defn try-n-times [f n t]
+  (if (zero? n)
+    (f)
+    (try
+      (f)
+      (catch Throwable _
+        (Thread/sleep t)
+        (try-n-times f (dec n) t)))))
+
 (describe "background job"
           (tags :unit :validator)
           (before-all
@@ -26,13 +35,13 @@
                                            :env-vars      {"POSTGRES_DB" "test"
                                                            "POSTGRES_PASSWORD" "postgres"}})
                                (tc/start!)))
-            (def ds (make-datasource {:database-name "test"
-                                      :pool-name     "test"
-                                      :username      "postgres"
-                                      :password      "postgres"
-                                      :server-name   "localhost"
-                                      :port-number   (get (:mapped-ports container) 5432)
-                                      :adapter       "postgresql"})))
+            (def ds (try-n-times #(make-datasource {:database-name "test"
+                                                    :pool-name     "test"
+                                                    :username      "postgres"
+                                                    :password      "postgres"
+                                                    :server-name   "localhost"
+                                                    :port-number   (get (:mapped-ports container) 5432)
+                                                    :adapter       "postgresql"}) 3 2000)))
 
           (before
             (jdbc/with-db-transaction
