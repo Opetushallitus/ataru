@@ -204,6 +204,10 @@
           attachment        (liitteet/attachment-for-hakukohde attachment-type hakukohde)
           default-deadline  (-> field :params :deadline-label (get selected-language))
           deadline          (or (liitteet/attachment-deadline selected-language attachment hakukohde) default-deadline)]
+    (prn "field" field)
+    (prn "attachment" attachment)
+    (prn "hakukohde-oid" hakukohde-oid)
+    (prn "deadline" deadline)
       deadline)))
 
 (re-frame/reg-sub

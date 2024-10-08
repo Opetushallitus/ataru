@@ -8,6 +8,7 @@
     [ataru.config.core :refer [config]]
     [clojure.string :as string]
     [clojure.set :as set]
+    [taoensso.timbre :as log]
     [ataru.constants :refer [hakutapa-jatkuva-haku hakutapa-joustava-haku]])
   (:import (java.util Locale)
            (java.time Instant ZoneId)
@@ -170,6 +171,7 @@
       modifier)))
 
 (defn attachment-edit-end [hakuaika]
+  (log/info "hakuaika" hakuaika)
   (let [default-modify-grace-period (-> config
                                         :public-config
                                         (get :attachment-modify-grace-period-days 14))
@@ -179,6 +181,10 @@
                              c/from-long)
         attachment-end (some-> hakuaika-end
                                (t/plus (t/days modify-grace-period)))]
+   ;(log/info "hakuaika.clj_:168 default-modify-grace-period" default-modify-grace-period)
+   (log/info "modify-grace-period" modify-grace-period)
+   (log/info "Dima 10:28 hakuaika-end" hakuaika-end)
+   (log/info "attachment-end" attachment-end)
    (when attachment-end
      (t/plus attachment-end (t/hours (winter-summertime-nullification-adjustment hakuaika-end attachment-end))))))
 

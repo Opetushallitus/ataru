@@ -26,6 +26,7 @@
 
 (defn- deadline-info [deadline]
   (let [lang @(subscribe [:application/form-language])]
+    (prn "deadline" deadline)
     [:div.application__form-upload-attachment--deadline
      (str (tu/get-hakija-translation :deadline-in lang) " " deadline)]))
 
