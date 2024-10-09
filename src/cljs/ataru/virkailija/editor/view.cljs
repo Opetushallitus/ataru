@@ -374,6 +374,7 @@
     [:div.editor-form__checkbox-with-label
      [:input.editor-form__checkbox
       {:id        id
+       :data-test-id "toggle-allow-hakeminen-tunnistautuneena"
        :checked   (true? (boolean current-value))
        :type      "checkbox"
        :disabled  disabled?

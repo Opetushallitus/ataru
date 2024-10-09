@@ -553,6 +553,13 @@
          (some #(= "pohjakoulutusristiriita" (:id %))))))
 
 (re-frame/reg-sub
+  :editor/tutkinnot-component-exists?
+  (fn [db _]
+    (->> (get-selected-form-content db)
+         util/flatten-form-fields
+         (some #(= "koski-tutkinnot-wrapper" (:id %))))))
+
+(re-frame/reg-sub
   :editor/email-template
   (fn [db _]
     (get-email-template db)))
@@ -666,3 +673,17 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
     (get form-properties :closed false)))
+
+(re-frame/reg-sub
+  :editor/get-selected-property-options
+  (fn [[_ _] _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties [_ category default]]
+    (get-in form-properties [(keyword category) :selected-option-ids] default)))
+
+(re-frame/reg-sub
+  :editor/get-property-value
+  (fn [[_ _] _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties [_ category property]]
+    (get-in form-properties [(keyword category)(keyword property)])))
