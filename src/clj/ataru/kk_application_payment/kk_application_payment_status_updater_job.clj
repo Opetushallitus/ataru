@@ -1,28 +1,37 @@
 (ns ataru.kk-application-payment.kk-application-payment-status-updater-job
   (:require [ataru.applications.application-store :as application-store]
             [ataru.background-job.job :as job]
+            [ataru.config.url-helper :as url-helper]
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.maksut.maksut-protocol :as maksut-protocol]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]))
 
+; TODO finalize after big OK-687 changes
 (defn- create-payment-and-send-email
-  [_ _ _])                                                  ; TODO
+  [maksut-service person term year]
+  (let [lang (:language person)
+        invoice-data (payment/generate-invoicing-data person term year)
+        invoice (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
+        url (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang)]
+    (when invoice
+      (log/info "Invoice details" invoice)
+      (log/info "Generate maksut-link for email" url))))
 
 (defn update-kk-payment-status-handler
   "Updates payment requirement status for a single (person oid, term, year). Creates payments and
   sends e-mails when necessary. Marking status as paid/overdue is done separately via
   kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year]}
-   {:keys [person-service tarjonta-service koodisto-cache haku-cache]}]
-  (let [{:keys [old-state new-state]} (payment/update-payment-status person-service tarjonta-service
+   {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service]}]
+  (let [{:keys [person old-state new-state]} (payment/update-payment-status person-service tarjonta-service
                                                                      koodisto-cache haku-cache
                                                                      person_oid term year nil)]
     (when-not (= old-state new-state)
       (cond
-        (= (:awaiting payment/all-states) new-state) (create-payment-and-send-email person_oid term year)
-        (= (:ok-via-linked-oid payment/all-states) new-state) ()        ; TODO: Do we need any further actions here?
-        (= (:not-required payment/all-states) new-state) ()             ; TODO: Do we need any further actions here?
+        (= (:awaiting payment/all-states) new-state) ()     ; TODO after OK-687 (create-payment-and-send-email maksut-service person term year)
+        ; TODO: Which other states need eg. mails sent?
         ))))
 
 (declare conn)                                              ; To keep linter happy

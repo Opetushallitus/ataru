@@ -12,7 +12,10 @@
             [ataru.util :as util]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [ataru.kk-application-payment.utils :as utils]))
+            [ataru.kk-application-payment.utils :as utils]
+            [ataru.config.core :refer [config]]))
+
+(def kk-application-payment-origin "kkhakemusmaksu")
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
 ; TODO: -> before the main feature branch gets merged to master
@@ -41,6 +44,26 @@
     (:not-required      all-states)
     (:ok-via-linked-oid all-states)
     (:paid              all-states)})
+
+; TODO finalize after big OK-687 changes
+(defn payment-status-to-reference
+  "Maksut payment references for hakemusmaksu are like 1.2.246.562.24.123456-kausi_s-2025"
+  [{:keys [person-oid start-term start-year]}]
+  (str/join "-" [person-oid start-term start-year]))
+
+; TODO finalize after big OK-687 changes
+(defn generate-invoicing-data
+  [person term year]
+  (let [amount (get-in config [:form-payment-info :kk-processing-fee])]
+    {:reference (payment-status-to-reference {:person-oid (:oid person)
+                                              :start-term term
+                                              :start-year year})
+     :origin kk-application-payment-origin
+     :due-date ""                                           ; TODO
+     :first-name (:first-name person)
+     :last-name (:last-name person)
+     :email ""                                              ; TODO: from application data
+     :amount amount}))
 
 (defn- set-payment-state
   [person-oid term year new-state virkailija-oid message]
@@ -102,15 +125,15 @@
                            (:hakukohteet haku))]
     (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)))
 
-(defn- is-eu-citizen? [person-service koodisto-cache oid]
-  (let [person (person-service/get-person person-service oid)
-        eu-area (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+(defn- is-eu-citizen? [koodisto-cache person]
+  (let [eu-area (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
                      (filter #(= "EU" (:value %)))
                      (first))
         eu-country-codes (set (map :value (:within eu-area)))]
     (if (> (count eu-country-codes) 0)
+      ; TODO: should this actually be (:nationality person) as opposed to test data? Check!
       (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person))
-      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid oid})))))
+      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
 
 (defn- resolve-actual-payment-state
   "Resolves a single payment state from the states of possibly multiple aliases for single person.
@@ -171,6 +194,7 @@
         valid-haku-oids (map :oid valid-hakus)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
+        person          (person-service/get-person person-service master-oid)
         aliases         (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
         original-state  (first (get-raw-payment-states [person-oid] term year))
         resolved-state  (resolve-actual-payment-state (get-raw-payment-states aliases term year))
@@ -181,40 +205,47 @@
         (= 0 (count applications))
         {:id (:id original-state)
          :old-state (:state original-state)
-         :new-state (:state original-state)}
+         :new-state (:state original-state)
+         :person person}
 
         (= (:state original-state) (:paid all-states))
         {:id (:id original-state)
          :old-state (:state original-state)
-         :new-state (:state original-state)}
+         :new-state (:state original-state)
+         :person person}
 
         ; If a payment was made via linked oid, use separate state that can change if linking changes
         (= (:state resolved-state) (:paid all-states))
         (if (= (:state original-state) (:state resolved-state))
           {:id (:id original-state)
            :old-state (:state original-state)
-           :new-state (:state original-state)}
+           :new-state (:state original-state)
+           :person person}
           {:id (set-application-fee-ok-via-linked-oid person-oid term year virkailija-oid
                                                       (str "Linked OID: " (:person-oid resolved-state)))
            :old-state (:state original-state)
-           :new-state (:ok-via-linked-oid all-states)})
+           :new-state (:ok-via-linked-oid all-states)
+           :person person})
 
         ; EU citizens get a free pass
-        (is-eu-citizen? person-service koodisto-cache master-oid)
+        (is-eu-citizen? koodisto-cache person)
         {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
          :old-state (:state original-state)
-         :new-state (:not-required all-states)}
+         :new-state (:not-required all-states)
+         :person person}
 
         ; If any of the linked OIDs has an exemption in application, all of them are naturally exempt.
         (some true? (map exemption-in-application? applications))
         {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
          :old-state (:state original-state)
-         :new-state (:not-required all-states)}
+         :new-state (:not-required all-states)
+         :person person}
 
         :else
         {:id (set-application-fee-required person-oid term year virkailija-oid nil)
          :old-state (:state original-state)
-         :new-state (:awaiting all-states)})))
+         :new-state (:awaiting all-states)
+         :person person})))
 
 (defn get-kk-payment-states
   "Returns higher education application fee related info to application list belonging to same haku."

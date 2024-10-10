@@ -3,20 +3,12 @@
   (:require [clojure.core.match :refer [match]]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.kk-application-payment.kk-application-payment :as payment]
-            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]))
 
-(def kk-application-payment-origin "kkhakemusmaksu")
-
-(defn- payment-state-to-key
-  "Payment references for hakemusmaksu are like 1.2.246.562.24.123456-kausi_s-2025"
-  [{:keys [person-oid start-term start-year]}]
-  (str/join "-" [person-oid start-term start-year]))
-
 (defn poll-payments [maksut-service payment-states]
   (let [keys-states (into {}
-                          (map (fn [state] [(payment-state-to-key state) state]) payment-states))
+                          (map (fn [state] [(payment/payment-status-to-reference state) state]) payment-states))
         maksut    (maksut-protocol/list-lasku-statuses maksut-service (keys keys-states))]
 
     (log/debug "Received statuses for" (count maksut) "kk payment invoices")
@@ -36,7 +28,7 @@
         (let [{:keys [origin ataru-status maksut-status ataru-data]} item
               {:keys [person-oid start-term start-year]} ataru-data
               awaiting-status (:awaiting payment/all-states)
-              response (if (= kk-application-payment-origin origin)
+              response (if (= payment/kk-application-payment-origin origin)
                          (match [ataru-status maksut-status]
                                 ; TODO can an overdue payment still be paid?
                                 [awaiting-status "paid"]
