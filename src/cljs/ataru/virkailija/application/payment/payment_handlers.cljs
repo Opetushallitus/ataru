@@ -82,10 +82,14 @@
   :payment/send-decision-invoice
   (fn [{db :db} [_ application-key payment-type]]
    (let [{:keys [due_date]} (get-in db [:payment :inputs application-key])
-         application (get-in db [:application :selected-application-and-form :application])
+         application-and-form (get-in db [:application :selected-application-and-form])
+         application (:application application-and-form)
+         form       (:form application-and-form)
          get-field  (fn [key] (->> (:answers application) key :value))
          message    (get-payment-note-input db application-key)
          amount     (get-payment-amount-input db application-key)
+         metadata   (when (= payment-type "payment-type-astu")
+                      {:form-name (:name form)})
          data {:reference application-key
                :first-name (get-field :first-name)
                :last-name (get-field :last-name)
@@ -104,7 +108,10 @@
 
                 :id :send-decision-invoice
                 :handler-args {:application-key application-key}
-                :override-args {:params data}))
+                :override-args {:params (cond->
+                                          data
+                                          (not-empty metadata)
+                                          (assoc :metadata metadata))}))
    {}))
 
 (re-frame/reg-fx
