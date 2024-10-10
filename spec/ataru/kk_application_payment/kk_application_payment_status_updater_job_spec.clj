@@ -14,7 +14,8 @@
             [ataru.cache.cache-service :as cache-service]
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.background-job.job :as job]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]))
 
 (def test-person-oid
   (:person-oid application-fixtures/application-without-hakemusmaksu-exemption))
@@ -29,6 +30,17 @@
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
+
+(defrecord MockMaksutService []
+  MaksutServiceProtocol
+
+  (create-kk-application-payment-lasku [_ _] {})
+  (create-kasittely-lasku [_ _] {})
+  (create-paatos-lasku [_ _] {})
+  (list-lasku-statuses [_ _] {})
+  (list-laskut-by-application-key [_ _] []))
+
+(def mock-maksut-service (->MockMaksutService))
 
 (def fake-haku-cache (reify cache-service/Cache
                        (get-from [_ _]
@@ -46,7 +58,8 @@
   (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
                        :person-service   fake-person-service
                        :haku-cache       fake-haku-cache
-                       :koodisto-cache   fake-koodisto-cache}))
+                       :koodisto-cache   fake-koodisto-cache
+                       :maksut-service   mock-maksut-service}))
 
 (declare conn)
 (declare spec)
