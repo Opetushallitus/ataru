@@ -1,5 +1,6 @@
 (ns ataru.kk-application-payment.kk-application-payment-store-spec
-  (:require [speclj.core :refer [describe tags it should-not-be-nil should= should-not before-all]]
+  (:require [ataru.kk-application-payment.kk-application-payment :as payment]
+            [speclj.core :refer [describe tags it should-not-be-nil should= should-not before-all]]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.db.db :as db]
             [clojure.java.jdbc :as jdbc]))
@@ -9,9 +10,9 @@
 (def test-term-fall "kausi_s")
 (def test-year 2025)
 (def test-year-2 2026)
-(def test-state-pending "awaiting-payment")
-(def test-state-paid "payment-paid")
-(def test-event-updated "state-updated")
+(def test-state-pending (:awaiting payment/all-states))
+(def test-state-paid (:paid payment/all-states))
+(def test-event-updated (:updated payment/all-event-types))
 (def test-event-comment "comment")
 
 (defn- delete-states-and-events! []
