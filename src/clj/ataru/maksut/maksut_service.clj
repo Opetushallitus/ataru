@@ -60,6 +60,10 @@
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
+  (create-kk-application-payment-lasku [_ lasku]
+    (create-lasku-post maksut-cas-client
+                       (assoc lasku :index 1)))
+
   (create-kasittely-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
                   (assoc lasku :index 1)))
