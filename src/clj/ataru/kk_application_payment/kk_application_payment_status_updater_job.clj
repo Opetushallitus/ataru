@@ -26,11 +26,11 @@
   [{:keys [person_oid term year]}
    {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service]}]
   (let [{:keys [person old-state new-state]} (payment/update-payment-status person-service tarjonta-service
-                                                                     koodisto-cache haku-cache
-                                                                     person_oid term year nil)]
+                                                                            koodisto-cache haku-cache
+                                                                            person_oid term year nil)]
     (when-not (= old-state new-state)
       (cond
-        (= (:awaiting payment/all-states) new-state) ()     ; TODO after OK-687 (create-payment-and-send-email maksut-service person term year)
+        (= (:awaiting payment/all-states) new-state) (create-payment-and-send-email maksut-service person term year)
         ; TODO: Which other states need eg. mails sent?
         ))))
 
@@ -39,9 +39,9 @@
   "Queues kk payment status updates for all persons with active applications in haku."
   [haku job-runner]
   (log/info "Processing haku" (:oid haku) "kk application payment statuses.")
-  (let [haku-oid    (:oid haku)
-        term        (:alkamiskausi haku)
-        year        (:alkamisvuosi haku)
+  (let [haku-oid (:oid haku)
+        term (:alkamiskausi haku)
+        year (:alkamisvuosi haku)
         person-oids (application-store/get-application-person-oids-for-haku haku-oid)]
     (log/info "Found" (count person-oids) "oids for haku" haku-oid "- updating kk application payment statuses.")
     (doseq [person-oid person-oids]
@@ -64,6 +64,6 @@
 (def updater-job-definition {:handler update-kk-payment-status-handler
                              :type    "kk-application-payment-status-update-job"})
 
-(def scheduler-job-definition {:handler update-kk-payment-status-scheduler-handler
-                               :type    "kk-application-payment-status-update-scheduler-job"
+(def scheduler-job-definition {:handler  update-kk-payment-status-scheduler-handler
+                               :type     "kk-application-payment-status-update-scheduler-job"
                                :schedule "0 6 * * *"})
