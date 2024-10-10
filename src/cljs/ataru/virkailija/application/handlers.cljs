@@ -369,7 +369,6 @@
                              tutu-form? review-states/application-hakukohde-processing-states
                              astu-form? review-states/application-hakukohde-processing-states-astu
                              :else      review-states/application-hakukohde-processing-states-normal)]
-     (print form)
      (-> db
          (assoc-in [:application :attachment-state-filter]
                    (extract-unselected-review-states-from-query
