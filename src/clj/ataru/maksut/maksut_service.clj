@@ -60,9 +60,8 @@
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
-  (create-kk-application-payment-lasku [_ lasku]
-    (create-lasku-post maksut-cas-client
-                       (assoc lasku :index 1)))
+  (create-kk-application-payment-lasku [_ _]
+    ())                                                     ; TODO finalize after big OK-687 changes
 
   (create-kasittely-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
