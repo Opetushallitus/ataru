@@ -8,8 +8,6 @@
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
-            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-maksut-poller-job]
-            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-updater-job]
             [ataru.background-job.job :refer [report-job cleanup-job]]))
 
 (def default-retry-strategy {:proletarian/retry-strategy-fn
