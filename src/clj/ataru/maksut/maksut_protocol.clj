@@ -1,6 +1,8 @@
 (ns ataru.maksut.maksut-protocol)
 
 (defprotocol MaksutServiceProtocol
+  (create-kk-application-payment-lasku [this lasku])
+
   (create-kasittely-lasku [this lasku])
 
   (create-paatos-lasku [this lasku])
