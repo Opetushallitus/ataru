@@ -27,12 +27,13 @@
                                                                 {:queue default-retry-strategy})
    (:type harkinnanvaraisuus-email-job/job-definition)   (merge harkinnanvaraisuus-email-job/job-definition
                                                                 {:queue default-retry-strategy})
-   (:type kk-maksut-poller-job/job-definition)           (merge kk-maksut-poller-job/job-definition
-                                                                {:queue default-retry-strategy})
-   (:type kk-updater-job/scheduler-job-definition)       (merge kk-updater-job/scheduler-job-definition
-                                                                {:queue default-retry-strategy})
-   (:type kk-updater-job/updater-job-definition)         (merge kk-updater-job/updater-job-definition
-                                                                {:queue default-retry-strategy})
+   ; TODO: these are disabled completely until OK-687 rewrite
+   ;(:type kk-maksut-poller-job/job-definition)           (merge kk-maksut-poller-job/job-definition
+   ;                                                             {:queue default-retry-strategy})
+   ;(:type kk-updater-job/scheduler-job-definition)       (merge kk-updater-job/scheduler-job-definition
+   ;                                                             {:queue default-retry-strategy})
+   ;(:type kk-updater-job/updater-job-definition)         (merge kk-updater-job/updater-job-definition
+   ;                                                             {:queue default-retry-strategy})
    "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                           :type    "automatic-payment-obligation-job"
                                                           :queue   default-retry-strategy}
