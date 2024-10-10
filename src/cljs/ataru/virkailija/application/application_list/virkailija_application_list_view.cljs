@@ -717,7 +717,8 @@
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key-for-search])
         filter-questions                          (subscribe [:application/filter-questions])
-        tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
+        tutu-form?                                (subscribe [:payment/tutu-form? @form-key])
+        astu-form?                                (subscribe [:payment/astu-form? @form-key])
         opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
@@ -786,7 +787,10 @@
                (when (some? @selected-hakukohde-oid)
                  [:div.application-handling__filter-hakukohde-name
                   @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-               (->> (if tutu-form? review-states/hakukohde-review-types review-states/hakukohde-review-types-normal)
+               (->> (cond
+                      @tutu-form? review-states/hakukohde-review-types
+                      @astu-form? review-states/hakukohde-review-types-astu
+                      :else review-states/hakukohde-review-types-normal)
                     (filter (fn [[kw _ _]]
                               (and
                                (contains? filters-to-include kw)
@@ -864,7 +868,8 @@
 (defn application-list-header [_]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])
         form-key        @(subscribe [:application/selected-form-key])
-        tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])
+        tutu-form?       @(subscribe [:payment/tutu-form? form-key])
+        astu-form?       @(subscribe [:payment/astu-form? form-key])
         korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])
         review-states-visible? (subscribe [:application/review-states-visible?])]
     [:div.application-handling__list-header.application-handling__list-row
@@ -893,9 +898,10 @@
           @(subscribe [:editor/virkailija-translation :processing-state])
           :states
           {:processing-state-filter
-           (if tutu-form?
-             review-states/application-hakukohde-processing-states
-             review-states/application-hakukohde-processing-states-normal)}
+           (cond
+             tutu-form? review-states/application-hakukohde-processing-states
+             astu-form? review-states/application-hakukohde-processing-states-astu
+             :else review-states/application-hakukohde-processing-states-normal)}
           :state-counts-subs
           {:processing-state-filter
            @(subscribe [:state-query [:application :review-state-counts]])}}])]

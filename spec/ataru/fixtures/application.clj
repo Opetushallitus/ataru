@@ -568,3 +568,28 @@
   {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
    :notes           "Some notes about the applicant"
    :state-name      "processing-state"})
+
+(def application-with-hakemusmaksu-exemption
+  (-> person-info-form-application
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543210
+              :person-oid "1.2.3.4.5.303"})
+      (update :answers
+              (comp vec concat)
+              [{:key "vapautus_hakemusmaksusta" :value "0" :fieldType "dropdown"}])))
+
+(def application-without-hakemusmaksu-exemption
+  (-> person-info-form-application
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543211
+              :person-oid "1.2.3.4.5.303"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key "vapautus_hakemusmaksusta" :value "12345" :fieldType "dropdown"}])))

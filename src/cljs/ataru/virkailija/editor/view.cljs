@@ -397,6 +397,78 @@
     {:for id}
     @(subscribe [:editor/virkailija-translation :only-yhteishaku])]]))
 
+(defn- lomakkeeseen-liittyy-maksutoiminto-component
+  []
+  (let [id                      "toggle-lomakkeeseen-liittyy-maksutoiminto"
+        maksutiedot             @(subscribe [:editor/maksutiedot])
+        maksutoiminto?          (not (empty? maksutiedot))
+        superuser?              @(subscribe [:editor/superuser?])
+        disabled?               (or @(subscribe [:editor/form-locked?])
+                                    (not superuser?)
+                                    (= (:type maksutiedot) "payment-type-kk"))]
+    [:div
+     [:div.editor-form__checkbox-with-label
+      [:input.editor-form__checkbox
+       {:id        id
+        :checked   maksutoiminto?
+        :type      "checkbox"
+        :disabled  disabled?
+        :on-change #(dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto])
+        :data-test-id "toggle-maksutoiminto"}]
+      [:label.editor-form__checkbox-label
+       {:for id}
+       @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
+     (when maksutoiminto?
+       [:div.editor-form__maksutoiminto-wrapper
+        [:div
+         [:div.editor-form__checkbox-with-label
+          [:input.editor-form__radio
+           {:type      "radio"
+            :value     "payment-type-tutu"
+            :checked   (= (:type maksutiedot) "payment-type-tutu")
+            :id        "maksutyyppi-tutu-radio"
+            :disabled  disabled?
+            :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])
+            :data-test-id "maksutyyppi-tutu-radio"}]
+          [:label.editor-form__checkbox-label
+           {:for   "maksutyyppi-tutu-radio"}
+           @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
+         (when (= (:type maksutiedot) "payment-type-tutu")
+           [:div.editor-form__payment-amount-wrapper
+            [:div.editor-form__text-field-wrapper
+             [:label.editor-form__component-item-header
+              @(subscribe [:editor/virkailija-translation :kasittelymaksu-input])]
+             [:input.editor-form__text-field
+              {:data-test-id "tutu-processing-fee-input"
+               :type         "number"
+               :value        (:processing-fee maksutiedot)
+               :required     true
+               :disabled     disabled?
+               :on-change    #(dispatch [:editor/change-processing-fee (.-value (.-target %))])}]]])
+        [:div.editor-form__checkbox-with-label
+         [:input.editor-form__radio
+          {:type      "radio"
+           :value     "payment-type-astu"
+           :checked   (= (:type maksutiedot) "payment-type-astu")
+           :id        "maksutyyppi-astu-radio"
+           :disabled  disabled?
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])
+           :data-test-id "maksutyyppi-astu-radio"}]
+         [:label.editor-form__checkbox-label
+          {:for   "maksutyyppi-astu-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]
+        [:div.editor-form__checkbox-with-label
+         [:input.editor-form__radio
+          {:type      "radio"
+           :value     "payment-type-kk"
+           :checked   (= (:type maksutiedot) "payment-type-kk")
+           :id        "maksutyyppi-kk-radio"
+           :disabled  true
+           :data-test-id "maksutyyppi-kk-radio"}]
+         [:label.editor-form__checkbox-label
+          {:for   "maksutyyppi-kk-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-kk-radio])]]]])]))
+
 (defn- close-form-component
   []
   (let [id           "toggle-close-form"
@@ -422,6 +494,7 @@
     [:div.editor-form__module-fields
      [allow-only-yhteishaku-component]
      [allow-hakeminen-tunnistautuneena-component]
+     [lomakkeeseen-liittyy-maksutoiminto-component]
      [close-form-component]]]
    (when @(subscribe [:editor/show-demo-config])
     [:div.editor-form__component-content-wrapper
