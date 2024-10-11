@@ -934,8 +934,7 @@
          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
          {:fieldClass "modalInfoElement"} [modal-info-element field-descriptor idx]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]
-         {:fieldClass "tutkinnot" :fieldType "tutkinnot"} [tutkinnot/tutkinnot field-descriptor idx]))
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
   (when (and field-descriptor (not (:duplikoitu-kysymys-hakukohde-oid field-descriptor)))

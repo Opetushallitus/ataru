@@ -7,5 +7,6 @@
    :id                    (util/component-id)
    :label                 {:fi "" :sv "" :en ""}
    :metadata              metadata
-   :exclude-from-answers  true})
+   :exclude-from-answers  true
+   :params                {:hidden true}})
 
