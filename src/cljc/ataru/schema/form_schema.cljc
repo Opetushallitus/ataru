@@ -122,6 +122,8 @@
    :exclude-from-answers          (s/eq true)
    :metadata                      element-metadata-schema/ElementMetadata
    :label                         localized-schema/LocalizedStringOptional
+   (s/optional-key :params)       params-schema/Params
+   (s/optional-key :rules)        {s/Keyword s/Any}
    (s/optional-key :description)  localized-schema/LocalizedStringOptional
    (s/optional-key :options)      [{:id                               s/Str
                                     :label                            localized-schema/LocalizedStringOptional
