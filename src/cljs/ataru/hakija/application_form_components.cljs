@@ -14,6 +14,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
+            [ataru.hakija.components.tutkinnot :as tutkinnot]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -583,6 +584,7 @@
 
 (defn- multi-choice-followups [followups question-group-idx]
   [:div.application__form-multi-choice-followups-outer-container
+   {:tab-index 0}
    [:div.application__form-multi-choice-followups-indicator]
    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
          (for [followup followups]
@@ -679,7 +681,9 @@
          {:key option-id}
          [:input
           (merge {:id        option-id
+                  :tab-index 0
                   :type      "checkbox"
+                  :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
                   :on-change #(toggle-value-fn (.. % -target -value))
@@ -693,7 +697,9 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :on-key-up #(when (a11y/is-enter-or-space? %)
+                     :aria-label  label
+                     :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
+                     :on-key-up #(when (a11y/is-enter-or-space? %) 
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
@@ -856,6 +862,37 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- into-multi-choice-followups-container [followups]
+  (into [:div.application__form-multi-choice-followups-container]
+        (for [followup followups]
+          (with-meta [render-field followup nil] {:key (:id followup)}))))
+
+(defn tutkinnot-wrapper-field
+  [field-descriptor]
+  (let [label (util/non-blank-val (:label field-descriptor)
+                                  @(subscribe [:application/default-languages]))
+        show-default-self-added-exam-selections? @(subscribe [:application/show-default-self-added-exam-selections?])
+        root-level-children (filter #(or (tutkinnot/is-tutkinto-configuration-component? %)
+                                         @(subscribe [:application/visible? (keyword (:id %))]))
+                                    (:children field-descriptor))]
+    [:div.application__wrapper-element
+     [:div.application__wrapper-heading
+      [:h2 label]
+      [scroll-to-anchor field-descriptor]]
+     (into [:div.application__wrapper-contents]
+           (for [child root-level-children]
+             (if (tutkinnot/is-tutkinto-configuration-component? child)
+               ;; TODO Tähän kohtaan koskesta tuleva contentti
+               (if show-default-self-added-exam-selections?
+                 [:div
+                  [tutkinnot/non-koski-header child]
+                  [:div.application__form-multi-choice-followups-outer-container
+                   {:tab-index 0}
+                   [:div.application__form-multi-choice-followups-indicator]
+                   (into-multi-choice-followups-container (tutkinnot/itse-syotetty-tutkinnot-content child))]]
+                 (into-multi-choice-followups-container (tutkinnot/itse-syotetty-tutkinnot-content child)))
+               (with-meta [render-field child nil] {:key (:id child)}))))]))
+
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
   (match field-descriptor
@@ -868,6 +905,8 @@
           :fieldType  "fieldset"} [question-group field-descriptor idx]
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "tutkinnot"} [tutkinnot-wrapper-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]

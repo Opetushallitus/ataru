@@ -8,6 +8,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
             [clj-access-logging]
@@ -31,7 +32,8 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.palaute.palaute-client :as palaute-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
+            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
+                                      alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
@@ -39,7 +41,8 @@
             [ataru.util.http-util :as http]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
-            [ataru.feature-config :as fc])
+            [ataru.feature-config :as fc]
+            [ataru.koski.koski-service :as koski])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -82,7 +85,7 @@
           (response/unauthorized {:code :secret-expired
                                   :lang lang-override})
           (:virkailija secret)
-          (response/bad-request {:code :secret-expired
+          (response/bad-request {:code  :secret-expired
                                  :error "Invalid virkailija secret"})
 
           :else
@@ -129,8 +132,8 @@
       ;; individually when navigating to any test file.
       (if (is-dev-env?)
         (render-file-in-dev (str "spec/" filename ".js")
-          (when (= "hakijaCommon" filename)
-            (get-test-vars-params)))
+                            (when (= "hakijaCommon" filename)
+                              (get-test-vars-params)))
         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
@@ -140,8 +143,6 @@
 
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
-
-
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
@@ -157,67 +158,68 @@
         (if (nil? ticket)
           (response/found
             (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target))
-          (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
-                       (:body))
-                parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
-            (if parsed-attributes
-              (let [new-session-key (generate-new-random-key)]
-                (audit-log/log audit-logger
-                               {:new       parsed-attributes
-                                :operation audit-log/operation-oppija-login
-                                :session   (:session request)
-                                :id        {:oppija-session new-session-key}})
-                (oss/persist-session! new-session-key ticket parsed-attributes)
-                (-> (response/found target)
-                    (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
-                                                                       :path "/hakemus"
-                                                                       :http-only true
-                                                                       :secure true})))))
-              ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
-              (response/bad-request))))
-        (catch Exception e
-          (log/error e "Virhe oppijan tunnistautumisessa.")
-          (response/internal-server-error))))
-    (api/POST "/oppija" [:as request]
-      (let [logout-request (get-in request [:params :logoutRequest])]
-        (log/info "Received request for logout:" logout-request)
-        (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request logout-request)]
-          (let [res (oss/delete-session-by-ticket! ticket)]
-            (log/info ticket ": db result" res)
-            (if (= res 1)
-              (response/ok)
-              (response/not-found)))
-          (log/warn "Something went wong when processing logout request..."))))
-    (api/GET "/oppija/logout" [:as request]
-      :query-params [{lang :- s/Str nil}]
-      (try
-        (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
-              result (oss/delete-session-by-key! oppija-session-key)
-              destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
-          (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
-          (audit-log/log audit-logger
-                         {:new       {}
-                          :operation audit-log/operation-oppija-logout
-                          :session   (:session request)
-                          :id        {:oppija-session oppija-session-key}})
-          (response/found destination))
-        (catch Exception e
-          (log/error e "Virhe oppijan uloskirjautumisessa.")
-          (response/internal-server-error))))
-    (api/GET "/session" [:as request]
-      (try
-        (let [oppija-session (get-in request [:cookies "oppija-session" :value])
-              session (oss/read-session oppija-session)
-              trimmed-session {:fields (get-in session [:data :fields])
-                               :display-name (get-in session [:data :display-name])
-                               :auth-type (get-in session [:data :auth-type])
-                               :logged-in (boolean (:logged-in session))
-                               :eidas-id (get-in session [:data :eidas-id])
-                               :seconds-left (or (:seconds_left session) 0)}]
-          (response/ok trimmed-session))
-        (catch Exception e
-          (log/error e "Virhe haettaessa oppijan sessiota.")
-          (response/internal-server-error))))))
+        (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
+                     (:body))
+              parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
+          (if parsed-attributes
+            (let [new-session-key (generate-new-random-key)]
+              (audit-log/log audit-logger
+                             {:new       parsed-attributes
+                              :operation audit-log/operation-oppija-login
+                              :session   (:session request)
+                              :id        {:oppija-session new-session-key}})
+              (oss/persist-session! new-session-key ticket parsed-attributes)
+              (-> (response/found target)
+                  (update :cookies (fn [c] (assoc c :oppija-session {:value     new-session-key
+                                                                     :path      "/hakemus"
+                                                                     :http-only true
+                                                                     :secure    true})))))
+            ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
+            (response/bad-request))))
+      (catch Exception e
+        (log/error e "Virhe oppijan tunnistautumisessa.")
+        (response/internal-server-error))))
+  (api/POST "/oppija" [:as request]
+    (let [logout-request (get-in request [:params :logoutRequest])]
+      (log/info "Received request for logout:" logout-request)
+      (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request logout-request)]
+        (let [res (oss/delete-session-by-ticket! ticket)]
+          (log/info ticket ": db result" res)
+          (if (= res 1)
+            (response/ok)
+            (response/not-found)))
+        (log/warn "Something went wong when processing logout request..."))))
+  (api/GET "/oppija/logout" [:as request]
+    :query-params [{lang :- s/Str nil}]
+    (try
+      (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
+            result (oss/delete-session-by-key! oppija-session-key)
+            destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
+        (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
+        (audit-log/log audit-logger
+                       {:new       {}
+                        :operation audit-log/operation-oppija-logout
+                        :session   (:session request)
+                        :id        {:oppija-session oppija-session-key}})
+        (response/found destination))
+      (catch Exception e
+        (log/error e "Virhe oppijan uloskirjautumisessa.")
+        (response/internal-server-error))))
+  (api/GET "/session" [:as request]
+    (try
+      (let [oppija-session (get-in request [:cookies "oppija-session" :value])
+            session (oss/read-session oppija-session)
+            trimmed-session {:fields       (get-in session [:data :fields])
+                             :display-name (get-in session [:data :display-name])
+                             :auth-type    (get-in session [:data :auth-type])
+                             :logged-in    (boolean (:logged-in session))
+                             :eidas-id     (get-in session [:data :eidas-id])
+                             :person-oid   (get-in session [:data :person-oid])
+                             :seconds-left (or (:seconds_left session) 0)}]
+        (response/ok trimmed-session))
+      (catch Exception e
+        (log/error e "Virhe haettaessa oppijan sessiota.")
+        (response/internal-server-error))))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
@@ -225,6 +227,7 @@
                           organization-service
                           ohjausparametrit-service
                           application-service
+                          koski-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
@@ -240,9 +243,9 @@
       :path-params [haku-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       (if-let [form-with-tarjonta (form-service/fetch-form-by-haku-oid-str-cached
-                                   form-by-haku-oid-str-cache
-                                   haku-oid
-                                   role)]
+                                    form-by-haku-oid-str-cache
+                                    haku-oid
+                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
         (response/not-found {})))
@@ -251,10 +254,10 @@
       :path-params [hakukohde-oid :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       (if-let [form-with-tarjonta (form-service/fetch-form-by-hakukohde-oid-str-cached
-                                   tarjonta-service
-                                   form-by-haku-oid-str-cache
-                                   hakukohde-oid
-                                   role)]
+                                    tarjonta-service
+                                    form-by-haku-oid-str-cache
+                                    hakukohde-oid
+                                    role)]
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
         (response/not-found {})))
@@ -311,18 +314,18 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
-              form-by-id-cache
-              koodisto-cache
-              tarjonta-service
-              job-runner
-              organization-service
-              ohjausparametrit-service
-              hakukohderyhma-settings-cache
-              audit-logger
-              application
-              session
-              liiteri-cas-client
-              maksut-service)
+               form-by-id-cache
+               koodisto-cache
+               tarjonta-service
+               job-runner
+               organization-service
+               ohjausparametrit-service
+               hakukohderyhma-settings-cache
+               audit-logger
+               application
+               session
+               liiteri-cas-client
+               maksut-service)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -360,7 +363,7 @@
                              liiteri-cas-client)
 
             :else
-            (response/bad-request {:code :secret-expired
+            (response/bad-request {:code  :secret-expired
                                    :error "No secret given"})))
     (api/POST "/send-application-secret" []
       :summary "Sends application link with fresh secret to applicant"
@@ -369,8 +372,29 @@
         (hakija-application-service/create-new-secret-and-send-link
           koodisto-cache tarjonta-service organization-service ohjausparametrit-service
           job-runner
-         (:old-secret request))
+          (:old-secret request))
         (response/ok {})))
+    (api/GET "/omat-tutkinnot" [:as request]
+      :summary "Returns exams from Koski for strongly authenticated applicant"
+      :return [koski-schema/AtaruKoskiTutkintoResponse]
+      (let [oppija-session (get-in request [:cookies "oppija-session" :value])
+            session (oss/read-session oppija-session)]
+         (if-let [henkilo-oid (get-in session [:data :person-oid])]
+          (if-let [suoritukset (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
+            (response/ok
+              (map (fn [suoritus] (-> {}
+                                      (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi]))
+                                      (assoc :koulutusohjelmanimi (get-in suoritus [:tyyppi :nimi]))
+                                      (assoc :toimipistenimi (get-in suoritus [:toimipiste :nimi]))
+                                      (assoc :valmistumispvm (get-in suoritus [:vahvistus :päivä]))
+                                      (assoc :koulutustyyppi
+                                             (select-keys
+                                               (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
+                                               [:koodistoUri :koodiarvo]))))
+                   (flatten (map :suoritukset (:opiskeluoikeudet suoritukset)))))
+            (response/not-found {}))
+          (response/unauthorized {}))
+        ))
     (api/context "/files" []
       (api/GET "/signed-upload" []
         :summary "Permission to upload"
@@ -387,18 +411,18 @@
                        file-name :- s/Str]
         :middleware [normalizer/wrap-query-params-filename-normalizer]
         (let [[status stored-file] (resumable-file/mark-upload-delivered-to-liiteri liiteri-cas-client file-id file-name)]
-            (log/info "Upload delivered" file-name "bytes:" status)
-            (case status
-              :complete (response/created "" {:stored-file stored-file})
-              :bad-request (response/bad-request {})
-              :liiteri-error (response/internal-server-error {}))))
+          (log/info "Upload delivered" file-name "bytes:" status)
+          (case status
+            :complete (response/created "" {:stored-file stored-file})
+            :bad-request (response/bad-request {})
+            :liiteri-error (response/internal-server-error {}))))
       (api/GET "/:key" []
         :summary "Download a file"
         :path-params [key :- s/Str]
         :query-params [{secret :- s/Str nil}
                        {virkailija-secret :- s/Str nil}]
         (if (hakija-application-service/can-access-attachment?
-             secret virkailija-secret key)
+              secret virkailija-secret key)
           (if-let [file (file-store/get-file liiteri-cas-client key)]
             (-> (:body file)
                 response/ok
@@ -465,8 +489,8 @@
                 form-key
                 (selection-limit/query-available-selections form-key)))
         (catch clojure.lang.ExceptionInfo _
-               (response/conflict
-                 (selection-limit/query-available-selections form-key)))))))
+          (response/conflict
+            (selection-limit/query-available-selections form-key)))))))
 
 (defn- render-application [lang]
   (let [public-config (json/generate-string (or (:public-config config) {}))]
@@ -536,9 +560,9 @@
                                     (route/not-found "<h1>Page not found</h1>")))))
                             (clj-access-logging/wrap-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
-                             {:path (str (-> config :log :hakija-base-path)
-                                         "/access_ataru-hakija"
-                                         (when (:hostname env) (str "_" (:hostname env))))})
+                              {:path (str (-> config :log :hakija-base-path)
+                                          "/access_ataru-hakija"
+                                          (when (:hostname env) (str "_" (:hostname env))))})
                             (wrap-gzip)
                             (wrap-referrer-policy "same-origin")
                             (cache-control/wrap-cache-control))))

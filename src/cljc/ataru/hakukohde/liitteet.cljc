@@ -57,8 +57,8 @@
 (defn format-attachment-address
   [lang address]
   (let [street-address (util/from-multi-lang (:osoite address) lang)
-        postal-code    (:koodiUri (:postinumero address))
-        post-office    (util/from-multi-lang (:nimi (:postinumero address)) lang)]
+        postal-code    (util/from-multi-lang-object (:postinumero address) lang :koodiUri)
+        post-office    (util/from-multi-lang-object (:postinumero address) lang :nimi)]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (lang (:toimitusosoite texts/translation-mapping)) ": "

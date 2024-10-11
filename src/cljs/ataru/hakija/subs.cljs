@@ -353,6 +353,7 @@
            (clojure.string/blank? hakija-secret)
            (not already-declined)
            (not logged-in)))))
+
 (re-frame/reg-sub
   :application/loading-complete?
   (fn [_ _]
@@ -361,10 +362,12 @@
      (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinto-fetch-handled]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
      (re-frame/subscribe [:state-query [:application :secret]])
      (re-frame/subscribe [:application/demo?])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret demo?] _]
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored tutkinto-fetch-handled
+        virkailija-secret hakija-secret demo?] _]
     (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (or load-failure
           (and form
@@ -373,7 +376,7 @@
                    (or (not (clojure.string/blank? virkailija-secret))
                        (not (clojure.string/blank? hakija-secret))
                        (not form-allows-ht)
-                       (or session-fetched
+                       (or (and session-fetched tutkinto-fetch-handled)
                            session-fetch-errored))))))))
 
 (re-frame/reg-sub
@@ -950,3 +953,36 @@
                   visible @(re-frame/subscribe [:application/visible? id])]
             :when visible]
         element))))
+
+(re-frame/reg-sub
+ :application/hakukohde-lisatty-toast
+ (fn [db _]
+   (:hakukohde-lisatty-toast db)))
+
+(re-frame/reg-sub
+ :application/hakukohde-poistettu-toast
+ (fn [db _]
+   (:hakukohde-poistettu-toast db)))
+
+(re-frame/reg-sub
+ :application/hakukohde-siirretty-alert
+ (fn [db _]
+   (:hakukohde-siirretty-alert db)))
+
+(re-frame/reg-sub
+  :application/tutkinnot-raw
+  (fn [db _]
+    (get-in db [:application :tutkinnot])))
+
+(re-frame/reg-sub
+  :application/tutkinnot
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tutkinnot-raw])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[tutkinto-result language] _]
+    (let [sorted-results (sort-by (comp language :nimi :tutkintonimi) tutkinto-result)]
+      (map
+        (fn [item idx]
+          (assoc item :key (str "tutkinto_" idx)))
+        sorted-results
+        (range (count sorted-results))))))

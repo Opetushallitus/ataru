@@ -74,6 +74,15 @@
    :application-priorization-invalid            {:fi "Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä"
                                                  :sv "Fel prioritetsordning för ansökningsmålen"
                                                  :en "Study programmes are in an invalid order of preference"}
+   :application-selected-study-programms        {:fi "Valitut hakukohteet "
+                                                 :sv "Valda ansökningsmål"
+                                                 :en "Selected study programmes"}
+   :application-study-program-added             {:fi "Hakukohde lisätty: "
+                                                 :sv "Ansökningsmål har lagts till: "
+                                                 :en "Study programme added: "}
+   :application-study-program-removed           {:fi "Hakukohde poistettu"
+                                                 :sv "Ansökningsmål har tagits bort"
+                                                 :en "Study programme removed"}
    :application-limit-reached-in-hakukohderyhma {:fi "Et voi hakea tähän hakukohteeseen, koska olet jo hakemassa seuraaviin hakukohteisiin:"
                                                  :sv "Du kan inte söka till detta ansökningsmål, eftersom du redan söker till följande ansökningsmål:"
                                                  :en "You can't apply to this study programme because you are applying to the following study programme:"}
@@ -575,12 +584,21 @@
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "Eller använd"
                                                  :en "EN: Tai käytä"}
+   :siirretty-ylos                              {:fi "siirretty ylös"
+                                                 :sv "flyttad upp"
+                                                 :en "moved up"}
+   :siirretty-alas                              {:fi "siirretty alas"
+                                                 :sv "flyttad ner"
+                                                 :en "moved down"}
    :archived                                    {:fi "Arkistoitu"
                                                  :sv "Arkiverad"
                                                  :en "Archived"}
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
                                                  :en "(mandatory information)"}
+   :selected                                    {:fi "Valittu: "
+                                                 :sv "Godkänd: "
+                                                 :en "Selected: "}
    :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
                                                  :sv "Ändring i antagningssättet i den gemensamma ansökan"
                                                  :en "EN: Muutos yhteishaun valintatapaan"}
@@ -2459,7 +2477,10 @@
                                                               :en "EN: Hakija on eidas-tunnistautunut."}
    :valittu                                                  {:fi "valittu"
                                                               :sv "valda"
-                                                              :en "selected"}})
+                                                              :en "selected"}
+   :tutkinnot                                                {:fi "Tutkintotiedot Koski-Palvelusta"
+                                                              :sv "SV: Tutkintotiedot Koski-Palvelusta"
+                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}})
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"
@@ -2750,6 +2771,104 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}})
+
+(def koski-tutkinnot-texts
+  {:section-label                                 {:fi "Tutkinnot"
+                                                   :sv "SV: Tutkinnot"
+                                                   :en ""}
+   :section-description                           {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                                   :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                                   :en ""}
+   :field-list                                    {:fi "Tutkinto, Koulutusohjelma, Oppilaitos, Valmistumispäivä, Tutkintotodistus (liitepyyntö kirjautumattomille)."
+                                                   :sv "SV: Tutkinto, Koulutusohjelma, Oppilaitos, Valmistumispäivä, Tutkintotodistus (liitepyyntö kirjautumattomille)."
+                                                   :en ""}
+   :completed-study-question-label                {:fi "Hakijalle näytetään opintosuoritukset"
+                                                   :sv "SV: Hakijalle näytetään opintosuoritukset"
+                                                   :en ""}
+   :koski-update-policy-label                     {:fi "Koskesta tuodun tutkintotiedon päivittyminen"
+                                                   :sv "SV: Koskesta tuodun tutkintotiedon päivittyminen"
+                                                   :en ""}
+   :koski-update-option-only-once-label           {:fi "Tiedot säilyvät samoina kuin ne ovat hakemushetkellä"
+                                                   :sv "SV: Tiedot säilyvät samoina kuin ne ovat hakemushetkellä"
+                                                   :en ""}
+   :koski-update-option-allways-label             {:fi "Tiedot voivat päivittyä hakemuksen teon jälkeen, päätöksentekoon asti"
+                                                   :sv "SV: Tiedot voivat päivittyä hakemuksen teon jälkeen, päätöksentekoon asti"
+                                                   :en ""}
+   :info-label                                    {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                                   :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                                   :en ""}
+   :tutkintotaso-label                            {:fi "Tutkintotasot"
+                                                   :sv "SV: Tutkintotasot"
+                                                   :en ""}
+   :tutkintotaso-description                      {:fi "Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                                   :sv "SV: Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                                   :en ""}
+   :perusopetus-label                             {:fi "Perusopetus"
+                                                   :sv "SV: Perusopetus"
+                                                   :en ""}
+   :yo-tutkinnot-label                            {:fi "Ylioppilastutkinnot"
+                                                   :sv "SV:Ylioppilastutkinnot"
+                                                   :en ""}
+   :amm-perustutkinnot-label                      {:fi "Ammatilliset perustutkinnot"
+                                                   :sv "SV: Ammatilliset perustutkinnot"
+                                                   :en ""}
+   :amm-tutkinnot-label                           {:fi "Ammattitutkinnot"
+                                                   :sv "SV: Ammattitutkinnot"
+                                                   :en ""}
+   :amm-erikoistutkinnot-label                    {:fi "Erikoisammattitutkinnot"
+                                                   :sv "SV: Erikoisammattitutkinnot"
+                                                   :en ""}
+   :alemmat-kk-tutkinnot-label                    {:fi "Alemmat korkeakoulututkinnot"
+                                                   :sv "SV: Alemmat korkeakoulututkinnot"
+                                                   :en ""}
+   :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
+                                                   :sv "SV: Ylemmät korkeakoulututkinnot"
+                                                   :en ""}
+   :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
+                                                   :sv "SV: Tohtoritutkinnot"
+                                                   :en ""}
+   :itse-syotetty-tutkinnot-label                 {:fi "Suoritus, joka ei ole Koskessa"
+                                                   :sv "SV: Suoritus, joka ei ole Koskessa"
+                                                   :en ""}
+   :koski-followup-label                          {:fi "Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                                   :sv "SV: Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                                   :en ""}
+   :itse-syotetty-followup-label                  {:fi "Kysymykset"
+                                                   :sv "SV: Kysymykset"
+                                                   :en ""}
+   :itse-syotetty-tutkinto-followup-label         {:fi "Tutkinto"
+                                                   :sv "SV: Tutkinto"
+                                                   :en ""}
+   :itse-syotetty-koulutusohjelma-followup-label  {:fi "Koulutusohjelma"
+                                                   :sv "SV: Koulutusohjelma"
+                                                   :en ""}
+   :itse-syotetty-oppilaitos-followup-label       {:fi "Oppilaitos"
+                                                   :sv "SV: Oppilaitos"
+                                                   :en ""}
+   :itse-syotetty-valmistumispvm-followup-label   {:fi "Valmistumispäivä"
+                                                   :sv "SV: Valmistumispäivä"
+                                                   :en ""}
+   :itse-syotetty-valimistumispvm-infotext-label  {:fi "Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"
+                                                   :sv "SV: Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"
+                                                   :en ""}
+   :itse-syotetty-liitteet-followup-label         {:fi "Tutkintotodistus"
+                                                   :sv "SV: Tutkintotodistus"
+                                                   :en ""}
+   :itse-syotetty-liitteet-infotext-value         {:fi "Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
+                                                   :sv "SV: Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
+                                                   :en ""}
+   :tutkinto-nimi-header-text                     {:fi "Tutkinnon nimi"
+                                                   :sv "SV: Tutkinnon nimi"
+                                                   :en ""}
+   :koulutusohjelma-header-text                   {:fi "Koulutusohjelma"
+                                                   :sv "SV: Koulutusohjelma"
+                                                   :en ""}
+   :valmistumispvm-header-text                    {:fi "Valmistumispäivä"
+                                                   :sv "SV: Valmistumispäivä"
+                                                   :en ""}
+   :oppilaitos-header-text                        {:fi "Oppilaitos"
+                                                   :sv "SV: Oppilaitos"
+                                                   :en ""}})
 
 (defn email-applied-error
   [email preferred-name]

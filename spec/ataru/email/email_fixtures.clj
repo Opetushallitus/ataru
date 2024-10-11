@@ -353,8 +353,8 @@
                                        :liitteiden-toimitusosoite
                                                                                                     {:osoite     {:fi "Toimisto\nElintie 5"},
                                                                                                      :postinumero
-                                                                                                                 {:koodiUri "posti_00100#2",
-                                                                                                                  :nimi     {:sv "HELSINGFORS", :fi "HELSINKI"}},
+                                                                                                                 {:fi {:koodiUri "posti_00100#2", :nimi "HELSINKI"},
+                                                                                                                  :sv {:koodiUri "posti_00100#2", :nimi "HELSINGFORS"}},
                                                                                                      :verkkosivu "https://elintie-liite.fi"},
                                        :liitteiden-toimitusaika
                                                                                                     {:fi "31.1.2022 klo 12:00",
@@ -409,8 +409,8 @@
                                                                                                       :toimitetaan-erikseen true,
                                                                                                       :toimitusosoite
                                                                                                                             {:osoite     {:fi "Hammasportti 500", :sv "Hammasportti 500 (SV)"},
-                                                                                                                             :postinumero
-                                                                                                                                         {:koodiUri "posti_01600#2", :nimi {:sv "VANDA", :fi "VANTAA"}},
+                                                                                                                             :postinumero {:fi {:koodiUri "posti_01600#2", :nimi "VANTAA"},
+                                                                                                                                           :sv {:koodiUri "posti_01600#2", :nimi "VANDA"}},
                                                                                                                              :verkkosivu "https://kauniit_puhtaat_hampaat-liitteena.fi"}}],
                                        :liitteiden-toimitusosoite                                   nil,
                                        :liitteiden-toimitusaika                                     nil,
@@ -464,8 +464,8 @@
                                                                                                       :toimitusosoite
                                                                                                                             {:osoite     {:fi "Hiushalkojantie 4"},
                                                                                                                              :postinumero
-                                                                                                                                         {:koodiUri "posti_00100#2",
-                                                                                                                                          :nimi     {:sv "HELSINGFORS", :fi "HELSINKI"}},
+                                                                                                                                         {:fi {:koodiUri "posti_00100#2", :nimi "HELSINKI"},
+                                                                                                                                          :sv {:koodiUri "posti_00100#2", :nimi "HELSINGFORS"}},
                                                                                                                              :verkkosivu "https://liite-hius.fi"}}
                                                                                                      {:tyyppi               "liitetyypitamm_7#1",
                                                                                                       :toimitusaika
@@ -476,8 +476,8 @@
                                                                                                       :toimitusosoite
                                                                                                                             {:osoite     {:fi "Hiuskatu 2"},
                                                                                                                              :postinumero
-                                                                                                                                         {:koodiUri "posti_00500#2",
-                                                                                                                                          :nimi     {:sv "HELSINGFORS", :fi "HELSINKI"}},
+                                                                                                                                         {:fi {:koodiUri "posti_00500#2", :nimi "HELSINKI"},
+                                                                                                                                          :sv {:koodiUri "posti_00500#2", :nimi "HELSINGFORS"}},
                                                                                                                              :verkkosivu "https://tupee-liitteena.fi"}}],
                                        :liitteiden-toimitusosoite                                   nil,
                                        :liitteiden-toimitusaika                                     nil,
