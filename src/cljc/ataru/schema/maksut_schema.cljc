@@ -25,9 +25,6 @@
    :status PaymentStatus
    :origin Origin})
 
-(s/defschema LaskuMetadata
-  {:form-name localized-schema/LocalizedStringOptional})
-
 (s/defschema Lasku
   {:order_id s/Str
    :first_name s/Str
@@ -39,10 +36,13 @@
    :reference s/Str
    (s/optional-key :secret) s/Str
    (s/optional-key :paid_at) s/Str
-   (s/optional-key :metadata) LaskuMetadata})
+   (s/optional-key :metadata) s/Any})
 
 (s/defschema Laskut
   [Lasku])
+
+(s/defschema LaskuMetadataCreate
+  {:form-name localized-schema/LocalizedStringOptional})
 
 (s/defschema LaskuCreate
   (s/constrained
@@ -58,7 +58,7 @@
      (s/optional-key :locale) (s/maybe Locale)
      (s/optional-key :message) (s/maybe s/Str)
      (s/optional-key :index) (s/constrained s/Int #(<= 1 % 2) 'valid-maksu-index)
-     (s/optional-key :metadata) LaskuMetadata}
+     (s/optional-key :metadata) LaskuMetadataCreate}
     (fn [{:keys [due-date due-days]}]
       (or due-date due-days))
     'must-have-either-due-date-or-due-days))
