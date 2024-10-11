@@ -14,7 +14,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
-            [ataru.hakija.tutkinnot :as tutkinnot]
+            [ataru.hakija.components.tutkinnot :as tutkinnot]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -862,6 +862,37 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- into-multi-choice-followups-container [followups]
+  (into [:div.application__form-multi-choice-followups-container]
+        (for [followup followups]
+          (with-meta [render-field followup nil] {:key (:id followup)}))))
+
+(defn tutkinnot-wrapper-field
+  [field-descriptor]
+  (let [label (util/non-blank-val (:label field-descriptor)
+                                  @(subscribe [:application/default-languages]))
+        show-default-self-added-exam-selections? @(subscribe [:application/show-default-self-added-exam-selections?])
+        root-level-children (filter #(or (tutkinnot/is-tutkinto-configuration-component? %)
+                                         @(subscribe [:application/visible? (keyword (:id %))]))
+                                    (:children field-descriptor))]
+    [:div.application__wrapper-element
+     [:div.application__wrapper-heading
+      [:h2 label]
+      [scroll-to-anchor field-descriptor]]
+     (into [:div.application__wrapper-contents]
+           (for [child root-level-children]
+             (if (tutkinnot/is-tutkinto-configuration-component? child)
+               ;; TODO Tähän kohtaan koskesta tuleva contentti
+               (if show-default-self-added-exam-selections?
+                 [:div
+                  [tutkinnot/non-koski-header child]
+                  [:div.application__form-multi-choice-followups-outer-container
+                   {:tab-index 0}
+                   [:div.application__form-multi-choice-followups-indicator]
+                   (into-multi-choice-followups-container (tutkinnot/itse-syotetty-tutkinnot-content child))]]
+                 (into-multi-choice-followups-container (tutkinnot/itse-syotetty-tutkinnot-content child)))
+               (with-meta [render-field child nil] {:key (:id child)}))))]))
+
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
   (match field-descriptor
@@ -874,6 +905,8 @@
           :fieldType  "fieldset"} [question-group field-descriptor idx]
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "tutkinnot"} [tutkinnot-wrapper-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
@@ -885,8 +918,7 @@
          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
          {:fieldClass "modalInfoElement"} [modal-info-element field-descriptor idx]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]
-         {:fieldClass "tutkinnot" :fieldType "tutkinnot"} [tutkinnot/tutkinnot field-descriptor idx]))
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
   (when (and field-descriptor (not (:duplikoitu-kysymys-hakukohde-oid field-descriptor)))
