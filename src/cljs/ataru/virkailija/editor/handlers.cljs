@@ -18,6 +18,7 @@
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
                                                       http post put]]
+            [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
@@ -501,21 +502,31 @@
            (into [])
            (assoc-in db path-vec)))))
 
+(defn- remove-properties
+  [db property-key]
+  (if property-key
+    (with-form-key [db form-key]
+    (let [path [:editor :forms form-key :properties]]
+      (update-in db path dissoc property-key)))
+    db))
+
+
 (reg-event-db
   :editor/remove-component
-  (fn [db [_ path]]
+  (fn [db [_ path & {:keys [property-key]}]]
     (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       (-> db
           (update-in [:editor :ui id] dissoc :remove)
-          (remove-component path)))))
+          (remove-component path)
+          (remove-properties property-key)))))
 
 (reg-event-fx
   :editor/confirm-remove-component
-  (fn [{db :db} [_ path]]
+  (fn [{db :db} [_ path & {:keys [property-key]}]]
     (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       {:db             (assoc-in db [:editor :ui id :remove] :disabled)
        :dispatch       [:editor/fold id]
-       :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]})))
+       :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path {:property-key property-key}]}]})))
 
 (reg-event-db
   :editor/start-remove-component
@@ -1615,8 +1626,62 @@
     (assoc-in db path value))))
 
 (reg-event-db
+  :editor/toggle-lomakkeeseen-liittyy-maksutoiminto
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:payment])
+          value (get-in db path)]
+      (if (not-empty value)
+        (assoc-in db path {})
+        (assoc-in
+          db
+          path
+          {:type "payment-type-tutu"
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])})))))
+
+(reg-event-db
+  :editor/change-maksutyyppi
+  (fn [db [_ maksutyyppi]]
+    (let [path (db/current-form-properties-path db [:payment])]
+      (assoc-in
+        db
+        path
+        {:type maksutyyppi
+         :decision-fee nil
+         :processing-fee (if (= maksutyyppi "payment-type-tutu")
+                           (config/get-public-config
+                             [:tutu-default-processing-fee])
+                           nil)}))))
+
+(reg-event-db
+  :editor/change-processing-fee
+  (fn [db [_ processing-fee]]
+    (let [path (db/current-form-properties-path db [:payment :processing-fee])]
+      (assoc-in db path processing-fee))))
+
+(reg-event-db
   :editor/toggle-close-form
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:closed])
+          value (not (get-in db path))]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/update-selected-property-options
+  (fn [db [_ category selected-option-ids]]
+    (let [path (vec (db/current-form-properties-path db [(keyword category)]))]
+      (assoc-in db (conj path :selected-option-ids) selected-option-ids))))
+
+(reg-event-db
+  :editor/set-property-value
+  (fn [db [_ category property value]]
+    (let [path (db/current-form-properties-path db [(keyword category)(keyword property)])]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-property-value
+  (fn [db [_ category property]]
+    (let [path (db/current-form-properties-path db [(keyword category)(keyword property)])
           value (not (get-in db path))]
       (assoc-in db path value))))

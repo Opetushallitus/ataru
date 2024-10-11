@@ -505,9 +505,9 @@ test.describe('Editori', () => {
 
     await page.locator('#lock-form').click()
 
-    await expect(getInputs(page, ':disabled')).toHaveCount(1)
+    await expect(getInputs(page, ':disabled')).toHaveCount(2)
     await expect(getInputs(page, ':enabled')).toHaveCount(
-      (await getInputs(page).count()) - 1
+      (await getInputs(page).count()) - 2
     )
 
     await expect(getComponentButtons(page, ':disabled')).toHaveCount(0)

@@ -11,6 +11,7 @@
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.schema.params-schema :as params-schema]
             [ataru.schema.pohjakoulutus-ristiriita-schema :as pohjakoulutus-ristiriita-schema]
+            [ataru.schema.koski-tutkinnot-schema :as tutkinnot-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -18,7 +19,10 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
+            [ataru.schema.form-properties-schema :refer [FormProperties]])
+  #?(:clj (:import [org.joda.time DateTime])))
+
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -112,32 +116,59 @@
     :else
     TextField))
 
+(s/defschema FormPropertyField
+  {:id                            s/Str
+   :fieldClass                    (s/eq "formPropertyField")
+   :fieldType                     (apply s/enum ["multipleChoice"])
+   :category                      s/Str
+   :exclude-from-answers          (s/eq true)
+   :metadata                      element-metadata-schema/ElementMetadata
+   :label                         localized-schema/LocalizedStringOptional
+   (s/optional-key :params)       params-schema/Params
+   (s/optional-key :rules)        {s/Keyword s/Any}
+   (s/optional-key :description)  localized-schema/LocalizedStringOptional
+   (s/optional-key :options)      [{:id                               s/Str
+                                    :label                            localized-schema/LocalizedStringOptional
+                                    (s/optional-key :default-value)   s/Bool
+                                    (s/optional-key :description)     localized-schema/LocalizedStringOptional
+                                    (s/optional-key :forced)          s/Bool
+                                    (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
+                                    (s/optional-key :followups)       [(s/if (comp some? :children)
+                                                                         (s/recursive #'WrapperElement)
+                                                                         (s/recursive #'BasicElement))]}]})
+
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
+   #(= "formPropertyField" (:fieldClass %)) FormPropertyField
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
-                             :id                                         s/Str
-                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                   [(s/conditional
-                                                                            #(or (= "wrapperElement" (:fieldClass %))
-                                                                                 (= "questionGroup" (:fieldClass %)))
-                                                                            (s/recursive #'WrapperElement)
-                                                                            :else
-                                                                            BasicElement)]
-                             :metadata                                   element-metadata-schema/ElementMetadata
-                             (s/optional-key :version)                   s/Str
-                             (s/optional-key :child-validator)           child-validator-schema/ChildValidator
-                             (s/optional-key :params)                    params-schema/Params
-                             (s/optional-key :label)                     localized-schema/LocalizedString
-                             (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module)                    module-schema/Module
-                             (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                             (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
+(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
+                             :id                                          s/Str
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot"])
+                             :children                                    [(s/conditional
+                                                                             #(or (= "wrapperElement" (:fieldClass %))
+                                                                                  (= "questionGroup" (:fieldClass %)))
+                                                                             (s/recursive #'WrapperElement)
+                                                                             :else
+                                                                             BasicElement)]
+                             :metadata                                    element-metadata-schema/ElementMetadata
+                             (s/optional-key :version)                    s/Str
+                             (s/optional-key :child-validator)            child-validator-schema/ChildValidator
+                             (s/optional-key :params)                     params-schema/Params
+                             (s/optional-key :label)                      localized-schema/LocalizedString
+                             (s/optional-key :label-amendment)            localized-schema/LocalizedString ; Additional info which can be displayed next to the label
+                             (s/optional-key :module)                     module-schema/Module
+                             (s/optional-key :belongs-to-hakukohteet)     [s/Str]
+                             (s/optional-key :belongs-to-hakukohderyhma)  [s/Str]})
+
+(s/defschema WrapperElement
+  (s/conditional
+   #(= "tutkinnot" (:fieldType %)) (merge WrapperBase tutkinnot-schema/Tutkinnot)
+   :else WrapperBase))
 
 (def Content (s/if (comp some? :children) WrapperElement BasicElement))
 
@@ -148,11 +179,11 @@
 
 (s/defschema SelectionLimit
   {:question-id s/Str
-   :answer-id s/Str})
+   :answer-id   s/Str})
 
 (s/defschema FormSelectionLimit
   {(s/optional-key :selection-id) s/Str
-   :limit-reached                [SelectionLimit]})
+   :limit-reached                 [SelectionLimit]})
 
 (s/defschema FormWithContent
   (merge form-schema/Form
@@ -162,12 +193,12 @@
           (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 
 (s/defschema UpdateElementOperation
-  {:type (s/eq "update")
+  {:type        (s/eq "update")
    :old-element (s/if (comp some? :children) WrapperElement BasicElement)
    :new-element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema DeleteElementOperation
-  {:type (s/eq "delete")
+  {:type    (s/eq "delete")
    :element (s/if (comp some? :children) WrapperElement BasicElement)})
 
 (s/defschema CreateMoveElement
@@ -179,14 +210,10 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
-(s/defschema FormProperties
-  {(s/optional-key :auto-expand-hakukohteet)          s/Bool
-   (s/optional-key :order-hakukohteet-by-opetuskieli) s/Bool
-   (s/optional-key :allow-only-yhteishaut)            s/Bool
-   (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
-   (s/optional-key :demo-validity-start)              (s/maybe s/Str)
-   (s/optional-key :demo-validity-end)                (s/maybe s/Str)
-   (s/optional-key :closed)                           s/Bool})
+(s/defschema PaymentProperties
+  {(s/optional-key :type)                             (s/maybe s/Str)
+   (s/optional-key :processing-fee)                   (s/maybe s/Str)
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -262,7 +289,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
    (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
-   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime) 
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema FormTarjontaMetadata
@@ -274,8 +301,11 @@
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
    :kohdejoukko-uri                    s/Str
+   :kohdejoukon-tarkenne-uri           (s/maybe s/Str)
    :hakutapa-uri                       s/Str
-   :yhteishaku                         (s/maybe s/Bool)})
+   :yhteishaku                         (s/maybe s/Bool)
+   (s/optional-key :alkamiskausi)      (s/maybe s/Str)
+   (s/optional-key :alkamisvuosi)      (s/maybe s/Int)})
 
 (s/defschema Haku
   {:oid                                        s/Str
@@ -284,6 +314,7 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
    :kohdejoukko-uri                            s/Str
    :hakutapa-uri                               s/Str
+   :kohdejoukon-tarkenne-uri                   (s/maybe s/Str)
    :yhteishaku                                 s/Bool
    :prioritize-hakukohteet                     s/Bool
    :can-submit-multiple-applications           s/Bool
@@ -292,11 +323,14 @@
                                                  :start                org.joda.time.DateTime
                                                  (s/optional-key :end) org.joda.time.DateTime}]
    :haun-tiedot-url                            s/Str
+   (s/optional-key :alkamiskausi)              (s/maybe s/Str)
+   (s/optional-key :alkamisvuosi)              (s/maybe s/Int)
    (s/optional-key :hakukausi-vuosi)           s/Int
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int
    (s/optional-key :valinnat-estetty-time-window) (s/maybe {:dateStart (s/maybe s/Int)
-                                                            :dateEnd   (s/maybe s/Int)})})
+                                                            :dateEnd   (s/maybe s/Int)})
+   (s/optional-key :admission-payment-required?) s/Bool})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
@@ -330,6 +364,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
    (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?)     (s/maybe s/Bool)
+   (s/optional-key :tutkintoon-johtava?)                                         s/Bool
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema HakukohdeSearchResult
@@ -447,7 +482,8 @@
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
    :eligibility-set-automatically                   [s/Str]
-   (s/optional-key :tunnistautuminen)                 (s/maybe s/Str)})
+   (s/optional-key :tunnistautuminen)               (s/maybe s/Str)
+   (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
@@ -484,6 +520,26 @@
    (s/optional-key :ssn)         s/Str
    (s/optional-key :minor)       s/Bool})
 
+(s/defschema PaymentStatus
+  {:person-oid   s/Str
+   :start-term   s/Str
+   :start-year   s/Int
+   :state        s/Str
+   :created-time #?(:clj  (s/maybe DateTime)
+                    :cljs (s/maybe s/Str)) })
+
+(s/defschema PaymentEvent
+  {:new-state      (s/maybe s/Str)
+   :event-type     s/Str
+   :virkailija-oid (s/maybe s/Str)
+   :message        (s/maybe s/Str)
+   :created-time   #?(:clj  (s/maybe DateTime)
+                      :cljs (s/maybe s/Str)) })
+
+(s/defschema KkPaymentState
+  {(s/optional-key :status) PaymentStatus
+   (s/optional-key :events) [PaymentEvent]})
+
 (s/defschema ApplicationWithPerson
   (-> Application
       (st/dissoc :person-oid)
@@ -491,14 +547,15 @@
       (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
-(s/defschema ApplicationWithPersonAndForm
+(s/defschema ApplicationWithPersonFormAndPayment
   {:application (-> Application
                     (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
                     (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
-                               :else FormWithContent)})
+                               :else FormWithContent)
+   :kk-payment  KkPaymentState})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
@@ -922,7 +979,8 @@
                                            :attachment-states-to-include        [s/Str]
                                            :processing-states-to-include        [s/Str]
                                            (s/optional-key :school-filter)      (s/maybe s/Str)
-                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])}})
+                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])
+                                           (s/optional-key :kk-payment-states-to-include) (s/maybe [s/Str])}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
@@ -990,3 +1048,8 @@
 
    :toisenAsteenSuoritus    s/Str
    :toisenAsteenSuoritusmaa (s/maybe s/Str)})
+
+(s/defschema FormPaymentInfo
+  {:paymentType                    (s/maybe s/Str)
+   (s/optional-key :processingFee) s/Str
+   (s/optional-key :decisionFee)   s/Str})

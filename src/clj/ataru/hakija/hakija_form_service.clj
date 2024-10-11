@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-form-service
   (:require [ataru.cache.cache-service :as cache]
             [ataru.forms.form-store :as form-store]
+            [ataru.forms.form-payment-info :as payment-info]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
@@ -318,6 +319,7 @@
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
+          (payment-info/populate-form-with-payment-info tarjonta-service (:tarjonta tarjonta-info))
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (log/warn "Form (id: " id ", haku-oid: " haku-oid ", hakukohteet: " hakukohteet ") cannot be fetched. Possible reason can be missing hakukohteet."))))

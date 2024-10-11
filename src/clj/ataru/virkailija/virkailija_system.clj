@@ -308,7 +308,8 @@
                   :valintalaskentakoostepalvelu-service
                   :audit-logger
                   :liiteri-cas-client
-                  :amazon-cloudwatch])
+                  :amazon-cloudwatch
+                  :maksut-service])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 

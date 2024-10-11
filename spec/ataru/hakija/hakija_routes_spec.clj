@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-routes-spec
   (:require [ataru.applications.field-deadline :as field-deadline]
+            [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.util :as util]
             [ataru.log.audit-log :as audit-log]
             [ataru.koodisto.koodisto :as koodisto]
@@ -295,6 +296,26 @@
           (should= (map :id (filter cannot-view? fields))
                    [])))))
 
+  (it "should get form with dynamic kk payment info as hakija"
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+        (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
+           (should= 200 (:status resp))
+           (let [payment-properties (->> resp :body :properties :payment)]
+             (should-not (empty? payment-properties))
+             (should= "payment-type-kk" (:type payment-properties))
+             (should= "100.00" (:processing-fee payment-properties))
+             (should= nil (:decision-fee payment-properties))))))
+
+  (it "should get form with dynamic kk payment info as virkailija without henkilo"
+      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+        (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
+           (should= 200 (:status resp))
+           (let [payment-properties (->> resp :body :properties :payment)]
+             (should-not (empty? payment-properties))
+             (should= "payment-type-kk" (:type payment-properties))
+             (should= "100.00" (:processing-fee payment-properties))
+             (should= nil (:decision-fee payment-properties))))))
+
   (it "should get application with hakuaika ended"
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
@@ -498,9 +519,23 @@
         (should= 200 (:status resp))
         (should (-> (get-in resp [:body :application])
                   (get-answer "87834771-34da-40a4-a9f6-sensitive")
-                  nil?)))))
+                  nil?))))
 
-  (describe "PUT application"
+    (it "should get application's kk payment data"
+        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+          (with-get-response "12345" resp
+            (let [application-id (get-in resp [:body :application :id])]
+              (store/add-person-oid application-id "1.2.3.4.5.6")
+              (payment/set-application-fee-required "1.2.3.4.5.6" "kausi_s" 2025 nil nil)
+              (with-get-response "12345" resp
+                (should= 200 (:status resp))
+                (should= {:person-oid "1.2.3.4.5.6", :start-term "kausi_s", :start-year 2025,
+                          :state (:awaiting payment/all-states)}
+                         (select-keys
+                           (get-in resp [:body :kk-payment :status])
+                           [:person-oid :start-term :start-year :state]))))))))
+
+          (describe "PUT application"
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
