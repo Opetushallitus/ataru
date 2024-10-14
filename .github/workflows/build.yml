@@ -125,7 +125,7 @@ jobs:
           cache-dependency-path: 'package-lock.json'
 
       - name: Build
-        run: ./bin/cibuild.sh create-uberjar
+        run: ./bin/cibuild.sh create-both-uberjars
 
       - uses: actions/cache@v4
         id: restore-build
@@ -154,3 +154,14 @@ jobs:
       jarfile: ataru
     secrets: 
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+
+  build-and-deploy-ovara-ataru:
+    needs: [test-integration, test-spec-and-mocha, build]
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    with:
+      application: ovara-ataru
+      base-image: baseimage-fatjar-openjdk17:OK-568b
+      configfolder: ovara-configuration
+      jarfile: ovara-ataru
+    secrets:
+      AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
