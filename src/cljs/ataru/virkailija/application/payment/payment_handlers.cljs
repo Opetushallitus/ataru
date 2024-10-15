@@ -1,6 +1,8 @@
 (ns ataru.virkailija.application.payment.payment-handlers
   (:require [ataru.virkailija.application.application-selectors :refer [get-payment-amount-input
-                                                                        get-payment-note-input]]
+                                                                        get-payment-note-input
+                                                                        tutu-form?
+                                                                        astu-form?]]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [cljs-time.format :as f]
             [clojure.string :refer [ends-with?]]
@@ -78,9 +80,14 @@
                 :override-args {:params data}))
      {}))
 
+(defn- get-origin [form]
+  (cond
+    (tutu-form? form) "tutu"
+    (astu-form? form) "astu"))
+
 (re-frame/reg-event-fx
   :payment/send-decision-invoice
-  (fn [{db :db} [_ application-key payment-type]]
+  (fn [{db :db} [_ application-key]]
    (let [{:keys [due_date]} (get-in db [:payment :inputs application-key])
          application-and-form (get-in db [:application :selected-application-and-form])
          application (:application application-and-form)
@@ -88,7 +95,8 @@
          get-field  (fn [key] (->> (:answers application) key :value))
          message    (get-payment-note-input db application-key)
          amount     (get-payment-amount-input db application-key)
-         metadata   (when (= payment-type "payment-type-astu")
+         origin     (get-origin form)
+         metadata   (when (= origin "astu")
                       {:form-name (:name form)})
          data {:reference application-key
                :first-name (get-field :first-name)
@@ -99,7 +107,7 @@
                :message message
                :due-date due_date
                :due-days 14
-               :origin payment-type
+               :origin origin
                :index 2}]
 
      (ajax/http :post
