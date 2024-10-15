@@ -160,7 +160,7 @@ jobs:
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ovara-ataru
-      base-image: baseimage-fatjar-openjdk17:OK-568b
+      base-image: baseimage-fatjar-openjdk17:master
       configfolder: ovara-configuration
       jarfile: ovara-ataru
     secrets:
