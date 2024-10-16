@@ -130,15 +130,14 @@ prepare-ui-tests() {
     reset-test-database-with-fixture
 }
 
-
-create-uberjar() {
+create-both-uberjars() {
     clean
     build-clojurescript
     npm-dependencies
     compile-less
     process-resources
     echo "Creating uberjar"
-    time ./bin/lein uberjar
+    time ./bin/lein with-profile ataru-main:ovara uberjar
 }
 
 run-tests() {
@@ -235,8 +234,8 @@ case "$command" in
     "ui-compile" )
         ui-compile
         ;;
-    "create-uberjar" )
-        create-uberjar
+    "create-both-uberjars" )
+        create-both-uberjars
         ;;
     "create-db-schema" )
         create-db-schema
@@ -298,7 +297,7 @@ case "$command" in
 * reset-test-database-with-fixture
 * ui-compile
 * prepare-ui-tests
-* create-uberjar
+* create-both-uberjars
 * run-tests
 * run-tests-and-create-uberjar
 * run-clojure-tests

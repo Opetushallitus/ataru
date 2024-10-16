@@ -205,7 +205,7 @@
        :form_id
        fetch-by-id))
 
-(defn siirtotiedosto-form-ids [{:keys [modified-before modified-after] :as params}]
+(defn siirtotiedosto-form-ids [{:keys [window-start window-end] :as params}]
   (log/info "Fetching changed form ids for siirtotiedosto with params" params)
-  (execute-with-db :db yesql-get-siirtotiedosto-form-ids {:modified_before modified-before
-                                                          :modified_after modified-after}))
+  (execute-with-db :db yesql-get-siirtotiedosto-form-ids {:window_end window-end
+                                                          :window_start window-start}))

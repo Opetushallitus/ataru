@@ -1316,9 +1316,9 @@ SELECT
     la.id
 FROM latest_applications as la
 WHERE
-    la.modified_time >= :modified_after::timestamptz
+    la.modified_time >= :window_start::timestamptz
   AND
-    la.modified_time <= :modified_before::timestamptz;
+    la.modified_time <= :window_end::timestamptz;
 
 -- name: yesql-get-siirtotiedosto-application-ids-for-haku
 -- Get list of ids for applications in haku to be included in siirtotiedosto
@@ -1335,9 +1335,9 @@ SELECT
     a.key,
     a.lang,
     a.form_id                           AS form,
-    a.created_time,
-    a.submitted,
-    a.modified_time,
+    a.created_time::text,
+    a.submitted::text,
+    a.modified_time::text,
     (SELECT content
      FROM answers_as_content
      WHERE application_id = a.id) AS content,
