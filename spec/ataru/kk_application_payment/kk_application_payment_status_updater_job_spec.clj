@@ -67,8 +67,8 @@
 (defn- clear! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/delete! conn :applications [])
-                            (jdbc/delete! conn :kk_application_payment_events [])
-                            (jdbc/delete! conn :kk_application_payment_states [])))
+                            (jdbc/delete! conn :kk_application_payments [])
+                            (jdbc/delete! conn :kk_application_payments_history [])))
 
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
@@ -103,7 +103,7 @@
               (updater-job/update-kk-payment-status-handler
                 {:person_oid test-person-oid :term test-term :year test-year}
                 runner)
-              (let [state-data (first (payment/get-raw-payment-states [test-person-oid] test-term test-year))]
+              (let [state-data (first (payment/get-raw-payments [test-person-oid] test-term test-year))]
                 (should=
                   {:person-oid "1.2.3.4.5.303" :start-term "kausi_s" :start-year 2025
                    :state (:awaiting payment/all-states)}
