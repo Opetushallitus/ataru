@@ -240,7 +240,7 @@
            attachment-metadata))))
 
 (defn- transfer
-  [config filename message]
+  [config filename message application-id]
   (let [stdin (new PipedInputStream)
         emit  (future
                 (with-open [w (new OutputStreamWriter (new PipedOutputStream stdin) "UTF-8")]
@@ -260,6 +260,7 @@
                   (future-cancel emit)
                   (future-cancel lftp)
                   {:exit 1 :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))]
+    (log/info (str "FTP transfer output for application-id " application-id " | exit-code: " (:exit r) " | out: " (:out r) " | err: " (:err r)))
     (when-not (zero? (:exit r))
       (throw (new RuntimeException (str "Writing file " filename " failed: "
                                         (:err r)))))))
@@ -342,7 +343,8 @@
                   application-id)
         (transfer ftp
                   (str (:key application) "_" application-id ".xml")
-                  message)
+                  message
+                  application-id)
         (log/info "Sent application"
                   (if edit? "edited" "submitted")
                   "message to ASHA for application"
@@ -364,18 +366,20 @@
                 country-question-id
                 ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
-        application           (:application application-and-state)]
+        application           (:application application-and-state)
+        application-id        (:id application)]
     (if (and (form-key-matches? form-key (:form-key application))
              (nil? (:review-key application-and-state))
              (= "inactivated" (:state application-and-state)))
       (let [message (->application-inactivated application)]
         (log/info "Sending application inactivated message to ASHA for application"
-                  (:id application))
+                  application-id)
         (transfer ftp
                   (str (:key application) "_" (:id application) "_" event-id ".xml")
-                  message)
+                  message
+                  application-id)
         (log/info "Sent application inactivated message to ASHA for application"
-                  (:id application))
+                  application-id)
         {:transition {:id :final}})
       {:transition {:id :final}})))
 
@@ -394,7 +398,8 @@
                   (:id application))
         (transfer ftp
                   (str (:key application) "_" (:id application) "_taydennyspyynto_" ts ".xml")
-                  message)
+                  message
+                  application-id)
         (log/info "Sent application information request sent message to ASHA for application"
                   (:id application))
         {:transition {:id :final}})
