@@ -5,7 +5,7 @@
             [ataru.person-service.person-service :as person-service]
             [clj-time.core :as time]
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
-                                 before around before-all]]
+                                 before around before-all focus-it]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
@@ -13,7 +13,8 @@
             [ataru.kk-application-payment.fixtures :as fixtures]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
-            [ataru.kk-application-payment.utils :as payment-utils]))
+            [ataru.kk-application-payment.utils :as payment-utils]
+            [ataru.applications.application-store :as application-store]))
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (mock-tarjonta-service/->MockTarjontaKoutaService))
@@ -31,30 +32,30 @@
                        (remove-from [_ _])
                        (clear-all [_])))
 
+(declare conn)
 (defn- delete-states-and-events! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (jdbc/delete! conn :kk_application_payment_events [])
-                            (jdbc/delete! conn :kk_application_payment_states [])))
+                            (jdbc/delete! conn :kk_application_payments [])
+                            (jdbc/delete! conn :kk_application_payments_history [])))
 
 (def term-spring "kausi_k")
 (def term-fall "kausi_s")
 (def term-error "kausi_a")
 (def year-ok 2025)
 (def year-error 2024)
-(def state-pending (:awaiting payment/all-states))
+
+(def state-awaiting (:awaiting payment/all-states))
 (def state-not-required (:not-required payment/all-states))
 (def state-paid (:paid payment/all-states))
 (def state-overdue (:overdue payment/all-states))
-(def state-ok-via-linked-oid (:ok-via-linked-oid payment/all-states))
-(def event-updated (:updated payment/all-event-types))
+(def state-ok-by-proxy (:ok-by-proxy payment/all-states))
+
+(def reason-eu-citizen (:eu-citizen payment/all-reasons))
+(def reason-exemption  (:exemption-field payment/all-reasons))
 
 (defn- should-be-matching-state
   [example state]
-  (should= example (dissoc state :id :created-time :modified-time)))
-
-(defn- should-be-matching-event
-  [example event]
-  (should= example (dissoc event :id :created-time)))
+  (should= example (select-keys state [:application-key :state :reason])))
 
 (declare spec)
 
@@ -115,14 +116,10 @@
                                                       application-fixtures/application-without-hakemusmaksu-exemption
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
-                              resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                  fake-koodisto-cache fake-haku-cache
-                                                                  oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                          (should-be-nil state)
-                          (should-be-nil (:old-state resp))
-                          (should-be-nil (:new-state resp))
-                          (should-be-nil (:id resp))))
+                              states (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                       fake-koodisto-cache fake-haku-cache
+                                                                                       oid term-fall year-ok)]
+                          (should= 0 (count states))))
 
                     (it "should throw an error when EU country codes could not be read"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
@@ -131,144 +128,155 @@
                                                         {:person-oid "1.1.1"}) nil)
                         (with-redefs [koodisto/get-koodisto-options (constantly [])]
                           (should-throw
-                            (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                           fake-koodisto-cache fake-haku-cache
-                                                           "1.1.1" term-fall year-ok nil))))
+                            (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                              fake-koodisto-cache fake-haku-cache
+                                                                              "1.1.1" term-fall year-ok))))
 
-                    (it "should return existing paid (terminal) state without state changes"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      (merge
-                                                        application-fixtures/application-without-hakemusmaksu-exemption
-                                                        {:person-oid "1.2.3.4.5.62"}) nil)
+                    (it "should return existing paid (terminal) state"
                         (let [oid "1.2.3.4.5.6"
-                              linked-oid (str oid "2")                ; See FakePersonService
-                              _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                              resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                  fake-koodisto-cache fake-haku-cache
-                                                                  linked-oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [linked-oid] term-fall year-ok))]
-                          (should-not-be-nil (:id resp))
-                          (should= state-paid (:old-state resp))
-                          (should= state-paid (:new-state resp))
-                          (should-be-matching-state {:person-oid linked-oid, :start-term term-fall,
-                                                     :start-year year-ok, :state state-paid} state)))
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-without-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              initial-payment (payment/set-application-fee-paid application-key nil)
+                              changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok)
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 0 (count changed))
+                          (should= initial-payment payment)
+                          (should-be-matching-state {:application-key application-key, :state state-paid :reason nil} payment)))
 
-                    (it "should set ok via linked oid status when linked oid has payment info"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      (merge
-                                                        application-fixtures/application-without-hakemusmaksu-exemption
-                                                        {:person-oid "1.2.3.4.5.123"}) nil)
-                        (let [oid "1.2.3.4.5.123"
+                    (it "should set ok via proxy for application when another application by linked oid has been paid for"
+                        (let [oid "1.2.3.4.5.303"                     ; FakePersonService returns non-EU nationality for this one
                               linked-oid (str oid "2")                ; See FakePersonService
-                              _ (payment/set-application-fee-paid linked-oid term-fall year-ok nil nil)
-                              resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                  fake-koodisto-cache fake-haku-cache
-                                                                  oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                          (should-not-be-nil (:id resp))
-                          (should-be-nil (:old-state resp))
-                          (should= state-ok-via-linked-oid (:new-state resp))
-                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                     :start-year year-ok, :state state-ok-via-linked-oid} state)))
+                              application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                            [(merge
+                                                                               application-fixtures/application-without-hakemusmaksu-exemption
+                                                                               {:person-oid oid})
+                                                                             (merge
+                                                                               application-fixtures/application-without-hakemusmaksu-exemption
+                                                                               {:person-oid linked-oid})])
+                              primary-application-key (:key (application-store/get-application (first application-ids)))
+                              linked-application-key (:key (application-store/get-application (second application-ids)))
+                              _ (payment/set-application-fee-paid linked-application-key nil)
+                              changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok)
+                              primary-payment (first (payment/get-raw-payments [primary-application-key]))
+                              linked-payment (first (payment/get-raw-payments [linked-application-key]))]
+                          (should= 1 (count changed))
+                          (should= primary-payment (first changed))
+                          (should-be-matching-state {:application-key primary-application-key, :state state-ok-by-proxy
+                                                     :reason nil}
+                                                    primary-payment)
+                          (should-be-matching-state {:application-key linked-application-key, :state state-paid
+                                                     :reason nil}
+                                                    linked-payment)))
 
-                    (it "should reset paid via linked oid status when the linking has been removed"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      (merge
-                                                        application-fixtures/application-without-hakemusmaksu-exemption
-                                                        {:person-oid "1.2.3.4.5.300"}) nil)
-                        (let [oid "1.2.3.4.5.300"
-                              _ (payment/set-application-fee-ok-via-linked-oid oid term-fall year-ok nil nil)
-                             resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                 fake-koodisto-cache fake-haku-cache
-                                                                 oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                          (should-not-be-nil (:id resp))
-                          (should= state-ok-via-linked-oid (:old-state resp))
-                          (should= state-not-required (:new-state resp))
-                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                     :start-year year-ok, :state state-not-required} state)))
+                    (it "should reset paid via linked oid status to person's normal status when the linking has been removed"
+                        (let [oid "1.2.3.4.5.303"                     ; FakePersonService returns non-EU nationality for this one
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-without-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              initial-payment (payment/set-application-fee-ok-by-proxy application-key nil)
+                              changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok)
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 1 (count changed))
+                          (should= (first changed) payment)
+                          (should-be-matching-state {:application-key application-key, :state state-ok-by-proxy
+                                                     :reason nil} initial-payment)
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
 
                     (it "should set payment status for eu citizen as not required"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      (merge
-                                                        application-fixtures/application-without-hakemusmaksu-exemption
-                                                        {:person-oid "1.2.3.4.5.7"}) nil)
                         (let [oid "1.2.3.4.5.7"                       ; FakePersonService returns Finnish nationality by default
-                              resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                  fake-koodisto-cache fake-haku-cache
-                                                                  oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                          (should-not-be-nil (:id resp))
-                          (should-be-nil (:old-state resp))
-                          (should= state-not-required (:new-state resp))
-                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                     :start-year year-ok, :state state-not-required} state)))
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-without-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok)
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 1 (count changed))
+                          (should= (first changed) payment)
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-eu-citizen} payment)))
 
                     (it "should set payment status for non eu citizen without exemption as required"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      application-fixtures/application-without-hakemusmaksu-exemption
-                                                      nil)
                         (with-redefs [payment/exemption-in-application? (constantly false)]
                           (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
-                                resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                    fake-koodisto-cache fake-haku-cache
-                                                                    oid term-fall year-ok nil)
-                                state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                            (should-not-be-nil (:id resp))
-                            (should-be-nil (:old-state resp))
-                            (should= state-pending (:new-state resp))
-                            (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                       :start-year year-ok, :state state-pending} state))))
+                                application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                             (merge
+                                                                               application-fixtures/application-without-hakemusmaksu-exemption
+                                                                               {:person-oid oid}) nil)
+                                application-key (:key (application-store/get-application application-id))
+                                changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                          fake-koodisto-cache fake-haku-cache
+                                                                                          oid term-fall year-ok)
+                                payment (first (payment/get-raw-payments [application-key]))]
+                            (should= 1 (count changed))
+                            (should= (first changed) payment)
+                            (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                       :reason nil} payment))))
 
                     (it "should set payment status for non eu citizen with existing linked overdue payment as required"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      application-fixtures/application-without-hakemusmaksu-exemption
-                                                      nil)
                         (with-redefs [payment/exemption-in-application? (constantly false)]
                           (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
-                                linked-oid (str oid "2")                ; See FakePersonService
-                                _ (payment/set-application-fee-overdue linked-oid term-fall year-ok nil nil)
-                                resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                    fake-koodisto-cache fake-haku-cache
-                                                                    oid term-fall year-ok nil)
-                                state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                            (should-not-be-nil (:id resp))
-                            (should-be-nil (:old-state resp))
-                            (should= state-pending (:new-state resp))
-                            (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                       :start-year year-ok, :state state-pending} state)))))
+                                linked-oid (str oid "2")                  ; See FakePersonService
+                                application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                              [(merge
+                                                                                 application-fixtures/application-without-hakemusmaksu-exemption
+                                                                                 {:person-oid oid})
+                                                                               (merge
+                                                                                 application-fixtures/application-without-hakemusmaksu-exemption
+                                                                                 {:person-oid linked-oid})])
+                                primary-application-key (:key (application-store/get-application (first application-ids)))
+                                linked-application-key (:key (application-store/get-application (second application-ids)))
+                                _ (payment/set-application-fee-overdue linked-application-key nil)
+                                changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                          fake-koodisto-cache fake-haku-cache
+                                                                                          oid term-fall year-ok)
+                                primary-payment (first (payment/get-raw-payments [primary-application-key]))
+                                linked-payment (first (payment/get-raw-payments [linked-application-key]))]
+                            (should= 1 (count changed))
+                            (should= primary-payment (first changed))
+                            (should-be-matching-state {:application-key primary-application-key, :state state-awaiting
+                                                       :reason nil} primary-payment)
+                            (should-be-matching-state {:application-key linked-application-key, :state state-overdue
+                                                       :reason nil} linked-payment)))))
 
           (describe "with exemption"
                     (before (delete-states-and-events!))
 
                     (it "should set payment status for non eu citizen with exemption as not required"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      application-fixtures/application-with-hakemusmaksu-exemption
-                                                      nil
-                                                      [{:state "active"}])
                         (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
-                              resp (payment/update-payment-status fake-person-service fake-tarjonta-service
-                                                                  fake-koodisto-cache fake-haku-cache
-                                                                  oid term-fall year-ok nil)
-                              state (first (payment/get-raw-payment-states [oid] term-fall year-ok))]
-                          (should-not-be-nil (:id resp))
-                          (should-be-nil (:old-state resp))
-                          (should= state-not-required (:new-state resp))
-                          (should-be-matching-state {:person-oid oid, :start-term term-fall,
-                                                     :start-year year-ok, :state state-not-required} state)))))
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-with-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              changed (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok)
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 1 (count changed))
+                          (should= (first changed) payment)
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))))
 
-(defn save-and-check-single-state-and-event
-  [oid term year state-func desired-state]
-  (let [state-id (state-func oid term-fall year-ok nil nil)
-        states   (payment/get-raw-payment-states [oid] term year)
-        events   (payment/get-raw-payment-events [state-id])
-        state    (first states)
-        event    (first events)]
-    (should= 1 (count states))
-    (should= 1 (count events))
-    (should-be-matching-state {:person-oid oid, :start-term term, :start-year year, :state desired-state} state)
-    (should-be-matching-event {:kk-application-payment-state-id state-id, :new-state desired-state,
-                               :event-type event-updated, :virkailija-oid nil, :message nil} event)))
+(defn save-and-check-single-state
+  [application-key state-func desired-state desired-reason]
+  (let [state-data (state-func application-key nil)]
+    (should= (:state state-data) desired-state)
+    (should= (:reason state-data) desired-reason)))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)
@@ -277,31 +285,29 @@
             (delete-states-and-events!))
 
           (describe "payment state validation"
-                    (it "should not allow setting fee for spring 2025 (starts from fall 2025)"
-                        (should-throw (payment/set-application-fee-required
-                                        "1.2.3.4.5.6" term-spring year-ok nil nil)))
+                    (it "should not allow setting fee with no application key"
+                        (should-throw (payment/set-application-fee-required "" nil))))
 
-                    (it "should not allow setting fee for year earlier than 2025"
-                        (should-throw (payment/set-application-fee-required
-                                        "1.2.3.4.5.6" term-spring year-error nil nil)))
-
-                    (it "should not allow setting fee for invalid term"
-                        (should-throw (payment/set-application-fee-required
-                                        "1.2.3.4.5.6" term-error year-ok nil nil))))
-
+          ; TODO test with previous states
           (describe "payment state setting"
-                    (it "should set and get application fee required for a person with oid"
-                        (save-and-check-single-state-and-event
-                          "1.2.3.4.5.6" term-fall year-ok payment/set-application-fee-required state-pending))
+                    (it "should set and get application fee required"
+                        (save-and-check-single-state
+                          "1.2.3.4.5.6" payment/set-application-fee-required state-awaiting nil))
 
-                    (it "should set and get application fee not required for a person with oid"
-                        (save-and-check-single-state-and-event
-                          "1.2.3.4.5.7" term-fall year-ok payment/set-application-fee-not-required state-not-required))
+                    (it "should set and get application fee not required for eu citizen"
+                        (save-and-check-single-state
+                          "1.2.3.4.5.7" payment/set-application-fee-not-required-for-eu-citizen
+                          state-not-required reason-eu-citizen))
 
-                    (it "should set and get application fee paid for a person with oid"
-                        (save-and-check-single-state-and-event
-                          "1.2.3.4.5.8" term-fall year-ok payment/set-application-fee-paid state-paid))
+                    (it "should set and get application fee not required due to exemption"
+                        (save-and-check-single-state
+                          "1.2.3.4.5.7" payment/set-application-fee-not-required-for-exemption
+                          state-not-required reason-exemption))
 
-                    (it "should set and get application fee overdue for a person with oid"
-                        (save-and-check-single-state-and-event
-                          "1.2.3.4.5.9" term-fall year-ok payment/set-application-fee-overdue state-overdue))))
+                    (it "should set and get application fee paid"
+                        (save-and-check-single-state
+                          "1.2.3.4.5.8" payment/set-application-fee-paid state-paid nil))
+
+                    (it "should set and get application fee overdue"
+                        (save-and-check-single-state
+                          "1.2.3.4.5.9" payment/set-application-fee-overdue state-overdue nil))))

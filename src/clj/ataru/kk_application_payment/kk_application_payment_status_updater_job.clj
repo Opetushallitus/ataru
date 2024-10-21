@@ -25,9 +25,9 @@
   kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year]}
    {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service]}]
-  (let [{:keys [person old-state new-state]} (payment/update-payment-status person-service tarjonta-service
-                                                                            koodisto-cache haku-cache
-                                                                            person_oid term year nil)]
+  (let [{:keys [person old-state new-state]} (payment/update-payments-for-person-term-and-year person-service tarjonta-service
+                                                                                               koodisto-cache haku-cache
+                                                                                               person_oid term year)]
     (when-not (= old-state new-state)
       (cond
         (= (:awaiting payment/all-states) new-state) (create-payment-and-send-email maksut-service person term year)
