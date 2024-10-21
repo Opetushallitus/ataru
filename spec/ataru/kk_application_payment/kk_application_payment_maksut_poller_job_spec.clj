@@ -82,9 +82,9 @@
    ["1.2.246.562.24.5123456" "kausi_s" 2025 (:paid payment/all-states) 1 2]])
 
 (defn check-state-and-event [oid term year state-name state-count event-count]
-  (let [states (payment/get-raw-payment-states [oid] term year)
+  (let [states (payment/get-raw-payments [oid] term year)
         state-data (first states)
-        events (payment/get-raw-payment-events [(:id state-data)])]
+        events (payment/get-raw-payment-history [(:id state-data)])]
     (should= state-count (count states))
     (should= event-count (count events))
     (should= state-name (:state state-data))))

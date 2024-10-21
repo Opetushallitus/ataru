@@ -73,10 +73,28 @@
         (merge review {:application-key (:key stored-application)}) {} audit-logger))
     application-id))
 
+(defn init-db-multi-application-fixture
+  [form-fixture application-fixtures]
+  (when (or (nil? (:id form-fixture)) (some #(not= (:id form-fixture) (:form %)) application-fixtures))
+    (throw (Exception. (str "Incorrect fixture data, application should refer the given form"))))
+  (let [audit-logger       (audit-log/new-dummy-audit-logger)
+        _                  (init-db-form-fixture form-fixture)]
+    (doall (map (fn [application-fixture] (-> (application-store/add-application
+                                                application-fixture
+                                                (:hakukohde application-fixture)
+                                                form-fixture
+                                                {}
+                                                audit-logger
+                                                nil)
+                                              :id)) application-fixtures))))
+
 (defn init-db-fixture
   ([form-fixture]
     (nuke-old-fixture-data (:id form-fixture))
     (init-db-form-fixture form-fixture))
+  ([form-fixture application-fixtures]
+   (nuke-old-fixture-data (:id form-fixture))
+   (init-db-multi-application-fixture form-fixture application-fixtures))
   ([form-fixture application-fixture application-hakukohde-reviews-fixture]
     (nuke-old-fixture-data (:id form-fixture))
     (init-db-application-fixture form-fixture application-fixture application-hakukohde-reviews-fixture nil))
