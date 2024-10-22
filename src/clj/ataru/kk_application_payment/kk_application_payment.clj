@@ -46,13 +46,6 @@
   {:eu-citizen      "eu-citizen"
    :exemption-field "exemption-field"})
 
-; TODO replace with approved-at?
-(def ok-states
-  #{nil
-    (:not-required all-states)
-    (:ok-by-proxy  all-states)
-    (:paid         all-states)})
-
 (defn get-due-date []
   (time-format/unparse default-format
                        (time/plus (time/now)
@@ -318,56 +311,23 @@
                                 history)))))
 
 (defn get-kk-payment-states
-  "Returns higher education application fee related info to application list belonging to same haku."
-  ([applications tarjonta person-oid-key]
-   (let [person-oids        (keep person-oid-key applications)
-         studies-start-term (:alkamiskausi tarjonta)
-         studies-start-year (:alkamisvuosi tarjonta)
-         payment-states     (when (and person-oids studies-start-term studies-start-year)
-                              (get-raw-payments
-                                person-oids studies-start-term studies-start-year))]
+  "Returns higher education application fee related info to application list."
+  ([applications application-key-field]
+   (let [application-keys   (map application-key-field applications)
+         payments           (get-raw-payments application-keys)]
      (into {}
-           (map #(vector (:person-oid %) %) payment-states))))
-  ([applications tarjonta]
-   (get-kk-payment-states applications tarjonta :person-oid)))
+           (map #(vector (:application-key %) %) payments))))
+  ([applications]
+   (get-kk-payment-states applications :key)))
 
-(defn- filter-kk-haku-applications-by-state
-  [applications haku person-oid-key filter-states]
-  (let [payment-states-by-person-oid (get-kk-payment-states applications haku person-oid-key)]
-    (filter (fn [application]
-              (let [kk-payment-state (get-in payment-states-by-person-oid
-                                             [(person-oid-key application) :state])]
-                (contains? filter-states kk-payment-state)))
-            applications)))
-
-; TODO: can be simplified now
-; TODO: requires-higher-education-application-fee filtering?
-(defn filter-application-list-by-kk-payment-state
-  "Filters an application list by kk payment state. Add nil to states-to-keep if you want to also include applications
-   with no payment data. Applications should include haku oid and person oid in the fields with
-   respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key states-to-keep]
-  (let [applications-with-person-oid-and-haku (filter
-                                                #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                                applications)
-        remaining-applications (remove
-                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                 applications)
-        applications-by-haku (group-by haku-oid-key applications-with-person-oid-and-haku)
-        haku-oids (keys applications-by-haku)
-        hakus-by-oid (into {}
-                           (map #(vector % (tarjonta/get-haku tarjonta-service %)) haku-oids))]
-    (->> haku-oids
-         (map #(filter-kk-haku-applications-by-state
-                 (get applications-by-haku %) (get hakus-by-oid %)
-                 person-oid-key states-to-keep))
-         flatten
-         (concat remaining-applications))))
-
-(defn filter-out-unpaid-kk-applications
-  "Filters out applications by persons that have not yet paid a mandatory fee for the application haku's starting period.
-   Applications should include haku oid and person oid in the fields with respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key]
-  (filter-application-list-by-kk-payment-state tarjonta-service applications
-                                               person-oid-key haku-oid-key
-                                               ok-states))
+(defn remove-kk-applications-with-unapproved-payments
+  "Filters out applications that have payment info but yet been approved (paid, exempted) for their respective admissions.
+   Returns applications that either have no payment info or have been approved."
+  [applications application-key-field]
+  (let [payments (get-kk-payment-states applications application-key-field)
+        approved-filter-fn (fn [application]
+                             (let [payment (get payments (application-key-field application))]
+                               (or
+                                 (nil? payment)
+                                 (some? (:approved-at payment)))))]
+    (filter approved-filter-fn applications)))

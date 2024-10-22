@@ -507,7 +507,7 @@
    :reason           (s/maybe s/Str)
    :due-date         #?(:clj  (s/maybe DateTime)
                         :cljs (s/maybe s/Str))
-   :total-sum        s/Str
+   :total-sum        (s/maybe s/Str)
    :created-at       #?(:clj  (s/maybe DateTime)
                         :cljs (s/maybe s/Str))
    :modified-at      #?(:clj  (s/maybe DateTime)
