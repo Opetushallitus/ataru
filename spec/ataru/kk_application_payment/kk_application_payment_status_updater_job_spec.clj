@@ -15,7 +15,8 @@
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]
-            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]))
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
+            [ataru.applications.application-store :as application-store]))
 
 (def test-person-oid
   (:person-oid application-fixtures/application-without-hakemusmaksu-exemption))
@@ -97,14 +98,14 @@
                                       :with [#(= (:oid %) "payment-info-test-kk-haku") :*]})))
 
           (it "should update payment status for oid"
-              (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                            application-fixtures/application-without-hakemusmaksu-exemption
-                                            nil)
-              (updater-job/update-kk-payment-status-handler
-                {:person_oid test-person-oid :term test-term :year test-year}
-                runner)
-              (let [state-data (first (payment/get-raw-payments [test-person-oid] test-term test-year))]
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))]
                 (should=
-                  {:person-oid "1.2.3.4.5.303" :start-term "kausi_s" :start-year 2025
-                   :state (:awaiting payment/all-states)}
-                  (dissoc state-data :id :created-time :modified-time)))))
+                  {:application-key application-key :state (:awaiting payment/all-states)}
+                  (select-keys payment [:application-key :state])))))
