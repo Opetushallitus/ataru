@@ -18,8 +18,8 @@
 (declare yesql-delete-fixture-form!)
 (declare yesql-delete-fixture-forms-with-key!)
 (declare yesql-set-form-id!)
-(declare yesql-delete-kk-payment-events!)
-(declare yesql-delete-kk-payment-states!)
+(declare yesql-delete-kk-payments-history!)
+(declare yesql-delete-kk-payments!)
 
 (defqueries "sql/dev-form-queries.sql")
 
@@ -37,8 +37,8 @@
   (ataru-db/exec :db yesql-delete-fixture-forms-with-key! {:key form-key}))
 
 (defn nuke-kk-payment-data []
-  (ataru-db/exec :db yesql-delete-kk-payment-events! {})
-  (ataru-db/exec :db yesql-delete-kk-payment-states! {}))
+  (ataru-db/exec :db yesql-delete-kk-payments-history! {})
+  (ataru-db/exec :db yesql-delete-kk-payments! {}))
 
 (defn init-db-form-fixture
   [form-fixture]

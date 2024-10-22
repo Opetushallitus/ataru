@@ -8,6 +8,7 @@
 
 (declare yesql-get-awaiting-kk-application-payments)
 (declare yesql-get-kk-application-payments-for-application-keys)
+(declare yesql-get-kk-application-payments-history-for-application-keys)
 (declare yesql-upsert-kk-application-payment<!)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
@@ -19,6 +20,11 @@
 (defn get-awaiting-kk-application-payments
   []
   (->> (exec-db :db yesql-get-awaiting-kk-application-payments {})
+       (map ->kebab-case-kw)))
+
+(defn get-kk-application-payments-history
+  [application-keys]
+  (->> (exec-db :db yesql-get-kk-application-payments-history-for-application-keys {:application_keys application-keys})
        (map ->kebab-case-kw)))
 
 (defn get-kk-application-payments

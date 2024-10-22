@@ -209,6 +209,7 @@
 (defn- exemption-in-application?
   [application]
   (let [answers (util/application-answers-by-key application)]
+    ; TODO: should we allow not answering the question at all in the end? Eg. for Finnish nationality.
     (if-let [exemption-answer (exemption-form-field-name answers)]
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
