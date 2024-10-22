@@ -6,13 +6,12 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]))
 
-(defn poll-payments [maksut-service payment-states]
+(defn poll-payments [maksut-service payments]
   (let [keys-states (into {}
-                          (map (fn [state] [(payment/payment-status-to-reference state) state]) payment-states))
+                          (map (fn [state] [(payment/payment-status-to-reference state) state])
+                               payments))
         maksut    (maksut-protocol/list-lasku-statuses maksut-service (keys keys-states))]
-
     (log/debug "Received statuses for" (count maksut) "kk payment invoices")
-
     (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
           raw      (map (fn [{:keys [reference status origin]}]
                           (when-let [key-match (get keys-states reference)]
@@ -26,16 +25,15 @@
       (log/debug (pr-str "Invoices" items))
       (doseq [item items]
         (let [{:keys [origin ataru-status maksut-status ataru-data]} item
-              {:keys [person-oid start-term start-year]} ataru-data
+              {:keys [application-key]} ataru-data
               awaiting-status (:awaiting payment/all-states)
               response (if (= payment/kk-application-payment-origin origin)
                          (match [ataru-status maksut-status]
-                                ; TODO can an overdue payment still be paid?
                                 [awaiting-status "paid"]
-                                (payment/set-application-fee-paid person-oid start-term start-year nil nil)
+                                (payment/set-application-fee-paid application-key ataru-status)
 
                                 [awaiting-status "overdue"]
-                                (payment/set-application-fee-overdue person-oid start-term start-year nil nil)
+                                (payment/set-application-fee-overdue application-key ataru-status)
 
                                 :else (log/debug "Invalid kk payment state combo, will not do anything" item))
                          (log/debug "Invalid origin, will not do anything" item))]
@@ -45,10 +43,10 @@
   [_ {:keys [maksut-service]}]
   (log/info "Poll kk application payments step starting")
   (try
-    (if-let [payment-states (seq (store/get-open-kk-application-payment-states))]
+    (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
       (do
-        (log/debug "Found " (count payment-states) " open kk application payments, checking maksut status")
-        (poll-payments maksut-service payment-states))
+        (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
+        (poll-payments maksut-service payments))
       (log/debug "No kk application payments in need of maksut polling found"))
     (catch Exception e
       (log/error e "Maksut polling failed"))))

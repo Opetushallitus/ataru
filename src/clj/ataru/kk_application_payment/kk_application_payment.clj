@@ -51,11 +51,10 @@
                        (time/plus (time/now)
                                   (time/days kk-application-payment-due-days))))
 
-; TODO finalize after big OK-687 changes
 (defn payment-status-to-reference
-  "Maksut payment references for hakemusmaksu are like 1.2.246.562.24.123456-kausi_s-2025"
-  [{:keys [person-oid start-term start-year]}]
-  (str/join "-" [person-oid start-term start-year]))
+  "Maksut payment references for hakemusmaksu are like 1.2.246.562.8.00000000000022225700"
+  [{:keys [application-key]}]
+  application-key)
 
 ; TODO finalize after big OK-687 changes
 (defn generate-invoicing-data
