@@ -170,8 +170,27 @@
       :else
       modifier)))
 
+(defn date-time [t_stamp] 
+  (c/from-long t_stamp))
+(def now (t/now))
+;(def tz (z/time-zone-for-id "Europe/Helsinki"))
+;(def helsinki-now (t/to-time-zone now tz))
+(def formatter (f/formatters :date-time))
+(def formatted-now (f/unparse formatter now))
+(defn formatted [t_stamp]
+  (f/unparse formatter t_stamp))
+(defn is-jatkuva_not_joustava [hakuaika]
+  (let [is-not-joustava? (not (hakuaika :joustava-haku?))
+        is-jatkuva-or-koustava? (hakuaika :jatkuva-or-joustava-haku?)]
+    (and is-not-joustava? is-jatkuva-or-koustava?)))
+
+
+
 (defn attachment-edit-end [hakuaika]
-  (log/info "hakuaika" hakuaika)
+  (when (> (:end hakuaika) 1630282400000)
+  ;(when (> (:end hakuaika) 1704189600000)
+    (log/info "hakuaika :start" (get-in hakuaika [:label :start :fi]) ":formatted_start" (formatted (date-time (:start hakuaika))))
+    (log/info "hakuaika :end" (get-in hakuaika [:label :end :fi]) ":end" (formatted (date-time (:end hakuaika))) ":end_long" (:end hakuaika) ))
   (let [default-modify-grace-period (-> config
                                         :public-config
                                         (get :attachment-modify-grace-period-days 14))
@@ -181,10 +200,11 @@
                              c/from-long)
         attachment-end (some-> hakuaika-end
                                (t/plus (t/days modify-grace-period)))]
-   ;(log/info "hakuaika.clj_:168 default-modify-grace-period" default-modify-grace-period)
-   (log/info "modify-grace-period" modify-grace-period)
-   (log/info "Dima 10:28 hakuaika-end" hakuaika-end)
-   (log/info "attachment-end" attachment-end)
+   (when (> (:end hakuaika) 1630282400000)
+      ;(log/info "modify-grace-period" modify-grace-period)
+      (log/info "hakuaika-end" hakuaika-end)
+      (log/info "attachment-end" attachment-end)
+      (log/info "---------------------------------------------------------------------------------"))
    (when attachment-end
      (t/plus attachment-end (t/hours (winter-summertime-nullification-adjustment hakuaika-end attachment-end))))))
 
