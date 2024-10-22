@@ -30,7 +30,7 @@ SELECT
   created_at,
   modified_at
 FROM kk_application_payments
-WHERE state = 'awaiting-payment';
+WHERE state = 'awaiting';
 
 -- name: yesql-upsert-kk-application-payment<!
 INSERT INTO kk_application_payments (
@@ -65,3 +65,20 @@ ON CONFLICT (application_key)
   required_at = :required_at::timestamptz,
   reminder_sent_at = :reminder_sent_at::timestamptz,
   approved_at = :approved_at::timestamptz;
+
+-- name: yesql-get-kk-application-payments-history-for-application-keys
+SELECT
+  id,
+  application_key,
+  state,
+  reason,
+  due_date,
+  total_sum,
+  maksut_secret,
+  required_at,
+  reminder_sent_at,
+  approved_at,
+  created_at,
+  modified_at
+FROM kk_application_payments_history
+WHERE application_key IN (:application_keys);
