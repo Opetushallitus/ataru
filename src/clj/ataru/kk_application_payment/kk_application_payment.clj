@@ -101,8 +101,9 @@
 
 (defn get-raw-payment-history
   [application-keys]
-  ; TODO return history?
-  )
+  (if (not-empty application-keys)
+    (store/get-kk-application-payments-history application-keys)
+    []))
 
 (defn- build-payment-data
   [state-data]
