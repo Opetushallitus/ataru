@@ -1,5 +1,6 @@
 (ns ataru.schema.maksut-schema
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s]
+            [ataru.schema.localized-schema :as localized-schema]))
 
 (s/defschema PaymentStatus
   (s/enum
@@ -34,10 +35,14 @@
    :origin s/Str
    :reference s/Str
    (s/optional-key :secret) s/Str
-   (s/optional-key :paid_at) s/Str})
+   (s/optional-key :paid_at) s/Str
+   (s/optional-key :metadata) s/Any})
 
 (s/defschema Laskut
   [Lasku])
+
+(s/defschema LaskuMetadataCreate
+  {:form-name localized-schema/LocalizedStringOptional})
 
 (s/defschema LaskuCreate
   (s/constrained
@@ -52,7 +57,8 @@
      :reference s/Str
      (s/optional-key :locale) (s/maybe Locale)
      (s/optional-key :message) (s/maybe s/Str)
-     (s/optional-key :index) (s/constrained s/Int #(<= 1 % 2) 'valid-maksu-index)}
+     (s/optional-key :index) (s/constrained s/Int #(<= 1 % 2) 'valid-maksu-index)
+     (s/optional-key :metadata) LaskuMetadataCreate}
     (fn [{:keys [due-date due-days]}]
       (or due-date due-days))
     'must-have-either-due-date-or-due-days))
