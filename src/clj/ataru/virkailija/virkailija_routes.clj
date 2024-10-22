@@ -21,6 +21,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
+            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -278,6 +279,7 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
+    ; TODO: do we need to also insert hakemusmaksu data here? Only used for virkailija hakemus browsing.
     (api/GET "/forms/latest-by-haku/:haku-oid" []
       :path-params [haku-oid :- s/Str]
       :return ataru-schema/FormWithContent
@@ -306,6 +308,18 @@
       :query-params [old-field-id :- s/Str
                     new-field-id :- s/Str]
       (access-controlled-form/update-field-id-in-form form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger)
+      (ok {}))
+
+    (api/PUT "/forms/:form-key/update-payment-info" {session :session}
+      :summary "Sets the payment type and amount(s) for the form."
+      :path-params [form-key :- s/Str]
+      :body [payment-info ataru-schema/FormPaymentInfo]
+      (access-controlled-form/update-form-payment-info
+        form-key
+        (:paymentType payment-info)
+        (:processingFee payment-info)
+        (:decisionFee payment-info)
+        session tarjonta-service organization-service audit-logger)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -548,7 +562,8 @@
                  :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) form-schema/Form
                  :information-requests         [ataru-schema/InformationRequest]
-                 (s/optional-key :master-oid)  (s/maybe s/Str)}
+                 (s/optional-key :master-oid)  (s/maybe s/Str)
+                 (s/optional-key :kk-payment) (s/maybe ataru-schema/KkPaymentState)}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key
@@ -1030,10 +1045,10 @@
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
 
       (api/POST "/maksupyynto" {session :session}
-        :body [input maksut-schema/TutuLaskuCreate]
+        :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [application-key locale message]} input
+        (let [{:keys [reference locale message]} input
               lasku-input (-> input
                               (dissoc :message)
                               (dissoc :locale))
@@ -1045,7 +1060,7 @@
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
                             session
-                            application-key
+                            reference
                             message
                             payment-url
                             "decision-fee-outstanding")]
@@ -1053,7 +1068,7 @@
               (log/warn "Review result" result)
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
-                                                (:application-key application-key)
+                                                reference
                                                 " käsittely ei ole sallittu")})))))
 
     (api/context "/tulos-service" []
@@ -1139,9 +1154,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
+              hakus-with-payment-flag (map
+                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
+                                        hakus)]
+        (-> hakus-with-payment-flag
             response/ok
-            (header "Cache-Control" "public, max-age=300")))
+            (header "Cache-Control" "public, max-age=300"))))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
@@ -1505,7 +1524,8 @@
               (response/unauthorized {:error "Unauthorized"})
               :else
               (response/ok
-                (application-store/valinta-tulos-service-applications
+                (application-service/valinta-tulos-service-applications
+                  application-service
                   hakuOid
                   hakukohdeOid
                   hakemusOids
@@ -1535,18 +1555,11 @@
                                          name))
                                  true
                                  seq)]
-          (if-let [applications (access-controlled-application/valinta-ui-applications
-                                  organization-service
-                                  tarjonta-service
-                                  person-service
+          (if-let [applications (application-service/valinta-ui-applications
+                                  application-service
                                   session
                                   (reduce application-service/->and-query queries))]
-            (response/ok
-              (->> applications
-                   (map #(dissoc % :hakukohde))
-                   (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
-                                                     :person-oid    :personOid
-                                                     :asiointikieli :asiointiKieli}))))
+            (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
 
@@ -1605,6 +1618,7 @@
                                 application-key)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/GET "/tilastokeskus" {session :session}
         :summary "Get application info for tilastokeskus"
         :query-params [hakuOid :- s/Str
@@ -1658,6 +1672,7 @@
         :return [ataru-schema/ValintapisteApplication]
         (if-let [applications (access-controlled-application/get-applications-for-valintapiste organization-service
                                                                                                session
+                                                                                               tarjonta-service
                                                                                                hakuOid
                                                                                                hakukohdeOid)]
           (response/ok applications)

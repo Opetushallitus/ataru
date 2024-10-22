@@ -46,3 +46,13 @@ WHERE form_id = :form_id;
 -- name: yesql-delete-fixture-form!
 DELETE FROM forms
 WHERE id = :id;
+
+-- name: yesql-delete-fixture-forms-with-key!
+DELETE FROM forms
+WHERE key = :key;
+
+-- name: yesql-delete-kk-payment-events!
+DELETE FROM kk_application_payment_events;
+
+-- name: yesql-delete-kk-payment-states!
+DELETE FROM kk_application_payment_states;

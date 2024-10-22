@@ -4,7 +4,7 @@
                          {:uri "2asteenpohjakoulutus2021" :version 1 :title "2. asteen pohjakoulutus (2021)"}
                          {:uri "pohjakoulutuseditori" :version 1 :title "Pohjakoulutus"}
                          {:uri "tutkinto" :version 2 :title "Tutkinto"}
-                         {:uri "koulutus" :version 6 :title "Koulutus"}
+                         {:uri "koulutus" :version 12 :title "Koulutus"}
                          {:uri "tutkintonimikkeet" :version 2 :title "Tutkintonimikkeet"}
                          {:uri "maatjavaltiot2" :version 2 :title "Maat ja valtiot"}
                          {:uri "kktutkinnot" :version 1 :title "Kk-tutkinnot"}

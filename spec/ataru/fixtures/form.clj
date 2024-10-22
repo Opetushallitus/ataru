@@ -341,3 +341,12 @@
                  :fieldType "dropdown"
                  :fieldClass "formField"
                  :validators ["required"]}]})
+
+(def payment-properties-test-form
+  (merge minimal-form
+         {:key "payment-properties-test-form"}))
+
+(def payment-exemption-test-form
+  (merge minimal-form
+         {:id  909909
+          :key "payment-exemption-test-form"}))
