@@ -51,8 +51,8 @@ WHERE id = :id;
 DELETE FROM forms
 WHERE key = :key;
 
--- name: yesql-delete-kk-payment-events!
-DELETE FROM kk_application_payment_events;
+-- name: yesql-delete-kk-payments!
+DELETE FROM kk_application_payments;
 
--- name: yesql-delete-kk-payment-states!
-DELETE FROM kk_application_payment_states;
+-- name: yesql-delete-kk-payments-history!
+DELETE FROM kk_application_payments_history;
