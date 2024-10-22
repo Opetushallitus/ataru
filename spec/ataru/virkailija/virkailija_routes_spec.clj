@@ -784,8 +784,6 @@
         haku-oid (:haku application-fixtures/application-without-hakemusmaksu-exemption)]
     [person-oid term year application haku-oid]))
 
-; TODO: for all of the integration APIs, overdue applications shouldn't be returned either - only approved
-
 (describe "valintalaskenta"
           (tags :unit)
 
@@ -812,6 +810,15 @@
           (it "should not return an application awaiting kk payment"
               (let [[_ _ _ application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required (:key application) nil)
+                    resp (post-valintalaskenta-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
                     resp (post-valintalaskenta-application-query [(:key application)])
                     status (:status resp)
                     applications (:body resp)]
@@ -848,6 +855,15 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with-overdue kk payment"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
+                    resp (post-siirto-application-query [(:key application)])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
                 (should= 0 (count applications)))))
 
 (describe "suoritusrekisteri"
@@ -876,6 +892,15 @@
           (it "should not return an application awaiting kk payment"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required (:key application) nil)
+                    resp (post-sure-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
                     resp (post-sure-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
@@ -912,6 +937,15 @@
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
                 (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
+                    resp (post-vts-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])]
+                (should= 200 status)
                 (should= 0 (count applications)))))
 
 (describe "valinta-ui"
@@ -940,6 +974,15 @@
           (it "should not return an application awaiting kk payment"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required (:key application) nil)
+                    resp (get-valinta-ui-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
@@ -976,6 +1019,15 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
+                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
                 (should= 0 (count applications)))))
 
 (describe "valintapiste"
@@ -1004,6 +1056,15 @@
           (it "should not return an application awaiting kk payment"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required (:key application) nil)
+                    resp (get-valintapiste-application-query {:hakuOid haku-oid})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 0 (count applications))))
+
+          (it "should not return an application with overdue kk payment"
+              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-overdue (:key application) nil)
                     resp (get-valintapiste-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
