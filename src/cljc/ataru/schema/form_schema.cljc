@@ -502,24 +502,26 @@
    (s/optional-key :minor)       s/Bool})
 
 (s/defschema PaymentStatus
-  {:person-oid   s/Str
-   :start-term   s/Str
-   :start-year   s/Int
-   :state        s/Str
-   :created-time #?(:clj  (s/maybe DateTime)
-                    :cljs (s/maybe s/Str)) })
-
-(s/defschema PaymentEvent
-  {:new-state      (s/maybe s/Str)
-   :event-type     s/Str
-   :virkailija-oid (s/maybe s/Str)
-   :message        (s/maybe s/Str)
-   :created-time   #?(:clj  (s/maybe DateTime)
-                      :cljs (s/maybe s/Str)) })
+  {:application-key  s/Str
+   :state            s/Str
+   :reason           (s/maybe s/Str)
+   :due-date         #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :total-sum        s/Str
+   :created-at       #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :modified-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :required-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :reminder-sent-at #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :approved-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))})
 
 (s/defschema KkPaymentState
-  {(s/optional-key :status) PaymentStatus
-   (s/optional-key :events) [PaymentEvent]})
+  {(s/optional-key :payment) PaymentStatus
+   (s/optional-key :history) [PaymentStatus]})
 
 (s/defschema ApplicationWithPerson
   (-> Application

@@ -302,9 +302,20 @@
             has-existing-payment?  (contains? payment-state-set (:paid all-states))]
         (update-payments-for-applications applications-payments is-eu-citizen? has-exemption? has-existing-payment?)))))
 
-
-
-
+(defn get-kk-payment-state
+  "Returns higher education application fee related info to single application.
+  If return-payment-events is truthy, also returns specific processing events."
+  [application return-payment-events]
+  (let [key-filter [:application-key :state :reason :due-date :total-sum
+                    :created-at :modified-at :required-at :reminder-sent-at :approved-at]
+        payment (first (get-raw-payments [(:key application)]))
+        history (when return-payment-events (get-raw-payment-history [(:key application)]))]
+    (cond-> {}
+            payment (assoc :payment
+                           (select-keys payment key-filter))
+            history (assoc :history
+                           (map #(select-keys % key-filter)
+                                history)))))
 
 (defn get-kk-payment-states
   "Returns higher education application fee related info to application list belonging to same haku."
@@ -319,23 +330,6 @@
            (map #(vector (:person-oid %) %) payment-states))))
   ([applications tarjonta]
    (get-kk-payment-states applications tarjonta :person-oid)))
-
-(defn get-kk-payment-state
-  "Returns higher education application fee related info to single application.
-  If return-payment-events is truthy, also returns specific processing events."
-  [application tarjonta-data return-payment-events]
-  (if-let [person-oid (:person-oid application)]
-    (let [payment-status (when (and application tarjonta-data)
-                           (get (get-kk-payment-states [application] (:tarjonta tarjonta-data)) person-oid))
-          payment-events (when (and payment-status return-payment-events)
-                           (get-raw-payment-history (:id payment-status)))]
-      (cond-> {}
-              payment-status (assoc :status
-                                    (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
-              payment-events (assoc :events
-                                    (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
-                                         payment-events))))
-    {}))
 
 (defn- filter-kk-haku-applications-by-state
   [applications haku person-oid-key filter-states]
