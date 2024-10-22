@@ -36,9 +36,10 @@
 (defn nuke-old-fixture-forms-with-key [form-key]
   (ataru-db/exec :db yesql-delete-fixture-forms-with-key! {:key form-key}))
 
+; NB: has to be done in this order, otherwise deleted rows from payments get to history...
 (defn nuke-kk-payment-data []
-  (ataru-db/exec :db yesql-delete-kk-payments-history! {})
-  (ataru-db/exec :db yesql-delete-kk-payments! {}))
+  (ataru-db/exec :db yesql-delete-kk-payments! {})
+  (ataru-db/exec :db yesql-delete-kk-payments-history! {}))
 
 (defn init-db-form-fixture
   [form-fixture]
