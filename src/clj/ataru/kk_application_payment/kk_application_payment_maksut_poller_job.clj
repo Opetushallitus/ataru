@@ -4,7 +4,8 @@
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [taoensso.timbre :as log]
-            [ataru.kk-application-payment.kk-application-payment-store :as store]))
+            [ataru.kk-application-payment.kk-application-payment-store :as store]
+            [ataru.config.core :refer [config]]))
 
 (defn poll-payments [maksut-service payments]
   (let [keys-states (into {}
@@ -41,15 +42,16 @@
 
 (defn poll-kk-payments-handler
   [_ {:keys [maksut-service]}]
-  (log/info "Poll kk application payments step starting")
-  (try
-    (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
-      (do
-        (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
-        (poll-payments maksut-service payments))
-      (log/debug "No kk application payments in need of maksut polling found"))
-    (catch Exception e
-      (log/error e "Maksut polling failed"))))
+  (when (get-in config [:kk-application-payments :maksut-poller-enabled?])
+    (log/info "Poll kk application payments step starting")
+    (try
+      (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
+        (do
+          (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
+          (poll-payments maksut-service payments))
+        (log/debug "No kk application payments in need of maksut polling found"))
+      (catch Exception e
+        (log/error e "Maksut polling failed")))))
 
 (def job-definition {:handler poll-kk-payments-handler
                      :type    "kk-application-payment-maksut-poller-job"
