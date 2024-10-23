@@ -123,25 +123,25 @@
                          :total-sum      kk-application-payment-amount
                          :required-at    "now()"})))
 
-(defn set-application-fee-not-required-for-eu-citizen
-  "Sets kk processing fee not required for the application due to person being EU citizen."
-  [application-key previous-state]
+(defn- set-application-fee-not-required
+  [application-key reason previous-state]
   (set-payment-state
     (build-payment-data {:application-key application-key
                          :state          (:not-required all-states)
-                         :reason         (:eu-citizen all-reasons)
-                         :required-at    (or (:required-at previous-state) "now()")
+                         :reason         reason
+                         ; Let's not store required timestamp separately if the application is directly approved
+                         :required-at    (:required-at previous-state)
                          :approved-at    "now()"})))
+
+(defn set-application-fee-not-required-for-eu-citizen
+  "Sets kk processing fee not required for the application due to person being EU citizen."
+  [application-key previous-state]
+  (set-application-fee-not-required application-key (:eu-citizen all-reasons) previous-state))
 
 (defn set-application-fee-not-required-for-exemption
   "Sets kk processing fee not required for the application due to exemption in application data."
   [application-key previous-state]
-  (set-payment-state
-    (build-payment-data {:application-key application-key
-                         :state          (:not-required all-states)
-                         :reason         (:exemption-field all-reasons)
-                         :required-at    (or (:required-at previous-state) "now()")
-                         :approved-at    "now()"})))
+  (set-application-fee-not-required application-key (:exemption-field all-reasons) previous-state))
 
 (defn set-application-fee-paid
   "Sets kk processing fee paid for the application."

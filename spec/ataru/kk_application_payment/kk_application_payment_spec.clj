@@ -5,7 +5,7 @@
             [ataru.person-service.person-service :as person-service]
             [clj-time.core :as time]
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
-                                 before around before-all focus-it]]
+                                 before around before-all]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
@@ -38,11 +38,8 @@
                             (jdbc/delete! conn :kk_application_payments [])
                             (jdbc/delete! conn :kk_application_payments_history [])))
 
-(def term-spring "kausi_k")
 (def term-fall "kausi_s")
-(def term-error "kausi_a")
 (def year-ok 2025)
-(def year-error 2024)
 
 (def state-awaiting (:awaiting payment/all-states))
 (def state-not-required (:not-required payment/all-states))
@@ -56,8 +53,6 @@
 (defn- should-be-matching-state
   [example state]
   (should= example (select-keys state [:application-key :state :reason])))
-
-(declare spec)
 
 (describe "get-haut-for-update"
           (tags :unit :kk-application-payment)
@@ -288,7 +283,6 @@
                     (it "should not allow setting fee with no application key"
                         (should-throw (payment/set-application-fee-required "" nil))))
 
-          ; TODO test with previous states
           (describe "payment state setting"
                     (it "should set and get application fee required"
                         (save-and-check-single-state
@@ -301,13 +295,79 @@
 
                     (it "should set and get application fee not required due to exemption"
                         (save-and-check-single-state
-                          "1.2.3.4.5.7" payment/set-application-fee-not-required-for-exemption
+                          "1.2.3.4.5.8" payment/set-application-fee-not-required-for-exemption
                           state-not-required reason-exemption))
 
                     (it "should set and get application fee paid"
                         (save-and-check-single-state
-                          "1.2.3.4.5.8" payment/set-application-fee-paid state-paid nil))
+                          "1.2.3.4.5.9" payment/set-application-fee-paid state-paid nil))
 
                     (it "should set and get application fee overdue"
                         (save-and-check-single-state
-                          "1.2.3.4.5.9" payment/set-application-fee-overdue state-overdue nil))))
+                          "1.2.3.4.5.10" payment/set-application-fee-overdue state-overdue nil)))
+
+          (describe "preserving and overwriting previous state data"
+                    (it "should reset approved state data when fee is required"
+                        (let [initial-data (payment/set-application-fee-not-required-for-exemption "1.2.3.4.5.11" nil)
+                              updated-data (payment/set-application-fee-required "1.2.3.4.5.11" initial-data)]
+                          (should-not-be-nil (:approved-at initial-data))
+                          (should-be-nil     (:required-at initial-data))
+                          (should-be-nil     (:due-date    initial-data))
+                          (should-be-nil     (:total-sum   initial-data))
+
+                          (should-be-nil     (:approved-at updated-data))
+                          (should-not-be-nil (:required-at updated-data))
+                          (should-not-be-nil (:due-date    updated-data))
+                          (should-not-be-nil (:total-sum   updated-data))))
+
+                    (it "should reset payment data when setting payment as not required for eu citizen"
+                        (let [initial-data (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                              updated-data (payment/set-application-fee-not-required-for-eu-citizen "1.2.3.4.5.12" initial-data)]
+                          (should-be-nil     (:approved-at initial-data))
+                          (should-not-be-nil (:required-at initial-data))
+                          (should-not-be-nil (:due-date    initial-data))
+                          (should-not-be-nil (:total-sum   initial-data))
+
+                          (should-not-be-nil (:approved-at updated-data))
+                          (should-not-be-nil (:required-at updated-data))
+                          (should-be-nil     (:due-date    updated-data))
+                          (should-be-nil     (:total-sum   updated-data))))
+
+                    (it "should reset payment data when setting payment as not required due to exemption"
+                        (let [initial-data (payment/set-application-fee-required "1.2.3.4.5.13" nil)
+                              updated-data (payment/set-application-fee-not-required-for-exemption "1.2.3.4.5.13" initial-data)]
+                          (should-be-nil     (:approved-at initial-data))
+                          (should-not-be-nil (:required-at initial-data))
+                          (should-not-be-nil (:due-date    initial-data))
+                          (should-not-be-nil (:total-sum   initial-data))
+
+                          (should-not-be-nil (:approved-at updated-data))
+                          (should-not-be-nil (:required-at updated-data))
+                          (should-be-nil     (:due-date    updated-data))
+                          (should-be-nil     (:total-sum   updated-data))))
+
+                    (it "should preserve payment data and mark approval when setting payment as paid"
+                        (let [initial-data (payment/set-application-fee-required "1.2.3.4.5.14" nil)
+                              updated-data (payment/set-application-fee-paid "1.2.3.4.5.14" initial-data)]
+                          (should-be-nil     (:approved-at initial-data))
+                          (should-not-be-nil (:required-at initial-data))
+                          (should-not-be-nil (:due-date    initial-data))
+                          (should-not-be-nil (:total-sum   initial-data))
+
+                          (should-not-be-nil (:approved-at updated-data))
+                          (should-not-be-nil (:required-at updated-data))
+                          (should-not-be-nil (:due-date    updated-data))
+                          (should-not-be-nil (:total-sum   updated-data))))
+
+                    (it "should preserve payment data without approval when setting payment as overdue"
+                        (let [initial-data (payment/set-application-fee-required "1.2.3.4.5.14" nil)
+                              updated-data (payment/set-application-fee-overdue "1.2.3.4.5.14" initial-data)]
+                          (should-be-nil     (:approved-at initial-data))
+                          (should-not-be-nil (:required-at initial-data))
+                          (should-not-be-nil (:due-date    initial-data))
+                          (should-not-be-nil (:total-sum   initial-data))
+
+                          (should-be-nil     (:approved-at updated-data))
+                          (should-not-be-nil (:required-at updated-data))
+                          (should-not-be-nil (:due-date    updated-data))
+                          (should-not-be-nil (:total-sum   updated-data))))))
