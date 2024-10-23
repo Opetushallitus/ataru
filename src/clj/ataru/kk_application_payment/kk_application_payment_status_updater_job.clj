@@ -6,7 +6,8 @@
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [clojure.java.jdbc :as jdbc]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.config.core :refer [config]]))
 
 (defn- create-payment-and-send-email
   [maksut-service payment person]
@@ -26,16 +27,17 @@
   kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year]}
    {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service]}]
-  (let [{:keys [person modified-payments]} (payment/update-payments-for-person-term-and-year person-service tarjonta-service
-                                                                                             koodisto-cache haku-cache
-                                                                                             person_oid term year)]
-    (doseq [payment modified-payments]
-      (let [new-state (:state payment)]
-        (cond
-          (= (:awaiting payment/all-states) new-state)
-          (create-payment-and-send-email maksut-service payment person)
-          ; TODO: Which other states need eg. mails sent?
-          )))))
+  (when (get-in config [:kk-application-payments :status-updater-enabled?])
+    (let [{:keys [person modified-payments]} (payment/update-payments-for-person-term-and-year person-service tarjonta-service
+                                                                                               koodisto-cache haku-cache
+                                                                                               person_oid term year)]
+      (doseq [payment modified-payments]
+        (let [new-state (:state payment)]
+          (cond
+            (= (:awaiting payment/all-states) new-state)
+            (create-payment-and-send-email maksut-service payment person)
+            ; TODO: Which other states need eg. mails sent?
+            ))))))
 
 (declare conn)                                              ; To keep linter happy
 (defn update-statuses-for-haku
@@ -58,11 +60,12 @@
   "Finds active hakus that still need to have kk application payment statuses updated,
    queues updates for persons in hakus."
   [_ {:keys [tarjonta-service haku-cache] :as job-runner}]
-  (log/info "Update kk application payment status step starting")
-  (let [hakus (payment/get-haut-for-update haku-cache tarjonta-service)]
-    (log/info "Found" (count hakus) "hakus for kk application payment status update.")
-    (doseq [haku hakus]
-      (update-statuses-for-haku haku job-runner))))
+  (when (get-in config [:kk-application-payments :status-updater-enabled?])
+    (log/info "Update kk application payment status step starting")
+    (let [hakus (payment/get-haut-for-update haku-cache tarjonta-service)]
+      (log/info "Found" (count hakus) "hakus for kk application payment status update.")
+      (doseq [haku hakus]
+        (update-statuses-for-haku haku job-runner)))))
 
 (def updater-job-definition {:handler update-kk-payment-status-handler
                              :type    "kk-application-payment-status-update-job"})
