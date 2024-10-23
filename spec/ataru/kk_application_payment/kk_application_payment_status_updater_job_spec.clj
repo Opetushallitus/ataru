@@ -32,10 +32,20 @@
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
 
+(def test-maksut-secret "1234ABCD5678EFGH")
+
 (defrecord MockMaksutService []
   MaksutServiceProtocol
 
-  (create-kk-application-payment-lasku [_ _] {})
+  (create-kk-application-payment-lasku [_ lasku] {:order_id (payment/maksut-reference->maksut-order-id (:reference lasku))
+                                                  :first_name "Test"
+                                                  :last_name "Person"
+                                                  :amount (:amount lasku)
+                                                  :status :active
+                                                  :due_date ""
+                                                  :origin (:origin lasku)
+                                                  :reference (:reference lasku)
+                                                  :secret test-maksut-secret})
   (create-kasittely-lasku [_ _] {})
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ _] {})
@@ -107,5 +117,6 @@
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))]
                 (should=
-                  {:application-key application-key :state (:awaiting payment/all-states)}
-                  (select-keys payment [:application-key :state])))))
+                  {:application-key application-key :state (:awaiting payment/all-states)
+                   :maksut-secret test-maksut-secret}
+                  (select-keys payment [:application-key :state :maksut-secret])))))
