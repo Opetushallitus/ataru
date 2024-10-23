@@ -46,28 +46,31 @@
   {:eu-citizen      "eu-citizen"
    :exemption-field "exemption-field"})
 
+; TODO: TEST TIME ZONE ISSUES
 (defn get-due-date []
   (time-format/unparse default-format
                        (time/plus (time/now)
                                   (time/days kk-application-payment-due-days))))
 
-(defn payment-status-to-reference
+(defn maksut-reference->maksut-order-id
+  [reference]
+  (let [aid (last (str/split reference #"[.]"))]
+    (str "KKHA" aid)))
+
+(defn payment->maksut-reference
   "Maksut payment references for hakemusmaksu are like 1.2.246.562.8.00000000000022225700"
   [{:keys [application-key]}]
   application-key)
 
-; TODO finalize after big OK-687 changes
 (defn generate-invoicing-data
-  [person term year]
-  {:reference (payment-status-to-reference {:person-oid (:oid person)
-                                            :start-term term
-                                            :start-year year})
+  [payment person]
+  {:reference  (payment->maksut-reference payment)
    :origin     kk-application-payment-origin
    :amount     kk-application-payment-amount
    :due-days   kk-application-payment-due-days
    :first-name (:first-name person)
    :last-name  (:last-name person)
-   :email      ""                                              ; TODO: from application data
+   :email      ""                                              ; TODO: where do we get this from?
    })
 
 (defn- validate-payment-data
@@ -84,6 +87,14 @@
       payment)
     (throw (ex-info "Parameter validation failed while setting payment state"
                     {:application-key application-key :state state}))))
+
+(defn set-maksut-secret
+  [application-key maksut-secret]
+  (let [count (store/update-maksut-secret! application-key maksut-secret)]
+    (if (= count 1)
+      (log/info (str "Set kk application payment maksut secret for application " application-key))
+      (throw (ex-info "Could not set maksut secret for kk application payment"
+                      {:application-key application-key :maksut-secret maksut-secret :updated-rows count})))))
 
 (defn get-raw-payments
   [application-keys]
@@ -110,8 +121,6 @@
      :notification-sent-at nil
      :approved-at          nil}
     state-data))
-
-; TODO SET MAKSUT SECRET
 
 (defn set-application-fee-required
   "Sets kk processing fee required for the application."
@@ -195,7 +204,6 @@
                      (first))
         eu-country-codes (set (map :value (:within eu-area)))]
     (if (> (count eu-country-codes) 0)
-      ; TODO: should this actually be (:nationality person) as opposed to test data? Check!
       (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person))
       (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
 
@@ -292,7 +300,9 @@
             is-eu-citizen?         (is-eu-citizen? koodisto-cache person)
             has-exemption?         (some true? (map exemption-in-application? applications))
             has-existing-payment?  (contains? payment-state-set (:paid all-states))]
-        (update-payments-for-applications applications-payments is-eu-citizen? has-exemption? has-existing-payment?)))))
+        {:person            person
+         :modified-payments (update-payments-for-applications
+                              applications-payments is-eu-citizen? has-exemption? has-existing-payment?)}))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.

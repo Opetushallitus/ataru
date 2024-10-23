@@ -8,7 +8,7 @@
 
 (defn poll-payments [maksut-service payments]
   (let [keys-states (into {}
-                          (map (fn [state] [(payment/payment-status-to-reference state) state])
+                          (map (fn [state] [(payment/payment->maksut-reference state) state])
                                payments))
         maksut    (maksut-protocol/list-lasku-statuses maksut-service (keys keys-states))]
     (log/debug "Received statuses for" (count maksut) "kk payment invoices")

@@ -10,12 +10,18 @@
 (declare yesql-get-kk-application-payments-for-application-keys)
 (declare yesql-get-kk-application-payments-history-for-application-keys)
 (declare yesql-upsert-kk-application-payment<!)
+(declare yesql-update-maksut-secret!)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
 (defn- exec-db
   [ds-key query params]
   (db/exec ds-key query params))
+
+(defn update-maksut-secret!
+  [application-key maksut-secret]
+  (exec-db :db yesql-update-maksut-secret! {:application_key application-key
+                                            :maksut_secret   maksut-secret}))
 
 (defn get-awaiting-kk-application-payments
   []

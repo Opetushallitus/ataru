@@ -82,3 +82,8 @@ SELECT
   modified_at
 FROM kk_application_payments_history
 WHERE application_key IN (:application_keys);
+
+-- name: yesql-update-maksut-secret!
+UPDATE kk_application_payments
+SET maksut_secret = :maksut_secret
+WHERE application_key = :application_key;

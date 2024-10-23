@@ -13,11 +13,6 @@
 (def key-with-active-status  "1.2.246.562.8.00000000000022225300")
 (def key-with-no-status      "1.2.246.562.8.00000000000000005400")
 
-(defn reference-to-order-id
-  [reference]
-  (let [aid (last (str/split reference #"[.]"))]
-    (str "KKHA" aid)))
-
 (defrecord FakeJobRunner []
   component/Lifecycle
 
@@ -32,7 +27,7 @@
   (list-lasku-statuses [_ keys] (->> keys
                                      (map (fn [key]
                                             (when (str/includes? key "2222")
-                                              {:order_id (reference-to-order-id key)
+                                              {:order_id (payment/maksut-reference->maksut-order-id key)
                                                :reference key
                                                :status (cond
                                                          (str/includes? key "5100") :paid
