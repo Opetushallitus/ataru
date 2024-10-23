@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>77229d14fb181e45bba6e02d33e05db3dec321c1</tag>
+    <tag>af4538e10c1deb9bfd88e6de2128563dec6ce3a8</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -186,7 +186,7 @@
       <dependency>
         <groupId>com.taoensso</groupId>
         <artifactId>encore</artifactId>
-        <version>3.68.0</version>
+        <version>3.113.0</version>
       </dependency>
       <dependency>
         <groupId>ring</groupId>
@@ -272,11 +272,6 @@
         <groupId>org.jboss.threads</groupId>
         <artifactId>jboss-threads</artifactId>
         <version>3.5.0.Final</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-codec-http2</artifactId>
-        <version>4.1.100.Final</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.xnio</groupId>
@@ -722,12 +717,6 @@
       <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
       <artifactId>dokumenttipalvelu</artifactId>
       <version>6.12-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>netty-codec-http2</artifactId>
-          <groupId>io.netty</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fzakaria</groupId>
