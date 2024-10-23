@@ -246,7 +246,8 @@
                 (with-open [w (new OutputStreamWriter (new PipedOutputStream stdin) "UTF-8")]
                   (xml/emit message w)))
         lftp  (future
-                (sh "lftp" "-v" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                (sh "lftp" "-v" "-c" (str "set log:file/xfer /dev/stdout"
+                                     (format "&& open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
                                      (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
                                      "&& set ftp:ssl-protect-data true"
                                      (format "&& cd %s" (:path config))
