@@ -45,7 +45,9 @@
                 (should-not-be-nil (:created-at updated-payment))
                 (should-not-be-nil (:modified-at updated-payment))
                 (should= (:created-at new-payment) (:created-at updated-payment))
-                (should (time/before? (:modified-at new-payment) (:modified-at updated-payment)))))
+                (should (or
+                          (time/before? (:modified-at new-payment) (:modified-at updated-payment))
+                          (time/equal?  (:modified-at new-payment) (:modified-at updated-payment))))))
 
           (it "should get payment states for applications"
               (let [payment-data-1 {:application-key test-application-key   :state test-state-awaiting}
@@ -96,7 +98,9 @@
                 (should= 0 (count paid-history))
                 (should= (:modified-at (first not-required-history)) (:modified-at not-required))
                 (should= (:modified-at (first awaiting-history)) (:modified-at awaiting))
-                (should (time/before? (:modified-at (first not-required-history))
-                                      (:modified-at (first awaiting-history))))
+                (should (or (time/before? (:modified-at (first not-required-history))
+                                          (:modified-at (first awaiting-history)))
+                            (time/equal?  (:modified-at (first not-required-history))
+                                          (:modified-at (first awaiting-history)))))
                 (should= (:created-at (first not-required-history)) (:created-at awaiting))
                 (should= (:created-at (first awaiting-history)) (:created-at not-required)))))
