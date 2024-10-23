@@ -20,7 +20,7 @@
 (def default-format (time-format/formatters :year-month-day))
 
 (def kk-application-payment-origin "kkhakemusmaksu")
-(def kk-application-payment-amount (get-in config [:form-payment-info :kk-processing-fee]))
+(def kk-application-payment-amount (get-in config [:kk-application-payments :processing-fee]))
 (def kk-application-payment-due-days 7)
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
