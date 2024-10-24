@@ -150,7 +150,7 @@
         :category "tutkinto-properties"
         :label (:tutkintotaso-label koski-tutkinnot-texts)
         :description (:tutkintotaso-description koski-tutkinnot-texts)
-        :rules {:show-followups-of-property-options nil}
+        :rules {:show-descendants-of-property-options nil}
         :options (tutkinto-tasot metadata))])
 
 (defn koski-tutkinnot-module [metadata]
