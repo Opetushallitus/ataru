@@ -203,29 +203,14 @@
 
 (defn ->and-query [& queries] (apply merge queries))
 
-(defn- populate-haku-applications-with-kk-payment-status
-  [applications haku]
-  (let [payment-states-by-person-oid (kk-application-payment/get-kk-payment-states applications haku)]
+(defn- populate-applications-with-kk-payment-status
+  [applications]
+  (let [payment-states-by-application (kk-application-payment/get-kk-payment-states applications)]
     (map (fn [application]
-           (if-let [kk-payment-state (get-in payment-states-by-person-oid [(:person-oid application) :state])]
+           (if-let [kk-payment-state (get-in payment-states-by-application [(:key application) :state])]
              (assoc application :kk-payment-state kk-payment-state)
              application))
          applications)))
-
-(defn- populate-applications-with-kk-payment-status
-  "Adds kk payment data to applications that have person oid and haku"
-  [tarjonta-service applications]
-  (let [applications-with-person-oid-and-haku (filter #(and (some? (:person-oid %)) (some? (:haku %))) applications)
-        remaining-applications (remove #(and (some? (:person-oid %)) (some? (:haku %))) applications)
-        applications-by-haku (group-by :haku applications-with-person-oid-and-haku)
-        haku-oids (keys applications-by-haku)
-        hakus-by-oid (into {}
-                           (map #(vector % (tarjonta-service/get-haku tarjonta-service %)) haku-oids))]
-    (->> haku-oids
-         (map #(populate-haku-applications-with-kk-payment-status
-                 (get applications-by-haku %) (get hakus-by-oid %)))
-         flatten
-         (concat remaining-applications))))
 
 (defn- populate-applications-with-person-data
   [person-service applications]
@@ -362,7 +347,7 @@
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews)
-                                       (populate-applications-with-kk-payment-status tarjonta-service))
+                                       populate-applications-with-kk-payment-status)
           authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications
@@ -518,7 +503,7 @@
             hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
             attachment-reviews    (future (parse-application-attachment-reviews application-key))
             events                (future (get-application-events organization-service application-key))
-            kk-payment-state      (future (kk-application-payment/get-kk-payment-state application tarjonta-info true))
+            kk-payment-state      (future (kk-application-payment/get-kk-payment-state application true))
             review                (future (application-store/get-application-review application-key))
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
@@ -732,13 +717,13 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service
+    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                             (aac/get-applications-for-valintalaskenta
                               organization-service
                               session
                               hakukohde-oid
                               application-keys)
-                             :personOid :hakuOid)]
+                            :hakemusOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -762,15 +747,14 @@
 
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (kk-application-payment/filter-out-unpaid-kk-applications
-                            tarjonta-service
+    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                             (aac/siirto-applications
                               tarjonta-service
                               organization-service
                               session
                               hakukohde-oid
                               application-keys)
-                            :personOid :hakuOid)]
+                            :hakemusOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -801,8 +785,8 @@
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
           applications (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)
-          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
-      (update applications :applications update-fn :personOid :applicationSystemId)))
+          update-fn kk-application-payment/remove-kk-applications-with-unapproved-payments]
+      (update applications :applications update-fn :oid)))
 
   (suoritusrekisteri-person-info
     [_ haku-oid hakukohde-oids offset]
@@ -837,20 +821,19 @@
                          hakukohde-oid
                          hakemus-oids
                          offset)
-          update-fn    (partial kk-application-payment/filter-out-unpaid-kk-applications tarjonta-service)]
-      (update applications :applications update-fn :henkiloOid :hakuOid)))
+          update-fn kk-application-payment/remove-kk-applications-with-unapproved-payments]
+      (update applications :applications update-fn :oid)))
 
   (valinta-ui-applications
     [_ session query]
-      (let [applications (kk-application-payment/filter-out-unpaid-kk-applications
-                           tarjonta-service
+      (let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                            (aac/valinta-ui-applications
                              organization-service
                              tarjonta-service
                              person-service
                              session
                              query)
-                           :person-oid :haku-oid)]
+                           :oid)]
         (->> applications
              (map #(dissoc % :hakukohde))
              (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid

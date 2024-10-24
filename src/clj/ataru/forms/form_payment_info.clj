@@ -11,7 +11,7 @@
       nil})
 
 (def kk-processing-fee
-  (bigdec (get-in config [:form-payment-info :kk-processing-fee])))
+  (bigdec (get-in config [:kk-application-payments :processing-fee])))
 
 (def tutu-processing-fee
   (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))

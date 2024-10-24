@@ -6,11 +6,11 @@
 
 (defqueries "sql/kk-application-payment-queries.sql")
 
-(declare yesql-get-kk-application-payment-states-for-person-oids)
-(declare yesql-upsert-kk-application-payment-state<!)
-(declare yesql-add-kk-application-payment-event<!)
-(declare yesql-get-kk-application-payment-events)
-(declare yesql-get-open-kk-application-payment-states)
+(declare yesql-get-awaiting-kk-application-payments)
+(declare yesql-get-kk-application-payments-for-application-keys)
+(declare yesql-get-kk-application-payments-history-for-application-keys)
+(declare yesql-upsert-kk-application-payment<!)
+(declare yesql-update-maksut-secret!)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
@@ -18,35 +18,36 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
-(defn create-or-update-kk-application-payment-state!
-  [person-oid, start-term, start-year, state]
-  (exec-db :db yesql-upsert-kk-application-payment-state<! {:person_oid person-oid
-                                                            :start_term start-term
-                                                            :start_year start-year
-                                                            :state      state}))
+(defn update-maksut-secret!
+  [application-key maksut-secret]
+  (exec-db :db yesql-update-maksut-secret! {:application_key application-key
+                                            :maksut_secret   maksut-secret}))
 
-(defn get-kk-application-payment-states
-  [person-oids start-term start-year]
-  (->> (exec-db :db yesql-get-kk-application-payment-states-for-person-oids {:person_oids person-oids
-                                                                             :start_term  start-term
-                                                                             :start_year  start-year})
-       (map ->kebab-case-kw)))
-
-(defn create-kk-application-payment-event!
-  [payment-state-id, new-state, event-type, virkailija-oid, message]
-  (exec-db :db yesql-add-kk-application-payment-event<! {:kk_application_payment_state_id payment-state-id
-                                                         :new_state                       new-state
-                                                         :event_type                      event-type
-                                                         :virkailija_oid                  virkailija-oid
-                                                         :message                         message}))
-
-(defn get-kk-application-payment-events
-  [payment-state-ids]
-  (->> (exec-db :db yesql-get-kk-application-payment-events
-                {:kk_application_payment_state_ids payment-state-ids})
-       (map ->kebab-case-kw)))
-
-(defn get-open-kk-application-payment-states
+(defn get-awaiting-kk-application-payments
   []
-  (->> (exec-db :db yesql-get-open-kk-application-payment-states {})
+  (->> (exec-db :db yesql-get-awaiting-kk-application-payments {})
        (map ->kebab-case-kw)))
+
+(defn get-kk-application-payments-history
+  [application-keys]
+  (->> (exec-db :db yesql-get-kk-application-payments-history-for-application-keys {:application_keys application-keys})
+       (map ->kebab-case-kw)))
+
+(defn get-kk-application-payments
+  [application-keys]
+  (->> (exec-db :db yesql-get-kk-application-payments-for-application-keys {:application_keys application-keys})
+       (map ->kebab-case-kw)))
+
+(defn create-or-update-kk-application-payment!
+  [{:keys [application-key state reason due-date total-sum maksut-secret
+           required-at reminder-sent-at approved-at]}]
+  (->> (exec-db :db yesql-upsert-kk-application-payment<! {:application_key      application-key
+                                                           :state                state
+                                                           :reason               reason
+                                                           :due_date             due-date
+                                                           :total_sum            total-sum
+                                                           :maksut_secret        maksut-secret
+                                                           :required_at          required-at
+                                                           :reminder_sent_at     reminder-sent-at
+                                                           :approved_at          approved-at})
+       (->kebab-case-kw)))

@@ -92,10 +92,9 @@
 
 (defn get-application-info-for-tilastokeskus
   [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid]
-  (let [applications (kk-application-payment/filter-out-unpaid-kk-applications
-                       tarjonta-service
+  (let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                        (application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)
-                       :henkilo_oid :haku_oid)
+                       :hakemus_oid)
         haut         (->> (keep :haku_oid applications)
                           distinct
                           (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))

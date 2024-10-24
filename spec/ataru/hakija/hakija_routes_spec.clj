@@ -524,16 +524,18 @@
     (it "should get application's kk payment data"
         (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
           (with-get-response "12345" resp
-            (let [application-id (get-in resp [:body :application :id])]
+            (let [application-id (get-in resp [:body :application :id])
+                  application-key (get-in resp [:body :application :key])]
               (store/add-person-oid application-id "1.2.3.4.5.6")
-              (payment/set-application-fee-required "1.2.3.4.5.6" "kausi_s" 2025 nil nil)
+              (payment/set-application-fee-required application-key nil)
               (with-get-response "12345" resp
                 (should= 200 (:status resp))
-                (should= {:person-oid "1.2.3.4.5.6", :start-term "kausi_s", :start-year 2025,
-                          :state (:awaiting payment/all-states)}
+                (should= {:application-key application-key
+                          :state           (:awaiting payment/all-states)
+                          :reason          nil}
                          (select-keys
-                           (get-in resp [:body :kk-payment :status])
-                           [:person-oid :start-term :start-year :state]))))))))
+                           (get-in resp [:body :kk-payment :payment])
+                           [:application-key :state :reason]))))))))
 
           (describe "PUT application"
     (around [spec]

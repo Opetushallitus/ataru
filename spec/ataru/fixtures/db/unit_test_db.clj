@@ -18,8 +18,8 @@
 (declare yesql-delete-fixture-form!)
 (declare yesql-delete-fixture-forms-with-key!)
 (declare yesql-set-form-id!)
-(declare yesql-delete-kk-payment-events!)
-(declare yesql-delete-kk-payment-states!)
+(declare yesql-delete-kk-payments-history!)
+(declare yesql-delete-kk-payments!)
 
 (defqueries "sql/dev-form-queries.sql")
 
@@ -36,9 +36,10 @@
 (defn nuke-old-fixture-forms-with-key [form-key]
   (ataru-db/exec :db yesql-delete-fixture-forms-with-key! {:key form-key}))
 
+; NB: has to be done in this order, otherwise deleted rows from payments get to history...
 (defn nuke-kk-payment-data []
-  (ataru-db/exec :db yesql-delete-kk-payment-events! {})
-  (ataru-db/exec :db yesql-delete-kk-payment-states! {}))
+  (ataru-db/exec :db yesql-delete-kk-payments! {})
+  (ataru-db/exec :db yesql-delete-kk-payments-history! {}))
 
 (defn init-db-form-fixture
   [form-fixture]
@@ -73,10 +74,28 @@
         (merge review {:application-key (:key stored-application)}) {} audit-logger))
     application-id))
 
+(defn init-db-multi-application-fixture
+  [form-fixture application-fixtures]
+  (when (or (nil? (:id form-fixture)) (some #(not= (:id form-fixture) (:form %)) application-fixtures))
+    (throw (Exception. (str "Incorrect fixture data, application should refer the given form"))))
+  (let [audit-logger       (audit-log/new-dummy-audit-logger)
+        _                  (init-db-form-fixture form-fixture)]
+    (doall (map (fn [application-fixture] (-> (application-store/add-application
+                                                application-fixture
+                                                (:hakukohde application-fixture)
+                                                form-fixture
+                                                {}
+                                                audit-logger
+                                                nil)
+                                              :id)) application-fixtures))))
+
 (defn init-db-fixture
   ([form-fixture]
     (nuke-old-fixture-data (:id form-fixture))
     (init-db-form-fixture form-fixture))
+  ([form-fixture application-fixtures]
+   (nuke-old-fixture-data (:id form-fixture))
+   (init-db-multi-application-fixture form-fixture application-fixtures))
   ([form-fixture application-fixture application-hakukohde-reviews-fixture]
     (nuke-old-fixture-data (:id form-fixture))
     (init-db-application-fixture form-fixture application-fixture application-hakukohde-reviews-fixture nil))

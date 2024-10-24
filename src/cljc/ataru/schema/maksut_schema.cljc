@@ -4,7 +4,7 @@
 
 (s/defschema PaymentStatus
   (s/enum
-   :active
+    :active
     :paid
     :overdue))
 
