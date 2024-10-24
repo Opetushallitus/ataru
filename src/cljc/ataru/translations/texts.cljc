@@ -715,7 +715,10 @@
                                                  :en "Suomi.fi."}
    :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
                                                  :sv "Ditt namn och födelsetid har hämtats till ansökningsblanketten via identifiering."
-                                                 :en "Your name and date of birth have been prefilled on the application form via identification."}})
+                                                 :en "Your name and date of birth have been prefilled on the application form via identification."}
+   :add-tutkinto                                {:fi "Lisää tutkinto"
+                                                 :sv "SV: Lisää tutkinto"
+                                                 :en ""}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -1968,6 +1971,9 @@
    :question-group                                           {:fi "Kysymysryhmä"
                                                               :sv "Frågegrupp"
                                                               :en "Question group"}
+   :question-group-tutkinto                                  {:fi "Kysymysryhmä (tutkintokokonaisuus)"
+                                                              :sv "SV: Kysymysryhmä (tutkintokokonaisuus)"
+                                                              :en "EN: Kysymysryhmä (tutkintokokonaisuus)"}
    :receiver                                                 {:fi "Vastaanottaja:"
                                                               :sv "Mottagare:"
                                                               :en "Receiver:"}
@@ -2825,6 +2831,9 @@
    :itse-syotetty-followup-label                  {:fi "Kysymykset"
                                                    :sv "SV: Kysymykset"
                                                    :en ""}
+   :itse-syotetty-tutkinto-group-label            {:fi "Tutkinto"
+                                                   :sv "SV: Tutkinto"
+                                                   :en ""}
    :itse-syotetty-tutkinto-followup-label         {:fi "Tutkinto"
                                                    :sv "SV: Tutkinto"
                                                    :en ""}
@@ -2845,18 +2854,6 @@
                                                    :en ""}
    :itse-syotetty-liitteet-infotext-value         {:fi "Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
                                                    :sv "SV: Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
-                                                   :en ""}
-   :tutkinto-nimi-header-text                     {:fi "Tutkinnon nimi"
-                                                   :sv "SV: Tutkinnon nimi"
-                                                   :en ""}
-   :koulutusohjelma-header-text                   {:fi "Koulutusohjelma"
-                                                   :sv "SV: Koulutusohjelma"
-                                                   :en ""}
-   :valmistumispvm-header-text                    {:fi "Valmistumispäivä"
-                                                   :sv "SV: Valmistumispäivä"
-                                                   :en ""}
-   :oppilaitos-header-text                        {:fi "Oppilaitos"
-                                                   :sv "SV: Oppilaitos"
                                                    :en ""}})
 
 (defn email-applied-error

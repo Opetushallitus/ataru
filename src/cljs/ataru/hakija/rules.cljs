@@ -485,22 +485,23 @@
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 
-(defn- find-followup-ids-by-parent-id
+(defn- find-descendant-ids-by-parent-id
   [db parent-id]
-  (let [followup-ids (mapv :id (filter #(= parent-id (:followup-of %)) (:flat-form-content db)))
-        nested-ids (flatten (map #(find-followup-ids-by-parent-id db %) followup-ids))]
-    (concat followup-ids nested-ids)))
+  (let [descendant-ids (mapv :id (filter #(or (= parent-id (:followup-of %)) (= parent-id (:children-of %)))
+                                       (:flat-form-content db)))
+        nested-ids (flatten (map #(find-descendant-ids-by-parent-id db %) descendant-ids))]
+    (concat descendant-ids nested-ids)))
 
-(defn- show-followups-of-property-options
+(defn- show-descendants-of-property-options
   [db _]
   (let [property-field-ids       (map :id (filter #(= "formPropertyField" (:fieldClass %)) (:flat-form-content db)))
-        all-followup-ids-beneath (flatten (map #(find-followup-ids-by-parent-id db %) property-field-ids))
+        all-descendant-ids (flatten (map #(find-descendant-ids-by-parent-id db %) property-field-ids))
         is-explicitly-hidden?     (fn [id] (get-in db [:flat-form-content (keyword id) :params :hidden] false))]
     (reduce
-      (fn [db' followup-id] (assoc-in db' [:application :ui (keyword followup-id) :visible?]
-                                      (not (is-explicitly-hidden? followup-id))))
+      (fn [db' descendant-id] (assoc-in db' [:application :ui (keyword descendant-id) :visible?]
+                                      (not (is-explicitly-hidden? descendant-id))))
       db
-      all-followup-ids-beneath)))
+      all-descendant-ids)))
 
 (defn- hakija-rule-to-fn [rule]
   (case rule
@@ -526,8 +527,8 @@
     toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
     :set-oppiaine-valinnainen-kieli-value
     set-oppiaine-valinnainen-kieli-value
-    :show-followups-of-property-options
-    show-followups-of-property-options))
+    :show-descendants-of-property-options
+    show-descendants-of-property-options))
 
 (defn run-rules
   ([db rules]

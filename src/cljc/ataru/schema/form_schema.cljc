@@ -128,6 +128,7 @@
    (s/optional-key :options)      [{:id                               s/Str
                                     :label                            localized-schema/LocalizedStringOptional
                                     (s/optional-key :default-value)   s/Bool
+                                    (s/optional-key :params)          params-schema/Params
                                     (s/optional-key :description)     localized-schema/LocalizedStringOptional
                                     (s/optional-key :forced)          s/Bool
                                     (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
@@ -146,7 +147,7 @@
 
 (s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                          s/Str
-                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot"])
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
                              :children                                    [(s/conditional
                                                                              #(or (= "wrapperElement" (:fieldClass %))
                                                                                   (= "questionGroup" (:fieldClass %)))

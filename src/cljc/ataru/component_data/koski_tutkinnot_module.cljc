@@ -34,27 +34,29 @@
     :default-value true
     :followup-label (:itse-syotetty-followup-label koski-tutkinnot-texts)
     :forced true
-    :followups  [(assoc (component/text-field metadata)
-                   :id "itse-syotetty-tutkinto-nimi"
-                   :label (:itse-syotetty-tutkinto-followup-label koski-tutkinnot-texts))
-                 (assoc (component/text-field metadata)
-                   :id "itse-syotetty-koulutusohjelma"
-                   :label (:itse-syotetty-koulutusohjelma-followup-label koski-tutkinnot-texts))
-                 (assoc (component/text-field metadata)
-                   :id "itse-syotetty-oppilaitos"
-                   :label (:itse-syotetty-oppilaitos-followup-label koski-tutkinnot-texts))
-                 (assoc (component/text-field metadata)
-                   :id "itse-syotetty-valmistumispvm"
-                   :label (:itse-syotetty-valmistumispvm-followup-label koski-tutkinnot-texts)
-                   :params {:info-text {:label (:itse-syotetty-valimistumispvm-infotext-label koski-tutkinnot-texts)}})
-                 (assoc (component/attachment metadata)
-                   :label (:itse-syotetty-liitteet-followup-label koski-tutkinnot-texts)
-                   :validators []
-                   :params {:mail-attachment? false
-                            :info-text {:enabled? true
-                                        :value (:itse-syotetty-liitteet-infotext-value koski-tutkinnot-texts)}})
-
-                 ]}])
+    :params {:allow-tutkinto-question-group true}
+    :followups  [(assoc (component/question-group-tutkinto metadata)
+                   :label (:itse-syotetty-tutkinto-group-label koski-tutkinnot-texts)
+                   :children
+                   [(assoc (component/text-field metadata)
+                      :id "itse-syotetty-tutkinto-nimi"
+                      :label (:itse-syotetty-tutkinto-followup-label koski-tutkinnot-texts))
+                    (assoc (component/text-field metadata)
+                      :id "itse-syotetty-koulutusohjelma"
+                      :label (:itse-syotetty-koulutusohjelma-followup-label koski-tutkinnot-texts))
+                    (assoc (component/text-field metadata)
+                      :id "itse-syotetty-oppilaitos"
+                      :label (:itse-syotetty-oppilaitos-followup-label koski-tutkinnot-texts))
+                    (assoc (component/text-field metadata)
+                      :id "itse-syotetty-valmistumispvm"
+                      :label (:itse-syotetty-valmistumispvm-followup-label koski-tutkinnot-texts)
+                      :params {:info-text {:label (:itse-syotetty-valimistumispvm-infotext-label koski-tutkinnot-texts)}})
+                    (assoc (component/attachment metadata)
+                      :label (:itse-syotetty-liitteet-followup-label koski-tutkinnot-texts)
+                      :validators []
+                      :params {:mail-attachment? false
+                               :info-text {:enabled? true
+                                           :value (:itse-syotetty-liitteet-infotext-value koski-tutkinnot-texts)}})])]}])
 
 (defn koski-tutkinnot-questions [metadata]
     [(assoc (component/info-element metadata)
@@ -63,7 +65,7 @@
         :category "tutkinto-properties"
         :label (:tutkintotaso-label koski-tutkinnot-texts)
         :description (:tutkintotaso-description koski-tutkinnot-texts)
-        :rules {:show-followups-of-property-options nil}
+        :rules {:show-descendants-of-property-options nil}
         :options (tutkinto-tasot metadata))])
 
 

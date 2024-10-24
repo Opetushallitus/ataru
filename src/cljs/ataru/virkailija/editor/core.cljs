@@ -52,6 +52,10 @@
                     :fieldType  "fieldset"}
                    [ec/component-group content path children]
 
+                   {:fieldClass "questionGroup"
+                    :fieldType  "tutkintofieldset"}
+                   [ec/component-group content path children]
+
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
                    [ec/adjacent-text-field content path]
