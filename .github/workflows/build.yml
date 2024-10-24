@@ -63,7 +63,8 @@ jobs:
         run: |
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph -e LANG=fi_FI.UTF8 -e POSTGRES_INITDB_ARGS="--locale-provider=icu --icu-locale=fi_FI --encoding=UTF8" $REGISTRY/ecr-public/docker/library/postgres:15-alpine
+          docker build -f -f test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -t test-postgres
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph localhost/test-postgres
           docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
           docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
@@ -103,7 +104,8 @@ jobs:
           sudo apt-get install -y lftp
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph -e LANG=fi_FI.UTF8 -e POSTGRES_INITDB_ARGS="--locale-provider=icu --icu-locale=fi_FI --encoding=UTF8" $REGISTRY/ecr-public/docker/library/postgres:15-alpine
+          docker build -f test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -t test-postgres
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph localhost/test-postgres
           docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
           docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
