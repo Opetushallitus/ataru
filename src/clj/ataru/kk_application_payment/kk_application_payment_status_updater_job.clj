@@ -27,7 +27,7 @@
   kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year]}
    {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service]}]
-  (when (get-in config [:kk-application-payments :status-updater-enabled?])
+  (when (get-in config [:kk-application-payments :enabled?])
     (let [{:keys [person modified-payments]} (payment/update-payments-for-person-term-and-year person-service tarjonta-service
                                                                                                koodisto-cache haku-cache
                                                                                                person_oid term year)]
@@ -56,16 +56,22 @@
                                                "kk-application-payment-status-update-job"
                                                {:person_oid person-oid :term term :year year})))))
 
-(defn update-kk-payment-status-scheduler-handler
+(defn get-hakus-and-update
   "Finds active hakus that still need to have kk application payment statuses updated,
    queues updates for persons in hakus."
-  [_ {:keys [tarjonta-service haku-cache] :as job-runner}]
-  (when (get-in config [:kk-application-payments :status-updater-enabled?])
-    (log/info "Update kk application payment status step starting")
+  [{:keys [tarjonta-service haku-cache] :as job-runner}]
+  (when (get-in config [:kk-application-payments :enabled?])
     (let [hakus (payment/get-haut-for-update haku-cache tarjonta-service)]
       (log/info "Found" (count hakus) "hakus for kk application payment status update.")
       (doseq [haku hakus]
         (update-statuses-for-haku haku job-runner)))))
+
+(defn update-kk-payment-status-scheduler-handler
+  [_ job-runner]
+  (when (get-in config [:kk-application-payments :status-updater-enabled?])
+    (log/info "Update kk application payment status step starting")
+    (get-hakus-and-update job-runner)
+    (log/info "Update kk application payment status step finished")))
 
 (def updater-job-definition {:handler update-kk-payment-status-handler
                              :type    "kk-application-payment-status-update-job"})
