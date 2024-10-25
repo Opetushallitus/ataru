@@ -63,8 +63,8 @@ jobs:
         run: |
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $REGISTRY/utility/postgres:11
-          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/utility/redis:5.0
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $(docker build -f ./test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -q .)
+          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
           docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
       - name: Run integration tests (Cypress & Playwright)
@@ -103,8 +103,8 @@ jobs:
           sudo apt-get install -y lftp
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $REGISTRY/utility/postgres:11
-          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/utility/redis:5.0
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $(docker build -f ./test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -q .)
+          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
           docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
       - name: Run Spec and Mocha tests
