@@ -24,7 +24,8 @@
                                                            :verify-certificate true
                                                            :path               ""
                                                            :timeout-seconds    10}}
- :kk-application-payments   {:status-updater-enabled? false
+ :kk-application-payments   {:enabled? false
+                             :status-updater-enabled? false
                              :maksut-poller-enabled? false
                              :processing-fee "100.00"}
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
