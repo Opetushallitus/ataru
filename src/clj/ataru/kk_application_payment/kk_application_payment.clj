@@ -80,21 +80,23 @@
 
 (defn- set-payment-state
   [{:keys [state application-key] :as payment-data}]
-  (if (validate-payment-data payment-data)
-    (let [payment (store/create-or-update-kk-application-payment! payment-data)]
-      (log/info
-        (str "Set payment state of application " application-key " to " state))
-      payment)
-    (throw (ex-info "Parameter validation failed while setting payment state"
-                    {:application-key application-key :state state}))))
+  (when (get-in config [:kk-application-payments :enabled?])
+    (if (validate-payment-data payment-data)
+      (let [payment (store/create-or-update-kk-application-payment! payment-data)]
+        (log/info
+          (str "Set payment state of application " application-key " to " state))
+        payment)
+      (throw (ex-info "Parameter validation failed while setting payment state"
+                      {:application-key application-key :state state})))))
 
 (defn set-maksut-secret
   [application-key maksut-secret]
-  (let [count (store/update-maksut-secret! application-key maksut-secret)]
-    (if (= count 1)
-      (log/info (str "Set kk application payment maksut secret for application " application-key))
-      (throw (ex-info "Could not set maksut secret for kk application payment"
-                      {:application-key application-key :maksut-secret maksut-secret :updated-rows count})))))
+  (when (get-in config [:kk-application-payments :enabled?])
+    (let [count (store/update-maksut-secret! application-key maksut-secret)]
+      (if (= count 1)
+        (log/info (str "Set kk application payment maksut secret for application " application-key))
+        (throw (ex-info "Could not set maksut secret for kk application payment"
+                        {:application-key application-key :maksut-secret maksut-secret :updated-rows count}))))))
 
 (defn get-raw-payments
   [application-keys]
@@ -287,22 +289,23 @@
         aliases         (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
         applications    (when (and (not-empty aliases) (not-empty valid-haku-oids))
                           (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
-    (if (= 0 (count applications))
-      []
-      (let [payment-by-application (into {}
-                                         (map (fn [payment] [(:application-key payment) payment]))
-                                         (get-raw-payments (map :key applications)))
-            applications-payments  (map (fn [application]
-                                          {:application application
-                                           :payment     (get payment-by-application (:key application))})
-                                        applications)
-            payment-state-set      (->> (vals payment-by-application) (map :state) set)
-            is-eu-citizen?         (is-eu-citizen? koodisto-cache person)
-            has-exemption?         (some true? (map exemption-in-application? applications))
-            has-existing-payment?  (contains? payment-state-set (:paid all-states))]
-        {:person            person
-         :modified-payments (update-payments-for-applications
-                              applications-payments is-eu-citizen? has-exemption? has-existing-payment?)}))))
+    (when (get-in config [:kk-application-payments :enabled?])
+      (if (= 0 (count applications))
+        []
+        (let [payment-by-application (into {}
+                                           (map (fn [payment] [(:application-key payment) payment]))
+                                           (get-raw-payments (map :key applications)))
+              applications-payments  (map (fn [application]
+                                            {:application application
+                                             :payment     (get payment-by-application (:key application))})
+                                          applications)
+              payment-state-set      (->> (vals payment-by-application) (map :state) set)
+              is-eu-citizen?         (is-eu-citizen? koodisto-cache person)
+              has-exemption?         (some true? (map exemption-in-application? applications))
+              has-existing-payment?  (contains? payment-state-set (:paid all-states))]
+          {:person            person
+           :modified-payments (update-payments-for-applications
+                                applications-payments is-eu-citizen? has-exemption? has-existing-payment?)})))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
