@@ -32,7 +32,7 @@
                 (should= (select-keys payment-data [:application-key :state :total-sum :maksut-secret])
                          (select-keys payment [:application-key :state :total-sum :maksut-secret]))))
 
-          (it "should update a payment state for person"
+          (it "should update a payment state for application key"
               (let [new-payment (store/create-or-update-kk-application-payment!
                                   {:application-key test-application-key :state test-state-awaiting})
                     updated-payment (store/create-or-update-kk-application-payment!
