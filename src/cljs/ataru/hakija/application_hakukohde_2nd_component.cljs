@@ -34,6 +34,7 @@
 (defn- koulutustyypit-filter [idx]
   (let [is-open (r/atom false)
         koulutustyypit (subscribe [:application/koulutustyypit])
+        active-hakukohde-selection (subscribe [:application/active-hakukohde-search])
         koulutustyypit-filters (subscribe [:application/active-koulutustyyppi-filters idx])
         lang (subscribe [:application/form-language])]
     (fn []
@@ -45,7 +46,7 @@
             on-click-fn #(swap! is-open not)]
         [:div.application__hakukohde-2nd-row__hakukohde-koulutustyyppi
          [koulutustyyppi-btn label @is-open on-click-fn]
-         (when @is-open
+         (when (and @is-open (nil? @active-hakukohde-selection))
            [:div.application__koulutustyypit-filter-wrapper
             [:btn/button.a-button
              {:on-click   on-click-fn
