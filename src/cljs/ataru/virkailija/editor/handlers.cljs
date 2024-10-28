@@ -501,21 +501,31 @@
            (into [])
            (assoc-in db path-vec)))))
 
+(defn- remove-properties
+  [db property-key]
+  (if property-key
+    (with-form-key [db form-key]
+    (let [path [:editor :forms form-key :properties]]
+      (update-in db path dissoc property-key)))
+    db))
+
+
 (reg-event-db
   :editor/remove-component
-  (fn [db [_ path]]
+  (fn [db [_ path & {:keys [property-key]}]]
     (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       (-> db
           (update-in [:editor :ui id] dissoc :remove)
-          (remove-component path)))))
+          (remove-component path)
+          (remove-properties property-key)))))
 
 (reg-event-fx
   :editor/confirm-remove-component
-  (fn [{db :db} [_ path]]
+  (fn [{db :db} [_ path & {:keys [property-key]}]]
     (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       {:db             (assoc-in db [:editor :ui id :remove] :disabled)
        :dispatch       [:editor/fold id]
-       :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]})))
+       :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path {:property-key property-key}]}]})))
 
 (reg-event-db
   :editor/start-remove-component
@@ -1618,5 +1628,24 @@
   :editor/toggle-close-form
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:closed])
+          value (not (get-in db path))]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/update-selected-property-options
+  (fn [db [_ category selected-option-ids]]
+    (let [path (vec (db/current-form-properties-path db [(keyword category)]))]
+      (assoc-in db (conj path :selected-option-ids) selected-option-ids))))
+
+(reg-event-db
+  :editor/set-property-value
+  (fn [db [_ category property value]]
+    (let [path (db/current-form-properties-path db [(keyword category)(keyword property)])]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-property-value
+  (fn [db [_ category property]]
+    (let [path (db/current-form-properties-path db [(keyword category)(keyword property)])
           value (not (get-in db path))]
       (assoc-in db path value))))
