@@ -112,7 +112,7 @@
                                      form-fixtures/payment-exemption-test-form
                                      application-fixtures/application-without-hakemusmaksu-exemption
                                      nil)
-                    _ (updater-job/update-kk-payment-status-handler
+                    _ (updater-job/update-kk-payment-status-for-person-handler
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))]
