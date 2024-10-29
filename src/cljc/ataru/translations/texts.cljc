@@ -2704,6 +2704,45 @@
                            :sv "Utbildningsstyrelsen"
                            :en "Finnish National Agency for Education"}})
 
+(def astu-decision-email
+  {:header1               {:fi "Hakemuksesi "
+                           :sv "Hakemuksesi "
+                           :en "Hakemuksesi "}
+   :header2               {:fi " on käsitelty."
+                           :sv " on käsitelty"
+                           :en " on käsitelty"}
+   :subject               {:fi "Opintopolku: Hakemuksesi on käsitelty"
+                           :sv "Studieinfo"
+                           :en "Studyinfo"}
+
+   :payment               {:fi "Maksu: "
+                           :sv "Aavgiften: "
+                           :en "Fee: "}
+   :due-date-desc         {:fi "Eräpäivä: "
+                           :sv "Eräpäivä: "
+                           :en "Due date: "}
+
+   :text-1                {:fi "Voit maksaa maksun ja tarkastella maksun tietoja seuraavasta linkistä: "
+                           :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
+                           :en "We will send you the decision once you have paid the decision fee."}
+   :text-2                {:fi "Linkki sulkeutuu eräpäivän jälkeen tietosuojasyistä."
+                           :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
+                           :en "You can pay the decision fee and view the details of your payment through the following link."}
+   :text-3                {:fi "Jos et maksa maksua eräpäivään mennessä, \nlähetämme sinulle maksusta erillisen laskun."
+                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                           :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
+
+   :info-noreply          {:fi "Älä vastaa tähän viestiin – viesti on lähetetty automaattisesti. Jos sinulla on kysyttävää, voit lähettää meille sähköpostia osoitteeseen "
+                           :sv "Svara inte på detta meddelande, det har skickats automatiskt. Om du har frågor, vänligen kontakta oss per epost via "
+                           :en "This is an automatically generated email, please do not reply. If you have any questions, please send us an email at "}
+
+   :signature-header      {:fi "Ystävällisin terveisin"
+                           :sv "Med vänliga hälsningar,"
+                           :en "Best regards"}
+   :signature-name        {:fi "Opetushallitus"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}})
+
 (def excel-texts
   {:name                     {:fi "Nimi"
                               :sv "Namn"
