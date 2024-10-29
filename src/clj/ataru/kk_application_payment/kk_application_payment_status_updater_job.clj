@@ -21,7 +21,7 @@
       (payment/set-maksut-secret (:application-key payment) (:secret invoice))
       (log/info "Generate kk application payment maksut-link for email" url))))
 
-(defn update-kk-payment-status-handler
+(defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year). Creates payments and
   sends e-mails when necessary. Marking status as paid/overdue is done separately via
   kk-application-payment-maksut-poller-job, never here."
@@ -39,7 +39,16 @@
             ; TODO: Which other states need eg. mails sent?
             ))))))
 
-(declare conn)                                              ; To keep linter happy
+(defn start-update-kk-payment-status-for-person-job
+  [job-runner person-oid term year]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                              (job/start-job job-runner
+                                             conn
+                                             "kk-application-payment-status-update-job"
+                                             {:person_oid person-oid :term term :year year}))))
+
+; TODO: we might be updating status of a single person multiple times if they have applications in multiple hakus.
 (defn update-statuses-for-haku
   "Queues kk payment status updates for all persons with active applications in haku."
   [haku job-runner]
@@ -50,11 +59,7 @@
         person-oids (application-store/get-application-person-oids-for-haku haku-oid)]
     (log/info "Found" (count person-oids) "oids for haku" haku-oid "- updating kk application payment statuses.")
     (doseq [person-oid person-oids]
-      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                (job/start-job job-runner
-                                               conn
-                                               "kk-application-payment-status-update-job"
-                                               {:person_oid person-oid :term term :year year})))))
+      (start-update-kk-payment-status-for-person-job job-runner person-oid term year))))
 
 (defn get-hakus-and-update
   "Finds active hakus that still need to have kk application payment statuses updated,
@@ -73,8 +78,8 @@
     (get-hakus-and-update job-runner)
     (log/info "Update kk application payment status step finished")))
 
-(def updater-job-definition {:handler update-kk-payment-status-handler
-                             :type    "kk-application-payment-status-update-job"})
+(def updater-job-definition {:handler update-kk-payment-status-for-person-handler
+                             :type    "kk-application-payment-person-status-update-job"})
 
 (def scheduler-job-definition {:handler  update-kk-payment-status-scheduler-handler
                                :type     "kk-application-payment-status-update-scheduler-job"

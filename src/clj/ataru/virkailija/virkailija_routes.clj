@@ -87,7 +87,8 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
-            [ataru.background-job.job :as job])
+            [ataru.background-job.job :as job]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -389,6 +390,20 @@
 
     (api/context "/background-jobs" []
       :tags ["background-jobs-api"]
+
+      (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
+        :path-params [person-oid :- s/Str
+                      term :- s/Str
+                      year :- s/Str]
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
+                job-runner
+                person-oid
+                term
+                year)
+              (response/ok {}))
+          (response/unauthorized {})))
+
       (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -397,6 +412,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -405,6 +421,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -413,6 +430,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -421,6 +439,7 @@
                 haku-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-payment-obligation-job/:person-oid" {session :session}
         :path-params [person-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -429,6 +448,7 @@
                 person-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-payment-obligation-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -437,6 +457,7 @@
                 haku-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-submit-jobs/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -450,10 +471,12 @@
                 nil)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/GET "/list-job-statuses" {session :session}
         (if (get-in session [:identity :superuser])
           (response/ok (job/get-job-types job-runner))
           (response/unauthorized {})))
+
       (api/POST "/update-job-statuses" {session :session}
         :body [body s/Any]
         (if (get-in session [:identity :superuser])
