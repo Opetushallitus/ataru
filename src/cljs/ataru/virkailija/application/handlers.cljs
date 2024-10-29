@@ -9,6 +9,8 @@
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
+                                                                        tutu-form?
+                                                                        astu-form?
                                                                         hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
                                                                         selected-hakukohde-oid-set]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
@@ -349,14 +351,6 @@
       (clj-string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
-(defn- tutu-form? [form]
-  (or
-    (= "payment-type-tutu" (get-in form [:properties :payment :type]))
-    (get-tutu-form? (:key form))))
-
-(defn- astu-form? [form]
-  (= "payment-type-astu" (get-in form [:properties :payment :type])))
-
 (reg-event-db
  :application/set-filters-from-query
  (fn [db [_ form-key]]
@@ -369,7 +363,6 @@
                              tutu-form? review-states/application-hakukohde-processing-states
                              astu-form? review-states/application-hakukohde-processing-states-astu
                              :else      review-states/application-hakukohde-processing-states-normal)]
-     (print form)
      (-> db
          (assoc-in [:application :attachment-state-filter]
                    (extract-unselected-review-states-from-query

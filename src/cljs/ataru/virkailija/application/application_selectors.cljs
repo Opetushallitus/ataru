@@ -59,3 +59,11 @@
      (and
       (not-empty tutu-forms)
       (some #(= tutu-key %) tutu-forms)))))
+
+(defn tutu-form? [form]
+  (or
+    (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+    (get-tutu-form? (:key form))))
+
+(defn astu-form? [form]
+  (= "payment-type-astu" (get-in form [:properties :payment :type])))

@@ -108,12 +108,12 @@
              [:span [:i.zmdi.zmdi-spinner.spin]]
              @(subscribe [:editor/virkailija-translation :maksupyynto-kasittelymaksu-button]))]]))
 
-(defn- send-decision-invoice-button [application-key decision-pay-status payment-type]
+(defn- send-decision-invoice-button [application-key decision-pay-status]
   (let [filled?           (subscribe [:payment/inputs-filled? application-key])
         loading?          (subscribe [:state-query [:request-handles :send-decision-invoice]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__tutu-payment-send-button.application-handling__button
-     {:on-click #(dispatch [:payment/send-decision-invoice application-key payment-type])
+     {:on-click #(dispatch [:payment/send-decision-invoice application-key])
       :disabled (or @loading? (not @filled?) (not @can-edit?))
       :class    (if (and @filled? @can-edit? (not @loading?))
                   "application-handling__send-information-request-button--enabled application-handling__send-information-request-button--cursor-pointer"
@@ -206,7 +206,7 @@
            [:div @(subscribe [:editor/virkailija-translation :maksupyynto-message])]
            [decision-payment-note application-key]
 
-           [send-decision-invoice-button application-key decision-pay-status "tutu"]
+           [send-decision-invoice-button application-key decision-pay-status]
            ])])
      ]))
 
@@ -279,5 +279,5 @@
                 (= :overdue decision-pay-status) false
                 (#{:processing :decision-fee-outstanding} state) true)
           [:<>
-           [send-decision-invoice-button application-key decision-pay-status "astu"]])])
+           [send-decision-invoice-button application-key decision-pay-status]])])
      ]))
