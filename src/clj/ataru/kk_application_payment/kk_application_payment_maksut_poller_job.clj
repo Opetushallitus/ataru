@@ -1,8 +1,11 @@
 (ns ataru.kk-application-payment.kk-application-payment-maksut-poller-job
   "Polls Maksut-services for paid and overdue kk payment invoices, linked to persons."
-  (:require [clojure.core.match :refer [match]]
+  (:require [ataru.background-job.job :as job]
+            [ataru.db.db :as db]
+            [clojure.core.match :refer [match]]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.config.core :refer [config]]))
@@ -57,6 +60,16 @@
     (log/info "Poll kk application payments step starting")
     (get-payments-and-poll maksut-service)
     (log/info "Poll kk application payments step finished")))
+
+(defn start-kk-application-payment-maksut-poller-job
+  [job-runner]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                              (job/start-job job-runner
+                                             conn
+                                             "kk-application-payment-maksut-poller-job"
+                                             {}))))
+
 
 (def job-definition {:handler poll-kk-payments-handler
                      :type    "kk-application-payment-maksut-poller-job"
