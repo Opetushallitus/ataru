@@ -32,13 +32,6 @@
                                        :values {:value nil
                                                 :valid true}}]
 
-            [{:id    "tutkinnot"
-              :label label}]
-            [:tutkinnot {:valid  true
-                         :label  label
-                         :value  nil
-                         :values {:value nil
-                         :valid true}}]
             ; Override default language based on selected form language
             [{:id    "language"
               :label label}]

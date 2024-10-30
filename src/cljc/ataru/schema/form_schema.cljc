@@ -146,7 +146,7 @@
    #(= "formPropertyField" (:fieldClass %)) FormPropertyField
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
+(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup" "externalDataElement"])
                              :id                                          s/Str
                              :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
                              :children                                    [(s/conditional

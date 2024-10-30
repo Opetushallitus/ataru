@@ -99,10 +99,6 @@
   []
   (boolean (:dev? env)))
 
-(defn- dev-env-and-fake-oppija-auth?
-  []
-  (and (is-dev-env?) (-> config :dev :fake-oppija-auth)))
-
 (defn- render-file-in-dev
   ([filename]
    (render-file-in-dev filename {}))
@@ -149,17 +145,6 @@
   (not (clojure.string/blank? x)))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
-
-(defn- url-of-itself-with-ticket
-  [request]
-  (str
-    "http://"
-    (:server-name request)
-    ":"
-    (:server-port request)
-    (:uri request)
-    "?ticket=ST-111-f6hAYnLk0VHNUhRYIq-po4ygDTg-ip-0-0-0-0&"
-    (:query-string request)))
 
 (defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []
@@ -389,7 +374,6 @@
           job-runner
           (:old-secret request))
         (response/ok {})))
-<<<<<<< HEAD
     (api/GET "/omat-tutkinnot" [:as request]
       :summary "Returns exams from Koski for strongly authenticated applicant"
       :return [koski-schema/AtaruKoskiTutkintoResponse]
@@ -411,24 +395,6 @@
             (response/not-found {}))
           (response/unauthorized {}))
         ))
-=======
-    (api/GET "/tutkinnot/:henkilo-oid" []
-      :path-params [henkilo-oid :- s/Str]
-      :return [koski-schema/AtaruKoskiTutkintoResponse]
-      (if-let [suoritukset (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
-        (response/ok
-          (map (fn [suoritus] (-> {}
-                                  (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi]))
-                                  (assoc :koulutusohjelmanimi (get-in suoritus [:tyyppi :nimi]))
-                                  (assoc :toimipistenimi (get-in suoritus [:toimipiste :nimi]))
-                                  (assoc :valmistumispvm (get-in suoritus [:vahvistus :päivä]))
-                                  (assoc :koulutustyyppi
-                                         (select-keys
-                                           (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
-                                           [:koodistoUri :koodiarvo]))))
-               (flatten (map :suoritukset (:opiskeluoikeudet suoritukset)))))
-        (response/not-found {})))
->>>>>>> ade056b83 (OK-607: Lisätty koski-tutkintojen hakulogiikka)
     (api/context "/files" []
       (api/GET "/signed-upload" []
         :summary "Permission to upload"
