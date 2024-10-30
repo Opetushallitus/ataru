@@ -576,35 +576,16 @@
     (doall
       (for [idx (range (or row-count 1))]
         ^{:key (str "question-group-row-" idx)}
-        [:div.application__tutkinto-group-container
-         [:div.application__tutkinto-header
-          label
-          (when (and (< 1 row-count) (not (some deref cannot-edits?)))
-            [:div.application__tutkinto-header.remove-tutkinto
-              [:a.application__tutkinto-header.remove-tutkinto.link
-               {:on-click (fn add-question-group-row [event]
-                              (.preventDefault event)
-                              (dispatch [:application/remove-question-group-row
-                                         field-descriptor
-                                         idx]))}
-              [:span.application__tutkinto-header.remove-tutkinto.button-text (tu/get-hakija-translation :poista lang)]
-              [:i.zmdi.zmdi-delete.application__tutkinto-header.remove-tutkinto.button-icon]]])]
-         [:div.application__form-multi-choice-followups-outer-container
-          {:tab-index 0}
-          [:div.application__form-multi-choice-followups-indicator]
-          (into [:div.application__tutkinto-entity-container]
-                (for [child (:children field-descriptor)]
-                  ^{:key (str (:id child) "-" idx)}
-                  [render-field child idx]))]]))]
+        [tutkinnot/tutkinto-group label
+                                  field-descriptor
+                                  idx
+                                  (and (< 1 row-count) (not (some deref cannot-edits?)))
+                                  lang
+                                  (for [child (:children field-descriptor)]
+                                    ^{:key (str (:id child) "-" idx)}
+                                    [render-field child idx])]))
     (when (not (some deref cannot-edits?))
-      [:div.application__add-tutkinto
-        [:button.application__add-tutkinto.button
-          {:on-click (fn [event]
-                      (.preventDefault event)
-                      (dispatch [:application/add-question-group-row field-descriptor]))}
-          [:i.zmdi.zmdi-plus.application__add-tutkinto.button-icon]
-          [:span.application__add-tutkinto.button-text (tu/get-hakija-translation :add-tutkinto lang)]]])]
-  )
+      [tutkinnot/add-tutkinto-button field-descriptor lang])]])
 
 (defn question-group [field-descriptor _]
   (let [languages     (subscribe [:application/default-languages])
@@ -613,8 +594,8 @@
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
-    (if (= "tutkintofieldset" (:fieldType field-descriptor))
-      (tutkinto-question-group field-descriptor label row-count cannot-edits? lang)
+    (case (:fieldType field-descriptor)
+      "tutkintofieldset" (tutkinto-question-group field-descriptor label row-count cannot-edits? lang)
       (generic-question-group field-descriptor label row-count cannot-edits? lang))))
 
 
@@ -917,12 +898,12 @@
       [:h2 label]
       [scroll-to-anchor field-descriptor]]
      (into [:div.application__wrapper-contents]
-           (for [child root-level-children]
-             (if (tutkinnot/is-tutkinto-configuration-component? child)
-               ;; TODO Tähän kohtaan koskesta tuleva contentti
-               (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
-                 (with-meta [render-field followup nil] {:key (:id followup)}))
-               (with-meta [render-field child nil] {:key (:id child)}))))]))
+       (for [child root-level-children]
+         (if (tutkinnot/is-tutkinto-configuration-component? child)
+           ;; TODO Tähän kohtaan koskesta tuleva contentti
+           (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
+             (with-meta [render-field followup nil] {:key (:id followup)}))
+           (with-meta [render-field child nil] {:key (:id child)}))))]))
 
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
@@ -936,6 +917,8 @@
           :fieldType  "fieldset"} [question-group field-descriptor idx]
          {:fieldClass "questionGroup"
           :fieldType  "tutkintofieldset"} [question-group field-descriptor idx]
+         {:fieldClass "externalDataElement"
+          :fieldType  "selectabletutkintolist"} [nil] ;Todo
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
          {:fieldClass "wrapperElement"

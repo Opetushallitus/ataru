@@ -3163,3 +3163,28 @@ i.arkistoitu {
     margin-left: 10px;
   }
 }
+
+.application__fixed-koski-tutkinto-container {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  padding: 10px 19px;
+  margin-bottom: 1px;
+  font-size: 14px;
+  background-color: @primary-green-700;
+  color: @white;
+
+  .inner-text {
+    flex-flow: column wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    row-gap: 10px;
+    padding: 0;
+
+    .upper-row {
+      font-weight: bold;
+    }
+  }
+}

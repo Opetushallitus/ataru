@@ -117,7 +117,7 @@
 (s/defschema FormPropertyField
   {:id                            s/Str
    :fieldClass                    (s/eq "formPropertyField")
-   :fieldType                     (apply s/enum ["multipleChoice"])
+   :fieldType                     (apply s/enum ["multipleOptions"])
    :category                      s/Str
    :exclude-from-answers          (s/eq true)
    :metadata                      element-metadata-schema/ElementMetadata
@@ -145,9 +145,9 @@
    #(= "formPropertyField" (:fieldClass %)) FormPropertyField
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
+(s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup" "externalDataElement"])
                              :id                                          s/Str
-                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset" "selectabletutkintolist"])
                              :children                                    [(s/conditional
                                                                              #(or (= "wrapperElement" (:fieldClass %))
                                                                                   (= "questionGroup" (:fieldClass %)))

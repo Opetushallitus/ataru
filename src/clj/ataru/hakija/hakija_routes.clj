@@ -382,15 +382,15 @@
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
           (if-let [suoritukset (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
             (response/ok
-              (map (fn [suoritus] (-> {}
-                                      (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi]))
-                                      (assoc :koulutusohjelmanimi (get-in suoritus [:tyyppi :nimi]))
-                                      (assoc :toimipistenimi (get-in suoritus [:toimipiste :nimi]))
-                                      (assoc :valmistumispvm (get-in suoritus [:vahvistus :päivä]))
-                                      (assoc :koulutustyyppi
-                                             (select-keys
-                                               (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
-                                               [:koodistoUri :koodiarvo]))))
+              (map (fn [suoritus] {:tutkintonimi        (get-in suoritus [:koulutusmoduuli :tunniste :nimi] "not found")
+                                   :koulutusohjelmanimi (get-in suoritus [:tyyppi :koodiarvo] "not found")
+                                   :toimipistenimi      (get-in suoritus [:toimipiste :nimi])
+                                   :valmistumispvm      (get-in suoritus [:vahvistus :päivä])
+                                   ;;:koulutustyyppi
+                                   ;;(select-keys
+                                   ;;  (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
+                                   ;;  [:koodistoUri :koodiarvo])
+                                   })
                    (flatten (map :suoritukset (:opiskeluoikeudet suoritukset)))))
             (response/not-found {}))
           (response/unauthorized {}))

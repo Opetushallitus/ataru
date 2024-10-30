@@ -56,6 +56,11 @@
                     :fieldType  "tutkintofieldset"}
                    [ec/component-group content path children]
 
+                   ;externalDataElement items not visible in editor
+                   {:fieldClass "externalDataElement"
+                    :fieldType  "selectabletutkintolist"}
+                   [nil]
+
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
                    [ec/adjacent-text-field content path]
@@ -95,7 +100,7 @@
                    [ec/hakukohteet-module content path]
 
                    {:fieldClass "formPropertyField"
-                    :fieldType  "multipleChoice"}
+                    :fieldType  "multipleOptions"}
                    [mcc/multiple-checkbox-component content followups path]
 
                    :else (do
