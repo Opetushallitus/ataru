@@ -88,7 +88,8 @@
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
             [ataru.background-job.job :as job]
-            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job])
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
+            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -390,6 +391,14 @@
 
     (api/context "/background-jobs" []
       :tags ["background-jobs-api"]
+
+      (api/POST "/start-kk-application-payment-maksut-poller-job" {session :session}
+        :path-params []
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
+                job-runner)
+              (response/ok {}))
+          (response/unauthorized {})))
 
       (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
         :path-params [person-oid :- s/Str
