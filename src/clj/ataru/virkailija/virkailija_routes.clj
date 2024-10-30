@@ -394,8 +394,18 @@
 
       (api/POST "/start-kk-application-payment-maksut-poller-job" {session :session}
         :path-params []
+        :summary "Triggers a job for updating maksut status for all open higher education application payments"
         (if (get-in session [:identity :superuser])
           (do (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
+                job-runner)
+              (response/ok {}))
+          (response/unauthorized {})))
+
+      (api/POST "/start-kk-application-payment-status-updater-job-for-all" {session :session}
+        :path-params []
+        :summary "Triggers a job for updating internal payment status for all open higher education application payments"
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
                 job-runner)
               (response/ok {}))
           (response/unauthorized {})))
@@ -404,6 +414,7 @@
         :path-params [person-oid :- s/Str
                       term :- s/Str
                       year :- s/Str]
+        :summary "Triggers a job for updating internal payment status for single higher education application payment"
         (if (get-in session [:identity :superuser])
           (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
                 job-runner
