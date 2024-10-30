@@ -915,6 +915,8 @@
           :fieldType  "fieldset"} [question-group field-descriptor idx]
          {:fieldClass "questionGroup"
           :fieldType  "tutkintofieldset"} [question-group field-descriptor idx]
+         {:fieldClass "externalDataElement"
+          :fieldType  "selectabletutkintolist"} [nil] ;Todo
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
          {:fieldClass "wrapperElement"

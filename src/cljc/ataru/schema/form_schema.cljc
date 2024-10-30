@@ -148,7 +148,7 @@
 
 (s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup" "externalDataElement"])
                              :id                                          s/Str
-                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset" "selectabletutkintolist"])
                              :children                                    [(s/conditional
                                                                              #(or (= "wrapperElement" (:fieldClass %))
                                                                                   (= "questionGroup" (:fieldClass %)))
