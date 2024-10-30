@@ -5,7 +5,8 @@
             [ataru.component-data.base-education-continuous-admissions-module :refer [base-education-continuous-admissions-module]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [ataru.component-data.arvosanat-module :as arvosanat]))
+            [ataru.component-data.arvosanat-module :as arvosanat]
+            [ataru.component-data.koski-tutkinnot-module :refer [koski-tutkinnot-module]]))
 
 (defn- toolbar-elements []
   [[:form-section component/form-section {:data-test-id "component-toolbar-lomakeosio"}]
@@ -41,7 +42,8 @@
    [:lupatiedot-kk component/lupatiedot-kk]
    [:lupatiedot-toinen-aste component/lupatiedot-toinen-aste]
    [:guardian-contact-information component/huoltajan-yhteystiedot]
-   [:harkinnanvaraisuus component/harkinnanvaraisuus]])
+   [:harkinnanvaraisuus component/harkinnanvaraisuus]
+   [:tutkinnot koski-tutkinnot-module]])
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -87,9 +89,15 @@
                     component/text-field)})
 
 (defn- component-toolbar [_ _ _]
-  (fn [path elements generator]
+  (fn [path _elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
-          pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
+          pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])
+          tutkinnot-component-exists? (subscribe [:editor/tutkinnot-component-exists?])
+          hakeminen-tunnistautuneena-not-allowed? (not @(subscribe [:editor/allow-hakeminen-tunnistautuneena?]))
+          tutkinto-question-group-allowed? @(subscribe [:editor/get-component-param :allow-tutkinto-question-group path])
+          elements (if tutkinto-question-group-allowed?
+                     (conj _elements [:question-group-tutkinto component/question-group-tutkinto])
+                     _elements)]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn {:keys [data-test-id]}] elements
                   :when (and (not (and (vector? path)
@@ -98,7 +106,9 @@
                              (not (and @base-education-module-exists?
                                        (contains? #{:base-education-module :kk-base-education-module :base-education-module-2nd} component-name)))
                              (not (and @pohjakoulutusristiriita-exists?
-                                       (= :pohjakoulutusristiriita component-name))))]
+                                       (= :pohjakoulutusristiriita component-name)))
+                             (not (and (or hakeminen-tunnistautuneena-not-allowed? @tutkinnot-component-exists?)
+                                       (= :tutkinnot component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)

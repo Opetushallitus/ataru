@@ -4,6 +4,8 @@
             [ataru.virkailija.editor.components.dropdown-component :as dc]
             [ataru.virkailija.editor.components.modal-info-element :as mie]
             [ataru.virkailija.editor.components.info-component :as ic]
+            [ataru.virkailija.editor.components.koski-tutkinnot-wrapper :as ktw]
+            [ataru.virkailija.editor.components.form-properties.multiple-checkbox-component :as mcc]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
@@ -39,12 +41,25 @@
                     :fieldType  "adjacentfieldset"}
                    [ec/adjacent-fieldset content path children]
 
+                   {:fieldClass "wrapperElement"
+                    :fieldType  "tutkinnot"}
+                   [ktw/tutkinnot-wrapper content path children]
+
                    {:fieldClass "wrapperElement"}
                    [ec/component-group content path children]
 
                    {:fieldClass "questionGroup"
                     :fieldType  "fieldset"}
                    [ec/component-group content path children]
+
+                   {:fieldClass "questionGroup"
+                    :fieldType  "tutkintofieldset"}
+                   [ec/component-group content path children]
+
+                   ;externalDataElement items not visible in editor
+                   {:fieldClass "externalDataElement"
+                    :fieldType  "selectabletutkintolist"}
+                   [nil]
 
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
@@ -83,6 +98,10 @@
                    {:fieldClass "formField"
                     :fieldType  "hakukohteet"}
                    [ec/hakukohteet-module content path]
+
+                   {:fieldClass "formPropertyField"
+                    :fieldType  "multipleOptions"}
+                   [mcc/multiple-checkbox-component content followups path]
 
                    :else (do
                            (log/error content)

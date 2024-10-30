@@ -1,28 +1,28 @@
 (ns ataru.virkailija.editor.component
   (:require
-   [ataru.application-common.application-field-common :refer [copy-link]]
-   [ataru.cljs-util :as util]
-   [ataru.component-data.person-info-module :as pm]
-   [ataru.virkailija.editor.components.toolbar :as toolbar]
-   [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
-   [cljs.core.match :refer-macros [match]]
-   [goog.string :as s]
-   [cljs-time.core :as t]
-   [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-   [reagent.core :as r]
-   [ataru.component-data.module.module-spec :as module-spec]
-   [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
-   [ataru.virkailija.editor.components.component-content :as component-content]
-   [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
-   [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
-   [ataru.virkailija.editor.components.input-field-component :as input-field-component]
-   [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
-   [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
-   [ataru.virkailija.editor.components.text-component :as text-component]
-   [ataru.virkailija.editor.components.text-header-component :as text-header-component]
-   [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
-   [clojure.string :as string]
-   [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
+    [ataru.application-common.application-field-common :refer [copy-link]]
+    [ataru.cljs-util :as util]
+    [ataru.component-data.person-info-module :as pm]
+    [ataru.virkailija.editor.components.toolbar :as toolbar]
+    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
+    [cljs.core.match :refer-macros [match]]
+    [goog.string :as s]
+    [cljs-time.core :as t]
+    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+    [reagent.core :as r]
+    [ataru.component-data.module.module-spec :as module-spec]
+    [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
+    [ataru.virkailija.editor.components.component-content :as component-content]
+    [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
+    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
+    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
+    [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
+    [ataru.virkailija.editor.components.text-component :as text-component]
+    [ataru.virkailija.editor.components.text-header-component :as text-header-component]
+    [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
+    [clojure.string :as string]
+    [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -37,56 +37,58 @@
    :header-label @(subscribe [:editor/virkailija-translation :text-area])
    :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 
+(defn get-leaf-component-labels [component lang]
+  (letfn [(recursively-get-labels [component]
+            (match (:fieldClass component)
+                   "questionGroup" (map #(recursively-get-labels %) (:children component))
+                   "wrapperElement" (map #(recursively-get-labels %) (:children component))
+                   :else (or (-> component :label lang)
+                             (-> component :label :fi))))]
+    (flatten (recursively-get-labels component))))
+
 (defn component-group [content path children]
-  (let [id                (:id content)
-        languages         @(subscribe [:editor/languages])
-        value             @(subscribe [:editor/get-component-value path])
+  (let [id (:id content)
+        languages @(subscribe [:editor/languages])
+        value @(subscribe [:editor/get-component-value path])
         group-header-text (case (:fieldClass content)
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-element])
-                            "questionGroup"  @(subscribe [:editor/virkailija-translation :question-group]))
+                            "questionGroup" (case (:fieldType content)
+                                              "tutkintofieldset" @(subscribe [:editor/virkailija-translation :question-group-tutkinto])
+                                              @(subscribe [:editor/virkailija-translation :question-group])))
         header-label-text (case (:fieldClass content)
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-header])
-                            "questionGroup"  @(subscribe [:editor/virkailija-translation :group-header]))]
+                            "questionGroup" @(subscribe [:editor/virkailija-translation :group-header]))]
     [:div.editor-form__component-wrapper
      {:data-test-id (str "editor-form__" (:fieldClass content) "-component-wrapper")}
      [text-header-component/text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
      [component-content/component-content
-      path ;id
+      path                                                  ;id
       [:div
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header header-label-text]
         (input-fields-with-lang-component/input-fields-with-lang
-         (fn [lang]
-           [input-field-component/input-field {:path        path
-                                               :lang        lang
-                                               :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                             (-> % .-target .-value)
-                                                                             path :label lang])}])
-         languages
-         :header? true)]
+          (fn [lang]
+            [input-field-component/input-field {:path        path
+                                                :lang        lang
+                                                :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                              (-> % .-target .-value)
+                                                                              path :label lang])}])
+          languages
+          :header? true)]
        [:div.editor-form__wrapper-element-well
         children]
        [dnd/drag-n-drop-spacer (conj path :children (count children))]
        (when-not @(subscribe [:editor/component-locked? path])
          (case (:fieldClass content)
            "wrapperElement" [toolbar/add-component (conj path :children (count children)) false]
-           "questionGroup"  [toolbar/question-group-toolbar path
-                             (fn [generate-fn]
-                               (dispatch [:generate-component generate-fn (conj path :children (count children))]))]))]]]))
-
-(defn get-leaf-component-labels [component lang]
-  (letfn [(recursively-get-labels [component]
-            (match (:fieldClass component)
-              "questionGroup" (map #(recursively-get-labels %) (:children component))
-              "wrapperElement" (map #(recursively-get-labels %) (:children component))
-              :else (or (-> component :label lang)
-                        (-> component :label :fi))))]
-    (flatten (recursively-get-labels component))))
+           "questionGroup" [toolbar/question-group-toolbar path
+                            (fn [generate-fn]
+                              (dispatch [:generate-component generate-fn (conj path :children (count children))]))]))]]]))
 
 (defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
-        value           (subscribe [:editor/get-component-value path])
+        value (subscribe [:editor/get-component-value path])
         component-locked (subscribe [:editor/component-locked? path])]
     (fn [content path]
       [:div.editor-form__component-wrapper
@@ -134,11 +136,11 @@
                 can-remove?
                 show-child-component-names?
                 has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
-        value             (subscribe [:editor/get-component-value path])
-        virkailija-lang   (subscribe [:editor/virkailija-lang])
+        value (subscribe [:editor/get-component-value path])
+        virkailija-lang (subscribe [:editor/virkailija-lang])
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path]
-      (let [module-name         (-> content :module keyword)
+      (let [module-name (-> content :module keyword)
             data-test-id-prefix (case module-name
                                   :person-info "henkilotietomoduuli"
                                   :arvosanat-peruskoulu "arvosanat-moduuli"
@@ -157,7 +159,7 @@
               [:div.editor-form__module-fields
                [:select.editor-form__select
                 {:on-change    (fn [event]
-                                 (let [version    (keyword (-> event .-target .-value))
+                                 (let [version (keyword (-> event .-target .-value))
                                        new-module (pm/person-info-module version)]
                                    (dispatch-sync [:editor/set-component-value
                                                    new-module path])))
@@ -183,30 +185,30 @@
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content/component-content
-        path ;(:id initial-content)
+        path                                                ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
            [:div.infoelement
             (->> (input-fields-with-lang-component/input-fields-with-lang
-                  (fn [lang]
-                    [input-field-component/input-field {:path        path
-                                                        :lang        lang
-                                                        :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                      (-> % .-target .-value)
-                                                                                      path :text lang])
-                                                        :value-fn    (fn [component] (get-in component [:text lang]))
-                                                        :tag         :textarea}])
-                  @languages
-                  :header? true)
+                   (fn [lang]
+                     [input-field-component/input-field {:path        path
+                                                         :lang        lang
+                                                         :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                       (-> % .-target .-value)
+                                                                                       path :text lang])
+                                                         :value-fn    (fn [component] (get-in component [:text lang]))
+                                                         :tag         :textarea}])
+                   @languages
+                   :header? true)
                  (map (fn [field]
                         (into field [[:div.editor-form__markdown-anchor
                                       (markdown-help-component/markdown-help)]])))
                  doall)]]]]]])))
 
 (defn adjacent-fieldset [_ path _]
-  (let [languages         (subscribe [:editor/languages])
-        sub-header        (subscribe [:editor/get-component-value path :label])
+  (let [languages (subscribe [:editor/languages])
+        sub-header (subscribe [:editor/get-component-value path :label])
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path children]
       [:div.editor-form__component-wrapper
@@ -214,20 +216,20 @@
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
         :sub-header @sub-header]
        [component-content/component-content
-        path ;(:id content)
+        path                                                ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
            (input-fields-with-lang-component/input-fields-with-lang
-            (fn [lang]
-              [input-field-component/input-field {:path        path
-                                                  :lang        lang
-                                                  :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                (-> % .-target .-value)
-                                                                                path :label lang])}])
-            @languages
-            :header? true)]
+             (fn [lang]
+               [input-field-component/input-field {:path        path
+                                                   :lang        lang
+                                                   :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                 (-> % .-target .-value)
+                                                                                 path :label lang])}])
+             @languages
+             :header? true)]
           [:div.editor-form__checkbox-wrapper
            [repeater-checkbox-component/repeater-checkbox path content]]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
@@ -256,14 +258,14 @@
           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
            [copy-link (:id content)]]
           (input-fields-with-lang-component/input-fields-with-lang
-           (fn [lang]
-             [input-field-component/input-field {:path        path
-                                                 :lang        lang
-                                                 :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                               (-> % .-target .-value)
-                                                                               path :label lang])}])
-           @languages
-           :header? true)]
+            (fn [lang]
+              [input-field-component/input-field {:path        path
+                                                  :lang        lang
+                                                  :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                (-> % .-target .-value)
+                                                                                path :label lang])}])
+            @languages
+            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
           [text-component/text-component-type-selector (:id content) path {:adjacent-text-field? true
@@ -271,17 +273,17 @@
          [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [_ path]
-  (let [checked?                   (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-        mail-attachment?           (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        fetch-info-from-kouta?     (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
-        selected-attachment-type?  (subscribe [:editor/get-component-value path :params :attachment-type])
+  (let [checked? (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        fetch-info-from-kouta? (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
+        selected-attachment-type? (subscribe [:editor/get-component-value path :params :attachment-type])
         attachment-types-koodisto? (subscribe [:editor/get-attachment-types-koodisto])
-        collapse?                  (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages                  (subscribe [:editor/languages])
-        lang                       (subscribe [:editor/virkailija-lang])
-        is-per-hakukohde-allowed   (subscribe [:editor/is-per-hakukohde-allowed path])
-        component-locked?          (subscribe [:editor/component-locked? path])
-        has-parent-per-hakukohde   (subscribe [:editor/has-parent-per-hakukohde path])]
+        collapse? (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages (subscribe [:editor/languages])
+        lang (subscribe [:editor/virkailija-lang])
+        is-per-hakukohde-allowed (subscribe [:editor/is-per-hakukohde-allowed path])
+        component-locked? (subscribe [:editor/component-locked? path])
+        has-parent-per-hakukohde (subscribe [:editor/has-parent-per-hakukohde path])]
     (fn [initial-content path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -332,7 +334,7 @@
                                   (let [checked? (.. event -target -checked)]
                                     (dispatch [:editor/set-component-value checked? path :params :fetch-info-from-kouta?])))}]
             [:label
-             {:for  id
+             {:for   id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]]))
        (when (and @fetch-info-from-kouta?
@@ -344,14 +346,14 @@
              @(subscribe [:editor/virkailija-translation :attachment-type])]
             [:div.editor-form__select-koodisto-dropdown-wrapper
              [:select.editor-form__select-koodisto-dropdown
-              {:id        id
-               :class     (if (string/blank? @selected-attachment-type?)
-                            "editor-form__select-koodisto-dropdown--invalid"
-                            "editor-form__select-koodisto-dropdown--regular")
-               :value     @selected-attachment-type?
-               :on-change (fn select-attachment-type [event]
-                            (.preventDefault event)
-                            (dispatch [:editor/set-component-value (.. event -target -value) path :params :attachment-type]))
+              {:id           id
+               :class        (if (string/blank? @selected-attachment-type?)
+                               "editor-form__select-koodisto-dropdown--invalid"
+                               "editor-form__select-koodisto-dropdown--regular")
+               :value        @selected-attachment-type?
+               :on-change    (fn select-attachment-type [event]
+                               (.preventDefault event)
+                               (dispatch [:editor/set-component-value (.. event -target -value) path :params :attachment-type]))
                :data-test-id "editor-form__select-koodisto-dropdown"}
               (when (string/blank? @selected-attachment-type?)
                 [:option {:value @selected-attachment-type?} ""])
@@ -378,16 +380,16 @@
        (when @checked?
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang-component/input-fields-with-lang
-                (fn attachment-textarea-input [lang]
-                  [input-field-component/input-field {:path        path
-                                                      :lang        lang
-                                                      :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                    (-> % .-target .-value)
-                                                                                    path :params :info-text :value lang])
-                                                      :value-fn    #(get-in % [:params :info-text :value lang])
-                                                      :tag         :textarea}])
-                @languages
-                :header? true)
+                 (fn attachment-textarea-input [lang]
+                   [input-field-component/input-field {:path        path
+                                                       :lang        lang
+                                                       :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                     (-> % .-target .-value)
+                                                                                     path :params :info-text :value lang])
+                                                       :value-fn    #(get-in % [:params :info-text :value lang])
+                                                       :tag         :textarea}])
+                 @languages
+                 :header? true)
                (map (fn [field]
                       (into field [[:div.editor-form__info-addon-markdown-anchor
                                     (markdown-help-component/markdown-help)]])))
@@ -407,45 +409,45 @@
         (s/format deadline-format day month year hours minutes)))))
 
 (defn attachment [_ path]
-  (let [component        (subscribe [:editor/get-component-value path])
-        languages        (subscribe [:editor/languages])
-        deadline-value   (r/atom (get-in @component [:params :deadline]))
-        valid            (r/atom true)
+  (let [component (subscribe [:editor/get-component-value path])
+        languages (subscribe [:editor/languages])
+        deadline-value (r/atom (get-in @component [:params :deadline]))
+        valid (r/atom true)
         mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        format-deadline  (fn [event]
-                           (some->> (deadline-date (-> event .-target .-value))
-                                    (reset! deadline-value)))
-        update-value     (fn [unformatted-value value valid?]
-                           (reset! deadline-value unformatted-value)
-                           (reset! valid valid?)
-                           (dispatch-sync [:editor/set-component-value value path :params :deadline]))
-        update-deadline  (fn [event]
-                           (let [value    (-> event .-target .-value)
-                                 deadline (deadline-date value)]
-                             (cond
-                               (string/blank? value) (update-value value nil true)
-                               (and value deadline) (update-value value deadline true)
-                               :else (update-value value nil false))))]
+        format-deadline (fn [event]
+                          (some->> (deadline-date (-> event .-target .-value))
+                                   (reset! deadline-value)))
+        update-value (fn [unformatted-value value valid?]
+                       (reset! deadline-value unformatted-value)
+                       (reset! valid valid?)
+                       (dispatch-sync [:editor/set-component-value value path :params :deadline]))
+        update-deadline (fn [event]
+                          (let [value (-> event .-target .-value)
+                                deadline (deadline-date value)]
+                            (cond
+                              (string/blank? value) (update-value value nil true)
+                              (and value deadline) (update-value value deadline true)
+                              :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)
         :sub-header (:label @component)]
        [component-content/component-content
-        path ;(:id content)
+        path                                                ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :attachment-name])
             [copy-link (:id content)]]
            (input-fields-with-lang-component/input-fields-with-lang
-            (fn attachment-file-name-input [lang]
-              [input-field-component/input-field {:path        path
-                                                  :lang        lang
-                                                  :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                (-> % .-target .-value)
-                                                                                path :label lang])}])
-            @languages
-            :header? true)]
+             (fn attachment-file-name-input [lang]
+               [input-field-component/input-field {:path        path
+                                                   :lang        lang
+                                                   :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                 (-> % .-target .-value)
+                                                                                 path :label lang])}])
+             @languages
+             :header? true)]
           [:div.editor-form__text-field-wrapper
            [:label.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :attachment-deadline])]
            [:input.editor-form__attachment-deadline-field

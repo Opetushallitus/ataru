@@ -504,6 +504,18 @@
     height: 0;
     overflow: hidden;
   }
+
+  &--no-indent {
+    padding: 12px 12px 12px 0;
+  }
+}
+
+.editor-form__tutkinto-field-wrapper {
+  padding-right: 14px;
+  padding-bottom: 8px;
+  display: flex;
+  flex-flow: column nowrap;
+  flex: initial;
 }
 
 .fade-out {
@@ -1011,6 +1023,12 @@
   margin-bottom: 5px;
 }
 
+.editor-form__component-item-description {
+  color: @blue-text-color;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
 .editor-form__koodisto-options {
   display: inline-flex;
   flex-direction: column;
@@ -1344,6 +1362,11 @@
   border: 1px solid @section-gray-border;
   background-color: @element-followup-well-background;
   padding: 12px;
+}
+
+.editor-form__followup-custom-query-container {
+  white-space: nowrap;
+  margin-bottom: 10px;
 }
 
 .editor-form__text-field:focus + .editor-form__text-field-label + .editor-form__markdown-help,
@@ -1728,4 +1751,50 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
 .editor-form__payment-amount-wrapper input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.editor-form__single-choice-button-container {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  margin-left: -5px;
+
+  .label {
+    color: @blue-text-color;
+    font-size: 14px;
+    margin-left: 4px;
+    cursor: default;
+  }
+
+  .choice {
+    margin-left: 0;
+    row-gap: normal;
+    flex-direction: row;
+    align-items: center;
+
+    .label {
+      color: @blue-text-color;
+      font-size: 14px;
+      margin-top: 2px;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+
+  }
+}
+
+.editor-form__plain-radio {
+  padding: 0;
+  background-color: transparent;
+  border: 2px solid @neutral-grey-700;
+  border-radius: 0.20rem;
+  outline: none;
+  appearance: auto;
+  width: 1.25em;
+  height: 1.25em;
+  min-width: 1.25em;
+  margin-right: 0.375em;
+  font-size: inherit;
+  vertical-align: middle;
+  cursor: pointer;
 }

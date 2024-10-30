@@ -14,6 +14,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
+            [ataru.hakija.components.tutkinnot :as tutkinnot]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -546,6 +547,46 @@
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
+(defn- generic-question-group [field-descriptor label row-count cannot-edits? lang]
+  [:div.application__question-group
+   (when-not (string/blank? label)
+     [:h3.application__question-group-heading label])
+   [scroll-to-anchor field-descriptor]
+   [:div
+    (doall
+      (for [idx (range (or row-count 1))]
+        ^{:key (str "question-group-row-" idx)}
+        [question-group-row
+         field-descriptor
+         idx
+         (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
+   (when (not (some deref cannot-edits?))
+     [:div.application__add-question-group-row
+      [:a {:href     "#"
+           :on-click (fn add-question-group-row [event]
+                       (.preventDefault event)
+                       (dispatch [:application/add-question-group-row field-descriptor]))}
+       [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+       (tu/get-hakija-translation :add lang)]])])
+
+(defn- tutkinto-question-group [field-descriptor label row-count cannot-edits? lang]
+  [:div
+   [scroll-to-anchor field-descriptor]
+   [:div
+    (doall
+      (for [idx (range (or row-count 1))]
+        ^{:key (str "question-group-row-" idx)}
+        [tutkinnot/tutkinto-group label
+                                  field-descriptor
+                                  idx
+                                  (and (< 1 row-count) (not (some deref cannot-edits?)))
+                                  lang
+                                  (for [child (:children field-descriptor)]
+                                    ^{:key (str (:id child) "-" idx)}
+                                    [render-field child idx])]))
+    (when (not (some deref cannot-edits?))
+      [tutkinnot/add-tutkinto-button field-descriptor lang])]])
+
 (defn question-group [field-descriptor _]
   (let [languages     (subscribe [:application/default-languages])
         label         (util/non-blank-val (:label field-descriptor) @languages)
@@ -553,26 +594,10 @@
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
-    [:div.application__question-group
-     (when-not (string/blank? label)
-       [:h3.application__question-group-heading label])
-     [scroll-to-anchor field-descriptor]
-     [:div
-      (doall
-       (for [idx (range (or row-count 1))]
-         ^{:key (str "question-group-row-" idx)}
-         [question-group-row
-          field-descriptor
-          idx
-          (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
-     (when (not (some deref cannot-edits?))
-       [:div.application__add-question-group-row
-        [:a {:href     "#"
-             :on-click (fn add-question-group-row [event]
-                         (.preventDefault event)
-                         (dispatch [:application/add-question-group-row field-descriptor]))}
-         [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         (tu/get-hakija-translation :add lang)]])]))
+    (case (:fieldType field-descriptor)
+      "tutkintofieldset" (tutkinto-question-group field-descriptor label row-count cannot-edits? lang)
+      (generic-question-group field-descriptor label row-count cannot-edits? lang))))
+
 
 (defn row-wrapper [field-descriptor _]
   (into [:div.application__row-field-wrapper]
@@ -861,6 +886,25 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn tutkinnot-wrapper-field
+  [field-descriptor]
+  (let [label (util/non-blank-val (:label field-descriptor)
+                                  @(subscribe [:application/default-languages]))
+        root-level-children (filter #(or (tutkinnot/is-tutkinto-configuration-component? %)
+                                         @(subscribe [:application/visible? (keyword (:id %))]))
+                                    (:children field-descriptor))]
+    [:div.application__wrapper-element
+     [:div.application__wrapper-heading
+      [:h2 label]
+      [scroll-to-anchor field-descriptor]]
+     (into [:div.application__wrapper-contents]
+       (for [child root-level-children]
+         (if (tutkinnot/is-tutkinto-configuration-component? child)
+           ;; TODO Tähän kohtaan koskesta tuleva contentti
+           (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
+             (with-meta [render-field followup nil] {:key (:id followup)}))
+           (with-meta [render-field child nil] {:key (:id child)}))))]))
+
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
   (match field-descriptor
@@ -871,8 +915,14 @@
           :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"} [question-group field-descriptor idx]
+         {:fieldClass "questionGroup"
+          :fieldType  "tutkintofieldset"} [question-group field-descriptor idx]
+         {:fieldClass "externalDataElement"
+          :fieldType  "selectabletutkintolist"} [nil] ;Todo
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "tutkinnot"} [tutkinnot-wrapper-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]

@@ -3093,3 +3093,98 @@ i.arkistoitu {
     }
   }
 }
+
+.application__tutkinto-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  flex-flow: row nowrap;
+  padding: 19px;
+  margin-bottom: 1px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: @primary-green-700;
+  color: @white;
+
+  .remove-tutkinto {
+    cursor: pointer;
+    justify-content: end;
+    padding: 0;
+    column-gap: 10px;
+
+    .link {
+      background-color: @primary-green-700;
+      color: @white;
+      border-radius: 0;
+      text-decoration: none;
+    }
+
+    .button-icon {
+      font-size: 22px;
+    }
+
+    .button-text {
+      font-weight: normal;
+    }
+  }
+}
+
+.application__tutkinto-group-container {
+  margin-bottom: 10px;
+}
+
+.application__tutkinto-entity-container {
+  .application__form-multi-choice-followups-container;
+  max-width: none;
+  width: 100%;
+}
+
+.application__add-tutkinto {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  .button {
+    .primary-button;
+    height: 43px;
+    width: 211px;
+    margin-right: 18px;
+    font-size: 14px;
+  }
+
+  .button-icon {
+    font-size: 22px;
+  }
+
+  .button-text {
+    margin-left: 10px;
+  }
+}
+
+.application__fixed-koski-tutkinto-container {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  padding: 10px 19px;
+  margin-bottom: 1px;
+  font-size: 14px;
+  background-color: @primary-green-700;
+  color: @white;
+
+  .inner-text {
+    flex-flow: column wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    row-gap: 10px;
+    padding: 0;
+
+    .upper-row {
+      font-weight: bold;
+    }
+  }
+}

@@ -485,6 +485,24 @@
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 
+(defn- find-descendant-ids-by-parent-id
+  [db parent-id]
+  (let [descendant-ids (mapv :id (filter #(or (= parent-id (:followup-of %)) (= parent-id (:children-of %)))
+                                       (:flat-form-content db)))
+        nested-ids (flatten (map #(find-descendant-ids-by-parent-id db %) descendant-ids))]
+    (concat descendant-ids nested-ids)))
+
+(defn- show-descendants-of-property-options
+  [db _]
+  (let [property-field-ids       (map :id (filter #(= "formPropertyField" (:fieldClass %)) (:flat-form-content db)))
+        all-descendant-ids (flatten (map #(find-descendant-ids-by-parent-id db %) property-field-ids))
+        is-explicitly-hidden?     (fn [id] (get-in db [:flat-form-content (keyword id) :params :hidden] false))]
+    (reduce
+      (fn [db' descendant-id] (assoc-in db' [:application :ui (keyword descendant-id) :visible?]
+                                      (not (is-explicitly-hidden? descendant-id))))
+      db
+      all-descendant-ids)))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -508,7 +526,9 @@
     :toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
     toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
     :set-oppiaine-valinnainen-kieli-value
-    set-oppiaine-valinnainen-kieli-value))
+    set-oppiaine-valinnainen-kieli-value
+    :show-descendants-of-property-options
+    show-descendants-of-property-options))
 
 (defn run-rules
   ([db rules]
