@@ -48,6 +48,15 @@
                                              "kk-application-payment-status-update-job"
                                              {:person_oid person-oid :term term :year year}))))
 
+(defn start-update-kk-payment-status-for-all-job
+  [job-runner]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                              (job/start-job job-runner
+                                             conn
+                                             "kk-application-payment-status-update-scheduler-job"
+                                             {}))))
+
 ; TODO: we might be updating status of a single person multiple times if they have applications in multiple hakus.
 (defn update-statuses-for-haku
   "Queues kk payment status updates for all persons with active applications in haku."
@@ -71,7 +80,7 @@
       (doseq [haku hakus]
         (update-statuses-for-haku haku job-runner)))))
 
-(defn update-kk-payment-status-scheduler-handler
+(defn update-kk-payment-status-for-all-handler
   [_ job-runner]
   (when (get-in config [:kk-application-payments :status-updater-enabled?])
     (log/info "Update kk application payment status step starting")
@@ -81,6 +90,6 @@
 (def updater-job-definition {:handler update-kk-payment-status-for-person-handler
                              :type    "kk-application-payment-person-status-update-job"})
 
-(def scheduler-job-definition {:handler  update-kk-payment-status-scheduler-handler
+(def scheduler-job-definition {:handler  update-kk-payment-status-for-all-handler
                                :type     "kk-application-payment-status-update-scheduler-job"
                                :schedule "0 6 * * *"})
