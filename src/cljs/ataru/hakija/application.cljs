@@ -194,12 +194,7 @@
                                               (:validators field)))
                            :value  []
                            :values []
-                           :label  label}]
-
-            [{:id         id
-              :fieldClass "formPropertyField"
-              :fieldType  "multipleChoice"}]
-            [(keyword id) {:params {:hidden true}}])))
+                           :label  label}])))
        (into {})))
 
 (defn create-initial-answers
