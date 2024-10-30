@@ -95,14 +95,14 @@
                     (spec)))
 
           (it "should not fail when nothing to update"
-              (should-not-throw (updater-job/update-kk-payment-status-scheduler-handler {} runner)))
+              (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
                 (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                               application-fixtures/application-without-hakemusmaksu-exemption
                                               nil)
-                (updater-job/update-kk-payment-status-scheduler-handler {} runner)
+                (updater-job/update-kk-payment-status-for-all-handler {} runner)
                 (should-have-invoked :update-statuses-for-haku
                                      {:times 1
                                       :with [#(= (:oid %) "payment-info-test-kk-haku") :*]})))
@@ -112,7 +112,7 @@
                                      form-fixtures/payment-exemption-test-form
                                      application-fixtures/application-without-hakemusmaksu-exemption
                                      nil)
-                    _ (updater-job/update-kk-payment-status-handler
+                    _ (updater-job/update-kk-payment-status-for-person-handler
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))]
