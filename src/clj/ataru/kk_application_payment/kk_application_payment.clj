@@ -13,9 +13,15 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]
-            [ataru.config.core :refer [config]]))
+            [ataru.config.core :refer [config]]
+            [clj-time.format :as time-format]
+            [clj-time.core :as time]))
+
+(def default-format (time-format/formatters :year-month-day))
 
 (def kk-application-payment-origin "kkhakemusmaksu")
+(def kk-application-payment-amount (get-in config [:kk-application-payments :processing-fee]))
+(def kk-application-payment-due-days 7)
 
 ; TODO: when the exact field is defined, make sure this is the final agreed id
 ; TODO: -> before the main feature branch gets merged to master
@@ -30,89 +36,158 @@
   #{"0" "1" "2" "3" "4" "5" "6"})
 
 (def all-states
-  {:not-required       "payment-not-required"
-   :awaiting           "awaiting-payment"
-   :ok-via-linked-oid  "payment-ok-via-linked-oid"
-   :paid               "payment-paid"
-   :overdue            "payment-overdue"})
+  {:not-required "not-required"
+   :awaiting     "awaiting"
+   :ok-by-proxy  "ok-by-proxy"
+   :paid         "paid"
+   :overdue      "overdue"})
 
-(def all-event-types
-      {:updated "state-updated"})
+(def all-reasons
+  {:eu-citizen      "eu-citizen"
+   :exemption-field "exemption-field"})
 
-(def ok-states
-  #{nil
-    (:not-required      all-states)
-    (:ok-via-linked-oid all-states)
-    (:paid              all-states)})
+; TODO: TEST TIME ZONE ISSUES
+(defn get-due-date []
+  (time-format/unparse default-format
+                       (time/plus (time/now)
+                                  (time/days kk-application-payment-due-days))))
 
-; TODO finalize after big OK-687 changes
-(defn payment-status-to-reference
-  "Maksut payment references for hakemusmaksu are like 1.2.246.562.24.123456-kausi_s-2025"
-  [{:keys [person-oid start-term start-year]}]
-  (str/join "-" [person-oid start-term start-year]))
+(defn maksut-reference->maksut-order-id
+  [reference]
+  (let [aid (last (str/split reference #"[.]"))]
+    (str "KKHA" aid)))
 
-; TODO finalize after big OK-687 changes
+(defn payment->maksut-reference
+  "Maksut payment references for hakemusmaksu are like 1.2.246.562.8.00000000000022225700"
+  [{:keys [application-key]}]
+  application-key)
+
 (defn generate-invoicing-data
-  [person term year]
-  (let [amount (get-in config [:form-payment-info :kk-processing-fee])]
-    {:reference (payment-status-to-reference {:person-oid (:oid person)
-                                              :start-term term
-                                              :start-year year})
-     :origin kk-application-payment-origin
-     :due-date ""                                           ; TODO
-     :first-name (:first-name person)
-     :last-name (:last-name person)
-     :email ""                                              ; TODO: from application data
-     :amount amount}))
+  [payment person]
+  {:reference  (payment->maksut-reference payment)
+   :origin     kk-application-payment-origin
+   :amount     kk-application-payment-amount
+   :due-days   kk-application-payment-due-days
+   :first-name (:first-name person)
+   :last-name  (:last-name person)
+   :email      ""                                              ; TODO: where do we get this from?
+   })
+
+(defn- validate-payment-data
+  [{:keys [application-key state]}]
+  (and (contains? (set (vals all-states)) state)
+       (not-empty application-key)))
 
 (defn- set-payment-state
-  [person-oid term year new-state virkailija-oid message]
-  (if (and (contains? (set (vals all-states)) new-state)
-           (utils/start-term-valid? term year))
-    (let [state-id (:id (store/create-or-update-kk-application-payment-state!
-                          person-oid term year new-state))]
-      (store/create-kk-application-payment-event! state-id new-state (:updated all-event-types) virkailija-oid message)
-      (log/info
-        (str "Set payment state of person " person-oid " for term " term " " year " to " new-state))
-      state-id)
-    (throw (ex-info "Parameter validation failed while setting payment state"
-                    {:person-oid person-oid :term term :year year :state new-state}))))
+  [{:keys [state application-key] :as payment-data}]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (if (validate-payment-data payment-data)
+      (let [payment (store/create-or-update-kk-application-payment! payment-data)]
+        (log/info
+          (str "Set payment state of application " application-key " to " state))
+        payment)
+      (throw (ex-info "Parameter validation failed while setting payment state"
+                      {:application-key application-key :state state})))))
 
-(defn get-raw-payment-states
-  [person-oids term year]
-  (if (and (not-empty person-oids) term year)
-    (let [simplified-term (first (str/split term #"#"))]
-      (store/get-kk-application-payment-states person-oids simplified-term year))
+(defn set-maksut-secret
+  [application-key maksut-secret]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (let [count (store/update-maksut-secret! application-key maksut-secret)]
+      (if (= count 1)
+        (log/info (str "Set kk application payment maksut secret for application " application-key))
+        (throw (ex-info "Could not set maksut secret for kk application payment"
+                        {:application-key application-key :maksut-secret maksut-secret :updated-rows count}))))))
+
+(defn get-raw-payments
+  [application-keys]
+  (if (not-empty application-keys)
+    (store/get-kk-application-payments application-keys)
     []))
 
-(defn get-raw-payment-events
-  [state-ids]
-  (store/get-kk-application-payment-events state-ids))
+(defn get-raw-payment-history
+  [application-keys]
+  (if (not-empty application-keys)
+    (store/get-kk-application-payments-history application-keys)
+    []))
+
+(defn- build-payment-data
+  [state-data]
+  (merge
+    {:application-key      nil
+     :state                nil
+     :reason               nil
+     :due-date             nil
+     :total-sum            nil
+     :maksut-secret        nil
+     :required-at          nil
+     :notification-sent-at nil
+     :approved-at          nil}
+    state-data))
 
 (defn set-application-fee-required
-  "Sets kk processing fee required for the target term."
-  [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year (:awaiting all-states) virkailija-oid message))
+  "Sets kk processing fee required for the application."
+  [application-key _]
+  (set-payment-state
+    (build-payment-data {:application-key application-key
+                         :state          (:awaiting all-states)
+                         :due-date       (get-due-date)
+                         :total-sum      kk-application-payment-amount
+                         :required-at    "now()"})))
 
-(defn set-application-fee-not-required
-  "Sets kk processing fee required for the target term."
-  [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year (:not-required all-states) virkailija-oid message))
+(defn- set-application-fee-not-required
+  [application-key reason previous-state]
+  (set-payment-state
+    (build-payment-data {:application-key application-key
+                         :state          (:not-required all-states)
+                         :reason         reason
+                         ; Let's not store required timestamp separately if the application is directly approved
+                         :required-at    (:required-at previous-state)
+                         :approved-at    "now()"})))
+
+(defn set-application-fee-not-required-for-eu-citizen
+  "Sets kk processing fee not required for the application due to person being EU citizen."
+  [application-key previous-state]
+  (set-application-fee-not-required application-key (:eu-citizen all-reasons) previous-state))
+
+(defn set-application-fee-not-required-for-exemption
+  "Sets kk processing fee not required for the application due to exemption in application data."
+  [application-key previous-state]
+  (set-application-fee-not-required application-key (:exemption-field all-reasons) previous-state))
 
 (defn set-application-fee-paid
-  "Sets kk processing fee paid for the target term."
-  [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year (:paid all-states) virkailija-oid message))
+  "Sets kk processing fee paid for the application."
+  [application-key previous-state]
+  (set-payment-state
+    (build-payment-data {:application-key       application-key
+                         :approved-at          "now()"
+                         :state                (:paid all-states)
+                         :reason               (:reason previous-state)
+                         :due-date             (:due-date previous-state)
+                         :total-sum            (:total-sum previous-state)
+                         :maksut-secret        (:maksut-secret previous-state)
+                         :required-at          (:required-at previous-state)
+                         :notification-sent-at (:notification-sent-at previous-state)})))
 
-(defn set-application-fee-ok-via-linked-oid
-  "Sets kk processing fee paid or exempt via another alias for the target term."
-  [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year (:ok-via-linked-oid all-states) virkailija-oid message))
+(defn set-application-fee-ok-by-proxy
+  "Sets kk processing fee paid via another application."
+  [application-key previous-state]
+  (set-payment-state
+    (build-payment-data {:application-key application-key
+                         :state          (:ok-by-proxy all-states)
+                         :required-at    (or (:required-at previous-state) "now()")
+                         :approved-at    "now()"})))
 
 (defn set-application-fee-overdue
   "Sets kk processing fee overdue for the target term."
-  [person-oid term year virkailija-oid message]
-  (set-payment-state person-oid term year (:overdue all-states) virkailija-oid message))
+  [application-key previous-state]
+  (set-payment-state
+    (build-payment-data {:application-key       application-key
+                         :state                (:overdue all-states)
+                         :due-date             (:due-date previous-state)
+                         :total-sum            (:total-sum previous-state)
+                         :maksut-secret        (:maksut-secret previous-state)
+                         :required-at          (:required-at previous-state)
+                         :notification-sent-at (:notification-sent-at previous-state)})))
 
 (defn- haku-valid-for-kk-payments?
   "Application payments are only collected for admissions starting on or after 1.1.2025
@@ -131,30 +206,13 @@
                      (first))
         eu-country-codes (set (map :value (:within eu-area)))]
     (if (> (count eu-country-codes) 0)
-      ; TODO: should this actually be (:nationality person) as opposed to test data? Check!
       (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person))
       (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
-
-(defn- resolve-actual-payment-state
-  "Resolves a single payment state from the states of possibly multiple aliases for single person.
-   Chooses on the benefit of the applicant in case of multiple conflicting states."
-  [states]
-  (when (not-empty states)
-    (let [state-set (->> states
-                         (map :state)
-                         set)
-          get-state-data (fn [field-name] (first
-                                            (filter #(= field-name (:state %)) states)))]
-      (cond
-        (= 1 (count state-set))                          (first states)
-        (contains? state-set (:paid all-states))         (get-state-data (:paid all-states))
-        (contains? state-set (:not-required all-states)) (get-state-data (:not-required all-states))
-        (contains? state-set (:awaiting all-states))     (get-state-data (:awaiting all-states))
-        :else                                            (get-state-data (:overdue all-states))))))
 
 (defn- exemption-in-application?
   [application]
   (let [answers (util/application-answers-by-key application)]
+    ; TODO: should we allow not answering the question at all in the end? Eg. for Finnish nationality.
     (if-let [exemption-answer (exemption-form-field-name answers)]
       (contains? exemption-field-ok-values (:value exemption-answer))
       (throw (ex-info "Missing exemption answer" {:application application})))))
@@ -182,138 +240,106 @@
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 
-(defn update-payment-status
-  "- Infers and sets new payment status for person according to their personal data, possible OID linkings
-     and applications for term.
+(defn- get-valid-haku-oids
+  [haku-cache tarjonta-service term year]
+  (->> (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
+       (filter (partial haku-valid-for-kk-payments? tarjonta-service))
+       (map :oid)))
+
+(defn- set-payment
+  [new-state state-change-fn {:keys [application payment]}]
+  (let [current-state   (:state payment)
+        application-key (:key application)]
+    (cond
+      (= current-state new-state)
+      (log/info "Application" application-key "already has kk payment status" current-state ", not changing state")
+
+      (= current-state (:paid all-states))
+      (log/info "Application" application-key "already has kk payment paid, not changing state")
+
+      ; N.B. even if you pay an another application, if a previous application is overdue, the state must not change.
+      (= current-state (:overdue all-states))
+      (log/info "Application" application-key "is already overdue, not changing state")
+
+      :else
+      (state-change-fn (:key application) payment))))
+
+(defn- update-payments-for-applications
+  [applications-payments is-eu-citizen? has-exemption? has-existing-payment?]
+  (let [map-payments (fn [new-state state-change-fn]
+                       (doall
+                         (remove nil? (map #(set-payment new-state state-change-fn %) applications-payments))))]
+    (cond
+      is-eu-citizen?        (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
+      has-exemption?        (map-payments (:not-required all-states) set-application-fee-not-required-for-exemption)
+      has-existing-payment? (map-payments (:ok-by-proxy all-states) set-application-fee-ok-by-proxy)
+      :else                 (map-payments (:awaiting all-states) set-application-fee-required))))
+
+(defn update-payments-for-person-term-and-year
+  "- Determines and sets new payment status for all person's applications on given starting term
+     according to their personal data, possible OID linkings and their applications.
    - Does not poll payments, they should be updated separately.
-   - Does not send notification e-mails, so please use via eg. status updater job.
-   - Returns a map with state id and old + new state names."
-  [person-service tarjonta-service koodisto-cache haku-cache person-oid term year virkailija-oid]
-  (let [hakus           (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
-        valid-hakus     (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
-        valid-haku-oids (map :oid valid-hakus)
+   - Does not send notification e-mails.
+   Returns a vector of changed states of all applications for possible further processing."
+  [person-service tarjonta-service koodisto-cache haku-cache person-oid term year]
+  (let [valid-haku-oids (get-valid-haku-oids haku-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
         person          (person-service/get-person person-service master-oid)
         aliases         (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
-        original-state  (first (get-raw-payment-states [person-oid] term year))
-        resolved-state  (resolve-actual-payment-state (get-raw-payment-states aliases term year))
         applications    (when (and (not-empty aliases) (not-empty valid-haku-oids))
                           (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
-      (cond
-        ; No need to do updates if there are no applications or application fee already paid
-        (= 0 (count applications))
-        {:id (:id original-state)
-         :old-state (:state original-state)
-         :new-state (:state original-state)
-         :person person}
-
-        (= (:state original-state) (:paid all-states))
-        {:id (:id original-state)
-         :old-state (:state original-state)
-         :new-state (:state original-state)
-         :person person}
-
-        ; If a payment was made via linked oid, use separate state that can change if linking changes
-        (= (:state resolved-state) (:paid all-states))
-        (if (= (:state original-state) (:state resolved-state))
-          {:id (:id original-state)
-           :old-state (:state original-state)
-           :new-state (:state original-state)
-           :person person}
-          {:id (set-application-fee-ok-via-linked-oid person-oid term year virkailija-oid
-                                                      (str "Linked OID: " (:person-oid resolved-state)))
-           :old-state (:state original-state)
-           :new-state (:ok-via-linked-oid all-states)
-           :person person})
-
-        ; EU citizens get a free pass
-        (is-eu-citizen? koodisto-cache person)
-        {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
-         :old-state (:state original-state)
-         :new-state (:not-required all-states)
-         :person person}
-
-        ; If any of the linked OIDs has an exemption in application, all of them are naturally exempt.
-        (some true? (map exemption-in-application? applications))
-        {:id (set-application-fee-not-required person-oid term year virkailija-oid nil)
-         :old-state (:state original-state)
-         :new-state (:not-required all-states)
-         :person person}
-
-        :else
-        {:id (set-application-fee-required person-oid term year virkailija-oid nil)
-         :old-state (:state original-state)
-         :new-state (:awaiting all-states)
-         :person person})))
-
-(defn get-kk-payment-states
-  "Returns higher education application fee related info to application list belonging to same haku."
-  ([applications tarjonta person-oid-key]
-   (let [person-oids        (keep person-oid-key applications)
-         studies-start-term (:alkamiskausi tarjonta)
-         studies-start-year (:alkamisvuosi tarjonta)
-         payment-states     (when (and person-oids studies-start-term studies-start-year)
-                              (get-raw-payment-states
-                                person-oids studies-start-term studies-start-year))]
-     (into {}
-           (map #(vector (:person-oid %) %) payment-states))))
-  ([applications tarjonta]
-   (get-kk-payment-states applications tarjonta :person-oid)))
+    (when (get-in config [:kk-application-payments :enabled?])
+      (if (= 0 (count applications))
+        []
+        (let [payment-by-application (into {}
+                                           (map (fn [payment] [(:application-key payment) payment]))
+                                           (get-raw-payments (map :key applications)))
+              applications-payments  (map (fn [application]
+                                            {:application application
+                                             :payment     (get payment-by-application (:key application))})
+                                          applications)
+              payment-state-set      (->> (vals payment-by-application) (map :state) set)
+              is-eu-citizen?         (is-eu-citizen? koodisto-cache person)
+              has-exemption?         (some true? (map exemption-in-application? applications))
+              has-existing-payment?  (contains? payment-state-set (:paid all-states))]
+          {:person            person
+           :modified-payments (update-payments-for-applications
+                                applications-payments is-eu-citizen? has-exemption? has-existing-payment?)})))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
   If return-payment-events is truthy, also returns specific processing events."
-  [application tarjonta-data return-payment-events]
-  (if-let [person-oid (:person-oid application)]
-    (let [payment-status (when (and application tarjonta-data)
-                           (get (get-kk-payment-states [application] (:tarjonta tarjonta-data)) person-oid))
-          payment-events (when (and payment-status return-payment-events)
-                           (get-raw-payment-events (:id payment-status)))]
-      (cond-> {}
-              payment-status (assoc :status
-                                    (select-keys payment-status [:person-oid :start-term :start-year :state :created-time]))
-              payment-events (assoc :events
-                                    (map #(select-keys % [:new-state :event-type :virkailija-oid :message :created-time])
-                                         payment-events))))
-    {}))
+  [application return-payment-events]
+  (let [key-filter [:application-key :state :reason :due-date :total-sum
+                    :created-at :modified-at :required-at :reminder-sent-at :approved-at]
+        payment (first (get-raw-payments [(:key application)]))
+        history (when return-payment-events (get-raw-payment-history [(:key application)]))]
+    (cond-> {}
+            payment (assoc :payment
+                           (select-keys payment key-filter))
+            history (assoc :history
+                           (map #(select-keys % key-filter)
+                                history)))))
 
-(defn- filter-kk-haku-applications-by-state
-  [applications haku person-oid-key filter-states]
-  (let [payment-states-by-person-oid (get-kk-payment-states applications haku person-oid-key)]
-    (filter (fn [application]
-              (let [kk-payment-state (get-in payment-states-by-person-oid
-                                             [(person-oid-key application) :state])]
-                (contains? filter-states kk-payment-state)))
-            applications)))
+(defn get-kk-payment-states
+  "Returns higher education application fee related info to application list."
+  ([applications application-key-field]
+   (let [application-keys   (map application-key-field applications)
+         payments           (get-raw-payments application-keys)]
+     (into {}
+           (map #(vector (:application-key %) %) payments))))
+  ([applications]
+   (get-kk-payment-states applications :key)))
 
-; TODO: requires-higher-education-application-fee filtering?
-(defn filter-application-list-by-kk-payment-state
-  "Filters an application list by kk payment state. Add nil to states-to-keep if you want to also include applications
-   with no payment data. Applications should include haku oid and person oid in the fields with
-   respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key states-to-keep]
-  (let [applications-with-person-oid-and-haku (filter
-                                                #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                                applications)
-        remaining-applications (remove
-                                 #(and (some? (person-oid-key %)) (some? (haku-oid-key %)))
-                                 applications)
-        applications-by-haku (group-by haku-oid-key applications-with-person-oid-and-haku)
-        haku-oids (keys applications-by-haku)
-        hakus-by-oid (into {}
-                           (map #(vector % (tarjonta/get-haku tarjonta-service %)) haku-oids))]
-    (->> haku-oids
-         (map #(filter-kk-haku-applications-by-state
-                 (get applications-by-haku %) (get hakus-by-oid %)
-                 person-oid-key states-to-keep))
-         flatten
-         (concat remaining-applications))))
-
-(defn filter-out-unpaid-kk-applications
-  "Filters out applications by persons that have not yet paid a mandatory fee for the application haku's starting period.
-   Applications should include haku oid and person oid in the fields with respective parametrized names."
-  [tarjonta-service applications person-oid-key haku-oid-key]
-  (filter-application-list-by-kk-payment-state tarjonta-service applications
-                                               person-oid-key haku-oid-key
-                                               ok-states))
+(defn remove-kk-applications-with-unapproved-payments
+  "Filters out applications that have payment info but yet been approved (paid, exempted) for their respective admissions.
+   Returns applications that either have no payment info or have been approved."
+  [applications application-key-field]
+  (let [payments (get-kk-payment-states applications application-key-field)
+        approved-filter-fn (fn [application]
+                             (let [payment (get payments (application-key-field application))]
+                               (or
+                                 (nil? payment)
+                                 (some? (:approved-at payment)))))]
+    (filter approved-filter-fn applications)))

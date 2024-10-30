@@ -15,7 +15,8 @@
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]
-            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]))
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
+            [ataru.applications.application-store :as application-store]))
 
 (def test-person-oid
   (:person-oid application-fixtures/application-without-hakemusmaksu-exemption))
@@ -31,10 +32,20 @@
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
 
+(def test-maksut-secret "1234ABCD5678EFGH")
+
 (defrecord MockMaksutService []
   MaksutServiceProtocol
 
-  (create-kk-application-payment-lasku [_ _] {})
+  (create-kk-application-payment-lasku [_ lasku] {:order_id (payment/maksut-reference->maksut-order-id (:reference lasku))
+                                                  :first_name "Test"
+                                                  :last_name "Person"
+                                                  :amount (:amount lasku)
+                                                  :status :active
+                                                  :due_date ""
+                                                  :origin (:origin lasku)
+                                                  :reference (:reference lasku)
+                                                  :secret test-maksut-secret})
   (create-kasittely-lasku [_ _] {})
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ _] {})
@@ -67,8 +78,8 @@
 (defn- clear! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/delete! conn :applications [])
-                            (jdbc/delete! conn :kk_application_payment_events [])
-                            (jdbc/delete! conn :kk_application_payment_states [])))
+                            (jdbc/delete! conn :kk_application_payments [])
+                            (jdbc/delete! conn :kk_application_payments_history [])))
 
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
@@ -84,27 +95,28 @@
                     (spec)))
 
           (it "should not fail when nothing to update"
-              (should-not-throw (updater-job/update-kk-payment-status-scheduler-handler {} runner)))
+              (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
                 (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                               application-fixtures/application-without-hakemusmaksu-exemption
                                               nil)
-                (updater-job/update-kk-payment-status-scheduler-handler {} runner)
+                (updater-job/update-kk-payment-status-for-all-handler {} runner)
                 (should-have-invoked :update-statuses-for-haku
                                      {:times 1
                                       :with [#(= (:oid %) "payment-info-test-kk-haku") :*]})))
 
           (it "should update payment status for oid"
-              (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                            application-fixtures/application-without-hakemusmaksu-exemption
-                                            nil)
-              (updater-job/update-kk-payment-status-handler
-                {:person_oid test-person-oid :term test-term :year test-year}
-                runner)
-              (let [state-data (first (payment/get-raw-payment-states [test-person-oid] test-term test-year))]
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))]
                 (should=
-                  {:person-oid "1.2.3.4.5.303" :start-term "kausi_s" :start-year 2025
-                   :state (:awaiting payment/all-states)}
-                  (dissoc state-data :id :created-time :modified-time)))))
+                  {:application-key application-key :state (:awaiting payment/all-states)
+                   :maksut-secret test-maksut-secret}
+                  (select-keys payment [:application-key :state :maksut-secret])))))

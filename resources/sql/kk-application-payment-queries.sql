@@ -1,43 +1,89 @@
--- name: yesql-get-kk-application-payment-states-for-person-oids
+-- name: yesql-get-kk-application-payments-for-application-keys
 SELECT
   id,
-  person_oid,
-  start_term,
-  start_year,
+  application_key,
   state,
-  created_time,
-  modified_time
-FROM kk_application_payment_states
-WHERE person_oid IN (:person_oids) AND start_term = :start_term AND start_year = :start_year;
+  reason,
+  due_date,
+  total_sum,
+  maksut_secret,
+  required_at,
+  reminder_sent_at,
+  approved_at,
+  created_at,
+  modified_at
+FROM kk_application_payments
+WHERE application_key IN (:application_keys);
 
--- name: yesql-upsert-kk-application-payment-state<!
-INSERT INTO kk_application_payment_states (person_oid, start_term, start_year, state, created_time, modified_time)
-VALUES (:person_oid, :start_term, :start_year, :state, now(), now())
-ON CONFLICT (person_oid, start_term, start_year)
-  DO UPDATE SET state = :state, modified_time = now();
-
--- name: yesql-add-kk-application-payment-event<!
-INSERT INTO kk_application_payment_events (kk_application_payment_state_id, new_state, event_type, virkailija_oid, message)
-VALUES (:kk_application_payment_state_id, :new_state, :event_type, :virkailija_oid, :message);
-
--- name: yesql-get-kk-application-payment-events
+-- name: yesql-get-awaiting-kk-application-payments
 SELECT
   id,
-  kk_application_payment_state_id,
-  new_state,
-  event_type,
-  virkailija_oid,
-  message,
-  created_time
-FROM kk_application_payment_events
-WHERE kk_application_payment_state_id IN (:kk_application_payment_state_ids);
+  application_key,
+  state,
+  reason,
+  due_date,
+  total_sum,
+  maksut_secret,
+  required_at,
+  reminder_sent_at,
+  approved_at,
+  created_at,
+  modified_at
+FROM kk_application_payments
+WHERE state = 'awaiting';
 
--- name: yesql-get-open-kk-application-payment-states
+-- name: yesql-upsert-kk-application-payment<!
+INSERT INTO kk_application_payments (
+  application_key,
+  state,
+  reason,
+  due_date,
+  total_sum,
+  maksut_secret,
+  required_at,
+  reminder_sent_at,
+  approved_at
+)
+VALUES (
+  :application_key,
+  :state,
+  :reason,
+  :due_date::date,
+  :total_sum,
+  :maksut_secret,
+  :required_at::timestamptz,
+  :reminder_sent_at::timestamptz,
+  :approved_at::timestamptz
+)
+ON CONFLICT (application_key)
+  DO UPDATE SET
+  state = :state,
+  reason = :reason,
+  due_date = :due_date::date,
+  total_sum = :total_sum,
+  maksut_secret = :maksut_secret,
+  required_at = :required_at::timestamptz,
+  reminder_sent_at = :reminder_sent_at::timestamptz,
+  approved_at = :approved_at::timestamptz;
+
+-- name: yesql-get-kk-application-payments-history-for-application-keys
 SELECT
   id,
-  person_oid,
-  start_term,
-  start_year,
-  state
-FROM kk_application_payment_states
-WHERE state = 'awaiting-payment';
+  application_key,
+  state,
+  reason,
+  due_date,
+  total_sum,
+  maksut_secret,
+  required_at,
+  reminder_sent_at,
+  approved_at,
+  created_at,
+  modified_at
+FROM kk_application_payments_history
+WHERE application_key IN (:application_keys);
+
+-- name: yesql-update-maksut-secret!
+UPDATE kk_application_payments
+SET maksut_secret = :maksut_secret
+WHERE application_key = :application_key;

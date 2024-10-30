@@ -1,7 +1,6 @@
 (ns ataru.kk-application-payment.kk-application-payment-maksut-poller-job-spec
-  (:require [speclj.core :refer [it describe tags should= after before]]
-            [clojure.java.jdbc :as jdbc]
-            [ataru.db.db :as db]
+  (:require [ataru.fixtures.db.unit-test-db :as unit-test-db]
+            [speclj.core :refer [it describe tags should= after before]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as poller-job]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
@@ -9,15 +8,10 @@
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]))
 
-(def ^:private comparison-state-ids (atom nil))
-(def ^:private latest-state-id (atom nil))
-
-(defn reference-to-order-id
-  [reference]
-  (let [[oid term year] (str/split reference #"[-]")
-        aid (last (str/split oid #"[.]"))
-        term (str/upper-case (last (str/split term #"[_]")))]
-    (str "KKHA" aid term year)))
+(def key-with-paid-status    "1.2.246.562.8.00000000000022225100")
+(def key-with-overdue-status "1.2.246.562.8.00000000000022225200")
+(def key-with-active-status  "1.2.246.562.8.00000000000022225300")
+(def key-with-no-status      "1.2.246.562.8.00000000000000005400")
 
 (defrecord FakeJobRunner []
   component/Lifecycle
@@ -32,13 +26,13 @@
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ keys] (->> keys
                                      (map (fn [key]
-                                            (when (str/includes? key "2025")
-                                              {:order_id (reference-to-order-id key)
+                                            (when (str/includes? key "2222")
+                                              {:order_id (payment/maksut-reference->maksut-order-id key)
                                                :reference key
                                                :status (cond
-                                                         (str/includes? key "123456") :paid
-                                                         (str/includes? key "654321") :overdue
-                                                         :else                        :active)
+                                                         (str/includes? key "5100") :paid
+                                                         (str/includes? key "5200") :overdue
+                                                         :else                      :active)
                                                :origin "kkhakemusmaksu"})))
                                      (remove nil?)))
   (list-laskut-by-application-key [_ _] []))
@@ -48,50 +42,33 @@
 (def runner
   (map->FakeJobRunner {:maksut-service mock-maksut-service}))
 
-(defn create-awaiting-status [state-data]
-  (let [[oid term year] state-data
-        id (payment/set-application-fee-required oid term year nil nil)
-        reference (str/join "-" [oid term year])]
-    (reset! latest-state-id id)
-    reference))
+(defn create-awaiting-status [application-key]
+  (payment/set-application-fee-required application-key nil)
+  application-key)
 
-(defn create-not-required-status [state-data]
-  (let [[oid term year] state-data
-        id (payment/set-application-fee-not-required oid term year nil nil)
-        reference (str/join "-" [oid term year])]
-    (reset! latest-state-id id)
-    reference))
+(defn create-not-required-status [application-key]
+  (payment/set-application-fee-not-required-for-eu-citizen application-key nil)
+  application-key)
 
-(defn- clean! [id]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (jdbc/delete! conn :kk_application_payment_events
-                                          ["kk_application_payment_state_id = ?" id])
-                            (jdbc/delete! conn :kk_application_payment_states
-                                          ["id = ?" id])))
+(defn check-state-and-history
+  [application-key state-name payment-count history-count]
+  (let [payments (payment/get-raw-payments [application-key])
+        payment-data (first payments)
+        history (payment/get-raw-payment-history [application-key])]
+    (should= payment-count (count payments))
+    (should= history-count (count history))
+    (should= state-name (:state payment-data))))
 
-(def state-with-paid-status    ["1.2.246.562.24.123456" "kausi_s" 2025])
-(def state-with-overdue-status ["1.2.246.562.24.654321" "kausi_s" 2025])
-(def state-with-active-status  ["1.2.246.562.24.111111" "kausi_s" 2025])
-(def state-with-no-status      ["1.2.246.562.24.111222" "kausi_k" 2026])
-
-(def comparison-states
+(def comparison-payments
   "Some states that should hold after each and every job run."
-  [["1.2.246.562.24.333333"  "kausi_s" 2025 (:not-required payment/all-states) 1 1]
-   ["1.2.246.562.24.444444"  "kausi_s" 2025 (:overdue payment/all-states) 1 1]
-   ["1.2.246.562.24.555555"  "kausi_s" 2025 (:paid payment/all-states) 1 1]
-   ["1.2.246.562.24.5123456" "kausi_s" 2025 (:paid payment/all-states) 1 2]])
+  [["1.2.246.562.8.00000000000022225500" (:not-required payment/all-states) 1 0]
+   ["1.2.246.562.8.00000000000022225600" (:overdue payment/all-states) 1 0]
+   ["1.2.246.562.8.00000000000022225700" (:paid payment/all-states) 1 0]
+   ["1.2.246.562.8.00000000001122225100" (:paid payment/all-states) 1 1]])
 
-(defn check-state-and-event [oid term year state-name state-count event-count]
-  (let [states (payment/get-raw-payment-states [oid] term year)
-        state-data (first states)
-        events (payment/get-raw-payment-events [(:id state-data)])]
-    (should= state-count (count states))
-    (should= event-count (count events))
-    (should= state-name (:state state-data))))
-
-(defn check-comparison-states []
-  (doseq [[oid term year state-name state-count event-count] comparison-states]
-    (check-state-and-event oid term year state-name state-count event-count)))
+(defn check-comparison-payments []
+  (doseq [[application-key state-name payment-count history-count] comparison-payments]
+    (check-state-and-history application-key state-name payment-count history-count)))
 
 (describe "kk-application-payment-maksut-poller-job"
           (tags :unit)
@@ -99,43 +76,40 @@
           ; Add some other states that are checked during every test
           (before
             ; The first three ones should always stay as is
-            (let [not-required-id (payment/set-application-fee-not-required "1.2.246.562.24.333333" "kausi_s" 2025 nil nil)
-                  overdue-id (payment/set-application-fee-overdue "1.2.246.562.24.444444" "kausi_s" 2025 nil nil)
-                  paid-id (payment/set-application-fee-paid "1.2.246.562.24.555555" "kausi_s" 2025 nil nil)
-                  ; The fourth one should change to paid after each job run because it's in awaiting state
-                  ; and mock maksut returns paid for the oid pattern.
-                  should-be-paid-id (payment/set-application-fee-required "1.2.246.562.24.5123456" "kausi_s" 2025 nil nil)]
-              (reset! comparison-state-ids [not-required-id overdue-id paid-id should-be-paid-id])))
+            (payment/set-application-fee-not-required-for-eu-citizen
+              "1.2.246.562.8.00000000000022225500" nil)
+            (payment/set-application-fee-overdue
+              "1.2.246.562.8.00000000000022225600" nil)
+            (payment/set-application-fee-paid
+              "1.2.246.562.8.00000000000022225700" nil)
+            ; The fourth one should change to paid after each job run because it's in awaiting state
+            ; and mock maksut returns paid for the oid pattern.
+            (payment/set-application-fee-required
+              "1.2.246.562.8.00000000001122225100" nil))
 
           (after
-            (doseq [id @comparison-state-ids]
-              (clean! id))
-            (clean! @latest-state-id))
+            (unit-test-db/nuke-kk-payment-data))
 
           (it "does not change status if payment not in awaiting state"
-              (let [[oid term year] state-with-no-status
-                    _ (create-not-required-status [oid term year])
+              (let [_ (create-not-required-status key-with-no-status)
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year (:not-required payment/all-states) 1 1)
-                (check-comparison-states)))
+                (check-state-and-history key-with-no-status (:not-required payment/all-states) 1 0)
+                (check-comparison-payments)))
 
           (it "does not change status if yet active payment returned from maksut"
-              (let [[oid term year] state-with-active-status
-                    _ (create-awaiting-status [oid term year])
+              (let [_ (create-awaiting-status key-with-active-status)
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year (:awaiting payment/all-states) 1 1)
-                (check-comparison-states)))
+                (check-state-and-history key-with-active-status (:awaiting payment/all-states) 1 0)
+                (check-comparison-payments)))
 
-          (it "changes the status of paid payment as paid"
-              (let [[oid term year] state-with-paid-status
-                    _ (create-awaiting-status [oid term year])
+          (it "changes the status of newly paid awaiting payment as paid"
+              (let [_ (create-awaiting-status key-with-paid-status)
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year (:paid payment/all-states) 1 2)
-                (check-comparison-states)))
+                (check-state-and-history key-with-paid-status (:paid payment/all-states) 1 1)
+                (check-comparison-payments)))
 
-          (it "changes the status of overdue payment as overdue"
-              (let [[oid term year] state-with-overdue-status
-                    _ (create-awaiting-status [oid term year])
+          (it "changes the status of newly overdue awaiting payment as overdue"
+              (let [_ (create-awaiting-status key-with-overdue-status)
                     _ (poller-job/poll-kk-payments-handler {} runner)]
-                (check-state-and-event oid term year (:overdue payment/all-states) 1 2)
-                (check-comparison-states))))
+                (check-state-and-history key-with-overdue-status (:overdue payment/all-states) 1 1)
+                (check-comparison-payments))))
