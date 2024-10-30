@@ -69,9 +69,9 @@
          ]
         [:div.editor-form__single-choice-button-container
          {:role "radiogroup"}
-         [:label.editor-form__checkbox-label (get-in koski-tutkinnot-texts [:koski-update-policy-label virkailija-lang])]
-         [:div
-          [:input.editor-form__radio
+         [:label.editor-form__single-choice-button-container.label (get-in koski-tutkinnot-texts [:koski-update-policy-label virkailija-lang])]
+         [:div.editor-form__single-choice-button-container.choice
+          [:input.editor-form__plain-radio
            {:type      "radio"
             :value     false
             :id        koski-update-policy-only-once-id
@@ -82,11 +82,11 @@
                          (.preventDefault event)
                          (dispatch
                            [:editor/set-property-value :tutkinto-properties :koski-update-allways false]))}]
-          [:label
+          [:label.editor-form__single-choice-button-container.choice.label
            {:for koski-update-policy-only-once-id}
            (get-in koski-tutkinnot-texts [:koski-update-option-only-once-label virkailija-lang])]]
-         [:div
-          [:input.editor-form__radio
+         [:div.editor-form__single-choice-button-container.choice
+          [:input.editor-form__plain-radio
            {:type      "radio"
             :value     true
             :id        koski-update-policy-allways-id
@@ -97,7 +97,7 @@
                          (.preventDefault event)
                          (dispatch
                            [:editor/set-property-value :tutkinto-properties :koski-update-allways true]))}]
-          [:label
+          [:label.editor-form__single-choice-button-container.choice.label
            {:for koski-update-policy-allways-id}
            (get-in koski-tutkinnot-texts [:koski-update-option-allways-label virkailija-lang])]]]]
        [:div.editor-form__wrapper-element-well
