@@ -1091,7 +1091,7 @@
         :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [reference locale message]} input
+        (let [{:keys [reference locale message origin metadata]} input
               lasku-input (-> input
                               (dissoc :message)
                               (dissoc :locale))
@@ -1104,9 +1104,14 @@
                             application-service
                             session
                             reference
-                            message
-                            payment-url
-                            "decision-fee-outstanding")]
+                            "decision-fee-outstanding"
+                            {:origin origin
+                             :message message
+                             :form-name (get-in metadata [:form-name (keyword lang)])
+                             :payment-url payment-url
+                             :amount (:amount invoice)
+                             :due-date (:due_date invoice)
+                             :decision-info-email "recognition@oph.fi"})]
             (do
               (log/warn "Review result" result)
               (response/ok result))

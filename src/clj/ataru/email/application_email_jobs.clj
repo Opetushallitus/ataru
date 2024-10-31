@@ -61,14 +61,14 @@
                   application-id)]
       (start-email-job job-runner email))))
 
-(defn start-tutu-decision-email-job
-  [job-runner application-id message payment-url]
-  (log/info "start-tutu-decision-email-job" application-id payment-url)
+(defn start-decision-email-job
+  [job-runner email-params]
+  (log/info "start-decision-email-job" (:application-id email-params) (:payment-url email-params))
   (dorun
-   (for [email (application-email/create-tutu-decision-email application-id message payment-url)]
-     (do
-       (log/info "Before email job" email)
-       (start-email-job job-runner email)))))
+    (for [email (application-email/create-decision-email email-params)]
+      (do
+        (log/info "Before email job" email)
+        (start-email-job job-runner email)))))
 
 (defn store-email-templates
   [form-key session templates form-allows-ht?]
