@@ -2651,12 +2651,12 @@
    :decision-fee-overdue         {:fi "Päätös maksamatta"
                                   :sv "Päätös maksamatta (sv) TODO"
                                   :en "Päätös maksamatta (en) TODO"}
-   :decision-fee-invoiced        {:fi "Päätös laskutuksessa"
-                                  :sv "Päätös laskutuksessa (sv) TODO"
-                                  :en "Päätös laskutuksessa (en) TODO"}
    :decision-fee-paid            {:fi "Päätös maksettu"
                                   :sv "Päätös maksettu (sv) TODO"
                                   :en "Päätös maksettu (en) TODO"}
+   :invoiced                     {:fi "Laskutuksessa"
+                                  :sv "Laskutuksessa (sv) TODO"
+                                  :en "Laskutuksessa (en) TODO"}
    :multiple-values              {:fi "Monta arvoa"
                                   :sv "Multipla värden"
                                   :en "Multiple values"}

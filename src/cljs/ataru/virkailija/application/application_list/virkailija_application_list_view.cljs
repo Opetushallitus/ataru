@@ -788,7 +788,7 @@
                  [:div.application-handling__filter-hakukohde-name
                   @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
                (->> (cond
-                      @tutu-form? review-states/hakukohde-review-types
+                      @tutu-form? review-states/hakukohde-review-types-tutu
                       @astu-form? review-states/hakukohde-review-types-astu
                       :else review-states/hakukohde-review-types-normal)
                     (filter (fn [[kw _ _]]
@@ -899,7 +899,7 @@
           :states
           {:processing-state-filter
            (cond
-             tutu-form? review-states/application-hakukohde-processing-states
+             tutu-form? review-states/application-hakukohde-processing-states-tutu
              astu-form? review-states/application-hakukohde-processing-states-astu
              :else review-states/application-hakukohde-processing-states-normal)}
           :state-counts-subs
