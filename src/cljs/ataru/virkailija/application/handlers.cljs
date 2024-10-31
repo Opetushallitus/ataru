@@ -360,7 +360,7 @@
          tutu-form?      (tutu-form? form)
          astu-form?      (astu-form? form)
          processing-states (cond
-                             tutu-form? review-states/application-hakukohde-processing-states
+                             tutu-form? review-states/application-hakukohde-processing-states-tutu
                              astu-form? review-states/application-hakukohde-processing-states-astu
                              :else      review-states/application-hakukohde-processing-states-normal)]
      (-> db
