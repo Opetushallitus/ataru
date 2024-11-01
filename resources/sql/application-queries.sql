@@ -872,11 +872,11 @@ ORDER BY a.key
 LIMIT 1000;
 
 --name: yesql-suoritusrekisteri-person-info
-SELECT
+SELECT DISTINCT ON(a.key)
     a.key,
     a.person_oid,
     a.ssn
-FROM latest_applications AS a
+FROM applications AS a
          JOIN application_reviews AS ar
               ON ar.application_key = a.key
 WHERE a.person_oid IS NOT NULL AND
@@ -888,7 +888,7 @@ WHERE a.person_oid IS NOT NULL AND
         WHEN :offset::text IS NULL THEN true
         ELSE a.key > :offset
         END
-ORDER BY a.key
+ORDER BY a.key, a.id desc
 LIMIT 200000;
 
 --name: yesql-get-applications-by-created-time
