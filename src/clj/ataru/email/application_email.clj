@@ -258,7 +258,8 @@
                                           :content-ending             content-ending
                                           :attachments-without-answer attachments-without-answer
                                           :kouta-attachments-by-type  attachments-info-from-kouta
-                                          :signature                  signature}
+                                          :signature                  signature
+                                          :no-hakuaika-mentions       (or (email-util/tutu-form? form) (email-util/astu-form? form))}
          applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
          render-file-fn                  (fn [template-params]
