@@ -76,7 +76,6 @@
 
 (defn has-payment-module? [form]
   (->> (:content form)
-       :children
        (map :id)
        (some #(= kk-application-payment-wrapper-key %))
        boolean))

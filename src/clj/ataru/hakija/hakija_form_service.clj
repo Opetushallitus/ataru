@@ -251,10 +251,10 @@
 
 (defn- add-payment-module-to-form
   [form]
-  (let [sections (-> form :content :children)
+  (let [sections (:content form)
         payment-section (kk-application-payment-module)
         updated-content (concat (take-nth 2 sections) [payment-section] (drop 2 sections))
-        updated-form (assoc-in form [:content :children]  updated-content)]
+        updated-form (assoc form :content updated-content)]
     (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! form {:user-agent "adding-payment-module"} @(atom nil))
     updated-form))

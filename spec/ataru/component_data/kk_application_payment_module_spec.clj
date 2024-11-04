@@ -1,11 +1,10 @@
 (ns ataru.component-data.kk-application-payment-module-spec
   (:require [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.util :as util]
-            [speclj.core :refer :all]))
-
+            [speclj.core :refer [describe tags it should-contain]]))
 
 (describe "kk-application-payment-module"
-          (tags :unit :attachments)
+          (tags :unit :attachments :payment)
 
           (it "should contain all the specified ids"
               (let [keys-generated (->> (payment-module/kk-application-payment-module)
