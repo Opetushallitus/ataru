@@ -112,7 +112,7 @@
         <td style="padding-left: 20px; padding-top: 20px;">
           Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
                          href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a>.
-          Voit tehdä muutoksia hakemukseesi{% if not no-hakuaika-mentions %} hakuaikana. Oma Opintopolku -palvelussa voit
+          {% if not no-hakuaika-mentions %}Voit tehdä muutoksia hakemukseesi hakuaikana. Oma Opintopolku -palvelussa voit
           lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan{% endif %}.
         </td>
       </tr>
