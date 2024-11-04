@@ -97,8 +97,7 @@
                                                                  koodisto-cache
                                                                  nil
                                                                  false
-                                                                 {}
-                                                                 false))
+                                                                 {}))
         validation-result             (when form (validator/valid-application?
                                                   koodisto-cache
                                                   false ; TODO: has-applied OK?
