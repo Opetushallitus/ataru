@@ -83,9 +83,9 @@
 (defn- none-option [metadata]
   {:label (:no-document-option kk-application-payment-module-texts)
    :value (:no-document-option-value kk-application-payment-document-options)
-   :followups (assoc-in (kk-option-attachment metadata "none-passport-attachment" :passport-attachment)
+   :followups [(assoc-in (kk-option-attachment metadata "none-passport-attachment" :passport-attachment)
                         [:params :info-text :label]
-                        (:none-passport-info kk-application-payment-module-texts))})
+                        (:none-passport-info kk-application-payment-module-texts))]})
 
 (defn- document-choice [metadata]
   (assoc (component/single-choice-button metadata)
@@ -107,4 +107,4 @@
   (assoc (component/form-section system-metadata)
     :id kk-application-payment-wrapper-key
     :label (:section-title kk-application-payment-module-texts)
-    :children (document-choice system-metadata)))
+    :children [(document-choice system-metadata)]))
