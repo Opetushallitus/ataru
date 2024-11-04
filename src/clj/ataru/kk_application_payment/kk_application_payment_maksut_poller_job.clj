@@ -14,6 +14,7 @@
   (let [keys-states (into {}
                           (map (fn [state] [(payment/payment->maksut-reference state) state])
                                payments))
+        ; TODO: the amount of open payments may be quite large at a given moment, should we partition the API queries here?
         maksut    (maksut-protocol/list-lasku-statuses maksut-service (keys keys-states))]
     (log/debug "Received statuses for" (count maksut) "kk payment invoices")
     (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
