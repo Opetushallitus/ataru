@@ -2,7 +2,8 @@
   (:require [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]))
 
 (def haku-update-grace-days
   "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
@@ -71,3 +72,10 @@
           (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
       ; Must be tutkintoon johtava
       (boolean (some true? (map #(:tutkintoon-johtava? %) hakukohteet))))))
+
+(defn has-payment-module? [form]
+  (->> (:content form)
+       :children
+       (map :id)
+       (some #(= kk-application-payment-wrapper-key %))
+       boolean))
