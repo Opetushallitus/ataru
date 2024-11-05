@@ -25,17 +25,14 @@
 (def kk-application-payment-amount (get-in config [:kk-application-payments :processing-fee]))
 (def kk-application-payment-due-days 7)
 
-; TODO: when the exact field is defined, make sure this is the final agreed id
-; TODO: -> before the main feature branch gets merged to master
 (def exemption-form-field-name
   "Unique id / field name for form field that indicates exemption from application fee"
-  :vapautus_hakemusmaksusta)
+  :kk-application-payment-option)
 
-; TODO: when the exact field is defined, check that these are correct
-; TODO: -> before the main feature branch gets merged to master
+; TODO: these are the options in current module version, check they're still up to date when going to prod.
 (def exemption-field-ok-values
   "Any of these values should be considered as exemption to payment"
-  #{"0" "1" "2" "3" "4" "5" "6"})
+  #{"0" "1" "2" "3" "4" "5"})
 
 (def all-states
   {:not-required "not-required"
@@ -79,8 +76,7 @@
    :due-days   kk-application-payment-due-days
    :first-name (:first-name person)
    :last-name  (:last-name person)
-   :email      ""                                              ; TODO: need application data as param for this
-   })
+   :email      (:email payment)})
 
 (defn- validate-payment-data
   [{:keys [application-key state]}]
@@ -257,7 +253,11 @@
 (defn- set-payment
   [new-state state-change-fn {:keys [application payment]}]
   (let [current-state   (:state payment)
-        application-key (:key application)]
+        application-key (:key application)
+        email (->> (get-in application [:content :answers])
+                   (filter #(= (:key %) "email"))
+                   first
+                   :value)]
     (cond
       (= current-state new-state)
       (log/info "Application" application-key "already has kk payment status" current-state ", not changing state")
@@ -270,7 +270,8 @@
       (log/info "Application" application-key "is already overdue, not changing state")
 
       :else
-      (state-change-fn (:key application) payment))))
+      (merge {:email email}
+        (state-change-fn (:key application) payment)))))
 
 (defn- update-payments-for-applications
   [applications-payments is-eu-citizen? has-exemption? has-existing-payment?]

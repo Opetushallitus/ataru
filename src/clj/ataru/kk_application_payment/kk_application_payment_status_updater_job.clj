@@ -10,15 +10,15 @@
             [ataru.config.core :refer [config]]))
 
 (defn- create-payment-and-send-email
-  [maksut-service payment person]
+  [maksut-service enriched-payment-data person]
   (let [lang (:language person)
-        invoice-data (payment/generate-invoicing-data payment person)
+        invoice-data (payment/generate-invoicing-data enriched-payment-data person)
         invoice (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
         url (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang)]
     (when invoice
       (log/info "Kk application payment invoice details" invoice)
       (log/info "Store kk application payment maksut secret for reference " (:reference invoice))
-      (payment/set-maksut-secret (:application-key payment) (:secret invoice))
+      (payment/set-maksut-secret (:application-key enriched-payment-data) (:secret invoice))
       (log/info "Generate kk application payment maksut-link for email" url))))
 
 (defn update-kk-payment-status-for-person-handler
