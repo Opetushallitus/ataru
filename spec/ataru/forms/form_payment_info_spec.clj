@@ -4,7 +4,6 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [clj-time.core :as t]
     [speclj.core :refer [describe it should= should-be tags]]
-    [speclj.core :refer [describe it should= should-be-nil tags]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (def expected-payment-info
@@ -37,6 +36,10 @@
 (def test-non-kk-form-with-existing-payment-info
   (merge test-non-kk-form {:properties test-payment-info}))
 
+(defn start-of-day-in-finland [year month day]
+  (t/from-time-zone (t/date-time year month day)
+                    (t/time-zone-for-id "Europe/Helsinki")))
+
 (describe "add-admission-payment-info-for-haku"
           (tags :unit)
 
@@ -46,8 +49,22 @@
                           :oid "payment-info-test-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
                           :hakukohteet ["payment-info-test-kk-hakukohde"]
-                          :hakuajat [{:start (t/date-time 2025 10 14)
-                                      :end   (t/date-time 2025 10 15)}]
+                          :hakuajat [{:start (start-of-day-in-finland 2025 10 14)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= true (:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as true with higher education haku starting on 1.1.2025 Finnish time"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 1"}
+                          :oid "payment-info-test-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-kk-hakukohde"]
+                          :hakuajat [{:start (start-of-day-in-finland 2025 1 1)
+                                      :end   (start-of-day-in-finland 2025 2 15)}]
                           :alkamiskausi "kausi_s#1"
                           :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
@@ -60,8 +77,8 @@
                           :oid "payment-info-test-non-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_11#1"
                           :hakukohteet ["payment-info-test-non-kk-hakukohde"]
-                          :hakuajat [{:start (t/date-time 2025 10 14)
-                                      :end   (t/date-time 2025 10 15)}]
+                          :hakuajat [{:start (start-of-day-in-finland 2025 10 14)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
                           :alkamiskausi "kausi_s#1"
                           :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
@@ -74,8 +91,8 @@
                           :oid "payment-info-test-unknown-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
                           :hakukohteet ["payment-info-test-unknown-hakukohde"]
-                          :hakuajat [{:start (t/date-time 2025 10 14)
-                                      :end   (t/date-time 2025 10 15)}]
+                          :hakuajat [{:start (start-of-day-in-finland 2025 10 14)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
                           :alkamiskausi "kausi_s#1"
                           :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
@@ -88,8 +105,22 @@
                           :oid "payment-info-test-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
                           :hakukohteet ["payment-info-test-kk-hakukohde"]
-                          :hakuajat [{:start (t/date-time 2024 10 14)
-                                      :end   (t/date-time 2025 10 15)}]
+                          :hakuajat [{:start (start-of-day-in-finland 2024 10 14)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
+                          :alkamiskausi "kausi_s#1"
+                          :alkamisvuosi 2025}
+                    haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
+                                             tarjonta-service haku)]
+                (should= false (:admission-payment-required? haku-with-payment-flag))))
+
+          (it "sets payment needed as false with higher education haku starting on 31.12.2024"
+              (let [tarjonta-service (mts/->MockTarjontaKoutaService)
+                    haku {:name { :fi "Testihaku 1"}
+                          :oid "payment-info-test-kk-haku"
+                          :kohdejoukko-uri "haunkohdejoukko_12#1"
+                          :hakukohteet ["payment-info-test-kk-hakukohde"]
+                          :hakuajat [{:start (start-of-day-in-finland 2024 12 31)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
                           :alkamiskausi "kausi_s#1"
                           :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
@@ -102,8 +133,8 @@
                           :oid "payment-info-test-kk-haku"
                           :kohdejoukko-uri "haunkohdejoukko_12#1"
                           :hakukohteet ["payment-info-test-kk-hakukohde"]
-                          :hakuajat [{:start (t/date-time 2025 10 14)
-                                      :end   (t/date-time 2025 10 15)}]
+                          :hakuajat [{:start (start-of-day-in-finland 2025 10 14)
+                                      :end   (start-of-day-in-finland 2025 10 15)}]
                           :alkamiskausi "kausi_k#1"
                           :alkamisvuosi 2025}
                     haku-with-payment-flag (payment-info/add-admission-payment-info-for-haku
