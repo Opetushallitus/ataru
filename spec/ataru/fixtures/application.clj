@@ -579,7 +579,7 @@
               :person-oid "1.2.3.4.5.303"})
       (update :answers
               (comp vec concat)
-              [{:key "vapautus_hakemusmaksusta" :value "0" :fieldType "dropdown"}])))
+              [{:key "kk-application-payment-option" :value "0" :fieldType "dropdown"}])))
 
 (def application-without-hakemusmaksu-exemption
   (-> person-info-form-application
