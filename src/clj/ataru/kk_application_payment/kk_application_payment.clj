@@ -17,9 +17,11 @@
             [clj-time.format :as time-format]
             [clj-time.core :as time]))
 
-(def default-format (time-format/formatters :year-month-day))
+(def default-time-format (time-format/formatters :year-month-day))
 
 (def kk-application-payment-origin "kkhakemusmaksu")
+(def kk-application-payment-order-id-prefix "KKHA")
+
 (def kk-application-payment-amount (get-in config [:kk-application-payments :processing-fee]))
 (def kk-application-payment-due-days 7)
 
@@ -46,19 +48,26 @@
   {:eu-citizen      "eu-citizen"
    :exemption-field "exemption-field"})
 
-; TODO: TEST TIME ZONE ISSUES
-(defn get-due-date []
-  (time-format/unparse default-format
-                       (time/plus (time/now)
+(defn get-due-date-for-todays-payment []
+  (time-format/unparse default-time-format
+                       (time/plus (time/today-at 12 0 0)
                                   (time/days kk-application-payment-due-days))))
 
+; This could be done automatically on every DB select, but needed so rarely that let's just convert on demand.
+(defn parse-due-date
+  "Convert due date retrieved from db to local date, interpreting it in correct time zone"
+  [due-date]
+  (let [due-date-local (time/to-time-zone due-date (time/time-zone-for-id "Europe/Helsinki"))]
+    (time/local-date (time/year due-date-local) (time/month due-date-local) (time/day due-date-local))))
+
 (defn maksut-reference->maksut-order-id
+  "Maksut order id is in format KKHA1234 where 1234 is the unique component of application key/oid"
   [reference]
   (let [aid (last (str/split reference #"[.]"))]
-    (str "KKHA" aid)))
+    (str kk-application-payment-order-id-prefix aid)))
 
 (defn payment->maksut-reference
-  "Maksut payment references for hakemusmaksu are like 1.2.246.562.8.00000000000022225700"
+  "Maksut payment references for hakemusmaksu correspond to application id, like 1.2.246.562.8.00000000000022225700"
   [{:keys [application-key]}]
   application-key)
 
@@ -70,7 +79,7 @@
    :due-days   kk-application-payment-due-days
    :first-name (:first-name person)
    :last-name  (:last-name person)
-   :email      ""                                              ; TODO: where do we get this from?
+   :email      ""                                              ; TODO: need application data as param for this
    })
 
 (defn- validate-payment-data
@@ -84,9 +93,9 @@
     (if (validate-payment-data payment-data)
       (let [payment (store/create-or-update-kk-application-payment! payment-data)]
         (log/info
-          (str "Set payment state of application " application-key " to " state))
+          (str "Set kk application payment state of application " application-key " to " state))
         payment)
-      (throw (ex-info "Parameter validation failed while setting payment state"
+      (throw (ex-info "Parameter validation failed while setting kk application payment state"
                       {:application-key application-key :state state})))))
 
 (defn set-maksut-secret
@@ -130,7 +139,7 @@
   (set-payment-state
     (build-payment-data {:application-key application-key
                          :state          (:awaiting all-states)
-                         :due-date       (get-due-date)
+                         :due-date       (get-due-date-for-todays-payment)
                          :total-sum      kk-application-payment-amount
                          :required-at    "now()"})))
 
@@ -212,10 +221,9 @@
 (defn- exemption-in-application?
   [application]
   (let [answers (util/application-answers-by-key application)]
-    ; TODO: should we allow not answering the question at all in the end? Eg. for Finnish nationality.
     (if-let [exemption-answer (exemption-form-field-name answers)]
       (contains? exemption-field-ok-values (:value exemption-answer))
-      (throw (ex-info "Missing exemption answer" {:application application})))))
+      false)))
 
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
