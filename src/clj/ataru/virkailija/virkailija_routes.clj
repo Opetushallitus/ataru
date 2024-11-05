@@ -1516,7 +1516,9 @@
         :query-params [{hakuOid :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
                        {hakemusOids :- [s/Str] nil}
-                       {name :- s/Str nil}]
+                       {name :- s/Str nil}
+                       {henkilotunnus :- s/Str nil}
+                       {henkiloOid :- s/Str nil}]
         :return [ataru-schema/ValintaUiApplication]
         (if-let [queries (cond-> []
                                  (some? hakuOid)
@@ -1533,6 +1535,10 @@
                                  (some? name)
                                  (conj (application-service/->name-query
                                          name))
+                                 (some? henkilotunnus)
+                                 (conj (application-service/->ssn-query henkilotunnus))
+                                 (some? henkiloOid)
+                                 (conj (application-service/->person-oid-query henkiloOid))
                                  true
                                  seq)]
           (if-let [applications (access-controlled-application/valinta-ui-applications

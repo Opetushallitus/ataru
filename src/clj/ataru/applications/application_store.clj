@@ -1323,7 +1323,9 @@
          (queries/yesql-valinta-ui-applications (-> (merge {:application_oids nil
                                                             :name             nil
                                                             :haku             nil
-                                                            :hakukohde        nil}
+                                                            :hakukohde        nil
+                                                            :ssn              nil
+                                                            :person_oid       nil}
                                                            (transform-keys ->snake_case query))
                                                     (update :application_oids
                                                             #(some->> (seq %)
