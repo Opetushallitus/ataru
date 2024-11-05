@@ -29,7 +29,8 @@
             [speclj.core :refer [around before-all should-not before should= should it describe tags]]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.component-data.kk-application-payment-module :as payment-module])
   (:import org.joda.time.DateTime))
 
 (declare resp)
@@ -250,6 +251,12 @@
                                    :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
+(defn- get-fields-of-form-without-payment-module [resp]
+  (->> resp :body :content
+       (filter #(not= (:id %) payment-module/kk-application-payment-wrapper-key))
+       util/flatten-form-fields
+       (filter util/answerable?)))
+
 (describe "/haku"
   (tags :unit :hakija-routes)
 
@@ -266,7 +273,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "87834771-34da-40a4-a9f6-sensitive"])
            (should= (map :id (filter cannot-view? fields))
@@ -276,7 +283,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -288,7 +295,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -320,7 +327,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -332,7 +339,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -344,7 +351,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city"])
           (should= (map :id (filter cannot-edit? fields))
@@ -356,7 +363,7 @@
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
+        (let [fields (get-fields-of-form-without-payment-module resp)]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -760,7 +767,7 @@
 
     (it "should not update dropdown answer when required followups are not answered"
       (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
-                                   (assoc-in [:answers 18 :value] "eka vaihtoehto")
+                                   (assoc-in [:answers 19 :value] "eka vaihtoehto")
                                    (merge {:secret "0000000031"}))
         (should= 400 (:status resp))
         (should= {:failures {:dropdown-followup-2 nil}
