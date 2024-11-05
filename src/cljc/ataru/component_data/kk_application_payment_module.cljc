@@ -58,8 +58,8 @@
    :followups [(assoc (component/info-element metadata)
                  :label (:continuous-residence-info kk-application-payment-module-texts))
                (deadline-field metadata)
-               (kk-option-attachment metadata "continuous-residence-permit-front" :continuous-residence-front-attachment)
-               (kk-option-attachment metadata "continuous-residence-permit-back" :continuous-residence-back-attachment)
+               (kk-option-attachment metadata "continuous-residence-permit-front" :continuous-permit-front-attachment)
+               (kk-option-attachment metadata "continuous-residence-permit-back" :continuous-permit-back-attachment)
                (kk-option-attachment metadata "continuous-residence-passport-attachment" :passport-attachment)]})
 
 (defn- permanent-residence-permit-option [metadata]
