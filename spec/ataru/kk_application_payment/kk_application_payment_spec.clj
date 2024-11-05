@@ -164,7 +164,7 @@
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                           (should= 1 (count changed))
-                          (should= primary-payment (first changed))
+                          (should= (assoc primary-payment :email "aku@ankkalinna.com") (first changed))
                           (should-be-matching-state {:application-key primary-application-key, :state state-ok-by-proxy
                                                      :reason nil}
                                                     primary-payment)
@@ -186,7 +186,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (first changed) payment)
+                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-ok-by-proxy
                                                      :reason nil} initial-payment)
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
@@ -205,7 +205,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (first changed) payment)
+                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
@@ -223,7 +223,7 @@
                                                                                           oid term-fall year-ok))
                                 payment (first (payment/get-raw-payments [application-key]))]
                             (should= 1 (count changed))
-                            (should= (first changed) payment)
+                            (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
                             (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                        :reason nil} payment))))
 
@@ -248,7 +248,7 @@
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 1 (count changed))
-                            (should= primary-payment (first changed))
+                            (should= (assoc primary-payment :email "aku@ankkalinna.com") (first changed))
                             (should-be-matching-state {:application-key primary-application-key, :state state-awaiting
                                                        :reason nil} primary-payment)
                             (should-be-matching-state {:application-key linked-application-key, :state state-overdue
@@ -270,7 +270,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (first changed) payment)
+                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))))
 
