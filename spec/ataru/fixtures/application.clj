@@ -250,6 +250,10 @@
                                                 {:key "home-town" :value "273" :fieldType "dropdown" :label {:fi "Kotikunta"}}
                                                 {:key "language" :value "FI" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
                                                 {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
+                                                {:key "kk-application-payment-option"
+                                                 :value "6"
+                                                 :fieldType "singleChoice"
+                                                 :label {:fi "Hakemusmaksu vaihtoehdot"}}
                                                 {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}]})
 
 (def form-with-followup-inside-a-question-group-application {:form       2147483646,
@@ -350,9 +354,9 @@
 
 (def person-info-form-application-with-modified-answers
   (-> person-info-form-application-with-more-answers
-      (update-in [:answers 17 :value] conj "Toistuva pakollinen 4")
-      (assoc-in [:answers 18 :value] "toka vaihtoehto")
-      (assoc-in [:answers 19 :value] ["modified-attachment-id"])
+      (update-in [:answers 18 :value] conj "Toistuva pakollinen 4")
+      (assoc-in [:answers 19 :value] "toka vaihtoehto")
+      (assoc-in [:answers 20 :value] ["modified-attachment-id"])
       (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
                                            :value     "Vierekkäinen vastaus 2"
                                            :fieldType "textField"}])))
@@ -379,7 +383,7 @@
 
 (def person-info-form-application-with-more-modified-answers
   (-> person-info-form-application-with-modified-answers
-      (assoc-in [:answers 18 :value] "eka vaihtoehto")
+      (assoc-in [:answers 19 :value] "eka vaihtoehto")
       (update :answers (comp vec concat) dropdown-followups)))
 
 (def person-info-form-application-for-hakukohde
@@ -421,7 +425,11 @@
                {:key       "87834771-34da-40a4-a9f6-sensitive"
                 :value     "Salainen vastaus"
                 :fieldType "textArea"
-                :label     {:fi "Salainen kysymys" :sv ""}}]})
+                :label     {:fi "Salainen kysymys" :sv ""}}
+               {:key "kk-application-payment-option"
+                :value "6"
+                :fieldType "singleChoice"
+                :label {:fi "Hakemusmaksu vaihtoehdot" :sv ""}}]})
 
 (def application-with-person-info-module {:key     "9d24af7d-f672-4c0e-870f-3c6999f105e0"
                                           :lang    "fi"

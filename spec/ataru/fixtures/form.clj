@@ -2,6 +2,7 @@
   (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [clojure.string :as string]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
@@ -75,6 +76,7 @@
    :locked-by        nil
    :content          [(component/hakukohteet)
                       (person-info-module/person-info-module)
+                      (payment-module/kk-application-payment-module)
                       {:fieldClass "wrapperElement"
                        :metadata   metadata
                        :fieldType  "fieldset"

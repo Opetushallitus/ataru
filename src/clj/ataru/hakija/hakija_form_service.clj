@@ -281,7 +281,7 @@
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (cache/get-from form-by-id-cache (str id))]
       (when (not (:deleted form))
-        (let [checked-form (if (and (uses-payment-module?) (not (has-payment-module? form)))
+        (let [checked-form (if (and uses-payment-module? (not (has-payment-module? form)))
                              (add-payment-module-to-form form)
                              form)]
           (-> (koodisto/populate-form-koodisto-fields koodisto-cache checked-form)
