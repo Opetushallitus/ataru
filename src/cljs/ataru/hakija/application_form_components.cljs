@@ -889,16 +889,14 @@
 (defn tutkinnot-wrapper-field
   [field-descriptor]
   (let [label (util/non-blank-val (:label field-descriptor)
-                                  @(subscribe [:application/default-languages]))
-        root-level-children (filter #(or (tutkinnot/is-tutkinto-configuration-component? %)
-                                         @(subscribe [:application/visible? (keyword (:id %))]))
-                                    (:children field-descriptor))]
+                                  @(subscribe [:application/default-languages]))]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
       [:h2 label]
       [scroll-to-anchor field-descriptor]]
      (into [:div.application__wrapper-contents]
-       (for [child root-level-children]
+       (for [child (:children field-descriptor)
+         :when @(subscribe [:application/visible? (keyword (:id child))])]
          (if (tutkinnot/is-tutkinto-configuration-component? child)
            ;; TODO Tähän kohtaan koskesta tuleva contentti
            (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
@@ -917,8 +915,6 @@
           :fieldType  "fieldset"} [question-group field-descriptor idx]
          {:fieldClass "questionGroup"
           :fieldType  "tutkintofieldset"} [question-group field-descriptor idx]
-         {:fieldClass "externalDataElement"
-          :fieldType  "selectabletutkintolist"} [nil] ;Todo
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
          {:fieldClass "wrapperElement"

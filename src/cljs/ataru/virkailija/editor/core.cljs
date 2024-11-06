@@ -56,14 +56,14 @@
                     :fieldType  "tutkintofieldset"}
                    [ec/component-group content path children]
 
-                   ;externalDataElement items not visible in editor
-                   {:fieldClass "externalDataElement"
-                    :fieldType  "selectabletutkintolist"}
-                   [nil]
-
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
                    [ec/adjacent-text-field content path]
+
+                   ;not visible in editor
+                   {:fieldClass "formField" :fieldType "textField"
+                    :params     {:transparent true}}
+                   []
 
                    {:fieldClass "formField" :fieldType "textField"}
                    [ec/text-field content followups path]
@@ -106,9 +106,11 @@
                    :else (do
                            (log/error content)
                            (throw (new js/Error (str "Unknown component type " content)))))]
-        [:div
-         [dnd/drag-n-drop-spacer path]
-         component]))))
+        (if (seq component)
+          [:div
+            [dnd/drag-n-drop-spacer path]
+            component]
+          [:div])))))
 
 (defn editor []
   (let [content (:content @(subscribe [:editor/selected-form]))]
