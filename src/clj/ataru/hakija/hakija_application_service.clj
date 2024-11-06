@@ -296,8 +296,7 @@
                                              koodisto-cache
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)
-                                             field-deadlines
-                                             false))
+                                             field-deadlines))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
