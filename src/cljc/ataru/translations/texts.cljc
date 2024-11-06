@@ -2714,9 +2714,9 @@
    :header2               {:fi " on käsitelty."
                            :sv " on käsitelty"
                            :en " on käsitelty"}
-   :subject               {:fi "Opintopolku: Hakemuksesi on käsitelty"
-                           :sv "Studieinfo"
-                           :en "Studyinfo"}
+   :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}
 
    :payment               {:fi "Maksu: "
                            :sv "Aavgiften: "

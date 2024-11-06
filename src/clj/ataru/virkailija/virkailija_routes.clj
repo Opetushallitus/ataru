@@ -59,6 +59,7 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [clout.core :as clout]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
@@ -1067,7 +1068,9 @@
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
                              :amount (:amount invoice)
-                             :due-date (:due_date invoice)
+                             :due-date (->> (str/split (:due_date invoice) #"-")
+                                            (reverse)
+                                            (str/join \.))
                              :decision-info-email "recognition@oph.fi"})]
             (do
               (log/warn "Review result" result)
