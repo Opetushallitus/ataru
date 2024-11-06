@@ -25,7 +25,9 @@
             [ataru.util :as util :refer [assoc?]]
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
-            [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]))
+            [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
+            [ataru.kk-application-payment.utils :refer [requires-higher-education-application-fee? has-payment-module?]]
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -247,24 +249,46 @@
   [form hakuajat now]
   (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
 
+(defn- add-payment-module-to-form
+  [form]
+  (let [sections (:content form)
+        payment-section (kk-application-payment-module)
+        updated-content (concat (take-nth 2 sections) [payment-section] (drop 2 sections))
+        updated-form (assoc form :content updated-content)]
+    (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
+    (form-store/create-form-or-increment-version! form {:user-agent "adding-payment-module"} @(atom nil))
+    updated-form))
+
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
-  [id :- s/Any
+  ([id :- s/Any
+   roles :- [form-role/FormRole]
+   form-by-id-cache :- s/Any
+   koodisto-cache :- s/Any
+   hakukohteet :- s/Any
+   application-in-processing-state? :- s/Bool
+   field-deadlines :- {s/Str form-schema/FieldDeadline}]
+  (fetch-form-by-id id roles form-by-id-cache koodisto-cache hakukohteet application-in-processing-state? field-deadlines false false))
+  ([id :- s/Any
    roles :- [form-role/FormRole]
    form-by-id-cache :- s/Any
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
-   use-toisen-asteen-yhteishaku-restrictions?]
+   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
+   uses-payment-module? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (cache/get-from form-by-id-cache (str id))]
       (when (not (:deleted form))
-        (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
-            (remove-required-hakija-validator-if-virkailija roles)
-            (populate-attachment-deadlines now hakuajat field-deadlines)
-            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions?)
-            (populate-demo-allowed hakuajat now))))))
+        (let [checked-form (if (and uses-payment-module? (not (has-payment-module? form)))
+                             (add-payment-module-to-form form)
+                             form)]
+          (-> (koodisto/populate-form-koodisto-fields koodisto-cache checked-form)
+              (remove-required-hakija-validator-if-virkailija roles)
+              (populate-attachment-deadlines now hakuajat field-deadlines)
+              (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions?)
+              (populate-demo-allowed hakuajat now))))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
@@ -281,8 +305,7 @@
                       koodisto-cache
                       hakukohteet
                       application-in-processing-state?
-                      field-deadlines
-                      false)))
+                      field-deadlines)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-and-id :- s/Any
   [form-by-id-cache :- s/Any
@@ -305,6 +328,7 @@
         old-priorisoivat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
+        uses-payment-module? (requires-higher-education-application-fee? tarjonta-service (:tarjonta tarjonta-info) (map :oid hakukohteet))
         form (fetch-form-by-id
                id
                roles
@@ -313,7 +337,8 @@
                hakukohteet
                application-in-processing-state?
                field-deadlines
-               use-toisen-asteen-yhteishaku-restrictions?)]
+               use-toisen-asteen-yhteishaku-restrictions?
+               uses-payment-module?)]
     (if (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
