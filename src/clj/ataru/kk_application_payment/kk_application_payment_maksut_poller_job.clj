@@ -8,7 +8,11 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
-            [ataru.config.core :refer [config]]))
+            [ataru.config.core :refer [config]]
+            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]))
+
+(defn send-payment-confirmation-email
+  [application-key])
 
 (defn poll-payments [maksut-service payments]
   (let [keys-states (into {}
@@ -35,7 +39,9 @@
               response (if (= payment/kk-application-payment-origin origin)
                          (match [ataru-status maksut-status]
                                 [awaiting-status "paid"]
-                                (payment/set-application-fee-paid application-key ataru-status)
+                                (do
+                                  (payment/set-application-fee-paid application-key ataru-status)
+                                  (send-payment-confirmation-email application-key))
 
                                 [awaiting-status "overdue"]
                                 (payment/set-application-fee-overdue application-key ataru-status)
@@ -47,6 +53,7 @@
 (defn get-payments-and-poll [maksut-service]
   (when (get-in config [:kk-application-payments :enabled?])
     (try
+      ; TODO: we have to also handle awaiting payments without maksut information (in case something has gone wrong)
       (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
         (do
           (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
