@@ -313,6 +313,7 @@
               has-exemption?         (some true? (map exemption-in-application? applications))
               has-existing-payment?  (contains? payment-state-set (:paid all-states))]
           {:person            person
+           :existing-payments applications-payments
            :modified-payments (update-payments-for-applications
                                 applications-payments is-eu-citizen? has-exemption? has-existing-payment?)})))))
 
