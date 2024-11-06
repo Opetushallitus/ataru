@@ -58,7 +58,8 @@
     :modal-info-element
     :attachment
     :adjacent-fieldset
-    :question-group})
+    :question-group
+    :tutkinnot})
 
 (def question-group-toolbar-element-names
   #{:text-field
