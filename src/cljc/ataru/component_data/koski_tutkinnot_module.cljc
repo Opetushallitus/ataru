@@ -8,108 +8,125 @@
   [{:id "perusopetus"
     :label (:perusopetus-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "perusopetus-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "perusopetus-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "perusopetus-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "perusopetus-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "perusopetus-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "perusopetus-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "perusopetus-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "perusopetus-valmistumispvm"
+                  :params {:transparent true})]}
 
    {:id "yo"
     :label (:yo-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "yo-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "yo-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "yo-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "yo-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "yo-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "yo-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "yo-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "yo-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "amm-perus"
     :label (:amm-perustutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "amm-perus-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "amm-perus-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "amm-perus-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "amm-perus-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "amm-perus-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-perus-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-perus-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-perus-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "amm"
     :label (:amm-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "amm-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "amm-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "amm-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "amm-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "amm-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "amm-erikois"
     :label (:amm-erikoistutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "amm-erikois-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "amm-erikois-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "amm-erikois-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "amm-erikois-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "amm-erikois-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-erikois-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-erikois-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "amm-erikois-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "kk-alemmat"
     :label (:alemmat-kk-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "kk-alemmat-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "kk-alemmat-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "kk-alemmat-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "kk-alemmat-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "kk-alemmat-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-alemmat-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-alemmat-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-alemmat-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "kk-ylemmat"
     :label (:ylemmat-kk-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "kk-ylemmat-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "kk-ylemmat-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "kk-ylemmat-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "kk-ylemmat-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "kk-ylemmat-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-ylemmat-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-ylemmat-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "kk-ylemmat-valmistumispvm"
+                  :params {:transparent true})]}
    {:id "tohtori"
     :label (:tohtori-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :followups [(assoc (component/externalDataElement metadata)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id "tohtori-tutkinto-nimi")
-                   (assoc (component/text-field metadata)
-                     :id "tohtori-koulutusohjelma")
-                   (assoc (component/text-field metadata)
-                     :id "tohtori-oppilaitos")
-                   (assoc (component/text-field metadata)
-                     :id "tohtori-valmistumispvm")])]}
+    :followups [(assoc (component/text-field metadata)
+                  :id "tohtori-tutkinto-nimi"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "tohtori-koulutusohjelma"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "tohtori-oppilaitos"
+                  :params {:transparent true})
+                (assoc (component/text-field metadata)
+                  :id "tohtori-valmistumispvm"
+                  :params {:transparent true})
+                ]}
    {:id "itse-syotetty"
     :label (:itse-syotetty-tutkinnot-label koski-tutkinnot-texts)
     :default-value true
