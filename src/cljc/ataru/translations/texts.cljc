@@ -1114,7 +1114,10 @@
 
 (def email-link-section-texts {:default {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan."
                                          :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet om du använder en offentlig dator.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen."
-                                         :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place."}})
+                                         :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place."}
+                               :no-hakuaika-mentions {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa."
+                                                      :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet om du använder en offentlig dator.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och göra ändringarna i tjänsten Min Studieinfo."
+                                                      :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service."}})
 
 (def email-default-texts
   {:email-submit-confirmation-template
@@ -2722,12 +2725,12 @@
    :decision-fee-overdue         {:fi "Päätös maksamatta"
                                   :sv "Päätös maksamatta (sv) TODO"
                                   :en "Päätös maksamatta (en) TODO"}
-   :decision-fee-invoiced        {:fi "Päätös laskutuksessa"
-                                  :sv "Päätös laskutuksessa (sv) TODO"
-                                  :en "Päätös laskutuksessa (en) TODO"}
    :decision-fee-paid            {:fi "Päätös maksettu"
                                   :sv "Päätös maksettu (sv) TODO"
                                   :en "Päätös maksettu (en) TODO"}
+   :invoiced                     {:fi "Laskutuksessa"
+                                  :sv "Laskutuksessa (sv) TODO"
+                                  :en "Laskutuksessa (en) TODO"}
    :multiple-values              {:fi "Monta arvoa"
                                   :sv "Multipla värden"
                                   :en "Multiple values"}
@@ -2765,6 +2768,45 @@
                            :en "https://www.oph.fi/en/services/recognition-and-international-comparability-qualifications"}
 
    :decision-info-noreply {:fi "Älä vastaa tähän viestiin – viesti on lähetetty automaattisesti. Jos sinulla on kysyttävää, otathan meihin yhteyttä sähköpostitse osoitteessa "
+                           :sv "Svara inte på detta meddelande, det har skickats automatiskt. Om du har frågor, vänligen kontakta oss per epost via "
+                           :en "This is an automatically generated email, please do not reply. If you have any questions, please send us an email at "}
+
+   :signature-header      {:fi "Ystävällisin terveisin"
+                           :sv "Med vänliga hälsningar,"
+                           :en "Best regards"}
+   :signature-name        {:fi "Opetushallitus"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}})
+
+(def astu-decision-email
+  {:header1               {:fi "Hakemuksesi "
+                           :sv "Hakemuksesi "
+                           :en "Hakemuksesi "}
+   :header2               {:fi " on käsitelty."
+                           :sv " on käsitelty"
+                           :en " on käsitelty"}
+   :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}
+
+   :payment               {:fi "Maksu: "
+                           :sv "Aavgiften: "
+                           :en "Fee: "}
+   :due-date-desc         {:fi "Eräpäivä: "
+                           :sv "Eräpäivä: "
+                           :en "Due date: "}
+
+   :text-1                {:fi "Voit maksaa maksun ja tarkastella maksun tietoja seuraavasta linkistä: "
+                           :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
+                           :en "We will send you the decision once you have paid the decision fee."}
+   :text-2                {:fi "Linkki sulkeutuu eräpäivän jälkeen tietosuojasyistä."
+                           :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
+                           :en "You can pay the decision fee and view the details of your payment through the following link."}
+   :text-3                {:fi "Jos et maksa maksua eräpäivään mennessä, \nlähetämme sinulle maksusta erillisen laskun."
+                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                           :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
+
+   :info-noreply          {:fi "Älä vastaa tähän viestiin – viesti on lähetetty automaattisesti. Jos sinulla on kysyttävää, voit lähettää meille sähköpostia osoitteeseen "
                            :sv "Svara inte på detta meddelande, det har skickats automatiskt. Om du har frågor, vänligen kontakta oss per epost via "
                            :en "This is an automatically generated email, please do not reply. If you have any questions, please send us an email at "}
 

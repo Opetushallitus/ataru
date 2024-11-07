@@ -59,6 +59,7 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [clout.core :as clout]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
@@ -1091,7 +1092,7 @@
         :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [reference locale message]} input
+        (let [{:keys [reference locale message origin metadata]} input
               lasku-input (-> input
                               (dissoc :message)
                               (dissoc :locale))
@@ -1104,9 +1105,16 @@
                             application-service
                             session
                             reference
-                            message
-                            payment-url
-                            "decision-fee-outstanding")]
+                            "decision-fee-outstanding"
+                            {:origin origin
+                             :message message
+                             :form-name (get-in metadata [:form-name (keyword lang)])
+                             :payment-url payment-url
+                             :amount (:amount invoice)
+                             :due-date (->> (str/split (:due_date invoice) #"-")
+                                            (reverse)
+                                            (str/join \.))
+                             :decision-info-email "recognition@oph.fi"})]
             (do
               (log/warn "Review result" result)
               (response/ok result))
