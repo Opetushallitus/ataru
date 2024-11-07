@@ -1087,7 +1087,7 @@
                                        (count (keys attachment-reviews-for-hakukohde)))]])
                    [application-hakukohde-review-inputs
                     (cond
-                      tutu-form? review-states/hakukohde-review-types
+                      tutu-form? review-states/hakukohde-review-types-tutu
                       astu-form? review-states/hakukohde-review-types-astu
                       :else review-states/hakukohde-review-types-normal)
                     application-key]]
