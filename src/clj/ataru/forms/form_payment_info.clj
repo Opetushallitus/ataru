@@ -13,9 +13,6 @@
 (def kk-processing-fee
   (bigdec (get-in config [:kk-application-payments :processing-fee])))
 
-(def tutu-processing-fee
-  (bigdec (get-in config [:tutkintojen-tunnustaminen :maksut :decision-amount])))
-
 (defn- valid-fees?
   [payment-type processing-fee decision-fee]
   (let [fee-nonpositive? (fn [amount] (and (some? amount) (<= amount 0.00M)))

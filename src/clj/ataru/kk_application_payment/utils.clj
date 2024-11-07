@@ -2,7 +2,8 @@
   (:require [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clojure.string :as str]
             [clj-time.core :as time]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]))
 
 (def haku-update-grace-days
   "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
@@ -28,7 +29,8 @@
 
 (def first-application-payment-hakuaika-start
   "Application payments are only charged from admissions starting in 2025 or later"
-  (time/date-time 2025 1 1))
+  (time/from-time-zone (time/date-time 2025 1 1)
+                       (time/time-zone-for-id "Europe/Helsinki")))
 
 (defn haku-active-for-updating
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.
@@ -71,3 +73,9 @@
           (str/starts-with? (:kohdejoukon-tarkenne-uri haku) "haunkohdejoukontarkenne_1#"))
       ; Must be tutkintoon johtava
       (boolean (some true? (map #(:tutkintoon-johtava? %) hakukohteet))))))
+
+(defn has-payment-module? [form]
+  (->> (:content form)
+       (map :id)
+       (some #(= kk-application-payment-wrapper-key %))
+       boolean))

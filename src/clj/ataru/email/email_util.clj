@@ -57,6 +57,15 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
+(defn tutu-form? [form]
+  (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+      (let [tutu-keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")]
+        (boolean
+          (and (some? tutu-keys) (some #(= (:key form) %) tutu-keys))))))
+
+(defn astu-form? [form]
+  (= "payment-type-astu" (get-in form [:properties :payment :type])))
+
 ;Vahvasti tunnistautunut saa linkin oma-opintopolkuun, muut saavat suoran muokkauslinkin hakemukselle ja siihen liittyvän ohjetekstin.
 ;Todo fixme: Tämä sisältää nyt vähän harmillisen virityksen application-url-textin kanssa.
 ;Kts: application-url-textin sisältö ja content-ending-kentän oletussisältö ja niiden samankaltaisuudet.
@@ -68,4 +77,6 @@
     (if strong-auth?
       {:oma-opintopolku-link (oma-opintopolku-link)}
       (merge {:application-url (modify-link (:secret application))}
-             (when form-allows-ht? {:application-url-text (get-in email-link-section-texts [:default lang])})))))
+             (when form-allows-ht? {:application-url-text (get-in email-link-section-texts [(if (or (tutu-form? form) (astu-form? form))
+                                                                                              :no-hakuaika-mentions
+                                                                                              :default) lang])})))))
