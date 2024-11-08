@@ -545,10 +545,11 @@
    :key s/Str
    :state s/Str
    :secret s/Str
-   :haku s/Str
+   :haku (s/maybe s/Str)
    :email s/Str
    :hakukohteet [s/Str]
-   :submitted org.joda.time.DateTime})
+   :submitted org.joda.time.DateTime
+   :form-name localized-schema/LocalizedStringOptional})
 
 (s/defschema Hakutoive
   {:processingState     s/Str

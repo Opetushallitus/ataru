@@ -137,10 +137,13 @@ SELECT
   a.haku      AS haku,
   a.email     AS email,
   a.hakukohde AS hakukohteet,
-  a.submitted AS submitted
+  a.submitted AS submitted,
+  f.name      AS form_name
 FROM applications AS a
 JOIN application_reviews AS ar
   ON ar.application_key = a.key
+JOIN forms AS f
+  ON f.id = a.form_id
 LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    FROM application_secrets
                    WHERE application_key = a.key
@@ -148,7 +151,6 @@ LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    LIMIT 1) AS las
   ON las.age < (interval '1 day' * :secret_link_valid_days - '1 day')
 WHERE a.person_oid = :person_oid AND
-      a.haku IS NOT NULL AND
       ar.state <> 'inactivated' AND
       NOT EXISTS (SELECT 1
                   FROM applications AS a2
