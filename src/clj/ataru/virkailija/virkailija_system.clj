@@ -295,7 +295,7 @@
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
                                             hakija-jobs/job-definitions)
                                      (db/get-datasource :db)
-                                     true)
+                                     (boolean (get-in config [:jobs :enabled] true)))
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache
