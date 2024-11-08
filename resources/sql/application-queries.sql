@@ -809,7 +809,9 @@ WHERE
   AND haku IS NOT NULL
   AND state <> 'inactivated'
   AND (:application_oids::text[] IS NULL OR a.key = ANY (:application_oids))
-  AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', :name))
+  AND (:name::text IS NULL OR to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ plainto_tsquery('unaccent_simple', :name))
+  AND (:ssn::text IS NULL OR ssn = :ssn)
+  AND (:person_oid::text IS NULL OR person_oid = :person_oid)
   AND (:haku::text IS NULL OR a.haku = :haku)
   AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
 ORDER BY a.created_time DESC;
