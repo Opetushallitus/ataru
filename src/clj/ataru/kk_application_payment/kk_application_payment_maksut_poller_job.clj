@@ -9,12 +9,28 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.config.core :refer [config]]
-            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]))
+            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
+            [ataru.kk-application-payment.utils :as utils]))
 
-(defn send-payment-confirmation-email
-  [application-key])
+(defn- payment-confirmation-email-params
+  [lang]
+  {:subject-key :email-kk-payment-confirmation-subject
+   :template-path (str "templates/email_kk_payment_confirmation_" (name lang) ".html")})
 
-(defn poll-payments [maksut-service payments]
+(defn- start-confirmation-email-job [job-runner application]
+  (let [application-key (:key application)
+        job-type        (:type email-job/job-definition)
+        email           (utils/get-application-email application)
+        lang            (utils/get-application-language application)
+        params          (payment-confirmation-email-params lang)
+        mail-content    (utils/payment-email lang email {} params)]
+    (if mail-content
+      (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                                             (job/start-job job-runner conn job-type mail-content))]
+        (log/info (str "Created kk application payment confirmation email job " job-id " for application " application-key)))
+      (log/warn "Creating kk application payment confirmation mail to application" application-key "failed"))))
+
+(defn poll-payments [job-runner maksut-service payments]
   (let [keys-states (into {}
                           (map (fn [state] [(payment/payment->maksut-reference state) state])
                                payments))
@@ -40,33 +56,36 @@
                          (match [ataru-status maksut-status]
                                 [awaiting-status "paid"]
                                 (do
+                                  (log/info "Set kk application payment paid for application key" application-key)
                                   (payment/set-application-fee-paid application-key ataru-status)
-                                  (send-payment-confirmation-email application-key))
+                                  (start-confirmation-email-job job-runner application-key))
 
                                 [awaiting-status "overdue"]
-                                (payment/set-application-fee-overdue application-key ataru-status)
+                                (do
+                                  (log/info "Set kk application payment overdue for application key" application-key)
+                                  (payment/set-application-fee-overdue application-key ataru-status))
 
                                 :else (log/debug "Invalid kk payment state combo, will not do anything" item))
                          (log/debug "Invalid origin, will not do anything" item))]
           (when response (log/info "Process result:" response)))))))
 
-(defn get-payments-and-poll [maksut-service]
+(defn get-payments-and-poll [job-runner maksut-service]
   (when (get-in config [:kk-application-payments :enabled?])
     (try
       ; TODO: we have to also handle awaiting payments without maksut information (in case something has gone wrong)
       (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
         (do
           (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
-          (poll-payments maksut-service payments))
+          (poll-payments job-runner maksut-service payments))
         (log/debug "No kk application payments in need of maksut polling found"))
       (catch Exception e
         (log/error e "Maksut polling failed")))))
 
 (defn poll-kk-payments-handler
-  [_ {:keys [maksut-service]}]
+  [_ {:keys [maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :maksut-poller-enabled?])
     (log/info "Poll kk application payments step starting")
-    (get-payments-and-poll maksut-service)
+    (get-payments-and-poll job-runner maksut-service)
     (log/info "Poll kk application payments step finished")))
 
 (defn start-kk-application-payment-maksut-poller-job
