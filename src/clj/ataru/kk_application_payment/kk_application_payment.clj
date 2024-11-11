@@ -244,12 +244,18 @@
        (filter #(and (= start-year (:alkamisvuosi %))
                      (str/starts-with? (:alkamiskausi %) start-term)))))
 
+(defn filter-haut-for-update
+  "filter haut that should have their kk payment status checked and updated at call time"
+  [tarjonta-service hakus]
+  (let [valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
+        active-hakus (filter utils/haku-active-for-updating valid-hakus)]
+    active-hakus))
+
 (defn get-haut-for-update
   "Get hakus that should have their kk payment status checked and updated at call time."
   [get-haut-cache tarjonta-service]
   (let [hakus (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
-        valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
-        active-hakus (filter utils/haku-active-for-updating valid-hakus)]
+        active-hakus (filter-haut-for-update tarjonta-service hakus)]
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 

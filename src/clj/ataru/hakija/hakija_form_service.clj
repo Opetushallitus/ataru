@@ -26,8 +26,7 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
-            [ataru.kk-application-payment.utils :refer [requires-higher-education-application-fee? has-payment-module?]]
-            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]))
+            [ataru.kk-application-payment.utils :refer [requires-higher-education-application-fee? has-payment-module?]]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -249,16 +248,6 @@
   [form hakuajat now]
   (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
 
-(defn- add-payment-module-to-form
-  [form]
-  (let [sections (:content form)
-        payment-section (kk-application-payment-module)
-        updated-content (concat (take-nth 2 sections) [payment-section] (drop 2 sections))
-        updated-form (assoc form :content updated-content)]
-    (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
-    (form-store/create-form-or-increment-version! form {:user-agent "adding-payment-module"} @(atom nil))
-    updated-form))
-
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   ([id :- s/Any
    roles :- [form-role/FormRole]
@@ -281,10 +270,9 @@
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (cache/get-from form-by-id-cache (str id))]
       (when (not (:deleted form))
-        (let [checked-form (if (and uses-payment-module? (not (has-payment-module? form)))
-                             (add-payment-module-to-form form)
-                             form)]
-          (-> (koodisto/populate-form-koodisto-fields koodisto-cache checked-form)
+        (if (and uses-payment-module? (not (has-payment-module? form)))
+          (throw (RuntimeException. (str "Haku should use payment module, but form " id " does not have one"))) ;todo, translation(?) & test error
+          (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
               (remove-required-hakija-validator-if-virkailija roles)
               (populate-attachment-deadlines now hakuajat field-deadlines)
               (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions?)
