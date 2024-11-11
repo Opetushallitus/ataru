@@ -5,26 +5,12 @@
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
-            [ataru.translations.translation-util :as translations]
             [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
-            [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
-            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]))
-
-(declare conn)
-
-(defn- get-application-language
-  [application]
-  (-> application (get :lang "fi") keyword))
-
-(defn- get-application-email
-  [application]
-  (->> (get-in application [:content :answers])
-       (filter #(= (:key %) "email"))
-       first
-       :value))
+            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
+            [ataru.kk-application-payment.utils :as utils]))
 
 (defn- payment-reminder-email-params
   [lang]
@@ -36,24 +22,10 @@
   {:subject-key :email-kk-payment-reminder-subject
    :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
 
-(defn- payment-email [lang email data {:keys [template-path subject-key]}]
-  (let [template-path    template-path
-        translations     (translations/get-translations lang)
-        emails           [email]
-        subject          (subject-key translations)
-        body             (selmer/render-file template-path
-                                             (merge data translations))]
-    (when (not-empty emails)
-      {:from       "no-reply@opintopolku.fi"
-       :recipients emails
-       :body       body
-       :subject    subject})))
-
-(defn- start-payment-email-job [job-runner application email payment-url params-fn type-str]
+(defn- start-payment-email-job [job-runner application email-address lang payment-url params-fn type-str]
   (let [application-key (:key application)
         job-type        (:type email-job/job-definition)
-        lang            (get-application-language application)
-        mail-content    (payment-email lang email {:payment-url payment-url} (params-fn lang))]
+        mail-content    (utils/payment-email lang email-address {:payment-url payment-url} (params-fn lang))]
     (if mail-content
       (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                                              (job/start-job job-runner conn job-type mail-content))]
@@ -64,8 +36,8 @@
   [job-runner maksut-service payment-data person]
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)
-        lang            (-> application (get :lang "fi") keyword)
-        email           (get-application-email application)
+        lang            (utils/get-application-language application)
+        email-address   (utils/get-application-email application)
         invoice-data    (payment/generate-invoicing-data payment-data person)
         invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
         url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang)]
@@ -73,17 +45,19 @@
       (log/info "Kk application payment invoice details" invoice)
       (log/info "Store kk application payment maksut secret for reference " (:reference invoice))
       (payment/set-maksut-secret application-key (:secret invoice))
-      (log/info "Generate kk application payment maksut-link for email" email "URL" url "application-key" application-key)
-      (start-payment-email-job job-runner application email url payment-link-email-params "maksut-link"))))
+      (log/info "Generate kk application payment maksut-link for email" email-address
+                "URL" url "application-key" application-key)
+      (start-payment-email-job job-runner application email-address lang url payment-link-email-params "maksut-link"))))
 
 (defn- send-reminder-email-and-mark-sent
   [job-runner payment-data application]
   (let [application-key (:application-key payment-data)
-        lang            (-> application (get :lang "fi") keyword)
-        email           (get-application-email application)
+        lang            (utils/get-application-language application)
+        email-address   (utils/get-application-email application)
         url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:maksut-secret payment-data) lang)]
-    (log/info "Generate kk application payment reminder for email" email "URL" url "application key" application-key)
-    (start-payment-email-job job-runner application email url payment-reminder-email-params "reminder")
+    (log/info "Generate kk application payment reminder for email" email-address
+              "URL" url "application key" application-key)
+    (start-payment-email-job job-runner application email-address lang url payment-reminder-email-params "reminder")
     (payment/mark-reminder-sent application-key)))
 
 (defn needs-reminder-sent?

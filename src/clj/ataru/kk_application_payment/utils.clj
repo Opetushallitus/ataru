@@ -3,7 +3,33 @@
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.coerce :as coerce]
+            [ataru.translations.translation-util :as translations]
+            [selmer.parser :as selmer]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]))
+
+(defn payment-email [lang email data {:keys [template-path subject-key]}]
+  (let [template-path    template-path
+        translations     (translations/get-translations lang)
+        emails           [email]
+        subject          (subject-key translations)
+        body             (selmer/render-file template-path
+                                             (merge data translations))]
+    (when (not-empty emails)
+      {:from       "no-reply@opintopolku.fi"
+       :recipients emails
+       :body       body
+       :subject    subject})))
+
+(defn get-application-language
+  [application]
+  (-> application (get :lang "fi") keyword))
+
+(defn get-application-email
+  [application]
+  (->> (get-in application [:content :answers])
+       (filter #(= (:key %) "email"))
+       first
+       :value))
 
 (def haku-update-grace-days
   "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
