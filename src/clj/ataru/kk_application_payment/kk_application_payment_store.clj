@@ -11,12 +11,17 @@
 (declare yesql-get-kk-application-payments-history-for-application-keys)
 (declare yesql-upsert-kk-application-payment<!)
 (declare yesql-update-maksut-secret!)
+(declare yesql-mark-reminder-sent!)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
 (defn- exec-db
   [ds-key query params]
   (db/exec ds-key query params))
+
+(defn mark-reminder-sent!
+  [application-key]
+  (exec-db :db yesql-mark-reminder-sent! {:application_key application-key}))
 
 (defn update-maksut-secret!
   [application-key maksut-secret]

@@ -94,6 +94,15 @@
       (throw (ex-info "Parameter validation failed while setting kk application payment state"
                       {:application-key application-key :state state})))))
 
+(defn mark-reminder-sent
+  [application-key]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (let [count (store/mark-reminder-sent! application-key)]
+      (if (= count 1)
+        (log/info (str "Set kk application payment reminder e-mail sent for application " application-key))
+        (throw (ex-info "Could not set kk application payment reminder e-mail sent for application"
+                        {:application-key application-key :updated-rows count}))))))
+
 (defn set-maksut-secret
   [application-key maksut-secret]
   (when (get-in config [:kk-application-payments :enabled?])
@@ -253,11 +262,7 @@
 (defn- set-payment
   [new-state state-change-fn {:keys [application payment]}]
   (let [current-state   (:state payment)
-        application-key (:key application)
-        email (->> (get-in application [:content :answers])
-                   (filter #(= (:key %) "email"))
-                   first
-                   :value)]
+        application-key (:key application)]
     (cond
       (= current-state new-state)
       (log/info "Application" application-key "already has kk payment status" current-state ", not changing state")
@@ -270,8 +275,7 @@
       (log/info "Application" application-key "is already overdue, not changing state")
 
       :else
-      (merge {:email email}
-        (state-change-fn (:key application) payment)))))
+      (state-change-fn (:key application) payment))))
 
 (defn- update-payments-for-applications
   [applications-payments is-eu-citizen? has-exemption? has-existing-payment?]

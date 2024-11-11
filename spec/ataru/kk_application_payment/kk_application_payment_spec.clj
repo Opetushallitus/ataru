@@ -93,8 +93,46 @@
                 (let [haut (payment/get-haut-for-update fake-haku-cache fake-tarjonta-service)]
                   (should= 0 (count haut))))))
 
+(describe "mark-reminder-sent"
+          (tags :unit :kk-application-payment)
+
+          (before-all
+            (delete-states-and-events!))
+
+          (it "should mark reminder sent for a payment"
+              (let [application-key "1.2.3.4.5.6"
+                    initial-data (payment/set-application-fee-required application-key nil)
+                    _ (payment/mark-reminder-sent application-key)
+                    updated-data (first (payment/get-raw-payments [application-key]))]
+                (should-be-nil (:reminder-sent-at initial-data))
+                (should-not-be-nil (:reminder-sent-at updated-data))))
+
+          (it "should throw an exception when trying to mark reminder sent for nonexisting payment"
+              (should-throw (payment/mark-reminder-sent "1.2.3.4.5.1234"))))
+
+(describe "set-maksut-secret"
+          (tags :unit :kk-application-payment)
+
+          (before-all
+            (delete-states-and-events!))
+
+          (it "should set maksut secret for a payment"
+              (let [application-key "1.2.3.4.5.6"
+                    maksut-secret "1234ABCD5678EFGH"
+                    initial-data (payment/set-application-fee-required application-key nil)
+                    _ (payment/set-maksut-secret application-key maksut-secret)
+                    updated-data (first (payment/get-raw-payments [application-key]))]
+                (should-be-nil (:maksut-secret initial-data))
+                (should= maksut-secret (:maksut-secret updated-data))))
+
+          (it "should throw an exception when trying to set maksut secret for nonexisting payment"
+              (should-throw (payment/set-maksut-secret "1.2.3.4.5.1234" "1234ABCD5678EFGH"))))
+
 (describe "update-payment-status"
           (tags :unit :kk-application-payment)
+
+          (before-all
+            (delete-states-and-events!))
 
           (around [spec]
                   (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
@@ -164,7 +202,7 @@
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                           (should= 1 (count changed))
-                          (should= (assoc primary-payment :email "aku@ankkalinna.com") (first changed))
+                          (should= primary-payment (first changed))
                           (should-be-matching-state {:application-key primary-application-key, :state state-ok-by-proxy
                                                      :reason nil}
                                                     primary-payment)
@@ -186,7 +224,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
+                          (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-ok-by-proxy
                                                      :reason nil} initial-payment)
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
@@ -205,7 +243,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
+                          (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
@@ -223,7 +261,7 @@
                                                                                           oid term-fall year-ok))
                                 payment (first (payment/get-raw-payments [application-key]))]
                             (should= 1 (count changed))
-                            (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
+                            (should= payment (first changed))
                             (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                        :reason nil} payment))))
 
@@ -248,7 +286,7 @@
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 1 (count changed))
-                            (should= (assoc primary-payment :email "aku@ankkalinna.com") (first changed))
+                            (should= primary-payment (first changed))
                             (should-be-matching-state {:application-key primary-application-key, :state state-awaiting
                                                        :reason nil} primary-payment)
                             (should-be-matching-state {:application-key linked-application-key, :state state-overdue
@@ -270,7 +308,7 @@
                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
-                          (should= (assoc payment :email "aku@ankkalinna.com") (first changed))
+                          (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))))
 
