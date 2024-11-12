@@ -10,6 +10,8 @@
 
 (def yhteishaku-hakutapa "hakutapa_01#1")
 
+(def custom-form-key "custom-form-key")
+
 (def base-haku
   {:tila                                                 "LUONNOS",
    :ataruLomakeAvain                                     "41101b4f-1762-49af-9db0-e3603adae3ad",
@@ -567,6 +569,15 @@
                                  :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
                                                                 :paattyy "2025-01-01T15:00:00"}]})
+   :payment-info-test-kk-haku-custom-form (merge
+                                             base-kouta-haku
+                                             {:oid                         "payment-info-test-kk-haku-custom-form"
+                                              :hakulomakeAtaruId           custom-form-key
+                                              :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                              :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                              :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                              :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
+                                                                             :paattyy "2025-01-01T15:00:00"}]})
    :payment-info-test-kk-no-tutkinto-haku (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku"

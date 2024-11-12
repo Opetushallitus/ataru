@@ -5,10 +5,10 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]
-            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]))
+            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
+            [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
 
 (defonce payment-module-session {:user-agent "payment-module"})
-(def audit-logger (atom nil))
 
 (defn- add-payment-module-to-form
   [form]
@@ -17,23 +17,29 @@
         updated-content (concat (take-nth 2 sections) [payment-section] (drop 2 sections))
         updated-form (assoc form :content updated-content)]
     (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
-    (form-store/create-form-or-increment-version! form payment-module-session @audit-logger)
+    (form-store/create-form-or-increment-version! updated-form payment-module-session (new-dummy-audit-logger))
     updated-form))
+
+(defn check-and-update
+  [tarjonta-service haku-oids]
+  (let [haut (->> haku-oids
+                  (keep #(tarjonta/get-haku tarjonta-service %))
+                  (filter #(some? (:ataru-form-key %)))
+                  (kk-application-payment/filter-haut-for-update tarjonta-service)
+                  seq)]
+    (->> haut
+         (map :ataru-form-key)
+         (map form-store/fetch-by-key)
+         (filter #(not (has-payment-module? %)))
+         (map add-payment-module-to-form)
+         count)))
 
 (defn check-need-for-application-payment-module
   [_ {:keys [tarjonta-service cas-client]}]
   (log/info "Check need for application payment module step starting")
-  (let [haut (->> (kouta-client/get-haku-oids cas-client)
-                  (keep #(tarjonta/get-haku tarjonta-service %))
-                  (filter #(some? (:ataru-form-key %)))
-                  (kk-application-payment/filter-haut-for-update tarjonta-service))
-        forms-updated (->> haut
-                           (map :ataru-form-key)
-                           (form-store/fetch-latest-version)
-                           (filter #(not (has-payment-module? %)))
-                           (add-payment-module-to-form)
-                           count)]
-    (log/info "Check need for application payment module step finishing, amount of haku checked: " (count haut) ", updated " forms-updated)))
+  (let [haku-oids (kouta-client/get-haku-oids cas-client)
+        forms-updated (check-and-update tarjonta-service haku-oids)]
+    (log/info "Check need for application payment module step finishing, amount of haku checked: " (count haku-oids) ", updated " forms-updated)))
 
 (def job-definition {:handler check-need-for-application-payment-module
                      :type    "application-payment-module-check"
