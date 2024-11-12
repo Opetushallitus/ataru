@@ -595,7 +595,14 @@
                                     {:oid                         "payment-info-test-non-kk-haku"
                                      :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
                                      :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
+                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})
+   :payment-info-test-non-kk-haku-custom-form (merge
+                                                base-kouta-haku
+                                                {:oid                         "payment-info-test-non-kk-haku-custom-form"
+                                                 :hakulomakeAtaruId           custom-form-key
+                                                 :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
+                                                 :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                                 :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
 
 (defrecord MockTarjontaKoutaService []
   component/Lifecycle
