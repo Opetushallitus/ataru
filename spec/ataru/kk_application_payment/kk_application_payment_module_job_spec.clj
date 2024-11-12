@@ -10,6 +10,7 @@
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]))
 
 (def haku-key "payment-info-test-kk-haku-custom-form")
+(def non-kk-haku-key "payment-info-test-non-kk-haku-custom-form")
 (def form-key tarjonta-service/custom-form-key)
 
 (def audit-logger (audit-log/new-dummy-audit-logger))
@@ -32,10 +33,18 @@
           (after
             (clean!))
 
-          (it "inserts payment module to form"
+          (it "inserts payment module to form for applicable haku"
               (init)
               (payment-module-job/check-and-update ts [haku-key])
               (should= true (->> (form-store/fetch-by-key form-key)
+                                 :content
+                                 (some #(= (:id %) kk-application-payment-wrapper-key))
+                                 boolean)))
+
+          (it "does not insert payment module to form as haku does not need it"
+              (init)
+              (payment-module-job/check-and-update ts [non-kk-haku-key])
+              (should= false (->> (form-store/fetch-by-key form-key)
                                  :content
                                  (some #(= (:id %) kk-application-payment-wrapper-key))
                                  boolean))))
