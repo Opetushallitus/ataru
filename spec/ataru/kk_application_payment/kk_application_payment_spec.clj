@@ -59,6 +59,7 @@
 
           (it "should return haku ending in the future regardless of start date"
               ; FWIW first-application-payment-hakuaika-start redef will not be needed in tests after 1.1.2025.
+              ; Meanwhile, we could also modify the config, but then other tests testing the actual official date would fail.
               (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)
                             payment/get-haut-with-tarjonta-data (constantly [(fixtures/haku-with-hakuajat
                                                                                (time/date-time 2025 1 1 6)

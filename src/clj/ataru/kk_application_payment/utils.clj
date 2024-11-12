@@ -5,7 +5,31 @@
             [clj-time.coerce :as coerce]
             [ataru.translations.translation-util :as translations]
             [selmer.parser :as selmer]
-            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]))
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
+            [ataru.config.core :refer [config]]))
+
+(def payment-config
+  (get config :kk-application-payments))
+
+(def first-application-payment-hakuaika-start
+  "Application payments are only charged from admissions starting on certain day"
+  (time/from-time-zone (time/date-time
+                         (get payment-config :start-year 2025)
+                         (get payment-config :start-month 1)
+                         (get payment-config :start-day 1))
+                       (time/time-zone-for-id "Europe/Helsinki")))
+
+(def haku-update-grace-days
+  "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
+  7)
+
+(def application-payment-start-year
+  "Application payments are charged from studies starting in (Autumn) 2025 or later."
+  2025)
+
+(def valid-terms
+  "Semesters / terms for kk application payments: one payment is required per starting term."
+  #{:kausi_k :kausi_s})
 
 (defn payment-email [lang email data {:keys [template-path subject-key]}]
   (let [template-path    template-path
@@ -31,18 +55,6 @@
        first
        :value))
 
-(def haku-update-grace-days
-  "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
-  7)
-
-(def application-payment-start-year
-  "Application payments are charged from studies starting in (Autumn) 2025 or later."
-  2025)
-
-(def valid-terms
-  "Semesters / terms for kk application payments: one payment is required per starting term."
-  #{:kausi_k :kausi_s})
-
 (defn start-term-valid?
   "Payments are only charged starting from term Autumn 2025, check that given start is on or after that."
   [term year]
@@ -52,11 +64,6 @@
       (or
         (and (contains? valid-terms term-kw) (> year application-payment-start-year))
         (and (= term-kw :kausi_s) (= year application-payment-start-year))))))
-
-(def first-application-payment-hakuaika-start
-  "Application payments are only charged from admissions starting in 2025 or later"
-  (time/from-time-zone (time/date-time 2025 1 1)
-                       (time/time-zone-for-id "Europe/Helsinki")))
 
 (defn haku-active-for-updating
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.
