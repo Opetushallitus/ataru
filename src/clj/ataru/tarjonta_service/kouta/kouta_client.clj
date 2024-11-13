@@ -222,10 +222,8 @@
    :koulutusohjelma-name {}
    :tutkintonimike-names []})
 
-(defn get-haku-oids [cas-client]
+(s/defn ^:always-validate get-haku-oids :- (s/maybe [s/Str])
   [cas-client]
-  (prn "is client nil?")
-  (prn cas-client)
   (some-> :kouta-internal.haku-search
           (url-helper/resolve-url)
           (get-result cas-client)

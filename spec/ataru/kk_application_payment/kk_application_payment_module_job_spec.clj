@@ -36,18 +36,33 @@
           (it "inserts payment module to form for applicable haku"
               (init)
               (payment-module-job/check-and-update ts [haku-key])
-              (should= true (->> (form-store/fetch-by-key form-key)
+              (let [form  (form-store/fetch-by-key form-key)]
+                (should= 3 (count (:content form)))
+                (should= true (->> form
                                  :content
                                  (some #(= (:id %) kk-application-payment-wrapper-key))
-                                 boolean)))
+                                 boolean))))
 
           (it "does not insert payment module to form as haku does not need it"
               (init)
               (payment-module-job/check-and-update ts [non-kk-haku-key])
-              (should= false (->> (form-store/fetch-by-key form-key)
-                                 :content
-                                 (some #(= (:id %) kk-application-payment-wrapper-key))
-                                 boolean))))
+              (let [form  (form-store/fetch-by-key form-key)]
+                (should= 2 (count (:content form)))
+                (should= false (->> form
+                                   :content
+                                   (some #(= (:id %) kk-application-payment-wrapper-key))
+                                   boolean))))
+
+          (it "does not reinsert payment module to form"
+              (init)
+              (payment-module-job/check-and-update ts [haku-key])
+              (payment-module-job/check-and-update ts [haku-key])
+              (let [form  (form-store/fetch-by-key form-key)]
+                (should= 3 (count (:content form)))
+                (should= true (->> form
+                                    :content
+                                    (some #(= (:id %) kk-application-payment-wrapper-key))
+                                    boolean)))))
 
 
 
