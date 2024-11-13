@@ -10,4 +10,5 @@
   (get-haku-name [this haku-oid])
   (get-koulutus [this haku-oid])
   (get-koulutukset [this koulutus-oids])
-  (clear-haku-caches [this haku-oid]))
+  (clear-haku-caches [this haku-oid])
+  (get-haku-oids [this]))

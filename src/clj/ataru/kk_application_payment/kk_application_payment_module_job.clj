@@ -5,7 +5,6 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]
-            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
 
 (defonce payment-module-session {:user-agent "payment-module"})
@@ -35,12 +34,12 @@
          count)))
 
 (defn check-need-for-application-payment-module
-  [_ {:keys [tarjonta-service cas-client]}]
+  [_ {:keys [tarjonta-service]}]
   (log/info "Check need for application payment module step starting")
-  (let [haku-oids (kouta-client/get-haku-oids cas-client)
+  (let [haku-oids (tarjonta/get-haku-oids tarjonta-service)
         forms-updated (check-and-update tarjonta-service haku-oids)]
     (log/info "Check need for application payment module step finishing, amount of haku checked: " (count haku-oids) ", updated " forms-updated)))
 
 (def job-definition {:handler check-need-for-application-payment-module
                      :type    "application-payment-module-check"
-                     :schedule "0 3 30 * *"})
+                     :schedule "*/5 * * * *"}) ;"0 3 30 * *"})
