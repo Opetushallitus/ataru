@@ -13,7 +13,7 @@
   [form]
   (let [sections (:content form)
         payment-section (kk-application-payment-module)
-        updated-content (concat (take-nth 2 sections) [payment-section] (drop 2 sections))
+        updated-content (concat (take 2 sections) [payment-section] (drop 2 sections))
         updated-form (assoc form :content updated-content)]
     (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! updated-form payment-module-session (new-dummy-audit-logger))
@@ -29,7 +29,7 @@
     (->> haut
          (map :ataru-form-key)
          (map form-store/fetch-by-key)
-         (filter #(not (has-payment-module? %)))
+         (filter #(not (or (nil? %) (has-payment-module? %))))
          (map add-payment-module-to-form)
          count)))
 
@@ -42,4 +42,4 @@
 
 (def job-definition {:handler check-need-for-application-payment-module
                      :type    "application-payment-module-check"
-                     :schedule "*/5 * * * *"}) ;"0 3 30 * *"})
+                     :schedule "0 4 * * *"})
