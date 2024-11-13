@@ -12,6 +12,12 @@
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
             [ataru.kk-application-payment.utils :as utils]))
 
+(def remind-days-before 2)
+
+(defn- local-date-today []
+  (let [time-local (time/to-time-zone (time/now) (time/time-zone-for-id "Europe/Helsinki"))]
+    (time/local-date (time/year time-local) (time/month time-local) (time/day time-local))))
+
 (defn- payment-reminder-email-params
   [lang]
   {:subject-key :email-kk-payment-reminder-subject
@@ -63,9 +69,9 @@
 (defn needs-reminder-sent?
   [payment]
   (when (and (:due-date payment) (:maksut-secret payment) (nil? (:reminder-sent-at payment)))
-    (let [now           (time/now)
+    (let [now           (local-date-today)
           due-at        (payment/parse-due-date (:due-date payment))
-          remind-at     (time/minus due-at (time/days 2))
+          remind-at     (time/minus due-at (time/days remind-days-before))
           remind-at-met (or (time/after? now remind-at)
                             (time/equal? now remind-at))]
       (and (= (:awaiting payment/all-states) (:state payment))
