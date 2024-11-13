@@ -1,6 +1,6 @@
 (ns ataru.kk-application-payment.kk-application-payment-maksut-poller-job-spec
   (:require [ataru.fixtures.db.unit-test-db :as unit-test-db]
-            [speclj.core :refer [it describe tags should= after before]]
+            [speclj.core :refer [it describe tags should= after before stub with-stubs should-have-invoked]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as poller-job]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
@@ -13,11 +13,14 @@
 (def key-with-active-status  "1.2.246.562.8.00000000000022225300")
 (def key-with-no-status      "1.2.246.562.8.00000000000000005400")
 
+(defn start-runner-job [_ _ _ _])
+
 (defrecord FakeJobRunner []
   component/Lifecycle
 
   job/JobRunner
-  (start-job [_ _ _ _]))
+  (start-job [this connection job-type initial-state]
+    (start-runner-job this connection job-type initial-state)))
 
 (defrecord MockMaksutService []
   MaksutServiceProtocol
@@ -73,6 +76,8 @@
 (describe "kk-application-payment-maksut-poller-job"
           (tags :unit)
 
+          (with-stubs)
+
           ; Add some other states that are checked during every test
           (before
             ; The first three ones should always stay as is
@@ -112,4 +117,18 @@
               (let [_ (create-awaiting-status key-with-overdue-status)
                     _ (poller-job/poll-kk-payments-handler {} runner)]
                 (check-state-and-history key-with-overdue-status (:overdue payment/all-states) 1 1)
-                (check-comparison-payments))))
+                (check-comparison-payments)))
+
+          (it "creates and queues e-mail job for a paid payment once"
+              (with-redefs [start-runner-job (stub :start-job)]
+                (let [_ (create-awaiting-status key-with-paid-status)
+                      _ (poller-job/get-payments-and-poll runner)
+                      _ (poller-job/get-payments-and-poll runner)
+                      _ (poller-job/get-payments-and-poll runner)
+                      check-mail-fn (fn [mail-content]
+                                      (str/includes? (:body mail-content) "Kiitos hakemusmaksun maksamisesta (fi)"))]
+                  (should-have-invoked :start-job
+                                       {:times 2            ; The one we just created, and one of the comparison states
+                                        :with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})))))

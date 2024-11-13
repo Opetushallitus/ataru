@@ -87,3 +87,8 @@ WHERE application_key IN (:application_keys);
 UPDATE kk_application_payments
 SET maksut_secret = :maksut_secret
 WHERE application_key = :application_key;
+
+-- name: yesql-mark-reminder-sent!
+UPDATE kk_application_payments
+SET reminder_sent_at = now()
+WHERE application_key = :application_key;

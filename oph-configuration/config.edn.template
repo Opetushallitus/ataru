@@ -26,7 +26,10 @@
  :kk-application-payments {:processing-fee {{ataru_kk_application_payments_processing_fee | default('100.00')}}
                            :enabled? {{ataru_kk_application_payments_enabled | default('false')}}
                            :status-updater-enabled? {{ataru_kk_application_payments_status_updater_enabled | default('false')}}
-                           :maksut-poller-enabled? {{ataru_kk_application_payments_maksut_poller_enabled | default('false')}}}
+                           :maksut-poller-enabled? {{ataru_kk_application_payments_maksut_poller_enabled | default('false')}}
+                           :start-year {{ataru_kk_application_payments_start_year | default('2025')}}
+                           :start-month {{ataru_kk_application_payments_start_month | default('1')}}
+                           :start-day {{ataru_kk_application_payments_start_day | default('1')}}}
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
  :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
