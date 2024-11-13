@@ -224,6 +224,8 @@
 
 (defn get-haku-oids [cas-client]
   [cas-client]
+  (prn "is client nil?")
+  (prn cas-client)
   (some-> :kouta-internal.haku-search
           (url-helper/resolve-url)
           (get-result cas-client)

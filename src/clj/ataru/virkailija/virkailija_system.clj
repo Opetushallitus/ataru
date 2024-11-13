@@ -78,7 +78,8 @@
                         :kouta-hakus-by-form-key-cache
                         :hakukohde-cache
                         :haku-cache
-                        :hakukohde-search-cache])
+                        :hakukohde-search-cache
+                        :kouta-internal-cas-client])
 
     :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache
     (component/using
