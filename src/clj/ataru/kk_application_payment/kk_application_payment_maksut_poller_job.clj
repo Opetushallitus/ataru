@@ -69,10 +69,10 @@
                          (log/debug "Invalid origin, will not do anything" item))]
           (when response (log/info "Process result:" response)))))))
 
-(defn get-payments-and-poll [job-runner maksut-service]
+(defn get-payments-and-poll [{:keys [maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (try
-      ; TODO: we have to also handle awaiting payments without maksut information (in case something has gone wrong)
+      ; TODO: we should probably also handle awaiting payments without maksut information (in case something has gone wrong)
       (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
         (do
           (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
@@ -82,10 +82,10 @@
         (log/error e "Maksut polling failed")))))
 
 (defn poll-kk-payments-handler
-  [_ {:keys [maksut-service] :as job-runner}]
+  [_ job-runner]
   (when (get-in config [:kk-application-payments :maksut-poller-enabled?])
     (log/info "Poll kk application payments step starting")
-    (get-payments-and-poll job-runner maksut-service)
+    (get-payments-and-poll job-runner)
     (log/info "Poll kk application payments step finished")))
 
 (defn start-kk-application-payment-maksut-poller-job
