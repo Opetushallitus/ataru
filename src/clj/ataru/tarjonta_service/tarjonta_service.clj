@@ -3,6 +3,7 @@
             [ataru.organization-service.organization-client :refer [oph-organization]]
             [ataru.config.core :refer [config]]
             [ataru.cache.cache-service :as cache]
+            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku]]
             [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
@@ -17,7 +18,8 @@
                                   kouta-hakus-by-form-key-cache
                                   hakukohde-cache
                                   haku-cache
-                                  hakukohde-search-cache]
+                                  hakukohde-search-cache
+                                  kouta-internal-cas-client]
   TarjontaService
   (get-hakukohde [_ hakukohde-oid]
     (cache/get-from hakukohde-cache hakukohde-oid))
@@ -83,7 +85,10 @@
           hakukohde-oids (:hakukohteet haku)]
       (cache/remove-from haku-cache haku-oid)
       (doseq [hakukohde-oid hakukohde-oids]
-        (cache/remove-from hakukohde-cache hakukohde-oid)))))
+        (cache/remove-from hakukohde-cache hakukohde-oid))))
+
+  (get-haku-oids [_]
+    (kouta-client/get-haku-oids [kouta-internal-cas-client])))
 
 (defn new-tarjonta-service
   []
