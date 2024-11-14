@@ -18,6 +18,9 @@
    :temporary-protection-option-value "7"
    :no-document-option-value "8"})
 
+(def kk-application-payment-document-exempt-options
+  (dissoc kk-application-payment-document-options :no-document-option-value))
+
 (defn- kk-option-attachment [metadata id label-key]
   (assoc (component/attachment metadata)
     :id id
