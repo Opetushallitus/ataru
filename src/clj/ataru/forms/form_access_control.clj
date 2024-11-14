@@ -10,8 +10,7 @@
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.tarjonta.haku :as haku]
     [ataru.forms.form-payment-info :as payment-info]
-    [ataru.kk-application-payment.utils :refer [has-payment-module?]]
-    [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module kk-application-payment-wrapper-key]]
+    [ataru.kk-application-payment.utils :as payment-utils]
     [taoensso.timbre :as log]))
 
 (def synthetic-application-permalock-user "synteettinen_hakemus")
@@ -166,22 +165,14 @@
 
 (defn- update-payment-module-to-form
   [form session audit-logger]
-  (let [sections (:content form)
-        payment-section (kk-application-payment-module)
-        updated-content (map #((if (= (:id %) kk-application-payment-wrapper-key)
-                                 payment-section
-                                 %)) sections)
-        updated-form (assoc form :content updated-content)]
+  (let [updated-form (payment-utils/update-payment-module-in-form form)]
     (log/info "updating kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! updated-form session audit-logger)
     "Lomakkeen maksumoduuli päivitetty"))
 
 (defn- add-payment-module-to-form
   [form session audit-logger]
-  (let [sections (:content form)
-        payment-section (kk-application-payment-module)
-        updated-content (concat (take 2 sections) [payment-section] (drop 2 sections))
-        updated-form (assoc form :content updated-content)]
+  (let [updated-form (payment-utils/inject-payment-module-to-form form)]
     (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! updated-form session audit-logger)
     "Lisätty maksumoduuli lomakkeelle"))
@@ -193,7 +184,7 @@
         has-applications? (form-store/form-has-applications form-key)]
     (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
     (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
-    (if (has-payment-module? form)
+    (if (payment-utils/has-payment-module? form)
       (update-payment-module-to-form form session audit-logger)
       (add-payment-module-to-form form session audit-logger))))
 
