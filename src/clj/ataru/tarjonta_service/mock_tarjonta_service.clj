@@ -10,7 +10,7 @@
 
 (def yhteishaku-hakutapa "hakutapa_01#1")
 
-(def custom-form-key "custom-form-key")
+(def custom-form-key "c68ca37b-61f0-4604-9952-a2dcf8f4301e")
 
 (def base-haku
   {:tila                                                 "LUONNOS",
