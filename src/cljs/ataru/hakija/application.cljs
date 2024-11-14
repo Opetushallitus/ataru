@@ -83,6 +83,17 @@
 
             [{:id         id
               :fieldClass "formField"
+              :fieldType  "textField"
+              :params     {:transparent true}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :value  [""]
+                             :values [{:value ""
+                                       :valid (not required?)}]}])
+
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  (:or "textField" "textArea")
               :label      label}]
             (let [required? (some #(contains? required-validators %)
