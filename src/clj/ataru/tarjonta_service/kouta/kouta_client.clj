@@ -222,6 +222,13 @@
    :koulutusohjelma-name {}
    :tutkintonimike-names []})
 
+(s/defn ^:always-validate get-haku-oids :- (s/maybe [s/Str])
+  [cas-client]
+  (some-> :kouta-internal.haku-search
+          (url-helper/resolve-url)
+          (get-result cas-client)
+          ((fn [result] (mapv :oid result)))))
+
 (defrecord CacheLoader [cas-client]
   cache-service/CacheLoader
 

@@ -15,7 +15,8 @@
             [ataru.kk-application-payment.utils :as utils]
             [ataru.config.core :refer [config]]
             [clj-time.format :as time-format]
-            [clj-time.core :as time]))
+            [clj-time.core :as time]
+            [ataru.component-data.kk-application-payment-module :as payment-module]))
 
 (def default-time-format (time-format/formatters :year-month-day))
 
@@ -29,10 +30,9 @@
   "Unique id / field name for form field that indicates exemption from application fee"
   :kk-application-payment-option)
 
-; TODO: these are the options in current module version, check they're still up to date when going to prod.
 (def exemption-field-ok-values
   "Any of these values should be considered as exemption to payment"
-  #{"0" "1" "2" "3" "4" "5"})
+  (set (map val payment-module/kk-application-payment-document-exempt-options)))
 
 (def all-states
   {:not-required "not-required"
@@ -244,12 +244,18 @@
        (filter #(and (= start-year (:alkamisvuosi %))
                      (str/starts-with? (:alkamiskausi %) start-term)))))
 
+(defn filter-haut-for-update
+  "filter haut that should have their kk payment status checked and updated at call time"
+  [tarjonta-service hakus]
+  (let [valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
+        active-hakus (filter utils/haku-active-for-updating valid-hakus)]
+    active-hakus))
+
 (defn get-haut-for-update
   "Get hakus that should have their kk payment status checked and updated at call time."
   [get-haut-cache tarjonta-service]
   (let [hakus (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
-        valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
-        active-hakus (filter utils/haku-active-for-updating valid-hakus)]
+        active-hakus (filter-haut-for-update tarjonta-service hakus)]
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 
