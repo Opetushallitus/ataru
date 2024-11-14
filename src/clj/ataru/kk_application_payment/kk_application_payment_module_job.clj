@@ -5,6 +5,7 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]
+            [ataru.config.core :refer [config]]
             [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
 
 (defonce payment-module-session {:user-agent "payment-module"})
@@ -42,4 +43,5 @@
 
 (def job-definition {:handler check-need-for-application-payment-module
                      :type    "application-payment-module-check"
-                     :schedule "0 4 * * *"})
+                     :schedule (get-in config [:jobs :application-payment-module-cron] "0 4 * * *")})
+
