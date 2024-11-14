@@ -596,7 +596,7 @@
               [{:key "kk-application-payment-option" :value "0" :fieldType "dropdown"}])))
 
 (def application-without-hakemusmaksu-exemption
-  (-> person-info-form-application
+  (-> person-info-form-application-without-kk-application-answer
       (merge {:form       909909,
               :lang       "fi"
               :haku       "payment-info-test-kk-haku"
@@ -606,4 +606,4 @@
       (update
         :answers
         (comp vec concat)
-        [{:key "vapautus_hakemusmaksusta" :value "12345" :fieldType "dropdown"}])))
+        [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))
