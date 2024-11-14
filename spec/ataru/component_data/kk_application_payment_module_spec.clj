@@ -22,9 +22,12 @@
                                    "continuous-residence-passport-attachment"
                                    "permanent-residence-permit"
                                    "permanent-residence-passport-attachment"
+                                   "brexit-permit-attachment"
+                                   "brexit-passport-attachment"
+                                   "permanent-residence-permit"
+                                   "permanent-residence-passport-attachment"
                                    "eu-family-member-permit"
                                    "eu-family-passport-attachment"
-                                   "temporary-protection-ukraine-permit"
-                                   "none-passport-attachment"]]
+                                   "temporary-protection-permit"]]
                 (doseq [id keys-to-check]
                   (should-contain id keys-generated)))))
