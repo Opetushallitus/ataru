@@ -29,6 +29,7 @@
                   seq)]
     (->> haut
          (map :ataru-form-key)
+         (filter #(= % "c68ca37b-61f0-4604-9952-a2dcf8f4301e")) ;temporary for testing
          (map form-store/fetch-by-key)
          (filter #(not (or (nil? %) (has-payment-module? %))))
          (map add-payment-module-to-form)
