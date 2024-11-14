@@ -5,7 +5,7 @@
             [clj-time.coerce :as coerce]
             [ataru.translations.translation-util :as translations]
             [selmer.parser :as selmer]
-            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key kk-application-payment-module]]
             [ataru.config.core :refer [config]]))
 
 (def payment-config
@@ -112,3 +112,21 @@
        (map :id)
        (some #(= kk-application-payment-wrapper-key %))
        boolean))
+
+(defn inject-payment-module-to-form [form]
+  (let [sections (:content form)
+        payment-section (kk-application-payment-module)
+        ; lisätään maksumoduuli hakukohde ja henkilötieto-osioiden jälkeen:
+        updated-content (concat (take 2 sections) [payment-section] (drop 2 sections))]
+    (assoc form :content updated-content)))
+
+(defn update-payment-module-in-form
+  [form]
+  (let [sections (:content form)
+        payment-section (kk-application-payment-module)
+        update-fn (fn[section]
+                    (if (= (:id section) kk-application-payment-wrapper-key)
+                      payment-section
+                      section))
+        updated-content (map update-fn sections)]
+    (assoc form :content updated-content)))
