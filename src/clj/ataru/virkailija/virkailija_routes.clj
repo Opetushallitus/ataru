@@ -305,6 +305,12 @@
       (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service audit-logger)
       (ok {}))
 
+    (api/PUT "/forms/:form-key/upsert-kk-application-payment-module" {session :session}
+      :summary "Add or update kk-application-payment-module for given form"
+      :path-params [form-key :- s/Str]
+      (let [message (access-controlled-form/upsert-kk-application-payment-module form-key session audit-logger)]
+        (ok message)))
+
     (api/PUT "/forms/:form-key/change-field-id" {session :session}
       :summary "Change id for form field."
       :path-params [form-key :- s/Str]
