@@ -37,7 +37,6 @@
               (init)
               (payment-module-job/check-and-update ts [haku-key])
               (let [form  (form-store/fetch-by-key form-key)]
-                (prn (map :id (:content form)))
                 (should= 6 (count (:content form)))
                 (should= true (->> form
                                  :content
