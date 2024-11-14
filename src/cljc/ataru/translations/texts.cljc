@@ -974,42 +974,48 @@
                                              :en "EN: Perusopetuksen oppimäärä"}})
 
 (def kk-application-payment-module-texts
-  {:section-title                           {:fi "Vapautus lukuvuosimaksusta"
-                                             :sv "Befrielse från läsårsavgifter"
-                                             :en "Exemption from tuition fees"}
+  {:section-title                           {:fi "Vapautus hakemusmaksusta ja lukuvuosimaksusta"
+                                             :sv "Befrielse från ansökningsavgift och läsårsavgift"
+                                             :en "Exemption from application and tuition fees"}
    :document-option-title                   {:fi "Minulla on seuraava dokumentti"
                                              :sv "Jag har följande dokument"
                                              :en "I have the following document"}
-   :document-option-info                    {:fi "EU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään lukuvuosimaksu muuhun kuin suomen- tai ruotsinkieliseen tutkintoon johtavaan koulutukseen hyväksytyltä opiskelijalta. Olet vapautettu lukuvuosimaksun maksamisesta, jos sinulla on jokin alla mainituista dokumenteista. Huomaa, että sinun tulee ladata kopio lukuvuosimaksun vapauttavasta dokumentista kyseisen korkeakoulun ohjeistuksen mukaisesti. Korkeakoulut voivat tarkistaa Suomen kansalaisuuden järjestelmästä, joten Suomen kansalaisten ei tarvitse lähettää kopiota passista tai henkilökortista.  Voit lukea lisää lukuvuosimaksuista [Opintopolku.fi-sivulta](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#lukuvuosimaksu-korkeakoulujen-vieraskielisissa-koulutuksissa) ja [Maahanmuuttoviraston sivulta](http://migri.fi/lukuvuosimaksut). Tarkemmat tiedot lukuvuosimaksuista ja apurahan hakemisesta löydät korkeakoulujen omilta internet-sivuilta ja Opintopolku.fi -sivustolla olevista hakukohdekohtaisista valintaperustetiedoista. "
-                                             :sv "Läsårsavgifter tillämpas för studerande som inte är medborgare i länder som hör till Europeiska Unionen (EU), Europeiska ekonomiska samarbetsområdet (EES) eller Schweiz, som antas till studier som leder till examen som erbjuds på annat språk än finska eller svenska.  Du är befriad från att betala läsårssavgifterna om du har något av dokumenten nedan. Vänligen notera att du måste ladda upp en kopia av det dokument du uppger här, i enlighet med högskolans anvisningar, för att kunna befrias från läsårsavgiften. Yrkeshögskolorna har möjlighet att kontrollera finskt medborgarskapet via systemet, så finska medborgare behöver inte skicka en kopia på passet eller personkortet. Läs mera om läsårsavgifterna i allmänhet på [Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#lasarsavgift-fr-hgskolornas-utbildningar-pa-frammande-sprak) och på [Migrationsverkets sidor](http://migri.fi/sv/studieavgifter). Mera information om läsårsavgifter och stipendiesystem hittas på respektive högskolas websida och via utbildningsbeskrivningarna på studieinfo.fi . \n\n"
-                                             :en "There will be a tuition fee applicable to students who are not citizens of countries of the European Union (EU), European Economic Area (EEA) or Switzerland. You are exempted from paying tuition fees if you have one of the documents mentioned below. Please note that you have to upload a copy of the document which you use as a basis for exemption according to instructions given by the higher education institution in question. Higher education institutions can verify Finnish citizenship from the database, so applicants who have Finnish citizenship do not have to send a copy of their passport or identity card. Please read more information about tuition fees in general from [Studyinfo.fi](https://opintopolku.fi/konfo/en/sivu/tuition-fees) and [Finnish Immigration Service](http://migri.fi/en/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on Studyinfo.fi. \n\n"}
+   :document-option-info                    {:fi "EU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään hakemusmaksu haettaessa tutkintoon johtavaan koulutukseen. Olet vapautettu hakemusmaksun maksamisesta, jos sinulla on jokin alla mainituista dokumenteista. Huomaa, että sinun tulee ladata kopio hakemusmaksun vapauttavasta dokumentista kyseisen korkeakoulun ohjeistuksen mukaisesti. Korkeakoulut voivat tarkistaa Suomen kansalaisuuden järjestelmästä, joten Suomen kansalaisten ei tarvitse lähettää kopiota passista tai henkilökortista.  Voit lukea lisää hakemusmaksuista [* Linkki uutiseen ja Usein kysyttyä hakemusmaksuista -sivustolle*]\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään lukuvuosimaksu muuhun kuin suomen- tai ruotsinkieliseen tutkintoon johtavaan koulutukseen hyväksytyltä opiskelijalta. Olet vapautettu lukuvuosimaksun maksamisesta, jos sinulla on jokin alla mainituista dokumenteista. Huomaa, että sinun tulee ladata kopio lukuvuosimaksun vapauttavasta dokumentista kyseisen korkeakoulun ohjeistuksen mukaisesti. Korkeakoulut voivat tarkistaa Suomen kansalaisuuden järjestelmästä, joten Suomen kansalaisten ei tarvitse lähettää kopiota passista tai henkilökortista.  Voit lukea lisää lukuvuosimaksuista [Opintopolku.fi-sivulta](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#lukuvuosimaksu-korkeakoulujen-vieraskielisissa-koulutuksissa) ja [Maahanmuuttoviraston sivulta](http://migri.fi/lukuvuosimaksut). Tarkemmat tiedot lukuvuosimaksuista ja apurahan hakemisesta löydät korkeakoulujen omilta internet-sivuilta ja Opintopolku.fi -sivustolla olevista hakukohdekohtaisista valintaperustetiedoista."
+                                             :sv "En ansökningsavgift debiteras av sökande som inte är medborgare i länder som hör till Europeiska unionen (EU), Europeiska ekonomiska samarbetsområdet (EES) eller Schweiz. Du är befriad från att betala ansökningsavgiften om du har något av dokumenten nedan. Vänligen notera att du måste ladda upp en kopia av det dokument du uppger här, i enlighet med högskolans anvisningar, för att kunna befrias från ansökningsavgiften. Högskolorna har möjlighet att kontrollera finskt medborgarskap direkt ur databasen, så finska medborgare behöver inte skicka en kopia på passet eller id-kortet. Läs mer om ansökningsavgiften: [LINKKI]\n\nLäsårsavgifter tillämpas för studerande som inte är medborgare i länder som hör till Europeiska Unionen (EU), Europeiska ekonomiska samarbetsområdet (EES) eller Schweiz, som antas till studier som leder till examen som erbjuds på annat språk än finska eller svenska.  Du är befriad från att betala läsårssavgifterna om du har något av dokumenten nedan. Vänligen notera att du måste ladda upp en kopia av det dokument du uppger här, i enlighet med högskolans anvisningar, för att kunna befrias från läsårsavgiften. Yrkeshögskolorna har möjlighet att kontrollera finskt medborgarskapet via systemet, så finska medborgare behöver inte skicka en kopia på passet eller personkortet. Läs mera om läsårsavgifterna i allmänhet på [Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#lasarsavgift-fr-hgskolornas-utbildningar-pa-frammande-sprak) och på [Migrationsverkets sidor](http://migri.fi/sv/studieavgifter). Mera information om läsårsavgifter och stipendiesystem hittas på respektive högskolas websida och via utbildningsbeskrivningarna på studieinfo.fi."
+                                             :en "An application fee is charged to applicants not citizens of countries belonging to the European Union (EU), European Economic Area (EEA) or Switzerland when applying to higher education leading to a degree. You are exempt from paying the application fee if you have any of the documents below. Please note that you must upload a copy of the document you provide here, in accordance with the instructions of the higher education institution, to be exempt from the application fee. Higher education institutions can verify Finnish citizenship directly from the database, so Finnish citizens do not need to send a copy of their passport or ID card. Read more about the application fee here: [LINKKI]\n\nThere will be a tuition fee applicable to students who are not citizens of countries of the European Union (EU), European Economic Area (EEA) or Switzerland. You are exempted from paying tuition fees if you have one of the documents mentioned below. Please note that you have to upload a copy of the document which you use as a basis for exemption according to instructions given by the higher education institution in question. Higher education institutions can verify Finnish citizenship from the database, so applicants who have Finnish citizenship do not have to send a copy of their passport or identity card. Please read more information about tuition fees in general from [Studyinfo.fi](https://opintopolku.fi/konfo/en/sivu/tuition-fees) and [Finnish Immigration Service](http://migri.fi/en/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on Studyinfo.fi."}
    :passport-option                         {:fi "Passi (tai henkilökortti), josta ilmenee EU- tai ETA-maan tai Sveitsin kansalaisuus"
                                              :sv "Pass (eller identitetskort) som visar medborgarskap i EU/EES/Schweiz"
                                              :en "Passport (or identity card) to indicate the citizenship of EU/EEA/Switzerland "}
-   :eu-blue-card-option                     {:fi "Erityisasiantuntija: EU:n sininen kortti Suomessa"
-                                             :sv "Specialsakkunnig: EU-blåkort i Finland"
-                                             :en "Specialist: EU Blue Card in Finland"}
+   :eu-blue-card-option                     {:fi "EU:n sininen kortti Suomessa"
+                                             :sv "EU-blåkort i Finland"
+                                             :en "EU Blue Card in Finland"}
    :continuous-residence-option             {:fi "Jatkuva oleskelulupakortti Suomessa, oleskelulupatyyppi A, myönnetty muulla kuin opiskelun perusteella"
                                              :sv "Kontinuerligt uppehållstillstånd i Finland, tillståndstyp A, som beviljats av annan orsak än för studier"
                                              :en "Continuous residence permit in Finland,  Type A permit issued for purposes other than studies"}
+   :longterm-residence-option               {:fi "Pitkään oleskelleen kolmannen maan kansalaisen EU-oleskelulupakortti Suomessa, oleskelulupatyyppi P-EU"
+                                             :sv "EU-uppehållstillstånd för varaktigt bosatta tredjelandsmedborgare med permanent uppehållstillstånd i Finland, tillståndstyp P-EU"
+                                             :en "EU residence permit for third-country citizens with long-term residence permit card in Finland (Type P-EU)"}
+   :brexit-option                           {:fi "Brexit-oleskelulupakortti, lupatyyppi SEU-sopimuksen 50 artikla = Erosopimuksen piiriin kuuluva oleskeluoikeus, tai  P SEU-sopimuksen 50 artikla = Erosopimuksen mukainen pysyvä oleskeluoikeus"
+                                             :sv "Brexit-uppehållstillståndskort, tillståndstyp SEU-sopimuksen 50 artikla = Uppehållsrätt i enlighet med utträdesavtalet, eller P SEU-sopimuksen 50 artikla = Permanent uppehållsrätt i enlighet med utträdesavtalet"
+                                             :en "Brexit residence permit card, Type SEU = Right of residence under the withdrawal agreement, or P SEU = Right of permanent residence under the withdrawal agreement"}
    :permanent-residence-option              {:fi "Pysyvä oleskelulupakortti Suomessa, oleskelulupa P"
                                              :sv "Permanent uppehållstillstånd i Finland, tillståndstyp P"
                                              :en "Permanent residence permit card in Finland, Type P permit"}
    :eu-family-member-option                 {:fi "EU-kansalaisen perheenjäsenen oleskelukortti Suomessa"
                                              :sv "Uppehållstillståndkort som EU medborgares familjemedlem i Finland"
                                              :en "EU Family Member's Residence Card in Finland "}
-   :temporary-protection-ukraine-option     {:fi "Tilapäinen suojelu (Ukraina)"
-                                             :sv "Tillfälligt skydd (Ukraina)"
-                                             :en "Temporary protection (Ukraine)"}
-   :no-document-option                      {:fi "Kopio passista  tai henkilökortista"
-                                             :sv "Pass eller identitetskort "
-                                             :en "Copy of passport or identity card"}
+   :temporary-protection-option             {:fi "Tilapäinen suojelu"
+                                             :sv "Tillfälligt skydd"
+                                             :en "Temporary protection"}
+   :no-document-option                      {:fi "Minulla ei ole mitään edellä mainituista dokumenteista"
+                                             :sv "Jag har inget av de ovannämnda"
+                                             :en "I do not have any of the above"}
    :asiakasnumero-migri                     {:fi "Asiakasnumero"
                                              :sv "Kundnummer"
                                              :en "Customer number"}
-   :asiakasnumero-migri-info                {:fi "Kirjoita tähän asiakasnumerosi Maahanmuuttovirastossa."
-                                             :sv "Fyll i ditt kundnummer hos Migrationsverket."
-                                             :en "Write your customer number at the Finnish Immigration Service."}
+   :asiakasnumero-migri-info                {:fi "Kirjoita tähän asiakasnumerosi Maahanmuuttovirastossa. Löydät asiakasnumerosi oleskelulupakortistasi. "
+                                             :sv "Fyll i ditt kundnummer hos Migrationsverket. Du hittar ditt kundnummer på ditt uppehållstillståndskort."
+                                             :en "Write your customer number at the Finnish Immigration Service. You can find your customer number on your residence permit card."}
    :continuous-residence-info               {:fi "Huom: Jatkuva oleskelulupa (A-lupa), joka on myönnetty opiskelua varten (15 huhtikuuta 2022 alkaen) ei vapauta lukuvuosimaksusta."
                                              :sv "Obs: Ett kontinuerligt uppehållstillstånd (A-tillstånd) som beviljats för att avlägga en högskoleexamen (fr.o.m 15 april 2022) befriar dig inte från att betala läsårsavgiften."
                                              :en "NB! A continuous residence permit (A-type permit) granted for studying in Finland (from 15 April 2022 onwards) doesn’t exempt you from paying the tuition fee."}
@@ -1020,8 +1026,8 @@
                                              :sv "Det sista giltighetsdatum (dd/mm/åååå)"
                                              :en "Valid until (dd/mm/yyyy)"}
    :passport-attachment                     {:fi "Kopio passista  tai henkilökortista"
-                                             :sv "Pass eller identitetskort "
-                                             :en "Copy of passport or identity card "}
+                                             :sv "Pass eller identitetskort"
+                                             :en "Copy of passport or identity card"}
    :eu-blue-card-attachment                 {:fi "Kopio oleskeluluvasta (EU:n sininen kortti) Suomeen"
                                              :sv "Uppehållstillstånd (EU-blåkort) i Finland"
                                              :en "Copy of residence permit (EU Blue Card) to Finland"}
@@ -1031,18 +1037,24 @@
    :continuous-permit-back-attachment      {:fi "Kopio oleskeluluvasta (A) Suomeen - takapuoli"
                                              :sv "Uppehållstillstånd (A) i Finland - baksida"
                                              :en "Copy of residence permit (A) to Finland - backside"}
+   :longterm-permit-attachment             {:fi "Kopio oleskeluluvasta (P-EU) Suomeen"
+                                            :sv "Uppehållstillstånd (P-EU) i Finland"
+                                            :en "Copy of residence permit (P-EU) to Finland"}
+   :brexit-permit-attachment               {:fi "Kopio Brexit-oleskeluluvasta (SEU tai P SEU) Suomeen"
+                                            :sv "Kopian av Brexit-uppehållstillstånd (SEU eller P SEU) i Finland"
+                                            :en "Copy of Brexit residence permit (SEU or P SEU) to Finland"}
    :permanent-permit-attachment            {:fi "Kopio oleskeluluvasta (P) Suomeen"
                                             :sv "Uppehållstillstånd (P) i Finland"
                                             :en "Copy of residence permit (P) to Finland"}
    :eu-family-member-attachment            {:fi "Kopio oleskeluluvasta (EU-kansalaisen perheenjäsenen oleskelukortti) Suomeen"
                                             :sv "Uppehållstillstånd (Uppehållstillståndkort som EU medborgares familjemedlem) i Finland"
                                             :en "Copy of residence permit (EU Family Member's Residence Card) to Finland"}
-   :temporary-protection-attachment        {:fi "Tilapäistä suojelua saavat"
-                                            :sv ""
-                                            :en ""}
-   :none-passport-info                     {:fi "**Henkilöllisyystodistus pyydetään hakemustarkastusta varten.**\n\nTallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.\n\nNimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus\n\nSkannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.\n\nSuositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX."
-                                            :sv "**Identitetsbevis tillfrågas för kontroll av ansökningen.**\n\nSpara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor. \n\nNamnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg\n\nSkanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga. \nSamla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor. \nKontrollera att dokumenten i filen är rättvända.\n\nRekommenderade filformat är PDF, JPG, PNG och DOCX. "
-                                            :en "**An identity document is required for application review purposes.**\n\nSubmit the attachment within 7 (seven) days after the application period has closed. The exact deadline is available next to the attachment request.\n\nName the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.\n\nScan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright. \n\nRecommended file formats are: PDF, JPG, PNG and DOCX."}})
+   :temporary-protection-attachment        {:fi "Tilapäisen suojelun oleskelulupakortti"
+                                            :sv "Uppehållstillståndskort på grund av tillfälligt skydd"
+                                            :en "Residence permit card on the basis of temporary protection"}
+   :none-passport-info                     {:fi "Olet antamiesi tietojen perusteella hakemusmaksuvelvollinen. Saat hakulomakkeen lähettämisen jälkeen hakemusmaksun maksuohjeet ilmoittamaasi sähköpostiosoitteeseen. "
+                                            :sv "Enligt de uppgifter som du angett är du förpliktad att betala ansökningsavgift. Efter att du skickat ansökningsblanketten får du anvisningar för hur du betalar ansökningsavgiften till den e-postadress som du angett."
+                                            :en "According to the information you provided, you are obliged to pay the application fee. After you send the application form, you will receive instructions on how to pay the application fee at the email address you provided."}})
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
