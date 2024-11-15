@@ -69,14 +69,18 @@
   application-key)
 
 (defn generate-invoicing-data
-  [payment person]
-  {:reference  (payment->maksut-reference payment)
-   :origin     kk-application-payment-origin
-   :amount     kk-application-payment-amount
-   :due-days   kk-application-payment-due-days
-   :first-name (:first-name person)
-   :last-name  (:last-name person)
-   :email      (:email payment)})
+  [payment application]
+  (let [get-field  (fn [key] (->> (:answers application)
+                                  (filter #(= key (:key %)))
+                                  (map :value)
+                                  first))]
+    {:reference  (payment->maksut-reference payment)
+     :origin     kk-application-payment-origin
+     :amount     (str kk-application-payment-amount)
+     :due-days   kk-application-payment-due-days
+     :first-name (get-field "first-name")
+     :last-name  (get-field "last-name")
+     :email      (get-field "email")}))
 
 (defn- validate-payment-data
   [{:keys [application-key state]}]
