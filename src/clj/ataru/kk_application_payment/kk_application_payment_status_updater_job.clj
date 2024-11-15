@@ -82,11 +82,11 @@
   sends e-mails when necessary. Marking status as paid/overdue is done separately via
   kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year]}
-   {:keys [person-service tarjonta-service koodisto-cache haku-cache maksut-service] :as job-runner}]
+   {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [{:keys [person modified-payments existing-payments]}
           (payment/update-payments-for-person-term-and-year person-service tarjonta-service
-                                                            koodisto-cache haku-cache
+                                                            koodisto-cache get-haut-cache
                                                             person_oid term year)]
       (doseq [payment modified-payments]
         (let [new-state (:state payment)]
@@ -134,9 +134,9 @@
 (defn get-hakus-and-update
   "Finds active hakus that still need to have kk application payment statuses updated,
    queues updates for persons in hakus."
-  [{:keys [tarjonta-service haku-cache] :as job-runner}]
+  [{:keys [tarjonta-service get-haut-cache] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
-    (let [hakus (payment/get-haut-for-update haku-cache tarjonta-service)]
+    (let [hakus (payment/get-haut-for-update get-haut-cache tarjonta-service)]
       (log/info "Found" (count hakus) "hakus for kk application payment status update.")
       (doseq [haku hakus]
         (update-statuses-for-haku haku job-runner)))))

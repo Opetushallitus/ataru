@@ -302,6 +302,7 @@
                   :henkilo-cache
                   :koodisto-cache
                   :haku-cache
+                  :get-haut-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service
