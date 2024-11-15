@@ -54,6 +54,25 @@
   [example state]
   (should= example (select-keys state [:application-key :state :reason])))
 
+(describe "creating valid invoicing data"
+          (tags :unit :kk-application-payment)
+
+          (it "should generate valid invoicing data from a payment and an application"
+              (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                 application-fixtures/application-without-hakemusmaksu-exemption
+                                                                 nil)
+                    application (application-store/get-application application-id)
+                    payment (payment/set-application-fee-paid (:key application) nil)
+                    invoice (payment/generate-invoicing-data payment application)
+                    expected-invoice {:reference (:key application)
+                                      :origin payment/kk-application-payment-origin,
+                                      :amount "100.00",
+                                      :due-days 7,
+                                      :first-name "Aku Petteri",
+                                      :last-name "Ankka",
+                                      :email "aku@ankkalinna.com"}]
+                (should= invoice expected-invoice))))
+
 (describe "get-haut-for-update"
           (tags :unit :kk-application-payment)
 
