@@ -10,6 +10,7 @@
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.tarjonta.haku :as haku]
     [ataru.forms.form-payment-info :as payment-info]
+    [ataru.kk-application-payment.utils :as payment-utils]
     [taoensso.timbre :as log]))
 
 (def synthetic-application-permalock-user "synteettinen_hakemus")
@@ -161,6 +162,31 @@
           updated-form (update form :content update-form-content-fn)]
       (log/info (str "Saving updated form " form-key ", changed field id " old-field-id " to " new-field-id))
       (post-form updated-form session tarjonta-service organization-service audit-logger))))
+
+(defn- update-payment-module-to-form
+  [form session audit-logger]
+  (let [updated-form (payment-utils/update-payment-module-in-form form)]
+    (log/info "updating kk-application-payment-module to form " (:key form) " with id " (:id form))
+    (form-store/create-form-or-increment-version! updated-form session audit-logger)
+    "Lomakkeen maksumoduuli päivitetty"))
+
+(defn- add-payment-module-to-form
+  [form session audit-logger]
+  (let [updated-form (payment-utils/inject-payment-module-to-form form)]
+    (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
+    (form-store/create-form-or-increment-version! updated-form session audit-logger)
+    "Lisätty maksumoduuli lomakkeelle"))
+
+(defn upsert-kk-application-payment-module [form-key session audit-logger]
+  (log/info (str "Upserting kk-application-payment-module to form " form-key))
+  (when (not (-> session :identity :superuser)) (throw (user-feedback-exception "Ei oikeuksia muokata lomaketta")))
+  (let [form (form-store/fetch-by-key form-key)
+        has-applications? (form-store/form-has-applications form-key)]
+    (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
+    (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
+    (if (payment-utils/has-payment-module? form)
+      (update-payment-module-to-form form session audit-logger)
+      (add-payment-module-to-form form session audit-logger))))
 
 (defn edit-form-with-operations
   [id operations session tarjonta-service organization-service audit-logger]
