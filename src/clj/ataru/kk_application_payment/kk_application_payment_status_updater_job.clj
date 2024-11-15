@@ -39,12 +39,12 @@
       (log/warn "Creating kk application payment" type-str "mail to application" application-key "failed"))))
 
 (defn- create-payment-and-send-email
-  [job-runner maksut-service payment-data person]
+  [job-runner maksut-service payment-data]
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)
         lang            (utils/get-application-language application)
         email-address   (utils/get-application-email application)
-        invoice-data    (payment/generate-invoicing-data payment-data person)
+        invoice-data    (payment/generate-invoicing-data payment-data application)
         invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
         url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang)]
     (when invoice
@@ -84,7 +84,7 @@
   [{:keys [person_oid term year]}
    {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
-    (let [{:keys [person modified-payments existing-payments]}
+    (let [{:keys [modified-payments existing-payments]}
           (payment/update-payments-for-person-term-and-year person-service tarjonta-service
                                                             koodisto-cache get-haut-cache
                                                             person_oid term year)]
@@ -92,11 +92,13 @@
         (let [new-state (:state payment)]
           (cond
             (= (:awaiting payment/all-states) new-state)
-            (create-payment-and-send-email job-runner maksut-service payment person))))
+            (create-payment-and-send-email job-runner maksut-service payment))))
 
       (doseq [application-payment existing-payments]
         (let [{:keys [application payment]} application-payment]
           (cond
+            ; TODO: Check existing payments that were not updated:
+
             (needs-reminder-sent? payment)
             (send-reminder-email-and-mark-sent job-runner payment application)))))))
 
