@@ -51,12 +51,12 @@
 
 (def mock-maksut-service (->MockMaksutService))
 
-(def fake-haku-cache (reify cache-service/Cache
-                       (get-from [_ _]
-                         [{:haku "payment-info-test-kk-haku"}])
-                       (get-many-from [_ _])
-                       (remove-from [_ _])
-                       (clear-all [_])))
+(def fake-get-haut-cache (reify cache-service/Cache
+                           (get-from [_ _]
+                             [{:haku "payment-info-test-kk-haku"}])
+                           (get-many-from [_ _])
+                           (remove-from [_ _])
+                           (clear-all [_])))
 (def fake-koodisto-cache (reify cache-service/Cache
                            (get-from [_ _])
                            (get-many-from [_ _])
@@ -75,7 +75,7 @@
 (def runner
   (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
                        :person-service   fake-person-service
-                       :haku-cache       fake-haku-cache
+                       :get-haut-cache   fake-get-haut-cache
                        :koodisto-cache   fake-koodisto-cache
                        :maksut-service   mock-maksut-service}))
 
