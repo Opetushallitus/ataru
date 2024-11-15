@@ -1,10 +1,9 @@
 (ns ataru.kk-application-payment.kk-application-payment-module-job
   (:require [ataru.forms.form-store :as form-store]
             [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
-            [ataru.kk-application-payment.utils :refer [has-payment-module?]]
+            [ataru.kk-application-payment.utils :refer [has-payment-module? inject-payment-module-to-form]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
-            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module]]
             [ataru.config.core :refer [config]]
             [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
 
@@ -12,10 +11,7 @@
 
 (defn- add-payment-module-to-form
   [form]
-  (let [sections (:content form)
-        payment-section (kk-application-payment-module)
-        updated-content (concat (take 2 sections) [payment-section] (drop 2 sections))
-        updated-form (assoc form :content updated-content)]
+  (let [updated-form (inject-payment-module-to-form form)]
     (log/info "adding kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! updated-form payment-module-session (new-dummy-audit-logger))
     updated-form))

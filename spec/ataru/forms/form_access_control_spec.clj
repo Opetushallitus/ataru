@@ -4,6 +4,8 @@
     [ataru.organization-service.organization-service :as os]
     [ataru.forms.form-access-control :as fac]
     [ataru.forms.form-store :as form-store]
+    [ataru.fixtures.form :as form-fixtures]
+    [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
 (defonce session
@@ -96,6 +98,47 @@
                                   (catch Throwable e
                                     (.getMessage e)))]
           (should= "Lomakkeella test-field-id-change-form on hakemuksia." failure-reason)))))
+
+(describe
+  "upsert-kk-application-payment-module"
+  (tags :unit)
+
+  (it "Is not be able to upsert application payment module as a non-superuser"
+      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]
+        (let [non-superuser-session (update session :identity assoc :superuser false)
+              result (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" non-superuser-session nil)
+
+                          (catch Throwable e
+                            (.getMessage e)))]
+          (should= "Ei oikeuksia muokata lomaketta" result))))
+
+  (it "Fails to upsert application payment module when form already has applications"
+      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)
+                    form-store/form-has-applications (fn [form-key]
+                                                       (= "test-field-id-change-form" form-key))]
+        (let [superuser-session (update session :identity assoc :superuser true)
+              failure-reason (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)
+                                  (catch Throwable e
+                                    (.getMessage e)))]
+          (should= "Lomakkeella test-field-id-change-form on hakemuksia." failure-reason))))
+
+  (it "Updates application payment module"
+      (with-redefs [form-store/fetch-by-key (fn [_] form-fixtures/person-info-form)
+                    form-store/create-form-or-increment-version! (fn [_ _ _])
+                    form-store/form-has-applications (fn [_] false)]
+        (let [superuser-session (update session :identity assoc :superuser true)
+              result (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)]
+          (should= "Lomakkeen maksumoduuli päivitetty" result))))
+
+  (it "Adds application payment module"
+      (let [content (filter #(not= (:id %) kk-application-payment-wrapper-key) (:content form-fixtures/person-info-form))
+            form (assoc form-fixtures/person-info-form :content content)]
+        (with-redefs [form-store/fetch-by-key (fn [_] form)
+                      form-store/create-form-or-increment-version! (fn [_ _ _])
+                      form-store/form-has-applications (fn [_] false)]
+          (let [superuser-session (update session :identity assoc :superuser true)
+                result (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)]
+            (should= "Lisätty maksumoduuli lomakkeelle" result))))))
 
 (describe
   "get-forms-for-editor"
