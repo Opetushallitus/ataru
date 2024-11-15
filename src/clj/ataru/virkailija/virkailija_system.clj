@@ -301,6 +301,7 @@
                   :ohjausparametrit-service
                   :henkilo-cache
                   :koodisto-cache
+                  :haku-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service
