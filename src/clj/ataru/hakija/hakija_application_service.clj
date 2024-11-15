@@ -244,6 +244,9 @@
                                          ohjausparametrit-service
                                          (:haku application)))
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                              hakukohteet)
+        applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
         [rewrite? virkailija-secret] (if is-modify?
                                        (if-let [rewrite-secret (valid-virkailija-rewrite-secret application)]
                                          [true rewrite-secret]
@@ -329,13 +332,10 @@
                                         final-application)
         ; halutaan että kahdessa kohtaa (juuressa, answers-osioissa) olevien hakukohteiden järjestys on aina synkassa
         ; koska answer-osion muutokset validoidaan käytetään sitä masterina
-        final-answer-hakukohteet      (:value (first (filter #(= (:key %) "hakukohteet") (:answers final-application))))
-        applied-hakukohteet           (filter #(contains? (set final-answer-hakukohteet) (:oid %))
-                                              hakukohteet)
-        applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
-        final-application             (if final-answer-hakukohteet
-                                        (merge final-application {:hakukohde final-answer-hakukohteet})
-                                        (dissoc final-application :hakukohde))
+        hakukohteet-answer-values     (:value (first (filter #(= (:key %) "hakukohteet") (:answers final-application))))
+        final-application             (if hakukohteet-answer-values
+                                        (merge final-application {:hakukohde hakukohteet-answer-values})
+                                        final-application)
         hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application)) oppija-session)
         validation-result             (validator/valid-application?
                                        koodisto-cache
