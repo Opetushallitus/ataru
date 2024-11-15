@@ -106,7 +106,7 @@
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                               (job/start-job job-runner
                                              conn
-                                             "kk-application-payment-status-update-job"
+                                             "kk-application-payment-person-status-update-job"
                                              {:person_oid person-oid :term term :year year}))))
 
 (defn start-update-kk-payment-status-for-all-job
