@@ -260,8 +260,8 @@
     active-hakus))
 
 (defn- get-valid-haku-oids
-  [haku-cache tarjonta-service term year]
-  (->> (get-haut-for-start-term-and-year haku-cache tarjonta-service term year)
+  [get-haut-cache tarjonta-service term year]
+  (->> (get-haut-for-start-term-and-year get-haut-cache tarjonta-service term year)
        (filter (partial haku-valid-for-kk-payments? tarjonta-service))
        (map :oid)))
 
@@ -300,8 +300,8 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [person-service tarjonta-service koodisto-cache haku-cache person-oid term year]
-  (let [valid-haku-oids (get-valid-haku-oids haku-cache tarjonta-service term year)
+  [person-service tarjonta-service koodisto-cache get-haut-cache person-oid term year]
+  (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
         person          (person-service/get-person person-service master-oid)
