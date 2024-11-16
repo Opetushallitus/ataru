@@ -35,7 +35,7 @@
     (if mail-content
       (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                                              (job/start-job job-runner conn job-type mail-content))]
-        (log/info (str "Created kk application payment" type-str "email job " job-id " for application " application-key)))
+        (log/info "Created kk application payment" type-str "email job" job-id "for application" application-key))
       (log/warn "Creating kk application payment" type-str "mail to application" application-key "failed"))))
 
 (defn- create-payment-and-send-email
@@ -77,30 +77,41 @@
       (and (= (:awaiting payment/all-states) (:state payment))
            remind-at-met))))
 
+(defn- resolve-term-data
+  [tarjonta-service person-oid term year application-id]
+  (if (and person-oid term year)
+    [person-oid term year]
+    (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)))
+
 (defn update-kk-payment-status-for-person-handler
-  "Updates payment requirement status for a single (person oid, term, year). Creates payments and
-  sends e-mails when necessary. Marking status as paid/overdue is done separately via
-  kk-application-payment-maksut-poller-job, never here."
-  [{:keys [person_oid term year]}
+  "Updates payment requirement status for a single (person oid, term, year) either directly or
+  via an application id. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
+  is done separately via kk-application-payment-maksut-poller-job, never here."
+  [{:keys [person_oid term year application_id]}
    {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
-    (let [{:keys [modified-payments existing-payments]}
-          (payment/update-payments-for-person-term-and-year person-service tarjonta-service
-                                                            koodisto-cache get-haut-cache
-                                                            person_oid term year)]
-      (doseq [payment modified-payments]
-        (let [new-state (:state payment)]
-          (cond
-            (= (:awaiting payment/all-states) new-state)
-            (create-payment-and-send-email job-runner maksut-service payment))))
+    (let [[person-oid application-term application-year]
+          (resolve-term-data tarjonta-service person_oid term year application_id)]
+      (if (and person-oid application-term application-year)
+        (let [{:keys [modified-payments existing-payments]}
+              (payment/update-payments-for-person-term-and-year person-service tarjonta-service
+                                                                koodisto-cache get-haut-cache
+                                                                person-oid application-term application-year)]
+          (log/info "Update kk payment status hander for" person-oid application-term application-year)
+          (doseq [payment modified-payments]
+            (let [new-state (:state payment)]
+              (cond
+                (= (:awaiting payment/all-states) new-state)
+                (create-payment-and-send-email job-runner maksut-service payment))))
 
-      (doseq [application-payment existing-payments]
-        (let [{:keys [application payment]} application-payment]
-          (cond
-            ; TODO: Check existing payments that were not updated:
+          (doseq [application-payment existing-payments]
+            (let [{:keys [application payment]} application-payment]
+              (cond
+                ; TODO: Check existing payments that were not updated:
 
-            (needs-reminder-sent? payment)
-            (send-reminder-email-and-mark-sent job-runner payment application)))))))
+                (needs-reminder-sent? payment)
+                (send-reminder-email-and-mark-sent job-runner payment application)))))
+        (log/debug "Application id" application_id "not in haku with kk application payments")))))
 
 (defn start-update-kk-payment-status-for-person-job
   [job-runner person-oid term year]

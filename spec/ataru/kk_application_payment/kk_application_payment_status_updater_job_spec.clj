@@ -115,6 +115,20 @@
                                      {:times 1
                                       :with [#(= (:oid %) "payment-info-test-kk-haku") :*]})))
 
+          (it "should update payment status fetching person and term with application id"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:application_id application-id} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))]
+                (should=
+                  {:application-key application-key :state (:awaiting payment/all-states)
+                   :maksut-secret test-maksut-secret}
+                  (select-keys payment [:application-key :state :maksut-secret]))))
+
           (it "should update payment status for oid"
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
