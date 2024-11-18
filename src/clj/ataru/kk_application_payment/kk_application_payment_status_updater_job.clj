@@ -46,7 +46,7 @@
         email-address   (utils/get-application-email application)
         invoice-data    (payment/generate-invoicing-data payment-data application)
         invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
-        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang)]
+        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) (name lang))]
     (when invoice
       (log/info "Kk application payment invoice details" invoice)
       (log/info "Store kk application payment maksut secret for reference " (:reference invoice))
@@ -60,7 +60,8 @@
   (let [application-key (:application-key payment-data)
         lang            (utils/get-application-language application)
         email-address   (utils/get-application-email application)
-        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:maksut-secret payment-data) lang)]
+        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret
+                                                (:maksut-secret payment-data) (name lang))]
     (log/info "Generate kk application payment reminder for email" email-address
               "URL" url "application key" application-key)
     (start-payment-email-job job-runner application email-address lang url payment-reminder-email-params "reminder")
