@@ -614,9 +614,15 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
-   :email-kk-payment-link-subject               {:fi "Korkeakoulujen hakemusmaksun maksulinkki"
-                                                 :sv "SV: Korkeakoulujen hakemusmaksun maksulinkki"
-                                                 :en "EN: Korkeakoulujen hakemusmaksun maksulinkki"}
+   :email-kk-payment-link-subject               {:fi "Korkeakouluhaun hakemusmaksun maksulinkki"
+                                                 :sv "SV: Korkeakouluhaun hakemusmaksun maksulinkki"
+                                                 :en "EN: Korkeakouluhaun hakemusmaksun maksulinkki"}
+   :email-kk-payment-reminder-subject           {:fi "Muistathan maksaa korkeakouluhaun hakemusmaksun"
+                                                 :sv "SV: Muistathan maksaa korkeakouluhaun hakemusmaksun"
+                                                 :en "EN: Muistathan maksaa korkeakouluhaun hakemusmaksun"}
+   :email-kk-payment-confirmation-subject       {:fi "Vahvistus korkeakouluhaun hakemusmaksun maksamisesta"
+                                                 :sv "SV: Vahvistus korkeakouluhaun hakemusmaksun maksamisesta"
+                                                 :en "EN: Vahvistus korkeakouluhaun hakemusmaksun maksamisesta"}
    :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
                                                  :sv "Hur vill du öppna ansökningsblanketten?"
                                                  :en "How do you want to access the application form?"}

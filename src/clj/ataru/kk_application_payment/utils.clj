@@ -50,7 +50,7 @@
 
 (defn get-application-email
   [application]
-  (->> (get-in application [:content :answers])
+  (->> (get application :answers)
        (filter #(= (:key %) "email"))
        first
        :value))

@@ -21,6 +21,13 @@
 (declare yesql-update-person-info-as-in-application!)
 (defqueries "sql/person-integration-queries.sql")
 
+(defn- start-jobs-for-application [job-runner application-id]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (job/start-job job-runner
+                   connection
+                   "kk-application-payment-person-status-update-job"
+                   {:application_id application-id})))
+
 (defn- start-jobs-for-person [job-runner person-oid]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (job/start-job job-runner
@@ -66,6 +73,7 @@
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
+      (start-jobs-for-application job-runner application-id)
       (log/info "Started person info update job for application" application-id)
       oid)
     (catch IllegalArgumentException e
