@@ -6,6 +6,7 @@
             [ataru.translations.translation-util :as translations]
             [selmer.parser :as selmer]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key kk-application-payment-module]]
+            [ataru.component-data.person-info-module :refer [person-info-module]]
             [ataru.config.core :refer [config]]))
 
 (def payment-config
@@ -115,9 +116,14 @@
 
 (defn inject-payment-module-to-form [form]
   (let [sections (:content form)
+        update-fn (fn[section]
+                    (if (= "person-info" (:module section))
+                      (person-info-module :onr-kk-application-payment)
+                      section))
+        updated-content (map update-fn sections)
         payment-section (kk-application-payment-module)
         ; lisätään maksumoduuli hakukohde ja henkilötieto-osioiden jälkeen:
-        updated-content (concat (take 2 sections) [payment-section] (drop 2 sections))]
+        updated-content (concat (take 2 updated-content) [payment-section] (drop 2 updated-content))]
     (assoc form :content updated-content)))
 
 (defn update-payment-module-in-form
