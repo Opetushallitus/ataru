@@ -6,7 +6,6 @@
   (:require [ataru.cache.cache-service :as cache]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
-            [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
@@ -218,14 +217,18 @@
                            (:hakukohteet haku))]
     (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)))
 
-(defn- is-eu-citizen? [koodisto-cache person]
-  (let [eu-area (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
-                     (filter #(= "EU" (:value %)))
-                     (first))
-        eu-country-codes (set (map :value (:within eu-area)))]
-    (if (> (count eu-country-codes) 0)
-      (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person))
-      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
+; TODO: this may still be needed later for yksilöity EU citizen handling.
+;(defn- is-eu-citizen? [koodisto-cache person]
+;  (let [eu-area (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+;                     (filter #(= "EU" (:value %)))
+;                     (first))
+;        eu-country-codes (set (map :value (:within eu-area)))]
+;    (if (> (count eu-country-codes) 0)
+;      (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person))
+;      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
+
+(defn- is-finnish-citizen? [person]
+  (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn- exemption-in-application?
   [application]
@@ -302,12 +305,12 @@
       (state-change-fn (:key application) payment))))
 
 (defn- update-payments-for-applications
-  [applications-payments is-eu-citizen? has-exemption? has-existing-payment?]
+  [applications-payments is-finnish-citizen? has-exemption? has-existing-payment?]
   (let [map-payments (fn [new-state state-change-fn]
                        (doall
                          (remove nil? (map #(set-payment new-state state-change-fn %) applications-payments))))]
     (cond
-      is-eu-citizen?        (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
+      is-finnish-citizen?   (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
       has-exemption?        (map-payments (:not-required all-states) set-application-fee-not-required-for-exemption)
       has-existing-payment? (map-payments (:ok-by-proxy all-states) set-application-fee-ok-by-proxy)
       :else                 (map-payments (:awaiting all-states) set-application-fee-required))))
@@ -318,7 +321,7 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [person-service tarjonta-service koodisto-cache get-haut-cache person-oid term year]
+  [person-service tarjonta-service _ get-haut-cache person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
@@ -337,13 +340,13 @@
                                              :payment     (get payment-by-application (:key application))})
                                           applications)
               payment-state-set      (->> (vals payment-by-application) (map :state) set)
-              is-eu-citizen?         (is-eu-citizen? koodisto-cache person)
+              is-finnish-citizen?    (is-finnish-citizen? person)
               has-exemption?         (some true? (map exemption-in-application? applications))
               has-existing-payment?  (contains? payment-state-set (:paid all-states))]
           {:person            person
            :existing-payments applications-payments
            :modified-payments (update-payments-for-applications
-                                applications-payments is-eu-citizen? has-exemption? has-existing-payment?)})))))
+                                applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)})))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.

@@ -174,17 +174,6 @@
                                                                                        oid term-fall year-ok)]
                           (should= 0 (count states))))
 
-                    (it "should throw an error when EU country codes could not be read"
-                        (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                      (merge
-                                                        application-fixtures/application-without-hakemusmaksu-exemption
-                                                        {:person-oid "1.1.1"}) nil)
-                        (with-redefs [koodisto/get-koodisto-options (constantly [])]
-                          (should-throw
-                            (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                              fake-koodisto-cache fake-haku-cache
-                                                                              "1.1.1" term-fall year-ok))))
-
                     (it "should return existing paid (terminal) state"
                         (let [oid "1.2.3.4.5.6"
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
