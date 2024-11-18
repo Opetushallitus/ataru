@@ -34,15 +34,15 @@
 (defn payment-email [lang email data {:keys [template-path subject-key]}]
   (let [template-path    template-path
         translations     (translations/get-translations lang)
-        emails           [email]
+        emails           (list email)
         subject          (subject-key translations)
         body             (selmer/render-file template-path
                                              (merge data translations))]
     (when (not-empty emails)
       {:from       "no-reply@opintopolku.fi"
        :recipients emails
-       :body       body
-       :subject    subject})))
+       :subject    subject
+       :body       body})))
 
 (defn get-application-language
   [application]
