@@ -25,7 +25,7 @@
 
 (defn- payment-link-email-params
   [lang]
-  {:subject-key :email-kk-payment-reminder-subject
+  {:subject-key :email-kk-payment-link-subject
    :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
 
 (defn- start-payment-email-job [job-runner application email-address lang payment-url params-fn type-str]
