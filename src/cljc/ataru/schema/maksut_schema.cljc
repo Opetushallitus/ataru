@@ -17,7 +17,8 @@
 (s/defschema Origin
   (s/enum
     "tutu"
-    "astu"))
+    "astu"
+    "kkhakemusmaksu"))
 
 (s/defschema LaskuStatus
   {:order_id s/Str
