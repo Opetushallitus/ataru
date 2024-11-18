@@ -35,6 +35,7 @@
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
+ :jobs {:application-payment-module-cron {{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
