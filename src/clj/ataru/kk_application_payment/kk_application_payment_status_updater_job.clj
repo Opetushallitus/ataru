@@ -82,8 +82,9 @@
   [tarjonta-service person-oid term year application-id application-key]
   (if (and person-oid term year)
     [person-oid term year]
-    (payment/get-valid-payment-info-for-application-id-or-key
-      tarjonta-service application-id application-key)))
+    (if (some? application-id)
+      (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)
+      (payment/get-valid-payment-info-for-application-key tarjonta-service application-key))))
 
 (defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year) either directly or
