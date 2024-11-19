@@ -3,6 +3,7 @@
             [speclj.core :refer [it describe tags should= after before stub with-stubs should-have-invoked]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as poller-job]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [clojure.string :as str]
             [ataru.background-job.job :as job]
@@ -118,6 +119,12 @@
                     _ (poller-job/poll-kk-payments-handler {} runner)]
                 (check-state-and-history key-with-overdue-status (:overdue payment/all-states) 1 1)
                 (check-comparison-payments)))
+
+          (it "starts a payment status update job every time a "
+              (with-redefs [updater-job/start-update-kk-payment-status-for-application-key-job (stub :start-update-job)]
+                (let [_ (create-awaiting-status key-with-paid-status)
+                      _ (poller-job/poll-kk-payments-handler {} runner)]
+                  (should-have-invoked :start-update-job {:times 2}))))
 
           (it "creates and queues e-mail job for a paid payment once"
               (with-redefs [start-runner-job (stub :start-job)]
