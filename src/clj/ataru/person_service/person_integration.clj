@@ -14,6 +14,7 @@
    [ataru.cache.cache-service :as cache]
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
+   [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
    [yesql.core :refer [defqueries]])
   (:import [java.util.concurrent Executors TimeUnit]))
 
@@ -22,11 +23,7 @@
 (defqueries "sql/person-integration-queries.sql")
 
 (defn- start-jobs-for-application [job-runner application-id]
-  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (job/start-job job-runner
-                   connection
-                   "kk-application-payment-person-status-update-job"
-                   {:application_id application-id})))
+  (kk-payment-job/start-update-kk-payment-status-for-application-id-job job-runner application-id))
 
 (defn- start-jobs-for-person [job-runner person-oid]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
