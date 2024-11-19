@@ -10,6 +10,7 @@
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.config.core :refer [config]]
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.kk-application-payment.utils :as utils]
             [ataru.applications.application-store :as application-store]))
 
@@ -31,7 +32,10 @@
         (log/info (str "Created kk application payment confirmation email job " job-id " for application " application-key)))
       (log/warn "Creating kk application payment confirmation mail to application" application-key "failed"))))
 
-(defn poll-payments [job-runner maksut-service payments]
+(defn poll-payments
+  "Polls maksut service for any open payment statuses, updates kk payment status to paid or overdue when necessary.
+   Triggers a confirmation e-mail and full payment status update for person whenever an application is marked paid."
+  [job-runner maksut-service payments]
   (let [keys-states (into {}
                           (map (fn [state] [(payment/payment->maksut-reference state) state])
                                payments))
@@ -59,7 +63,10 @@
                                 (do
                                   (log/info "Set kk application payment paid for application key" application-key)
                                   (payment/set-application-fee-paid application-key ataru-status)
-                                  (start-confirmation-email-job job-runner application-key))
+                                  (log/info "Starting kk application payment jobs for application key" application-key)
+                                  (start-confirmation-email-job job-runner application-key)
+                                  (updater-job/start-update-kk-payment-status-for-application-key-job
+                                    job-runner application-key))
 
                                 [awaiting-status "overdue"]
                                 (do
