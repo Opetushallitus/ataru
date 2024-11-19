@@ -292,6 +292,16 @@
                                           hakemus-value oppija-session-value key))))]
       (filter #(some? %) validation-result))))
 
+; Hakukohteet (ja niiden järjestys) on hakemuksessa tallennettu kahteen paikkaan (miksi oi miksi?).
+; Näiden pitää aina olla synkassa.
+(defn validate-hakukohteet-synced [application]
+  (let [
+        answers-hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
+        hakukohteet (:hakukohde application)]
+    (or (empty? hakukohteet)                                ; tämä tekee yksikkötesteistä yksinkertaisempia kun
+                                                            ; hakukohteita ei tarvitse määritellä kahteen paikkaan
+        (= answers-hakukohteet hakukohteet))))
+
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
@@ -303,6 +313,7 @@
         extra-answers             (extra-answers-not-in-original-form
                                     (map (comp keyword :id) flattened-form-fields)
                                     (keys answers-no-duplicates))
+        hakukohteet-in-sync       (validate-hakukohteet-synced application)
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
         failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application flattened-form-fields)
@@ -370,12 +381,26 @@
                  failed-form-id
                  failed-form-key
                  (str failed-per-hakukohde-fields)))
+    (when (not hakukohteet-in-sync)
+      (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
+      fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Hakukohteet not in sync!"
+                 application-id
+                 application-key
+                 failed-haku-oid
+                 failed-hakukohteet
+                 failed-person-oid
+                 failed-person-first-name
+                 failed-person-last-name
+                 failed-person-email
+                 failed-form-id
+                 failed-form-key))
     {:passed?
      (and
        (empty? extra-answers)
        (empty? failed-results)
        (empty? failed-per-hakukohde-fields)
-       (empty? failed-meta-fields))
+       (empty? failed-meta-fields)
+       hakukohteet-in-sync)
      :failures
      (merge
        (when (not-empty extra-answers) {:extra-answers extra-answers})
