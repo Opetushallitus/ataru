@@ -7,6 +7,7 @@
             [ataru.kk-application-payment.kk-application-payment-module-job :as payment-module-job]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
             [ataru.fixtures.form :as form-fixtures]
+            [ataru.component-data.person-info-module :refer [person-info-module-keys]]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]))
 
 (def haku-key "payment-info-test-kk-haku-custom-form")
@@ -38,6 +39,12 @@
               (payment-module-job/check-and-update ts [haku-key])
               (let [form  (form-store/fetch-by-key form-key)]
                 (should= 6 (count (:content form)))
+                (should= (:onr-kk-application-payment person-info-module-keys)
+                         (->> form
+                              :content
+                              (filter #(= (:module %) "person-info"))
+                              first
+                              :id))
                 (should= true (->> form
                                  :content
                                  (some #(= (:id %) kk-application-payment-wrapper-key))
@@ -59,6 +66,12 @@
               (payment-module-job/check-and-update ts [haku-key])
               (let [form  (form-store/fetch-by-key form-key)]
                 (should= 6 (count (:content form)))
+                (should= (:onr-kk-application-payment person-info-module-keys)
+                         (->> form
+                              :content
+                              (filter #(= (:module %) "person-info"))
+                              first
+                              :id))
                 (should= true (->> form
                                     :content
                                     (some #(= (:id %) kk-application-payment-wrapper-key))

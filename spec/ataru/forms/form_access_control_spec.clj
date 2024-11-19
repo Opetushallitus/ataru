@@ -103,7 +103,7 @@
   "upsert-kk-application-payment-module"
   (tags :unit)
 
-  (it "Is not be able to upsert application payment module as a non-superuser"
+  (it "Is not able to upsert application payment module as a non-superuser"
       (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]
         (let [non-superuser-session (update session :identity assoc :superuser false)
               result (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" non-superuser-session nil)
