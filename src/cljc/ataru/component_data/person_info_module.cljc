@@ -80,7 +80,7 @@
                                  :section-visibility-conditions [{:section-name kk-application-payment-wrapper-key
                                                                   :condition {:comparison-operator "="
                                                                               :data-type "str"
-                                                                              :answer-compared-to "Suomi"}}]
+                                                                              :answer-compared-to "246"}}]
                                  :rules           (if gender?
                                                     {:toggle-ssn-based-fields nil}
                                                     {:toggle-ssn-based-fields-without-gender nil})
