@@ -133,6 +133,15 @@
                                              "kk-application-payment-person-status-update-job"
                                              {:application_key application-key}))))
 
+(defn start-update-kk-payment-status-for-application-id-job
+  [job-runner application-id]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                              (job/start-job job-runner
+                                             conn
+                                             "kk-application-payment-person-status-update-job"
+                                             {:application_id application-id}))))
+
 (defn start-update-kk-payment-status-for-all-job
   [job-runner]
   (when (get-in config [:kk-application-payments :enabled?])
