@@ -341,8 +341,15 @@
         (keep
           (fn [visibility-condition]
             (when (visibility-condition-applies-to-field? visibility-condition field)
-              (let [answer (get-in answers [(keyword condition-owner-id) :value])]
-                (assoc visibility-condition :value answer))))
+              (let [value (get-in answers [(keyword condition-owner-id) :value])
+                    answer-compared-to (-> visibility-condition :condition :answer-compared-to)
+                    processed-value (if (is-question-group-answer? value)
+                                      (->> value
+                                           flatten
+                                           (filter #(= % answer-compared-to))
+                                           first)
+                                      value)]
+                (assoc visibility-condition :value processed-value))))
           conditions))
       fields-with-visibility-rules)))
 
