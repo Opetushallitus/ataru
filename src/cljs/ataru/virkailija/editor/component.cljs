@@ -161,7 +161,7 @@
                                        new-module (pm/person-info-module version)]
                                    (dispatch-sync [:editor/set-component-value
                                                    new-module path])))
-                 :disabled     @component-locked?
+                 :disabled     (or @component-locked? (= (:id content) "onr-kk-application-payment"))
                  :value        (or (get values (:id content)) "onr")
                  :data-test-id (some-> data-test-id-prefix (str "-select"))}
                 (doall (for [opt values]
