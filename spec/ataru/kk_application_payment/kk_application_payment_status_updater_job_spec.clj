@@ -129,6 +129,20 @@
                    :maksut-secret test-maksut-secret}
                   (select-keys payment [:application-key :state :maksut-secret]))))
 
+          (it "should update payment status fetching person and term with application key"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:application_key application-key} runner)
+                    payment (first (payment/get-raw-payments [application-key]))]
+                (should=
+                  {:application-key application-key :state (:awaiting payment/all-states)
+                   :maksut-secret test-maksut-secret}
+                  (select-keys payment [:application-key :state :maksut-secret]))))
+
           (it "should update payment status for oid"
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form

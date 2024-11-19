@@ -79,20 +79,21 @@
            remind-at-met))))
 
 (defn- resolve-term-data
-  [tarjonta-service person-oid term year application-id]
+  [tarjonta-service person-oid term year application-id application-key]
   (if (and person-oid term year)
     [person-oid term year]
-    (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)))
+    (payment/get-valid-payment-info-for-application-id-or-key
+      tarjonta-service application-id application-key)))
 
 (defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year) either directly or
-  via an application id. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
+  via an application id/key. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
   is done separately via kk-application-payment-maksut-poller-job, never here."
-  [{:keys [person_oid term year application_id]}
+  [{:keys [person_oid term year application_id application_key]}
    {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [[person-oid application-term application-year]
-          (resolve-term-data tarjonta-service person_oid term year application_id)]
+          (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
         (let [{:keys [modified-payments existing-payments]}
               (payment/update-payments-for-person-term-and-year person-service tarjonta-service
@@ -122,6 +123,15 @@
                                              conn
                                              "kk-application-payment-person-status-update-job"
                                              {:person_oid person-oid :term term :year year}))))
+
+(defn start-update-kk-payment-status-for-application-key-job
+  [job-runner application-key]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                              (job/start-job job-runner
+                                             conn
+                                             "kk-application-payment-person-status-update-job"
+                                             {:application_key application-key}))))
 
 (defn start-update-kk-payment-status-for-all-job
   [job-runner]
