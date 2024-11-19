@@ -266,12 +266,10 @@
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 
-(defn get-valid-payment-info-for-application-id-or-key
+(defn get-valid-payment-info-for-application-key
   "Return person and term data for an application id or key when application's haku is valid for updates"
-  [tarjonta-service application-id application-key]
-  (let [application        (when application-id (application-store/get-application application-id))
-        key                (if (some? application) (:key application) application-key)
-        latest-application (application-store/get-latest-application-by-key key)
+  [tarjonta-service application-key]
+  (let [latest-application (application-store/get-latest-application-by-key application-key)
         haku-oid           (:haku latest-application)
         person-oid         (:person-oid latest-application)
         haku               (when haku-oid (tarjonta/get-haku tarjonta-service haku-oid))
@@ -280,6 +278,12 @@
                              false)]
     (when valid-haku?
       [person-oid (:alkamiskausi haku) (:alkamisvuosi haku)])))
+
+(defn get-valid-payment-info-for-application-id
+  [tarjonta-service application-id]
+  (let [application (application-store/get-application application-id)
+        application-key (:key application)]
+    (get-valid-payment-info-for-application-key tarjonta-service application-key)))
 
 (defn- get-valid-haku-oids
   [get-haut-cache tarjonta-service term year]
