@@ -2,7 +2,8 @@
   (:require #?(:cljs [ataru.cljs-util :as util])
             #?(:cljs [goog.string :as gstring])
             [clojure.string :as string]
-            [ataru.application.option-visibility :as option-visibility])
+            [ataru.application.option-visibility :as option-visibility]
+            [medley.core :refer [find-first]])
   (:import #?(:clj [java.util UUID])))
 
 (defn is-question-group-answer? [value]
@@ -158,8 +159,15 @@
                   rest-of-fields)
                 acc)))})))
 
-(defn followups? [dropdown-options]
-  (some some? (mapcat :followups dropdown-options)))
+(defn findWrapperParent [flat-form-fields field]
+  (let [id (:id field)
+        parent-id (-> (find-first #(= (:id %) id) flat-form-fields)
+                            :children-of)
+        parent-element (find-first #(= (:id %) parent-id) flat-form-fields)]
+    (when parent-element
+      (if (= "wrapperElement" (:fieldClass parent-element))
+        parent-element
+        (findWrapperParent flat-form-fields parent-element)))))
 
 (def ^:private b-limit 1024)
 (def ^:private kb-limit 102400)
