@@ -342,8 +342,10 @@
     (= section-name field-name)))
 
 (defn- visibility-conditions-on-field
-  [form answers field]
-  (let [fields-with-visibility-rules (fields-with-visibility-rules-memo form)]
+  [form answers field usememo?]
+  (let [fields-with-visibility-rules (if usememo?
+                                       (fields-with-visibility-rules-memo form)
+                                       (fields-with-visibility-rules form))]
     (mapcat
       (fn [{conditions :section-visibility-conditions condition-owner-id :id}]
         (keep
@@ -385,12 +387,15 @@
         (option-visibility/answer-satisfies-condition? value condition))
       conditions)))
 
-(defn is-field-hidden-by-section-visibility-conditions [form answers field]
-  (let [visibility-conditions (visibility-conditions-on-field form answers field)
+(defn is-field-hidden-by-section-visibility-conditions
+  ([form answers field]
+  (is-field-hidden-by-section-visibility-conditions form answers field true))
+  ([form answers field usememo?]
+  (let [visibility-conditions (visibility-conditions-on-field form answers field usememo?)
         by-quantifier         (group-by condition-quantifier visibility-conditions)]
     (or
       (every-condition-satisfied (seq (:every by-quantifier)))
-      (some-condition-satisfied (seq (:some by-quantifier))))))
+      (some-condition-satisfied (seq (:some by-quantifier)))))))
 
 (defn distinct-by [f coll]
   (map #(first (second %))

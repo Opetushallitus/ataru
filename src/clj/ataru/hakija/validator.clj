@@ -74,7 +74,7 @@
 
 (defn- passed? [has-applied form flattened-form-fields answer validators answers-by-key field-descriptor virkailija?]
   (let [wrapper-parent (util/findWrapperParent flattened-form-fields field-descriptor)
-        parent-hidden? (and (some? wrapper-parent) (util/is-field-hidden-by-section-visibility-conditions form answers-by-key wrapper-parent))]
+        parent-hidden? (and (some? wrapper-parent) (util/is-field-hidden-by-section-visibility-conditions form answers-by-key wrapper-parent false))]
     (or parent-hidden?
         (every? (fn [validator]
                     (first (async/<!! (validator/validate {:has-applied                  has-applied
@@ -116,7 +116,7 @@
       (belongs-to-correct-hakukohderyhma? field hakukohderyhmat)))
 
 (defn build-results
-  [koodisto-cache has-applied answers-by-key answers form fields flattened-form-fields hakukohderyhmat virkailija?]
+  [koodisto-cache has-applied answers-by-key form fields flattened-form-fields hakukohderyhmat virkailija?]
   (let [hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (loop [fields  (map (fn [f] [nil false f]) fields)
            results {}]
@@ -153,7 +153,7 @@
                 (recur (rest fields)
                        (if ((validator-keyword->fn (:child-validator field))
                             answers-by-key
-                            (build-results koodisto-cache has-applied answers-by-key answers form (:children field) flattened-form-fields hakukohderyhmat virkailija?)
+                            (build-results koodisto-cache has-applied answers-by-key form (:children field) flattened-form-fields hakukohderyhmat virkailija?)
                             (:children field))
                          results
                          (->> (:children field)
@@ -301,7 +301,7 @@
         extra-answers             (extra-answers-not-in-original-form
                                     (map (comp keyword :id) flattened-form-fields)
                                     (keys answers-no-duplicates))
-        failed-results            (build-results koodisto-cache has-applied answers-by-key (:answers application) form (:content form) flattened-form-fields applied-hakukohderyhmat virkailija?)
+        failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) flattened-form-fields applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
         failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application flattened-form-fields)
         failed-haku-oid           (:haku application)
