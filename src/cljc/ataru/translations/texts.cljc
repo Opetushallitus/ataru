@@ -35,6 +35,9 @@
    :application-can-be-found-here               {:fi "Hakemuksesi löytyy täältä"
                                                  :sv "Din ansökan kan hittas här"
                                                  :en "You can find your application here"}
+   :application-confirmation-kk-payment-info    {:fi "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen."
+                                                 :sv "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen. (SV)"
+                                                 :en "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen. (EN)"}
    :application-confirmation                    {:fi "Saat vahvistuksen sähköpostiisi"
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
@@ -2281,6 +2284,9 @@
    :used-by-haut                                             {:fi "Tämä lomake on seuraavien hakujen käytössä"
                                                               :sv "Denna blankett används i följande ansökningar"
                                                               :en "EN: Tämä lomake on seuraavien hakujen käytössä"}
+   :requires-kk-application-payment                          {:fi "Haussa on käytössä hakemusmaksu"
+                                                              :sv "SV: Haussa on käytössä hakemusmaksu"
+                                                              :en "EN: Haussa on käytössä hakemusmaksu"}
    :kevyt-valinta-valinnan-tila-change                       {:fi "Valinta: %s"
                                                               :sv "Antagning: %s"
                                                               :en "Student selection: %s"}

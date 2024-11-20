@@ -230,6 +230,12 @@
 (defn- in-language [term lang]
   (util/non-blank-val term [lang :fi :sv :en]))
 
+(defn- requires-kk-application-payment-label [haku]
+  (let [label @(subscribe [:editor/virkailija-translation :requires-kk-application-payment])]
+    (when (:admission-payment-required? haku)
+      [:div.editor-form__requires-kk-application-payment
+       [:span [:i.zmdi.zmdi-alert-triangle] (str " " label)]])))
+
 (defn- used-in-haku-list-haku-name [haku]
   (let [lang @(subscribe [:editor/virkailija-lang])]
     [:div.editor-form__used-in-haku-list-haku-name
@@ -287,6 +293,7 @@
         ^{:key (str "haku-" (:oid haku))}
         [:li
          [used-in-haku-list-haku-name haku]
+         [requires-kk-application-payment-label haku]
          [haku-preview-link haku]]))]])
 
 (defn- form-not-in-use-in-hakus [form-key]
@@ -487,20 +494,23 @@
       @(subscribe [:editor/virkailija-translation :close-form])]]))
 
 (defn- properties []
-  [:div.editor-form__component-wrapper
-   [:div.editor-form__header-wrapper
-    [:header.editor-form__component-header {:data-test-id "properties-header"}
-     [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
-   [:div.editor-form__component-content-wrapper
-    [:div.editor-form__module-fields
-     [allow-only-yhteishaku-component]
-     [allow-hakeminen-tunnistautuneena-component]
-     [lomakkeeseen-liittyy-maksutoiminto-component]
-     [close-form-component]]]
-   (when @(subscribe [:editor/show-demo-config])
-    [:div.editor-form__component-content-wrapper
-     [:div.editor-form__module-fields
-      [demo-validity]]])])
+  (let [form-key              @(subscribe [:editor/selected-form-key])
+        form-used-in-hakus    @(subscribe [:editor/form-used-in-hakus form-key])
+        kk-payments-required? (some true? (map :admission-payment-required? form-used-in-hakus))]
+    [:div.editor-form__component-wrapper
+     [:div.editor-form__header-wrapper
+      [:header.editor-form__component-header {:data-test-id "properties-header"}
+       [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
+     [:div.editor-form__component-content-wrapper
+      [:div.editor-form__module-fields
+       [allow-only-yhteishaku-component]
+       [allow-hakeminen-tunnistautuneena-component]
+       (when-not kk-payments-required? [lomakkeeseen-liittyy-maksutoiminto-component])
+       [close-form-component]]]
+     (when @(subscribe [:editor/show-demo-config])
+       [:div.editor-form__component-content-wrapper
+        [:div.editor-form__module-fields
+         [demo-validity]]])]))
 
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container
