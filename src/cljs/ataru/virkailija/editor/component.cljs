@@ -183,7 +183,7 @@
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content/component-content
-        path ;(:id initial-content)
+        path
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
