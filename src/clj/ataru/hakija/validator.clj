@@ -72,19 +72,22 @@
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))
 
-(defn- passed? [has-applied form answer validators answers-by-key field-descriptor virkailija?]
-  (every? (fn [validator]
-              (first (async/<!! (validator/validate {:has-applied                  has-applied
-                                                     :try-selection                (constantly (async/go [true []]))
-                                                     :validator                    validator
-                                                     :value                        answer
-                                                     :answers-by-key               answers-by-key
-                                                     :tarjonta-hakukohteet         (get-in form [:tarjonta :hakukohteet])
-                                                     :priorisoivat-hakukohderyhmat (:priorisoivat-hakukohderyhmat form)
-                                                     :rajaavat-hakukohderyhmat     (:rajaavat-hakukohderyhmat form)
-                                                     :virkailija?                  virkailija?
-                                                     :field-descriptor             field-descriptor}))))
-          validators))
+(defn- passed? [has-applied form flattened-form-fields answer validators answers-by-key field-descriptor virkailija?]
+  (let [wrapper-parent (util/find-wrapper-parent flattened-form-fields field-descriptor)
+        parent-hidden? (and (some? wrapper-parent) (util/is-field-hidden-by-section-visibility-conditions form answers-by-key wrapper-parent false))]
+    (or parent-hidden?
+        (every? (fn [validator]
+                    (first (async/<!! (validator/validate {:has-applied                  has-applied
+                                                           :try-selection                (constantly (async/go [true []]))
+                                                           :validator                    validator
+                                                           :value                        answer
+                                                           :answers-by-key               answers-by-key
+                                                           :tarjonta-hakukohteet         (get-in form [:tarjonta :hakukohteet])
+                                                           :priorisoivat-hakukohderyhmat (:priorisoivat-hakukohderyhmat form)
+                                                           :rajaavat-hakukohderyhmat     (:rajaavat-hakukohderyhmat form)
+                                                           :virkailija?                  virkailija?
+                                                           :field-descriptor             field-descriptor}))))
+                validators))))
 
 ; Use the code set version embedded in the form by default, try looking up from koodisto if not found.
 (defn allowed-values [koodisto-cache koodisto-source options]
@@ -113,7 +116,7 @@
       (belongs-to-correct-hakukohderyhma? field hakukohderyhmat)))
 
 (defn build-results
-  [koodisto-cache has-applied answers-by-key form fields hakukohderyhmat virkailija?]
+  [koodisto-cache has-applied answers-by-key form fields flattened-form-fields hakukohderyhmat virkailija?]
   (let [hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (loop [fields  (map (fn [f] [nil false f]) fields)
            results {}]
@@ -150,7 +153,7 @@
                 (recur (rest fields)
                        (if ((validator-keyword->fn (:child-validator field))
                             answers-by-key
-                            (build-results koodisto-cache has-applied answers-by-key form (:children field) hakukohderyhmat virkailija?)
+                            (build-results koodisto-cache has-applied answers-by-key form (:children field) flattened-form-fields hakukohderyhmat virkailija?)
                             (:children field))
                          results
                          (->> (:children field)
@@ -204,7 +207,7 @@
                                    [idx (not (= value (:value option))) followup])
                                  (rest fields))
                          (if (or (and (contains? allowed-values value)
-                                  (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                                  (passed? has-applied form flattened-form-fields value (:validators field) answers-by-key field virkailija?))
                                  (boolean (:per-hakukohde field)))
                            results
                            (assoc results id (get answers-by-key id)))))
@@ -218,7 +221,7 @@
                                    [idx (not (contains? (set value) (:value option))) followup])
                                  (rest fields))
                          (if (or (and (every? #(contains? allowed-values %) value)
-                                  (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                                  (passed? has-applied form flattened-form-fields value (:validators field) answers-by-key field virkailija?))
                                  (boolean (:per-hakukohde field)))
                            results
                            (assoc results id (get answers-by-key id)))))
@@ -226,7 +229,7 @@
                 (or (= :hakukohteet id)
                     (= "attachment" (:fieldType field)))
                 (recur (rest fields)
-                       (if (passed? has-applied form value (:validators field) answers-by-key field virkailija?)
+                       (if (passed? has-applied form flattened-form-fields value (:validators field) answers-by-key field virkailija?)
                          results
                          (assoc results id (get answers-by-key id))))
 
@@ -234,17 +237,12 @@
                 (recur (rest fields)
                        (if (if (vector? value)
                              (and (not-empty value)
-                                  (every? #(passed? has-applied form % (:validators field) answers-by-key field virkailija?)
+                                  (every? #(passed? has-applied form flattened-form-fields % (:validators field) answers-by-key field virkailija?)
                                           value))
-                             (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                             (passed? has-applied form flattened-form-fields value (:validators field) answers-by-key field virkailija?))
                          results
                          (assoc results id (get answers-by-key id))))))
         results))))
-
-(defn build-failed-results [answers-by-key failed-results]
-  (merge-with merge
-    (select-keys answers-by-key (keys failed-results))
-    failed-results))
 
 (defn- validate-meta-fields [application]
   (when (not (contains? #{"fi" "sv" "en"} (:lang application)))
@@ -303,7 +301,7 @@
         extra-answers             (extra-answers-not-in-original-form
                                     (map (comp keyword :id) flattened-form-fields)
                                     (keys answers-no-duplicates))
-        failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
+        failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) flattened-form-fields applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
         failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application flattened-form-fields)
         failed-haku-oid           (:haku application)

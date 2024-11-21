@@ -2,7 +2,8 @@
   (:require #?(:cljs [ataru.cljs-util :as util])
             #?(:cljs [goog.string :as gstring])
             [clojure.string :as string]
-            [ataru.application.option-visibility :as option-visibility])
+            [ataru.application.option-visibility :as option-visibility]
+            [medley.core :refer [find-first]])
   (:import #?(:clj [java.util UUID])))
 
 (defn is-question-group-answer? [value]
@@ -158,8 +159,14 @@
                   rest-of-fields)
                 acc)))})))
 
-(defn followups? [dropdown-options]
-  (some some? (mapcat :followups dropdown-options)))
+(defn find-wrapper-parent [flat-form-fields field]
+  (let [field-from-flattened-fields (find-first #(= (:id %) (:id field)) flat-form-fields)
+        parent-id (or (:children-of field-from-flattened-fields) (:followup-of field-from-flattened-fields))
+        parent-element (find-first #(= (:id %) parent-id) flat-form-fields)]
+    (when parent-element
+      (if (= "wrapperElement" (:fieldClass parent-element))
+        parent-element
+        (find-wrapper-parent flat-form-fields parent-element)))))
 
 (def ^:private b-limit 1024)
 (def ^:private kb-limit 102400)
@@ -334,15 +341,24 @@
     (= section-name field-name)))
 
 (defn- visibility-conditions-on-field
-  [form answers field]
-  (let [fields-with-visibility-rules (fields-with-visibility-rules-memo form)]
+  [form answers field usememo?]
+  (let [fields-with-visibility-rules (if usememo?
+                                       (fields-with-visibility-rules-memo form)
+                                       (fields-with-visibility-rules form))]
     (mapcat
       (fn [{conditions :section-visibility-conditions condition-owner-id :id}]
         (keep
           (fn [visibility-condition]
             (when (visibility-condition-applies-to-field? visibility-condition field)
-              (let [answer (get-in answers [(keyword condition-owner-id) :value])]
-                (assoc visibility-condition :value answer))))
+              (let [value (get-in answers [(keyword condition-owner-id) :value])
+                    answer-compared-to (-> visibility-condition :condition :answer-compared-to)
+                    processed-value (if (is-question-group-answer? value)
+                                      (->> value
+                                           flatten
+                                           (filter #(= % answer-compared-to))
+                                           first)
+                                      value)]
+                (assoc visibility-condition :value processed-value))))
           conditions))
       fields-with-visibility-rules)))
 
@@ -370,12 +386,15 @@
         (option-visibility/answer-satisfies-condition? value condition))
       conditions)))
 
-(defn is-field-hidden-by-section-visibility-conditions [form answers field]
-  (let [visibility-conditions (visibility-conditions-on-field form answers field)
+(defn is-field-hidden-by-section-visibility-conditions
+  ([form answers field]
+  (is-field-hidden-by-section-visibility-conditions form answers field true))
+  ([form answers field usememo?]
+  (let [visibility-conditions (visibility-conditions-on-field form answers field usememo?)
         by-quantifier         (group-by condition-quantifier visibility-conditions)]
     (or
       (every-condition-satisfied (seq (:every by-quantifier)))
-      (some-condition-satisfied (seq (:some by-quantifier))))))
+      (some-condition-satisfied (seq (:some by-quantifier)))))))
 
 (defn distinct-by [f coll]
   (map #(first (second %))

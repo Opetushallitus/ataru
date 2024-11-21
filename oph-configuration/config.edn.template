@@ -33,8 +33,13 @@
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
  :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
- :cache {:type {{ataru_cache_type}}}
+ :cache {:type {{ataru_cache_type}}
+         :ttl-amounts {:haku {{ataru_cache_ttl_amounts_haku | default('3')}}
+                       :hakukohde {{ataru_cache_ttl_amounts_hakukohde | default('3')}}
+                       :kouta-hakus-by-form-key {{ataru_cache_ttl_amounts_kouta_hakus_by_form_key | default('3')}}
+                       :hakukohde-search {{ataru_cache_ttl_amounts_hakukohde_search | default('3')}}}}
  :redis {:uri "{{ataru_redis_uri}}"}
+ :jobs {:application-payment-module-cron {{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
