@@ -67,8 +67,18 @@
   [{:keys [application-key]}]
   application-key)
 
+(defn- create-invoice-metadata
+  [tarjonta-service application]
+  (let [haku         (tarjonta/get-haku tarjonta-service (:haku application))
+        name         (:name haku)
+        alkamiskausi (first (str/split (:alkamiskausi haku) #"#"))
+        alkamisvuosi (:alkamisvuosi haku)]
+    {:haku-name    name
+     :alkamiskausi alkamiskausi
+     :alkamisvuosi alkamisvuosi}))
+
 (defn generate-invoicing-data
-  [payment application]
+  [tarjonta-service payment application]
   (let [get-field  (fn [key] (->> (:answers application)
                                   (filter #(= key (:key %)))
                                   (map :value)
@@ -79,7 +89,8 @@
      :due-days   kk-application-payment-due-days
      :first-name (get-field "first-name")
      :last-name  (get-field "last-name")
-     :email      (get-field "email")}))
+     :email      (get-field "email")
+     :metadata   (create-invoice-metadata tarjonta-service application)}))
 
 (defn- validate-payment-data
   [{:keys [application-key state]}]
