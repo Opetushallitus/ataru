@@ -159,15 +159,14 @@
                   rest-of-fields)
                 acc)))})))
 
-(defn findWrapperParent [flat-form-fields field]
-  (let [id (:id field)
-        parent-id (-> (find-first #(= (:id %) id) flat-form-fields)
-                            :children-of)
+(defn find-wrapper-parent [flat-form-fields field]
+  (let [field-from-flattened-fields (find-first #(= (:id %) (:id field)) flat-form-fields)
+        parent-id (or (:children-of field-from-flattened-fields) (:followup-of field-from-flattened-fields))
         parent-element (find-first #(= (:id %) parent-id) flat-form-fields)]
     (when parent-element
       (if (= "wrapperElement" (:fieldClass parent-element))
         parent-element
-        (findWrapperParent flat-form-fields parent-element)))))
+        (find-wrapper-parent flat-form-fields parent-element)))))
 
 (def ^:private b-limit 1024)
 (def ^:private kb-limit 102400)
