@@ -21,7 +21,7 @@
             [schema-tools.core :as st]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
             [ataru.schema.form-properties-schema :refer [FormProperties]])
-  (:import (org.joda.time DateTime)))
+  #?(:clj (:import [org.joda.time DateTime])))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
