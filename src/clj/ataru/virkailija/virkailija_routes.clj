@@ -21,6 +21,7 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
+            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -58,6 +59,7 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             [clout.core :as clout]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
@@ -86,7 +88,9 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
-            [ataru.background-job.job :as job])
+            [ataru.background-job.job :as job]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
+            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -278,6 +282,7 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
+    ; TODO: do we need to also insert hakemusmaksu data here? Only used for virkailija hakemus browsing.
     (api/GET "/forms/latest-by-haku/:haku-oid" []
       :path-params [haku-oid :- s/Str]
       :return ataru-schema/FormWithContent
@@ -300,12 +305,30 @@
       (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service audit-logger)
       (ok {}))
 
+    (api/PUT "/forms/:form-key/upsert-kk-application-payment-module" {session :session}
+      :summary "Add or update kk-application-payment-module for given form"
+      :path-params [form-key :- s/Str]
+      (let [message (access-controlled-form/upsert-kk-application-payment-module form-key session audit-logger)]
+        (ok message)))
+
     (api/PUT "/forms/:form-key/change-field-id" {session :session}
       :summary "Change id for form field."
       :path-params [form-key :- s/Str]
       :query-params [old-field-id :- s/Str
                     new-field-id :- s/Str]
       (access-controlled-form/update-field-id-in-form form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger)
+      (ok {}))
+
+    (api/PUT "/forms/:form-key/update-payment-info" {session :session}
+      :summary "Sets the payment type and amount(s) for the form."
+      :path-params [form-key :- s/Str]
+      :body [payment-info ataru-schema/FormPaymentInfo]
+      (access-controlled-form/update-form-payment-info
+        form-key
+        (:paymentType payment-info)
+        (:processingFee payment-info)
+        (:decisionFee payment-info)
+        session tarjonta-service organization-service audit-logger)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -375,6 +398,39 @@
 
     (api/context "/background-jobs" []
       :tags ["background-jobs-api"]
+
+      (api/POST "/start-kk-application-payment-maksut-poller-job" {session :session}
+        :path-params []
+        :summary "Triggers a job for updating maksut status for all open higher education application payments"
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
+                job-runner)
+              (response/ok {}))
+          (response/unauthorized {})))
+
+      (api/POST "/start-kk-application-payment-status-updater-job-for-all" {session :session}
+        :path-params []
+        :summary "Triggers a job for updating internal payment status for all open higher education application payments"
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
+                job-runner)
+              (response/ok {}))
+          (response/unauthorized {})))
+
+      (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
+        :path-params [person-oid :- s/Str
+                      term :- s/Str
+                      year :- s/Str]
+        :summary "Triggers a job for updating internal payment status for single higher education application payment"
+        (if (get-in session [:identity :superuser])
+          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
+                job-runner
+                person-oid
+                term
+                year)
+              (response/ok {}))
+          (response/unauthorized {})))
+
       (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -383,6 +439,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -391,6 +448,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -399,6 +457,7 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -407,6 +466,7 @@
                 haku-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-payment-obligation-job/:person-oid" {session :session}
         :path-params [person-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -415,6 +475,7 @@
                 person-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-automatic-payment-obligation-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
         (if (get-in session [:identity :superuser])
@@ -423,6 +484,7 @@
                 haku-oid)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/POST "/start-submit-jobs/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -436,10 +498,12 @@
                 nil)
               (response/ok {}))
           (response/unauthorized {})))
+
       (api/GET "/list-job-statuses" {session :session}
         (if (get-in session [:identity :superuser])
           (response/ok (job/get-job-types job-runner))
           (response/unauthorized {})))
+
       (api/POST "/update-job-statuses" {session :session}
         :body [body s/Any]
         (if (get-in session [:identity :superuser])
@@ -548,7 +612,8 @@
                  :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) form-schema/Form
                  :information-requests         [ataru-schema/InformationRequest]
-                 (s/optional-key :master-oid)  (s/maybe s/Str)}
+                 (s/optional-key :master-oid)  (s/maybe s/Str)
+                 (s/optional-key :kk-payment) (s/maybe ataru-schema/KkPaymentState)}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key
@@ -1030,10 +1095,10 @@
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
 
       (api/POST "/maksupyynto" {session :session}
-        :body [input maksut-schema/TutuLaskuCreate]
+        :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [application-key locale message]} input
+        (let [{:keys [reference locale message origin metadata]} input
               lasku-input (-> input
                               (dissoc :message)
                               (dissoc :locale))
@@ -1045,15 +1110,22 @@
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
                             session
-                            application-key
-                            message
-                            payment-url
-                            "decision-fee-outstanding")]
+                            reference
+                            "decision-fee-outstanding"
+                            {:origin origin
+                             :message message
+                             :form-name (get-in metadata [:form-name (keyword lang)])
+                             :payment-url payment-url
+                             :amount (:amount invoice)
+                             :due-date (->> (str/split (:due_date invoice) #"-")
+                                            (reverse)
+                                            (str/join \.))
+                             :decision-info-email "recognition@oph.fi"})]
             (do
               (log/warn "Review result" result)
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
-                                                (:application-key application-key)
+                                                reference
                                                 " käsittely ei ole sallittu")})))))
 
     (api/context "/tulos-service" []
@@ -1139,9 +1211,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
+              hakus-with-payment-flag (map
+                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
+                                        hakus)]
+        (-> hakus-with-payment-flag
             response/ok
-            (header "Cache-Control" "public, max-age=300")))
+            (header "Cache-Control" "public, max-age=300"))))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
@@ -1505,7 +1581,8 @@
               (response/unauthorized {:error "Unauthorized"})
               :else
               (response/ok
-                (application-store/valinta-tulos-service-applications
+                (application-service/valinta-tulos-service-applications
+                  application-service
                   hakuOid
                   hakukohdeOid
                   hakemusOids
@@ -1516,7 +1593,9 @@
         :query-params [{hakuOid :- s/Str nil}
                        {hakukohdeOid :- s/Str nil}
                        {hakemusOids :- [s/Str] nil}
-                       {name :- s/Str nil}]
+                       {name :- s/Str nil}
+                       {henkilotunnus :- s/Str nil}
+                       {henkiloOid :- s/Str nil}]
         :return [ataru-schema/ValintaUiApplication]
         (if-let [queries (cond-> []
                                  (some? hakuOid)
@@ -1533,20 +1612,17 @@
                                  (some? name)
                                  (conj (application-service/->name-query
                                          name))
+                                 (some? henkilotunnus)
+                                 (conj (application-service/->ssn-query henkilotunnus))
+                                 (some? henkiloOid)
+                                 (conj (application-service/->person-oid-query henkiloOid))
                                  true
                                  seq)]
-          (if-let [applications (access-controlled-application/valinta-ui-applications
-                                  organization-service
-                                  tarjonta-service
-                                  person-service
+          (if-let [applications (application-service/valinta-ui-applications
+                                  application-service
                                   session
                                   (reduce application-service/->and-query queries))]
-            (response/ok
-              (->> applications
-                   (map #(dissoc % :hakukohde))
-                   (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
-                                                     :person-oid    :personOid
-                                                     :asiointikieli :asiointiKieli}))))
+            (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
 
@@ -1605,6 +1681,7 @@
                                 application-key)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/GET "/tilastokeskus" {session :session}
         :summary "Get application info for tilastokeskus"
         :query-params [hakuOid :- s/Str

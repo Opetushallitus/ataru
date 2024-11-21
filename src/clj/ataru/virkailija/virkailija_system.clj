@@ -78,7 +78,8 @@
                         :kouta-hakus-by-form-key-cache
                         :hakukohde-cache
                         :haku-cache
-                        :hakukohde-search-cache])
+                        :hakukohde-search-cache
+                        :kouta-internal-cas-client])
 
     :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache
     (component/using
@@ -295,11 +296,13 @@
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
                                             hakija-jobs/job-definitions)
                                      (db/get-datasource :db)
-                                     true)
+                                     (boolean (get-in config [:jobs :enabled] true)))
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache
                   :koodisto-cache
+                  :haku-cache
+                  :get-haut-cache
                   :person-service
                   :tarjonta-service
                   :suoritus-service
@@ -308,7 +311,8 @@
                   :valintalaskentakoostepalvelu-service
                   :audit-logger
                   :liiteri-cas-client
-                  :amazon-cloudwatch])
+                  :amazon-cloudwatch
+                  :maksut-service])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 

@@ -18,6 +18,7 @@
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
                                                       http post put]]
+            [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
@@ -1623,6 +1624,53 @@
     (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])
           value (not (get-in db path))]
     (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-lomakkeeseen-liittyy-maksutoiminto
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:payment])
+          value (get-in db path)]
+      (if (not-empty value)
+        (assoc-in db path {})
+        (assoc-in
+          db
+          path
+          {:type "payment-type-tutu"
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])})))))
+
+(reg-event-db
+  :editor/change-maksutyyppi
+  (fn [db [_ maksutyyppi]]
+    (let [path (db/current-form-properties-path db [:payment])]
+      (assoc-in
+        db
+        path
+        {:type maksutyyppi
+         :decision-fee nil
+         :processing-fee (if (= maksutyyppi "payment-type-tutu")
+                           (config/get-public-config
+                             [:tutu-default-processing-fee])
+                           nil)}))))
+
+(reg-event-db
+  :editor/change-processing-fee
+  (fn [db [_ processing-fee]]
+    (let [path (db/current-form-properties-path db [:payment :processing-fee])]
+      (assoc-in db path processing-fee))))
+
+(reg-event-db
+  :editor/change-vat
+  (fn [db [_ vat]]
+    (let [path (db/current-form-properties-path db [:payment :vat])]
+      (assoc-in db path vat))))
+
+(reg-event-db
+  :editor/change-order-id-prefix
+  (fn [db [_ order-id-prefix]]
+    (let [path (db/current-form-properties-path db [:payment :order-id-prefix])]
+      (assoc-in db path order-id-prefix))))
 
 (reg-event-db
   :editor/toggle-close-form

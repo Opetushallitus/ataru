@@ -1323,7 +1323,9 @@
          (queries/yesql-valinta-ui-applications (-> (merge {:application_oids nil
                                                             :name             nil
                                                             :haku             nil
-                                                            :hakukohde        nil}
+                                                            :hakukohde        nil
+                                                            :ssn              nil
+                                                            :person_oid       nil}
                                                            (transform-keys ->snake_case query))
                                                     (update :application_oids
                                                             #(some->> (seq %)
@@ -1710,3 +1712,8 @@
                                               %))
                                          application-keys)))]
     (remove nil? (vec (flatten not-deleted-keys)))))
+
+(defn get-latest-applications-for-kk-payment-processing
+  [person-oids haku-oids]
+  (exec-db :db queries/yesql-get-latest-applications-for-kk-payment-processing {:person_oids person-oids
+                                                                                :haku_oids (vec haku-oids)}))
