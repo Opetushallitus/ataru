@@ -184,7 +184,9 @@
 (s/defschema PaymentProperties
   {(s/optional-key :type)                             (s/maybe s/Str)
    (s/optional-key :processing-fee)                   (s/maybe s/Str)
-   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)
+   (s/optional-key :vat)                              (s/maybe s/Str)
+   (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
 
 (s/defschema FormProperties
   {(s/optional-key :auto-expand-hakukohteet)          s/Bool
@@ -549,7 +551,7 @@
    :email s/Str
    :hakukohteet [s/Str]
    :submitted org.joda.time.DateTime
-   :form-name localized-schema/LocalizedStringOptional})
+   :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
   {:processingState     s/Str
