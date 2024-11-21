@@ -2,7 +2,16 @@
   (:require [speclj.core :refer :all]
             [ataru.fixtures.answer :refer [answer]]
             [ataru.fixtures.person-info-form :refer [form]]
+            [ataru.component-data.person-info-module :as person-module]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.util :as util]))
+
+(def form-with-visibility-conditions (assoc form :content [(person-module/person-info-module :onr-kk-application-payment)
+                                                           (payment-module/kk-application-payment-module)]))
+
+(def payment-wrapper (get-in form-with-visibility-conditions [:content 1]))
+(def answer-hiding-wrapper {:nationality {:value [["246"]]}})
+(def answer-showing-wrapper {:nationality {:value [["200"]["245"]]}})
 
 (defn extract-wrapper-sections [form]
   (map #(select-keys % [:id :label :children])
@@ -19,6 +28,30 @@
           second
           (map keys)
           flatten))))
+
+(describe "is-field-hidden-by-section-visibility-conditions"
+          (tags :unit :visibility)
+
+          (it "field is shown by default"
+              (should= nil (util/is-field-hidden-by-section-visibility-conditions
+                               form-with-visibility-conditions
+                               {}
+                               payment-wrapper
+                               false)))
+
+          (it "field is hidden by section"
+              (should= true (util/is-field-hidden-by-section-visibility-conditions
+                              form-with-visibility-conditions
+                              answer-hiding-wrapper
+                              payment-wrapper
+                              false)))
+
+          (it "field is shown when answer does not meet condition"
+              (should= nil (util/is-field-hidden-by-section-visibility-conditions
+                              form-with-visibility-conditions
+                              answer-showing-wrapper
+                              payment-wrapper
+                              false))))
 
 (def field-descriptor-id "64d4a625-370b-4814-ae4f-d5956e8881be")
 (def field-descriptor {:id         field-descriptor-id
