@@ -163,7 +163,7 @@
                                        new-module (pm/person-info-module version)]
                                    (dispatch-sync [:editor/set-component-value
                                                    new-module path])))
-                 :disabled     @component-locked?
+                 :disabled     (or @component-locked? (= (:id content) "onr-kk-application-payment"))
                  :value        (or (get values (:id content)) "onr")
                  :data-test-id (some-> data-test-id-prefix (str "-select"))}
                 (doall (for [opt values]
@@ -185,7 +185,7 @@
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content/component-content
-        path                                                ;(:id initial-content)
+        path
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper

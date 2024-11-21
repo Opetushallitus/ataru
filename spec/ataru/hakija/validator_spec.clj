@@ -11,6 +11,7 @@
 
 (def f form)
 (def a answer)
+(def flattened-form (util/flatten-form-fields (:content form)))
 (def extra-answers (update a :answers conj {:key "foo" :value "barbara"}))
 (def answers-by-key (util/answers-by-key (:answers a)))
 (def base-oppija-session {:data {:fields {:first-name  {:value  "Timo"
@@ -161,10 +162,10 @@
              content))))
 
 (def koodisto-cache (reify cache-service/Cache
-                      (get-from [this key])
-                      (get-many-from [this keys])
-                      (remove-from [this key])
-                      (clear-all [this])))
+                      (get-from [_ _])
+                      (get-many-from [_ _])
+                      (remove-from [_ _])
+                      (clear-all [_])))
 
 (describe "application validation"
   (tags :unit :backend-validation)
@@ -190,6 +191,7 @@
                                       answers-by-key
                                       f
                                       (:content f)
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -208,6 +210,7 @@
                                                (assoc-in [:params :hidden] true))
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -228,6 +231,7 @@
                                                (assoc-in [:params :hidden] true))
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -238,6 +242,7 @@
                                       (assoc-in answers-by-key [:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 :value] [])
                                       f
                                       (:content f)
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -254,6 +259,7 @@
                                            (dissoc form :validators)
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -271,6 +277,7 @@
                                            (assoc form :validators ["required"])
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -288,6 +295,7 @@
                                            (assoc form :validators ["required"])
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -298,6 +306,7 @@
                                       (assoc-in answers-by-key [:047da62c-9afe-4e28-bfe8-5b50b21b4277 :value] [""])
                                       f
                                       (:content f)
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -315,6 +324,7 @@
                                            (assoc form :validators ["required"])
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -332,6 +342,7 @@
                                            (assoc form :validators ["required"])
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -350,6 +361,7 @@
                                            (assoc form :validators ["required"])
                                            :else form))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
@@ -367,6 +379,7 @@
                                            (assoc form-field :child-validator "birthdate-and-gender-component")
                                            :else form-field))
                                        (:content f))
+                                      flattened-form
                                       #{}
                                       false)))
 
