@@ -8,7 +8,11 @@
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
-            [ataru.background-job.job :refer [report-job cleanup-job]]))
+            [ataru.background-job.job :refer [report-job cleanup-job]]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-updater-job]
+            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-maksut-poller-job]
+            [ataru.kk-application-payment.kk-application-payment-email-job :as kk-email-job]
+            [ataru.kk-application-payment.kk-application-payment-module-job :as kk-payment-module-job]))
 
 (def default-retry-strategy {:proletarian/retry-strategy-fn
                     (fn [_ _] {:retries 20
@@ -24,6 +28,16 @@
    (:type harkinnanvaraisuus-job/recheck-job-definition) (merge harkinnanvaraisuus-job/recheck-job-definition
                                                                 {:queue default-retry-strategy})
    (:type harkinnanvaraisuus-email-job/job-definition)   (merge harkinnanvaraisuus-email-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type kk-maksut-poller-job/job-definition)           (merge kk-maksut-poller-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type kk-updater-job/scheduler-job-definition)       (merge kk-updater-job/scheduler-job-definition
+                                                                {:queue default-retry-strategy})
+   (:type kk-updater-job/updater-job-definition)         (merge kk-updater-job/updater-job-definition
+                                                                {:queue default-retry-strategy})
+   (:type kk-payment-module-job/job-definition)          (merge kk-payment-module-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type kk-email-job/job-definition)                   (merge kk-email-job/job-definition
                                                                 {:queue default-retry-strategy})
    "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                           :type    "automatic-payment-obligation-job"

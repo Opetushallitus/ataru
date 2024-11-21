@@ -24,6 +24,13 @@
                                                            :verify-certificate true
                                                            :path               ""
                                                            :timeout-seconds    10}}
+ :kk-application-payments   {:enabled? false
+                             :status-updater-enabled? false
+                             :maksut-poller-enabled? false
+                             :processing-fee "100.00"
+                             :start-year 2025
+                             :start-month 1
+                             :start-day 1}
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :application-delete-key    {:secret-key "vT6+TMbTwsJx5J&T"}
  :yksiloimattomat {:allow false}
@@ -40,6 +47,7 @@
                    :oppija-session-polling-interval     300000
                    :secret-link-valid-days              14
                    :tutu-payment-form-keys              ""
+                   :tutu-default-processing-fee         "100.00"
                    :attachment-modify-grace-period-days 14
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880}

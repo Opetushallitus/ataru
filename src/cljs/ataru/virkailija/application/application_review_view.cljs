@@ -31,11 +31,7 @@
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.tutu-payment.tutu-payment-view :refer [application-tutu-payment-status]]))
-
-
-
-
+            [ataru.virkailija.application.payment.payment-view :refer [application-tutu-payment-status application-astu-payment-status]]))
 
 (defn- application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
@@ -1026,19 +1022,20 @@
        :reagent-render
        (fn []
          (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-               tutu-form?                       @(subscribe [:tutu-payment/show-review-ui?])
+               tutu-form?                       @(subscribe [:payment/tutu-form-selected?])
+               astu-form?                       @(subscribe [:payment/astu-form-selected?])
                application-key                  @(subscribe [:state-query [:application :review :application-key]])
-               payments                         (subscribe [:tutu-payment/payments application-key])
+               payments                         @(subscribe [:payment/payments application-key])
                attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
                                                      (map (fn [liitepyynto]
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
                                                      (group-by (comp :key first)))
-               lang                             (subscribe [:application/lang])
-               rights-to-view-reviews?          @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])
-               opinto-ohjaaja                   (subscribe [:editor/opinto-ohjaaja?])
-               only-opinto-ohjaaja              @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
-               toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
-               show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
+               lang (subscribe [:application/lang])
+               rights-to-view-reviews? @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])
+               opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])
+               only-opinto-ohjaaja @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
+               toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
+               show-attachment-review? @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
              {:on-click (fn [event]
@@ -1089,14 +1086,17 @@
                                        @(subscribe [:editor/virkailija-translation :attachments])
                                        (count (keys attachment-reviews-for-hakukohde)))]])
                    [application-hakukohde-review-inputs
-                    (if tutu-form?
-                      review-states/hakukohde-review-types
-                      review-states/hakukohde-review-types-normal) application-key]]
+                    (cond
+                      tutu-form? review-states/hakukohde-review-types-tutu
+                      astu-form? review-states/hakukohde-review-types-astu
+                      :else review-states/hakukohde-review-types-normal)
+                    application-key]]
                   [:div.application-handling__review-row
                    [:span.hakukohde-review-rights-alert
                     @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]))
-              (when tutu-form?
-                [application-tutu-payment-status @payments])
+              (cond
+                tutu-form? [application-tutu-payment-status payments]
+                astu-form? [application-astu-payment-status payments])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
               [application-review-inputs]
@@ -1113,8 +1113,8 @@
 
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
-        application-loading           (subscribe [:state-query [:application :loading?]])
-        hakukohteet                   (subscribe [:state-query [:hakukohteet]])]
+        application-loading (subscribe [:state-query [:application :loading?]])
+        hakukohteet (subscribe [:state-query [:hakukohteet]])]
     (fn []
       (if @application-loading
         [:div.application-handling__application-loading-indicator

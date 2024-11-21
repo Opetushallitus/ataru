@@ -25,7 +25,8 @@
             [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
-            [medley.core :refer [find-first]])
+            [medley.core :refer [find-first]]
+            [ataru.constants :refer [system-metadata]])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (defonce migration-session {:user-agent "migration"})
@@ -352,14 +353,6 @@
                     (migration-app-store/insert-1.86-application
                      conn
                      (assoc new-application :form_id id)))))))))))
-
-(def system-metadata
-  {:created-by  {:name "system"
-                 :oid  "system"
-                 :date "1970-01-01T00:00:00Z"}
-   :modified-by {:name "system"
-                 :oid  "system"
-                 :date "1970-01-01T00:00:00Z"}})
 
 (defn- get-field-metadata
   [virkailija]

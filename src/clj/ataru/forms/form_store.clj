@@ -146,7 +146,7 @@
               (update :deleted identity)
               (update :properties (fnil identity {})))))))
 
-(defn increment-version [{:keys [key id] :as form} _]
+(defn- increment-version [{:keys [key id] :as form} _]
   {:pre [(some? key)
          (some? id)]}
   (first

@@ -37,7 +37,8 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
-    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
+    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -202,6 +203,15 @@
 
 (defn ->and-query [& queries] (apply merge queries))
 
+(defn- populate-applications-with-kk-payment-status
+  [applications]
+  (let [payment-states-by-application (kk-application-payment/get-kk-payment-states applications)]
+    (map (fn [application]
+           (if-let [kk-payment-state (get-in payment-states-by-application [(:key application) :state])]
+             (assoc application :kk-payment-state kk-payment-state)
+             application))
+         applications)))
+
 (defn- populate-applications-with-person-data
   [person-service applications]
   (let [persons (person-service/get-persons
@@ -277,6 +287,7 @@
   [henkilot application]
   (let [person         (get henkilot (:personOid application))
         kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
+        aidinkieli     (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi])
         asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
@@ -298,8 +309,8 @@
                                      :sukunimi
                                      :sukupuoli
                                      :turvakielto
-                                     :aidinkieli
                                      :kutsumanimi]))
+        (assoc-in [:person :aidinkieli] aidinkieli)
         (assoc-in [:person :asiointiKieli] (select-keys asiointikieli
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
@@ -335,7 +346,8 @@
      sort
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
-                                       (map remove-irrelevant-application_hakukohde_reviews))
+                                       (map remove-irrelevant-application_hakukohde_reviews)
+                                       populate-applications-with-kk-payment-status)
           authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications
@@ -405,7 +417,7 @@
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
-  (payment-triggered-processing-state-change [this session application-key message payment-url state])
+  (payment-triggered-processing-state-change [this session application-key state params])
   (payment-poller-processing-state-change [this application-key state])
   (send-modify-application-link-email [this application-key payment-url session])
   (add-review-note [this session note])
@@ -421,7 +433,9 @@
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
   (get-ensisijainen-application-counts-for-haku [this haku-oid])
-  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete]))
+  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete])
+  (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
+  (valinta-ui-applications [this session query]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -489,6 +503,7 @@
             hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
             attachment-reviews    (future (parse-application-attachment-reviews application-key))
             events                (future (get-application-events organization-service application-key))
+            kk-payment-state      (future (kk-application-payment/get-kk-payment-state application true))
             review                (future (application-store/get-application-review application-key))
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
@@ -509,6 +524,7 @@
                                  :events                @events
                                  :review                @review
                                  :review-notes          @review-notes
+                                 :kk-payment            @kk-payment-state
                                  :information-requests  @information-requests
                                  :master-oid            @master-oid}))))
 
@@ -548,7 +564,7 @@
                                                                        selected-hakukohderyhma
                                                                        skip-answers-to-preserve-memory?
                                                                        included-ids
-                                                                       ids-only? 
+                                                                       ids-only?
                                                                        (keyword sort-by-field)
                                                                        (keyword sort-order)
                                                                        lang
@@ -585,7 +601,7 @@
           :forbidden))))
 
   (payment-triggered-processing-state-change
-    [_ session application-key message payment-url state]
+    [_ session application-key state email-params]
     (let [hakukohde   "form"
           requirement "processing-state"]
       (when (aac/applications-access-authorized?
@@ -602,10 +618,11 @@
                state
                session
                audit-logger)
-        (log/info "Before email sending" message)
+        (log/info "Before email sending")
         (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
-          (email/start-tutu-decision-email-job job-runner application-id message payment-url))
-
+          (email/start-decision-email-job
+            job-runner
+            (assoc email-params :application-id application-id)))
         (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
               events            (future (get-application-events organization-service application-key))]
           (util/remove-nil-values {:events            @events
@@ -692,6 +709,7 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
+  ; TODO this doesn't currently filter out unpaid kk applications, should it? Probably not...
   (omatsivut-applications
     [_ session person-oid]
     (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -700,11 +718,13 @@
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
-    (if-let [applications (aac/get-applications-for-valintalaskenta
-                            organization-service
-                            session
-                            hakukohde-oid
-                            application-keys)]
+    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
+                            (aac/get-applications-for-valintalaskenta
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                            :hakemusOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -728,12 +748,14 @@
 
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (aac/siirto-applications
-                           tarjonta-service
-                           organization-service
-                           session
-                           hakukohde-oid
-                           application-keys)]
+    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
+                            (aac/siirto-applications
+                              tarjonta-service
+                              organization-service
+                              session
+                              hakukohde-oid
+                              application-keys)
+                            :hakemusOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
@@ -762,8 +784,10 @@
   (suoritusrekisteri-applications
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
-                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
+          applications (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)
+          update-fn kk-application-payment/remove-kk-applications-with-unapproved-payments]
+      (update applications :applications update-fn :oid)))
 
   (suoritusrekisteri-person-info
     [_ haku-oid hakukohde-oids offset]
@@ -790,6 +814,32 @@
         questions
         urheilija-amm-hakukohdes
         haun-hakukohteet)))
+
+  (valinta-tulos-service-applications
+    [_ haku-oid hakukohde-oid hakemus-oids offset]
+    (let [applications (application-store/valinta-tulos-service-applications
+                         haku-oid
+                         hakukohde-oid
+                         hakemus-oids
+                         offset)
+          update-fn kk-application-payment/remove-kk-applications-with-unapproved-payments]
+      (update applications :applications update-fn :oid)))
+
+  (valinta-ui-applications
+    [_ session query]
+      (let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
+                           (aac/valinta-ui-applications
+                             organization-service
+                             tarjonta-service
+                             person-service
+                             session
+                             query)
+                           :oid)]
+        (->> applications
+             (map #(dissoc % :hakukohde))
+             (map #(clojure.set/rename-keys % {:haku-oid      :hakuOid
+                                               :person-oid    :personOid
+                                               :asiointikieli :asiointiKieli})))))
 
   (get-applications-paged
     [_ session params]

@@ -3,7 +3,8 @@
             [ataru.util :as util]
             [ataru.translations.texts :refer [person-info-module-texts general-texts]]
             [clojure.walk]
-            [com.rpl.specter :refer [select walker]]))
+            [com.rpl.specter :refer [select walker]]
+            [ataru.constants :refer [system-metadata]]))
 
 ; validators defined in ataru.hakija.application-validators
 
@@ -285,25 +286,19 @@
   ([]
    (person-info-module :onr))
   ([version]
-  (let [metadata {:created-by  {:name "system"
-                                :oid  "system"
-                                :date "1970-01-01T00:00:00Z"}
-                  :modified-by {:name "system"
-                                :oid  "system"
-                                :date "1970-01-01T00:00:00Z"}}]
-    (merge (component/form-section metadata)
-           {:label           (:label person-info-module-texts)
-            :label-amendment (:label-amendment person-info-module-texts)
-            :id              (name version)
-            :children        (cond
-                               (= version :muu)
-                               (muu-person-info-module metadata)
+  (merge (component/form-section system-metadata)
+         {:label           (:label person-info-module-texts)
+          :label-amendment (:label-amendment person-info-module-texts)
+          :id              (name version)
+          :children        (cond
+                             (= version :muu)
+                             (muu-person-info-module system-metadata)
 
-                               (= version :onr-2nd)
-                               (onr-2nd-person-info-module metadata)
+                             (= version :onr-2nd)
+                             (onr-2nd-person-info-module system-metadata)
 
-                               :else (onr-person-info-module metadata))
-            :module          :person-info}))))
+                             :else (onr-person-info-module system-metadata))
+          :module          :person-info})))
 
 
 (def person-info-questions

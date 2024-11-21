@@ -9,6 +9,8 @@
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
+                                                                        tutu-form?
+                                                                        astu-form?
                                                                         hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
                                                                         selected-hakukohde-oid-set]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
@@ -354,10 +356,13 @@
  (fn [db [_ form-key]]
    (let [query-params    (cljs-util/extract-query-params)
          ensisijaisesti? (= "true" (:ensisijaisesti query-params))
-         tutu-form?      (get-tutu-form? form-key)
-         processing-states (if tutu-form?
-                             review-states/application-hakukohde-processing-states
-                             review-states/application-hakukohde-processing-states-normal)]
+         form            (get-in db [:forms form-key])
+         tutu-form?      (tutu-form? form)
+         astu-form?      (astu-form? form)
+         processing-states (cond
+                             tutu-form? review-states/application-hakukohde-processing-states-tutu
+                             astu-form? review-states/application-hakukohde-processing-states-astu
+                             :else      review-states/application-hakukohde-processing-states-normal)]
      (-> db
          (assoc-in [:application :attachment-state-filter]
                    (extract-unselected-review-states-from-query
@@ -662,11 +667,16 @@
      (-> application :person :oid)
      (:created-time application)]))
 
+(defn- form-has-payments? [form]
+  (or (tutu-form? form)
+      (astu-form? form)
+      (get-tutu-form? (:key form))))
+
 (reg-event-fx
  :application/handle-fetch-application
  (fn [{:keys [db]} [_ response]]
    (let [application-key            (-> response :application :key)
-         form-key                   (-> response :form :key)
+         form                       (:form response)
          response-with-parsed-times (parse-application-times response)
          db                         (-> db
                                         (update-application-details response-with-parsed-times)
@@ -678,8 +688,8 @@
                                          [:application/start-autosave])
                                        (when (not (get-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                          [:liitepyynto-information-request/get-deadlines application-key])
-                                       (when (get-tutu-form? form-key)
-                                         [:tutu-payment/fetch-payments application-key])
+                                       (when (form-has-payments? form)
+                                         [:payment/fetch-payments application-key])
                                        [:application/get-application-change-history application-key]]
                                       (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                       [(hyvaksynnan-ehto-hakemukselle-dispatch db)]

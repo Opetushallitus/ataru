@@ -222,35 +222,45 @@
    :state           "unprocessed"
    :notes           "Some notes about the applicant"})
 
-(def person-info-form-application {:form       2147483647,
-                                   :lang       "fi"
-                                   :id         1
-                                   :person-oid "1.2.3.4.5.6"
-                                   :answers    [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a"
-                                                 :value     "Vastaus tekstikysymykseen"
-                                                 :fieldType "textField"
-                                                 :label     {:fi "Tekstikysymys" :sv ""}}
-                                                {:key "address" :value "Paratiisitie 13" :fieldType "textField" :label {:fi "Katuosoite" :sv "Adress"}}
-                                                {:key       "email"
-                                                 :value     "aku@ankkalinna.com"
-                                                 :fieldType "textField"
-                                                 :label     {:fi "Sähköpostiosoite" :sv "E-postadress"}}
-                                                {:key "preferred-name" :value "Aku" :fieldType "textField" :label {:fi "Kutsumanimi" :sv "Smeknamn"}}
-                                                {:key "last-name" :value "Ankka" :fieldType "textField" :label {:fi "Sukunimi" :sv "Efternamn"}}
-                                                {:key       "phone"
-                                                 :value     "050123"
-                                                 :fieldType "textField"
-                                                 :label     {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"}}
-                                                {:key "nationality" :value [["246"]] :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
-                                                {:key "country-of-residence" :value "246" :fieldType "dropdown" :label {:fi "Asuinmaa" :sv "Boningsland"}}
-                                                {:key "ssn" :value "010101A123N" :fieldType "textField" :label {:fi "Henkilötunnus" :sv "Personnummer"}}
-                                                {:key "first-name" :value "Aku Petteri" :fieldType "textField" :label {:fi "Etunimet" :sv "Förnamn"}}
-                                                {:key "postal-code" :value "00013" :fieldType "textField" :label {:fi "Postinumero" :sv "Postnummer"}}
-                                                {:key "postal-office" :value "Paikka" :fieldType "textField" :label {:fi "Postitoimipaikka"}}
-                                                {:key "home-town" :value "273" :fieldType "dropdown" :label {:fi "Kotikunta"}}
-                                                {:key "language" :value "FI" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
-                                                {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
-                                                {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}]})
+(def person-info-form-application-without-kk-application-answer
+  {:form       2147483647,
+   :lang       "fi"
+   :id         1
+   :person-oid "1.2.3.4.5.6"
+   :answers    [{:key       "b0839467-a6e8-4294-b5cc-830756bbda8a"
+                 :value     "Vastaus tekstikysymykseen"
+                 :fieldType "textField"
+                 :label     {:fi "Tekstikysymys" :sv ""}}
+                {:key "address" :value "Paratiisitie 13" :fieldType "textField" :label {:fi "Katuosoite" :sv "Adress"}}
+                {:key       "email"
+                 :value     "aku@ankkalinna.com"
+                 :fieldType "textField"
+                 :label     {:fi "Sähköpostiosoite" :sv "E-postadress"}}
+                {:key "preferred-name" :value "Aku" :fieldType "textField" :label {:fi "Kutsumanimi" :sv "Smeknamn"}}
+                {:key "last-name" :value "Ankka" :fieldType "textField" :label {:fi "Sukunimi" :sv "Efternamn"}}
+                {:key       "phone"
+                 :value     "050123"
+                 :fieldType "textField"
+                 :label     {:fi "Matkapuhelin" :sv "Mobiltelefonnummer"}}
+                {:key "nationality" :value [["246"]] :fieldType "dropdown" :label {:fi "Kansalaisuus" :sv "Nationalitet"}}
+                {:key "country-of-residence" :value "246" :fieldType "dropdown" :label {:fi "Asuinmaa" :sv "Boningsland"}}
+                {:key "ssn" :value "010101A123N" :fieldType "textField" :label {:fi "Henkilötunnus" :sv "Personnummer"}}
+                {:key "first-name" :value "Aku Petteri" :fieldType "textField" :label {:fi "Etunimet" :sv "Förnamn"}}
+                {:key "postal-code" :value "00013" :fieldType "textField" :label {:fi "Postinumero" :sv "Postnummer"}}
+                {:key "postal-office" :value "Paikka" :fieldType "textField" :label {:fi "Postitoimipaikka"}}
+                {:key "home-town" :value "273" :fieldType "dropdown" :label {:fi "Kotikunta"}}
+                {:key "language" :value "FI" :fieldType "dropdown" :label {:fi "Äidinkieli" :sv "Modersmål"}}
+                {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
+                {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}]})
+
+(def person-info-form-application
+  (-> person-info-form-application-without-kk-application-answer
+      (update :answers
+              (comp vec concat)
+              [{:key "kk-application-payment-option"
+                :value "6"
+                :fieldType "singleChoice"
+                :label {:fi "Hakemusmaksu vaihtoehdot"}}])))
 
 (def form-with-followup-inside-a-question-group-application {:form       2147483646,
                                                              :lang       "fi"
@@ -350,9 +360,9 @@
 
 (def person-info-form-application-with-modified-answers
   (-> person-info-form-application-with-more-answers
-      (update-in [:answers 17 :value] conj "Toistuva pakollinen 4")
-      (assoc-in [:answers 18 :value] "toka vaihtoehto")
-      (assoc-in [:answers 19 :value] ["modified-attachment-id"])
+      (update-in [:answers 18 :value] conj "Toistuva pakollinen 4")
+      (assoc-in [:answers 19 :value] "toka vaihtoehto")
+      (assoc-in [:answers 20 :value] ["modified-attachment-id"])
       (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
                                            :value     "Vierekkäinen vastaus 2"
                                            :fieldType "textField"}])))
@@ -379,7 +389,7 @@
 
 (def person-info-form-application-with-more-modified-answers
   (-> person-info-form-application-with-modified-answers
-      (assoc-in [:answers 18 :value] "eka vaihtoehto")
+      (assoc-in [:answers 19 :value] "eka vaihtoehto")
       (update :answers (comp vec concat) dropdown-followups)))
 
 (def person-info-form-application-for-hakukohde
@@ -421,7 +431,11 @@
                {:key       "87834771-34da-40a4-a9f6-sensitive"
                 :value     "Salainen vastaus"
                 :fieldType "textArea"
-                :label     {:fi "Salainen kysymys" :sv ""}}]})
+                :label     {:fi "Salainen kysymys" :sv ""}}
+               {:key "kk-application-payment-option"
+                :value "6"
+                :fieldType "singleChoice"
+                :label {:fi "Hakemusmaksu vaihtoehdot" :sv ""}}]})
 
 (def application-with-person-info-module {:key     "9d24af7d-f672-4c0e-870f-3c6999f105e0"
                                           :lang    "fi"
@@ -568,3 +582,28 @@
   {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
    :notes           "Some notes about the applicant"
    :state-name      "processing-state"})
+
+(def application-with-hakemusmaksu-exemption
+  (-> person-info-form-application-without-kk-application-answer
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543210
+              :person-oid "1.2.3.4.5.303"})
+      (update :answers
+              (comp vec concat)
+              [{:key "kk-application-payment-option" :value "0" :fieldType "dropdown"}])))
+
+(def application-without-hakemusmaksu-exemption
+  (-> person-info-form-application-without-kk-application-answer
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543211
+              :person-oid "1.2.3.4.5.303"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))

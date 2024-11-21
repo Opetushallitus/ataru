@@ -13,7 +13,8 @@
             [ataru.hakukohde.liitteet :as liitteet]
             [ataru.hakija.demo :as demo]
             [ataru.tarjonta.haku :as haku]
-            [ataru.hakija.application-handlers :as handlers]))
+            [ataru.hakija.application-handlers :as handlers]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -965,3 +966,23 @@
  :application/hakukohde-siirretty-alert
  (fn [db _]
    (:hakukohde-siirretty-alert db)))
+
+(re-frame/reg-sub
+  :application/nationality-values
+  (fn [db _]
+    (get-in db [:application :answers :nationality :values])))
+
+(re-frame/reg-sub
+  :application/payment-type
+  (fn [db _]
+    (get-in db [:form :properties :payment :type])))
+
+(re-frame/reg-sub
+  :application/may-need-kk-application-payment
+  (fn [_ _]
+    [(re-frame/subscribe [:application/nationality-values])
+     (re-frame/subscribe [:application/payment-type])])
+  (fn [[nationality-values payment-type] _]
+    (and
+      (empty? (filter (fn [[v & _]] (= (:value v) finland-country-code)) nationality-values))
+      (= "payment-type-kk" payment-type))))

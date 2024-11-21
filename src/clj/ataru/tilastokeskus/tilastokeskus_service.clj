@@ -1,5 +1,6 @@
 (ns ataru.tilastokeskus.tilastokeskus-service
-  (:require [clj-time.core :as t]
+  (:require [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
+            [clj-time.core :as t]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.answer-util :as answer-util]
             [ataru.applications.suoritus-filter :as suoritus-filter]
@@ -91,7 +92,9 @@
 
 (defn get-application-info-for-tilastokeskus
   [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid]
-  (let [applications (application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)
+  (let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
+                       (application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)
+                       :hakemus_oid)
         haut         (->> (keep :haku_oid applications)
                           distinct
                           (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))

@@ -42,15 +42,15 @@
 (defn selected-application-answers [db]
   (get-in db [:application :selected-application-and-form :application :answers]))
 
-(defn get-tutu-payment-note-input [db application-key]
+(defn get-payment-note-input [db application-key]
   (or
-   (get-in db [:tutu-payment :inputs application-key :note])
+   (get-in db [:payment :inputs application-key :note])
    ""))
 
-(defn get-tutu-payment-amount-input [db application-key]
+(defn get-payment-amount-input [db application-key]
   (or
-   (get-in db [:tutu-payment :inputs application-key :amount])
-   (get-in db [:tutu-payment :applications application-key :decision :amount])
+   (get-in db [:payment :inputs application-key :amount])
+   (get-in db [:payment :applications application-key :decision :amount])
    ""))
 
 (defn get-tutu-form? [tutu-key]
@@ -59,3 +59,11 @@
      (and
       (not-empty tutu-forms)
       (some #(= tutu-key %) tutu-forms)))))
+
+(defn tutu-form? [form]
+  (or
+    (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+    (get-tutu-form? (:key form))))
+
+(defn astu-form? [form]
+  (= "payment-type-astu" (get-in form [:properties :payment :type])))

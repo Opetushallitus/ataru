@@ -317,3 +317,5 @@
            :haut             haut
            :hakukohteet      hakukohteet-with-kevyt-valinta
            :hakukohderyhmat  hakukohderyhmat}))
+
+
