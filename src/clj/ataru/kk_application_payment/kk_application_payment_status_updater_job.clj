@@ -39,12 +39,12 @@
       (log/warn "Creating kk application payment" type-str "mail to application" application-key "failed"))))
 
 (defn- create-payment-and-send-email
-  [job-runner maksut-service payment-data]
+  [{:keys [tarjonta-service] :as job-runner} maksut-service payment-data]
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)
         lang            (utils/get-application-language application)
         email-address   (utils/get-application-email application)
-        invoice-data    (payment/generate-invoicing-data payment-data application)
+        invoice-data    (payment/generate-invoicing-data tarjonta-service payment-data application)
         invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
         url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) (name lang))]
     (when invoice
