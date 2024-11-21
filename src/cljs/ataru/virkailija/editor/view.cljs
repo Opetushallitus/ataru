@@ -7,6 +7,7 @@
             [ataru.virkailija.editor.demo.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [reagent.dom :as r-dom]
@@ -452,18 +453,43 @@
                :required     true
                :disabled     disabled?
                :on-change    #(dispatch [:editor/change-processing-fee (.-value (.-target %))])}]]])
-        [:div.editor-form__checkbox-with-label
-         [:input.editor-form__radio
-          {:type      "radio"
-           :value     "payment-type-astu"
-           :checked   (= (:type maksutiedot) "payment-type-astu")
-           :id        "maksutyyppi-astu-radio"
-           :disabled  disabled?
-           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])
-           :data-test-id "maksutyyppi-astu-radio"}]
-         [:label.editor-form__checkbox-label
-          {:for   "maksutyyppi-astu-radio"}
-          @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]
+         [:div.editor-form__checkbox-with-label
+          [:input.editor-form__radio
+           {:type      "radio"
+            :value     "payment-type-astu"
+            :checked   (= (:type maksutiedot) "payment-type-astu")
+            :id        "maksutyyppi-astu-radio"
+            :disabled  disabled?
+            :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])
+            :data-test-id "maksutyyppi-astu-radio"}]
+          [:label.editor-form__checkbox-label
+           {:for   "maksutyyppi-astu-radio"}
+           @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]
+         (when (= (:type maksutiedot) "payment-type-astu")
+           [:div
+            [:div.editor-form__payment-amount-wrapper
+             [:div.editor-form__text-field-wrapper
+              [:label.editor-form__component-item-header
+               "ALV"]
+              [:input.editor-form__text-field
+               {:data-test-id "astu-vat-input"
+                :type         "number"
+                :value        (:vat maksutiedot)
+                :required     false
+                :disabled     disabled?
+                :on-change    #(dispatch [:editor/change-vat (.-value (.-target %))])}]]]
+            [:div.editor-form__text-field-wrapper
+             [:label.editor-form__component-item-header
+              "Maksuviite"]
+             [:select
+              {:data-test-id "astu-order-id-prefix-input"
+               :value        (:order-id-prefix maksutiedot)
+               :required     true
+               :disabled     disabled?
+               :on-change    #(dispatch [:editor/change-order-id-prefix (.-value (.-target %))])}
+              (map
+                #(list [:option {:value %} %])
+                (concat [nil] astu-order-id-prefixes))]]])
         [:div.editor-form__checkbox-with-label
          [:input.editor-form__radio
           {:type      "radio"
