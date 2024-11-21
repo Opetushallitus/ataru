@@ -73,7 +73,7 @@
   (apply disj (set answer-keys) form-keys))
 
 (defn- passed? [has-applied form flattened-form-fields answer validators answers-by-key field-descriptor virkailija?]
-  (let [wrapper-parent (util/findWrapperParent flattened-form-fields field-descriptor)
+  (let [wrapper-parent (util/find-wrapper-parent flattened-form-fields field-descriptor)
         parent-hidden? (and (some? wrapper-parent) (util/is-field-hidden-by-section-visibility-conditions form answers-by-key wrapper-parent false))]
     (or parent-hidden?
         (every? (fn [validator]
