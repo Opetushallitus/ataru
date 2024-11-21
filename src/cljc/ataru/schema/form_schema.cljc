@@ -20,7 +20,8 @@
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
-            [ataru.schema.form-properties-schema :refer [FormProperties]]))
+            [ataru.schema.form-properties-schema :refer [FormProperties]])
+  (:import (org.joda.time DateTime)))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -314,8 +315,8 @@
    :can-submit-multiple-applications           s/Bool
    :sijoittelu                                 s/Bool
    :hakuajat                                   [{:hakuaika-id          s/Str
-                                                 :start                org.joda.time.DateTime
-                                                 (s/optional-key :end) org.joda.time.DateTime}]
+                                                 :start                DateTime
+                                                 (s/optional-key :end) DateTime}]
    :haun-tiedot-url                            s/Str
    (s/optional-key :alkamiskausi)              (s/maybe s/Str)
    (s/optional-key :alkamisvuosi)              (s/maybe s/Int)
@@ -344,8 +345,8 @@
    :tarjoaja-oids                                                                [s/Str]
    :ryhmaliitokset                                                               [s/Str]
    (s/optional-key :hakuaika-id)                                                 s/Str
-   (s/optional-key :hakuajat)                                                    [{:start                org.joda.time.DateTime
-                                                                                   (s/optional-key :end) org.joda.time.DateTime}]
+   (s/optional-key :hakuajat)                                                    [{:start                DateTime
+                                                                                   (s/optional-key :end) DateTime}]
    (s/optional-key :koulutustyyppikoodi)                                         (s/maybe s/Str)
    :hakukelpoisuusvaatimus-uris                                                  [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
@@ -380,9 +381,9 @@
   {:key          s/Str
    :content-type s/Str
    :size         s/Int
-   :uploaded     #?(:clj  org.joda.time.DateTime
+   :uploaded     #?(:clj  DateTime
                     :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
-   :deleted      (s/maybe #?(:clj  org.joda.time.DateTime
+   :deleted      (s/maybe #?(:clj  DateTime
                              :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})
 
 (s/defschema File
@@ -393,9 +394,9 @@
    (s/optional-key :page-count)     (s/maybe s/Int)
    :virus-scan-status               s/Str
    :final                           s/Bool
-   :uploaded                        #?(:clj  org.joda.time.DateTime
+   :uploaded                        #?(:clj  DateTime
                                        :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
-   (s/optional-key :deleted)        (s/maybe #?(:clj  org.joda.time.DateTime
+   (s/optional-key :deleted)        (s/maybe #?(:clj  DateTime
                                                 :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))
    (s/optional-key :preview-status) (s/enum "not_supported" "not_generated" "finished" "error")
    (s/optional-key :previews)       [Preview]
@@ -462,10 +463,10 @@
                                                      :yksiloity            s/Bool
                                                      (s/optional-key :ssn) s/Str
                                                      :dob                  s/Str}
-   :submitted                                       org.joda.time.DateTime
+   :submitted                                       DateTime
    :base-education                                  [s/Str]
    (s/optional-key :form)                           s/Int
-   (s/optional-key :created-time)                   org.joda.time.DateTime
+   (s/optional-key :created-time)                   DateTime
    (s/optional-key :haku)                           (s/maybe s/Str)
    (s/optional-key :hakukohde)                      (s/maybe [s/Str])
    (s/optional-key :secret)                         s/Str
@@ -480,25 +481,25 @@
    (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
 (s/defschema Application
-  {(s/optional-key :key)                s/Str
-   :form                                s/Int
-   (s/optional-key :lang)               s/Str
-   :answers                             [Answer]
-   (s/optional-key :applications-count) s/Int
-   (s/optional-key :state)              (s/maybe s/Str)
-   (s/optional-key :hakukohde)          (s/maybe [s/Str])
-   (s/optional-key :haku)               (s/maybe s/Str)
-   (s/optional-key :id)                 s/Int
-   (s/optional-key :created-time)       org.joda.time.DateTime
-   (s/optional-key :secret)             s/Str
-   (s/optional-key :virkailija-secret)  s/Str
-   (s/optional-key :selection-id)       s/Str
-   (s/optional-key :form-key)           s/Str
-   (s/optional-key :tarjonta)           FormTarjontaMetadata
-   (s/optional-key :person-oid)         (s/maybe s/Str)
+  {(s/optional-key :key)                                 s/Str
+   :form                                                 s/Int
+   (s/optional-key :lang)                                s/Str
+   :answers                                              [Answer]
+   (s/optional-key :applications-count)                  s/Int
+   (s/optional-key :state)                               (s/maybe s/Str)
+   (s/optional-key :hakukohde)                           (s/maybe [s/Str])
+   (s/optional-key :haku)                                (s/maybe s/Str)
+   (s/optional-key :id)                                  s/Int
+   (s/optional-key :created-time)                        DateTime
+   (s/optional-key :secret)                              s/Str
+   (s/optional-key :virkailija-secret)                   s/Str
+   (s/optional-key :selection-id)                        s/Str
+   (s/optional-key :form-key)                            s/Str
+   (s/optional-key :tarjonta)                            FormTarjontaMetadata
+   (s/optional-key :person-oid)                          (s/maybe s/Str)
    (s/optional-key :strict-warnings-on-unchanged-edits?) (s/maybe s/Bool)
-   (s/optional-key :tunnistautunut)     (s/maybe s/Bool)
-   (s/optional-key :tunnistautuminen)   (s/maybe s/Str)})
+   (s/optional-key :tunnistautunut)                      (s/maybe s/Bool)
+   (s/optional-key :tunnistautuminen)                    (s/maybe s/Str)})
 
 (s/defschema Person
   {(s/optional-key :oid)         s/Str
@@ -554,15 +555,15 @@
    :kk-payment  KkPaymentState})
 
 (s/defschema OmatsivutApplication
-  {:oid s/Str
-   :key s/Str
-   :state s/Str
-   :secret s/Str
-   :haku (s/maybe s/Str)
-   :email s/Str
+  {:oid         s/Str
+   :key         s/Str
+   :state       s/Str
+   :secret      s/Str
+   :haku        (s/maybe s/Str)
+   :email       s/Str
    :hakukohteet [s/Str]
-   :submitted org.joda.time.DateTime
-   :form-name (s/maybe localized-schema/LocalizedStringOptional)})
+   :submitted   DateTime
+   :form-name   (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
   {:processingState     s/Str
@@ -707,21 +708,21 @@
    :idTunnus     (s/maybe s/Str)})
 
 (s/defschema TilastokeskusApplication
-  {:hakemus_oid                       s/Str
-   :hakemus_tila                      s/Str
-   :haku_oid                          s/Str
-   :henkilo_oid                       s/Str
-   :hakukohde_oids                    [s/Str]
-   :kotikunta                         (s/maybe s/Str)
-   :asuinmaa                          (s/maybe s/Str)
-   :submitted                         org.joda.time.DateTime
-   :pohjakoulutus_kk                  [{:pohjakoulutuskklomake          s/Str
+  {:hakemus_oid                                         s/Str
+   :hakemus_tila                                        s/Str
+   :haku_oid                                            s/Str
+   :henkilo_oid                                         s/Str
+   :hakukohde_oids                                      [s/Str]
+   :kotikunta                                           (s/maybe s/Str)
+   :asuinmaa                                            (s/maybe s/Str)
+   :submitted                                           DateTime
+   :pohjakoulutus_kk                                    [{:pohjakoulutuskklomake          s/Str
                                         (s/optional-key :suoritusvuosi) s/Int}]
-   :pohjakoulutus_kk_ulk_country      (s/maybe s/Str)
-   (s/optional-key :pohjakoulutus_2aste)               (s/maybe s/Str)
-   (s/optional-key :pohjakoulutus_2aste_suorituskieli) (s/maybe s/Str)
+   :pohjakoulutus_kk_ulk_country                        (s/maybe s/Str)
+   (s/optional-key :pohjakoulutus_2aste)                (s/maybe s/Str)
+   (s/optional-key :pohjakoulutus_2aste_suorituskieli)  (s/maybe s/Str)
    (s/optional-key :pohjakoulutus_2aste_lahtokoulu_oid) (s/maybe s/Str)
-   :hakutoiveet                       [{:hakukohde_oid (s/maybe s/Str)
+   :hakutoiveet                                         [{:hakukohde_oid (s/maybe s/Str)
                                         :sija          s/Int
                                         :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
 
@@ -786,7 +787,7 @@
 
 (s/defschema Event
   {:event-type                                event-types
-   :time                                      org.joda.time.DateTime
+   :time                                      DateTime
    :id                                        s/Int
    :application-key                           s/Str
    (s/optional-key :new-review-state)         (s/maybe s/Str)
@@ -814,7 +815,7 @@
 
 (s/defschema FieldDeadline
   {:field-id s/Str
-   :deadline org.joda.time.DateTime})
+   :deadline DateTime})
 
 (s/defschema ReviewNote
   {:id                                        s/Int
@@ -829,12 +830,12 @@
                                                 (s/optional-key :active?)         s/Bool}]
    (s/optional-key :hakukohde)                (s/maybe s/Str)
    (s/optional-key :state-name)               HakukohdeReviewTypeNames
-   (s/optional-key :created-time)             org.joda.time.DateTime})
+   (s/optional-key :created-time)             DateTime})
 
 (s/defschema Review
   {:id                                  s/Int
    :application-key                     s/Str
-   (s/optional-key :modified-time)      org.joda.time.DateTime
+   (s/optional-key :modified-time)      DateTime
    :state                               s/Str
    (s/optional-key :score)              (s/maybe s/Num)
    (s/optional-key :hakukohde-reviews)  HakukohdeReviews
@@ -900,7 +901,7 @@
                                  :message         s/Str
                                  :application-key s/Str
                                  :message-type    s/Str
-                                 :created-time    #?(:clj  org.joda.time.DateTime
+                                 :created-time    #?(:clj  DateTime
                                                      :cljs s/Str)
                                  :first-name      s/Str
                                  :last-name       s/Str})
@@ -933,12 +934,12 @@
                  {:order-by                (s/eq "created-time")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key          s/Str
-                                            :created-time org.joda.time.DateTime}}
+                                            :created-time DateTime}}
                  #(= "submitted" (:order-by %))
                  {:order-by                (s/eq "submitted")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key       s/Str
-                                            :submitted org.joda.time.DateTime}}))
+                                            :submitted DateTime}}))
 
 (s/defschema QueryAttachmentReviewStates
   {s/Keyword
