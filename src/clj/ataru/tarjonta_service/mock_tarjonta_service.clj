@@ -486,7 +486,7 @@
    :hakulomakeAtaruId                                    "41101b4f-1762-49af-9db0-e3603adae3ad",
    :hakutapaKoodiUri                                     "hakutapa_02#1",
    :modified                                             "2024-04-16T10:12:10",
-   :nimi                                                 {:fi "testing2"},
+   :nimi                                                 {:fi "testing2" :sv "testing3" :en "testing4"},
    :oid                                                  "1.2.246.562.29.65950024185",
    :hakukohdeOids                                        ["1.2.246.562.20.49028196522"],
    :organisaatioOid                                      "1.2.246.562.10.73539475928",

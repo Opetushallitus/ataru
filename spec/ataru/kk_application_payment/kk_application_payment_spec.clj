@@ -63,14 +63,17 @@
                                                                  nil)
                     application (application-store/get-application application-id)
                     payment (payment/set-application-fee-paid (:key application) nil)
-                    invoice (payment/generate-invoicing-data payment application)
+                    invoice (payment/generate-invoicing-data fake-tarjonta-service payment application)
                     expected-invoice {:reference (:key application)
-                                      :origin payment/kk-application-payment-origin,
-                                      :amount "100.00",
-                                      :due-days 7,
-                                      :first-name "Aku Petteri",
-                                      :last-name "Ankka",
-                                      :email "aku@ankkalinna.com"}]
+                                      :origin payment/kk-application-payment-origin
+                                      :amount "100.00"
+                                      :due-days 7
+                                      :first-name "Aku Petteri"
+                                      :last-name "Ankka"
+                                      :email "aku@ankkalinna.com"
+                                      :metadata {:haku-name {:fi "testing2", :sv "testing3", :en "testing4"}
+                                                 :alkamiskausi "kausi_s"
+                                                 :alkamisvuosi 2025}}]
                 (should= invoice expected-invoice))))
 
 (describe "get-haut-for-update"
