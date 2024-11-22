@@ -47,13 +47,13 @@
               :fieldType  (:or "textField" "textArea")
               :label      label
               :params     {:question-group-id _}}]
-            (let [required? (some #(contains? required-validators %)
-                                  (:validators field))]
-              [(keyword id) {:valid  (not required?)
-                             :label  label
-                             :value  [[""]]
-                             :values [[{:value ""
-                                        :valid (not required?)}]]}])
+                 (let [required? (some #(contains? required-validators %)
+                                       (:validators field))]
+                   [(keyword id) {:valid  (not required?)
+                                           :label  label
+                                           :value  [[""]]
+                                           :values [[{:value ""
+                                                      :valid (not required?)}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -108,16 +108,15 @@
               :fieldClass "formField"
               :fieldType  "dropdown"
               :label      label
-              :params     {:question-group-id _}
-              :options    options}]
-            (let [value     (some #(when (:default-value %) (:value %)) options)
-                  required? (some #(contains? required-validators %)
-                                  (:validators field))]
-              [(keyword id) {:valid  (or (some? value) (not required?))
-                             :label  label
-                             :value  [[(or value "")]]
-                             :values [[{:value (or value "")
-                                        :valid (or (some? value) (not required?))}]]}])
+              :params     {:question-group-id _}}]
+            (let [value     (some #(when (:default-value %) (:value %)) (:options field))
+                 required?  (some #(contains? required-validators %)
+                                 (:validators field))]
+             [(keyword id) {:valid  (or (some? value) (not required?))
+                                     :label  label
+                                     :value  [[(or value "")]]
+                                     :values [[{:value (or value "")
+                                                :valid (or (some? value) (not required?))}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -144,11 +143,11 @@
               :label      label
               :params     {:question-group-id _}}]
             (let [required? (some #(contains? required-validators %)
-                                  (:validators field))]
+                                 (:validators field))]
               [(keyword id) {:valid  (not required?)
-                             :value  [nil]
-                             :values [nil]
-                             :label  label}])
+                                     :value  [nil]
+                                     :values [nil]
+                                     :label  label}])
 
             [{:id         id
               :fieldClass "formField"
@@ -170,10 +169,10 @@
               :label      label
               :params     {:question-group-id _}}]
             [(keyword id) {:valid  (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                           :value  [[]]
-                           :values [[]]
-                           :label  label}]
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"
@@ -192,10 +191,10 @@
               :label      label
               :params     {:question-group-id _}}]
             [(keyword id) {:valid  (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                           :value  [[]]
-                           :values [[]]
-                           :label  label}]
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"
@@ -203,6 +202,14 @@
               :label      label}]
             [(keyword id) {:valid  (not (some #(contains? required-validators %)
                                               (:validators field)))
+                           :value  []
+                           :values []
+                           :label  label}]
+
+            [{:id             id
+              :special-field  "koski-tutkinto-option"
+              :label          label}]
+            [(keyword id) {:valid  true
                            :value  []
                            :values []
                            :label  label}])))

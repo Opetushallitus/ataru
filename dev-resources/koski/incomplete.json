@@ -1,0 +1,431 @@
+{
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.23380441347",
+      "versionumero": 2,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.67887034139",
+        "oppilaitosnumero": {
+          "koodiarvo": "07379",
+          "nimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Nostavan koulu",
+          "sv": "Nostavan koulu",
+          "en": "Nostavan koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.15738250156",
+        "nimi": {
+          "fi": "Hollolan kunta",
+          "sv": "Hollolan kunta",
+          "en": "Hollolan kunta"
+        },
+        "yTunnus": "0146248-5",
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2008-08-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-06-04",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.67887034139",
+            "nimi": {
+              "fi": "Nostavan koulu",
+              "sv": "Nostavan koulu",
+              "en": "Nostavan koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "098",
+              "nimi": {
+                "fi": "Hollola",
+                "sv": "Hollola"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-06-03"
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2008-08-15",
+      "päättymispäivä": "2016-06-04"
+    },
+    {
+      "oid": "1.2.246.562.15.23380441347",
+      "versionumero": 2,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.67887034139",
+        "oppilaitosnumero": {
+          "koodiarvo": "07379",
+          "nimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Nostavan koulu",
+          "sv": "Nostavan koulu",
+          "en": "Nostavan koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.15738250156",
+        "nimi": {
+          "fi": "Hollolan kunta",
+          "sv": "Hollolan kunta",
+          "en": "Hollolan kunta"
+        },
+        "yTunnus": "0146248-5",
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2008-08-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-06-04",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.67887034139",
+            "nimi": {
+              "fi": "Nostavan koulu",
+              "sv": "Nostavan koulu",
+              "en": "Nostavan koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "098",
+              "nimi": {
+                "fi": "Hollola",
+                "sv": "Hollola"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning",
+          "en": "Basic education"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2008-08-15",
+      "päättymispäivä": "2016-06-04"
+    },
+    {
+      "oid": "1.2.246.562.15.23380441347",
+      "versionumero": 2,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.67887034139",
+        "oppilaitosnumero": {
+          "koodiarvo": "07379",
+          "nimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Nostavan koulu",
+          "sv": "Nostavan koulu",
+          "en": "Nostavan koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.15738250156",
+        "nimi": {
+          "fi": "Hollolan kunta",
+          "sv": "Hollolan kunta",
+          "en": "Hollolan kunta"
+        },
+        "yTunnus": "0146248-5",
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2008-08-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-06-04",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.67887034139",
+            "nimi": {
+              "fi": "Nostavan koulu",
+              "sv": "Nostavan koulu",
+              "en": "Nostavan koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "098",
+              "nimi": {
+                "fi": "Hollola",
+                "sv": "Hollola"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-06-04"
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning",
+          "en": "Basic education"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2008-08-15",
+      "päättymispäivä": "2016-06-04"
+    }
+  ]
+}

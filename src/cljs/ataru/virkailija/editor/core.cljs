@@ -49,17 +49,16 @@
                    [ec/component-group content path children]
 
                    {:fieldClass "questionGroup"
+                    :fieldType  "embedded"}
+                   [ec/embedded-question-group content path children]
+
+                   {:fieldClass "questionGroup"
                     :fieldType  "fieldset"}
                    [ec/component-group content path children]
 
                    {:fieldClass "questionGroup"
                     :fieldType  "tutkintofieldset"}
                    [ec/component-group content path children]
-
-                   ;externalDataElement items not visible in editor
-                   {:fieldClass "externalDataElement"
-                    :fieldType  "selectabletutkintolist"}
-                   [nil]
 
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
