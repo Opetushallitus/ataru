@@ -122,7 +122,7 @@
                                           data
                                           (not-empty metadata)
                                           (assoc :metadata metadata)
-                                          (some? vat)
+                                          (not-empty vat)
                                           (assoc :vat vat))}))
    {}))
 
