@@ -6,7 +6,9 @@
 ; in the future and already do to some extent.
 
 (ns ataru.hakija.hakija-readonly
-  (:require [clojure.string :as string]
+  (:require [ataru.hakija.components.tutkinnot :as tutkinnot]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
@@ -44,21 +46,25 @@
             (into [:div.application-handling__nested-container]
                   (child-fields (:followups option) application lang ui group-idx)))])))])
 
-(defn- text-readonly-text [field-descriptor values group-idx]
+(defn- readonly-text [field-id label-id values]
   [:div.application__readonly-text
-   {:aria-labelledby (application-field/id-for-label field-descriptor group-idx)
+   {:aria-labelledby label-id
     :data-test-id    "tekstikenttä-vastaus"}
    (cond (and (sequential? values) (< 1 (count values)))
          [:ul.application__form-field-list
           (map-indexed
             (fn [i value]
-              ^{:key (str (:id field-descriptor) i)}
+              ^{:key (str field-id "-" i)}
               [:li (application-field/render-paragraphs value)])
             values)]
          (sequential? values)
          (application-field/render-paragraphs (first values))
          :else
          (application-field/render-paragraphs values))])
+
+
+(defn- text-readonly-text [field-descriptor values group-idx]
+  (readonly-text (:id field-descriptor) (application-field/id-for-label field-descriptor group-idx) values))
 
 (defn- text-form-field-label [field-descriptor lang group-idx]
   [:div.application__form-field-label
@@ -113,19 +119,68 @@
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
 
+(defn- tutkinto [children application lang ui idx tutkinto]
+  (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
+    [:div.application__tutkinto-wrapper-readonly
+     (doall
+      (for [field (tutkinnot/get-tutkinto-field-mappings lang)]
+        (let [field-id (:id field)
+              label-id (str "koski-answer-label-" field-id "-" idx)]
+        ^{:key (str "koski-answer-" field-id "-" idx)}
+        [:div.application__form-field
+         [:div.application__form-field-label
+          {:id label-id}
+          [:span (:text field)]]
+         [readonly-text field-id label-id (get-in tutkinto [(:koski-tutkinto-field field) lang])]])))
+     (doall (child-fields non-koski-content application lang ui idx))]))
+
+(defn tutkinto-wrapper [_ _ _ _]
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [content application lang children]
+      (let [configuration-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) children)
+            itse-syotetyt-tutkinnot (tutkinnot/itse-syotetty-tutkinnot-content configuration-component)
+            additional-content (filterv #(not (ktm/is-tutkinto-configuration-component? %)) children)]
+        [:div.application__wrapper-element
+          [:div.application__wrapper-heading
+            [:h2 (util/from-multi-lang (:label content) lang)]
+            [application-field/scroll-to-anchor content]]
+            [:div.application__wrapper-contents
+             (doall
+               (for [koski-item @(subscribe [:application/koski-tutkinnot])
+                 :let [level (:level koski-item)
+                       question-group-of-level (tutkinnot/get-question-group-of-level configuration-component level)
+                       answer-idx (tutkinnot/get-tutkinto-idx level (:id koski-item))]
+                 :when (some? answer-idx)]
+                   ^{:key (str "tutkinto-" level "-" answer-idx)}
+                   [tutkinto (:children question-group-of-level) application lang ui answer-idx koski-item]))
+             (doall (child-fields itse-syotetyt-tutkinnot application lang ui nil))
+             (doall (child-fields additional-content application lang ui nil))]]))))
+
 (defn question-group [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-      (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__question-group.application__read-only
-         [:p.application__read-only-heading-text
-          (util/from-multi-lang (:label content) lang)]
-         (into [:div]
-               (for [idx (range groups-amount)]
-                 ^{:key (str (:id content) "-" idx)}
-                 [:div.application__question-group-row
-                  (into [:div.application__question-group-row-content.application__form-field]
-                        (child-fields children application lang ui idx))]))]))))
+      (let [groups-amount (->> content :id keyword (get @ui) :count)
+            tutkinto-group? (= "tutkintofieldset" (:fieldType content))]
+        (if tutkinto-group?
+          (let [flat-form-content @(subscribe [:application/flat-form-content])
+                children-and-descendants (concat (map :id children)
+                                                 (mapcat
+                                                   #(util/find-descendant-ids-by-parent-id
+                                                      flat-form-content %) children))]
+            (into [:div]
+                  (for [idx (range groups-amount)
+                    :when (some? (some #(when (util/answered-in-group-idx (deref (subscribe [:application/answer %])) idx) %)
+                                       children-and-descendants))]
+                    ^{:key (str (:id content) "-" idx)}
+                    [tutkinto children application lang ui idx nil])))
+          [:div.application__question-group.application__read-only
+           [:p.application__read-only-heading-text (util/from-multi-lang (:label content) lang)]
+           (into [:div]
+                 (for [idx (range groups-amount)]
+                   ^{:key (str (:id content) "-" idx)}
+                     [:div.application__question-group-row
+                      (into [:div.application__question-group-row-content.application__form-field]
+                            (child-fields children application lang ui idx))]))])))))
 
 (defn row-container [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -251,7 +306,9 @@
   (match field-descriptor
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper field-descriptor application lang children]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper field-descriptor application lang children]
+         {:fieldClass "wrapperElement" :fieldType "tutkinnot" :children children}  [tutkinto-wrapper field-descriptor application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group field-descriptor application lang children]
+         {:fieldClass "questionGroup" :fieldType "tutkintofieldset" :children children} [question-group field-descriptor application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset field-descriptor application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil

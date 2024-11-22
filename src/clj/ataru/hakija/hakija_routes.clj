@@ -16,7 +16,7 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
-            [clojure.string]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [compojure.api.exception :as ex]
@@ -42,7 +42,8 @@
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
             [ataru.feature-config :as fc]
-            [ataru.koski.koski-service :as koski])
+            [ataru.koski.koski-service :as koski]
+            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -376,25 +377,16 @@
         (response/ok {})))
     (api/GET "/omat-tutkinnot" [:as request]
       :summary "Returns exams from Koski for strongly authenticated applicant"
-      :return [koski-schema/AtaruKoskiTutkintoResponse]
+      :query-params [tutkinto-levels :- s/Str]
+      :return [koski-schema/AtaruKoskiTutkinto]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
-            session (oss/read-session oppija-session)]
+            session (oss/read-session oppija-session)
+            tutkinto-level-list (str/split tutkinto-levels #",")]
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
-          (if-let [suoritukset (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
-            (response/ok
-              (map (fn [suoritus] {:tutkintonimi        (get-in suoritus [:koulutusmoduuli :tunniste :nimi] "not found")
-                                   :koulutusohjelmanimi (get-in suoritus [:tyyppi :koodiarvo] "not found")
-                                   :toimipistenimi      (get-in suoritus [:toimipiste :nimi])
-                                   :valmistumispvm      (get-in suoritus [:vahvistus :päivä])
-                                   ;;:koulutustyyppi
-                                   ;;(select-keys
-                                   ;;  (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
-                                   ;;  [:koodistoUri :koodiarvo])
-                                   })
-                   (flatten (map :suoritukset (:opiskeluoikeudet suoritukset)))))
+          (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
+            (response/ok (parse-koski-tutkinnot (:opiskeluoikeudet oppija-response) tutkinto-level-list))
             (response/not-found {}))
-          (response/unauthorized {}))
-        ))
+          (response/unauthorized {}))))
     (api/context "/files" []
       (api/GET "/signed-upload" []
         :summary "Permission to upload"

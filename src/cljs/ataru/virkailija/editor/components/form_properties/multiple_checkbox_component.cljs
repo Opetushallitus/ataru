@@ -5,6 +5,16 @@
             [ataru.virkailija.editor.components.text-header-component :as text-header-component]
             [ataru.virkailija.editor.components.component-content :as component-content]
             [ataru.virkailija.editor.components.followup-question :as followup-question]))
+
+(defn- followup-count [option]
+  (reduce +
+          (map (fn [fup]
+                 (let [children (:children fup)]
+                   (if (seq children)
+                     (count (filter #(not (get-in % [:params :transparent])) children))
+                     (if (not (get-in fup [:params :transparent])) 1 0))))
+               (:followups option))))
+
 (defn multiple-checkbox-component [content _ path]
   (let [category (keyword (:category content))
         options (:options content)
@@ -63,13 +73,15 @@
                                      {:for (:id item)}
                                      (get-in item [:label @virkailija-lang])]]
                                    (when ((keyword (:id item)) @option-check-statuses)
-                                     [:div
-                                      (if (:followup-label item)
+                                     (let [followup-label (get-in item [:followup-label @virkailija-lang]
+                                                                  @(subscribe [:editor/virkailija-translation :followups]))
+                                           followups-of-item (nth followups idx)]
+                                      [:div
                                         [:div.editor-form__followup-custom-query-container
-                                         [followup-question/followup-question idx (nth followups idx) show-followups
-                                          (get-in item [:followup-label @virkailija-lang])]]
-                                        [followup-question/followup-question idx (nth followups idx) show-followups])
-                                      [followup-question/followup-question-overlay idx (nth followups idx) path show-followups]]
-                                     )]
-                                  )
+                                         [followup-question/followup-question
+                                          idx followups-of-item show-followups followup-label (followup-count item)]]
+                                      (if (get item :allow-user-followups true)
+                                        [followup-question/followup-question-overlay idx followups-of-item path show-followups]
+                                        [followup-question/followup-question-overlay-readonly idx followups-of-item show-followups]
+                                        )]))])
                                 options))]]]]))))
