@@ -970,19 +970,16 @@
    (:hakukohde-siirretty-alert db)))
 
 (re-frame/reg-sub
-  :application/tutkinnot-raw
-  (fn [db _]
-    (get-in db [:application :tutkinnot])))
+  :application/selected-tutkinto-levels
+  (fn [db]
+    (get-in db [:form :properties :tutkinto-properties :selected-option-ids] [])))
 
 (re-frame/reg-sub
-  :application/tutkinnot
-  (fn [_ _]
-    [(re-frame/subscribe [:application/tutkinnot-raw])
-     (re-frame/subscribe [:application/form-language])])
-  (fn [[tutkinto-result language] _]
-    (let [sorted-results (sort-by (comp language :nimi :tutkintonimi) tutkinto-result)]
-      (map
-        (fn [item idx]
-          (assoc item :key (str "tutkinto_" idx)))
-        sorted-results
-        (range (count sorted-results))))))
+  :application/koski-tutkinnot-of-level
+  (fn [db [_ level]]
+    (get-in db [:application :tutkinnot (keyword level)] [])))
+
+(re-frame/reg-sub
+  :application/any-koski-tutkinnot?
+  (fn [db]
+    (some? (not-empty (get-in db [:application :tutkinnot] {})))))

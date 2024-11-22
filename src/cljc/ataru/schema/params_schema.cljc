@@ -18,6 +18,7 @@
                      (s/optional-key :question-group-id)                s/Int
                      (s/optional-key :max-length)                       s/Str
                      (s/optional-key :hidden)                           s/Bool
+                     (s/optional-key :transparent)                      (s/maybe s/Bool)
                      (s/optional-key :size)                             s/Str
                      (s/optional-key :haku-oid)                         s/Str
                      (s/optional-key :placeholder)                      localized-schema/LocalizedString
