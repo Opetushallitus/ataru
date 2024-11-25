@@ -97,7 +97,9 @@
          amount     (get-payment-amount-input db application-key)
          origin     (get-origin form)
          metadata   (when (= origin "astu")
-                      {:form-name (:name form)})
+                      {:form-name (:name form)
+                       :order-id-prefix (get-in form [:properties :payment :order-id-prefix])})
+         vat        (get-in form [:properties :payment :vat])
          data {:reference application-key
                :first-name (get-field :first-name)
                :last-name (get-field :last-name)
@@ -119,7 +121,9 @@
                 :override-args {:params (cond->
                                           data
                                           (not-empty metadata)
-                                          (assoc :metadata metadata))}))
+                                          (assoc :metadata metadata)
+                                          (not-empty vat)
+                                          (assoc :vat vat))}))
    {}))
 
 (re-frame/reg-fx

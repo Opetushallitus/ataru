@@ -1661,6 +1661,18 @@
       (assoc-in db path processing-fee))))
 
 (reg-event-db
+  :editor/change-vat
+  (fn [db [_ vat]]
+    (let [path (db/current-form-properties-path db [:payment :vat])]
+      (assoc-in db path vat))))
+
+(reg-event-db
+  :editor/change-order-id-prefix
+  (fn [db [_ order-id-prefix]]
+    (let [path (db/current-form-properties-path db [:payment :order-id-prefix])]
+      (assoc-in db path order-id-prefix))))
+
+(reg-event-db
   :editor/toggle-close-form
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:closed])
