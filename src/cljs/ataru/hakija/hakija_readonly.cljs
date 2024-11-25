@@ -7,6 +7,7 @@
 
 (ns ataru.hakija.hakija-readonly
   (:require [ataru.hakija.components.tutkinnot :as tutkinnot]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
@@ -114,34 +115,66 @@
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
 
+(defn- tutkinto [children application lang ui idx tutkinto]
+  (let [grouped-to-koski-or-not (group-by #(if (get-in % [:params :transparent]) "koski" "non-koski") children)]
+    [:div.application__tutkinto-wrapper-readonly
+     (doall
+      (for [child (get grouped-to-koski-or-not "koski" [])]
+        ^{:key (str "tutkintovastaus-" (:id child) "-" idx)}
+        [:div.application__form-field
+         [text-form-field-label child lang nil]
+         [text-readonly-text child (tutkinnot/find-answer-from-koskidata child tutkinto lang) nil]]))
+     (doall (child-fields (get grouped-to-koski-or-not "non-koski" []) application lang ui idx))]))
+
 (defn tutkinto-wrapper [_ _ _ _]
-  (let [ui (subscribe [:state-query [:application :ui]])]
+  (let [ui (subscribe [:state-query [:application :ui]])
+        answers @(subscribe [:application/answers])]
     (fn [content application lang children]
-      (let [visible-children (flatten (map (fn [child] (if (tutkinnot/is-tutkinto-configuration-component? child)
-                                                         ;(flatten (map :followups (:options child)))
-                                                         (tutkinnot/itse-syotetty-tutkinnot-content child)
-                                                         [child]))
-                                           children))]
+      (let [configuration-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) children)
+            itse-syotetyt-tutkinnot (tutkinnot/itse-syotetty-tutkinnot-content configuration-component)
+            additional-content (filterv #(not (ktm/is-tutkinto-configuration-component? %)) children)]
         [:div.application__wrapper-element
           [:div.application__wrapper-heading
             [:h2 (util/from-multi-lang (:label content) lang)]
             [application-field/scroll-to-anchor content]]
-            (into [:div.application__wrapper-contents]
-              (child-fields visible-children application lang ui nil))]))))
+            [:div.application__wrapper-contents
+             (doall
+               (for [level-component (tutkinnot/selected-koski-tutkinnot-content configuration-component)
+                     idx (range (count (get-in answers [(keyword (:id level-component)) :value] [])))
+                 :let [level-id (:id level-component)
+                       level-answers (get-in answers [(keyword level-id) :value] [])
+                       tutkinto-item (tutkinnot/get-tutkinto-of-level level-id (get level-answers idx))]
+                 :when (some? tutkinto-item)]
+                   ^{:key (str "tutkinto-" level-id "-" idx)}
+                   [tutkinto (:followups level-component) application lang ui idx tutkinto-item]))
+             (doall (child-fields itse-syotetyt-tutkinnot application lang ui nil))
+             (doall (child-fields additional-content application lang ui nil))]]))))
 
 (defn question-group [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
-      (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__question-group.application__read-only
-         [:p.application__read-only-heading-text
-          (util/from-multi-lang (:label content) lang)]
-         (into [:div]
-               (for [idx (range groups-amount)]
-                 ^{:key (str (:id content) "-" idx)}
-                 [:div.application__question-group-row
-                  (into [:div.application__question-group-row-content.application__form-field]
-                        (child-fields children application lang ui idx))]))]))))
+      (let [groups-amount (->> content :id keyword (get @ui) :count)
+            tutkinto-group? (= "tutkintofieldset" (:fieldType content))]
+        (if tutkinto-group?
+          (let [flat-form-content @(subscribe [:application/flat-form-content])
+                children-and-descendants (concat (map :id children)
+                                                 (mapcat
+                                                   #(util/find-descendant-ids-by-parent-id
+                                                      flat-form-content %) children))]
+            (into [:div]
+                  (for [idx (range groups-amount)
+                    :when (some? (some #(when (util/answered-in-group-idx (deref (subscribe [:application/answer %])) idx) %)
+                                       children-and-descendants))]
+                    ^{:key (str (:id content) "-" idx)}
+                    [tutkinto children application lang ui idx nil])))
+          [:div.application__question-group.application__read-only
+           [:p.application__read-only-heading-text (util/from-multi-lang (:label content) lang)]
+           (into [:div]
+                 (for [idx (range groups-amount)]
+                   ^{:key (str (:id content) "-" idx)}
+                     [:div.application__question-group-row
+                      (into [:div.application__question-group-row-content.application__form-field]
+                            (child-fields children application lang ui idx))]))])))))
 
 (defn row-container [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]

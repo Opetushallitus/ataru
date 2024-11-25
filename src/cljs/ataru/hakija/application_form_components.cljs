@@ -15,6 +15,7 @@
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.hakija.components.tutkinnot :as tutkinnot]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -888,20 +889,67 @@
 
 (defn tutkinnot-wrapper-field
   [field-descriptor]
-  (let [label (util/non-blank-val (:label field-descriptor)
-                                  @(subscribe [:application/default-languages]))]
-    [:div.application__wrapper-element
-     [:div.application__wrapper-heading
-      [:h2 label]
-      [scroll-to-anchor field-descriptor]]
-     (into [:div.application__wrapper-contents]
-       (for [child (:children field-descriptor)
-         :when @(subscribe [:application/visible? (keyword (:id child))])]
-         (if (tutkinnot/is-tutkinto-configuration-component? child)
-           ;; TODO Tähän kohtaan koskesta tuleva contentti
-           (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
-             (with-meta [render-field followup nil] {:key (:id followup)}))
-           (with-meta [render-field child nil] {:key (:id child)}))))]))
+  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
+        lang @(subscribe [:application/form-language])
+        always-show-itse-syotetyt? (r/atom false)]
+    (fn [field-descriptor]
+      (let [any-koski-tutkinnot? @(subscribe [:application/any-koski-tutkinnot?])
+            on-click-to-add-additional-itse-syotetyt (fn [event]
+                                                       (.preventDefault event)
+                                                       (reset! always-show-itse-syotetyt? true))]
+        [:div.application__wrapper-element
+         [:div.application__wrapper-heading
+          [:h2 label]
+          [scroll-to-anchor field-descriptor]]
+         (into [:div.application__wrapper-contents]
+               (for [child (:children field-descriptor)
+                     :when @(subscribe [:application/visible? (keyword (:id child))])]
+                 (if (ktm/is-tutkinto-configuration-component? child)
+                   [:div
+                    [:div
+                     (into [:div]
+                           (for [parent-option (tutkinnot/selected-koski-tutkinnot-content child)]
+                             (let [level-id (:id parent-option)
+                                   koski-items @(subscribe [:application/koski-tutkinnot-of-level level-id])
+                                   parent-with-sub-options (assoc parent-option
+                                                             :options
+                                                             (mapv (fn [item] {:value (:id item)}) koski-items))
+                                   additional-followups (filter #(not (get-in % [:params :transparent]))
+                                                                (:followups parent-option))]
+                               ^{:key level-id}
+                               (into [:div]
+                                     (for [idx (range (count koski-items))]
+                                       (let [koski-item (nth koski-items idx)
+                                             on-toggle (fn []
+                                                         (dispatch [:application/toggle-multiple-choice-option
+                                                                    parent-with-sub-options
+                                                                    idx
+                                                                    {:value (:id koski-item)}]))
+                                             checked? @(subscribe [:application/multiple-choice-option-checked?
+                                                                   level-id
+                                                                   (:id koski-item)
+                                                                   idx])]
+                                         ^{:key (str level-id "-" idx)}
+                                         [:div.application__tutkinto-group-container
+                                          [:div
+                                           {:on-click on-toggle}
+                                           [tutkinnot/fixed-tutkinto-item parent-option koski-item idx checked?]]
+                                          (when (and checked? (seq additional-followups))
+                                            [:div.application__form-multi-choice-followups-outer-container
+                                             {:tab-index 0}
+                                             [:div.application__form-multi-choice-followups-indicator]
+                                             (into [:div.application__tutkinto-entity-container]
+                                                   (for [followup additional-followups]
+                                                     (with-meta [render-field followup idx]
+                                                                {:key (str (:id followup) "-" idx)})))])
+
+                                          ]))))))
+                     (when (and any-koski-tutkinnot? (not @always-show-itse-syotetyt?))
+                       [tutkinnot/add-button on-click-to-add-additional-itse-syotetyt lang])]
+                    (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))
+                      (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
+                        (with-meta [render-field followup nil] {:key (:id followup)})))]
+                   (with-meta [render-field child nil] {:key (:id child)}))))]))))
 
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
