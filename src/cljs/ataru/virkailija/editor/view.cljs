@@ -442,7 +442,7 @@
            {:for   "maksutyyppi-tutu-radio"}
            @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
          (when (= (:type maksutiedot) "payment-type-tutu")
-           [:div.editor-form__payment-amount-wrapper
+           [:div.editor-form__payment-properties-wrapper
             [:div.editor-form__text-field-wrapper
              [:label.editor-form__component-item-header
               @(subscribe [:editor/virkailija-translation :kasittelymaksu-input])]
@@ -466,22 +466,21 @@
            {:for   "maksutyyppi-astu-radio"}
            @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]
          (when (= (:type maksutiedot) "payment-type-astu")
-           [:div
-            [:div.editor-form__payment-amount-wrapper
-             [:div.editor-form__text-field-wrapper
-              [:label.editor-form__component-item-header
-               "ALV"]
-              [:input.editor-form__text-field
-               {:data-test-id "astu-vat-input"
-                :type         "number"
-                :value        (:vat maksutiedot)
-                :required     false
-                :disabled     disabled?
-                :on-change    #(dispatch [:editor/change-vat (.-value (.-target %))])}]]]
+           [:div.editor-form__payment-properties-wrapper
             [:div.editor-form__text-field-wrapper
              [:label.editor-form__component-item-header
-              "Maksuviite"]
-             [:select
+              @(subscribe [:editor/virkailija-translation :vat-input])]
+             [:input.editor-form__text-field
+              {:data-test-id "astu-vat-input"
+               :type         "number"
+               :value        (:vat maksutiedot)
+               :required     true
+               :disabled     disabled?
+               :on-change    #(dispatch [:editor/change-vat (.-value (.-target %))])}]]
+            [:div.editor-form__text-field-wrapper
+             [:label.editor-form__component-item-header
+              @(subscribe [:editor/virkailija-translation :order-id-prefix-input])]
+             [:select.editor-form__select
               {:data-test-id "astu-order-id-prefix-input"
                :value        (:order-id-prefix maksutiedot)
                :required     true
@@ -489,18 +488,7 @@
                :on-change    #(dispatch [:editor/change-order-id-prefix (.-value (.-target %))])}
               (map
                 #(list [:option {:value %} %])
-                (concat [nil] astu-order-id-prefixes))]]])
-        [:div.editor-form__checkbox-with-label
-         [:input.editor-form__radio
-          {:type      "radio"
-           :value     "payment-type-kk"
-           :checked   (= (:type maksutiedot) "payment-type-kk")
-           :id        "maksutyyppi-kk-radio"
-           :disabled  true
-           :data-test-id "maksutyyppi-kk-radio"}]
-         [:label.editor-form__checkbox-label
-          {:for   "maksutyyppi-kk-radio"}
-          @(subscribe [:editor/virkailija-translation :maksutyyppi-kk-radio])]]]])]))
+                astu-order-id-prefixes)]]])]])]))
 
 (defn- close-form-component
   []

@@ -948,7 +948,6 @@
   height: 33px;
   font-size: 14px;
   border: 1px solid #C1C1C1;
-  border-radius: 2px;
   margin-bottom: 15px;
 }
 
@@ -1727,16 +1726,29 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   margin: 8px 0;
 }
 
-.editor-form__payment-amount-wrapper {
+.editor-form__payment-properties-wrapper {
   margin: 0 0 8px 16px;
-}
-
-.editor-form__payment-amount-wrapper label{
-  font-weight: bold;
-}
-
-.editor-form__payment-amount-wrapper input[type=number]::-webkit-inner-spin-button,
-.editor-form__payment-amount-wrapper input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  display: flex;
+  flex-direction: row;
+  .editor-form__text-field {
+    width: 200px;
+  }
+  label {
+    font-weight: bold;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  .editor-form__payment-properties-wrapper input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    margin: 0;
+  }
+  .editor-form__select {
+    font-size: 16px;
+    width: 200px;
+    height: 43px;
+    margin-bottom: 0;
+    option {
+      width: 250px
+    }
+  }
 }
