@@ -147,7 +147,7 @@
 
             [{:fieldClass "formField"
               :fieldType  "dropdown"
-              :params     {:question-group-id _}]
+              :params     {:question-group-id _}}]
             (grouped-dropdown-values field)
 
             [{:fieldClass "formField"
