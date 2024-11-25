@@ -97,17 +97,13 @@
                           :values {:value value
                                    :valid (not (empty? value))}}])
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  (:or "textField" "textArea")
-              :label      label
               :params     {:question-group-id _}}]
             (grouped-text-values field)
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  (:or "textField" "textArea")
-              :label      label
               :grouped    true}]
             (grouped-text-values field)
 
@@ -149,20 +145,14 @@
                              :values {:value ""
                                       :valid (not required?)}}])
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "dropdown"
-              :label      label
-              :params     {:question-group-id _}
-              :options    options}]
+              :params     {:question-group-id _}]
             (grouped-dropdown-values field)
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "dropdown"
-              :label      label
-              :grouped    true
-              :options    options}]
+              :grouped    true}]
             (grouped-dropdown-values field)
 
             [{:id         id
@@ -184,17 +174,13 @@
                                                     (or (not required?)
                                                     (boolean (:per-hakukohde field))))}}])
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "singleChoice"
-              :label      label
               :params     {:question-group-id _}}]
             (grouped-single-choice-values field)
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "singleChoice"
-              :label      label
               :grouped    true}]
             (grouped-single-choice-values field)
 
@@ -212,17 +198,13 @@
                                                  (boolean (:per-hakukohde field)))}
                              :label  label}])
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "multipleChoice"
-              :label      label
               :params     {:question-group-id _}}]
             (grouped-multiple-choice-values field)
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "multipleChoice"
-              :label      label
               :grouped    true}]
             (grouped-multiple-choice-values field)
 
@@ -237,17 +219,13 @@
                       :values []
                       :label  label}]
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "attachment"
-              :label      label
               :params     {:question-group-id _}}]
             (grouped-attachment-values field)
 
-            [{:id         id
-              :fieldClass "formField"
+            [{:fieldClass "formField"
               :fieldType  "attachment"
-              :label      label
               :grouped    true}]
             (grouped-attachment-values field)
 
