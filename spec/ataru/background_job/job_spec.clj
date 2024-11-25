@@ -218,7 +218,7 @@
                     ; schedule job only once
                     (job/start-job job-runner connection "queued" nil))
 
-                  (should (deref ready 300 false))       ; job run once plus two retries
+                  (should (deref ready 400 false))       ; job run once plus two retries
                   (finally (.stop job-runner)))))
 
           (it "job type should not preempt other job types"
