@@ -62,7 +62,7 @@
                                 [awaiting-status "paid"]
                                 (do
                                   (log/info "Set kk application payment paid for application key" application-key)
-                                  (payment/set-application-fee-paid application-key ataru-status)
+                                  (payment/set-application-fee-paid application-key ataru-data)
                                   (log/info "Starting kk application payment jobs for application key" application-key)
                                   (start-confirmation-email-job job-runner application-key)
                                   (updater-job/start-update-kk-payment-status-for-application-key-job
@@ -71,7 +71,7 @@
                                 [awaiting-status "overdue"]
                                 (do
                                   (log/info "Set kk application payment overdue for application key" application-key)
-                                  (payment/set-application-fee-overdue application-key ataru-status))
+                                  (payment/set-application-fee-overdue application-key ataru-data))
 
                                 :else (log/debug "Invalid kk payment state combo, will not do anything" item))
                          (log/debug "Invalid origin, will not do anything" item))]
