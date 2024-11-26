@@ -72,8 +72,16 @@
     (throw (user-feedback-exception
              (str "Maksutiedot virheelliset: " [payment-type processing-fee decision-fee])))))
 
+(defn- add-vat
+  "Adds vat to form if valid."
+  [form vat]
+  (if (and (some? vat) (<= vat 0.00M))
+    (user-feedback-exception
+      (str "ALV virheellinen: " [vat]))
+    (assoc-in form [:properties :payment :vat] vat)))
+
 (defn- add-payment-info-to-form
-  [form payment-type processing-fee decision-fee]
+  [form payment-type processing-fee decision-fee vat]
   (let [payment-type-kw    (keyword payment-type)
         coerce-bigdec-fn   (fn [fee]
                              (when fee
@@ -81,16 +89,18 @@
                                     (catch Exception _
                                       (throw (user-feedback-exception (str "Maksusumma ei numero: " fee)))))))
         processing-fee-num (coerce-bigdec-fn processing-fee)
-        decision-fee-num   (coerce-bigdec-fn decision-fee)]
+        decision-fee-num   (coerce-bigdec-fn decision-fee)
+        vat-num (when (not-empty vat) (coerce-bigdec-fn vat))]
     (-> form
         (add-payment-type payment-type-kw)
-        (add-fees payment-type-kw processing-fee-num decision-fee-num))))
+        (add-fees payment-type-kw processing-fee-num decision-fee-num)
+        (add-vat vat-num))))
 
 (defn- add-payment-info-if-higher-education
   "Set payment info if form is attached to one or more matching higher education admissions."
   [form tarjonta-service haku hakukohde-oids]
     (if (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
-      (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil)
+      (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil nil)
       form))
 
 (defn set-payment-info
@@ -100,11 +110,12 @@
     (assoc-in form [:properties :payment] payment-properties)
     (let [payment-type (:type payment-properties)
           processing-fee (:processing-fee payment-properties)
-          decision-fee (:decision-fee payment-properties)]
+          decision-fee (:decision-fee payment-properties)
+          vat (:vat payment-properties)]
       (if (= :payment-type-kk (keyword payment-type))
         (throw (user-feedback-exception
                  (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
-        (add-payment-info-to-form form payment-type processing-fee decision-fee)))))
+        (add-payment-info-to-form form payment-type processing-fee decision-fee vat)))))
 
 (defn populate-form-with-payment-info
   "Adds payment info for form. Should be always used to get payment info rather than querying
