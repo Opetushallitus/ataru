@@ -75,10 +75,10 @@
 (defn- add-vat
   "Adds vat to form if valid."
   [form vat]
-  (if (and (some? vat) (<= vat 0.00M))
+  (if (and (some? vat) (< vat 0.00M))
     (user-feedback-exception
       (str "ALV virheellinen: " [vat]))
-    (assoc-in form [:properties :payment :vat] vat)))
+    (assoc-in form [:properties :payment :vat] (str vat))))
 
 (defn- add-payment-info-to-form
   [form payment-type processing-fee decision-fee vat]
