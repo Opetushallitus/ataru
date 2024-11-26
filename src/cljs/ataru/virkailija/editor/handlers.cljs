@@ -18,6 +18,7 @@
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
                                                       http post put]]
+            [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
             [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
@@ -1647,12 +1648,18 @@
       (assoc-in
         db
         path
-        {:type maksutyyppi
-         :decision-fee nil
-         :processing-fee (if (= maksutyyppi "payment-type-tutu")
-                           (config/get-public-config
-                             [:tutu-default-processing-fee])
-                           nil)}))))
+        (case maksutyyppi
+          "payment-type-tutu"
+          {:type maksutyyppi
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])}
+          "payment-type-astu"
+          {:type maksutyyppi
+           :decision-fee nil
+           :processing-fee nil
+           :vat "0"
+           :order-id-prefix (first astu-order-id-prefixes)})))))
 
 (reg-event-db
   :editor/change-processing-fee
