@@ -2763,7 +2763,22 @@
                                   :en "Multiple values"}
    :attachments-tab-info         {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
                                   :sv "Alla uppgifter om bilagor syns nödvändigtvis inte om läroanstalten inte sparat uppgifterna."
-                                  :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}})
+                                  :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}
+   :kk-application-payment       {:fi "Hakemusmaksun tila"
+                                  :sv "SV: Hakemusmaksun tila"
+                                  :en "Application payment state"}
+   :not-required                 {:fi "Ei vaadittu"
+                                  :sv "SV: Ei vaadittu"
+                                  :en "Not required"}
+   :awaiting                     {:fi "Odottaa käsittelyä"
+                                  :sv "SV: Odottaa käsittely"
+                                  :en "Awaiting processing"}
+   :ok-by-proxy                  {:fi "ok-by-proxy"
+                                  :sv "ok-by-proxy"
+                                  :en "ok-by-proxy"}
+   :paid                         {:fi "Maksettu"
+                                  :sv "SV: Maksettu"
+                                  :en "Paid"}})
 
 (def tutu-decision-email
   {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"

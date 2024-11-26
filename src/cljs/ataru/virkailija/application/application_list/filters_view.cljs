@@ -293,6 +293,7 @@
         fetching?                                 (subscribe [:application/fetching-applications?])
         enabled-filter-count                      (subscribe [:application/enabled-filter-count])
         review-settings                           (subscribe [:state-query [:application :review-settings :config]])
+        kk-application-payment-required?          (subscribe [:application/kk-application-payment-haku-selected?])
         selected-hakukohde-oid                    (subscribe [:state-query [:application :selected-hakukohde]])
         show-eligibility-set-automatically-filter (subscribe [:application/show-eligibility-set-automatically-filter])
         has-base-education-answers                (subscribe [:application/applications-have-base-education-answers])
@@ -307,144 +308,146 @@
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
-        filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
         lang                                      (subscribe [:editor/virkailija-lang])
         toisen-asteen-yhteishaku-selected?        (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn []
-      [:span.application-handling__filters
-       [:a
-        {:id       "open-application-filters"
-         :on-click #(do
-                      (when (and @opinto-ohjaaja-or-admin? @toisen-asteen-yhteishaku-selected?)
-                        (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
-                      (dispatch [:application/undo-filters])
-                      (swap! filters-visible not))}
-        [:span
-         (gstring/format "%s (%d"
-                         @(subscribe [:editor/virkailija-translation :filter-applications])
-                         @applications-count)]
-        (when @fetching?
-          [:span "+ "
-           [:i.zmdi.zmdi-spinner.spin]])
-        [:span ")"]]
-       (when (pos? @enabled-filter-count)
-         [:span
-          [:span.application-handling__filters-count-separator "|"]
-          [:a
-           {:on-click #(dispatch [:application/remove-filters])}
-           @(subscribe [:editor/virkailija-translation :remove-filters])
-           " (" @enabled-filter-count ")"]])
-       (when @filters-visible
-         [:div.application-handling__filters-popup
-          [:div.application-handling__filters-popup-close-button-container
-           [:button.virkailija-close-button.application-handling__filters-popup-close-button
-            {:on-click #(reset! filters-visible false)}
-            [:i.zmdi.zmdi-close]]]
-          [:div.application-handling__filters-popup-content-container
-           [:div.application-handling__popup-column
-            (when @show-ensisijaisesti?
-              [:div.application-handling__filter-group
-               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ensisijaisuus])]
-               [ensisijaisesti]
-               (when @show-rajaa-hakukohteella?
-                 [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
-            [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ssn])]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :without-ssn]) :only-ssn :without-ssn]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :with-ssn]) :only-ssn :with-ssn]]
-            [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :identifying])]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :unidentified]) :only-identified :unidentified]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :identified]) :only-identified :identified]]
-            [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-active]) :active-status :active]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]
-            [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet])]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet-edited]) :only-edited-hakutoiveet :edited]
-             [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet-unedited]) :only-edited-hakutoiveet :unedited]]]
-           (when (not @toisen-asteen-yhteishaku-selected?)
+      (let [filters-to-include (if @kk-application-payment-required?
+                                 #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :kk-application-payment}
+                                 #{:language-requirement :degree-requirement :eligibility-state :payment-obligation})]
+        [:span.application-handling__filters
+         [:a
+          {:id       "open-application-filters"
+           :on-click #(do
+                        (when (and @opinto-ohjaaja-or-admin? @toisen-asteen-yhteishaku-selected?)
+                          (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
+                        (dispatch [:application/undo-filters])
+                        (swap! filters-visible not))}
+          [:span
+           (gstring/format "%s (%d"
+                           @(subscribe [:editor/virkailija-translation :filter-applications])
+                           @applications-count)]
+          (when @fetching?
+            [:span "+ "
+             [:i.zmdi.zmdi-spinner.spin]])
+          [:span ")"]]
+         (when (pos? @enabled-filter-count)
+           [:span
+            [:span.application-handling__filters-count-separator "|"]
+            [:a
+             {:on-click #(dispatch [:application/remove-filters])}
+             @(subscribe [:editor/virkailija-translation :remove-filters])
+             " (" @enabled-filter-count ")"]])
+         (when @filters-visible
+           [:div.application-handling__filters-popup
+            [:div.application-handling__filters-popup-close-button-container
+             [:button.virkailija-close-button.application-handling__filters-popup-close-button
+              {:on-click #(reset! filters-visible false)}
+              [:i.zmdi.zmdi-close]]]
+            [:div.application-handling__filters-popup-content-container
              [:div.application-handling__popup-column
+              (when @show-ensisijaisesti?
+                [:div.application-handling__filter-group
+                 [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ensisijaisuus])]
+                 [ensisijaisesti]
+                 (when @show-rajaa-hakukohteella?
+                   [select-rajaava-hakukohde rajaava-hakukohde-opened?])])
               [:div.application-handling__filter-group
-               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
-               (when (some? @selected-hakukohde-oid)
-                 [:div.application-handling__filter-hakukohde-name
-                  @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-               (->> (cond
-                      @tutu-form? review-states/hakukohde-review-types-tutu
-                      @astu-form? review-states/hakukohde-review-types-astu
-                      :else review-states/hakukohde-review-types-normal)
-                    (filter (fn [[kw _ _]]
-                              (and
-                                (contains? filters-to-include kw)
-                                (-> @review-settings (get kw) (false?) (not)))))
-                    (map (partial review-type-filter filters-checkboxes @lang))
-                    (doall))
-               (when @show-eligibility-set-automatically-filter
-                 [:div.application-handling__filter-group
-                  [:div.application-handling__filter-group-title
-                   @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])]
-                  [:div.application-handling__filter-group-checkboxes
-                   [application-filter-checkbox
-                    filters-checkboxes
-                    (-> general-texts :yes (get @lang))
-                    :eligibility-set-automatically
-                    :yes]
-                   [application-filter-checkbox
-                    filters-checkboxes
-                    (-> general-texts :no (get @lang))
-                    :eligibility-set-automatically
-                    :no]]])]])
-           (when @toisen-asteen-yhteishaku-selected?
-             [school-and-class-filters])
-           (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
-             [:div.application-handling__popup-column.application-handling__popup-column--large
-              [application-base-education-filters filters-checkboxes @lang]])]
-          [:div.application-handling__filter-group
-           [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
-           [:div.application-handling__filters-attachment-search-input
-            [question-search/search-input
-             @form-key
-             question-search-id
-             @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
-             (not (empty? @filter-questions))
-             (fn [db form-key]
-               (every-pred (qsh/field-type-filter-predicate ["attachment"
-                                                             "dropdown"
-                                                             "multipleChoice"
-                                                             "singleChoice"])
-                           (qsh/belongs-to-selected-filter-predicate db form-key)))]]
-           (if (seq @filter-questions)
-             [:div.application-handling__filters-attachment-attachments
-              (into [:ul.application-handling__filters-attachment-attachments__list]
-                    (map (fn [[field-id _]]
-                           [:li.application-handling__filters-attachment-attachments__list-item
-                            [:button.application-handling__filters-attachment-attachments__remove-button
-                             {:on-click #(dispatch [:application/remove-question-filter (get @(subscribe [:application/form-fields-by-id @form-key]) (keyword field-id))])}
-                             [:i.zmdi.zmdi-close]]
-                            [:span.application-handling__filters-attachment-attachments__label
-                             @(subscribe [:application/form-field-label @form-key field-id])]
-                            [question-filter-dropdown @form-key field-id]])
-                         @filter-questions))]
-             [:div.application-handling__filters-attachment-search-results
-              [question-search/search-results
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :ssn])]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :without-ssn]) :only-ssn :without-ssn]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :with-ssn]) :only-ssn :with-ssn]]
+              [:div.application-handling__filter-group
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :identifying])]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :unidentified]) :only-identified :unidentified]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :identified]) :only-identified :identified]]
+              [:div.application-handling__filter-group
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-active]) :active-status :active]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]
+              [:div.application-handling__filter-group
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet])]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet-edited]) :only-edited-hakutoiveet :edited]
+               [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :only-edited-hakutoiveet-unedited]) :only-edited-hakutoiveet :unedited]]]
+             (when (not @toisen-asteen-yhteishaku-selected?)
+               [:div.application-handling__popup-column
+                [:div.application-handling__filter-group
+                 [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
+                 (when (some? @selected-hakukohde-oid)
+                   [:div.application-handling__filter-hakukohde-name
+                    @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
+                 (->> (cond
+                        @tutu-form? review-states/hakukohde-review-types-tutu
+                        @astu-form? review-states/hakukohde-review-types-astu
+                        :else review-states/hakukohde-review-types-normal)
+                      (filter (fn [[kw _ _]]
+                                (and
+                                  (contains? filters-to-include kw)
+                                  (-> @review-settings (get kw) (false?) (not)))))
+                      (map (partial review-type-filter filters-checkboxes @lang))
+                      (doall))
+                 (when @show-eligibility-set-automatically-filter
+                   [:div.application-handling__filter-group
+                    [:div.application-handling__filter-group-title
+                     @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])]
+                    [:div.application-handling__filter-group-checkboxes
+                     [application-filter-checkbox
+                      filters-checkboxes
+                      (-> general-texts :yes (get @lang))
+                      :eligibility-set-automatically
+                      :yes]
+                     [application-filter-checkbox
+                      filters-checkboxes
+                      (-> general-texts :no (get @lang))
+                      :eligibility-set-automatically
+                      :no]]])]])
+             (when @toisen-asteen-yhteishaku-selected?
+               [school-and-class-filters])
+             (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
+               [:div.application-handling__popup-column.application-handling__popup-column--large
+                [application-base-education-filters filters-checkboxes @lang]])]
+            [:div.application-handling__filter-group
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
+             [:div.application-handling__filters-attachment-search-input
+              [question-search/search-input
                @form-key
                question-search-id
-               #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
-                    (dispatch [:application/add-question-filter @form-key %]))]])]
-          [:div.application-handling__filters-popup-apply-button-container
-           [:a.editor-form__control-button.editor-form__control-button--variable-width
-            {:class    (if @filters-changed?
-                         "editor-form__control-button--enabled"
-                         "editor-form__control-button--disabled")
-             :on-click (fn [_]
-                         (reset! filters-visible false)
-                         (dispatch [:application/apply-filters]))}
-            @(subscribe [:editor/virkailija-translation :filters-apply-button])]
-           [:a.editor-form__control-button.editor-form__control-button--variable-width
-            {:class    (if @filters-changed?
-                         "editor-form__control-button--enabled"
-                         "editor-form__control-button--disabled")
-             :on-click #(dispatch [:application/undo-filters])}
-            @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])])))
+               @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
+               (not (empty? @filter-questions))
+               (fn [db form-key]
+                 (every-pred (qsh/field-type-filter-predicate ["attachment"
+                                                               "dropdown"
+                                                               "multipleChoice"
+                                                               "singleChoice"])
+                             (qsh/belongs-to-selected-filter-predicate db form-key)))]]
+             (if (seq @filter-questions)
+               [:div.application-handling__filters-attachment-attachments
+                (into [:ul.application-handling__filters-attachment-attachments__list]
+                      (map (fn [[field-id _]]
+                             [:li.application-handling__filters-attachment-attachments__list-item
+                              [:button.application-handling__filters-attachment-attachments__remove-button
+                               {:on-click #(dispatch [:application/remove-question-filter (get @(subscribe [:application/form-fields-by-id @form-key]) (keyword field-id))])}
+                               [:i.zmdi.zmdi-close]]
+                              [:span.application-handling__filters-attachment-attachments__label
+                               @(subscribe [:application/form-field-label @form-key field-id])]
+                              [question-filter-dropdown @form-key field-id]])
+                           @filter-questions))]
+               [:div.application-handling__filters-attachment-search-results
+                [question-search/search-results
+                 @form-key
+                 question-search-id
+                 #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
+                      (dispatch [:application/add-question-filter @form-key %]))]])]
+            [:div.application-handling__filters-popup-apply-button-container
+             [:a.editor-form__control-button.editor-form__control-button--variable-width
+              {:class    (if @filters-changed?
+                           "editor-form__control-button--enabled"
+                           "editor-form__control-button--disabled")
+               :on-click (fn [_]
+                           (reset! filters-visible false)
+                           (dispatch [:application/apply-filters]))}
+              @(subscribe [:editor/virkailija-translation :filters-apply-button])]
+             [:a.editor-form__control-button.editor-form__control-button--variable-width
+              {:class    (if @filters-changed?
+                           "editor-form__control-button--enabled"
+                           "editor-form__control-button--disabled")
+               :on-click #(dispatch [:application/undo-filters])}
+              @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])]))))
