@@ -235,7 +235,7 @@
                                         (= (count (:recipients mail-content)) 1)
                                         (= "aku@ankkalinna.com" (first (:recipients mail-content)))
                                         (not-empty (:subject mail-content))
-                                        (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun osoitteessa (fi)")
+                                        (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun allaolevan linkin kautta.")
                                         (str/includes? (:body mail-content) test-maksut-secret)))
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
