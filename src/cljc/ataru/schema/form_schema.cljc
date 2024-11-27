@@ -977,8 +977,7 @@
                                            :attachment-states-to-include        [s/Str]
                                            :processing-states-to-include        [s/Str]
                                            (s/optional-key :school-filter)      (s/maybe s/Str)
-                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])
-                                           (s/optional-key :kk-payment-states-to-include) (s/maybe [s/Str])}})
+                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort

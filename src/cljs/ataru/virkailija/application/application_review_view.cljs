@@ -288,7 +288,11 @@
                                                                      @(subscribe [:state-query [:application :review :hakukohde-reviews (keyword oid) kw]]))
                                                                    @current-hakukohteet)))
         multiple-values?                          (< 1 (count review-states-for-hakukohteet))
-        review-state-for-current                  (when-not multiple-values? (first review-states-for-hakukohteet))
+        kk-payment-state                          (subscribe [:payment/kk-payment-state])
+        review-state-for-current                  (when-not multiple-values?
+                                                    (if (= :kk-application-payment kw)
+                                                      @kk-payment-state
+                                                      (first review-states-for-hakukohteet)))
         list-click                                (partial toggle-review-list-visibility kw)
         list-opened                               (subscribe [:state-query [:application :ui/review kw]])
         lang                                      (subscribe [:editor/virkailija-lang])]
@@ -1035,7 +1039,8 @@
                opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])
                only-opinto-ohjaaja @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
                toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
-               show-attachment-review? @(subscribe [:state-query [:application :show-attachment-reviews?]])]
+               show-attachment-review? @(subscribe [:state-query [:application :show-attachment-reviews?]])
+               kk-application-payment-required? @(subscribe [:application/kk-application-payment-haku-selected?])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
              {:on-click (fn [event]
@@ -1089,6 +1094,7 @@
                     (cond
                       tutu-form? review-states/hakukohde-review-types-tutu
                       astu-form? review-states/hakukohde-review-types-astu
+                      kk-application-payment-required? review-states/hakukohde-review-types-kk-application-payment
                       :else review-states/hakukohde-review-types-normal)
                     application-key]]
                   [:div.application-handling__review-row
@@ -1101,7 +1107,6 @@
                 [application-information-request])
               [application-review-inputs]
               [application-review-notes]
-
               [application-modify-link false]
               (when @superuser?
                 [application-modify-link true])

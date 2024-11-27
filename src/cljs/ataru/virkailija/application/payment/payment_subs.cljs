@@ -88,3 +88,14 @@
   (fn [db [_ application-key]]
    (get-in db [:payment :applications application-key])))
 
+(re-frame/reg-sub
+  :payment/kk-payment
+  (fn [db [_]]
+    (get-in db [:application :kk-payment :payment])))
+
+(re-frame/reg-sub
+  :payment/kk-payment-state
+  (fn [_ _]
+    [(re-frame/subscribe [:payment/kk-payment])])
+  (fn [[kk-payment]]
+    (get kk-payment :state "not-checked")))
