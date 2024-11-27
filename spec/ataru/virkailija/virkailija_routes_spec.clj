@@ -514,7 +514,7 @@
 
   (it "Should include application with matching payment state"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
-                      (assoc-in [:states-and-filters :kk-payment-states-to-include] [(:awaiting payment/all-states)]))
+                      (assoc-in [:states-and-filters :filters :kk-application-payment :awaiting] true))
             application-id (db/init-db-fixture
                              fixtures/minimal-form
                              (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
@@ -534,8 +534,7 @@
 
   (it "Should filter out application with non-matching payment state"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
-                      (assoc-in [:states-and-filters :kk-payment-states-to-include]
-                                [(:not-required payment/all-states)]))
+                      (assoc-in [:states-and-filters :filters :kk-application-payment :not-required] true))
             application-id (db/init-db-fixture
                              fixtures/minimal-form
                              (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
