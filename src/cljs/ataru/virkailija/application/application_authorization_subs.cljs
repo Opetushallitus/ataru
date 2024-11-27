@@ -115,6 +115,7 @@
      superuser?
      (not toisen-asteen-yhteishaku?)
      (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name)))
+    (not (= :kk-application-payment field-name))
     (or
      (not all-organizations-have-opinto-ohjaaja-rights?)
      (not (contains? review-states/uneditable-for-opinto-ohjaaja-only field-name))))))
