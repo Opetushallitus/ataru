@@ -381,7 +381,7 @@
       :return koski-schema/AtaruKoskiTutkinnot
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
-            tutkinto-level-list (str/split tutkinto-levels ",")]
+            tutkinto-level-list (str/split tutkinto-levels #",")]
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
           (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
             (response/ok (parse-koski-tutkinnot (:opiskeluoikeudet oppija-response) tutkinto-level-list))
