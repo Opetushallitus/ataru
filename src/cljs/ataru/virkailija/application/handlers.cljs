@@ -513,6 +513,7 @@
                                               attachment-reviews
                                               information-requests
                                               review-notes
+                                              kk-payment
                                               master-oid]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
@@ -529,6 +530,7 @@
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
+      (assoc-in [:application :kk-payment] kk-payment)
       (assoc-in [:application :selected-application-and-form :application :person :master-oid] master-oid)
       (update-in [:application :selected-review-hakukohde-oids]
                  (fn [current-hakukohde-oids]

@@ -181,6 +181,14 @@
    [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
    [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
    [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
+   [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
+
+(def hakukohde-review-types-kk-application-payment
+  [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states-normal]
+   [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
+   [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
+   [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
+   [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
    [:kk-application-payment (:kk-application-payment state-translations) kk-application-payment-states]
    [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
 

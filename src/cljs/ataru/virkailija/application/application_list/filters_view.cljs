@@ -377,6 +377,7 @@
                  (->> (cond
                         @tutu-form? review-states/hakukohde-review-types-tutu
                         @astu-form? review-states/hakukohde-review-types-astu
+                        @kk-application-payment-required? review-states/hakukohde-review-types-kk-application-payment
                         :else review-states/hakukohde-review-types-normal)
                       (filter (fn [[kw _ _]]
                                 (and
