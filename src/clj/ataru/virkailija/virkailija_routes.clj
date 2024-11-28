@@ -1101,13 +1101,18 @@
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
         (let [{:keys [reference locale message origin metadata]} input
-              lasku-input (-> input
-                              (dissoc :message)
-                              (dissoc :locale))
-              invoice     (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
-              secret      (:secret invoice)
-              lang        (or locale "fi")
-              payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)]
+              lasku-input  (-> input
+                               (dissoc :message)
+                               (dissoc :locale))
+              invoice      (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
+              secret       (:secret invoice)
+              lang         (or locale "fi")
+              payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
+              amount       (bigdec (:amount invoice))
+              vat          (when (:vat invoice) (bigdec (:vat invoice)))
+              total-amount (if vat
+                             (str (with-precision 2 (+ amount (* amount (/ vat 100)))))
+                             (str amount))]
 
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
@@ -1118,11 +1123,12 @@
                              :message message
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
-                             :amount (:amount invoice)
+                             :amount total-amount
+                             :vat (when vat (str (with-precision 1 vat)))
                              :due-date (->> (str/split (:due_date invoice) #"-")
                                             (reverse)
                                             (str/join \.))
-                             :decision-info-email "recognition@oph.fi"})]
+                             :order-id-prefix (:order-id-prefix metadata)})]
             (do
               (log/warn "Review result" result)
               (response/ok result))

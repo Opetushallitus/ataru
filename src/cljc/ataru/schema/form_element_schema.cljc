@@ -24,7 +24,10 @@
                                                         (s/optional-key :demo-validity-start)              (s/maybe s/Str)
                                                         (s/optional-key :demo-validity-end)                (s/maybe s/Str)
                                                         (s/optional-key :closed)                           s/Bool
-                                                        (s/optional-key :payment) (s/maybe {(s/optional-key :type)   s/Str
-                                                                                            (s/optional-key :processing-fee) (s/maybe s/Str)
-                                                                                            (s/optional-key :decision-fee)   (s/maybe s/Str)})}
+                                                        (s/optional-key :payment) (s/maybe
+                                                                                    {(s/optional-key :type)   s/Str
+                                                                                     (s/optional-key :processing-fee)  (s/maybe s/Str)
+                                                                                     (s/optional-key :decision-fee)    (s/maybe s/Str)
+                                                                                     (s/optional-key :vat)             (s/maybe s/Str)
+                                                                                     (s/optional-key :order-id-prefix) (s/maybe s/Str)})}
                    (s/optional-key :demo-allowed)      s/Bool})

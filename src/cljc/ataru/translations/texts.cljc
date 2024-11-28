@@ -1377,7 +1377,8 @@
    :maksutyyppi-tutu-radio                                   {:fi "TUTU (käsittelymaksu ja päätösmaksu)"}
    :kasittelymaksu-input                                     {:fi "Käsittelymaksu (€) *"}
    :maksutyyppi-astu-radio                                   {:fi "ASTU (päätösmaksu)"}
-   :maksutyyppi-kk-radio                                     {:fi "Hakemusmaksu (käsittelymaksu)"}
+   :vat-input                                                {:fi "ALV % *"}
+   :order-id-prefix-input                                    {:fi "Viitteet *"}
    :close-form                                               {:fi "Sulje lomake"
                                                               :sv "Stänga blanketten"
                                                               :en "Close form"}
@@ -2830,21 +2831,22 @@
    :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
                            :sv "Utbildningsstyrelsen"
                            :en "Finnish National Agency for Education"}
-
    :payment               {:fi "Maksu: "
                            :sv "Aavgiften: "
                            :en "Fee: "}
    :due-date-desc         {:fi "Eräpäivä: "
                            :sv "Eräpäivä: "
                            :en "Due date: "}
-
+   :includes-vat          {:fi "sis. alv "
+                           :sv "sis. alv "
+                           :en "sis. alv "}
    :text-1                {:fi "Voit maksaa maksun ja tarkastella maksun tietoja seuraavasta linkistä: "
                            :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
                            :en "We will send you the decision once you have paid the decision fee."}
    :text-2                {:fi "Linkki sulkeutuu eräpäivän jälkeen tietosuojasyistä."
                            :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
                            :en "You can pay the decision fee and view the details of your payment through the following link."}
-   :text-3                {:fi "Jos et maksa maksua eräpäivään mennessä, \nlähetämme sinulle maksusta erillisen laskun."
+   :text-3                {:fi "Jos et maksa maksua eräpäivään mennessä, lähetämme sinulle maksusta erillisen laskun."
                            :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
                            :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
 
