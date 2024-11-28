@@ -310,6 +310,12 @@
                  false
                  nil))
 
+(defn decision-info-email [order-id-prefix]
+  (case order-id-prefix
+    "OTR" "oikeustulkkirekisteri@oph.fi"
+    "AKR" "auktoris.lautakunta@oph.fi"
+    "recognition@oph.fi"))
+
 (defn create-decision-email
   [params]
   (let [origin                          (:origin params)
@@ -327,8 +333,9 @@
                                                      "tutu" tutu-decision-email
                                                      "astu" astu-decision-email))
         template-params                 (merge
-                                         params
-                                         translations)
+                                          params
+                                          translations
+                                          {:decision-info-email (decision-info-email (:order-id-prefix params))})
         subject                         (case origin
                                           "tutu" (str (:subject-prefix translations) ": " (:header translations))
                                           "astu" (:subject translations))

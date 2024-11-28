@@ -1106,10 +1106,6 @@
               secret       (:secret invoice)
               lang         (or locale "fi")
               payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
-              info-email   (case (:order-id-prefix metadata)
-                            "OTR" "oikeustulkkirekisteri@oph.fi"
-                            "AKR" "auktoris.lautakunta@oph.fi"
-                            "recognition@oph.fi")
               amount       (bigdec (:amount invoice))
               vat          (when (:vat invoice) (bigdec (:vat invoice)))
               total-amount (if vat
@@ -1130,7 +1126,7 @@
                              :due-date (->> (str/split (:due_date invoice) #"-")
                                             (reverse)
                                             (str/join \.))
-                             :decision-info-email info-email})]
+                             :order-id-prefix (:order-id-prefix metadata)})]
             (do
               (log/warn "Review result" result)
               (response/ok result))
