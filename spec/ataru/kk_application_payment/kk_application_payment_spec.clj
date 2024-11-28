@@ -57,6 +57,11 @@
 (describe "creating valid invoicing data"
           (tags :unit :kk-application-payment)
 
+          (it "should generate valid order id from application key"
+              (let [key "1.2.246.562.11.00000000000002353349"
+                    order-id (payment/maksut-reference->maksut-order-id key)]
+                (should= "KKHA2353349" order-id)))
+
           (it "should generate valid invoicing data from a payment and an application"
               (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                  application-fixtures/application-without-hakemusmaksu-exemption
