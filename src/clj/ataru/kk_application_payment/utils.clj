@@ -22,7 +22,7 @@
 
 (def haku-update-grace-days
   "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
-  7)
+  180)
 
 (def application-payment-start-year
   "Application payments are charged from studies starting in (Autumn) 2025 or later."

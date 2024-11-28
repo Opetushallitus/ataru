@@ -87,15 +87,16 @@
           (it "should return haku ending in the future regardless of start date"
               ; FWIW first-application-payment-hakuaika-start redef will not be needed in tests after 1.1.2025.
               ; Meanwhile, we could also modify the config, but then other tests testing the actual official date would fail.
-              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)
-                            payment/get-haut-with-tarjonta-data (constantly [(fixtures/haku-with-hakuajat
-                                                                               (time/date-time 2025 1 1 6)
-                                                                               (time/date-time 2025 1 10 4 3 27 456))])]
+              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
+                            payment/get-haut-with-tarjonta-data
+                            (constantly [(fixtures/haku-with-hakuajat
+                                           (-> payment-utils/haku-update-grace-days time/days time/from-now)
+                                           (-> (* payment-utils/haku-update-grace-days 2) time/days time/from-now))])]
                 (let [haut (payment/get-haut-for-update fake-haku-cache fake-tarjonta-service)]
                   (should= 1 (count haut)))))
 
           (it "should return haku ending today at the end of day"
-              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)
+              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
                             payment/get-haut-with-tarjonta-data (constantly [(fixtures/haku-with-hakuajat
                                                                                (time/now)
                                                                                (time/today-at 23 59))])]
@@ -103,7 +104,7 @@
                   (should= 1 (count haut)))))
 
           (it "should return haku that ended in grace days"
-              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)
+              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
                             payment/get-haut-with-tarjonta-data
                             (constantly [(fixtures/haku-with-hakuajat
                                            (-> (* payment-utils/haku-update-grace-days 2) time/days time/ago)
@@ -113,7 +114,7 @@
                   (should= 1 (count haut)))))
 
           (it "should not return haku that ended before grace days"
-              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)
+              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
                             payment/get-haut-with-tarjonta-data
                             (constantly [(fixtures/haku-with-hakuajat
                                            (-> (* payment-utils/haku-update-grace-days 2) time/days time/ago)
