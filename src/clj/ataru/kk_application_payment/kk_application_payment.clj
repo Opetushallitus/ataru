@@ -59,7 +59,10 @@
 (defn maksut-reference->maksut-order-id
   "Maksut order id is in format KKHA1234 where 1234 is the unique component of application key/oid"
   [reference]
-  (let [aid (last (str/split reference #"[.]"))]
+  (let [trim-zeroes (fn this [str] (if (clojure.string/starts-with? str "0")
+                                     (this (subs str 1))
+                                     str))
+        aid (trim-zeroes (last (str/split reference #"[.]")))]
     (str kk-application-payment-order-id-prefix aid)))
 
 (defn payment->maksut-reference
