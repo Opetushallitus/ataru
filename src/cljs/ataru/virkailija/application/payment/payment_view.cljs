@@ -8,18 +8,25 @@
             [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (def date-formatter (format/formatters :date))
+(def datetime-formatter (format/formatters :date-time))
 
 (def fi-formatter (format/formatter "dd.MM.yyyy"))
 
-(defn- iso-date-str->date [date-str]
+(defn- iso-date-str->date [date-str formatter]
   (when-not (string/blank? date-str)
     (try
-      (format/parse-local date-formatter date-str)
+      (format/parse-local formatter date-str)
       (catch js/Error _))))
 
-(defn- format-date [iso-date-str]
-  (when-let [date (iso-date-str->date iso-date-str)]
-    (format/unparse fi-formatter date)))
+(defn- format-date
+  ([iso-date-str] (format-date iso-date-str false))
+  ([iso-date-str is-datetime?]
+    (when-let [date (iso-date-str->date iso-date-str
+                                        (if is-datetime?
+                                          datetime-formatter
+                                          date-formatter)
+                                        )]
+      (format/unparse fi-formatter date))))
 
 (defn- date-picker [application-key]
   (let [value     (subscribe [:payment/duedate-input application-key])
@@ -63,34 +70,35 @@
      [:span (str "€")]
      ]))
 
-(defn- single-payment-status-row [header payment]
-  (let [status (keyword (:status payment))
-        icon (case (keyword status)
-               :active  icons/tutu-payment-outstanding
-                     :paid    icons/tutu-payment-paid
-                     :overdue icons/tutu-payment-overdue
-                     nil)
-        label      (if (or (empty? payment) (nil? status))
-                     @(subscribe [:editor/virkailija-translation :maksupyynto-invoice-notfound])
-                     (case (keyword status)
-                       :active @(subscribe [:editor/virkailija-translation :maksupyynto-payment-active])
-                       :paid (str @(subscribe [:editor/virkailija-translation :maksupyynto-payment-paid]) " " (format-date (:paid_at payment)))
-                       :overdue (str @(subscribe [:editor/virkailija-translation :maksupyynto-payment-overdue]) " " (format-date (:due_date payment)))
-                       @(subscribe [:editor/virkailija-translation :maksupyynto-payment-unknown])))]
-    [:<>
-     [:div header]
-     [:div
-      (when icon [icon])
-      (str label)
-      (when (= :paid (keyword (:status payment)))
-        [:a
-         {:href (str "/lomake-editori/api/maksut/kuitti/" (:order_id payment))
-          :download (str (:order_id payment) ".html")
-          :title @(subscribe [:editor/virkailija-translation :maksupyynto-payment-download-receipt])}
-         [:i.application-handling__tutu-receipt-icon.zmdi.zmdi-download.zmdi-hc-lg]])
-      ]
-     ]
-    ))
+(defn- single-payment-status-row
+  ([header payment] (single-payment-status-row header payment (keyword (:status payment))))
+  ([header payment status]
+    (let [icon (case (keyword status)
+                 :active  icons/tutu-payment-outstanding
+                       :paid    icons/tutu-payment-paid
+                       :overdue icons/tutu-payment-overdue
+                       nil)
+          label      (if (or (empty? payment) (nil? status))
+                       @(subscribe [:editor/virkailija-translation :maksupyynto-invoice-notfound])
+                       (case (keyword status)
+                         :active @(subscribe [:editor/virkailija-translation :maksupyynto-payment-active])
+                         :paid (str @(subscribe [:editor/virkailija-translation :maksupyynto-payment-paid]) " " (format-date (:paid_at payment)))
+                         :overdue (str @(subscribe [:editor/virkailija-translation :maksupyynto-payment-overdue]) " " (format-date (:due_date payment)))
+                         @(subscribe [:editor/virkailija-translation :maksupyynto-payment-unknown])))]
+      [:<>
+       [:div header]
+       [:div
+        (when icon [icon])
+        (str label)
+        (when (= :paid (keyword (:status payment)))
+          [:a
+           {:href (str "/lomake-editori/api/maksut/kuitti/" (:order_id payment))
+            :download (str (:order_id payment) ".html")
+            :title @(subscribe [:editor/virkailija-translation :maksupyynto-payment-download-receipt])}
+           [:i.application-handling__tutu-receipt-icon.zmdi.zmdi-download.zmdi-hc-lg]])
+        ]
+       ]
+    )))
 
 (defn- resend-processing-invoice-button []
   (let [loading? (subscribe [:state-query [:request-handles :resend-processing-invoice]])
@@ -281,3 +289,43 @@
           [:<>
            [send-decision-invoice-button application-key decision-pay-status]])])
      ]))
+
+(defn kk-application-payment-status [payments]
+  (let [payment             @(subscribe [:payment/kk-payment])
+        payment-state       @(subscribe [:payment/kk-payment-state])
+        email               @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
+        amount-label        (case (keyword payment-state)
+                               :awaiting @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :overdue @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                               :paid @(subscribe [:editor/virkailija-translation :maksupyynto-total-paid-label])
+                               nil)
+        amount-value         (:total-sum payment)
+        state-for-status-row (case (keyword payment-state)
+                               :awaiting :active
+                               :paid :paid
+                               :overdue :overdue
+                               nil)
+        due-label         (when (= "awaiting" payment-state)
+                            @(subscribe [:editor/virkailija-translation :maksupyynto-due-label]))
+        due-value         (format-date (:due-date payment) true)
+        _ (prn "due-label " due-label)
+        _ (prn "due-value " due-value (:due-date payment))]
+    [:div.application-handling__tutu-payment-maksupyynto-box
+     [:span.application-handling__tutu-payment--span-2
+      [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
+     [:<>
+      [single-payment-status-row @(subscribe [:editor/virkailija-translation :maksupyynto-processing-header])
+        (:processing payments) state-for-status-row]
+
+      [:div @(subscribe [:editor/virkailija-translation :maksupyynto-recipient])]
+      [:div email]
+
+      (when (and amount-label amount-value)
+        [:<>
+         [:div (str amount-label ":")]
+         [:div (str amount-value " €")]])
+
+      (when (and due-label due-value)
+        [:<>
+         [:div (str due-label ":")]
+         [:div (str due-value)]])]]))
