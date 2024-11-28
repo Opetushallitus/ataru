@@ -2816,14 +2816,15 @@
    :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
                            :sv "Utbildningsstyrelsen"
                            :en "Finnish National Agency for Education"}
-
    :payment               {:fi "Maksu: "
                            :sv "Aavgiften: "
                            :en "Fee: "}
    :due-date-desc         {:fi "Eräpäivä: "
                            :sv "Eräpäivä: "
                            :en "Due date: "}
-
+   :includes-vat          {:fi "sis. alv "
+                           :sv "sis. alv "
+                           :en "sis. alv "}
    :text-1                {:fi "Voit maksaa maksun ja tarkastella maksun tietoja seuraavasta linkistä: "
                            :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
                            :en "We will send you the decision once you have paid the decision fee."}

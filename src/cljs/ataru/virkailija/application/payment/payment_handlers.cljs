@@ -109,8 +109,7 @@
                :message message
                :due-date due_date
                :due-days 14
-               :origin origin
-               :index 2}]
+               :origin origin}]
 
      (ajax/http :post
                 "/lomake-editori/api/maksut/maksupyynto"
@@ -123,7 +122,9 @@
                                           (not-empty metadata)
                                           (assoc :metadata metadata)
                                           (not-empty vat)
-                                          (assoc :vat vat))}))
+                                          (assoc :vat vat)
+                                          (= origin "tutu")
+                                          (assoc :index 2))}))
    {}))
 
 (re-frame/reg-fx
