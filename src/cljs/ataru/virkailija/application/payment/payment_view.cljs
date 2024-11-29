@@ -284,6 +284,18 @@
            [send-decision-invoice-button application-key decision-pay-status]])])
      ]))
 
+(defn- resend-kk-application-payment-email []
+  (let [can-edit? (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+        application-key      @(subscribe [:state-query [:application :review :application-key]])]
+    [:button.application-handling__tutu-payment-send-button.application-handling__button
+     {:on-click #(dispatch [:payment/resend-application-payment-email application-key])
+      :disabled (not @can-edit?)
+      :class    (if @can-edit?
+                  "application-handling__send-information-request-button--enabled application-handling__send-information-request-button--cursor-pointer"
+                  "application-handling__send-information-request-button--disabled application-handling__send-information-request-button--cursor-default")
+      }
+     [:div @(subscribe [:editor/virkailija-translation :maksupyynto-again-button])]]))
+
 (defn- kk-application-payment-data [kk-payment-state payments]
   (let [kk-payment          @(subscribe [:payment/kk-payment])
         email               @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
@@ -316,7 +328,9 @@
       (when (and due-label due-value)
         [:<>
          [:div (str due-label ":")]
-         [:div (str due-value)]])]))
+         [:div (str due-value)]])
+
+      [resend-kk-application-payment-email]]))
 
 (defn kk-application-payment-status [payments]
   (let [payment-state  (keyword @(subscribe [:payment/kk-payment-state]))
