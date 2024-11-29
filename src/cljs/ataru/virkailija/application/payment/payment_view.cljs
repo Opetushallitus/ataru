@@ -325,7 +325,7 @@
      [:span.application-handling__tutu-payment--span-2
       [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
     (if not-required?
-      [:div
+      [:span.application-handling__tutu-payment--span-2
        [icons/tutu-payment-outstanding]
-       [:span @(subscribe [:editor/virkailija-translation :payment-not-obligated])]]
+       @(subscribe [:editor/virkailija-translation :payment-not-obligated])]
       [kk-application-payment-data payment-state payments])]))
