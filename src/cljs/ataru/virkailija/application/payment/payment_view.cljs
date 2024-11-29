@@ -8,24 +8,18 @@
             [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (def date-formatter (format/formatters :date))
-(def datetime-formatter (format/formatters :date-time))
 
 (def fi-formatter (format/formatter "dd.MM.yyyy"))
 
-(defn- iso-date-str->date [date-str formatter]
+(defn- iso-date-str->date [date-str]
   (when-not (string/blank? date-str)
     (try
-      (format/parse-local formatter date-str)
+      (format/parse-local date-formatter date-str)
       (catch js/Error _))))
 
 (defn- format-date
-  ([iso-date-str] (format-date iso-date-str false))
-  ([iso-date-str is-datetime?]
-    (when-let [date (iso-date-str->date iso-date-str
-                                        (if is-datetime?
-                                          datetime-formatter
-                                          date-formatter)
-                                        )]
+  ([iso-date-str]
+    (when-let [date (iso-date-str->date iso-date-str)]
       (format/unparse fi-formatter date))))
 
 (defn- date-picker [application-key]
@@ -290,32 +284,26 @@
            [send-decision-invoice-button application-key decision-pay-status]])])
      ]))
 
-(defn kk-application-payment-status [payments]
-  (let [payment             @(subscribe [:payment/kk-payment])
-        payment-state       @(subscribe [:payment/kk-payment-state])
+(defn- kk-application-payment-data [kk-payment-state payments]
+  (let [kk-payment          @(subscribe [:payment/kk-payment])
         email               @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
-        amount-label        (case (keyword payment-state)
-                               :awaiting @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
-                               :overdue @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
-                               :paid @(subscribe [:editor/virkailija-translation :maksupyynto-total-paid-label])
-                               nil)
-        amount-value         (:total-sum payment)
-        state-for-status-row (case (keyword payment-state)
+        amount-label        (case kk-payment-state
+                              :awaiting @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                              :overdue @(subscribe [:editor/virkailija-translation :maksupyynto-amount-label])
+                              :paid @(subscribe [:editor/virkailija-translation :maksupyynto-total-paid-label])
+                              nil)
+        amount-value         (:total-sum kk-payment)
+        state-for-status-row (case kk-payment-state
                                :awaiting :active
                                :paid :paid
                                :overdue :overdue
                                nil)
-        due-label         (when (= "awaiting" payment-state)
+        due-label         (when (= :awaiting kk-payment-state)
                             @(subscribe [:editor/virkailija-translation :maksupyynto-due-label]))
-        due-value         (format-date (:due-date payment) true)
-        _ (prn "due-label " due-label)
-        _ (prn "due-value " due-value (:due-date payment))]
-    [:div.application-handling__tutu-payment-maksupyynto-box
-     [:span.application-handling__tutu-payment--span-2
-      [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
+        due-value         (format/unparse fi-formatter (:due-date kk-payment))]
      [:<>
       [single-payment-status-row @(subscribe [:editor/virkailija-translation :maksupyynto-processing-header])
-        (:processing payments) state-for-status-row]
+       (:processing payments) state-for-status-row]
 
       [:div @(subscribe [:editor/virkailija-translation :maksupyynto-recipient])]
       [:div email]
@@ -328,4 +316,16 @@
       (when (and due-label due-value)
         [:<>
          [:div (str due-label ":")]
-         [:div (str due-value)]])]]))
+         [:div (str due-value)]])]))
+
+(defn kk-application-payment-status [payments]
+  (let [payment-state  (keyword @(subscribe [:payment/kk-payment-state]))
+        not-required?  (or (= payment-state :not-checked) (= payment-state :not-required))]
+    [:div.application-handling__tutu-payment-maksupyynto-box
+     [:span.application-handling__tutu-payment--span-2
+      [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
+    (if not-required?
+      [:div
+       [icons/tutu-payment-outstanding]
+       [:span @(subscribe [:editor/virkailija-translation :payment-not-obligated])]]
+      [kk-application-payment-data payment-state payments])]))
