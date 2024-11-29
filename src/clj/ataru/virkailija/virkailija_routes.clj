@@ -1111,8 +1111,8 @@
               amount       (bigdec (:amount invoice))
               vat          (when (:vat invoice) (bigdec (:vat invoice)))
               total-amount (if vat
-                             (str (with-precision 2 (+ amount (* amount (/ vat 100)))))
-                             (str amount))]
+                             (+ amount (* amount (/ vat 100)))
+                             amount)]
 
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
@@ -1124,7 +1124,7 @@
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
                              :amount total-amount
-                             :vat (when vat (str (with-precision 1 vat)))
+                             :vat vat
                              :due-date (->> (str/split (:due_date invoice) #"-")
                                             (reverse)
                                             (str/join \.))
