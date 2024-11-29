@@ -28,10 +28,15 @@
   {:subject-key :email-kk-payment-link-subject
    :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
 
-(defn- start-payment-email-job [job-runner application email-address lang payment-url params-fn type-str]
+(defn- start-payment-email-job [job-runner application secret params-fn type-str]
   (let [application-key (:key application)
         job-type        (:type email-job/job-definition)
+        lang            (utils/get-application-language application)
+        email-address   (utils/get-application-email application)
+        payment-url     (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret (name lang))
         mail-content    (utils/payment-email lang email-address {:payment-url payment-url} (params-fn lang))]
+    (log/info "Generate kk application payment " type-str " for email" email-address
+              "URL" payment-url "application-key" application-key)
     (if mail-content
       (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                                              (job/start-job job-runner conn job-type mail-content))]
@@ -42,29 +47,23 @@
   [{:keys [tarjonta-service] :as job-runner} maksut-service payment-data]
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)
-        lang            (utils/get-application-language application)
-        email-address   (utils/get-application-email application)
         invoice-data    (payment/generate-invoicing-data tarjonta-service payment-data application)
-        invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)
-        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) (name lang))]
+        invoice         (maksut-protocol/create-kk-application-payment-lasku maksut-service invoice-data)]
     (when invoice
       (log/info "Kk application payment invoice details" invoice)
       (log/info "Store kk application payment maksut secret for reference " (:reference invoice))
       (payment/set-maksut-secret application-key (:secret invoice))
-      (log/info "Generate kk application payment maksut-link for email" email-address
-                "URL" url "application-key" application-key)
-      (start-payment-email-job job-runner application email-address lang url payment-link-email-params "maksut-link"))))
+      (start-payment-email-job job-runner application (:secret invoice) payment-link-email-params "maksut-link"))))
+
+(defn resend-payment-email [job-runner application-key]
+  (let [application     (application-store/get-latest-application-by-key application-key)
+        payment         (first (payment/get-raw-payments [application-key]))]
+    (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link")))
 
 (defn- send-reminder-email-and-mark-sent
   [job-runner payment-data application]
-  (let [application-key (:application-key payment-data)
-        lang            (utils/get-application-language application)
-        email-address   (utils/get-application-email application)
-        url             (url-helper/resolve-url :maksut-service.hakija-get-by-secret
-                                                (:maksut-secret payment-data) (name lang))]
-    (log/info "Generate kk application payment reminder for email" email-address
-              "URL" url "application key" application-key)
-    (start-payment-email-job job-runner application email-address lang url payment-reminder-email-params "reminder")
+  (let [application-key (:application-key payment-data)]
+    (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder")
     (payment/mark-reminder-sent application-key)))
 
 (defn needs-reminder-sent?
