@@ -1,5 +1,5 @@
 (ns ataru.hakija.components.tutkinnot
-  (:require [clojure.string :refer [join ends-with?]]
+  (:require [clojure.string :refer [join]]
             [re-frame.core :refer [dispatch subscribe]]
             [ataru.translations.translation-util :as tu]
             [ataru.component-data.koski-tutkinnot-module :as ktm]

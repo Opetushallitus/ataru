@@ -2,7 +2,6 @@
   (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
-            [ataru.component-data.component :as component]
             [ataru.virkailija.editor.components.text-header-component :as text-header-component]
             [ataru.virkailija.editor.components.component-content :as component-content]
             [ataru.virkailija.editor.components.followup-question :as followup-question]))

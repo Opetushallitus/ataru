@@ -2,7 +2,6 @@
   "Pure functions handling application data"
   (:require [ataru.util :as util]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
-            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [clojure.core.match :refer [match]]))
 
 (def selected-language-map
