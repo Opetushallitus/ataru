@@ -1096,6 +1096,13 @@
             (response/not-found
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
 
+      (api/POST "/hakemusmaksu/email/laheta/:hakemus-oid" {session :session}
+        :path-params [hakemus-oid :- s/Str]
+        :summary "Lähettää hakemusmaksu sähköpostin"
+        (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
+          (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid)
+          (response/unauthorized)))
+
       (api/POST "/maksupyynto" {session :session}
         :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
@@ -1111,8 +1118,8 @@
               amount       (bigdec (:amount invoice))
               vat          (when (:vat invoice) (bigdec (:vat invoice)))
               total-amount (if vat
-                             (str (with-precision 2 (+ amount (* amount (/ vat 100)))))
-                             (str amount))]
+                             (+ amount (* amount (/ vat 100)))
+                             amount)]
 
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
@@ -1124,7 +1131,7 @@
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
                              :amount total-amount
-                             :vat (when vat (str (with-precision 1 vat)))
+                             :vat vat
                              :due-date (->> (str/split (:due_date invoice) #"-")
                                             (reverse)
                                             (str/join \.))

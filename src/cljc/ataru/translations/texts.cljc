@@ -2588,7 +2588,10 @@
                                                               :en "selected"}
    :tutkinnot                                                {:fi "Tutkintotiedot Koski-Palvelusta"
                                                               :sv "SV: Tutkintotiedot Koski-Palvelusta"
-                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}})
+                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}
+   :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
+                                                              :sv "SV: Hakija ei ole maksuvelvollinen"
+                                                              :en "EN: Hakija ei ole maksuvelvollinen"}})
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"

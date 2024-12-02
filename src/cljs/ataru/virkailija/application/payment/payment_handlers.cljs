@@ -127,6 +127,15 @@
                                           (assoc :index 2))}))
    {}))
 
+(re-frame/reg-event-fx
+  :payment/resend-application-payment-email
+  (fn [_ [_ application-key]]
+    (ajax/http :post
+               (str "/lomake-editori/api/maksut/hakemusmaksu/email/laheta/" application-key)
+               :payment/handle-processing-invoice
+               :id :resend-application-payment-email
+               :handler-args {:application-key key})))
+
 (re-frame/reg-fx
   :payment/fetch-payments
   (fn [{:keys [application-key]}]
