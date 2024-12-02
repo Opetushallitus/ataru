@@ -2,34 +2,32 @@
   (:require [clojure.string :refer [join ends-with?]]
             [re-frame.core :refer [dispatch subscribe]]
             [ataru.translations.translation-util :as tu]
-            [ataru.util :as util]
-            [ataru.component-data.koski-tutkinnot-module :as ktm]))
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.translations.texts :refer [koski-tutkinnot-texts]]))
 
-(defn selected-koski-tutkinnot-content [conf-field-descriptor]
-  (let [selected-tutkinto-levels @(subscribe [:application/selected-tutkinto-levels])
-        selected-koski-levels (filterv #(not (= ktm/itse-syotetty-option-id %)) selected-tutkinto-levels)]
-    (filterv
-      (fn [option] (some? (some #(when (= (:id option) %) %) selected-koski-levels)))
-      (:options conf-field-descriptor))))
+(defn get-tutkinto-idx [level id]
+  (let [tutkinto-id (str level "-" ktm/tutkinto-id-field-postfix)
+        checked-tutkinto-ids (flatten (:value @(subscribe [:application/answer tutkinto-id])))]
+    (when (some #(when (= % id) %) checked-tutkinto-ids)
+      (.indexOf checked-tutkinto-ids id))))
 
-(defn get-tutkinto-of-level [level-id id]
-  (let [tutkinnot-of-level @(subscribe [:application/koski-tutkinnot-of-level level-id])
-        id-val (if (coll? id) (first id) id)]
-    (some #(when (= (:id %) id-val) %) tutkinnot-of-level)))
+(defn get-question-group-of-level [conf-field-descriptor level]
+  (let [level-item (some #(when (= level (:id %)) %) (:options conf-field-descriptor))
+        level-question-group-id (str level "-" ktm/question-group-of-level)]
+    (some #(when (= level-question-group-id (:id %)) %) (:followups level-item))))
 
-(defn find-answer-from-koskidata [field-descriptor koski-data lang]
-  (let [id (:id field-descriptor)]
-    (cond (ends-with? id ktm/tutkinto-nimi-field-postfix)
-          (util/from-multi-lang (:tutkintonimi koski-data) lang)
-          (ends-with? id ktm/koulutusohjelma-field-postfix)
-          (util/from-multi-lang (:koulutusohjelmanimi koski-data) lang)
-          (ends-with? id ktm/oppilaitos-field-postfix)
-          (util/from-multi-lang (:toimipistenimi koski-data) lang)
-          (ends-with? id ktm/valmistumispvm-field-postfix)
-          (:valmistumispvm koski-data)
-          :else
-          "")))
+(defn id-field-of-level [question-group-of-level level]
+  (let [id (str level "-" ktm/tutkinto-id-field-postfix)]
+    (some #(when (= id (:id %)) %) (:children question-group-of-level))))
 
+(defn get-tutkinto-field-mappings [lang]
+  (map-indexed (fn [idx field] {:id idx
+                                :text (tu/get-translation (:label-id field) lang koski-tutkinnot-texts false)
+                                :koski-tutkinto-field (:koski-tutkinto-field field)})
+       [{:label-id :tutkinto-followup-label :koski-tutkinto-field :tutkintonimi}
+        {:label-id :koulutusohjelma-followup-label :koski-tutkinto-field :koulutusohjelmanimi}
+        {:label-id :oppilaitos-followup-label :koski-tutkinto-field :toimipistenimi}
+        {:label-id :valmistumispvm-followup-label :koski-tutkinto-field :valmistumispvm}]))
 
 (defn itse-syotetty-tutkinnot-content [conf-field-descriptor]
   (get-in (some #(when (= ktm/itse-syotetty-option-id (:id %)) %) (:options conf-field-descriptor)) [:followups] []))
@@ -66,21 +64,21 @@
                 (dispatch [:application/add-question-group-row field-descriptor]))
               lang))
 
-(defn fixed-tutkinto-item [_ tutkinto _ _]
+(defn fixed-tutkinto-item [tutkinto _ _]
   (let [lang @(subscribe [:application/form-language])
         localized-val (fn [field] (get-in tutkinto [field (keyword lang)]))
         upper-row (join ", "
                         (filterv #(some? %) [(localized-val :tutkintonimi) (localized-val :koulutusohjelmanimi)
                                              (:valmistumispvm tutkinto)]))
         lower-row (localized-val :toimipistenimi)]
-    (fn [parent-field-descriptor _ idx checked?]
+    (fn [_ id checked?]
       (let [set-checked-as-needed (fn [] (if checked?
                                            {:class " checked-koski-tutkinto"}
                                            nil))]
         [:div.application__fixed-koski-tutkinto-item (set-checked-as-needed)
          [:div.application__fixed-koski-tutkinto-item.inner-content (set-checked-as-needed)
           [:input.application__form-checkbox.embedded
-           (merge {:id        (str "checkbox-" (:id parent-field-descriptor) "-" idx)
+           (merge {:id        (str "checkbox-" id)
                    :type      "checkbox"
                    :read-only true
                    :checked   checked?

@@ -975,9 +975,9 @@
     (get-in db [:form :properties :tutkinto-properties :selected-option-ids] [])))
 
 (re-frame/reg-sub
-  :application/koski-tutkinnot-of-level
-  (fn [db [_ level]]
-    (get-in db [:application :tutkinnot (keyword level)] [])))
+  :application/koski-tutkinnot
+  (fn [db]
+    (get-in db [:application :tutkinnot] [])))
 
 (re-frame/reg-sub
   :application/any-koski-tutkinnot?

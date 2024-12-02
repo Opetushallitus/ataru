@@ -36,18 +36,15 @@
                        :tyyppi                        KoodistoValueWithOptionalNimi
                        :suoritukset                   [KoskiSuoritusItem]}]})
 
+(def koski-levels
+  ["perusopetus" "yo" "amm" "amm-perus" "amm-erikois" "kk-alemmat" "kk-ylemmat" "tohtori"])
 (s/defschema AtaruKoskiTutkinto
   {:id                                    s/Str
    :tutkintonimi                          localized-schema/LocalizedString
    (s/optional-key :koulutusohjelmanimi)  localized-schema/LocalizedString
    (s/optional-key :toimipistenimi)       localized-schema/LocalizedString
-   :valmistumispvm                        s/Str})
-
-(def koski-level-keys
-  (map #(keyword %) ["perusopetus" "yo" "amm" "amm-perus" "amm-erikois" "kk-alemmat" "kk-ylemmat" "tohtori"]))
-
-(s/defschema AtaruKoskiTutkinnot
-  {(apply s/enum koski-level-keys)  [AtaruKoskiTutkinto]})
+   :valmistumispvm                        s/Str
+   :level                                 (apply s/enum koski-levels)})
 
 (s/defschema Tutkinnot
   {:tutkinnot {:description localized-schema/LocalizedString

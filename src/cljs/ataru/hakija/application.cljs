@@ -8,62 +8,8 @@
 (def selected-language-map
   { :fi "FI" :sv "SV" })
 
-(defn- extract-koski-tutkinto-options
-  [flattened-form-fields]
-  (let [tutkinto-conf-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) flattened-form-fields)
-        tutkinto-conf-component-id (:id tutkinto-conf-component)]
-    (if tutkinto-conf-component
-      (concat (mapv #(if (= tutkinto-conf-component-id (:followup-of %))
-                       (assoc % :grouped true)
-                       %) flattened-form-fields)
-            (mapv #(assoc % :special-field "koski-tutkinto-option")
-                 (filter #(not (= ktm/itse-syotetty-option-id (:id %)))
-                         (get tutkinto-conf-component :options []))))
-      flattened-form-fields)))
-
-(defn- grouped-text-values [field]
-  (let [required? (some #(contains? required-validators %)
-                        (:validators field))]
-    [(keyword (:id field)) {:valid  (not required?)
-                   :label  (:label field)
-                   :value  [[""]]
-                   :values [[{:value ""
-                              :valid (not required?)}]]}]))
-
-(defn- grouped-dropdown-values [field]
-  (let [value     (some #(when (:default-value %) (:value %)) (:options field))
-        required? (some #(contains? required-validators %)
-                        (:validators field))]
-    [(keyword (:id field)) {:valid  (or (some? value) (not required?))
-                   :label  (:label field)
-                   :value  [[(or value "")]]
-                   :values [[{:value (or value "")
-                              :valid (or (some? value) (not required?))}]]}]))
-
-(defn- grouped-single-choice-values [field]
-  (let [required? (some #(contains? required-validators %)
-                        (:validators field))]
-    [(keyword (:id field)) {:valid  (not required?)
-                   :value  [nil]
-                   :values [nil]
-                   :label  (:label field)}]))
-
-(defn- grouped-attachment-values [field]
-  [(keyword (:id field)) {:valid  (not (some #(contains? required-validators %)
-                                    (:validators field)))
-                 :value  [[]]
-                 :values [[]]
-                 :label  (:label field)}])
-
-(defn- grouped-multiple-choice-values [field]
-  [(keyword (:id field)) {:valid  (not (some #(contains? required-validators %)
-                                    (:validators field)))
-                 :value  [[]]
-                 :values [[]]
-                 :label  (:label field)}])
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohteet selected-language]
   (->> flattened-form-fields
-       (extract-koski-tutkinto-options)
        (filter util/answerable?)
        (map-indexed
         (fn [_ field]
@@ -97,15 +43,18 @@
                           :values {:value value
                                    :valid (not (empty? value))}}])
 
-            [{:fieldClass "formField"
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  (:or "textField" "textArea")
+              :label      label
               :params     {:question-group-id _}}]
-            (grouped-text-values field)
-
-            [{:fieldClass "formField"
-              :fieldType  (:or "textField" "textArea")
-              :grouped    true}]
-            (grouped-text-values field)
+                 (let [required? (some #(contains? required-validators %)
+                                       (:validators field))]
+                   [(keyword id) {:valid  (not required?)
+                                           :label  label
+                                           :value  [[""]]
+                                           :values [[{:value ""
+                                                      :valid (not required?)}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -145,15 +94,19 @@
                              :values {:value ""
                                       :valid (not required?)}}])
 
-            [{:fieldClass "formField"
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  "dropdown"
+              :label      label
               :params     {:question-group-id _}}]
-            (grouped-dropdown-values field)
-
-            [{:fieldClass "formField"
-              :fieldType  "dropdown"
-              :grouped    true}]
-            (grouped-dropdown-values field)
+            (let [value     (some #(when (:default-value %) (:value %)) (:options field))
+                 required?  (some #(contains? required-validators %)
+                                 (:validators field))]
+             [(keyword id) {:valid  (or (some? value) (not required?))
+                                     :label  label
+                                     :value  [[(or value "")]]
+                                     :values [[{:value (or value "")
+                                                :valid (or (some? value) (not required?))}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -174,15 +127,17 @@
                                                     (or (not required?)
                                                     (boolean (:per-hakukohde field))))}}])
 
-            [{:fieldClass "formField"
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  "singleChoice"
+              :label      label
               :params     {:question-group-id _}}]
-            (grouped-single-choice-values field)
-
-            [{:fieldClass "formField"
-              :fieldType  "singleChoice"
-              :grouped    true}]
-            (grouped-single-choice-values field)
+            (let [required? (some #(contains? required-validators %)
+                                 (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                                     :value  [nil]
+                                     :values [nil]
+                                     :label  label}])
 
             [{:id         id
               :fieldClass "formField"
@@ -198,15 +153,16 @@
                                                  (boolean (:per-hakukohde field)))}
                              :label  label}])
 
-            [{:fieldClass "formField"
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  "multipleChoice"
+              :label      label
               :params     {:question-group-id _}}]
-            (grouped-multiple-choice-values field)
-
-            [{:fieldClass "formField"
-              :fieldType  "multipleChoice"
-              :grouped    true}]
-            (grouped-multiple-choice-values field)
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"
@@ -219,15 +175,16 @@
                       :values []
                       :label  label}]
 
-            [{:fieldClass "formField"
+            [{:id         id
+              :fieldClass "formField"
               :fieldType  "attachment"
+              :label      label
               :params     {:question-group-id _}}]
-            (grouped-attachment-values field)
-
-            [{:fieldClass "formField"
-              :fieldType  "attachment"
-              :grouped    true}]
-            (grouped-attachment-values field)
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"

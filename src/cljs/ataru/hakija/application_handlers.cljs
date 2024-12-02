@@ -1005,7 +1005,7 @@
       (cond-> (assoc-in db [:application :answers id] answer)
               (some? limit-reached) (assoc-in [:application :answers id :limit-reached] limit-reached)))))
 
-(defn- set-empty-value-dispatch
+(defn set-empty-value-dispatch
   [group-idx field-descriptor]
   (match field-descriptor
          {:fieldType (:or "dropdown" "textField" "textArea")}

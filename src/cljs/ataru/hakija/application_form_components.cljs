@@ -887,6 +887,10 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- visible-tutkinto-field? [field-descriptor]
+  (and @(subscribe [:application/visible? (keyword (:id field-descriptor))])
+       (not (get-in field-descriptor [:params :transparent]))))
+
 (defn tutkinnot-wrapper-field
   [field-descriptor]
   (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
@@ -908,42 +912,38 @@
                    [:div
                     [:div
                      (into [:div]
-                           (for [parent-option (tutkinnot/selected-koski-tutkinnot-content child)]
-                             (let [level-id (:id parent-option)
-                                   koski-items @(subscribe [:application/koski-tutkinnot-of-level level-id])
-                                   parent-with-sub-options (assoc parent-option
-                                                             :options
-                                                             (mapv (fn [item] {:value (:id item)}) koski-items))
-                                   additional-followups (filter #(not (get-in % [:params :transparent]))
-                                                                (:followups parent-option))]
-                               ^{:key level-id}
-                               (into [:div]
-                                     (for [idx (range (count koski-items))]
-                                       (let [koski-item (nth koski-items idx)
-                                             on-toggle (fn []
-                                                         (dispatch [:application/toggle-multiple-choice-option
-                                                                    parent-with-sub-options
-                                                                    idx
-                                                                    {:value (:id koski-item)}]))
-                                             checked? @(subscribe [:application/multiple-choice-option-checked?
-                                                                   level-id
-                                                                   (:id koski-item)
-                                                                   idx])]
-                                         ^{:key (str level-id "-" idx)}
-                                         [:div.application__tutkinto-group-container
-                                          [:div
-                                           {:on-click on-toggle}
-                                           [tutkinnot/fixed-tutkinto-item parent-option koski-item idx checked?]]
-                                          (when (and checked? (seq additional-followups))
-                                            [:div.application__form-multi-choice-followups-outer-container
-                                             {:tab-index 0}
-                                             [:div.application__form-multi-choice-followups-indicator]
-                                             (into [:div.application__tutkinto-entity-container]
-                                                   (for [followup additional-followups]
-                                                     (with-meta [render-field followup idx]
-                                                                {:key (str (:id followup) "-" idx)})))])
-
-                                          ]))))))
+                           (for [koski-item @(subscribe [:application/koski-tutkinnot])]
+                             (let [id (:id koski-item)
+                                   level (:level koski-item)
+                                   question-group-of-level (tutkinnot/get-question-group-of-level child level)
+                                   answer-idx (tutkinnot/get-tutkinto-idx level id)
+                                   checked? (some? answer-idx)
+                                   on-toggle (fn [event]
+                                               (.preventDefault event)
+                                               (if answer-idx
+                                                 (dispatch [:application/remove-question-group-row
+                                                            question-group-of-level
+                                                            answer-idx])
+                                                 (dispatch [:application/add-tutkinto-row
+                                                            question-group-of-level
+                                                            (tutkinnot/id-field-of-level question-group-of-level level)
+                                                            (:id koski-item)])))]
+                               ^{:key id}
+                               [:div.application__tutkinto-group-container
+                                [:div
+                                 {:on-click on-toggle}
+                                 [tutkinnot/fixed-tutkinto-item koski-item id checked?]]
+                                (when checked?
+                                  (let [additional-followups (filter visible-tutkinto-field?
+                                                                     (:children question-group-of-level))]
+                                    (when (seq additional-followups)
+                                      [:div.application__form-multi-choice-followups-outer-container
+                                       {:tab-index 0}
+                                       [:div.application__form-multi-choice-followups-indicator]
+                                       (into [:div.application__tutkinto-entity-container]
+                                             (for [followup additional-followups]
+                                               (with-meta [render-field followup answer-idx]
+                                                          {:key (str (:id followup) "-" answer-idx)})))])))])))
                      (when (and any-koski-tutkinnot? (not @always-show-itse-syotetyt?))
                        [tutkinnot/add-button on-click-to-add-additional-itse-syotetyt lang])]
                     (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))

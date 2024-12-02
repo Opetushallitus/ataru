@@ -113,8 +113,10 @@
       [])))
 
 
-(s/defn ^:always-validate parse-koski-tutkinnot :- koski-schema/AtaruKoskiTutkinnot
+(defn- filter-by-levels [tutkinto requested-levels]
+  (some #(when (= (:level tutkinto) %) %) requested-levels))
+
+(s/defn ^:always-validate parse-koski-tutkinnot :- [koski-schema/AtaruKoskiTutkinto]
   [koski-opiskelu-oikeudet requested-levels]
-  (let [tutkinto-vec (vec (flatten (map #(parse-tutkinnot-by-level % requested-levels) koski-opiskelu-oikeudet)))
-        grouped (group-by :level tutkinto-vec)]
-    (into {} (map (fn [level] [(keyword level) (mapv #(dissoc % :level) (get grouped level))]) (keys grouped)))))
+  (filterv #(filter-by-levels % requested-levels)
+           (flatten (map #(parse-tutkinnot-by-level % requested-levels) koski-opiskelu-oikeudet))))

@@ -1,65 +1,67 @@
 (ns ataru.koski.koski-json-parser-spec
   (:require [speclj.core :refer :all]
             [ataru.koski.koski-json-parser :as parser]
-            [cheshire.core :as json]
-            [schema.core :as s]
-            [ataru.schema.koski-tutkinnot-schema :as ks]))
+            [cheshire.core :as json]))
 
 (defn- read-opiskeluoikeudet-from-json [json-name]
   (:opiskeluoikeudet (json/parse-string (slurp (str "dev-resources/koski/" json-name)) true)))
+
+(defn- levels [parsed]
+  (distinct (map :level parsed)))
+
 
 (describe "Parsing tutkinnot from Koski-opiskeluoikeudet"
           (tags :unit)
           (it "should parse perusopetus -tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
                              (read-opiskeluoikeudet-from-json "perusopetus.json") ["perusopetus"])
-                    tutkinnot (:perusopetus parsed)]
-                (should= 1 (count (keys parsed)))
+                    tutkinnot (filter #(= "perusopetus" (:level %)) parsed)]
+                (should= 1 (count (levels parsed)))
                 (should= 3 (count tutkinnot))
-                (should= "1.2.246.562.10.67887034139_201101_2016-06-03" (:id (get tutkinnot 0)))
-                (should= "Perusopetus" (get-in (get tutkinnot 0) [:tutkintonimi :fi]))
-                (should= "1.2.246.562.10.81044480515_201101_2000-05-21" (:id (get tutkinnot 1)))
-                (should= "Aikuisten perusopetus" (get-in (get tutkinnot 1) [:tutkintonimi :fi]))
-                (should= "1.2.246.562.10.32727448402_201101_2019-05-21" (:id (get tutkinnot 2)))
-                (should= "Aikuisten perusopetus" (get-in (get tutkinnot 2) [:tutkintonimi :fi]))))
+                (should= "1.2.246.562.10.67887034139_201101_2016-06-03" (:id (nth tutkinnot 0)))
+                (should= "Perusopetus" (get-in (nth tutkinnot 0) [:tutkintonimi :fi]))
+                (should= "1.2.246.562.10.81044480515_201101_2000-05-21" (:id (nth tutkinnot 1)))
+                (should= "Aikuisten perusopetus" (get-in (nth tutkinnot 1) [:tutkintonimi :fi]))
+                (should= "1.2.246.562.10.32727448402_201101_2019-05-21" (:id (nth tutkinnot 2)))
+                (should= "Aikuisten perusopetus" (get-in (nth tutkinnot 2) [:tutkintonimi :fi]))))
 
           (it "should parse yo -tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
                              (read-opiskeluoikeudet-from-json "ylioppilas.json") ["yo"])
-                    tutkinnot (:yo parsed)]
-                (should= 1 (count (keys parsed)))
+                    tutkinnot (filter #(= "yo" (:level %)) parsed)]
+                (should= 1 (count (levels parsed)))
                 (should= 3 (count tutkinnot))
-                (should= "1.2.246.562.10.43628088406_301000_2012-06-02" (:id (get tutkinnot 0)))
-                (should= "Ylioppilastutkinto" (get-in (get tutkinnot 0) [:tutkintonimi :fi]))
-                (should= "1.2.246.562.10.45093614456_301103_2016-06-04" (:id (get tutkinnot 1)))
-                (should= "DIA-tutkinto" (get-in (get tutkinnot 1) [:koulutusohjelmanimi :fi]))
-                (should= "1.2.246.562.10.13349113236_301104_2023-06-15" (:id (get tutkinnot 2)))
-                (should= "EB-tutkinto (European Baccalaureate)" (get-in (get tutkinnot 2) [:tutkintonimi :fi]))))
+                (should= "1.2.246.562.10.43628088406_301000_2012-06-02" (:id (nth tutkinnot 0)))
+                (should= "Ylioppilastutkinto" (get-in (nth tutkinnot 0) [:tutkintonimi :fi]))
+                (should= "1.2.246.562.10.45093614456_301103_2016-06-04" (:id (nth tutkinnot 1)))
+                (should= "DIA-tutkinto" (get-in (nth tutkinnot 1) [:koulutusohjelmanimi :fi]))
+                (should= "1.2.246.562.10.13349113236_301104_2023-06-15" (:id (nth tutkinnot 2)))
+                (should= "EB-tutkinto (European Baccalaureate)" (get-in (nth tutkinnot 2) [:tutkintonimi :fi]))))
 
           (it "should parse ammatilliset tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
                              (read-opiskeluoikeudet-from-json "ammatilliset.json") ["amm" "amm-perus" "amm-erikois"])
-                    amm (:amm parsed)
-                    amm-perus (:amm-perus parsed)
-                    amm-erikois (:amm-erikois parsed)]
-                (should= 3 (count (keys parsed)))
+                    amm (filter #(= "amm" (:level %)) parsed)
+                    amm-perus (filter #(= "amm-perus" (:level %)) parsed)
+                    amm-erikois (filter #(= "amm-erikois" (:level %)) parsed)]
+                (should= 3 (count (levels parsed)))
                 (should= 1 (count amm))
                 (should= 1 (count amm-perus))
                 (should= 1 (count amm-erikois))
-                (should= "1.2.246.562.10.52251087186_354345_2023-08-30" (:id (get amm 0)))
-                (should= "Ammattitutkinto" (get-in (get amm 0) [:koulutusohjelmanimi :fi]))
-                (should= "1.2.246.562.10.56139411567_351301_2016-01-09" (:id (get amm-perus 0)))
-                (should= "Ammatillinen perustutkinto" (get-in (get amm-perus 0) [:koulutusohjelmanimi :fi]))
-                (should= "1.2.246.562.10.54019331674_437109_2020-11-16" (:id (get amm-erikois 0)))
-                (should= "Erikoisammattitutkinto" (get-in (get amm-erikois 0) [:koulutusohjelmanimi :fi]))))
+                (should= "1.2.246.562.10.52251087186_354345_2023-08-30" (:id (nth amm 0)))
+                (should= "Ammattitutkinto" (get-in (nth amm 0) [:koulutusohjelmanimi :fi]))
+                (should= "1.2.246.562.10.56139411567_351301_2016-01-09" (:id (nth amm-perus 0)))
+                (should= "Ammatillinen perustutkinto" (get-in (nth amm-perus 0) [:koulutusohjelmanimi :fi]))
+                (should= "1.2.246.562.10.54019331674_437109_2020-11-16" (:id (nth amm-erikois 0)))
+                (should= "Erikoisammattitutkinto" (get-in (nth amm-erikois 0) [:koulutusohjelmanimi :fi]))))
 
           (it "should parse korkeakoulu-tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
                              (read-opiskeluoikeudet-from-json "korkeakoulutukset.json") ["kk-alemmat" "kk-ylemmat" "tohtori"])
-                    kk-alemmat (:kk-alemmat parsed)
-                    kk-ylemmat (:kk-ylemmat parsed)
-                    tohtori (:tohtori parsed)]
-                (should= 3 (count (keys parsed)))
+                    kk-alemmat (filter #(= "kk-alemmat" (:level %)) parsed)
+                    kk-ylemmat (filter #(= "kk-ylemmat" (:level %)) parsed)
+                    tohtori (filter #(= "tohtori" (:level %)) parsed)]
+                (should= 3 (count (levels parsed)))
                 (should= 4 (count kk-alemmat))
                 (should= 8 (count kk-ylemmat))
                 (should= 1 (count tohtori))
@@ -85,5 +87,5 @@
           (it "should ignore incomplete data returned from koski"
               (let [parsed (parser/parse-koski-tutkinnot
                              (read-opiskeluoikeudet-from-json "incomplete.json") ["perusopetus"])]
-                (should= 1 (count (keys parsed)))
-                (should= 1 (count (:perusopetus parsed))))))
+                (should= 1 (count (levels parsed)))
+                (should= 1 (count parsed)))))

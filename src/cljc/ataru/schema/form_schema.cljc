@@ -131,6 +131,8 @@
                                     (s/optional-key :params)          params-schema/Params
                                     (s/optional-key :description)     localized-schema/LocalizedStringOptional
                                     (s/optional-key :forced)          s/Bool
+                                    (s/optional-key
+                                      :allow-user-followups)          s/Bool
                                     (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
                                     (s/optional-key :followups)       [(s/if (comp some? :children)
                                                                          (s/recursive #'WrapperElement)
@@ -147,7 +149,7 @@
 
 (s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                          s/Str
-                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset" "embedded"])
                              :children                                    [(s/conditional
                                                                              #(or (= "wrapperElement" (:fieldClass %))
                                                                                   (= "questionGroup" (:fieldClass %)))

@@ -46,21 +46,25 @@
             (into [:div.application-handling__nested-container]
                   (child-fields (:followups option) application lang ui group-idx)))])))])
 
-(defn- text-readonly-text [field-descriptor values group-idx]
+(defn- readonly-text [field-id label-id values]
   [:div.application__readonly-text
-   {:aria-labelledby (application-field/id-for-label field-descriptor group-idx)
+   {:aria-labelledby label-id
     :data-test-id    "tekstikenttä-vastaus"}
    (cond (and (sequential? values) (< 1 (count values)))
          [:ul.application__form-field-list
           (map-indexed
             (fn [i value]
-              ^{:key (str (:id field-descriptor) i)}
+              ^{:key (str field-id "-" i)}
               [:li (application-field/render-paragraphs value)])
             values)]
          (sequential? values)
          (application-field/render-paragraphs (first values))
          :else
          (application-field/render-paragraphs values))])
+
+
+(defn- text-readonly-text [field-descriptor values group-idx]
+  (readonly-text (:id field-descriptor) (application-field/id-for-label field-descriptor group-idx) values))
 
 (defn- text-form-field-label [field-descriptor lang group-idx]
   [:div.application__form-field-label
@@ -116,19 +120,22 @@
              (child-fields children application lang ui nil))])))
 
 (defn- tutkinto [children application lang ui idx tutkinto]
-  (let [grouped-to-koski-or-not (group-by #(if (get-in % [:params :transparent]) "koski" "non-koski") children)]
+  (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
     [:div.application__tutkinto-wrapper-readonly
      (doall
-      (for [child (get grouped-to-koski-or-not "koski" [])]
-        ^{:key (str "tutkintovastaus-" (:id child) "-" idx)}
+      (for [field (tutkinnot/get-tutkinto-field-mappings lang)]
+        (let [field-id (:id field)
+              label-id (str "koski-answer-label-" field-id "-" idx)]
+        ^{:key (str "koski-answer-" field-id "-" idx)}
         [:div.application__form-field
-         [text-form-field-label child lang nil]
-         [text-readonly-text child (tutkinnot/find-answer-from-koskidata child tutkinto lang) nil]]))
-     (doall (child-fields (get grouped-to-koski-or-not "non-koski" []) application lang ui idx))]))
+         [:div.application__form-field-label
+          {:id label-id}
+          [:span (:text field)]]
+         [readonly-text field-id label-id (get-in tutkinto [(:koski-tutkinto-field field) lang])]])))
+     (doall (child-fields non-koski-content application lang ui idx))]))
 
 (defn tutkinto-wrapper [_ _ _ _]
-  (let [ui (subscribe [:state-query [:application :ui]])
-        answers @(subscribe [:application/answers])]
+  (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [configuration-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) children)
             itse-syotetyt-tutkinnot (tutkinnot/itse-syotetty-tutkinnot-content configuration-component)
@@ -139,14 +146,13 @@
             [application-field/scroll-to-anchor content]]
             [:div.application__wrapper-contents
              (doall
-               (for [level-component (tutkinnot/selected-koski-tutkinnot-content configuration-component)
-                     idx (range (count (get-in answers [(keyword (:id level-component)) :value] [])))
-                 :let [level-id (:id level-component)
-                       level-answers (get-in answers [(keyword level-id) :value] [])
-                       tutkinto-item (tutkinnot/get-tutkinto-of-level level-id (get level-answers idx))]
-                 :when (some? tutkinto-item)]
-                   ^{:key (str "tutkinto-" level-id "-" idx)}
-                   [tutkinto (:followups level-component) application lang ui idx tutkinto-item]))
+               (for [koski-item @(subscribe [:application/koski-tutkinnot])
+                 :let [level (:level koski-item)
+                       question-group-of-level (tutkinnot/get-question-group-of-level configuration-component level)
+                       answer-idx (tutkinnot/get-tutkinto-idx level (:id koski-item))]
+                 :when (some? answer-idx)]
+                   ^{:key (str "tutkinto-" level "-" answer-idx)}
+                   [tutkinto (:children question-group-of-level) application lang ui answer-idx koski-item]))
              (doall (child-fields itse-syotetyt-tutkinnot application lang ui nil))
              (doall (child-fields additional-content application lang ui nil))]]))))
 
