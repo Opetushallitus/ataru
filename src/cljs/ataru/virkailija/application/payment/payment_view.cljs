@@ -330,7 +330,8 @@
          [:div (str due-label ":")]
          [:div (str due-value)]])
 
-      [resend-kk-application-payment-email]]))
+      (when (= :awaiting kk-payment-state)
+        [resend-kk-application-payment-email])]))
 
 (defn kk-application-payment-status [payments]
   (let [payment-state  (keyword @(subscribe [:payment/kk-payment-state]))
