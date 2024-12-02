@@ -88,6 +88,14 @@
                             (jdbc/delete! conn :kk_application_payments [])
                             (jdbc/delete! conn :kk_application_payments_history [])))
 
+(defn- check-mail-fn [mail-content]
+  (and
+    (= (count (:recipients mail-content)) 1)
+    (= "aku@ankkalinna.com" (first (:recipients mail-content)))
+    (not-empty (:subject mail-content))
+    (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun allaolevan linkin kautta.")
+    (str/includes? (:body mail-content) test-maksut-secret)))
+
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
           (with-stubs)
@@ -224,19 +232,12 @@
                      :maksut-secret reminder-maksut-secret}
                     (select-keys payment [:application-key :state :maksut-secret])))))
 
-          (it "should create a payment e-mail and a sending job"
+          (it "should create a payment and e-mail sending job"
               (with-redefs [start-runner-job (stub :start-job)]
                 (let [application-id (unit-test-db/init-db-fixture
                                        form-fixtures/payment-exemption-test-form
                                        application-fixtures/application-without-hakemusmaksu-exemption
                                        nil)
-                      check-mail-fn (fn [mail-content]
-                                      (and
-                                        (= (count (:recipients mail-content)) 1)
-                                        (= "aku@ankkalinna.com" (first (:recipients mail-content)))
-                                        (not-empty (:subject mail-content))
-                                        (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun allaolevan linkin kautta.")
-                                        (str/includes? (:body mail-content) test-maksut-secret)))
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
                       application-key (:key (application-store/get-application application-id))
@@ -248,4 +249,29 @@
                   (should=
                     {:application-key application-key :state (:awaiting payment/all-states)
                      :maksut-secret test-maksut-secret}
-                    (select-keys payment [:application-key :state :maksut-secret]))))))
+                    (select-keys payment [:application-key :state :maksut-secret])))))
+
+          (it "creates payment email sending job"
+              (with-redefs [start-runner-job (stub :start-job)]
+                (let [application-id (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                       nil)
+                      application-key (:key (application-store/get-application application-id))
+                      _ (payment-store/create-or-update-kk-application-payment!
+                          {:application-key      application-key
+                           :state                (:awaiting payment/all-states)
+                           :reason               nil
+                           :due-date             (time-format/unparse payment/default-time-format
+                                                                      (time/plus (time/today-at 12 0 0)
+                                                                                 (time/days 3)))
+                           :total-sum            payment/kk-application-payment-amount
+                           :maksut-secret        test-maksut-secret
+                           :required-at          "now()"
+                           :notification-sent-at nil
+                           :approved-at          nil})
+                      _ (updater-job/resend-payment-email runner application-key)]
+                  (should-have-invoked :start-job
+                                       {:with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})))))
