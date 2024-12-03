@@ -86,6 +86,14 @@
                             (fn [generate-fn]
                               (dispatch [:generate-component generate-fn (conj path :children (count children))]))]))]]]))
 
+(defn embedded-question-group [_ path children]
+  [:div
+   [:div children]
+   (when-not @(subscribe [:editor/component-locked? path])
+     [toolbar/question-group-toolbar path
+      (fn [generate-fn]
+        (dispatch [:generate-component generate-fn (conj path :children (count children))]))])])
+
 (defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value (subscribe [:editor/get-component-value path])
@@ -185,7 +193,7 @@
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content/component-content
-        path
+        path                                                ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
