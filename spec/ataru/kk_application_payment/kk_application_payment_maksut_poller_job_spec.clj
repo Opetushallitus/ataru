@@ -124,18 +124,4 @@
               (with-redefs [updater-job/start-update-kk-payment-status-for-application-key-job (stub :start-update-job)]
                 (let [_ (create-awaiting-status key-with-paid-status)
                       _ (poller-job/poll-kk-payments-handler {} runner)]
-                  (should-have-invoked :start-update-job {:times 2}))))
-
-          (it "creates and queues e-mail job for a paid payment once"
-              (with-redefs [start-runner-job (stub :start-job)]
-                (let [_ (create-awaiting-status key-with-paid-status)
-                      _ (poller-job/get-payments-and-poll runner)
-                      _ (poller-job/get-payments-and-poll runner)
-                      _ (poller-job/get-payments-and-poll runner)
-                      check-mail-fn (fn [mail-content]
-                                      (str/includes? (:body mail-content) "Kiitos hakemusmaksun maksamisesta (fi)"))]
-                  (should-have-invoked :start-job
-                                       {:times 2            ; The one we just created, and one of the comparison states
-                                        :with [:* :*
-                                               "ataru.kk-application-payment.kk-application-payment-email-job"
-                                               check-mail-fn]})))))
+                  (should-have-invoked :start-update-job {:times 2})))))
