@@ -420,7 +420,7 @@
       (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
         :path-params [person-oid :- s/Str
                       term :- s/Str
-                      year :- s/Str]
+                      year :- s/Int]
         :summary "Triggers a job for updating internal payment status for single higher education application payment"
         (if (get-in session [:identity :superuser])
           (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
