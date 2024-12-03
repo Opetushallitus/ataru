@@ -2583,6 +2583,9 @@
    :valittu                                                  {:fi "valittu"
                                                               :sv "valda"
                                                               :en "selected"}
+   :payment-not-checked                                      {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
+                                                              :sv "SV: Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
+                                                              :en "EN: Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
                                                               :en "EN: Hakija ei ole maksuvelvollinen"}})
