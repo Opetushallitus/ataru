@@ -122,9 +122,7 @@
                                           (not-empty metadata)
                                           (assoc :metadata metadata)
                                           (not-empty vat)
-                                          (assoc :vat vat)
-                                          (= origin "tutu")
-                                          (assoc :index 2))}))
+                                          (assoc :vat vat))}))
    {}))
 
 (re-frame/reg-event-fx
