@@ -617,15 +617,15 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
-   :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :sv "SV: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :en "EN: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"}
-   :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :sv "SV: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :en "EN: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"}
-   :email-kk-payment-confirmation-subject       {:fi "Opintopolku: Vahvistus hakemusmaksun maksamisesta"
-                                                 :sv "SV: Opintopolku: Vahvistus hakemusmaksun maksamisesta"
-                                                 :en "EN: Opintopolku: Vahvistus hakemusmaksun maksamisesta"}
+   :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
+                                                 :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
+                                                 :en "Studyinfo: application fee, reminder to pay the fee by"}
+   :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
+                                                 :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
+                                                 :en "Studyinfo: Application fee, please remember to pay the fee by"}
+   :kk-payment-info-url                         {:fi "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu"
+                                                 :sv "https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift"
+                                                 :en "https://opintopolku.fi/konfo/en/sivu/application-fee"}
    :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
                                                  :sv "Hur vill du öppna ansökningsblanketten?"
                                                  :en "How do you want to access the application form?"}
