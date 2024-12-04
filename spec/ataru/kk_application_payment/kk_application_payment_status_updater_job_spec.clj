@@ -92,9 +92,11 @@
   (and
     (= (count (:recipients mail-content)) 1)
     (= "aku@ankkalinna.com" (first (:recipients mail-content)))
-    (not-empty (:subject mail-content))
+    (str/includes? (:subject mail-content) "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään")
     (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun allaolevan linkin kautta.")
-    (str/includes? (:body mail-content) test-maksut-secret)))
+    (str/includes? (:body mail-content) (str "maksut-ui/fi?secret=" test-maksut-secret))
+    (str/includes? (:body mail-content) "Olet hakenut haussa: testing2")
+    (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu")))
 
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
@@ -175,7 +177,10 @@
                       application-key (:key (application-store/get-application application-id))
                       check-mail-fn (fn [mail-content]
                                       (and
-                                        (str/includes? (:body mail-content) "Hakemusmaksusi erääntyy pian (fi)")
+                                        (str/includes? (:subject mail-content) "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään")
+                                        (str/includes? (:body mail-content) "Olet hakenut haussa: testing2")
+                                        (str/includes? (:body mail-content) "Emme ole vielä saaneet maksusuoritustasi hakemusmaksua koskien")
+                                        (str/includes? (:body mail-content) "23:59:00")
                                         (str/includes? (:body mail-content) reminder-maksut-secret)))
                       _ (payment-store/create-or-update-kk-application-payment!
                           {:application-key      application-key
@@ -238,6 +243,60 @@
                                        form-fixtures/payment-exemption-test-form
                                        application-fixtures/application-without-hakemusmaksu-exemption
                                        nil)
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      application-key (:key (application-store/get-application application-id))
+                      payment (first (payment/get-raw-payments [application-key]))]
+                  (should-have-invoked :start-job
+                                       {:with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})
+                  (should=
+                    {:application-key application-key :state (:awaiting payment/all-states)
+                     :maksut-secret test-maksut-secret}
+                    (select-keys payment [:application-key :state :maksut-secret])))))
+
+          (it "should create a payment and e-mail sending job for english application"
+              (with-redefs [start-runner-job (stub :start-job)]
+                (let [application-id (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       (merge application-fixtures/application-without-hakemusmaksu-exemption
+                                              {:lang "en"})
+                                       nil)
+                      check-mail-fn (fn [mail-content]
+                                      (and
+                                        (str/includes? (:subject mail-content) "Studyinfo: application fee, reminder to pay the fee by")
+                                        (str/includes? (:body mail-content) "You have applied in: testing4")
+                                        (str/includes? (:body mail-content) "You can find more information about application fees on our website")
+                                        (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/en/sivu/application-fee")
+                                        (str/includes? (:body mail-content) (str "maksut-ui/en?secret=" test-maksut-secret))))
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      application-key (:key (application-store/get-application application-id))
+                      payment (first (payment/get-raw-payments [application-key]))]
+                  (should-have-invoked :start-job
+                                       {:with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})
+                  (should=
+                    {:application-key application-key :state (:awaiting payment/all-states)
+                     :maksut-secret test-maksut-secret}
+                    (select-keys payment [:application-key :state :maksut-secret])))))
+
+          (it "should create a payment and e-mail sending job for swedish application"
+              (with-redefs [start-runner-job (stub :start-job)]
+                (let [application-id (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       (merge application-fixtures/application-without-hakemusmaksu-exemption
+                                              {:lang "sv"})
+                                       nil)
+                      check-mail-fn (fn [mail-content]
+                                      (and
+                                        (str/includes? (:subject mail-content) "Studieinfo: Ansökningsavgift, betala avgiften senast")
+                                        (str/includes? (:body mail-content) "Du har ansökt i följande ansökan: testing3")
+                                        (str/includes? (:body mail-content) "Mera information om ansökningsavgiften finns på vår webbsida")
+                                        (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift")
+                                        (str/includes? (:body mail-content) (str "maksut-ui/sv?secret=" test-maksut-secret))))
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
                       application-key (:key (application-store/get-application application-id))

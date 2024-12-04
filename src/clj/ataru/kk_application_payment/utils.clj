@@ -32,11 +32,13 @@
   "Semesters / terms for kk application payments: one payment is required per starting term."
   #{:kausi_k :kausi_s})
 
-(defn payment-email [lang email data {:keys [template-path subject-key]}]
+(defn payment-email [lang email data {:keys [template-path subject-key subject-suffix]}]
   (let [template-path    template-path
         translations     (translations/get-translations lang)
         emails           (list email)
-        subject          (subject-key translations)
+        subject          (if subject-suffix
+                           (str (subject-key translations) " " subject-suffix)
+                           (subject-key translations))
         body             (selmer/render-file template-path
                                              (merge data translations))]
     (when (not-empty emails)

@@ -32,7 +32,7 @@
                                 application-store/add-application-event       (stub :add-application-event)
                                 application-store/add-person-oid              (stub :add-person-oid)
                                 person-integration/start-jobs-for-person      (stub :start-jobs-for-person)
-                                person-integration/start-jobs-for-application (stub :start-jobs-for-application)]
+                                person-integration/start-jobs-for-kk-application-payments (stub :start-jobs-for-application)]
                     (spec)))
 
           (it "upserts a person and updates application but does not add an event for a normal created person"
