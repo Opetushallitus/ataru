@@ -9,8 +9,7 @@
    :can-copy?                    s/Bool
    :can-remove?                  s/Bool
    :show-child-component-names?  s/Bool
-   :has-multiple-configurations? s/Bool
-   :show-content?                s/Bool})
+   :has-multiple-configurations? s/Bool})
 
 (def default-spec
   {:foldable?                    false
@@ -18,8 +17,7 @@
    :can-copy?                    false
    :can-remove?                  false
    :show-child-component-names?  false
-   :has-multiple-configurations? false
-   :show-content?                false})
+   :has-multiple-configurations? false})
 
 (def person-info-module-spec
   {:foldable?                    false
@@ -27,8 +25,7 @@
    :can-copy?                    false
    :can-remove?                  false
    :show-child-component-names?  true
-   :has-multiple-configurations? true
-   :show-content?                false})
+   :has-multiple-configurations? true})
 
 (def arvosanat-module-spec
   {:foldable?                    false
@@ -36,17 +33,15 @@
    :can-copy?                    false
    :can-remove?                  true
    :show-child-component-names?  false
-   :has-multiple-configurations? false
-   :show-content?                false})
+   :has-multiple-configurations? false})
 
 (def kk-application-payment-module-spec
-  {:foldable?                    true
+  {:foldable?                    false
    :can-cut?                     true
    :can-copy?                    false
    :can-remove?                  false
    :show-child-component-names?  false
    :has-multiple-configurations? false
-   :show-content?                true
    })
 
 (s/defn get-module-spec :- ModuleSpec

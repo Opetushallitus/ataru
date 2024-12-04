@@ -134,7 +134,6 @@
                 can-remove?
                 show-child-component-names?
                 has-multiple-configurations?
-                ;show-content?
                 ]} (-> content :module name module-spec/get-module-spec)
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
@@ -177,14 +176,7 @@
              " "
              [:span
               {:data-test-id (some-> data-test-id-prefix (str "-fields-label"))}
-              (string/join ", " (get-leaf-component-labels @value @(subscribe [:editor/virkailija-lang])))]])
-          ;(when show-content?
-           ; [component-content/component-content
-            ; path
-             ;[:div
-              ;[:div.editor-form__adjacent-fieldset-container
-               ;(:children content)]]])
-               ]]))))
+              (string/join ", " (get-leaf-component-labels @value @(subscribe [:editor/virkailija-lang])))]])]]))))
 
 (defn pohjakoulutusristiriita
   [_ _]
