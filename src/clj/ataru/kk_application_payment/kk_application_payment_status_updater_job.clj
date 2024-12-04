@@ -5,12 +5,28 @@
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [clj-time.core :as time]
+            [clj-time.format :as f]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
-            [ataru.kk-application-payment.utils :as utils]))
+            [ataru.kk-application-payment.utils :as utils])
+  (:import java.util.Locale))
+
+(def tz (time/time-zone-for-id "Europe/Helsinki"))
+
+(def formatters
+  {:fi (-> (f/formatters :rfc822 tz)
+           (f/with-locale (Locale. "fi"))
+           (f/with-zone tz))
+   :sv (-> (f/formatters :rfc822 tz)
+           (f/with-locale (Locale. "sv"))
+           (f/with-zone tz))
+   :en (-> (f/formatters :rfc822 tz)
+           (f/with-locale (Locale. "en"))
+           (f/with-zone tz))})
 
 (def remind-days-before 2)
 
@@ -18,23 +34,41 @@
   (let [time-local (time/to-time-zone (time/now) (time/time-zone-for-id "Europe/Helsinki"))]
     (time/local-date (time/year time-local) (time/month time-local) (time/day time-local))))
 
+(defn- due-date-to-printable-datetime
+  [lang due-date]
+  (let [due-at             (payment/parse-due-date due-date)
+        due-datetime       (time/date-time (time/year due-at) (time/month due-at) (time/day due-at) 23 59)
+        due-datetime-in-tz (time/from-time-zone due-datetime (time/time-zone-for-id "Europe/Helsinki"))
+        formatter          (lang formatters)]
+    (f/unparse formatter due-datetime-in-tz)))
+
 (defn- payment-reminder-email-params
-  [lang]
-  {:subject-key :email-kk-payment-reminder-subject
+  [lang suffix]
+  {:subject-suffix suffix
+   :subject-key :email-kk-payment-reminder-subject
    :template-path (str "templates/email_kk_payment_reminder_" (name lang) ".html")})
 
 (defn- payment-link-email-params
-  [lang]
-  {:subject-key :email-kk-payment-link-subject
+  [lang suffix]
+  {:subject-suffix suffix
+   :subject-key :email-kk-payment-link-subject
    :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
 
-(defn- start-payment-email-job [job-runner application secret params-fn type-str]
+(defn- start-payment-email-job [{:keys [tarjonta-service] :as job-runner}
+                                application secret params-fn type-str]
   (let [application-key (:key application)
         job-type        (:type email-job/job-definition)
         lang            (utils/get-application-language application)
         email-address   (utils/get-application-email application)
         payment-url     (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret (name lang))
-        mail-content    (utils/payment-email lang email-address {:payment-url payment-url} (params-fn lang))]
+        payment         (first (payment/get-raw-payments [application-key]))
+        haku            (tarjonta/get-haku tarjonta-service (:haku application))
+        haku-name       (get-in haku [:name lang] (get-in haku [:name :fi]))
+        due-date-str    (due-date-to-printable-datetime lang (:due-date payment))
+        mail-content    (utils/payment-email lang email-address {:payment-url   payment-url
+                                                                 :due-date-time due-date-str
+                                                                 :haku-name     haku-name}
+                                             (params-fn lang due-date-str))]
     (log/info "Generate kk application payment " type-str " for email" email-address
               "URL" payment-url "application-key" application-key)
     (if mail-content

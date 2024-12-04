@@ -35,9 +35,12 @@
    :application-can-be-found-here               {:fi "Hakemuksesi löytyy täältä"
                                                  :sv "Din ansökan kan hittas här"
                                                  :en "You can find your application here"}
-   :application-confirmation-kk-payment-info    {:fi "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen."
-                                                 :sv "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen. (SV)"
-                                                 :en "Hakemuksen käsittelyn jälkeen saat tiedon maksuvelvollisuudestasi. Saat maksulinkin sähköpostiisi, mikäli olet maksuvelvollinen. (EN)"}
+   :application-confirmation-kk-payment-info-1  {:fi "Jos sinun tulee maksaa hakemusmaksu, saat viimeistään vuorokauden sisällä erillisen sähköpostin, joka sisältää maksulinkin hakemusmaksuun. Tarkistathan myös roskapostikansiosi."
+                                                 :sv "Om du måste betala ansökningsavgift får du senast inom ett dygn ett skilt meddelande med en länk genom vilken du kan betala ansökningsavgiften. Kontrollera även din skräppostmapp."
+                                                 :en "If you need to pay an application fee, you will receive another email within the next 24 hours. This email has a payment link for the application fee. Please also check your spam folder."}
+   :application-confirmation-kk-payment-info-2  {:fi "Jos olet jo maksanut hakemusmaksun toisen haun yhteydessä, sinun ei tarvitse maksaa hakemusmaksua uudelleen. Et saa tällöin uutta maksulinkkiä."
+                                                 :sv "Om du redan ha betalat ansökningsavgiften i samband med en tidigare ansökan behöver du inte betala ansökningsavgiften på nytt. I sådant fall skickas inte en ny länk till betalningen."
+                                                 :en "If you have already paid the application fee after sending in another application, you do not need to pay the application fee again. In this case, you will not be sent a new payment link."}
    :application-confirmation                    {:fi "Saat vahvistuksen sähköpostiisi"
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
@@ -617,15 +620,15 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
-   :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :sv "SV: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :en "EN: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"}
-   :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :sv "SV: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"
-                                                 :en "EN: Opintopolku: Hakemusmaksu, maksathan maksun viimeistään x"}
-   :email-kk-payment-confirmation-subject       {:fi "Opintopolku: Vahvistus hakemusmaksun maksamisesta"
-                                                 :sv "SV: Opintopolku: Vahvistus hakemusmaksun maksamisesta"
-                                                 :en "EN: Opintopolku: Vahvistus hakemusmaksun maksamisesta"}
+   :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
+                                                 :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
+                                                 :en "Studyinfo: application fee, reminder to pay the fee by"}
+   :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
+                                                 :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
+                                                 :en "Studyinfo: Application fee, please remember to pay the fee by"}
+   :kk-payment-info-url                         {:fi "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu"
+                                                 :sv "https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift"
+                                                 :en "https://opintopolku.fi/konfo/en/sivu/application-fee"}
    :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
                                                  :sv "Hur vill du öppna ansökningsblanketten?"
                                                  :en "How do you want to access the application form?"}
