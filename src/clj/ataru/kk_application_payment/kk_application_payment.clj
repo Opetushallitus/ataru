@@ -287,9 +287,7 @@
         haku-oid           (:haku latest-application)
         person-oid         (:person-oid latest-application)
         haku               (when haku-oid (tarjonta/get-haku tarjonta-service haku-oid))
-        valid-haku?        (if haku
-                             (haku-valid-for-kk-payments? tarjonta-service haku)
-                             false)]
+        valid-haku?        (when haku (haku-valid-for-kk-payments? tarjonta-service haku))]
     (when valid-haku?
       [person-oid (:alkamiskausi haku) (:alkamisvuosi haku)])))
 

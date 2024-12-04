@@ -273,9 +273,14 @@
           (translations/get-hakija-translation :application-confirmation lang)])
        (when may-need-kk-application-payment
          [:div.application__submitted-submit-notification-additional-info
-          {:id "submitted-submit-notification-additional-info"
+          {:id "submitted-submit-notification-additional-info-1"
            :role "text"}
-          (translations/get-hakija-translation :application-confirmation-kk-payment-info lang)])
+          (translations/get-hakija-translation :application-confirmation-kk-payment-info-1 lang)])
+       (when may-need-kk-application-payment
+         [:div.application__submitted-submit-notification-additional-info
+          {:id "submitted-submit-notification-additional-info-2"
+           :role "text"}
+          (translations/get-hakija-translation :application-confirmation-kk-payment-info-2 lang)])
        [:div.application__submitted-submit-notification-inner
         [:button.application__overlay-button.application__overlay-button--enabled
          {:tab-index    "1"

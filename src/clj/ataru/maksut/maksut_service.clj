@@ -69,7 +69,9 @@
 
   (create-paatos-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
-                  (assoc lasku :index 2)))
+                  (cond-> lasku
+                          (= "tutu" (:origin lasku))
+                          (assoc :index 2))))
 
   (list-laskut-by-application-key [_ application-key]
     (list-get maksut-cas-client application-key))
