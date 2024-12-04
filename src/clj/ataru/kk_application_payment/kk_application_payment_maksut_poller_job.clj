@@ -9,28 +9,7 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.config.core :refer [config]]
-            [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
-            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
-            [ataru.kk-application-payment.utils :as utils]
-            [ataru.applications.application-store :as application-store]))
-
-(defn- payment-confirmation-email-params
-  [lang]
-  {:subject-key :email-kk-payment-confirmation-subject
-   :template-path (str "templates/email_kk_payment_confirmation_" (name lang) ".html")})
-
-(defn- start-confirmation-email-job [job-runner application-key]
-  (let [application     (application-store/get-latest-application-by-key application-key)
-        job-type        (:type email-job/job-definition)
-        email           (utils/get-application-email application)
-        lang            (utils/get-application-language application)
-        params          (payment-confirmation-email-params lang)
-        mail-content    (utils/payment-email lang email {} params)]
-    (if mail-content
-      (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                             (job/start-job job-runner conn job-type mail-content))]
-        (log/info (str "Created kk application payment confirmation email job " job-id " for application " application-key)))
-      (log/warn "Creating kk application payment confirmation mail to application" application-key "failed"))))
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]))
 
 (defn poll-payments
   "Polls maksut service for any open payment statuses, updates kk payment status to paid or overdue when necessary.
@@ -64,7 +43,6 @@
                                   (log/info "Set kk application payment paid for application key" application-key)
                                   (payment/set-application-fee-paid application-key ataru-data)
                                   (log/info "Starting kk application payment jobs for application key" application-key)
-                                  (start-confirmation-email-job job-runner application-key)
                                   (updater-job/start-update-kk-payment-status-for-application-key-job
                                     job-runner application-key))
 

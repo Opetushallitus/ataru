@@ -13,7 +13,7 @@
       </tr>
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          {{payment|safe}}{{amount|number-format:%.2f:fi}}€{% if vat %} ({{includes-vat|safe}}{{vat|number-format:%.1f:fi}}%){% endif %}
+          {{payment|safe}}{{amount|number-format:%.2f:fi}}€{% if vat > 0 %} ({{includes-vat|safe}}{{vat|number-format:%.1f:fi}}%){% endif %}
         </td>
       </tr>
       <tr>
