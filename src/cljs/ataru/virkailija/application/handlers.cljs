@@ -5,6 +5,7 @@
             [ataru.cljs-util :as cljs-util]
             [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.tarjonta.haku :as haku]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.util :as util]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
@@ -513,7 +514,8 @@
                                               attachment-reviews
                                               information-requests
                                               review-notes
-                                              master-oid]}]
+                                              master-oid
+                                              koski-tutkinnot]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
                 {:form        form
@@ -530,6 +532,8 @@
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
       (assoc-in [:application :selected-application-and-form :application :person :master-oid] master-oid)
+      (assoc-in [:application :selected-application-and-form :application :koski-tutkinnot]
+                (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
       (update-in [:application :selected-review-hakukohde-oids]
                  (fn [current-hakukohde-oids]
                    (let
