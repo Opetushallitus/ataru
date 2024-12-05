@@ -117,6 +117,6 @@
   (some #(when (= (:level tutkinto) %) %) requested-levels))
 
 (s/defn ^:always-validate parse-koski-tutkinnot :- [koski-schema/AtaruKoskiTutkinto]
-  [koski-opiskelu-oikeudet requested-levels]
+  [requested-levels koski-opiskelu-oikeudet]
   (filterv #(filter-by-levels % requested-levels)
            (flatten (map #(parse-tutkinnot-by-level % requested-levels) koski-opiskelu-oikeudet))))

@@ -14,7 +14,7 @@
           (tags :unit)
           (it "should parse perusopetus -tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "perusopetus.json") ["perusopetus"])
+                             ["perusopetus"] (read-opiskeluoikeudet-from-json "perusopetus.json"))
                     tutkinnot (filter #(= "perusopetus" (:level %)) parsed)]
                 (should= 1 (count (levels parsed)))
                 (should= 3 (count tutkinnot))
@@ -27,7 +27,7 @@
 
           (it "should parse yo -tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "ylioppilas.json") ["yo"])
+                             ["yo"] (read-opiskeluoikeudet-from-json "ylioppilas.json"))
                     tutkinnot (filter #(= "yo" (:level %)) parsed)]
                 (should= 1 (count (levels parsed)))
                 (should= 3 (count tutkinnot))
@@ -40,7 +40,7 @@
 
           (it "should parse ammatilliset tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "ammatilliset.json") ["amm" "amm-perus" "amm-erikois"])
+                             ["amm" "amm-perus" "amm-erikois"] (read-opiskeluoikeudet-from-json "ammatilliset.json"))
                     amm (filter #(= "amm" (:level %)) parsed)
                     amm-perus (filter #(= "amm-perus" (:level %)) parsed)
                     amm-erikois (filter #(= "amm-erikois" (:level %)) parsed)]
@@ -57,7 +57,7 @@
 
           (it "should parse korkeakoulu-tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "korkeakoulutukset.json") ["kk-alemmat" "kk-ylemmat" "tohtori"])
+                             ["kk-alemmat" "kk-ylemmat" "tohtori"] (read-opiskeluoikeudet-from-json "korkeakoulutukset.json"))
                     kk-alemmat (filter #(= "kk-alemmat" (:level %)) parsed)
                     kk-ylemmat (filter #(= "kk-ylemmat" (:level %)) parsed)
                     tohtori (filter #(= "tohtori" (:level %)) parsed)]
@@ -77,15 +77,15 @@
 
           (it "should return empty when returned tutkinnot not in requested level list"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "korkeakoulutukset.json") ["perusopetus"])]
+                             ["perusopetus"] (read-opiskeluoikeudet-from-json "korkeakoulutukset.json"))]
                 (should= true (empty? parsed))))
 
           (it "should return empty when koski response was empty"
               (let [parsed (parser/parse-koski-tutkinnot
-                             {:opiskeluoikeudet []} ["perusopetus"])]
+                             ["perusopetus"] {:opiskeluoikeudet []})]
                 (should= true (empty? parsed))))
           (it "should ignore incomplete data returned from koski"
               (let [parsed (parser/parse-koski-tutkinnot
-                             (read-opiskeluoikeudet-from-json "incomplete.json") ["perusopetus"])]
+                             ["perusopetus"] (read-opiskeluoikeudet-from-json "incomplete.json"))]
                 (should= 1 (count (levels parsed)))
                 (should= 1 (count parsed)))))

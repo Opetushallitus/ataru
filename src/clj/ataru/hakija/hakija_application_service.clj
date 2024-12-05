@@ -15,11 +15,14 @@
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.hakija.validator :as validator]
+    [ataru.koski.koski-service :as koski-service]
+    [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
     [ataru.log.audit-log :as audit-log]
     [ataru.maksut.maksut-protocol :as maksut-protocol]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.tutkinto.tutkinto-util :as tutkinto-util]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -690,7 +693,8 @@
    tarjonta-service
    hakukohderyhma-settings-cache
    secret
-   liiteri-cas-client]
+   liiteri-cas-client
+   koski-service]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -748,6 +752,12 @@
                                                                       nil
                                                                       application-in-processing?
                                                                       field-deadlines))
+        requested-tutkinto-levels (tutkinto-util/koski-tutkinto-levels-in-form form)
+        koski-tutkinnot       (future (some->> (when requested-tutkinto-levels (:person-oid application))
+                                               (koski-service/get-tutkinnot-for-oppija koski-service)
+                                               :opiskeluoikeudet
+                                               (parse-koski-tutkinnot
+                                                 (string/split requested-tutkinto-levels #","))))
         new-person (application-service/get-person-for-securelink application-service application)
         filtered-person (if (= actor-role :virkailija)
                           new-person
@@ -761,11 +771,14 @@
                                                                                    (in-processing-state? application form))))
                                 (when (some? (:key application))
                                   {:application-identifier (application-service/mask-application-key (:key application))}))]
-    [(when full-application
-       {:application full-application
-        :person      filtered-person
-        :form        form
-        :kk-payment  @kk-payment})
+    [(cond-> {}
+             full-application
+             (merge {:application full-application
+                     :person      filtered-person
+                     :form        form
+                     :kk-payment  @kk-payment})
+             @koski-tutkinnot
+             (assoc :koski-tutkinnot @koski-tutkinnot))
      secret-expired?
      lang-override
      inactivated?]))
