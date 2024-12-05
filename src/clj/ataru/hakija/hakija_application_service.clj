@@ -771,14 +771,13 @@
                                                                                    (in-processing-state? application form))))
                                 (when (some? (:key application))
                                   {:application-identifier (application-service/mask-application-key (:key application))}))]
-    [(cond-> {}
-             full-application
-             (merge {:application full-application
-                     :person      filtered-person
-                     :form        form
-                     :kk-payment  @kk-payment})
-             @koski-tutkinnot
-             (assoc :koski-tutkinnot @koski-tutkinnot))
+    [(when full-application
+       (cond-> {:application full-application
+                :person      filtered-person
+                :form        form
+                :kk-payment  @kk-payment}
+               @koski-tutkinnot
+               (assoc :koski-tutkinnot @koski-tutkinnot)))
      secret-expired?
      lang-override
      inactivated?]))
