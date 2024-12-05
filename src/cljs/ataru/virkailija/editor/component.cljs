@@ -133,7 +133,8 @@
                 can-copy?
                 can-remove?
                 show-child-component-names?
-                has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
+                has-multiple-configurations?
+                ]} (-> content :module name module-spec/get-module-spec)
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
         component-locked? (subscribe [:editor/component-locked? path])]
@@ -142,6 +143,7 @@
             data-test-id-prefix (case module-name
                                   :person-info "henkilotietomoduuli"
                                   :arvosanat-peruskoulu "arvosanat-moduuli"
+                                  :kk-application-payment "kk-hakemusmaksu-moduuli"
                                   nil)]
         [:div.editor-form__component-wrapper
          [text-header-component/text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil

@@ -334,13 +334,20 @@
         [resend-kk-application-payment-email])]))
 
 (defn kk-application-payment-status [payments]
-  (let [payment-state  (keyword @(subscribe [:payment/kk-payment-state]))
-        not-required?  (or (= payment-state :not-checked) (= payment-state :not-required))]
+  (let [payment-state (keyword @(subscribe [:payment/kk-payment-state]))]
     [:div.application-handling__tutu-payment-maksupyynto-box
      [:span.application-handling__tutu-payment--span-2
       [:b @(subscribe [:editor/virkailija-translation :maksupyynto-header])]]
-    (if not-required?
+    (cond
+      (= payment-state :not-required)
       [:span.application-handling__tutu-payment--span-2
        [icons/tutu-payment-outstanding]
        @(subscribe [:editor/virkailija-translation :payment-not-obligated])]
+
+      (= payment-state :not-checked)
+      [:span.application-handling__tutu-payment--span-2
+       [icons/tutu-payment-outstanding]
+       @(subscribe [:editor/virkailija-translation :payment-not-checked])]
+
+      :else
       [kk-application-payment-data payment-state payments])]))

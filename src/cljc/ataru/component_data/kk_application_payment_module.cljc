@@ -3,6 +3,8 @@
             [ataru.translations.texts :refer [kk-application-payment-module-texts]]
             [ataru.constants :refer [system-metadata]]))
 
+(def payment-module-keyword :kk-application-payment-module)
+(def payment-module-name (name payment-module-keyword))
 (def kk-application-payment-wrapper-key "kk-application-payment-wrapper")
 (def kk-application-payment-choice-key "kk-application-payment-option")
 (def asiakasnumero-migri-key "asiakasnumero-migri")
@@ -126,5 +128,6 @@
 (defn kk-application-payment-module []
   (assoc (component/form-section system-metadata)
     :id kk-application-payment-wrapper-key
+    :module payment-module-keyword
     :label (:section-title kk-application-payment-module-texts)
     :children [(document-choice system-metadata)]))
