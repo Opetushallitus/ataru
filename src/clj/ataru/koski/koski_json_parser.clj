@@ -34,6 +34,15 @@
                           (assoc :tutkintonimi (get-in koski-opiskeluoikeus [:tyyppi :nimi]))))
        (:suoritukset koski-opiskeluoikeus)))
 
+(defn- is-lukiokoulutus? [koski-opiskeluoikeus]
+  (= "lukiokoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")))
+
+(defn- parse-lukiokoulutukset [koski-opiskeluoikeus]
+  (map (fn [suoritus] (-> (parse-common-fields suoritus)
+                          (assoc :level "lukiokoulutus")
+                          (assoc :tutkintonimi (get-in koski-opiskeluoikeus [:tyyppi :nimi]))))
+       (:suoritukset koski-opiskeluoikeus)))
+
 (defn- is-yotutkinto? [koski-opiskeluoikeus]
   (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")]
     (some? (some #(when (= tutkinto-type %) %) ["ylioppilastutkinto" "diatutkinto" "ebtutkinto"]))))
@@ -73,8 +82,9 @@
   (= "korkeakoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")))
 
 (defn- resolve-subtype-of-korkeakoulututkinto [virta-tyyppi-koodi]
-  (cond (some #(when (= virta-tyyppi-koodi %) %) ["2"]) "kk-alemmat"
-        (some #(when (= virta-tyyppi-koodi %) %) ["4"]) "kk-ylemmat"
+  (cond (some #(when (= virta-tyyppi-koodi %) %) ["1" "2"]) "kk-alemmat"
+        (some #(when (= virta-tyyppi-koodi %) %) ["3" "4"]) "kk-ylemmat"
+        (some #(when (= virta-tyyppi-koodi %) %) ["6"]) "lisensiaatti"
         (some #(when (= virta-tyyppi-koodi %) %) ["7"]) "tohtori"))
 
 (defn- parse-korkeakoulututkinnot [koski-opiskeluoikeus]
@@ -100,13 +110,15 @@
   (let [any-requested? (fn [& levels] (any-requested-levels? requested-levels levels))
         list-fn (cond (and (is-perusopetus? koski-opiskeluoikeus) (any-requested? "perusopetus"))
                       parse-perusopetukset
+                      (and (is-lukiokoulutus? koski-opiskeluoikeus) (any-requested? "lukiokoulutus"))
+                      parse-lukiokoulutukset
                       (and (is-yotutkinto? koski-opiskeluoikeus) (any-requested? "yo"))
                       parse-yotutkinnot
                       (and (is-ammatillinen? koski-opiskeluoikeus)
                            (any-requested? "amm" "amm-perus" "amm-erikois"))
                       parse-ammatilliset
                       (and (is-korkeakoulututkinto? koski-opiskeluoikeus)
-                           (any-requested? "kk-alemmat" "kk-ylemmat" "tohtori"))
+                           (any-requested? "kk-alemmat" "kk-ylemmat" "lisensiaatti" "tohtori"))
                       parse-korkeakoulututkinnot)]
     (if list-fn
       (filter #(and (:tutkintonimi %) (:valmistumispvm %)) (list-fn koski-opiskeluoikeus))
