@@ -59446,10 +59446,10 @@
   			},
   			"lisätiedot": {
   				"virtaOpiskeluoikeudenTyyppi": {
-  					"koodiarvo": "4",
+  					"koodiarvo": "6",
   					"nimi": {
-  						"fi": "Ylempi korkeakoulututkinto",
-  						"sv": "Högre högskoleexamen"
+  						"fi": "Lisensiaatti",
+  						"sv": "Lisensiat"
   					},
   					"koodistoUri": "virtaopiskeluoikeudentyyppi",
   					"koodistoVersio": 1

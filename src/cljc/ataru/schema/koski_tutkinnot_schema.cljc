@@ -37,7 +37,7 @@
                        :suoritukset                   [KoskiSuoritusItem]}]})
 
 (def koski-levels
-  ["perusopetus" "yo" "amm" "amm-perus" "amm-erikois" "kk-alemmat" "kk-ylemmat" "tohtori"])
+  ["perusopetus" "lukiokoulutus" "yo" "amm" "amm-perus" "amm-erikois" "kk-alemmat" "kk-ylemmat" "lisensiaatti" "tohtori"])
 (s/defschema AtaruKoskiTutkinto
   {:id                                    s/Str
    :tutkintonimi                          localized-schema/LocalizedString

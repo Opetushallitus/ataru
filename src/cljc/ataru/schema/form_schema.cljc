@@ -546,7 +546,7 @@
       (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
-(s/defschema ApplicationWithPersonFormAndPayment
+(s/defschema ApplicationWithPersonFormPaymentAndTutkinnot
   {:application (-> Application
                     (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
@@ -554,7 +554,8 @@
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
                                :else FormWithContent)
-   :kk-payment  KkPaymentState})
+   :kk-payment  KkPaymentState
+   (s/optional-key :koski-tutkinnot) [tutkinnot-schema/AtaruKoskiTutkinto]})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str

@@ -144,6 +144,170 @@
       "päättymispäivä": "2007-11-08"
     },
     {
+      "oid": "1.2.246.562.15.41249094792",
+      "versionumero": 1,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.14613773812",
+        "oppilaitosnumero": {
+          "koodiarvo": "00204",
+          "nimi": {
+            "fi": "Jyväskylän normaalikoulu",
+            "sv": "Jyväskylän normaalikoulu",
+            "en": "Jyväskylän normaalikoulu"
+          },
+          "lyhytNimi": {
+            "fi": "Jyväskylän normaalikoulu",
+            "sv": "Jyväskylän normaalikoulu",
+            "en": "Jyväskylän normaalikoulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Jyväskylän normaalikoulu",
+          "sv": "Jyväskylän normaalikoulu",
+          "en": "Jyväskylän normaalikoulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "179",
+          "nimi": {
+            "fi": "Jyväskylä",
+            "sv": "Jyväskylä"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.77055527103",
+        "nimi": {
+          "fi": "Jyväskylän yliopisto",
+          "sv": "Jyväskylän yliopisto",
+          "en": "Jyväskylän yliopisto"
+        },
+        "yTunnus": "0245894-7",
+        "kotipaikka": {
+          "koodiarvo": "179",
+          "nimi": {
+            "fi": "Jyväskylä",
+            "sv": "Jyväskylä"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2012-09-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education funded by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-08-08",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education funded by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "309902",
+              "nimi": {
+                "fi": "Lukion oppimäärä",
+                "sv": "Gymnasiets lärokurs"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.14613773812",
+            "nimi": {
+              "fi": "Jyväskylän normaalikoulu",
+              "sv": "Jyväskylän normaalikoulu",
+              "en": "Jyväskylän normaalikoulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "179",
+              "nimi": {
+                "fi": "Jyväskylä",
+                "sv": "Jyväskylä"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-06-08"
+          },
+          "tyyppi": {
+            "koodiarvo": "lukionoppimaara",
+            "nimi": {
+              "fi": "Lukion oppimäärä",
+              "sv": "Gymnasiets lärokurs",
+              "en": "General upper secondary education  syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "lukiokoulutus",
+        "nimi": {
+          "fi": "Lukiokoulutus",
+          "sv": "Gymnasieutbildning",
+          "en": "General upper secondary education"
+        },
+        "lyhytNimi": {
+          "fi": "Lukiokoulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2012-09-01",
+      "päättymispäivä": "2016-08-08"
+    },
+    {
       "oid": "1.2.246.562.51.22419471986",
       "oppilaitos": {
         "oid": "1.2.246.562.10.43628088406",

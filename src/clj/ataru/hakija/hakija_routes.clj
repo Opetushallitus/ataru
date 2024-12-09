@@ -59,7 +59,8 @@
    audit-logger
    session
    secret
-   liiteri-cas-client]
+   liiteri-cas-client
+   koski-service]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
@@ -69,7 +70,8 @@
                                                                      tarjonta-service
                                                                      hakukohderyhma-settings-cache
                                                                      secret
-                                                                     liiteri-cas-client)]
+                                                                     liiteri-cas-client
+                                                                     koski-service)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated" :lang lang-override})
 
@@ -336,7 +338,7 @@
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
                      {virkailija-secret :- s/Str nil}]
-      :return ataru-schema/ApplicationWithPersonFormAndPayment
+      :return ataru-schema/ApplicationWithPersonFormPaymentAndTutkinnot
       (cond (not-blank? secret)
             (get-application form-by-id-cache
                              koodisto-cache
@@ -348,7 +350,8 @@
                              audit-logger
                              session
                              {:hakija secret}
-                             liiteri-cas-client)
+                             liiteri-cas-client
+                             koski-service)
 
             (not-blank? virkailija-secret)
             (get-application form-by-id-cache
@@ -361,7 +364,8 @@
                              audit-logger
                              session
                              {:virkailija virkailija-secret}
-                             liiteri-cas-client)
+                             liiteri-cas-client
+                             koski-service)
 
             :else
             (response/bad-request {:code  :secret-expired
@@ -384,7 +388,7 @@
             tutkinto-level-list (str/split tutkinto-levels #",")]
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
           (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
-            (response/ok (parse-koski-tutkinnot (:opiskeluoikeudet oppija-response) tutkinto-level-list))
+            (response/ok (parse-koski-tutkinnot tutkinto-level-list (:opiskeluoikeudet oppija-response)))
             (response/not-found {}))
           (response/unauthorized {}))))
     (api/context "/files" []
