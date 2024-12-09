@@ -11,4 +11,6 @@
 
   (list-laskut-by-application-key [this application-key])
 
-  (download-receipt [this order-id]))
+  (download-receipt [this order-id])
+
+  (invalidate-laskut [this application-keys]))
