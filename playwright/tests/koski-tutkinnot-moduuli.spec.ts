@@ -91,13 +91,16 @@ test.describe('Koski-tutkinnot -moduuli', (): void => {
     await expect(perusopetusCheckbox).not.toBeChecked()
     await expect(tohtoritutkinnotCheckbox).not.toBeChecked()
     await perusopetusCheckbox.click()
-    let putRequestPromise = page.waitForRequest((req) => req.method() === 'PUT')
+    const putRequestPromise = page.waitForRequest(
+      (req) => req.method() === 'PUT'
+    )
     await tohtoritutkinnotCheckbox.click()
-    let putRequest = await putRequestPromise
+    const putRequest = await putRequestPromise
     await expect(perusopetusCheckbox).toBeChecked()
     await expect(tohtoritutkinnotCheckbox).toBeChecked()
-    let updatedProperties = JSON.parse(putRequest.postData() || '')[0]['new-form']
-      .properties
+    const updatedProperties = JSON.parse(putRequest.postData() || '')[0][
+      'new-form'
+    ].properties
     expect(
       updatedProperties['tutkinto-properties']['selected-option-ids']
     ).toStrictEqual(['perusopetus', 'itse-syotetty', 'tohtori'])
