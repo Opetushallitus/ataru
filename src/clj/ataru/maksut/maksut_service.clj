@@ -57,6 +57,21 @@
                                          " status: " (:status result)
                                          " response body: " (:body result))))))
 
+(defn- post-invalidate-laskut
+  "Invalidates maksut invoices with defined references (aka application keys).
+   Invalidated invoices cannot be paid or modified, but can still be viewed via secret link."
+  [maksut-cas-client keys]
+  (let [url    (url/resolve-url :maksut-service.virkailija-invalidate)
+        req    {:keys keys}
+        result (cas/cas-authenticated-post maksut-cas-client url req)]
+    (match/match result
+                 {:status 200 :body body}
+                 (parse-and-validate body [maksut-schema/LaskuStatus])
+
+                 :else (throw-error (str "Could not invalidate laskut for keys " (apply str keys)
+                                         " status: " (:status result)
+                                         " response body: " (:body result))))))
+
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
@@ -80,7 +95,10 @@
     (list-statuses maksut-cas-client keys))
 
   (download-receipt [_ order-id]
-    (receipt-get maksut-cas-client order-id)))
+    (receipt-get maksut-cas-client order-id))
+
+  (invalidate-laskut [_ keys]
+    (post-invalidate-laskut maksut-cas-client keys)))
 
 (defn new-maksut-service []
   (map->MaksutService {}))

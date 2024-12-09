@@ -6,7 +6,8 @@
   (s/enum
     :active
     :paid
-    :overdue))
+    :overdue
+    :invalidated))
 
 (s/defschema Locale
   (s/enum

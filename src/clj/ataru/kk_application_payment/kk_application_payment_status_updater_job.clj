@@ -119,6 +119,17 @@
       (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)
       (payment/get-valid-payment-info-for-application-key tarjonta-service application-key))))
 
+(defn- invalidate-maksut-payments-if-needed
+  "Whenever a payment for a term is made, other payment invoices for the person and term
+  should be invalidated to avoid accidental double payments."
+  [maksut-service modified-payments]
+  (let [proxy-state-application-keys (->> modified-payments
+                                          (filter #(= (:ok-by-proxy payment/all-states) (:state %)))
+                                          (map :application-key))]
+    (when (seq proxy-state-application-keys)
+      (log/info "Invalidating ok-by-proxy kk payment applications with keys" proxy-state-application-keys)
+      (maksut-protocol/invalidate-laskut maksut-service proxy-state-application-keys))))
+
 (defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year) either directly or
   via an application id/key. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
@@ -143,10 +154,10 @@
           (doseq [application-payment existing-payments]
             (let [{:keys [application payment]} application-payment]
               (cond
-                ; TODO: Check existing payments that were not updated:
-
                 (needs-reminder-sent? payment)
-                (send-reminder-email-and-mark-sent job-runner payment application)))))
+                (send-reminder-email-and-mark-sent job-runner payment application))))
+
+          (invalidate-maksut-payments-if-needed maksut-service modified-payments))
         (log/debug "Application id" application_id "not in haku with kk application payments")))))
 
 (defn start-update-kk-payment-status-for-person-job
