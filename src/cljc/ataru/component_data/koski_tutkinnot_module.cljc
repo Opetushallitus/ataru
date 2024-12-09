@@ -7,12 +7,14 @@
 (def tutkinto-property-component-category "tutkinto-properties")
 (def itse-syotetty-option-id "itse-syotetty")
 (def perusopetus-option-id "perusopetus")
+(def lukiokoulutus-option-id "lukiokoulutus")
 (def yo-option-id "yo")
 (def amm-perus-option-id "amm-perus")
 (def amm-option-id "amm")
 (def amm-erikois-option-id "amm-erikois")
 (def kk-alemmat-option-id "kk-alemmat")
 (def kk-ylemmat-option-id "kk-ylemmat")
+(def lisensiaatti-option-id "lisensiaatti")
 (def tohtori-option-id "tohtori")
 (def tutkinto-id-field-postfix "tutkinto-id")
 (def tutkinto-nimi-field-postfix "tutkinto-nimi")
@@ -20,9 +22,6 @@
 (def oppilaitos-field-postfix "oppilaitos")
 (def valmistumispvm-field-postfix "valmistumispvm")
 (def question-group-of-level "question-group")
-
-(def koski-tutkinto-option-ids [perusopetus-option-id yo-option-id amm-perus-option-id amm-option-id
-                                amm-erikois-option-id kk-alemmat-option-id kk-ylemmat-option-id tohtori-option-id])
 
 (defn- tutkinto-tasot [metadata]
   [{:id perusopetus-option-id
@@ -35,6 +34,16 @@
                   [(assoc (component/text-field metadata)
                     :id (str perusopetus-option-id "-" tutkinto-id-field-postfix)
                     :params {:transparent true})])]}
+   {:id lukiokoulutus-option-id
+    :label (:lukiokoulutus-label koski-tutkinnot-texts)
+    :followup-label (:koski-followup-label koski-tutkinnot-texts)
+    :allow-user-followups false
+    :followups [(assoc (component/question-group-embedded metadata)
+                  :id (str lukiokoulutus-option-id "-" question-group-of-level)
+                  :children
+                  [(assoc (component/text-field metadata)
+                     :id (str lukiokoulutus-option-id "-" tutkinto-id-field-postfix)
+                     :params {:transparent true})])]}
    {:id yo-option-id
     :label (:yo-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
@@ -94,6 +103,16 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str kk-ylemmat-option-id "-" tutkinto-id-field-postfix)
+                     :params {:transparent true})])]}
+   {:id lisensiaatti-option-id
+    :label (:lisensiaatti-tutkinnot-label koski-tutkinnot-texts)
+    :followup-label (:koski-followup-label koski-tutkinnot-texts)
+    :allow-user-followups false
+    :followups [(assoc (component/question-group-embedded metadata)
+                  :id (str lisensiaatti-option-id "-" question-group-of-level)
+                  :children
+                  [(assoc (component/text-field metadata)
+                     :id (str lisensiaatti-option-id "-" tutkinto-id-field-postfix)
                      :params {:transparent true})])]}
    {:id tohtori-option-id
     :label (:tohtori-tutkinnot-label koski-tutkinnot-texts)
