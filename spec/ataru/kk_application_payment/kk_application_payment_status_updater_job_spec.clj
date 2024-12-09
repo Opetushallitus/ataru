@@ -32,6 +32,8 @@
 
 (def test-maksut-secret "1234ABCD5678EFGH")
 
+(defn invalidate-laskut-fn [_ _])
+
 (defrecord MockMaksutService []
   MaksutServiceProtocol
 
@@ -47,7 +49,8 @@
   (create-kasittely-lasku [_ _] {})
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ _] {})
-  (list-laskut-by-application-key [_ _] []))
+  (list-laskut-by-application-key [_ _] [])
+  (invalidate-laskut [this keys] (invalidate-laskut-fn this keys)))
 
 (def mock-maksut-service (->MockMaksutService))
 
@@ -236,6 +239,53 @@
                     {:application-key application-key :state (:awaiting payment/all-states)
                      :maksut-secret reminder-maksut-secret}
                     (select-keys payment [:application-key :state :maksut-secret])))))
+
+          (it "should call maksut payment invalidation when changing payments status to ok-by-proxy"
+              (with-redefs [invalidate-laskut-fn (stub :invalidate-laskut)]
+                (let [application-ids (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       [application-fixtures/application-without-hakemusmaksu-exemption
+                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                        application-fixtures/application-without-hakemusmaksu-exemption])
+                      application-keys (map #(:key (application-store/get-application %)) application-ids)
+                      _ (payment-store/create-or-update-kk-application-payment!
+                          {:application-key      (first application-keys)
+                           :state                (:paid payment/all-states)
+                           :reason               nil
+                           :due-date             (time-format/unparse payment/default-time-format
+                                                                      (time/plus (time/today-at 12 0 0)
+                                                                                 (time/days 3)))
+                           :total-sum            payment/kk-application-payment-amount
+                           :maksut-secret        test-maksut-secret
+                           :required-at          "now()"
+                           :notification-sent-at nil
+                           :approved-at          "now()"})
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      payments (payment/get-raw-payments application-keys)
+                      paid-payments (filter #(= (:paid payment/all-states) (:state %)) payments)
+                      proxy-payments (filter #(= (:ok-by-proxy payment/all-states) (:state %)) payments)
+                      check-keys-fn (fn [keys] (= (set keys) (set (map :application-key proxy-payments))))]
+                  (should= 1 (count paid-payments))
+                  (should= 3 (count proxy-payments))
+                  (should-have-invoked :invalidate-laskut
+                                       {:with [:*
+                                               check-keys-fn]}))))
+
+          (it "should not call maksut payment invalidation when changing payments status to other state than ok-by-proxy"
+              (with-redefs [invalidate-laskut-fn (stub :invalidate-laskut)]
+                (let [application-ids (unit-test-db/init-db-fixture
+                                        form-fixtures/payment-exemption-test-form
+                                        [application-fixtures/application-without-hakemusmaksu-exemption
+                                         application-fixtures/application-without-hakemusmaksu-exemption])
+                      application-keys (map #(:key (application-store/get-application %)) application-ids)
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      payments (payment/get-raw-payments application-keys)
+                      awaiting-payments (filter #(= (:awaiting payment/all-states) (:state %)) payments)]
+                  (should= 2 (count awaiting-payments))
+                  (should-not-have-invoked :invalidate-laskut))))
 
           (it "should create a payment and e-mail sending job"
               (with-redefs [start-runner-job (stub :start-job)]
