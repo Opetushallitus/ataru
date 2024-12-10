@@ -377,6 +377,16 @@
   (fn [db]
     (get-in db [:application :send-update-link?-checkbox])))
 
+(re-frame/reg-sub
+  :application/information-request-send-reminder
+  (fn [db]
+    (get-in db [:application :information-request :send-reminder?])))
+
+(re-frame/reg-sub
+  :application/information-request-reminder-days
+  (fn [db]
+    (get-in db [:application :information-request :reminder-days])))
+
 (defn- haku-completely-processed?
   [haku]
   (= (:processed haku) (:application-count haku)))

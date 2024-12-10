@@ -25,6 +25,7 @@
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
+
 (defn- initial-state [connection information-request guardian?]
   (let [add-update-link? (:add-update-link information-request)]
     (when add-update-link?
