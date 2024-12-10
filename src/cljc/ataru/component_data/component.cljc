@@ -47,6 +47,24 @@
    :metadata   metadata
    :params     {}})
 
+(defn question-group-tutkinto [metadata]
+  {:fieldClass "questionGroup"
+   :fieldType  "tutkintofieldset"
+   :id         (util/component-id)
+   :label      {:fi "" :sv "" :en ""}
+   :children   []
+   :metadata   metadata
+   :params     {}})
+
+(defn question-group-embedded [metadata]
+  {:fieldClass "questionGroup"
+   :fieldType  "embedded"
+   :id         (util/component-id)
+   :label      {:fi "" :sv "" :en ""}
+   :children   []
+   :metadata   metadata
+   :params     {}})
+
 (defn dropdown-option
   ([] (dropdown-option nil))
   ([value]

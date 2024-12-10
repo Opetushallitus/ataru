@@ -14,6 +14,9 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
+            [ataru.hakija.components.tutkinnot :as tutkinnot]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -546,6 +549,46 @@
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
+(defn- generic-question-group [field-descriptor label row-count cannot-edits? lang]
+  [:div.application__question-group
+   (when-not (string/blank? label)
+     [:h3.application__question-group-heading label])
+   [scroll-to-anchor field-descriptor]
+   [:div
+    (doall
+      (for [idx (range (or row-count 1))]
+        ^{:key (str "question-group-row-" idx)}
+        [question-group-row
+         field-descriptor
+         idx
+         (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
+   (when (not (some deref cannot-edits?))
+     [:div.application__add-question-group-row
+      [:a {:href     "#"
+           :on-click (fn add-question-group-row [event]
+                       (.preventDefault event)
+                       (dispatch [:application/add-question-group-row field-descriptor]))}
+       [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
+       (tu/get-hakija-translation :add lang)]])])
+
+(defn- tutkinto-question-group [field-descriptor label row-count cannot-edits? lang]
+  [:div
+   [scroll-to-anchor field-descriptor]
+   [:div
+    (doall
+      (for [idx (range (or row-count 1))]
+        ^{:key (str "question-group-row-" idx)}
+        [tutkinnot/tutkinto-group label
+                                  field-descriptor
+                                  idx
+                                  (and (< 1 row-count) (not (some deref cannot-edits?)))
+                                  lang
+                                  (for [child (:children field-descriptor)]
+                                    ^{:key (str (:id child) "-" idx)}
+                                    [render-field child idx])]))
+    (when (not (some deref cannot-edits?))
+      [tutkinnot/add-tutkinto-button field-descriptor lang])]])
+
 (defn question-group [field-descriptor _]
   (let [languages     (subscribe [:application/default-languages])
         label         (util/non-blank-val (:label field-descriptor) @languages)
@@ -553,26 +596,10 @@
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
-    [:div.application__question-group
-     (when-not (string/blank? label)
-       [:h3.application__question-group-heading label])
-     [scroll-to-anchor field-descriptor]
-     [:div
-      (doall
-       (for [idx (range (or row-count 1))]
-         ^{:key (str "question-group-row-" idx)}
-         [question-group-row
-          field-descriptor
-          idx
-          (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
-     (when (not (some deref cannot-edits?))
-       [:div.application__add-question-group-row
-        [:a {:href     "#"
-             :on-click (fn add-question-group-row [event]
-                         (.preventDefault event)
-                         (dispatch [:application/add-question-group-row field-descriptor]))}
-         [:span.zmdi.zmdi-plus-circle.application__add-question-group-plus-sign]
-         (tu/get-hakija-translation :add lang)]])]))
+    (case (:fieldType field-descriptor)
+      "tutkintofieldset" (tutkinto-question-group field-descriptor label row-count cannot-edits? lang)
+      (generic-question-group field-descriptor label row-count cannot-edits? lang))))
+
 
 (defn row-wrapper [field-descriptor _]
   (into [:div.application__row-field-wrapper]
@@ -861,6 +888,70 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- visible-tutkinto-field? [field-descriptor]
+  (and @(subscribe [:application/visible? (keyword (:id field-descriptor))])
+       (not (get-in field-descriptor [:params :transparent]))))
+
+(defn tutkinnot-wrapper-field
+  [field-descriptor]
+  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
+        lang @(subscribe [:application/form-language])
+        always-show-itse-syotetyt? (r/atom false)]
+    (fn [field-descriptor]
+      (let [any-koski-tutkinnot? @(subscribe [:application/any-koski-tutkinnot?])
+            on-click-to-add-additional-itse-syotetyt (fn [event]
+                                                       (.preventDefault event)
+                                                       (reset! always-show-itse-syotetyt? true))]
+        [:div.application__wrapper-element
+         [:div.application__wrapper-heading
+          [:h2 label]
+          [scroll-to-anchor field-descriptor]]
+         (into [:div.application__wrapper-contents]
+               (for [child (:children field-descriptor)
+                     :when @(subscribe [:application/visible? (keyword (:id child))])]
+                 (if (ktm/is-tutkinto-configuration-component? child)
+                   [:div
+                    [:div
+                     (into [:div]
+                           (for [koski-item @(subscribe [:application/koski-tutkinnot])]
+                             (let [id (:id koski-item)
+                                   level (:level koski-item)
+                                   question-group-of-level (tutkinto-util/get-question-group-of-level child level)
+                                   answer-idx (tutkinto-util/get-tutkinto-idx level id)
+                                   checked? (some? answer-idx)
+                                   on-toggle (fn [event]
+                                               (.preventDefault event)
+                                               (if answer-idx
+                                                 (dispatch [:application/remove-question-group-row
+                                                            question-group-of-level
+                                                            answer-idx])
+                                                 (dispatch [:application/add-tutkinto-row
+                                                            question-group-of-level
+                                                            (tutkinto-util/id-field-of-level question-group-of-level level)
+                                                            (:id koski-item)])))]
+                               ^{:key id}
+                               [:div.application__tutkinto-group-container
+                                [:div
+                                 {:on-click on-toggle}
+                                 [tutkinnot/fixed-tutkinto-item koski-item id checked?]]
+                                (when checked?
+                                  (let [additional-followups (filter visible-tutkinto-field?
+                                                                     (:children question-group-of-level))]
+                                    (when (seq additional-followups)
+                                      [:div.application__form-multi-choice-followups-outer-container
+                                       {:tab-index 0}
+                                       [:div.application__form-multi-choice-followups-indicator]
+                                       (into [:div.application__tutkinto-entity-container]
+                                             (for [followup additional-followups]
+                                               (with-meta [render-field followup answer-idx]
+                                                          {:key (str (:id followup) "-" answer-idx)})))])))])))
+                     (when (and any-koski-tutkinnot? (not @always-show-itse-syotetyt?))
+                       [tutkinnot/add-button on-click-to-add-additional-itse-syotetyt lang])]
+                    (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))
+                      (for [followup (tutkinto-util/itse-syotetty-tutkinnot-content child)]
+                        (with-meta [render-field followup nil] {:key (:id followup)})))]
+                   (with-meta [render-field child nil] {:key (:id child)}))))]))))
+
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
   (match field-descriptor
@@ -871,8 +962,12 @@
           :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"} [question-group field-descriptor idx]
+         {:fieldClass "questionGroup"
+          :fieldType  "tutkintofieldset"} [question-group field-descriptor idx]
          {:fieldClass "wrapperElement"
           :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "tutkinnot"} [tutkinnot-wrapper-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
          {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]

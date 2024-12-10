@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [ataru.config :as config]
+            [ataru.constants :as constants]
             [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
@@ -11,6 +12,7 @@
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.ht-util :as ht-util]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
@@ -698,12 +700,14 @@
                                [_
                                 {:keys [secret virkailija-secret]}
                                 response]]
-  (let [{:keys [application person form]} (:body response)
+  (let [{:keys [application person form koski-tutkinnot]} (:body response)
         [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
                                             [:secret secret]
                                             [:virkailija-secret virkailija-secret])]
     (util/set-query-param "application-key" (:key application))
-    {:db       (-> db
+    {:db       (-> (if koski-tutkinnot
+                     (assoc-in db [:application :koski-tutkinnot] (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
+                     db)
                    (assoc-in [:application :application-identifier] (:application-identifier application))
                    (assoc-in [:application :editing?] true)
                    (assoc-in [:application secret-kwd] secret-val)
@@ -763,29 +767,42 @@
     (js/console.log (str "Handle oppija session error fetch, resp" response))
     {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
+(defn- set-tutkinto-fetch-status-as-needed
+  [db tutkinto-fetch-needed]
+  (if tutkinto-fetch-needed
+    db
+    (assoc-in db [:oppija-session :tutkinto-fetch-handled] true)))
+
 (reg-event-fx
   :application/handle-oppija-session-fetch
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
-    (let [session-data (get-in response [:body])]
+    (let [session-data (get-in response [:body])
+          requested-koski-levels (tutkinto-util/koski-tutkinto-levels-in-form (:form db))
+          tutkinto-fetch-needed (and requested-koski-levels
+                                     (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
+               (set-tutkinto-fetch-status-as-needed tutkinto-fetch-needed)
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
-                    (when (:logged-in session-data) [:application/start-oppija-session-polling])]})))
+                    (when (:logged-in session-data)
+                      [:application/start-oppija-session-polling]
+                      (when tutkinto-fetch-needed
+                        [:application/fetch-tutkinnot requested-koski-levels]))]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ session-data]]
-    (let [haku-oid             (get-in db [:form :tarjonta :haku-oid])
+    (let [haku-oid (get-in db [:form :tarjonta :haku-oid])
           can-submit-multiple? (get-in db [:form :tarjonta :can-submit-multiple-applications])
-          ssn                  (get-in session-data [:fields :ssn :value])
-          eidas-id             (get-in session-data [:eidas-id])
+          ssn (get-in session-data [:fields :ssn :value])
+          eidas-id (get-in session-data [:eidas-id])
           body {:haku-oid haku-oid
                 :ssn      ssn
                 :eidas-id eidas-id}]
@@ -984,7 +1001,7 @@
       (cond-> (assoc-in db [:application :answers id] answer)
               (some? limit-reached) (assoc-in [:application :answers id :limit-reached] limit-reached)))))
 
-(defn- set-empty-value-dispatch
+(defn set-empty-value-dispatch
   [group-idx field-descriptor]
   (match field-descriptor
          {:fieldType (:or "dropdown" "textField" "textArea")}

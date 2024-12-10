@@ -644,9 +644,15 @@
    :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ja täytä hakulomake"
                                                  :sv "Identifiera dig och fyll i ansökningsblanketten"
                                                  :en "Identify and fill in the application form"}
-   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
-                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
-                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically. You can modify your contact information on the application form."}
+   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
+                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten."
+                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically."}
+   :ht-tunnistaudu-ensin-tutkinto-fetch-notice  {:fi "Myös tutkintotietosi tuodaan lomakkeelle, jos tunnistaudut."
+                                                 :sv "SV: Myös tutkintotietosi tuodaan lomakkeelle, jos tunnistaudut."
+                                                 :en ""}
+   :ht-tunnistaudu-ensin-post-notice            {:fi "Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
+                                                 :sv "Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
+                                                 :en "You can modify your contact information on the application form."}
    :ht-tunnistaudu-ensin-text-2                 {:fi "Sinulla on tunnistautumisen jälkeen neljä tuntia aikaa täyttää ja lähettää hakulomake, minkä jälkeen istuntosi aikakatkaistaan."
                                                  :sv "Efter att du har identifierat dig har du fyra timmar på dig att fylla i och skicka din ansökningsblankett. Efter detta avbryts din session."
                                                  :en "Once you have completed identification, you have four hours to fill in and send the application form. The session will expire after four hours."}
@@ -730,7 +736,10 @@
                                                  :en "Suomi.fi."}
    :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
                                                  :sv "Ditt namn och födelsetid har hämtats till ansökningsblanketten via identifiering."
-                                                 :en "Your name and date of birth have been prefilled on the application form via identification."}})
+                                                 :en "Your name and date of birth have been prefilled on the application form via identification."}
+   :add-tutkinto                                {:fi "Lisää tutkinto"
+                                                 :sv "SV: Lisää tutkinto"
+                                                 :en ""}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -2075,6 +2084,9 @@
    :question-group                                           {:fi "Kysymysryhmä"
                                                               :sv "Frågegrupp"
                                                               :en "Question group"}
+   :question-group-tutkinto                                  {:fi "Kysymysryhmä (tutkintokokonaisuus)"
+                                                              :sv "SV: Kysymysryhmä (tutkintokokonaisuus)"
+                                                              :en "EN: Kysymysryhmä (tutkintokokonaisuus)"}
    :receiver                                                 {:fi "Vastaanottaja:"
                                                               :sv "Mottagare:"
                                                               :en "Receiver:"}
@@ -2585,7 +2597,10 @@
                                                               :en "selected"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
-                                                              :en "EN: Hakija ei ole maksuvelvollinen"}})
+                                                              :en "EN: Hakija ei ole maksuvelvollinen"}
+   :tutkinnot                                                {:fi "Tutkintotiedot Koski-Palvelusta"
+                                                              :sv "SV: Tutkintotiedot Koski-Palvelusta"
+                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}})
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"
@@ -2931,6 +2946,101 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}})
+
+(def koski-tutkinnot-texts
+  {:section-label                                 {:fi "Tutkinnot"
+                                                   :sv "SV: Tutkinnot"
+                                                   :en ""}
+   :section-description                           {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                                   :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                                   :en ""}
+   :field-list                                    {:fi "Tutkinto, Koulutusohjelma, Oppilaitos, Valmistumispäivä, Tutkintotodistus (liitepyyntö kirjautumattomille)."
+                                                   :sv "SV: Tutkinto, Koulutusohjelma, Oppilaitos, Valmistumispäivä, Tutkintotodistus (liitepyyntö kirjautumattomille)."
+                                                   :en ""}
+   :completed-study-question-label                {:fi "Hakijalle näytetään opintosuoritukset"
+                                                   :sv "SV: Hakijalle näytetään opintosuoritukset"
+                                                   :en ""}
+   :koski-update-policy-label                     {:fi "Koskesta tuodun tutkintotiedon päivittyminen"
+                                                   :sv "SV: Koskesta tuodun tutkintotiedon päivittyminen"
+                                                   :en ""}
+   :koski-update-option-only-once-label           {:fi "Tiedot säilyvät samoina kuin ne ovat hakemushetkellä"
+                                                   :sv "SV: Tiedot säilyvät samoina kuin ne ovat hakemushetkellä"
+                                                   :en ""}
+   :koski-update-option-allways-label             {:fi "Tiedot voivat päivittyä hakemuksen teon jälkeen, päätöksentekoon asti"
+                                                   :sv "SV: Tiedot voivat päivittyä hakemuksen teon jälkeen, päätöksentekoon asti"
+                                                   :en ""}
+   :info-label                                    {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                                   :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                                   :en ""}
+   :tutkintotaso-label                            {:fi "Tutkintotasot"
+                                                   :sv "SV: Tutkintotasot"
+                                                   :en ""}
+   :tutkintotaso-description                      {:fi "Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                                   :sv "SV: Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                                   :en ""}
+   :perusopetus-label                             {:fi "Perusopetus"
+                                                   :sv "SV: Perusopetus"
+                                                   :en ""}
+   :lukiokoulutus-label                           {:fi "Lukiokoulutus"
+                                                   :sv "SV: Lukiokoulutus"
+                                                   :en ""}
+   :yo-tutkinnot-label                            {:fi "Ylioppilastutkinnot"
+                                                   :sv "SV:Ylioppilastutkinnot"
+                                                   :en ""}
+   :amm-perustutkinnot-label                      {:fi "Ammatilliset perustutkinnot"
+                                                   :sv "SV: Ammatilliset perustutkinnot"
+                                                   :en ""}
+   :amm-tutkinnot-label                           {:fi "Ammattitutkinnot"
+                                                   :sv "SV: Ammattitutkinnot"
+                                                   :en ""}
+   :amm-erikoistutkinnot-label                    {:fi "Erikoisammattitutkinnot"
+                                                   :sv "SV: Erikoisammattitutkinnot"
+                                                   :en ""}
+   :alemmat-kk-tutkinnot-label                    {:fi "Alemmat korkeakoulututkinnot"
+                                                   :sv "SV: Alemmat korkeakoulututkinnot"
+                                                   :en ""}
+   :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
+                                                   :sv "SV: Ylemmät korkeakoulututkinnot"
+                                                   :en ""}
+   :lisensiaatti-tutkinnot-label                  {:fi "Lisensiaattitutkinnot"
+                                                   :sv "SV: Lisensiaattitutkinnot"
+                                                   :en ""}
+   :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
+                                                   :sv "SV: Tohtoritutkinnot"
+                                                   :en ""}
+   :itse-syotetty-tutkinnot-label                 {:fi "Suoritus, joka ei ole Koskessa"
+                                                   :sv "SV: Suoritus, joka ei ole Koskessa"
+                                                   :en ""}
+   :koski-followup-label                          {:fi "Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                                   :sv "SV: Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                                   :en ""}
+   :itse-syotetty-followup-label                  {:fi "Kysymykset"
+                                                   :sv "SV: Kysymykset"
+                                                   :en ""}
+   :itse-syotetty-tutkinto-group-label            {:fi "Tutkinto"
+                                                   :sv "SV: Tutkinto"
+                                                   :en ""}
+   :tutkinto-followup-label                       {:fi "Tutkinto"
+                                                   :sv "SV: Tutkinto"
+                                                   :en ""}
+   :koulutusohjelma-followup-label                {:fi "Koulutusohjelma"
+                                                   :sv "SV: Koulutusohjelma"
+                                                   :en ""}
+   :oppilaitos-followup-label                     {:fi "Oppilaitos"
+                                                   :sv "SV: Oppilaitos"
+                                                   :en ""}
+   :valmistumispvm-followup-label                 {:fi "Valmistumispäivä"
+                                                   :sv "SV: Valmistumispäivä"
+                                                   :en ""}
+   :itse-syotetty-valimistumispvm-infotext-label  {:fi "Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"
+                                                   :sv "SV: Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"
+                                                   :en ""}
+   :itse-syotetty-liitteet-followup-label         {:fi "Tutkintotodistus"
+                                                   :sv "SV: Tutkintotodistus"
+                                                   :en ""}
+   :itse-syotetty-liitteet-infotext-value         {:fi "Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
+                                                   :sv "SV: Tallenna todistuksesi joko pdf -muodossa tai kuvatiedostona (esim png tai jpeg)"
+                                                   :en ""}})
 
 (defn email-applied-error
   [email preferred-name]
