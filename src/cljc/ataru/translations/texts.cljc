@@ -2159,6 +2159,9 @@
    :sending-information-request                              {:fi "Täydennyspyyntöä lähetetään"
                                                               :sv "Begäran om komplettering skickas"
                                                               :en "Message has been sent"}
+   :information-request-send-reminder                        {:fi "Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
+                                                              :sv "SV Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
+                                                              :en "EN Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"}
    :set-haku-to-form                                         {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                               :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                               :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}

@@ -874,6 +874,16 @@
  (fn [db [_ message]]
    (assoc-in db [:application :information-request :message] message)))
 
+(reg-event-db
+  :application/toggle-information-request-send-reminder
+  (fn [db [_ send-reminder?]]
+    (assoc-in db [:application :information-request :send-reminder?] (not send-reminder?))))
+
+(reg-event-db
+  :application/set-information-request-reminder-days
+  (fn [db [_ days]]
+    (assoc-in db [:application :information-request :reminder-days] days)))
+
 (reg-event-fx
  :application/submit-information-request
  (fn [{:keys [db]} _]
