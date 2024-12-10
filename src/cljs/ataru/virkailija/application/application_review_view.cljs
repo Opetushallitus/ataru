@@ -804,6 +804,25 @@
    [:div.application-handling__information-request-submitted-checkmark]
    [:span.application-handling__information-request-submitted-text @(subscribe [:editor/virkailija-translation :information-request-sent])]])
 
+(defn- application-information-request-send-reminder []
+  (let [send-reminder @(subscribe [:application/information-request-send-reminder])]
+    [:div.application-handling__review-filters
+     [:input.application-handling__attachment-download-checkbox
+      {:id        "application-handling__information-request-send-reminder"
+       :type      "checkbox"
+       :checked   send-reminder
+       :on-change #(dispatch [:application/toggle-information-request-send-reminder (not send-reminder)])}]
+     [:label
+      {:for "application-handling__information-request-send-reminder"}
+      @(subscribe [:editor/virkailija-translation :information-request-send-reminder])]]))
+
+(defn- application-information-request-reminder-days []
+  (let [reminder-days @(subscribe [:application/information-request-reminder-days])
+        send-reminder @(subscribe [:application/information-request-send-reminder])
+        days-options (take 14 (iterate inc 1))]
+    (when send-reminder
+      [:div [:span reminder-days days-options]])))
+
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
@@ -822,6 +841,8 @@
                   [application-information-request-subject]
                   [application-information-request-message]
                   [application-information-request-contains-modification-link]
+                  [application-information-request-send-reminder]
+                  [application-information-request-reminder-days]
                   [application-information-request-submit-button])))
         [:div.application-handling__information-request-show-container-link
          [:a
