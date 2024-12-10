@@ -120,7 +120,7 @@
                    (-> form :name lang))
         tunnistaudu-ensin-texts (cond-> [(translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
                                         (tutkinto-util/koski-tutkinto-levels-in-form form)
-                                        (concat [" " (translations/get-hakija-translation :ht-tunnistaudu-ensin-tukinto-fetch-notice lang)])
+                                        (concat [" " (translations/get-hakija-translation :ht-tunnistaudu-ensin-tutkinto-fetch-notice lang)])
                                         true
                                         (concat [" " (translations/get-hakija-translation :ht-tunnistaudu-ensin-post-notice lang)]))]
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
