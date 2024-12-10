@@ -19,7 +19,7 @@
        (get-in koski-suoritus [:vahvistus :päivä])))
 
 (defn- is-perusopetus? [koski-opiskeluoikeus]
-  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")]
+  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])]
     (or (= "perusopetus" tutkinto-type) (= "aikuistenperusopetus" tutkinto-type))))
 
 (defn- parse-common-fields [koski-suoritus]
@@ -35,7 +35,7 @@
        (:suoritukset koski-opiskeluoikeus)))
 
 (defn- is-lukiokoulutus? [koski-opiskeluoikeus]
-  (= "lukiokoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")))
+  (= "lukiokoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])))
 
 (defn- parse-lukiokoulutukset [koski-opiskeluoikeus]
   (map (fn [suoritus] (-> (parse-common-fields suoritus)
@@ -44,11 +44,11 @@
        (:suoritukset koski-opiskeluoikeus)))
 
 (defn- is-yotutkinto? [koski-opiskeluoikeus]
-  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")]
-    (some? (some #(when (= tutkinto-type %) %) ["ylioppilastutkinto" "diatutkinto" "ebtutkinto"]))))
+  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])]
+    (some? (some #{tutkinto-type} ["ylioppilastutkinto" "diatutkinto" "ebtutkinto"]))))
 
 (defn- parse-yotutkinnot [koski-opiskeluoikeus]
-  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")]
+  (let [tutkinto-type (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])]
     (map (fn [suoritus] (cond-> (-> (parse-common-fields suoritus)
                                     (assoc :level "yo")
                                     (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi]))
@@ -63,12 +63,12 @@
          (:suoritukset koski-opiskeluoikeus))))
 
 (defn- is-ammatillinen? [koski-opiskeluoikeus]
-  (= "ammatillinenkoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")))
+  (= "ammatillinenkoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])))
 
 (defn- resolve-subtype-of-ammatillinen [koulutus-tyyppi-koodi]
-  (cond (some #(when (= koulutus-tyyppi-koodi %) %) ["1" "26" "4" "13"]) "amm-perus"
-        (some #(when (= koulutus-tyyppi-koodi %) %) ["12"]) "amm-erikois"
-        (some #(when (= koulutus-tyyppi-koodi %) %) ["11"]) "amm"))
+  (cond (some #{koulutus-tyyppi-koodi} ["1" "26" "4" "13"]) "amm-perus"
+        (some #{koulutus-tyyppi-koodi} ["12"]) "amm-erikois"
+        (some #{koulutus-tyyppi-koodi} ["11"]) "amm"))
 
 (defn- parse-ammatilliset [koski-opiskeluoikeus]
   (map (fn [suoritus] (-> (parse-common-fields suoritus)
@@ -79,13 +79,13 @@
        (:suoritukset koski-opiskeluoikeus)))
 
 (defn- is-korkeakoulututkinto? [koski-opiskeluoikeus]
-  (= "korkeakoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo] "")))
+  (= "korkeakoulutus" (get-in koski-opiskeluoikeus [:tyyppi :koodiarvo])))
 
 (defn- resolve-subtype-of-korkeakoulututkinto [virta-tyyppi-koodi]
-  (cond (some #(when (= virta-tyyppi-koodi %) %) ["1" "2"]) "kk-alemmat"
-        (some #(when (= virta-tyyppi-koodi %) %) ["3" "4"]) "kk-ylemmat"
-        (some #(when (= virta-tyyppi-koodi %) %) ["6"]) "lisensiaatti"
-        (some #(when (= virta-tyyppi-koodi %) %) ["7"]) "tohtori"))
+  (cond (some #{virta-tyyppi-koodi} ["1" "2"]) "kk-alemmat"
+        (some #{virta-tyyppi-koodi} ["3" "4"]) "kk-ylemmat"
+        (some #{virta-tyyppi-koodi} ["6"]) "lisensiaatti"
+        (some #{virta-tyyppi-koodi} ["7"]) "tohtori"))
 
 (defn- parse-korkeakoulututkinnot [koski-opiskeluoikeus]
   (let [tutkinto-koodi (get-in koski-opiskeluoikeus [:lisätiedot :virtaOpiskeluoikeudenTyyppi :koodiarvo])
@@ -126,7 +126,7 @@
 
 
 (defn- filter-by-levels [tutkinto requested-levels]
-  (some #(when (= (:level tutkinto) %) %) requested-levels))
+  (some #{(:level tutkinto)} requested-levels))
 
 (s/defn ^:always-validate parse-koski-tutkinnot :- [koski-schema/AtaruKoskiTutkinto]
   [requested-levels koski-opiskelu-oikeudet]
