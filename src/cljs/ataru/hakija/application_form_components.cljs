@@ -16,6 +16,7 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.hakija.components.tutkinnot :as tutkinnot]
             [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
@@ -915,8 +916,8 @@
                            (for [koski-item @(subscribe [:application/koski-tutkinnot])]
                              (let [id (:id koski-item)
                                    level (:level koski-item)
-                                   question-group-of-level (tutkinnot/get-question-group-of-level child level)
-                                   answer-idx (tutkinnot/get-tutkinto-idx level id)
+                                   question-group-of-level (tutkinto-util/get-question-group-of-level child level)
+                                   answer-idx (tutkinto-util/get-tutkinto-idx level id)
                                    checked? (some? answer-idx)
                                    on-toggle (fn [event]
                                                (.preventDefault event)
@@ -926,7 +927,7 @@
                                                             answer-idx])
                                                  (dispatch [:application/add-tutkinto-row
                                                             question-group-of-level
-                                                            (tutkinnot/id-field-of-level question-group-of-level level)
+                                                            (tutkinto-util/id-field-of-level question-group-of-level level)
                                                             (:id koski-item)])))]
                                ^{:key id}
                                [:div.application__tutkinto-group-container
@@ -947,7 +948,7 @@
                      (when (and any-koski-tutkinnot? (not @always-show-itse-syotetyt?))
                        [tutkinnot/add-button on-click-to-add-additional-itse-syotetyt lang])]
                     (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))
-                      (for [followup (tutkinnot/itse-syotetty-tutkinnot-content child)]
+                      (for [followup (tutkinto-util/itse-syotetty-tutkinnot-content child)]
                         (with-meta [render-field followup nil] {:key (:id followup)})))]
                    (with-meta [render-field child nil] {:key (:id child)}))))]))))
 

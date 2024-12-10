@@ -33,6 +33,7 @@
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
             [ataru.schema.maksut-schema :as maksut-schema]
+            [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -613,7 +614,8 @@
                  (s/optional-key :latest-form) form-schema/Form
                  :information-requests         [ataru-schema/InformationRequest]
                  (s/optional-key :master-oid)  (s/maybe s/Str)
-                 (s/optional-key :kk-payment) (s/maybe ataru-schema/KkPaymentState)}
+                 (s/optional-key :kk-payment) (s/maybe ataru-schema/KkPaymentState)
+                 (s/optional-key :koski-tutkinnot) (s/maybe [koski-schema/AtaruKoskiTutkinto])}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key
