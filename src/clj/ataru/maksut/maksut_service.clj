@@ -5,6 +5,7 @@
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
             [clojure.core.match :as match]
+            [clojure.string :as str]
             [schema.coerce :as c]))
 
 (defn throw-error [msg]
@@ -68,7 +69,7 @@
                  {:status 200 :body body}
                  (parse-and-validate body [maksut-schema/LaskuStatus])
 
-                 :else (throw-error (str "Could not invalidate laskut for keys " (apply str keys)
+                 :else (throw-error (str "Could not invalidate laskut for keys " (str/join ", " keys)
                                          " status: " (:status result)
                                          " response body: " (:body result))))))
 
