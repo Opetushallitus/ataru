@@ -21,7 +21,8 @@
   (fn [{db :db} [_ body {:keys [application-key]}]]
    (let [oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
          payments {:processing (oid-suffix-matcher "-1")
-                   :decision (oid-suffix-matcher "-2")}]
+                   :decision (or (oid-suffix-matcher "-2")
+                                 (first (filter #(= (:origin %) "astu") body)))}]
 
      {:db (assoc-in db [:payment :applications application-key] payments)})))
 
