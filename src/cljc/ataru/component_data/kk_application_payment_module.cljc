@@ -3,6 +3,8 @@
             [ataru.translations.texts :refer [kk-application-payment-module-texts]]
             [ataru.constants :refer [system-metadata]]))
 
+(def payment-module-keyword :kk-application-payment-module)
+(def payment-module-name (name payment-module-keyword))
 (def kk-application-payment-wrapper-key "kk-application-payment-wrapper")
 (def kk-application-payment-choice-key "kk-application-payment-option")
 (def asiakasnumero-migri-key "asiakasnumero-migri")
@@ -27,7 +29,7 @@
     :label (label-key kk-application-payment-module-texts)
     :params {
              :info-text
-              {:label (:attachment-info kk-application-payment-module-texts)}}))
+              {:value (:attachment-info kk-application-payment-module-texts)}}))
 
 (defn- deadline-field [metadata]
   (assoc (component/text-field metadata)
@@ -68,8 +70,8 @@
 (defn- continuous-residence-permit-option [metadata]
   {:label (:continuous-residence-option kk-application-payment-module-texts)
    :value (:continuous-residence-option-value kk-application-payment-document-options)
-   :followups [(assoc (component/info-element metadata)
-                 :label (:continuous-residence-info kk-application-payment-module-texts))
+   :followups [(merge (component/info-element metadata)
+                 {:text (:continuous-residence-info kk-application-payment-module-texts)})
                (deadline-field metadata)
                (asiakasnumero-migri metadata)
                (kk-option-attachment metadata "continuous-residence-permit-front" :continuous-permit-front-attachment)
@@ -103,7 +105,8 @@
   {:label (:no-document-option kk-application-payment-module-texts)
    :value (:no-document-option-value kk-application-payment-document-options)
    :followups [(merge (component/info-element metadata)
-                      {:label (:none-passport-info kk-application-payment-module-texts)})]})
+                      {:text (:none-passport-info kk-application-payment-module-texts)})
+               (kk-option-attachment metadata "none-passport-attachment" :passport-attachment)]})
 
 (defn- document-choice [metadata]
   (assoc (component/single-choice-button metadata)
@@ -126,5 +129,6 @@
 (defn kk-application-payment-module []
   (assoc (component/form-section system-metadata)
     :id kk-application-payment-wrapper-key
+    :module payment-module-keyword
     :label (:section-title kk-application-payment-module-texts)
     :children [(document-choice system-metadata)]))

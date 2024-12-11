@@ -152,6 +152,7 @@
             data-test-id-prefix (case module-name
                                   :person-info "henkilotietomoduuli"
                                   :arvosanat-peruskoulu "arvosanat-moduuli"
+                                  :kk-application-payment "kk-hakemusmaksu-moduuli"
                                   nil)]
         [:div.editor-form__component-wrapper
          [text-header-component/text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil

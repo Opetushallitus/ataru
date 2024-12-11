@@ -1725,9 +1725,9 @@
       {:db         (field-visibility/set-field-visibility
                     descendants-modified
                     field-descriptor)
-       :dispatch-n (mapv (fn [descendant]
+       :dispatch-n  (conj (mapv (fn [descendant]
                            [:application/run-rules (:rules descendant)])
-                         descendants)})))
+                         descendants) [:application/handle-section-visibility-conditions])})))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
