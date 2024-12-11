@@ -1,5 +1,6 @@
 (ns ataru.kk-application-payment.utils
   (:require [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.util :as util]
             [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.coerce :as coerce]
@@ -123,7 +124,7 @@
                       (person-info-module :onr-kk-application-payment)
                       section))
         payment-section (kk-application-payment-module)
-        index-of-person-info-module (.indexOf (map #(keyword (:module %)) sections) :person-info)
+        index-of-person-info-module (util/first-index-of #(= :person-info (keyword %)) (map :module sections))
         index-to-insert (if (<= 0 index-of-person-info-module)
                           (+ index-of-person-info-module 1)
                           2)
