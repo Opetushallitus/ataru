@@ -119,13 +119,20 @@
 (defn inject-payment-module-to-form [form]
   (let [sections (:content form)
         update-fn (fn[section]
-                    (if (= "person-info" (:module section))
+                    (if (and (some? (:module section))(= "person-info" (name (:module section))))
                       (person-info-module :onr-kk-application-payment)
                       section))
-        updated-content (map update-fn sections)
         payment-section (kk-application-payment-module)
+        index-of-person-info-module (.indexOf (map :module sections) "person-info")
+        index-of-person-info-module (if (<= 0 index-of-person-info-module)
+                                      index-of-person-info-module
+                                      (.indexOf (map :module sections) :person-info))
+        index-to-insert (if (<= 0 index-of-person-info-module)
+                          (+ index-of-person-info-module 1)
+                          2)
+        updated-content (map update-fn sections)
         ; lisätään maksumoduuli hakukohde ja henkilötieto-osioiden jälkeen:
-        updated-content (concat (take 2 updated-content) [payment-section] (drop 2 updated-content))]
+        updated-content (concat (take index-to-insert updated-content) [payment-section] (drop index-to-insert updated-content))]
     (assoc form :content updated-content)))
 
 (defn update-payment-module-in-form
