@@ -17,7 +17,29 @@
           (before
             (unit-test-db/nuke-kk-payment-data))
 
-          ; TODO test to check time zones for time stamps
+          (it "should store and retrieve due date in correct time zone"
+              (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                    due-date-stored (:due-date data)
+                    due-date-midday (time/plus (time/today-at 12 0 0)
+                                               (time/days payment/kk-application-payment-due-days))]
+                (should= (time/year due-date-stored) (time/year due-date-midday))
+                (should= (time/month due-date-stored) (time/month due-date-midday))
+                (should= (time/day due-date-stored) (time/day due-date-midday))))
+
+          (it "should do a roundtrip of store, retrieve and store due date without the date changing."
+              (let [old-data        (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                    due-date-old    (:due-date old-data)
+                    new-data        (store/create-or-update-kk-application-payment!
+                                      {:application-key "1.2.3.4.5.12"
+                                       :state           test-state-paid
+                                       :due-date        due-date-old})
+                    due-date-new    (:due-date new-data)]
+                (should= due-date-old due-date-new)))
+
+          (it "should do nothing to due-date if it is not set."
+              (let [old-data        (payment/set-application-fee-not-required-for-exemption "1.2.3.4.5.12" nil)
+                    due-date        (:due-date old-data)]
+                (should= due-date nil)))
 
           (it "should store payment state for application key"
               (let [payment-data {:application-key test-application-key :state test-state-awaiting
