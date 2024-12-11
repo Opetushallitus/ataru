@@ -71,7 +71,9 @@
   {:label (:continuous-residence-option kk-application-payment-module-texts)
    :value (:continuous-residence-option-value kk-application-payment-document-options)
    :followups [(assoc (component/info-element metadata)
-                 :label (:continuous-residence-info kk-application-payment-module-texts))
+                 :params {
+                          :info-text
+                          {:label (:continuous-residence-info kk-application-payment-module-texts)}})
                (deadline-field metadata)
                (asiakasnumero-migri metadata)
                (kk-option-attachment metadata "continuous-residence-permit-front" :continuous-permit-front-attachment)
@@ -104,9 +106,9 @@
 (defn- none-option [metadata]
   {:label (:no-document-option kk-application-payment-module-texts)
    :value (:no-document-option-value kk-application-payment-document-options)
-   :followups [(kk-option-attachment metadata "none-passport-attachment" :passport-attachment)
-               (merge (component/info-element metadata)
-                      {:label (:none-passport-info kk-application-payment-module-texts)})]})
+   :followups [(merge (component/info-element metadata)
+                      {:label (:none-passport-info kk-application-payment-module-texts)})
+               (kk-option-attachment metadata "none-passport-attachment" :passport-attachment)]})
 
 (defn- document-choice [metadata]
   (assoc (component/single-choice-button metadata)
