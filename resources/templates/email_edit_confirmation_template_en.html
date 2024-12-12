@@ -77,8 +77,9 @@
       {% if application-url|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          The changes to your application have been saved. You can change your application during the application
-          period with the following link: <a style="color: #0093C4;"
+          The changes to your application have been saved. You can change your application
+          {% if not no-hakuaika-mentions %}during the application period{% endif %}
+          with the following link: <a style="color: #0093C4;"
           href="{{application-url|safe}}">{{application-url|safe}}</a>. Do not
           share the link with others.
         </td>
@@ -88,7 +89,7 @@
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Changes to the application have been saved. You can view your application and make modification to it on <a style="color: #0093C4;"
-                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">My Studyinfo</a> during the application period.
+                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">My Studyinfo</a>{% if not no-hakuaika-mentions %} during the application period{% endif %}.
           If you are using a shared computer, please remember to log out of My Studyinfo.
         </td>
       </tr>
