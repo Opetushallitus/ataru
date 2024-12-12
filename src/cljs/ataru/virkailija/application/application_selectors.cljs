@@ -67,3 +67,6 @@
 
 (defn astu-form? [form]
   (= "payment-type-astu" (get-in form [:properties :payment :type])))
+
+(defn kk-application-payment-form? [form]
+  (= "payment-type-kk" (get-in form [:properties :payment :type])))
