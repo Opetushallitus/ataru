@@ -283,7 +283,6 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
-    ; TODO: do we need to also insert hakemusmaksu data here? Only used for virkailija hakemus browsing.
     (api/GET "/forms/latest-by-haku/:haku-oid" []
       :path-params [haku-oid :- s/Str]
       :return ataru-schema/FormWithContent

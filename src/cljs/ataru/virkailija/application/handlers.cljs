@@ -678,10 +678,15 @@
       (astu-form? form)
       (get-tutu-form? (:key form))))
 
+(defn- haku-has-kk-application-payment? [haku-oid db]
+  (let [haku (get-in db [:haut haku-oid])]
+    (:admission-payment-required? haku)))
+
 (reg-event-fx
  :application/handle-fetch-application
  (fn [{:keys [db]} [_ response]]
    (let [application-key            (-> response :application :key)
+         haku-oid                   (-> response :application :haku)
          form                       (:form response)
          response-with-parsed-times (parse-application-times response)
          db                         (-> db
@@ -694,7 +699,9 @@
                                          [:application/start-autosave])
                                        (when (not (get-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                          [:liitepyynto-information-request/get-deadlines application-key])
-                                       (when (form-has-payments? form)
+                                       (when (or (form-has-payments? form)
+                                                 (and haku-oid
+                                                      (haku-has-kk-application-payment? haku-oid db)))
                                          [:payment/fetch-payments application-key])
                                        [:application/get-application-change-history application-key]]
                                       (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)

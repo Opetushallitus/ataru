@@ -16,6 +16,7 @@
       (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
             raw      (map (fn [{:keys [reference status order_id origin]}]
                             (when-let [type (cond
+                                              (= origin "astu") :decision
                                               (ends-with? order_id "-1") :processing
                                               (ends-with? order_id "-2") :decision
                                               :else nil)]
@@ -41,9 +42,9 @@
                                              [:decision   "decision-fee-outstanding" "paid"] (toggle "decision-fee-paid")
                                              [:decision   "decision-fee-outstanding" "overdue"] (toggle "decision-fee-overdue")
                                              :else (log/warn "Invalid application&payment state combo, will not do anything" item))
-                               "astu" (match [app-status maksu-status]
-                                             ["decision-fee-outstanding" "paid"] (toggle "processed")
-                                             ["decision-fee-outstanding" "overdue"] (toggle "decision-fee-overdue")
+                               "astu" (match [type app-status maksu-status]
+                                             [:decision "decision-fee-outstanding" "paid"] (toggle "processed")
+                                             [:decision "decision-fee-outstanding" "overdue"] (toggle "decision-fee-overdue")
                                              :else (log/warn "Invalid application&payment state combo, will not do anything" item))
                                :else (log/warn "Not a tutu or astu invoice, will not do anything" item))]
               (when response (log/info "Process result:" response))
