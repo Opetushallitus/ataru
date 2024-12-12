@@ -17,7 +17,32 @@
           (before
             (unit-test-db/nuke-kk-payment-data))
 
-          ; TODO test to check time zones for time stamps
+          (it "should store and retrieve due date in correct time zone"
+              (let [data               (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                    due-date-stored    (:due-date data)
+                    due-date-generated (time/from-time-zone
+                                          (time/plus (time/today-at 23 59 0)
+                                                     (time/days payment/kk-application-payment-due-days))
+                                          (time/time-zone-for-id "Europe/Helsinki"))]
+                (should= due-date-stored due-date-generated)))
+
+          (it "should do a roundtrip of store, retrieve and store due date without the date changing."
+              (let [old-data        (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                    due-date-old    (:due-date old-data)
+                    new-data        (store/create-or-update-kk-application-payment!
+                                      {:application-key "1.2.3.4.5.12"
+                                       :state           test-state-paid
+                                       :due-date        due-date-old})
+                    due-date-new    (:due-date new-data)
+                    new-data-fetch  (first (store/get-kk-application-payments ["1.2.3.4.5.12"]))
+                    due-date-fetch  (:due-date new-data-fetch)]
+                (should= due-date-old due-date-new)
+                (should= due-date-old due-date-fetch)))
+
+          (it "should do nothing to due-date if it is not set."
+              (let [old-data        (payment/set-application-fee-not-required-for-exemption "1.2.3.4.5.12" nil)
+                    due-date        (:due-date old-data)]
+                (should= due-date nil)))
 
           (it "should store payment state for application key"
               (let [payment-data {:application-key test-application-key :state test-state-awaiting

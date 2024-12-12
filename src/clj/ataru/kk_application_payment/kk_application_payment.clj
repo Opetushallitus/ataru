@@ -53,8 +53,7 @@
 (defn parse-due-date
   "Convert due date retrieved from db to local date, interpreting it in correct time zone"
   [due-date]
-  (let [due-date-local (time/to-time-zone due-date (time/time-zone-for-id "Europe/Helsinki"))]
-    (time/local-date (time/year due-date-local) (time/month due-date-local) (time/day due-date-local))))
+    (time/local-date (time/year due-date) (time/month due-date) (time/day due-date)))
 
 (defn maksut-reference->maksut-order-id
   "Maksut order id is in format KKHA1234 where 1234 is the unique component of application key/oid"
