@@ -15,10 +15,16 @@
 (declare yesql-mark-reminder-sent!)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
-(defn due-date-to-finnish-tz [payment]
+
+; Yesql converts PostgreSQL dates to datetimes automatically - and in that case the
+; true due datetime is the last minute of the day in Helsinki time zone. This also
+; helps to sidestep various automatic UTC conversion issues in the frontend...
+(defn due-date-to-full-time-in-finnish-tz [payment]
   (if-let [due-date (:due-date payment)]
     (assoc payment :due-date
-                   (time/to-time-zone due-date (time/time-zone-for-id "Europe/Helsinki")))
+                   (time/to-time-zone
+                       (time/plus due-date (time/hours 23) (time/minutes 59))
+                       (time/time-zone-for-id "Europe/Helsinki")))
     payment))
 
 (defn- exec-db
@@ -38,19 +44,19 @@
   []
   (->> (exec-db :db yesql-get-awaiting-kk-application-payments {})
        (map ->kebab-case-kw)
-       (map due-date-to-finnish-tz)))
+       (map due-date-to-full-time-in-finnish-tz)))
 
 (defn get-kk-application-payments-history
   [application-keys]
   (->> (exec-db :db yesql-get-kk-application-payments-history-for-application-keys {:application_keys application-keys})
        (map ->kebab-case-kw)
-       (map due-date-to-finnish-tz)))
+       (map due-date-to-full-time-in-finnish-tz)))
 
 (defn get-kk-application-payments
   [application-keys]
   (->> (exec-db :db yesql-get-kk-application-payments-for-application-keys {:application_keys application-keys})
        (map ->kebab-case-kw)
-       (map due-date-to-finnish-tz)))
+       (map due-date-to-full-time-in-finnish-tz)))
 
 (defn create-or-update-kk-application-payment!
   [{:keys [application-key state reason due-date total-sum maksut-secret
@@ -65,4 +71,4 @@
                                                            :reminder_sent_at     reminder-sent-at
                                                            :approved_at          approved-at})
        (->kebab-case-kw)
-       (due-date-to-finnish-tz)))
+       (due-date-to-full-time-in-finnish-tz)))
