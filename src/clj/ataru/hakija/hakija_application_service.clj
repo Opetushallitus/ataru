@@ -393,7 +393,7 @@
 
       (and (:haku application)
            (:hakukohde application)
-           (hakukohteet-are-valid? final-answer-hakukohteet hakukohteet))
+           (not (hakukohteet-are-valid? final-answer-hakukohteet hakukohteet)))
       {:passed? false
        :failures ["Hakukohteet contain invalid members"]
        :key  (:key latest-application)
