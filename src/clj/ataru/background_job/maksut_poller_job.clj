@@ -15,21 +15,25 @@
 
       (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
             raw      (map (fn [{:keys [reference status order_id origin]}]
-                            (when-let [type (cond
+                            (if-let [type (cond
                                               (= origin "astu") :decision
                                               (ends-with? order_id "-1") :processing
                                               (ends-with? order_id "-2") :decision
                                               :else nil)]
-                              (when-let [key-match (find key-state reference)]
+                              (if-let [key-match (find key-state reference)]
                                 {:reference reference
                                  :maksu-status (name status)
                                  :type type
                                  :app-status (val key-match)
-                                 :origin origin})))
+                                 :origin origin}
+                                (log/warn "Key-match not found" reference order_id origin status))
+                              (log/warn "Unknown type" reference order_id origin status)))
                           terminal)
             items    (filter some? raw)]
         (log/info "Out of which in terminal-state are" (count terminal) "invoices")
         (log/info (pr-str "Invoices" items))
+        (when (not= (count terminal) (count items))
+          (log/warn "Terminal invoices" terminal))
         (doseq [item items]
           (let [{:keys [reference origin type app-status maksu-status]} item
                 toggle   #(application-service/payment-poller-processing-state-change application-service reference %)
