@@ -384,7 +384,7 @@
        :key  (:key latest-application)
        :code :internal-server-error}
 
-      (and (:hakukohde application)
+      (and (seq (:hakukohde application))
            (empty? (:haku application)))
       {:passed? false
        :failures ["Haku must be specified also when hakukohde is"]
@@ -395,7 +395,7 @@
            (:hakukohde application)
            (not (hakukohteet-are-valid? final-answer-hakukohteet hakukohteet)))
       {:passed? false
-       :failures ["Hakukohteet contain invalid members"]
+       :failures ["Hakukohteet contains invalid members"]
        :key  (:key latest-application)
        :code :internal-server-error}
 
