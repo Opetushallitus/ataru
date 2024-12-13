@@ -2585,7 +2585,7 @@
                                                               :en "selected"}
    :payment-not-checked                                      {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
                                                               :sv "SV: Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
-                                                              :en "EN: Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"}
+                                                              :en "Applicant payment liability unknown"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
                                                               :en "EN: Hakija ei ole maksuvelvollinen"}})
@@ -2723,7 +2723,7 @@
    :eligibility-state            {:fi "Hakukelpoisuus"
                                   :sv "Ansökningsbehörighet"
                                   :en "Eligibility"}
-   :payment-obligation           {:fi "Maksuvelvollisuus"
+   :payment-obligation           {:fi "Lukuvuosimaksuvelvollisuus"
                                   :sv "Betalningsskyldighet"
                                   :en "Obligated to pay"}
    :selection-state              {:fi "Valinta"
@@ -2774,20 +2774,20 @@
    :attachments-tab-info         {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
                                   :sv "Alla uppgifter om bilagor syns nödvändigtvis inte om läroanstalten inte sparat uppgifterna."
                                   :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}
-   :kk-application-payment       {:fi "Hakemusmaksun tila"
-                                  :sv "SV: Hakemusmaksun tila"
-                                  :en "Application payment state"}
+   :kk-application-payment       {:fi "Hakemusmaksu"
+                                  :sv "Ansökningsavgift"
+                                  :en "Application fee"}
    :not-required                 {:fi "Ei vaadittu"
                                   :sv "SV: Ei vaadittu"
                                   :en "Not required"}
-   :awaiting                     {:fi "Odottaa käsittelyä"
-                                  :sv "SV: Odottaa käsittely"
-                                  :en "Awaiting processing"}
-   :ok-by-proxy                  {:fi "ok-by-proxy"
-                                  :sv "ok-by-proxy"
-                                  :en "ok-by-proxy"}
+   :awaiting                     {:fi "Odottaa maksua"
+                                  :sv "SV: Odottaa maksua"
+                                  :en "Awaiting payment"}
+   :ok-by-proxy                  {:fi "Maksettu toisessa haussa"
+                                  :sv "SV: Maksettu toisessa haussa"
+                                  :en "Paid in another application round"}
    :paid                         {:fi "Maksettu"
-                                  :sv "SV: Maksettu"
+                                  :sv "Betalt"
                                   :en "Paid"}})
 
 (def tutu-decision-email
