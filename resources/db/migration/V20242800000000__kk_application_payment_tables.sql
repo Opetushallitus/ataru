@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS kk_application_payment_states;
 -- Store payment info related to individual applications.
 -- Use history table with automatic update triggers.
 
-CREATE TABLE kk_application_payments
+CREATE TABLE IF NOT EXISTS kk_application_payments
 (
     id                   serial PRIMARY KEY,
     application_key      varchar(40) UNIQUE,
@@ -37,19 +37,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER sync_lastmod
+CREATE OR REPLACE TRIGGER sync_lastmod
 BEFORE UPDATE ON kk_application_payments
 FOR EACH ROW EXECUTE PROCEDURE update_payment_modified_at();
 
 -- Also update application modified at in sync whenever payment data changes
-CREATE TRIGGER set_application_modified_time_on_kk_application_payment_update
+CREATE OR REPLACE TRIGGER set_application_modified_time_on_kk_application_payment_update
     AFTER INSERT OR UPDATE OR DELETE
     ON kk_application_payments
     FOR EACH ROW
 EXECUTE PROCEDURE update_application_modified_time();
 
 -- Automatic audit history for payment changes.
-CREATE TABLE kk_application_payments_history
+CREATE TABLE IF NOT EXISTS kk_application_payments_history
 (
     id                   serial PRIMARY KEY,
     application_key      varchar(40),
@@ -99,12 +99,12 @@ begin
 end;
 $$ language plpgsql;
 
-CREATE TRIGGER update_kk_application_payments
+CREATE OR REPLACE TRIGGER update_kk_application_payments
 AFTER UPDATE ON kk_application_payments
 FOR EACH ROW
 EXECUTE PROCEDURE kk_application_payments_history_trigger();
 
-CREATE TRIGGER delete_kk_application_payments
+CREATE OR REPLACE TRIGGER delete_kk_application_payments
 AFTER DELETE ON kk_application_payments
 FOR EACH ROW
 EXECUTE PROCEDURE kk_application_payments_history_trigger();
