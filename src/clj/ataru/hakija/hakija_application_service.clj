@@ -330,6 +330,9 @@
         ; halutaan että kahdessa kohtaa (juuressa, answers-osioissa) olevien hakukohteiden järjestys on aina synkassa
         ; koska answer-osion muutokset validoidaan käytetään sitä masterina
         final-answer-hakukohteet      (:value (first (filter #(= (:key %) "hakukohteet") (:answers final-application))))
+        hakukohteet-are-valid?        (fn [kohteet real-kohteet]
+                                        (let [real-oids (set (map :oid real-kohteet))]
+                                          (every? #(contains? real-oids %) kohteet)))
         applied-hakukohteet           (filter #(contains? (set final-answer-hakukohteet) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
@@ -378,6 +381,21 @@
            (empty? (:hakukohde application)))
       {:passed? false
        :failures ["Hakukohde must be specified"]
+       :key  (:key latest-application)
+       :code :internal-server-error}
+
+      (and (seq (:hakukohde application))
+           (empty? (:haku application)))
+      {:passed? false
+       :failures ["Haku must be specified also when hakukohde is"]
+       :key  (:key latest-application)
+       :code :internal-server-error}
+
+      (and (:haku application)
+           (:hakukohde application)
+           (not (hakukohteet-are-valid? final-answer-hakukohteet hakukohteet)))
+      {:passed? false
+       :failures ["Hakukohteet contains invalid members"]
        :key  (:key latest-application)
        :code :internal-server-error}
 
