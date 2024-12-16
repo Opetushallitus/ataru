@@ -21,9 +21,9 @@
   (try
     (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")}))]
       (do
-        (log/debug "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
+        (log/info "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
         (start-maksut-poller-job application-service maksut-service job-runner apps))
-      (log/debug "No applications in need of Maksut-polling found"))
+      (log/info "No applications in need of Maksut-polling found"))
     (catch Exception e
       (log/error e "Maksut polling failed"))))
 

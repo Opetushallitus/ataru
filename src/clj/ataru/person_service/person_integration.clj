@@ -14,12 +14,16 @@
    [ataru.cache.cache-service :as cache]
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
+   [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
    [yesql.core :refer [defqueries]])
   (:import [java.util.concurrent Executors TimeUnit]))
 
 (declare yesql-update-person-info-as-in-person!)
 (declare yesql-update-person-info-as-in-application!)
 (defqueries "sql/person-integration-queries.sql")
+
+(defn- start-jobs-for-kk-application-payments [job-runner application-id]
+  (kk-payment-job/start-update-kk-payment-status-for-application-id-job job-runner application-id))
 
 (defn- start-jobs-for-person [job-runner person-oid]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -66,6 +70,7 @@
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
+      (start-jobs-for-kk-application-payments job-runner application-id)
       (log/info "Started person info update job for application" application-id)
       oid)
     (catch IllegalArgumentException e

@@ -1091,6 +1091,16 @@
       (haku/toisen-asteen-yhteishaku? (get haut selected-haku-oid)))))
 
 (re-frame/reg-sub
+  :application/kk-application-payment-haku-selected?
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[selected-haku-oid haut]]
+    (and
+      (not (nil? selected-haku-oid))
+      (:admission-payment-required? (get haut selected-haku-oid)))))
+
+(re-frame/reg-sub
   :application/toisen-asteen-yhteishaku-oid?
   (fn [db [_ haku-oid]]
     (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))

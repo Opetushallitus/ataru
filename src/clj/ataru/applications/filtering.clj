@@ -4,6 +4,19 @@
             [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]))
 
+(defn- filter-by-kk-payment-states
+  [application states]
+  (let [not-checked? (contains? states "not-checked")]
+    (cond
+      (nil? states)
+      true
+
+      (and not-checked? (nil? (:kk-payment-state application)))
+      true
+
+      :else
+      (contains? states (:kk-payment-state application)))))
+
 (defn- filter-by-attachment-review
   [application selected-hakukohteet states-to-include]
   (or (empty? (:hakukohde application))
@@ -96,13 +109,17 @@
       (-> filters :only-identified :unidentified))))
 
 (defn filter-applications
-  [applications {:keys [selected-hakukohteet attachment-states-to-include processing-states-to-include filters]}]
+  [applications {:keys [selected-hakukohteet attachment-states-to-include
+                                         processing-states-to-include filters]}]
   (let [selected-hakukohteet-set         (when selected-hakukohteet (set selected-hakukohteet))
         applications-with-requirements   (map
-                                           #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
+                                           #(assoc % :application-hakukohde-reviews
+                                                     (application-states/get-all-reviews-for-all-requirements %))
                                            applications)
         processing-states-to-include-set (set processing-states-to-include)
         attachment-states-to-include-set (set attachment-states-to-include)
+        kk-payment-states-to-include-set (when (:kk-application-payment filters)
+                                           (parse-enabled-filters filters :kk-application-payment))
         with-ssn?                        (-> filters :only-ssn :with-ssn)
         without-ssn?                     (-> filters :only-ssn :without-ssn)
         identified?                      (-> filters :only-identified :identified)
@@ -118,6 +135,7 @@
           (filter-by-ssn application with-ssn? without-ssn?)
           (filter-by-yksiloity application identified? unidentified?)
           (filter-by-active application active? passive?)
+          (filter-by-kk-payment-states application kk-payment-states-to-include-set)
           (or
             all-base-educations-enabled?
             (filter-by-base-education application (:base-education filters)))

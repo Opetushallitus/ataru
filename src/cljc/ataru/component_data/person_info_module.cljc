@@ -3,7 +3,11 @@
             [ataru.util :as util]
             [ataru.translations.texts :refer [person-info-module-texts general-texts]]
             [clojure.walk]
-            [com.rpl.specter :refer [select walker]]))
+            [com.rpl.specter :refer [select walker]]
+            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
+            [ataru.constants :refer [system-metadata]]))
+
+(def person-info-module-keys {:onr "onr" :onr-2nd "onr-2nd" :onr-kk-application-payment "onr-kk-application-payment" :muu "muu"})
 
 ; validators defined in ataru.hakija.application-validators
 
@@ -60,6 +64,23 @@
                                  :options         []
                                  :id              :nationality
                                  :validators      [:required]
+                                 :rules           (if gender?
+                                                    {:toggle-ssn-based-fields nil}
+                                                    {:toggle-ssn-based-fields-without-gender nil})
+                                 :koodisto-source {:uri "maatjavaltiot2" :version 2 :default-option "Suomi"}})]})))
+
+(defn ^:private nationality-component-for-application-payment
+  [metadata gender?]
+  (-> (component/question-group metadata)
+      (merge {:children [(merge (dissoc (component/dropdown metadata) :validators)
+                                {:label           (:nationality person-info-module-texts)
+                                 :options         []
+                                 :id              :nationality
+                                 :validators      [:required]
+                                 :section-visibility-conditions [{:section-name kk-application-payment-wrapper-key
+                                                                  :condition {:comparison-operator "="
+                                                                              :data-type "str"
+                                                                              :answer-compared-to "246"}}]
                                  :rules           (if gender?
                                                     {:toggle-ssn-based-fields nil}
                                                     {:toggle-ssn-based-fields-without-gender nil})
@@ -249,6 +270,24 @@
    (city-component metadata)
    (native-language-section metadata)])
 
+(defn onr-kk-application-payment-person-info-module [metadata]
+  [(first-name-section metadata)
+   (last-name-component metadata)
+   (nationality-component-for-application-payment metadata true)
+   (have-finnish-ssn-component metadata true)
+   (ssn-birthdate-gender-wrapper metadata)
+   (birthplace metadata)
+   (passport-number metadata)
+   (national-id-number metadata)
+   (email-component metadata)
+   (phone-component metadata)
+   (country-of-residence-component metadata)
+   (street-address-component metadata)
+   (postal-office-section metadata)
+   (home-town-component metadata)
+   (city-component metadata)
+   (native-language-section metadata)])
+
 (defn onr-2nd-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
@@ -285,25 +324,22 @@
   ([]
    (person-info-module :onr))
   ([version]
-  (let [metadata {:created-by  {:name "system"
-                                :oid  "system"
-                                :date "1970-01-01T00:00:00Z"}
-                  :modified-by {:name "system"
-                                :oid  "system"
-                                :date "1970-01-01T00:00:00Z"}}]
-    (merge (component/form-section metadata)
-           {:label           (:label person-info-module-texts)
-            :label-amendment (:label-amendment person-info-module-texts)
-            :id              (name version)
-            :children        (cond
-                               (= version :muu)
-                               (muu-person-info-module metadata)
+  (merge (component/form-section system-metadata)
+         {:label           (:label person-info-module-texts)
+          :label-amendment (:label-amendment person-info-module-texts)
+          :id              (version person-info-module-keys)
+          :children        (cond
+                             (= version :muu)
+                             (muu-person-info-module system-metadata)
 
-                               (= version :onr-2nd)
-                               (onr-2nd-person-info-module metadata)
+                             (= version :onr-2nd)
+                             (onr-2nd-person-info-module system-metadata)
 
-                               :else (onr-person-info-module metadata))
-            :module          :person-info}))))
+                             (= version :onr-kk-application-payment)
+                             (onr-kk-application-payment-person-info-module system-metadata)
+
+                             :else (onr-person-info-module system-metadata))
+          :module          :person-info})))
 
 
 (def person-info-questions

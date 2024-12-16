@@ -7,6 +7,7 @@
             [ataru.virkailija.editor.demo.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
+            [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [reagent.dom :as r-dom]
@@ -230,6 +231,12 @@
 (defn- in-language [term lang]
   (util/non-blank-val term [lang :fi :sv :en]))
 
+(defn- requires-kk-application-payment-label [haku]
+  (let [label @(subscribe [:editor/virkailija-translation :requires-kk-application-payment])]
+    (when (:admission-payment-required? haku)
+      [:div.editor-form__requires-kk-application-payment
+       [:span [:i.zmdi.zmdi-alert-triangle] (str " " label)]])))
+
 (defn- used-in-haku-list-haku-name [haku]
   (let [lang @(subscribe [:editor/virkailija-lang])]
     [:div.editor-form__used-in-haku-list-haku-name
@@ -287,6 +294,7 @@
         ^{:key (str "haku-" (:oid haku))}
         [:li
          [used-in-haku-list-haku-name haku]
+         [requires-kk-application-payment-label haku]
          [haku-preview-link haku]]))]])
 
 (defn- form-not-in-use-in-hakus [form-key]
@@ -397,6 +405,90 @@
     {:for id}
     @(subscribe [:editor/virkailija-translation :only-yhteishaku])]]))
 
+(defn- lomakkeeseen-liittyy-maksutoiminto-component
+  []
+  (let [id                      "toggle-lomakkeeseen-liittyy-maksutoiminto"
+        maksutiedot             @(subscribe [:editor/maksutiedot])
+        maksutoiminto?          (not (empty? maksutiedot))
+        superuser?              @(subscribe [:editor/superuser?])
+        disabled?               (or @(subscribe [:editor/form-locked?])
+                                    (not superuser?)
+                                    (= (:type maksutiedot) "payment-type-kk"))]
+    [:div
+     [:div.editor-form__checkbox-with-label
+      [:input.editor-form__checkbox
+       {:id        id
+        :checked   maksutoiminto?
+        :type      "checkbox"
+        :disabled  disabled?
+        :on-change #(dispatch [:editor/toggle-lomakkeeseen-liittyy-maksutoiminto])
+        :data-test-id "toggle-maksutoiminto"}]
+      [:label.editor-form__checkbox-label
+       {:for id}
+       @(subscribe [:editor/virkailija-translation :lomakkeeseen-liittyy-maksutoiminto])]]
+     (when maksutoiminto?
+       [:div.editor-form__maksutoiminto-wrapper
+        [:div.editor-form__checkbox-with-label
+         [:input.editor-form__radio
+          {:type      "radio"
+           :value     "payment-type-tutu"
+           :checked   (= (:type maksutiedot) "payment-type-tutu")
+           :id        "maksutyyppi-tutu-radio"
+           :disabled  disabled?
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-tutu"])
+           :data-test-id "maksutyyppi-tutu-radio"}]
+         [:label.editor-form__checkbox-label
+          {:for   "maksutyyppi-tutu-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-tutu-radio])]]
+        (when (= (:type maksutiedot) "payment-type-tutu")
+          [:div.editor-form__payment-properties-wrapper
+           [:div.editor-form__text-field-wrapper
+            [:label.editor-form__component-item-header
+             @(subscribe [:editor/virkailija-translation :kasittelymaksu-input])]
+            [:input.editor-form__text-field
+             {:data-test-id "tutu-processing-fee-input"
+              :type         "number"
+              :value        (:processing-fee maksutiedot)
+              :required     true
+              :disabled     disabled?
+              :on-change    #(dispatch [:editor/change-processing-fee (.-value (.-target %))])}]]])
+        [:div.editor-form__checkbox-with-label
+         [:input.editor-form__radio
+          {:type      "radio"
+           :value     "payment-type-astu"
+           :checked   (= (:type maksutiedot) "payment-type-astu")
+           :id        "maksutyyppi-astu-radio"
+           :disabled  disabled?
+           :on-change #(dispatch [:editor/change-maksutyyppi "payment-type-astu"])
+           :data-test-id "maksutyyppi-astu-radio"}]
+         [:label.editor-form__checkbox-label
+          {:for   "maksutyyppi-astu-radio"}
+          @(subscribe [:editor/virkailija-translation :maksutyyppi-astu-radio])]]
+        (when (= (:type maksutiedot) "payment-type-astu")
+          [:div.editor-form__payment-properties-wrapper
+           [:div.editor-form__text-field-wrapper
+            [:label.editor-form__component-item-header
+             @(subscribe [:editor/virkailija-translation :vat-input])]
+            [:input.editor-form__text-field
+             {:data-test-id "astu-vat-input"
+              :type         "number"
+              :value        (:vat maksutiedot)
+              :required     true
+              :disabled     disabled?
+              :on-change    #(dispatch [:editor/change-vat (.-value (.-target %))])}]]
+           [:div.editor-form__text-field-wrapper
+            [:label.editor-form__component-item-header
+             @(subscribe [:editor/virkailija-translation :order-id-prefix-input])]
+            [:select.editor-form__select
+             {:data-test-id "astu-order-id-prefix-input"
+              :value        (:order-id-prefix maksutiedot)
+              :required     true
+              :disabled     disabled?
+              :on-change    #(dispatch [:editor/change-order-id-prefix (.-value (.-target %))])}
+             (map
+               #(list [:option {:value %} %])
+               astu-order-id-prefixes)]]])])]))
+
 (defn- close-form-component
   []
   (let [id           "toggle-close-form"
@@ -414,19 +506,23 @@
       @(subscribe [:editor/virkailija-translation :close-form])]]))
 
 (defn- properties []
-  [:div.editor-form__component-wrapper
-   [:div.editor-form__header-wrapper
-    [:header.editor-form__component-header {:data-test-id "properties-header"}
-     [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
-   [:div.editor-form__component-content-wrapper
-    [:div.editor-form__module-fields
-     [allow-only-yhteishaku-component]
-     [allow-hakeminen-tunnistautuneena-component]
-     [close-form-component]]]
-   (when @(subscribe [:editor/show-demo-config])
-    [:div.editor-form__component-content-wrapper
-     [:div.editor-form__module-fields
-      [demo-validity]]])])
+  (let [form-key              @(subscribe [:editor/selected-form-key])
+        form-used-in-hakus    @(subscribe [:editor/form-used-in-hakus form-key])
+        kk-payments-required? (some true? (map :admission-payment-required? form-used-in-hakus))]
+    [:div.editor-form__component-wrapper
+     [:div.editor-form__header-wrapper
+      [:header.editor-form__component-header {:data-test-id "properties-header"}
+       [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
+     [:div.editor-form__component-content-wrapper
+      [:div.editor-form__module-fields
+       [allow-only-yhteishaku-component]
+       [allow-hakeminen-tunnistautuneena-component]
+       (when-not kk-payments-required? [lomakkeeseen-liittyy-maksutoiminto-component])
+       [close-form-component]]]
+     (when @(subscribe [:editor/show-demo-config])
+       [:div.editor-form__component-content-wrapper
+        [:div.editor-form__module-fields
+         [demo-validity]]])]))
 
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container

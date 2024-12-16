@@ -7,7 +7,7 @@
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts email-link-section-texts tutu-decision-email]]
+            [ataru.translations.texts :refer [email-default-texts email-link-section-texts tutu-decision-email astu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -258,7 +258,8 @@
                                           :content-ending             content-ending
                                           :attachments-without-answer attachments-without-answer
                                           :kouta-attachments-by-type  attachments-info-from-kouta
-                                          :signature                  signature}
+                                          :signature                  signature
+                                          :no-hakuaika-mentions       (or (email-util/tutu-form? form) (email-util/astu-form? form))}
          applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
          render-file-fn                  (fn [template-params]
@@ -309,26 +310,36 @@
                  false
                  nil))
 
-(defn create-tutu-decision-email
-  [application-id message payment-url]
-  (let [application                     (application-store/get-application application-id)
-        template-name                   (fn [_] "templates/tutu_decision_email_template.html")
+(defn decision-info-email [order-id-prefix]
+  (case order-id-prefix
+    "OTR" "oikeustulkkirekisteri@oph.fi"
+    "AKR" "auktoris.lautakunta@oph.fi"
+    "recognition@oph.fi"))
+
+(defn create-decision-email
+  [params]
+  (let [origin                          (:origin params)
+        application                     (application-store/get-application (:application-id params))
+        template-name                   (fn [_] (case origin
+                                                  "tutu" "templates/tutu_decision_email_template.html"
+                                                  "astu" "templates/astu_decision_email_template.html"))
         lang                            (keyword (:lang application))
         applier-recipients              (->> (:answers application)
                                              (filter #(= "email" (:key %)))
                                              (map :value))
         translations                    (reduce-kv #(assoc %1 %2 (get %3 lang))
                                                    {}
-                                                   tutu-decision-email)
+                                                   (case origin
+                                                     "tutu" tutu-decision-email
+                                                     "astu" astu-decision-email))
         template-params                 (merge
-                                         {:application-oid            (:key application)
-                                          :payment-url                payment-url
-                                          :message                    (->safe-html message)
-                                          :decision-info-email        "recognition@oph.fi"}
-                                         translations)
-        subject                         (str (:subject-prefix translations) ": " (:header translations))
+                                          params
+                                          translations
+                                          {:decision-info-email (decision-info-email (:order-id-prefix params))})
+        subject                         (case origin
+                                          "tutu" (str (:subject-prefix translations) ": " (:header translations))
+                                          "astu" (:subject translations))
         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
         render-file-fn                  (fn [template-params]
                                           (selmer/render-file (template-name lang) template-params))]
     (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
-

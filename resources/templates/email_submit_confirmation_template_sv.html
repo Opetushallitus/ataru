@@ -112,7 +112,7 @@
         <td style="padding-left: 20px; padding-top: 20px;">
           Du kan granska och ändra din ansökan i tjänsten <a style="color: #0093C4;"
                                                      href="{{oma-opintopolku-link|safe}}" target="_blank">Min Studieinfo</a>.
-          Du kan göra ändringarna i ansökan under ansökningstiden. I Min Studieinfo kan du dessutom se antagningsresultatet och ta emot en studieplats.
+          {% if not no-hakuaika-mentions %}Du kan göra ändringarna i ansökan under ansökningstiden. I Min Studieinfo kan du dessutom se antagningsresultatet och ta emot en studieplats.{% endif %}
         </td>
       </tr>
       {% endif %}

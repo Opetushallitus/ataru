@@ -47,10 +47,14 @@
     (merge
      {:can-submit-multiple-applications           (get ohjausparametrit :useitaHakemuksia false)
       :hakuajat                                   hakuajat
+      :alkamiskausi                               (:alkamiskausiKoodiUri haku)
+      :alkamisvuosi                               (when (:alkamisvuosi haku)
+                                                    (Integer/parseInt (:alkamisvuosi haku)))
       :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
       :haun-tiedot-url                            (url-helper/resolve-url :kouta-app.haku (:oid haku))
       :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
+      :kohdejoukon-tarkenne-uri                   (:kohdejoukonTarkenneKoodiUri haku)
       :name                                       (:nimi haku)
       :oid                                        (:oid haku)
       :prioritize-hakukohteet                     (get ohjausparametrit :jarjestetytHakutoiveet false)
@@ -126,9 +130,10 @@
                                                                           (parse-liite-toimitusosoite))
      :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteetOnkoSamaToimitusaika hakukohde))
      :liitteiden-toimitusaika                                     (some-> hakukohde
-                                                                          :liitteidenToimitusaika
-                                                                          (hakuaika/basic-date-time-str->date-time)
-                                                                          (hakuaika/date-time->localized-date-time)) 
+                                                                    :liitteidenToimitusaika
+                                                                    (hakuaika/basic-date-time-str->date-time)
+                                                                    (hakuaika/date-time->localized-date-time))
+     :tutkintoon-johtava?                                         (boolean (:johtaaTutkintoon hakukohde))
      :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?     (boolean (:voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita hakukohde))
      :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
    (if (:kaytetaanHaunAikataulua hakukohde)
@@ -216,6 +221,13 @@
    :koulutuskoodi-name   {}
    :koulutusohjelma-name {}
    :tutkintonimike-names []})
+
+(s/defn ^:always-validate get-haku-oids :- (s/maybe [s/Str])
+  [cas-client]
+  (some-> :kouta-internal.haku-search
+          (url-helper/resolve-url)
+          (get-result cas-client)
+          ((fn [result] (mapv :oid result)))))
 
 (defrecord CacheLoader [cas-client]
   cache-service/CacheLoader
