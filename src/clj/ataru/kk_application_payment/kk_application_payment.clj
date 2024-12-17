@@ -253,7 +253,7 @@
                                 :deadline)
         passed         (if (some? field-deadline)
                          (time/after? now field-deadline)
-                         (not (utils/time-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
+                         (not (utils/time-is-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
     (when passed
       review)))
 

@@ -69,7 +69,7 @@
         (and (contains? valid-terms term-kw) (> year application-payment-start-year))
         (and (= term-kw :kausi_s) (= year application-payment-start-year))))))
 
-(defn time-before-some-hakuaika-grace-period?
+(defn time-is-before-some-hakuaika-grace-period?
   "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
   [haku grace-days now]
   (let [hakuajat-end                (if-let [hakuajat (:hakuajat haku)]
@@ -86,7 +86,7 @@
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.
    Returns all hakus that have their last application end date max grace days before today."
   [haku]
-  (time-before-some-hakuaika-grace-period?
+  (time-is-before-some-hakuaika-grace-period?
     haku (+ haku-update-grace-days 1) (time/now)))
 
 (defn requires-higher-education-application-fee?
