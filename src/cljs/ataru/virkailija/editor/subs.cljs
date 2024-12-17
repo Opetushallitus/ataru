@@ -589,7 +589,7 @@
     (get-all-organizations-have-only-opinto-ohjaaja-rights? db)))
 
 (re-frame/reg-sub
- :editor/all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakaytajan-rights?
+ :editor/all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights?
  (fn [db _]
    (get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights? db)))
 
