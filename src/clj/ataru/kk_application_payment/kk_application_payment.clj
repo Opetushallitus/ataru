@@ -250,10 +250,12 @@
         field-deadline (some->> field-deadlines
                                 (filter #(= id (:field-id %)))
                                 first
-                                :deadline)]
-    (if (some? field-deadline)
-      (time/before? now field-deadline)
-      (not (utils/time-before-some-hakuaika-grace-period? haku haku-grace-days now)))))
+                                :deadline)
+        passed         (if (some? field-deadline)
+                         (time/after? now field-deadline)
+                         (not (utils/time-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
+    (when passed
+      review)))
 
 (defn- haku-grace-days
   [ohjausparametrit-service haku]
@@ -285,11 +287,12 @@
   [application-key]
   (let [attachment-keys payment-module/kk-application-payment-exempt-attachment-keys
         invalid-states  #{"attachment-missing" "incomplete-attachment"}
-        reviews         (application-store/get-application-hakukohde-reviews application-key)]
-    (filter (fn [review]
-              (and (contains? attachment-keys (:attachment-key review))
-                   (contains? invalid-states  (:state review))))
-            reviews)))
+        reviews         (application-store/get-application-attachment-reviews application-key)
+        invalid-reviews (filter (fn [review]
+                                  (and (contains? attachment-keys (:attachment-key review))
+                                       (contains? invalid-states  (:state review))))
+                                reviews)]
+    invalid-reviews))
 
 (defn- attachments-invalid-and-deadline-passed?
   "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
