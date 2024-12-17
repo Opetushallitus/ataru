@@ -104,16 +104,15 @@
   (tags :unit)
 
   (it "Is not able to upsert application payment module as a non-superuser"
-      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]
+      (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] field-id-test-form)]
         (let [non-superuser-session (update session :identity assoc :superuser false)
               result (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" non-superuser-session nil)
-
                           (catch Throwable e
                             (.getMessage e)))]
           (should= "Ei oikeuksia muokata lomaketta" result))))
 
   (it "Fails to upsert application payment module when form already has applications"
-      (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)
+      (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] field-id-test-form)
                     form-store/form-has-applications (fn [form-key]
                                                        (= "test-field-id-change-form" form-key))]
         (let [superuser-session (update session :identity assoc :superuser true)
@@ -123,7 +122,7 @@
           (should= "Lomakkeella test-field-id-change-form on hakemuksia." failure-reason))))
 
   (it "Updates application payment module"
-      (with-redefs [form-store/fetch-by-key (fn [_] form-fixtures/person-info-form)
+      (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] form-fixtures/person-info-form)
                     form-store/create-form-or-increment-version! (fn [_ _ _])
                     form-store/form-has-applications (fn [_] false)]
         (let [superuser-session (update session :identity assoc :superuser true)
@@ -133,7 +132,7 @@
   (it "Adds application payment module"
       (let [content (filter #(not= (:id %) kk-application-payment-wrapper-key) (:content form-fixtures/person-info-form))
             form (assoc form-fixtures/person-info-form :content content)]
-        (with-redefs [form-store/fetch-by-key (fn [_] form)
+        (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] form)
                       form-store/create-form-or-increment-version! (fn [_ _ _])
                       form-store/form-has-applications (fn [_] false)]
           (let [superuser-session (update session :identity assoc :superuser true)

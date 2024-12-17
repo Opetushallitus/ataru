@@ -25,7 +25,7 @@
                   seq)]
     (->> haut
          (map :ataru-form-key)
-         (map form-store/fetch-by-key)
+         (map form-store/fetch-by-key-for-kk-payment-module-job)
          (filter #(not (or (nil? %) (has-payment-module? %))))
          (map add-payment-module-to-form)
          count)))
