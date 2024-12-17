@@ -3,8 +3,7 @@
             [cheshire.core :as json]
             clojure.string
             clojure.walk
-            [taoensso.timbre :as log])
-  (:import java.util.concurrent.Executors))
+            [taoensso.timbre :as log]))
 
 (defn- date-to-iso8601
   [date]
@@ -36,12 +35,19 @@
                              (cond-> (assoc answer :value value)
                                      (= "attachment" (:fieldType answer))
                                      (anonymize-attachment attachment-key))))]
-    (merge application {:preferred_name (:preferred-name fake-person)
-                        :last_name      (:last-name fake-person)
-                        :ssn            (:fake-ssn fake-person)
-                        :email          (:email fake-person)
-                        :dob            (date-to-iso8601 (:birth-date fake-person))
-                        :content        (update (:content application) :answers #(map anonymize-answer %))})))
+    (merge application {:preferred_name   (:preferred-name fake-person)
+                        :last_name        (:last-name fake-person)
+                        :ssn              (:fake-ssn fake-person)
+                        :email            (:email fake-person)
+                        :dob              (date-to-iso8601 (:birth-date fake-person))
+                        :tunnistautuminen (or (some->> (-> application
+                                                           :tunnistautuminen
+                                                           :session
+                                                           :data
+                                                           :auth-type)
+                                                       (update-in {} [:session :data] assoc :auth-type))
+                                              {})
+                        :content          (update (:content application) :answers #(map anonymize-answer %))})))
 
 (defn fake-person->ataru-person [{:keys [sukupuoli
                                          toinennimi
@@ -68,28 +74,43 @@
    :birth-date     syntymaaika})
 
 (defn file->fake-persons [file]
-  (->> file
-       (slurp)
-       (clojure.string/split-lines)
-       (map (comp fake-person->ataru-person
-                  clojure.walk/keywordize-keys
-                  json/parse-string))
-       (group-by :person-oid)))
+  (log/info "Indexing persons")
+  (time
+    (->> file
+         (slurp)
+         (clojure.string/split-lines)
+         (map (comp fake-person->ataru-person
+                    clojure.walk/keywordize-keys
+                    json/parse-string))
+         (group-by :person-oid))))
 
 (defn anonymize-data [& args]
   (assert (not (clojure.string/blank? (second args))))
-  (let [executor-service (Executors/newFixedThreadPool
-                          (.availableProcessors (Runtime/getRuntime)))
-        fake-persons     (file->fake-persons (first args))
-        attachment-key   (second args)]
-    (doseq [id (application-store/get-all-application-ids)]
-      (.execute
-       executor-service
-       (fn []
-         (let [application (application-store/get-application id)]
-           (if-let [fake-person (first (get fake-persons (:person_oid application)))]
-             (do (application-store/update-application (anonymize fake-person attachment-key application))
-                 (log/info "Anonymized application" (:id application)))
-             (log/info "Did not anonymize application" (:id application)))))))
-    (.shutdown executor-service)
-    (application-store/regenerate-application-secrets)))
+  (let [fake-persons     (file->fake-persons (first args))
+        attachment-key   (second args)
+        application-ids  (application-store/get-all-application-ids)
+        last-id          (last application-ids)]
+    (log/info "Anonymise" (count application-ids) "application ids")
+    (time
+      (dorun
+        (pmap (fn [id]
+                (let [application (application-store/get-application id)]
+                  (if-let [fake-person (first (get fake-persons (:person_oid application)))]
+                    (do (application-store/update-application (anonymize fake-person attachment-key application))
+                      (when (or (= last-id id)
+                                (= 0 (mod id 1000)))
+                        (log/info "Anonymized application id" (:id application))))
+                    (log/info "Did not anonymize application" (:id application)))))
+              application-ids)))
+    (log/info "Anonymize guardians")
+    (time (application-store/anonymize-guardian!))
+    (log/info "Anonymize long textareas")
+    (time
+      (dorun (pcalls application-store/anonymize-long-textareas-group!
+                     application-store/anonymize-long-textareas-multi!
+                     application-store/anonymize-long-textareas!)))
+    (log/info "Regenerate application secrets")
+    (time (application-store/regenerate-application-secrets!)))
+  (when-not (first (nnext args))
+    (log/info "Shutting down")
+    (shutdown-agents)))

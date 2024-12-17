@@ -3,6 +3,7 @@
             [ataru.util.random :as crypto]
             [cheshire.core :as json]
             [clojure.java.jdbc :as jdbc]
+            [taoensso.timbre :as log]
             [yesql.core :as sql])
   (:import org.postgresql.util.PGobject))
 
@@ -13,6 +14,44 @@
 
 (defn get-application [id]
   (first (db/exec :db sql-get-application {:id id})))
+
+(defn anonymize-guardian! []
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (sql-update-multi-by-key! {:key "guardian-name" :val "Testi Huoltaja"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-name-secondary" :val "Testi Huoltaja"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-firstname" :val "Testi"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-firstname-secondary" :val "Testi"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-lastname" :val "Huoltaja"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-lastname-secondary" :val "Huoltaja"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-phone" :val "0501234567"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-phone-secondary" :val "0501234567"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-email" :val "testi1.huoltaja@testiopintopolku.fi"}
+                              {:connection connection})
+    (sql-update-multi-by-key! {:key "guardian-email-secondary" :val "testi2.huoltaja@testiopintopolku.fi"}
+                              {:connection connection})))
+
+(defn anonymize-long-textareas-group! []
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (sql-anonymize-long-textareas-group! {} {:connection connection}))
+  (log/info "Done anonymizing long textareas in group answers"))
+
+(defn anonymize-long-textareas-multi! []
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (sql-anonymize-long-textareas-multi! {} {:connection connection}))
+  (log/info "Done anonymizing long textareas in multi answers"))
+
+(defn anonymize-long-textareas! []
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (sql-anonymize-long-textareas! {} {:connection connection}))
+  (log/info "Done anonymizing long textareas in answers"))
 
 (defn update-application [application]
   (let [answers             (:answers (:content application))
@@ -26,7 +65,7 @@
       (sql-update-application-multi-answer-values! update-answers-args {:connection connection})
       (sql-update-application-group-answer-values! update-answers-args {:connection connection}))))
 
-(defn regenerate-application-secrets []
+(defn regenerate-application-secrets! []
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (doseq [id-chunk (->> (sql-application-secret-ids {} {:connection connection})
                           (map :id)
