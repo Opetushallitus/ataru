@@ -22,7 +22,8 @@
    "automatic-payment-obligation-job"                  {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                         :type    "automatic-payment-obligation-job"
                                                         :queue   default-retry-strategy}
-   (:type attachment-finalizer-job/job-definition)     attachment-finalizer-job/job-definition
+   (:type attachment-finalizer-job/job-definition)     (merge attachment-finalizer-job/job-definition
+                                                              {:queue default-retry-strategy})
    "automatic-eligibility-if-ylioppilas-job"           {:handler automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
                                                         :type    "automatic-eligibility-if-ylioppilas-job"
                                                         :queue   default-retry-strategy}
