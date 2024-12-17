@@ -14,7 +14,8 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.kk-application-payment.utils :as payment-utils]
-            [ataru.applications.application-store :as application-store]))
+            [ataru.applications.application-store :as application-store]
+            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (mock-tarjonta-service/->MockTarjontaKoutaService))
@@ -31,6 +32,9 @@
                        (get-many-from [_ _])
                        (remove-from [_ _])
                        (clear-all [_])))
+
+(def fake-ohjausparametrit-service
+  (->MockOhjausparametritService))
 
 (declare conn)
 (defn- delete-states-and-events! []
@@ -178,7 +182,8 @@
                                                       application-fixtures/application-without-hakemusmaksu-exemption
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
-                              states (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                              states (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                       fake-person-service fake-tarjonta-service
                                                                                        fake-koodisto-cache fake-haku-cache
                                                                                        oid term-fall year-ok)]
                           (should= 0 (count states))))
@@ -192,9 +197,10 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-paid application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 0 (count changed))
                           (should= initial-payment payment)
@@ -214,7 +220,8 @@
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (:modified-payments
-                                        (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                        (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                          fake-person-service fake-tarjonta-service
                                                                                           fake-koodisto-cache fake-haku-cache
                                                                                           oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -237,9 +244,10 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-ok-by-proxy application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -256,9 +264,10 @@
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -274,9 +283,10 @@
                                                                                {:person-oid oid}) nil)
                                 application-key (:key (application-store/get-application application-id))
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                          fake-koodisto-cache fake-haku-cache
-                                                                                          oid term-fall year-ok))
+                                         (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                           fake-person-service fake-tarjonta-service
+                                                                                           fake-koodisto-cache fake-haku-cache
+                                                                                           oid term-fall year-ok))
                                 payment (first (payment/get-raw-payments [application-key]))]
                             (should= 1 (count changed))
                             (should= payment (first changed))
@@ -298,9 +308,10 @@
                                 linked-application-key (:key (application-store/get-application (second application-ids)))
                                 _ (payment/set-application-fee-overdue linked-application-key nil)
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                          fake-koodisto-cache fake-haku-cache
-                                                                                          oid term-fall year-ok))
+                                         (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                           fake-person-service fake-tarjonta-service
+                                                                                           fake-koodisto-cache fake-haku-cache
+                                                                                           oid term-fall year-ok))
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 1 (count changed))
@@ -321,9 +332,10 @@
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))

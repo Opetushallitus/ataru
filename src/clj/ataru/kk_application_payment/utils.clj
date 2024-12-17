@@ -69,20 +69,25 @@
         (and (contains? valid-terms term-kw) (> year application-payment-start-year))
         (and (= term-kw :kausi_s) (= year application-payment-start-year))))))
 
+(defn time-before-some-hakuaika-grace-period?
+  "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
+  [haku grace-days now]
+  (let [hakuajat-end                (if-let [hakuajat (:hakuajat haku)]
+                                      (map :end hakuajat)
+                                      [(coerce/from-long (get-in haku [:hakuaika :end]))])
+        end-times-with-grace-period (map
+                                      #(time/with-time-at-start-of-day
+                                         (time/plus % (time/days grace-days)))
+                                      hakuajat-end)]
+    (boolean
+      (some #(not (time/before? % now)) end-times-with-grace-period))))
+
 (defn haku-active-for-updating
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.
    Returns all hakus that have their last application end date max grace days before today."
   [haku]
-  (let [hakuajat-end (if-let [hakuajat (:hakuajat haku)]
-                       (map :end hakuajat)
-                       [(coerce/from-long (get-in haku [:hakuaika :end]))])
-        end-times-with-grace-period (map
-                                      #(time/with-time-at-start-of-day
-                                         (time/plus % (time/days (+ haku-update-grace-days 1))))
-                                      hakuajat-end)
-        now (time/now)]
-    (boolean (some #(not (time/before? % now))
-                   end-times-with-grace-period))))
+  (time-before-some-hakuaika-grace-period?
+    haku (+ haku-update-grace-days 1) (time/now)))
 
 (defn requires-higher-education-application-fee?
   "Returns true if application fee should be charged for given haku"
