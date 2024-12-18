@@ -305,7 +305,7 @@
                                      (get form-fields-by-key (first (string/split answer-key #"_")))
                                      (get form-fields-by-key answer-key))
             value-or-values        (cond
-                                     ((keyword answer-key) person)
+                                     (contains? person (keyword answer-key))
                                      (get person (keyword answer-key))
                                      (tutkinto-util/is-koski-tutkinto-id-field? answer-key)
                                      (->tutkinto-values (:value answer) tutkinnot lang)

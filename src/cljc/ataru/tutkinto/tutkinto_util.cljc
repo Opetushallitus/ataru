@@ -43,8 +43,10 @@
 
 (defn koski-tutkinto-levels-in-form
   [form]
-  (filter #(not (= ktm/itse-syotetty-option-id %))
-          (get-in form [:properties :tutkinto-properties :selected-option-ids] [])))
+  (let [koski-tutkinto-levels (filter #(not (= ktm/itse-syotetty-option-id %))
+                                      (get-in form [:properties :tutkinto-properties :selected-option-ids] []))]
+    (when (seq koski-tutkinto-levels)
+      koski-tutkinto-levels)))
 
 (defn- descending [a b]
   (compare b a))
