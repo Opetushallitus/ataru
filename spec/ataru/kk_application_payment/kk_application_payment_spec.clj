@@ -176,40 +176,23 @@
 
 (def exempt-test-oid "1.2.3.4.5.303") ; FakePersonService returns non-EU nationality for this one
 
-(defn create-payment-exempt-by-application []
+(defn create-payment-exempt-by-application [merge-map]
   (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                      (merge
                                                        application-fixtures/application-with-hakemusmaksu-exemption
-                                                       {:person-oid exempt-test-oid}) nil)
+                                                       {:person-oid exempt-test-oid}
+                                                       merge-map) nil)
         application-key (:key (application-store/get-application application-id))]
     application-key))
 
 (defn create-future-payment-exempt-by-application []
-  (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                     (merge
-                                                       application-fixtures/application-with-hakemusmaksu-exemption
-                                                       {:person-oid exempt-test-oid
-                                                        :haku "payment-info-test-kk-haku-future"}) nil)
-        application-key (:key (application-store/get-application application-id))]
-    application-key))
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-future"}))
 
 (defn create-past-payment-exempt-by-application []
-  (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                     (merge
-                                                       application-fixtures/application-with-hakemusmaksu-exemption
-                                                       {:person-oid exempt-test-oid
-                                                        :haku "payment-info-test-kk-haku-past"}) nil)
-        application-key (:key (application-store/get-application application-id))]
-    application-key))
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-past"}))
 
 (defn create-past-payment-exempt-by-application-with-custom-grace-days []
-  (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                     (merge
-                                                       application-fixtures/application-with-hakemusmaksu-exemption
-                                                       {:person-oid exempt-test-oid
-                                                        :haku "payment-info-test-kk-haku-custom-grace"}) nil)
-        application-key (:key (application-store/get-application application-id))]
-    application-key))
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
 
 (defn update-exempt-payment [application-key]
   (let [changed         (:modified-payments
@@ -387,7 +370,7 @@
                               (spec)))
 
                     (it "should set payment status for non eu citizen with exemption as not required"
-                        (let [application-key   (create-payment-exempt-by-application)
+                        (let [application-key   (create-payment-exempt-by-application {})
                               [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
