@@ -135,13 +135,15 @@
   via an application id/key. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
   is done separately via kk-application-payment-maksut-poller-job, never here."
   [{:keys [person_oid term year application_id application_key]}
-   {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
+   {:keys [ohjausparametrit-service person-service tarjonta-service
+           koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
         (let [{:keys [modified-payments existing-payments]}
-              (payment/update-payments-for-person-term-and-year person-service tarjonta-service
+              (payment/update-payments-for-person-term-and-year ohjausparametrit-service
+                                                                person-service tarjonta-service
                                                                 koodisto-cache get-haut-cache
                                                                 person-oid application-term application-year)]
           (log/info "Update kk payment status hander for" person-oid application-term application-year)

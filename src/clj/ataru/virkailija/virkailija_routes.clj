@@ -1099,7 +1099,9 @@
         :path-params [hakemus-oid :- s/Str]
         :summary "Lähettää hakemusmaksu sähköpostin"
         (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
-          (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid)
+          (do
+            (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid)
+            (response/ok))
           (response/unauthorized)))
 
       (api/POST "/maksupyynto" {session :session}
