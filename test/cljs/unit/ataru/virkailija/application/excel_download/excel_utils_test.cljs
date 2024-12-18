@@ -13,6 +13,36 @@
   (fn [form-field] (form-field-belongs-to-hakukohde form-field hakukohde-oid hakukohderyhma-oid (delay all-hakukohteet))))
 
 (defn stub-true [& _] true)
+(def form-properties {:tutkinto-properties {:selected-option-ids ["kk-alemmat", "itse-syotetty", "tohtori"]}})
+(def tutkinto-wrapper [{:id "koski-tutkinnot-wrapper"
+                        :fieldClass "wrapperElement"
+                        :fieldType "tutkinnot"
+                        :children [{:fieldClass  "formPropertyField"
+                                    :fieldType   "multipleOptions"
+                                    :category    "tutkinto-properties"
+                                    :id          "qwer"
+                                    :exclude-from-answers  true
+                                    :options [{:id "kk-alemmat"
+                                               :followups [{:id "kk-alemmat-question-group"
+                                                            :fieldClass "questionGroup"
+                                                            :fieldType "embedded"
+                                                            :children [{:id "kk-alemmat-tutkinto-id"
+                                                                        :fieldClass "formField"
+                                                                        :fieldType "textField"
+                                                                        :params {:transparent true}}
+                                                                       {:id "asdf"
+                                                                        :fieldClass "formField"
+                                                                        :fieldType "textField"}]}]}
+                                              {:id "itse-syotetty"
+                                               :followups [{:id "itse-syotetty-question-group"
+                                                            :fieldClass "questionGroup"
+                                                            :fieldType "tutkintofieldset"
+                                                            :children [{:id "qwer"
+                                                                        :fieldClass "formField"
+                                                                        :fieldType "textField"}
+                                                                       {:id "zxcv"
+                                                                        :fieldClass "formField"
+                                                                        :fieldType "textField"}]}]}]}]}])
 
 (deftest test-get-excel-checkbox-filter-defs
   (testing "Show top-level form field without children"
@@ -22,13 +52,14 @@
                     :child-ids ()
                     :checked true}}
            (get-excel-checkbox-filter-defs [{:id "asdf" :fieldClass "formField"}]
-                                           stub-true))))
+                                           stub-true
+                                           form-properties))))
   
   (testing "Hide hidden field"
     (is (= {}
            (get-excel-checkbox-filter-defs [{:id "asdf"
                                              :fieldClass "formField"
-                                             :hidden true}] stub-true))))
+                                             :hidden true}] stub-true form-properties))))
   
   (testing "Hide top-level question group with only one infoElement child"
     (is (= {}
@@ -36,7 +67,8 @@
                                              :fieldClass "questionGroup"
                                              :children [{:id "qwer"
                                                          :fieldClass "infoElement"}]}]
-                                           stub-true))))
+                                           stub-true
+                                           form-properties))))
 
   (testing "Show top-level question group with form field child"
     (is (= {"asdf" {:id "asdf"
@@ -54,7 +86,8 @@
                                              :fieldClass "questionGroup"
                                              :children [{:id "qwer"
                                                          :fieldClass "formField"}]}]
-                                           stub-true))))
+                                           stub-true
+                                           form-properties))))
 
   (testing "Hide top-level question which doesn't belong to hakukohde"
     (is (= {"eka" {:id "eka"
@@ -68,7 +101,8 @@
                                             {:id "toka"
                                              :belongs-to-hakukohteet ["hakukohde.oid.2"]
                                              :fieldClass "formField"}]
-                                           (create-belongs-to "hakukohde.oid.1" nil)))))
+                                           (create-belongs-to "hakukohde.oid.1" nil)
+                                           form-properties))))
   
   (testing "Hide top-level question which doesn't belong to hakukohderyhma"
     (is (= {"eka" {:id "eka"
@@ -82,4 +116,40 @@
                                             {:id "toka"
                                              :belongs-to-hakukohderyhma ["hakukohderyhma.oid.unknown"]
                                              :fieldClass "formField"}]
-                                           (create-belongs-to nil "hakukohderyhma.oid.1"))))))
+                                           (create-belongs-to nil "hakukohderyhma.oid.1")
+                                           form-properties))))
+
+  (testing "Show tutkinto-fields"
+    (is (= {"koski-tutkinnot-wrapper" {:id "koski-tutkinnot-wrapper"
+                                       :index 0
+                                       :label nil
+                                       :checked true
+                                       :child-ids ["kk-alemmat-tutkinto-id" "asdf" "qwer" "zxcv"]}
+                                      "kk-alemmat-tutkinto-id"
+                                             {:id "kk-alemmat-tutkinto-id"
+                                              :index 2
+                                              :label nil
+                                              :checked true
+                                              :parent-id "koski-tutkinnot-wrapper"
+                                              :child-ids []}
+                                      "asdf" {:id "asdf"
+                                              :index 3
+                                              :label nil
+                                              :checked true
+                                              :parent-id "koski-tutkinnot-wrapper"
+                                              :child-ids []}
+                                      "qwer" {:id "qwer"
+                                              :index 4
+                                              :label nil
+                                              :checked true
+                                              :parent-id "koski-tutkinnot-wrapper"
+                                              :child-ids []}
+                                      "zxcv" {:id "zxcv"
+                                              :index 5
+                                              :label nil
+                                              :checked true
+                                              :parent-id "koski-tutkinnot-wrapper"
+                                              :child-ids []}}
+           (get-excel-checkbox-filter-defs tutkinto-wrapper
+                                           stub-true
+                                           form-properties)))))

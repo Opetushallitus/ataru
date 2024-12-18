@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.excel-download.excel-utils
-  (:require [ataru.util :refer [assoc? to-vec]]))
+  (:require [ataru.util :refer [assoc? to-vec]]
+            [ataru.tutkinto.tutkinto-util :refer [resolve-excel-content]]))
 
 (defn assoc-in-excel [db k v]
   (assoc-in db (concat [:application :excel-request] (to-vec k)) v))
@@ -24,13 +25,19 @@
 
 (defn- info-element? [field] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass field)))
 
+(defn- tutkinto-wrapper? [field] (and (= "wrapperElement" (:fieldClass field)) (= "tutkinnot" (:fieldType field))))
+
 (defn get-excel-checkbox-filter-defs
-  ([form-content form-field-belongs-to parent-id level parent-index-acc]
+  ([form-content form-field-belongs-to form-properties parent-id level parent-index-acc]
    (when (seq form-content)
      (reduce (fn [acc form-field]
                (let [index-acc (+ parent-index-acc (count acc))
-                     children (get-excel-checkbox-filter-defs (:children form-field)
+                     child-objects (if (tutkinto-wrapper? form-field)
+                                     (resolve-excel-content form-field form-properties)
+                                     (:children form-field))
+                     children (get-excel-checkbox-filter-defs child-objects
                                                               form-field-belongs-to
+                                                              form-properties
                                                               (or parent-id (:id form-field))
                                                               (inc level)
                                                               (inc index-acc))]
@@ -53,8 +60,8 @@
                                                                                        (map :id))))})))))
              {}
              form-content)))
-  ([form-content form-field-belongs-to]
-   (get-excel-checkbox-filter-defs form-content form-field-belongs-to nil 0 0)))
+  ([form-content form-field-belongs-to form-properties]
+   (get-excel-checkbox-filter-defs form-content form-field-belongs-to form-properties nil 0 0)))
 
 (defn get-values-for-child-filters [db filter-id]
   (when-let [filter (get-in-excel db [:filters filter-id])]

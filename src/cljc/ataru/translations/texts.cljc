@@ -560,6 +560,9 @@
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}
+   :poista-osio                                 {:fi "Poista osio"
+                                                 :sv "SV: Poista osio"
+                                                 :en ""}
    :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
                                                  :sv "Övningsblankett – Dina uppgifter sparas inte!"
                                                  :en "Practice form  — Your information will not be saved!"}

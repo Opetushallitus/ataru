@@ -66,6 +66,14 @@
                       (seq answer)
                       (or (not (coll? answer)) (seq (first answer)))))))))
 
+(defn non-blank-answer? [answer-entity]
+  (let [value (:value answer-entity)]
+    (if (vector? value)
+      (if (or (vector? (first value)) (nil? (first value)))
+        (some #(and (seq (first %)) (every? some? %)) value)
+        (and (seq (first value)) (every? some? value)))
+      (seq value))))
+
 (defn answerable? [field]
   (not (contains? #{"infoElement" "modalInfoElement" "wrapperElement" "questionGroup" "formPropertyField"}
                   (:fieldClass field))))

@@ -3105,6 +3105,14 @@ i.arkistoitu {
   }
 }
 
+.application__tutkinto-button-icon {
+  font-size: 22px;
+}
+
+.application__tutkinto-button-text {
+  font-weight: normal;
+}
+
 .application__tutkinto-header {
   align-items: center;
   display: flex;
@@ -3129,14 +3137,6 @@ i.arkistoitu {
       border-radius: 0;
       text-decoration: none;
     }
-
-    .button-icon {
-      font-size: 22px;
-    }
-
-    .button-text {
-      font-weight: normal;
-    }
   }
 }
 
@@ -3150,7 +3150,7 @@ i.arkistoitu {
   width: 100%;
 }
 
-.application__add-tutkinto {
+.application__show-additional-tutkinnot {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
@@ -3166,12 +3166,25 @@ i.arkistoitu {
     font-size: 14px;
   }
 
-  .button-icon {
-    font-size: 22px;
-  }
-
   .button-text {
     margin-left: 10px;
+  }
+}
+
+.application__hide-additional-tutkinnot {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: end;
+  justify-content: end;
+  padding-top: 10px;
+  padding-bottom: 5px;
+  column-gap: 10px;
+
+  .link {
+    color: @text-color;
+    cursor: pointer;
+    border-radius: 0;
+    text-decoration: none;
   }
 }
 
