@@ -1,6 +1,8 @@
 (ns ataru.hakija.application-tutkinto-handlers
   (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
+            [ataru.util :as autil]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.hakija.application :refer [create-initial-answers]]
             [ataru.hakija.application-handlers :refer [check-schema-interceptor set-empty-value-dispatch]]))
 
 (reg-event-fx
@@ -37,3 +39,22 @@
        :dispatch-n (concat (mapcat (partial set-empty-value-dispatch repeat-count)
                                    (:children field-descriptor))
                            [[:application/set-repeatable-application-field id-field-descriptor (dec repeat-count) nil tutkinto-id]])})))
+
+(reg-event-fx
+  :application/reset-tutkinto-answers
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ fields]]
+    (let [fields-and-descendants    (autil/flatten-form-fields fields)
+          question-groups           (map :id (filter #(= "questionGroup" (:fieldClass %)) fields-and-descendants))
+          initial-answers-of-fields (create-initial-answers fields-and-descendants nil nil)
+          merged-answers            (merge (get-in db [:application :answers]) initial-answers-of-fields)
+          current-ui-values         (get-in db [:application :ui])
+          merged-ui-values          (merge current-ui-values
+                                           (into {}
+                                                 (map
+                                                   (fn [id] [(keyword id)
+                                                             (merge ((keyword id) current-ui-values) {:count 1})])
+                                                   question-groups)))]
+      {:db  (-> db
+                (assoc-in [:application :answers] merged-answers)
+                (assoc-in [:application :ui] merged-ui-values))})))

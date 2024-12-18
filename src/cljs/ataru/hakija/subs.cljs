@@ -1004,3 +1004,11 @@
   :application/any-koski-tutkinnot?
   (fn [db]
     (some? (not-empty (get-in db [:application :koski-tutkinnot] {})))))
+
+(re-frame/reg-sub
+  :application/any-answered?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/answers])])
+  (fn [[answers] [_ field-descriptors]]
+    (let [field-ids (map #(keyword (:id %)) (util/flatten-form-fields field-descriptors))]
+      (some #(util/non-blank-answer? (get answers %)) field-ids))))

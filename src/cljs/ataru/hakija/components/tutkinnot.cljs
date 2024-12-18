@@ -15,25 +15,32 @@
                      (dispatch [:application/remove-question-group-row
                                 field-descriptor
                                 idx]))}
-        [:span.application__tutkinto-header.remove-tutkinto.button-text (tu/get-hakija-translation :poista lang)]
-        [:i.zmdi.zmdi-delete.application__tutkinto-header.remove-tutkinto.button-icon]]])]
+        [:i.zmdi.zmdi-delete.application__tutkinto-button-icon]
+        [:span.application__tutkinto-button-text (tu/get-hakija-translation :poista lang)]]])]
    [:div.application__form-multi-choice-followups-outer-container
     {:tab-index 0}
     [:div.application__form-multi-choice-followups-indicator]
     (into [:div.application__tutkinto-entity-container] child-components)]])
 
 (defn add-button [on-click lang]
-  [:div.application__add-tutkinto
-   [:button.application__add-tutkinto.button
+  [:div.application__show-additional-tutkinnot
+   [:button.application__show-additional-tutkinnot.button
     {:on-click on-click}
-    [:i.zmdi.zmdi-plus.application__add-tutkinto.button-icon]
-    [:span.application__add-tutkinto.button-text (tu/get-hakija-translation :add-tutkinto lang)]]])
+    [:i.zmdi.zmdi-plus.application__tutkinto-button-icon]
+    [:span.application__show-additional-tutkinnot.button-text (tu/get-hakija-translation :add-tutkinto lang)]]])
 
 (defn add-tutkinto-button [field-descriptor lang]
   (add-button (fn [event]
                 (.preventDefault event)
                 (dispatch [:application/add-question-group-row field-descriptor]))
               lang))
+
+(defn hide-additional-tutkinnot-button [on-click lang]
+  [:div.application__hide-additional-tutkinnot
+   [:a.application__hide-additional-tutkinnot.link
+    {:on-click on-click}
+    [:i.zmdi.zmdi-delete.application__tutkinto-button-icon]
+    [:span.application__tutkinto-button-text (tu/get-hakija-translation :poista-osio lang)]]])
 
 (defn fixed-tutkinto-item [tutkinto _ _]
   (let [lang @(subscribe [:application/form-language])
