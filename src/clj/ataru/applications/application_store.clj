@@ -860,6 +860,11 @@
                      (= "unreviewed" (:state existing-requirement-review "unreviewed")))
                 (and (= "unreviewed" (:state review-to-store))
                      (= "not-obligated" (:state existing-requirement-review))
+                     automatically-changed?)
+                (and (= "obligated" (:state review-to-store))
+                     (= "unreviewed" (:state existing-requirement-review "unreviewed")))
+                (and (= "obligated" (:state review-to-store))
+                     (= "not-obligated" (:state existing-requirement-review))
                      automatically-changed?))
         (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
         (let [event {:application_key          application-key
