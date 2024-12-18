@@ -569,40 +569,64 @@
                                  :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
                                                                 :paattyy "2025-01-01T15:00:00"}]})
-   :payment-info-test-kk-haku-custom-form (merge
+   :payment-info-test-kk-haku-future (merge
+                                       base-kouta-haku
+                                       {:oid                         "payment-info-test-kk-haku-future"
+                                        :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                        :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                        :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                        :hakuajat                    [{:alkaa "2030-01-01T08:00:00",
+                                                                       :paattyy "2030-06-01T15:00:00"}]})
+    :payment-info-test-kk-haku-past (merge
+                                      base-kouta-haku
+                                      {:oid                         "payment-info-test-kk-haku-past"
+                                       :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                       :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                       :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                       :hakuajat                    [{:alkaa "2024-06-01T08:00:00",
+                                                                      :paattyy "2024-08-01T15:00:00"}]})
+   :payment-info-test-kk-haku-custom-grace (merge
+                                             base-kouta-haku
+                                             {:oid                         "payment-info-test-kk-haku-custom-grace"
+                                              :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                              :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                              :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                              :hakuajat                    [{:alkaa "2024-06-01T08:00:00",
+                                                                             :paattyy "2024-08-01T15:00:00"}]})
+    :payment-info-test-kk-haku-custom-form (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku-custom-form"
                                               :hakulomakeAtaruId           custom-form-key
                                               :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                               :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                               :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
-                                              :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
+                                              :hakuajat                    [{:alkaa   "2025-01-01T08:00:00",
                                                                              :paattyy "2025-01-01T15:00:00"}]})
-   :payment-info-test-kk-no-tutkinto-haku (merge
+    :payment-info-test-kk-no-tutkinto-haku (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku"
                                               :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                               :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                               :hakukohdeOids               ["payment-info-test-kk-no-tutkinto-hakukohde"]})
     :payment-info-test-kk-jatko-haku (merge
-                                        base-kouta-haku
-                                        {:oid                         "payment-info-test-kk-haku"
-                                         :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
-                                         :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_3#1"
-                                         :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
-   :payment-info-test-non-kk-haku (merge
-                                    base-kouta-haku
-                                    {:oid                         "payment-info-test-non-kk-haku"
-                                     :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
-                                     :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                     :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})
-   :payment-info-test-non-kk-haku-custom-form (merge
-                                                base-kouta-haku
-                                                {:oid                         "payment-info-test-non-kk-haku-custom-form"
-                                                 :hakulomakeAtaruId           custom-form-key
-                                                 :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
-                                                 :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                                 :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
+                                       base-kouta-haku
+                                       {:oid                         "payment-info-test-kk-haku"
+                                        :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                        :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_3#1"
+                                        :hakukohdeOids               ["payment-info-test-kk-hakukohde"]})
+    :payment-info-test-non-kk-haku (merge
+                                     base-kouta-haku
+                                     {:oid                         "payment-info-test-non-kk-haku"
+                                      :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
+                                      :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                      :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})
+    :payment-info-test-non-kk-haku-custom-form (merge
+                                                 base-kouta-haku
+                                                 {:oid                         "payment-info-test-non-kk-haku-custom-form"
+                                                  :hakulomakeAtaruId           custom-form-key
+                                                  :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
+                                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                                  :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
 
 (defrecord MockTarjontaKoutaService []
   component/Lifecycle
