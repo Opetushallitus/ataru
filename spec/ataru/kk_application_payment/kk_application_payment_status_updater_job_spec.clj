@@ -93,6 +93,15 @@
                                     application-key "payment-obligation" hakukohde])
                                  first)))
 
+(defn- store-not-obligated-review [application-key hakukohde]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (jdbc/insert! conn "application_hakukohde_reviews"
+                                          {:application_key application-key
+                                           :requirement "payment-obligation"
+                                           :hakukohde hakukohde
+                                           :state "not-obligated"})))
+
+
 (defn- clear! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/delete! conn :applications [])
@@ -461,4 +470,20 @@
                     payment (first (payment/get-raw-payments [application-key]))
                     obligation (get-payment-obligation-review application-key "payment-info-test-kk-fisv-hakukohde")]
                 (should= (:awaiting payment/all-states) (:state payment))
-                (should-be-nil obligation))))
+                (should-be-nil obligation)))
+
+          (it "should not override a non-automatic obligation"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))
+                    _ (store-not-obligated-review application-key "payment-info-test-kk-hakukohde")
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should= {:application_key application-key, :requirement "payment-obligation",
+                          :state "not-obligated", :hakukohde "payment-info-test-kk-hakukohde"}
+                         (select-keys obligation [:application_key :requirement :state :hakukohde])))))
