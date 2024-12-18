@@ -97,13 +97,14 @@
                        (get-filter-trans section @virkailija-lang)
                        (:child-ids section)
                        [:div.application-handling__excel-accordion-checkbox-col
-                        (map (fn [child-id]
+                        (doall (map (fn [child-id]
                                (let [sub-filter (get-in filter-defs [child-id])]
                                  ^{:key (str child-id "_checkbox")}
                                  [excel-checkbox-control
                                   child-id
                                   (get-filter-trans sub-filter @virkailija-lang)]))
-                             (:child-ids section))]]))))]])))
+                             (:child-ids section)))]]))
+               doall))]])))
 
 (defn- excel-kirjoita-tunnisteet-content
   []

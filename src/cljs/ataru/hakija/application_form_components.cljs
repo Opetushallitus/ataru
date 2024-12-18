@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-form-components
   (:require [ataru.hakija.application-view-icons :as icons]
-            [re-frame.core :refer [subscribe dispatch]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common
              :as application-field
@@ -899,9 +899,17 @@
         always-show-itse-syotetyt? (r/atom false)]
     (fn [field-descriptor]
       (let [any-koski-tutkinnot? @(subscribe [:application/any-koski-tutkinnot?])
-            on-click-to-add-additional-itse-syotetyt (fn [event]
-                                                       (.preventDefault event)
-                                                       (reset! always-show-itse-syotetyt? true))]
+            itse-syotetty-content (tutkinto-util/find-itse-syotetty-content-beneath field-descriptor)
+            on-click-to-show-additional-itse-syotetyt (fn [event]
+                                                        (.preventDefault event)
+                                                        (reset! always-show-itse-syotetyt? true))
+            on-click-to-hide-additional-itse-syotetyt (fn [event]
+                                                        (.preventDefault event)
+                                                        (dispatch-sync [:application/reset-tutkinto-answers
+                                                                   itse-syotetty-content])
+                                                        (reset! always-show-itse-syotetyt? false))]
+        (when (and (not @always-show-itse-syotetyt?) @(subscribe [:application/any-answered? itse-syotetty-content]))
+          (reset! always-show-itse-syotetyt? true))
         [:div.application__wrapper-element
          [:div.application__wrapper-heading
           [:h2 label]
@@ -945,10 +953,13 @@
                                              (for [followup additional-followups]
                                                (with-meta [render-field followup answer-idx]
                                                           {:key (str (:id followup) "-" answer-idx)})))])))])))
-                     (when (and any-koski-tutkinnot? (not @always-show-itse-syotetyt?))
-                       [tutkinnot/add-button on-click-to-add-additional-itse-syotetyt lang])]
+                     (when any-koski-tutkinnot?
+                       [:div
+                        (if @always-show-itse-syotetyt?
+                          [tutkinnot/hide-additional-tutkinnot-button on-click-to-hide-additional-itse-syotetyt lang]
+                          [tutkinnot/add-button on-click-to-show-additional-itse-syotetyt lang])])]
                     (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))
-                      (for [followup (tutkinto-util/itse-syotetty-tutkinnot-content child)]
+                      (for [followup itse-syotetty-content]
                         (with-meta [render-field followup nil] {:key (:id followup)})))]
                    (with-meta [render-field child nil] {:key (:id child)}))))]))))
 
