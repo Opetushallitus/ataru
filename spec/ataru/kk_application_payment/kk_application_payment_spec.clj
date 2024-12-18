@@ -386,7 +386,7 @@
                                                                       {:application_key application-key
                                                                        :attachment_key "brexit-passport-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}])
+                                                                       :state "missing-attachment"}])
                               [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -425,7 +425,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
-                    (it "should set payment status as not required if an unrelated attachment is missing after deadline"
+                    (it "should set payment status as not required if an unrelated attachment is missing or incomplete after deadline"
                         (let [application-key   (create-past-payment-exempt-by-application)
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "none-passport-attachment"
@@ -441,7 +441,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
-                    (it "should set payment status as required if an exemption attachment is missing after deadline"
+                    (it "should set payment status as required if an exemption attachment is incomplete after deadline"
                         (let [application-key   (create-past-payment-exempt-by-application)
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
@@ -457,7 +457,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                      :reason nil} payment)))
 
-                    (it "should set payment status as required if an exemption attachment is incomplete after deadline"
+                    (it "should set payment status as required if an exemption attachment is missing after deadline"
                         (let [application-key   (create-past-payment-exempt-by-application)
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
