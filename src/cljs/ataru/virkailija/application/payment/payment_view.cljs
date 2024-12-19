@@ -312,7 +312,9 @@
                                nil)
         due-label         (when (= :awaiting kk-payment-state)
                             @(subscribe [:editor/virkailija-translation :maksupyynto-due-label]))
-        due-value         (format/unparse fi-formatter (:due-date kk-payment))]
+        due-value         (if (:due-date kk-payment)
+                            (format/unparse fi-formatter (:due-date kk-payment))
+                            "")]
      [:<>
       [single-payment-status-row @(subscribe [:editor/virkailija-translation :maksupyynto-processing-header])
        (:processing payments) state-for-status-row]
