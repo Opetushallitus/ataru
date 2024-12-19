@@ -120,16 +120,15 @@
       (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)
       (payment/get-valid-payment-info-for-application-key tarjonta-service application-key))))
 
-(defn- oid-if-needs-tuition-fee
+(defn- needs-tuition-fee?
   [hakukohde]
   (let [codes (->> (:opetuskieli-koodi-urit hakukohde)
                    (map #(first (str/split % #"#")))
                    set)]
-    (when (and (seq codes)
-               (not (contains? codes "oppilaitoksenopetuskieli_1"))  ; fi
-               (not (contains? codes "oppilaitoksenopetuskieli_2"))  ; sv
-               (not (contains? codes "oppilaitoksenopetuskieli_3"))) ; fi/sv
-      (:oid hakukohde))))
+    (and (seq codes)
+         (not (contains? codes "oppilaitoksenopetuskieli_1"))    ; fi
+         (not (contains? codes "oppilaitoksenopetuskieli_2"))    ; sv
+         (not (contains? codes "oppilaitoksenopetuskieli_3"))))) ; fi/sv
 
 (defn- mark-tuition-fee-obligated
   "Marks tuition fee (lukuvuosimaksu) obligation for application key for every hakukohde that does not organize
@@ -140,7 +139,8 @@
         hakukohteet            (tarjonta/get-hakukohteet
                                  tarjonta-service
                                  (remove nil? hakukohde-oids))
-        tuition-hakukohde-oids (remove nil? (map oid-if-needs-tuition-fee hakukohteet))]
+        tuition-hakukohde-oids (remove nil?
+                                       (map #(when (needs-tuition-fee? %) (:oid %)) hakukohteet))]
     (doseq [hakukohde-oid tuition-hakukohde-oids]
       (log/info "Marking tuition payment obligation due to kk application fee eligibility for application key"
                 application-key "and hakukohde oid" hakukohde-oid)

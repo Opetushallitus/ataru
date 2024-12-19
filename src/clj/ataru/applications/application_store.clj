@@ -842,6 +842,8 @@
           (queries/yesql-add-application-event<! event connection))))))
 
 (defn save-payment-obligation-automatically-changed
+  "Only used by automatic tuition fee obligation logic. Sets new obligation state if previous one was not set by
+   virkailija and the state transition is allowed. If successful, adds an event marking the obligation was set automatically."
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection                  {:connection conn}
@@ -856,6 +858,11 @@
                                            :event_type
                                            (= "payment-obligation-automatically-changed"))
           existing-requirement-review (first (queries/yesql-get-existing-requirement-review review-to-store connection))]
+      ; Main idea:
+      ; - When the state is still unreviewed, it can be always automatically changed.
+      ; - When virkailija has made the latest modification to tuition fee obligation (not automatically-changed?)
+      ;   we should never override that state automatically anymore.
+      ; - Once the state is automatically set as obligated, don't modify further without virkailija input.
       (when (or (and (= "not-obligated" (:state review-to-store))
                      (= "unreviewed" (:state existing-requirement-review "unreviewed")))
                 (and (= "unreviewed" (:state review-to-store))
@@ -866,6 +873,7 @@
                 (and (= "obligated" (:state review-to-store))
                      (= "not-obligated" (:state existing-requirement-review))
                      automatically-changed?))
+        ; Whenever we set the obligation automatically, also add an event for auditing and possible further state changes.
         (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
         (let [event {:application_key          application-key
                      :event_type               "payment-obligation-automatically-changed"
