@@ -85,7 +85,7 @@
 (declare conn)
 (declare spec)
 
-(defn- get-payment-obligation-review [application-key hakukohde]
+(defn- get-tuition-payment-obligation-review [application-key hakukohde]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (->> (jdbc/query
                                    conn
@@ -93,7 +93,7 @@
                                     application-key "payment-obligation" hakukohde])
                                  first)))
 
-(defn- store-not-obligated-review [application-key hakukohde]
+(defn- store-tuition-fee-not-required-review [application-key hakukohde]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/insert! conn "application_hakukohde_reviews"
                                           {:application_key application-key
@@ -403,6 +403,9 @@
                                                check-mail-fn]}))))
 
           (it "should set tuition fee obligation for non fi/sv hakukohde when payment state changes to awaiting"
+              ; Initial state: hakukohde in the application has only english as teaching language,
+              ; and the application / person has no exemption, meaning the application should require both
+              ; application fee AND tuition fee for the hakukohde.
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
                                      application-fixtures/application-without-hakemusmaksu-exemption
@@ -411,13 +414,17 @@
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))
-                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                    obligation (get-tuition-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
                 (should= (:awaiting payment/all-states) (:state payment))
                 (should= {:application_key application-key, :requirement "payment-obligation",
                           :state "obligated", :hakukohde "payment-info-test-kk-hakukohde"}
                          (select-keys obligation [:application_key :requirement :state :hakukohde]))))
 
           (it "should set tuition fee obligation for non fi/sv hakukohde when payment state changes to ok-by-proxy"
+              ; Initial state: hakukohde in both applications has only english as teaching language,
+              ; and the application / person has no exemption, and we mark one of the applications paid manually.
+              ; This means the other application should not require application payment BUT should still require
+              ; tuition fee.
               (let [application-ids (unit-test-db/init-db-fixture
                                       form-fixtures/payment-exemption-test-form
                                       [application-fixtures/application-without-hakemusmaksu-exemption
@@ -438,13 +445,16 @@
                     _ (updater-job/update-kk-payment-status-for-person-handler
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     payment (first (payment/get-raw-payments [second-key]))
-                    obligation (get-payment-obligation-review second-key "payment-info-test-kk-hakukohde")]
+                    obligation (get-tuition-payment-obligation-review second-key "payment-info-test-kk-hakukohde")]
                 (should= (:ok-by-proxy payment/all-states) (:state payment))
                 (should= {:application_key second-key, :requirement "payment-obligation",
                           :state "obligated", :hakukohde "payment-info-test-kk-hakukohde"}
                          (select-keys obligation [:application_key :requirement :state :hakukohde]))))
 
           (it "should not set tuition fee obligation for non fi/sv hakukohde when payment state changes to not-required"
+              ; Initial state: hakukohde in the application has only english as teaching language,
+              ; but the application / person has an exemption, meaning the application should require neither
+              ; application fee nor tuition fee for the hakukohde.
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
                                      application-fixtures/application-with-hakemusmaksu-exemption
@@ -453,11 +463,14 @@
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))
-                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                    obligation (get-tuition-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
                 (should= (:not-required payment/all-states) (:state payment))
                 (should-be-nil obligation)))
 
           (it "should not set tuition fee obligation for fi/sv hakukohde"
+              ; Initial state: hakukohde in the application has swedish and/or finnish in its teaching languages,
+              ; so even the application / person has no exemption, the application should require only an
+              ; application fee, but no tuition fee for the hakukohde.
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
                                      (merge
@@ -468,21 +481,24 @@
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     application-key (:key (application-store/get-application application-id))
                     payment (first (payment/get-raw-payments [application-key]))
-                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-fisv-hakukohde")]
+                    obligation (get-tuition-payment-obligation-review application-key "payment-info-test-kk-fisv-hakukohde")]
                 (should= (:awaiting payment/all-states) (:state payment))
                 (should-be-nil obligation)))
 
           (it "should not override a non-automatic obligation"
+              ; Initial state: hakukohde in the application has only english as teaching language,
+              ; and application / person has no exemption, but there's a human review already for the tuition.
+              ; Application fee should be required, but tuition fee state should not change automatically anymore.
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
                                      application-fixtures/application-without-hakemusmaksu-exemption
                                      nil)
                     application-key (:key (application-store/get-application application-id))
-                    _ (store-not-obligated-review application-key "payment-info-test-kk-hakukohde")
+                    _ (store-tuition-fee-not-required-review application-key "payment-info-test-kk-hakukohde")
                     _ (updater-job/update-kk-payment-status-for-person-handler
                         {:person_oid test-person-oid :term test-term :year test-year} runner)
                     payment (first (payment/get-raw-payments [application-key]))
-                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                    obligation (get-tuition-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
                 (should= (:awaiting payment/all-states) (:state payment))
                 (should= {:application_key application-key, :requirement "payment-obligation",
                           :state "not-obligated", :hakukohde "payment-info-test-kk-hakukohde"}
