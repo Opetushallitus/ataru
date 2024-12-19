@@ -132,7 +132,7 @@
   :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
-  :jvm-opts ^:replace ["-Xmx2g"]
+  :jvm-opts ^:replace ["-Xmx8g"]
 
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11"]
