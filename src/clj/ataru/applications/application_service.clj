@@ -503,7 +503,7 @@
             hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
             attachment-reviews    (future (parse-application-attachment-reviews application-key))
             events                (future (get-application-events organization-service application-key))
-            kk-payment-state      (future (kk-application-payment/get-kk-payment-state application true))
+            kk-payment-state      (future (kk-application-payment/get-kk-payment-state application false))
             review                (future (application-store/get-application-review application-key))
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))

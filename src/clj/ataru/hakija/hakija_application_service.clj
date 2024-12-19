@@ -717,7 +717,7 @@
                                      (application-store/application-exists-with-secret? secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
-        kk-payment                 (future (kk-application-payment/get-kk-payment-state application true))
+        kk-payment                 (future (kk-application-payment/get-kk-payment-state application false))
         lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key

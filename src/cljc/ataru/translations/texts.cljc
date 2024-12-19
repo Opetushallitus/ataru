@@ -1598,7 +1598,7 @@
    :guardian-contact-information                             {:fi "Huoltajan yhteystiedot"
                                                               :sv "Vårdnadshavarens kontaktuppgifter"
                                                               :en "Guardians contact information"}
-   :payment-obligation                                       {:fi "Maksuvelvollisuus"
+   :payment-obligation                                       {:fi "Lukuvuosimaksuvelvollisuus"
                                                               :sv "Betalningsskyldighet"
                                                               :en "Obligated to pay"}
    :payment-obligation-set-automatically                     {:fi "Maksuvelvollisuus asetettu automaattisesti"
@@ -2463,7 +2463,7 @@
    :maksupyynto-due-label                                    {:fi "Eräpäivä"
                                                               :sv ""
                                                               :en ""}
-   :maksupyynto-header                                       {:fi "Maksupyyntö"
+   :maksupyynto-header                                       {:fi "Hakemusmaksupyyntö"
                                                               :sv ""
                                                               :en ""}
    :maksupyynto-processing-header                            {:fi "Käsittelymaksu:"
@@ -2584,7 +2584,7 @@
                                                               :sv "valda"
                                                               :en "selected"}
    :payment-not-checked                                      {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
-                                                              :sv "SV: Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
+                                                              :sv "Sökandens betalningsskyldighet är ännu okänd"
                                                               :en "Applicant payment liability unknown"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
@@ -2777,14 +2777,17 @@
    :kk-application-payment       {:fi "Hakemusmaksu"
                                   :sv "Ansökningsavgift"
                                   :en "Application fee"}
+   :kk-payment-not-checked       {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
+                                  :sv "Sökandens betalningsskyldighet är ännu okänd"
+                                  :en "Applicant payment liability unknown"}
    :not-required                 {:fi "Ei vaadittu"
-                                  :sv "SV: Ei vaadittu"
+                                  :sv "Krävs ej"
                                   :en "Not required"}
    :awaiting                     {:fi "Odottaa maksua"
-                                  :sv "SV: Odottaa maksua"
+                                  :sv "Väntar på betalning"
                                   :en "Awaiting payment"}
    :ok-by-proxy                  {:fi "Maksettu toisessa haussa"
-                                  :sv "SV: Maksettu toisessa haussa"
+                                  :sv "Betald i en annan ansökan"
                                   :en "Paid in another application round"}
    :paid                         {:fi "Maksettu"
                                   :sv "Betalt"
@@ -2910,7 +2913,7 @@
                               :en "EN: Hakukelpoisuus"}
    :maksuvelvollisuus        {:fi "Maksuvelvollisuus"
                               :sv "Betalningsskyldighet"
-                              :en "EN: Maksuvelvollisuus"}
+                              :en "Obligated to pay"}
    :valinnan-tila            {:fi "Valinnan tila"
                               :sv "Antagningens status"
                               :en "EN: Valinnan tila"}
