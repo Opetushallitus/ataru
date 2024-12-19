@@ -2777,6 +2777,9 @@
    :kk-application-payment       {:fi "Hakemusmaksu"
                                   :sv "Ansökningsavgift"
                                   :en "Application fee"}
+   :kk-payment-not-checked       {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
+                                  :sv "Sökandens betalningsskyldighet är ännu okänd"
+                                  :en "Applicant payment liability unknown"}
    :not-required                 {:fi "Ei vaadittu"
                                   :sv "Krävs ej"
                                   :en "Not required"}
@@ -2910,7 +2913,7 @@
                               :en "EN: Hakukelpoisuus"}
    :maksuvelvollisuus        {:fi "Maksuvelvollisuus"
                               :sv "Betalningsskyldighet"
-                              :en "EN: Maksuvelvollisuus"}
+                              :en "Obligated to pay"}
    :valinnan-tila            {:fi "Valinnan tila"
                               :sv "Antagningens status"
                               :en "EN: Valinnan tila"}
