@@ -2600,7 +2600,10 @@
                                                               :en "Applicant payment liability unknown"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
-                                                              :en "EN: Hakija ei ole maksuvelvollinen"}})
+                                                              :en "EN: Hakija ei ole maksuvelvollinen"}
+   :tutkinnot                                                {:fi "Tutkintotiedot Koski-Palvelusta"
+                                                              :sv "SV: Tutkintotiedot Koski-Palvelusta"
+                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}})
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"
