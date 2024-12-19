@@ -19,8 +19,9 @@
 (re-frame/reg-event-fx
   :payment/handle-fetch-payments
   (fn [{db :db} [_ body {:keys [application-key]}]]
-   (let [oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
-         payments {:processing (oid-suffix-matcher "-1")
+    (let [oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
+         payments {:processing (or (oid-suffix-matcher "-1")
+                                   (first (filter #(= (:origin %) "kkhakemusmaksu") body)))
                    :decision (or (oid-suffix-matcher "-2")
                                  (first (filter #(= (:origin %) "astu") body)))}]
 
@@ -138,7 +139,6 @@
 (re-frame/reg-fx
   :payment/fetch-payments
   (fn [{:keys [application-key]}]
-   (prn "Ladataan hakemukseen liittyviä maksuja")
    (ajax/http :get
               (str "/lomake-editori/api/maksut/list/" application-key)
               :payment/handle-fetch-payments

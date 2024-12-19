@@ -20,7 +20,7 @@
                                payments))
         ; TODO: the amount of open payments may be quite large at a given moment, should we partition the API queries here?
         maksut    (maksut-protocol/list-lasku-statuses maksut-service (keys keys-states))]
-    (log/debug "Received statuses for" (count maksut) "kk payment invoices")
+    (log/info "Received statuses for" (count maksut) "kk payment invoices")
     (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
           raw      (map (fn [{:keys [reference status origin]}]
                           (when-let [key-match (get keys-states reference)]
@@ -30,7 +30,7 @@
                              :origin origin}))
                         terminal)
           items    (filter some? raw)]
-      (log/debug "Out of which in terminal-state are" (count terminal) "invoices")
+      (log/info "Out of which in terminal-state are" (count terminal) "invoices")
       (log/debug (pr-str "Invoices" items))
       (doseq [item items]
         (let [{:keys [origin ataru-status maksut-status ataru-data]} item
@@ -61,9 +61,9 @@
       ; TODO: we should probably also handle awaiting payments without maksut information (in case something has gone wrong)
       (if-let [payments (seq (store/get-awaiting-kk-application-payments))]
         (do
-          (log/debug "Found " (count payments) " open kk application payments, checking maksut status")
+          (log/info "Found " (count payments) " open kk application payments, checking maksut status")
           (poll-payments job-runner maksut-service payments))
-        (log/debug "No kk application payments in need of maksut polling found"))
+        (log/info "No kk application payments in need of maksut polling found"))
       (catch Exception e
         (log/error e "Maksut polling failed")))))
 
