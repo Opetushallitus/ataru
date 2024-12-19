@@ -69,9 +69,9 @@
   ([header payment status]
     (let [icon (case (keyword status)
                  :active  icons/tutu-payment-outstanding
-                       :paid    icons/tutu-payment-paid
-                       :overdue icons/tutu-payment-overdue
-                       nil)
+                 :paid    icons/tutu-payment-paid
+                 :overdue icons/tutu-payment-overdue
+                 nil)
           label      (if (or (empty? payment) (nil? status))
                        @(subscribe [:editor/virkailija-translation :maksupyynto-invoice-notfound])
                        (case (keyword status)
