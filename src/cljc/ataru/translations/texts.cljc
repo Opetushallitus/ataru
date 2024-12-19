@@ -2791,7 +2791,10 @@
                                   :en "Paid in another application round"}
    :paid                         {:fi "Maksettu"
                                   :sv "Betalt"
-                                  :en "Paid"}})
+                                  :en "Paid"}
+   :kk-payment-overdue           {:fi "Erääntynyt"
+                                  :sv "Förfallen"
+                                  :en "Expired"}})
 
 (def tutu-decision-email
   {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"

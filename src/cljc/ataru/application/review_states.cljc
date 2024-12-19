@@ -164,7 +164,7 @@
    ["awaiting" (:awaiting state-translations)]
    ["ok-by-proxy" (:ok-by-proxy state-translations)]
    ["paid" (:paid state-translations)]
-   ["overdue" (:overdue state-translations)]
+   ["overdue" (:kk-payment-overdue state-translations)]
    ["not-checked" (:kk-payment-not-checked state-translations)]])
 
 (def hakukohde-review-types
