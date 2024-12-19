@@ -179,6 +179,3 @@
 
 (defn is-tutkinto-configuration-component? [field-descriptor]
   (= tutkinto-property-component-category (:category field-descriptor)))
-
-(defn is-koski-tutkinto-option [id]
-  (some? (some #(when (= id %) %) koski-tutkinto-option-ids)))
