@@ -550,7 +550,14 @@
                        :payment-info-test-kk-hakukohde     (merge
                                                              base-kouta-hakukohde
                                                              {:oid          "payment-info-test-kk-hakukohde"
-                                                              :johtaaTutkintoon true})
+                                                              :johtaaTutkintoon true
+                                                              :opetuskieliKoodiUrit ["oppilaitoksenopetuskieli_4#2"]})
+                       :payment-info-test-kk-fisv-hakukohde (merge
+                                                             base-kouta-hakukohde
+                                                             {:oid          "payment-info-test-kk-fisv-hakukohde"
+                                                              :johtaaTutkintoon true
+                                                              :opetuskieliKoodiUrit ["oppilaitoksenopetuskieli_2#2"
+                                                                                     "oppilaitoksenopetuskieli_4#2"]})
                        :payment-info-test-kk-no-tutkinto-hakukohde (merge
                                                                      base-kouta-hakukohde
                                                                      {:oid          "payment-info-test-kk-no-tutkinto-hakukohde"

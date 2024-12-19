@@ -50,9 +50,8 @@
                        (time/plus (time/today-at 12 0 0)
                                   (time/days kk-application-payment-due-days))))
 
-; This could be done automatically on every DB select, but needed so rarely that let's just convert on demand.
 (defn parse-due-date
-  "Convert due date retrieved from db to local date, interpreting it in correct time zone"
+  "Convert due date timestamp retrieved from db to local date"
   [due-date]
     (time/local-date (time/year due-date) (time/month due-date) (time/day due-date)))
 
