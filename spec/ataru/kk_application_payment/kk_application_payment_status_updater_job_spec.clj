@@ -10,7 +10,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [speclj.core :refer [it describe should-not-throw stub should-have-invoked should-not-have-invoked
-                                 tags with-stubs should= around before]]
+                                 should-be-nil tags with-stubs should= around before]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
@@ -84,6 +84,23 @@
 
 (declare conn)
 (declare spec)
+
+(defn- get-payment-obligation-review [application-key hakukohde]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (->> (jdbc/query
+                                   conn
+                                   ["select * FROM application_hakukohde_reviews WHERE application_key = ? AND requirement = ? AND hakukohde = ?"
+                                    application-key "payment-obligation" hakukohde])
+                                 first)))
+
+(defn- store-not-obligated-review [application-key hakukohde]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (jdbc/insert! conn "application_hakukohde_reviews"
+                                          {:application_key application-key
+                                           :requirement "payment-obligation"
+                                           :hakukohde hakukohde
+                                           :state "not-obligated"})))
+
 
 (defn- clear! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -383,4 +400,90 @@
                   (should-have-invoked :start-job
                                        {:with [:* :*
                                                "ataru.kk-application-payment.kk-application-payment-email-job"
-                                               check-mail-fn]})))))
+                                               check-mail-fn]}))))
+
+          (it "should set tuition fee obligation for non fi/sv hakukohde when payment state changes to awaiting"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should= {:application_key application-key, :requirement "payment-obligation",
+                          :state "obligated", :hakukohde "payment-info-test-kk-hakukohde"}
+                         (select-keys obligation [:application_key :requirement :state :hakukohde]))))
+
+          (it "should set tuition fee obligation for non fi/sv hakukohde when payment state changes to ok-by-proxy"
+              (let [application-ids (unit-test-db/init-db-fixture
+                                      form-fixtures/payment-exemption-test-form
+                                      [application-fixtures/application-without-hakemusmaksu-exemption
+                                       application-fixtures/application-without-hakemusmaksu-exemption])
+                    [first-key second-key] (map #(:key (application-store/get-application %)) application-ids)
+                    _ (payment-store/create-or-update-kk-application-payment!
+                        {:application-key      first-key
+                         :state                (:paid payment/all-states)
+                         :reason               nil
+                         :due-date             (time-format/unparse payment/default-time-format
+                                                                    (time/plus (time/today-at 12 0 0)
+                                                                               (time/days 3)))
+                         :total-sum            payment/kk-application-payment-amount
+                         :maksut-secret        test-maksut-secret
+                         :required-at          "now()"
+                         :notification-sent-at nil
+                         :approved-at          "now()"})
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    payment (first (payment/get-raw-payments [second-key]))
+                    obligation (get-payment-obligation-review second-key "payment-info-test-kk-hakukohde")]
+                (should= (:ok-by-proxy payment/all-states) (:state payment))
+                (should= {:application_key second-key, :requirement "payment-obligation",
+                          :state "obligated", :hakukohde "payment-info-test-kk-hakukohde"}
+                         (select-keys obligation [:application_key :requirement :state :hakukohde]))))
+
+          (it "should not set tuition fee obligation for non fi/sv hakukohde when payment state changes to not-required"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                (should= (:not-required payment/all-states) (:state payment))
+                (should-be-nil obligation)))
+
+          (it "should not set tuition fee obligation for fi/sv hakukohde"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     (merge
+                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                       {:hakukohde ["payment-info-test-kk-fisv-hakukohde"]})
+                                     nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-fisv-hakukohde")]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should-be-nil obligation)))
+
+          (it "should not override a non-automatic obligation"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))
+                    _ (store-not-obligated-review application-key "payment-info-test-kk-hakukohde")
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid :term test-term :year test-year} runner)
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (get-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should= {:application_key application-key, :requirement "payment-obligation",
+                          :state "not-obligated", :hakukohde "payment-info-test-kk-hakukohde"}
+                         (select-keys obligation [:application_key :requirement :state :hakukohde])))))
