@@ -362,20 +362,27 @@
 (defn- set-payment
   [new-state state-change-fn {:keys [application payment]}]
   (let [current-state   (:state payment)
-        application-key (:key application)]
+        application-key (:key application)
+        person-oid      (:person-oid application)]
     (cond
       (= current-state new-state)
-      (log/info "Application" application-key "already has kk payment status" current-state ", not changing state")
+      (log/info "Application" application-key "with person-oid" person-oid "already has kk payment status" current-state
+                ", not changing kk application payment state")
 
       (= current-state (:paid all-states))
-      (log/info "Application" application-key "already has kk payment paid, not changing state")
+      (log/info "Application" application-key "with person-oid" person-oid
+                "already has payment paid, not changing kk application payment state")
 
       ; N.B. even if you pay an another application, if a previous application is overdue, the state must not change.
       (= current-state (:overdue all-states))
-      (log/info "Application" application-key "is already overdue, not changing state")
+      (log/info "Application" application-key "with person-oid" person-oid
+                "is already overdue, not changing kk application payment state")
 
       :else
-      (state-change-fn (:key application) payment))))
+      (do
+       (log/info "Changing kk application payment state for application" application-key
+                 "with person-oid" person-oid "to" new-state)
+       (state-change-fn (:key application) payment)))))
 
 (defn- update-payments-for-applications
   [applications-payments is-finnish-citizen? has-exemption? has-existing-payment?]
@@ -404,25 +411,34 @@
                           (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
     (when (get-in config [:kk-application-payments :enabled?])
       (if (= 0 (count applications))
-        []
-        (let [payment-by-application (into {}
-                                           (map (fn [payment] [(:application-key payment) payment]))
-                                           (get-raw-payments (map :key applications)))
-              applications-payments  (map (fn [application]
-                                            {:application application
-                                             :payment     (get payment-by-application (:key application))})
-                                          applications)
-              payment-state-set      (->> (vals payment-by-application) (map :state) set)
-              is-finnish-citizen?    (is-finnish-citizen? person)
-              has-exemption?         (some true?
-                                           (map
-                                             (partial exemption-in-application? tarjonta-service ohjausparametrit-service)
-                                             applications))
-              has-existing-payment?  (contains? payment-state-set (:paid all-states))]
-          {:person            person
-           :existing-payments applications-payments
-           :modified-payments (update-payments-for-applications
-                                applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)})))))
+        (do
+          (log/info "Not updating kk payment status for person" person-oid "term" term "year" year
+                    "with all person aliases" aliases "because no matching applications were found.")
+          {})
+        (do
+          (log/info "Updating kk payment status for person" person-oid "term" term "year" year
+                    "with all person aliases" aliases "and application keys" (map :key applications))
+          (let [payment-by-application (into {}
+                                             (map (fn [payment] [(:application-key payment) payment]))
+                                             (get-raw-payments (map :key applications)))
+                applications-payments  (map (fn [application]
+                                              {:application application
+                                               :payment     (get payment-by-application (:key application))})
+                                            applications)
+                payment-state-set      (->> (vals payment-by-application) (map :state) set)
+                is-finnish-citizen?    (is-finnish-citizen? person)
+                has-exemption?         (some true?
+                                             (map
+                                               (partial exemption-in-application? tarjonta-service ohjausparametrit-service)
+                                               applications))
+                has-existing-payment?  (contains? payment-state-set (:paid all-states))]
+            (log/info "Updating application level kk application payment status for person" person-oid "term" term "year" year
+                      "is-finnish-citizen?" (boolean is-finnish-citizen?) "has-exemption?" (boolean has-exemption?)
+                      "has-existing-payment?" (boolean has-existing-payment?))
+            {:person            person
+             :existing-payments applications-payments
+             :modified-payments (update-payments-for-applications
+                                  applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)}))))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
