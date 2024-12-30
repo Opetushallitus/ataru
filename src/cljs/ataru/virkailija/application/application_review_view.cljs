@@ -1028,6 +1028,7 @@
          (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
                tutu-form?                       @(subscribe [:payment/tutu-form-selected?])
                astu-form?                       @(subscribe [:payment/astu-form-selected?])
+               kk-application-payment-form?     @(subscribe [:payment/kk-application-payment-form-selected?])
                application-key                  @(subscribe [:state-query [:application :review :application-key]])
                payments                         @(subscribe [:payment/payments application-key])
                attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
@@ -1094,6 +1095,7 @@
                     (cond
                       tutu-form? review-states/hakukohde-review-types-tutu
                       astu-form? review-states/hakukohde-review-types-astu
+                      kk-application-payment-form? review-states/hakukohde-review-types-kk-application-payment
                       kk-application-payment-required? review-states/hakukohde-review-types-kk-application-payment
                       :else review-states/hakukohde-review-types-normal)
                     application-key]]
@@ -1103,6 +1105,7 @@
               (cond
                 tutu-form? [application-tutu-payment-status payments]
                 astu-form? [application-astu-payment-status payments]
+                kk-application-payment-form? [kk-application-payment-status payments]
                 kk-application-payment-required? [kk-application-payment-status payments])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
