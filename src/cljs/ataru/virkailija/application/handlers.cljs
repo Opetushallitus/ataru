@@ -11,6 +11,7 @@
             [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
                                                                         tutu-form?
                                                                         astu-form?
+                                                                        kk-application-payment-form?
                                                                         hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
                                                                         selected-hakukohde-oid-set]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
@@ -672,6 +673,7 @@
 (defn- form-has-payments? [form]
   (or (tutu-form? form)
       (astu-form? form)
+      (kk-application-payment-form? form)
       (get-tutu-form? (:key form))))
 
 (defn- haku-has-kk-application-payment? [haku-oid db]
