@@ -1044,8 +1044,8 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/selected-application])])
   (fn show-tutkinto-fetch-failed? [[application] _]
-    (and (tutkinto-util/koski-tutkinnot-in-application? application))
-         (not (seq (:koski-tutkinnot application)))))
+    (and (tutkinto-util/koski-tutkinnot-in-application? application)
+         (not (seq (:koski-tutkinnot application))))))
 
 (re-frame/reg-sub
   :application/filter-questions
