@@ -20,7 +20,7 @@
                         :children [{:fieldClass  "formPropertyField"
                                     :fieldType   "multipleOptions"
                                     :category    "tutkinto-properties"
-                                    :id          "qwer"
+                                    :id          "tutkinto-properties"
                                     :exclude-from-answers  true
                                     :options [{:id "kk-alemmat"
                                                :followups [{:id "kk-alemmat-question-group"
@@ -30,17 +30,17 @@
                                                                         :fieldClass "formField"
                                                                         :fieldType "textField"
                                                                         :params {:transparent true}}
-                                                                       {:id "asdf"
+                                                                       {:id "kk-alemmat-additional-text-field"
                                                                         :fieldClass "formField"
                                                                         :fieldType "textField"}]}]}
                                               {:id "itse-syotetty"
                                                :followups [{:id "itse-syotetty-question-group"
                                                             :fieldClass "questionGroup"
                                                             :fieldType "tutkintofieldset"
-                                                            :children [{:id "qwer"
+                                                            :children [{:id "itse-syotetty-additional-text-field1"
                                                                         :fieldClass "formField"
                                                                         :fieldType "textField"}
-                                                                       {:id "zxcv"
+                                                                       {:id "itse-syotetty-additional-text-field2"
                                                                         :fieldClass "formField"
                                                                         :fieldType "textField"}]}]}]}]}])
 
@@ -124,7 +124,9 @@
                                        :index 0
                                        :label nil
                                        :checked true
-                                       :child-ids ["kk-alemmat-tutkinto-id" "asdf" "qwer" "zxcv"]}
+                                       :child-ids ["kk-alemmat-tutkinto-id" "kk-alemmat-additional-text-field"
+                                                   "itse-syotetty-additional-text-field1"
+                                                   "itse-syotetty-additional-text-field2"]}
                                       "kk-alemmat-tutkinto-id"
                                              {:id "kk-alemmat-tutkinto-id"
                                               :index 2
@@ -132,19 +134,22 @@
                                               :checked true
                                               :parent-id "koski-tutkinnot-wrapper"
                                               :child-ids []}
-                                      "asdf" {:id "asdf"
+                                      "kk-alemmat-additional-text-field"
+                                             {:id "kk-alemmat-additional-text-field"
                                               :index 3
                                               :label nil
                                               :checked true
                                               :parent-id "koski-tutkinnot-wrapper"
                                               :child-ids []}
-                                      "qwer" {:id "qwer"
+                                      "itse-syotetty-additional-text-field1"
+                                             {:id "itse-syotetty-additional-text-field1"
                                               :index 4
                                               :label nil
                                               :checked true
                                               :parent-id "koski-tutkinnot-wrapper"
                                               :child-ids []}
-                                      "zxcv" {:id "zxcv"
+                                      "itse-syotetty-additional-text-field2"
+                                             {:id "itse-syotetty-additional-text-field2"
                                               :index 5
                                               :label nil
                                               :checked true

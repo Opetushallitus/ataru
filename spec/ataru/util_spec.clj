@@ -89,6 +89,9 @@
           (it "reject empty string"
               (should-not (util/answered-in-group-idx {:value [""]} 0))
               (should-not (util/answered-in-group-idx {:value [[""]]} 0)))
+          (it "reject blank string"
+              (should-not (util/answered-in-group-idx {:value [" "]} 0))
+              (should-not (util/answered-in-group-idx {:value [[" "]]} 0)))
           (it "reject non-array answer"
               (should-not (util/answered-in-group-idx {:value ""} 0)))
           (it "reject index-out-of-bounds answer"
@@ -112,7 +115,11 @@
           (it "reject empty string"
               (should-not (util/non-blank-answer? {:value ""}))
               (should-not (util/non-blank-answer? {:value [""]}))
-              (should-not (util/non-blank-answer? {:value [[""]]}))))
+              (should-not (util/non-blank-answer? {:value [[""]]})))
+          (it "reject blank string"
+              (should-not (util/non-blank-answer? {:value " "}))
+              (should-not (util/non-blank-answer? {:value [" "]}))
+              (should-not (util/non-blank-answer? {:value [[" "]]}))))
 
 (def field-descriptor-id "64d4a625-370b-4814-ae4f-d5956e8881be")
 (def field-descriptor {:id         field-descriptor-id
