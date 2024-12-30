@@ -763,9 +763,11 @@
                     status (:status resp)
                     body (:body resp)
                     payment-data (:kk-payment body)
+                    form-payment (get-in body [:form :properties :payment])
                     state (get-in payment-data [:payment :state])]
                 (should= 200 status)
                 (should-not-be-nil payment-data)
+                (should= {:type "payment-type-kk", :processing-fee "100.00", :decision-fee nil} form-payment)
                 (should= (:paid payment/all-states) state))))
 
 (defn- init-and-get-kk-fixtures []

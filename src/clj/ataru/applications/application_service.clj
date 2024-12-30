@@ -6,6 +6,7 @@
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-jobs :as email]
+    [ataru.forms.form-payment-info :as payment-info]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
@@ -78,9 +79,10 @@
    (application-store/get-application-attachment-reviews application-key)))
 
 (defn- populate-form-fields
-  [form koodisto-cache tarjonta-info]
+  [form koodisto-cache tarjonta-info tarjonta-service]
   (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
       (populate-hakukohde-answer-options tarjonta-info)
+      (payment-info/populate-form-with-payment-info tarjonta-service (:tarjonta tarjonta-info))
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
 (defn fields-equal? [[new-in-left new-in-right]]
@@ -492,10 +494,12 @@
             newest-form           (form-store/fetch-by-key (:key form-in-application))
             form                  (populate-form-fields (if with-newest-form?
                                                           newest-form
-                                                          form-in-application) koodisto-cache tarjonta-info)
+                                                          form-in-application)
+                                                        koodisto-cache tarjonta-info tarjonta-service)
             forms-differ?         (and (not with-newest-form?)
                                        (forms-differ? application tarjonta-info form
-                                                      (populate-form-fields newest-form koodisto-cache tarjonta-info)))
+                                                      (populate-form-fields newest-form
+                                                                            koodisto-cache tarjonta-info tarjonta-service)))
             alternative-form      (some-> (when forms-differ?
                                             newest-form)
                                           (assoc :content [])
