@@ -753,8 +753,9 @@
                                                                       application-in-processing?
                                                                       field-deadlines))
         requested-tutkinto-levels (tutkinto-util/koski-tutkinto-levels-in-form form)
-        koski-tutkinnot       (future (some->> (when requested-tutkinto-levels (:person-oid application))
-                                               (koski-service/get-tutkinnot-for-oppija koski-service)
+        koski-tutkinnot       (future (some->> (when (tutkinto-util/koski-tutkinnot-in-application? application)
+                                                 (:person-oid application))
+                                               (koski-service/get-tutkinnot-for-oppija koski-service true)
                                                :opiskeluoikeudet
                                                (parse-koski-tutkinnot requested-tutkinto-levels)))
         new-person (application-service/get-person-for-securelink application-service application)
