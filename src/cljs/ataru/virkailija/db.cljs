@@ -25,7 +25,7 @@
                       :payment-obligation                {:unreviewed    true
                                                           :obligated     true
                                                           :not-obligated true}
-                      :kk-application-payment            {:not-checked false
+                      :kk-application-payment            {:not-checked true
                                                           :not-required true
                                                           :awaiting false
                                                           :ok-by-proxy true
