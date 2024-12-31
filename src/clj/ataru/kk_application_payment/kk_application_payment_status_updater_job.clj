@@ -211,8 +211,8 @@
   (let [haku-oid (:oid haku)
         term (:alkamiskausi haku)
         year (:alkamisvuosi haku)
-        person-oids (application-store/get-application-person-oids-for-haku haku-oid)]
-    (log/info "Found" (count person-oids) "oids for haku" haku-oid "- updating kk application payment statuses.")
+        person-oids (distinct (application-store/get-application-person-oids-for-haku haku-oid))]
+    (log/info "Found" (count person-oids) "distinct oids for haku" haku-oid "- updating kk application payment statuses.")
     (doseq [person-oid person-oids]
       (start-update-kk-payment-status-for-person-job job-runner person-oid term year))))
 
