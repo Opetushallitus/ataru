@@ -523,7 +523,7 @@
 
 (s/defschema KkPaymentState
   {(s/optional-key :payment) PaymentStatus
-   (s/optional-key :history) [PaymentStatus]})
+   (s/optional-key :history) (s/maybe [PaymentStatus])})
 
 (s/defschema ApplicationWithPerson
   (-> Application

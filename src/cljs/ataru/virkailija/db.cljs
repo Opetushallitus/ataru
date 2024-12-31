@@ -27,10 +27,10 @@
                                                           :not-obligated true}
                       :kk-application-payment            {:not-checked true
                                                           :not-required true
-                                                          :awaiting true
+                                                          :awaiting false
                                                           :ok-by-proxy true
                                                           :paid true
-                                                          :overdue true}
+                                                          :overdue false}
                       :only-identified                   {:identified   true
                                                           :unidentified true}
                       :only-ssn                          {:with-ssn    true

@@ -751,7 +751,7 @@
           (after-all
             (db/nuke-kk-payment-data))
 
-          (it "should return payment information and history for an application"
+          (it "should return payment information for an application"
               (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
                                                        application-fixtures/application-without-hakemusmaksu-exemption
                                                        nil)
@@ -763,14 +763,12 @@
                     status (:status resp)
                     body (:body resp)
                     payment-data (:kk-payment body)
-                    state (get-in payment-data [:payment :state])
-                    history (sort-by :modified-at (:history payment-data))]
+                    form-payment (get-in body [:form :properties :payment])
+                    state (get-in payment-data [:payment :state])]
                 (should= 200 status)
                 (should-not-be-nil payment-data)
-                (should= (:paid payment/all-states) state)
-                (should= 2 (count history))
-                (should= [(:not-required payment/all-states) (:awaiting payment/all-states)]
-                         (map :state history)))))
+                (should= {:type "payment-type-kk", :processing-fee "100.00", :decision-fee nil} form-payment)
+                (should= (:paid payment/all-states) state))))
 
 (defn- init-and-get-kk-fixtures []
   (let [person-oid "1.2.3.4.5.303"

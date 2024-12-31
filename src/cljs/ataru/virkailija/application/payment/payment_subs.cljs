@@ -39,6 +39,13 @@
     (= "payment-type-astu" (get-in form [:properties :payment :type]))))
 
 (re-frame/reg-sub
+  :payment/kk-application-payment-form-selected?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-form])])
+  (fn [[form]]
+    (= "payment-type-kk" (get-in form [:properties :payment :type]))))
+
+(re-frame/reg-sub
   :payment/show-review-ui?
   (fn [_ _]
     [(re-frame/subscribe [:payment/astu-form-selected?])
