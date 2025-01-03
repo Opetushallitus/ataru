@@ -4,6 +4,7 @@
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.tarjonta.haku :as haku]
             [ataru.util :as u]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.virkailija.application.application-selectors :refer [hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
                                                                         selected-application-answers
                                                                         selected-hakukohde-oid-set
@@ -1037,6 +1038,14 @@
   (fn show-creating-henkilo-failed? [[application form] _]
     (and (not (person-info-module/muu-person-info-module? form))
          (nil? (get-in application [:person :oid])))))
+
+(re-frame/reg-sub
+  :application/show-tutkinto-fetch-failed?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])])
+  (fn show-tutkinto-fetch-failed? [[application] _]
+    (and (tutkinto-util/koski-tutkinnot-in-application? application)
+         (not (seq (:koski-tutkinnot application))))))
 
 (re-frame/reg-sub
   :application/filter-questions
