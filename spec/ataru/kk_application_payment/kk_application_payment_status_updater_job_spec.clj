@@ -9,8 +9,8 @@
             [clj-time.format :as time-format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
-            [speclj.core :refer [it describe should-not-throw stub should-have-invoked should-not-have-invoked
-                                 tags with-stubs should= around before]]
+            [speclj.core :refer [it describe should-throw should-not-throw stub should-have-invoked
+                                 should-not-have-invoked tags with-stubs should= around before]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
@@ -65,6 +65,13 @@
                            (get-many-from [_ _])
                            (remove-from [_ _])
                            (clear-all [_])))
+(def empty-get-haut-cache (reify cache-service/Cache
+                           (get-from [_ _]
+                             [])
+                           (get-many-from [_ _])
+                           (remove-from [_ _])
+                           (clear-all [_])))
+
 
 (defn start-runner-job [_ _ _ _])
 
@@ -79,6 +86,13 @@
   (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
                        :person-service   fake-person-service
                        :get-haut-cache   fake-get-haut-cache
+                       :koodisto-cache   fake-koodisto-cache
+                       :maksut-service   mock-maksut-service}))
+
+(def runner-with-empty-haku-cache
+  (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
+                       :person-service   fake-person-service
+                       :get-haut-cache   empty-get-haut-cache
                        :koodisto-cache   fake-koodisto-cache
                        :maksut-service   mock-maksut-service}))
 
@@ -141,6 +155,19 @@
                   {:application-key application-key :state (:awaiting payment/all-states)
                    :maksut-secret test-maksut-secret}
                   (select-keys payment [:application-key :state :maksut-secret]))))
+
+          (it "should throw an exception when person and term found but updater doesn't find eligible applications"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-without-hakemusmaksu-exemption
+                                     nil)]
+                ; Here the handler first resolves the person from application correctly, but then the updater
+                ; function itself queries for all applications with hakus from get-haku-cache (= all haku oids from applications)
+                ; and finds none from an empty one. This may happen with the very first application(s) for haku until
+                ; cache is completely refreshed, so the job runner needs to retry.
+                (should-throw
+                  (updater-job/update-kk-payment-status-for-person-handler
+                    {:application_id application-id} runner-with-empty-haku-cache))))
 
           (it "should update payment status fetching person and term with application key"
               (let [application-id (unit-test-db/init-db-fixture
