@@ -8,6 +8,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
             [clj-access-logging]
@@ -31,7 +32,9 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.palaute.palaute-client :as palaute-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
+            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
+                                      alter-application-to-hakuaikaloppu-for-secret
+                                      successful-oppija-auth-response-strong]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
@@ -39,7 +42,8 @@
             [ataru.util.http-util :as http]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
-            [ataru.feature-config :as fc])
+            [ataru.feature-config :as fc]
+            [ataru.koski.koski-service :as koski])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -96,6 +100,10 @@
   []
   (boolean (:dev? env)))
 
+(defn- dev-env-and-fake-oppija-auth?
+  []
+  (and (is-dev-env?) (-> config :dev :fake-oppija-auth)))
+
 (defn- render-file-in-dev
   ([filename]
    (render-file-in-dev filename {}))
@@ -145,6 +153,17 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
+(defn- url-of-itself-with-ticket
+  [request]
+  (str
+    "http://"
+    (:server-name request)
+    ":"
+    (:server-port request)
+    (:uri request)
+    "?ticket=ST-111-f6hAYnLk0VHNUhRYIq-po4ygDTg-ip-0-0-0-0&"
+    (:query-string request)))
+
 (defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []
     :tags ["hakija-auth-api"]
@@ -155,10 +174,14 @@
       (log/info "login with lang" lang ",ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
       (try
         (if (nil? ticket)
-          (response/found
-            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target))
-          (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
-                       (:body))
+          (if (dev-env-and-fake-oppija-auth?)
+            (response/found  (url-of-itself-with-ticket request))
+            (response/found
+              (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))
+          (let [rs (if (dev-env-and-fake-oppija-auth?)
+                     successful-oppija-auth-response-strong
+                     (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
+                       (:body)))
                 parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
             (if parsed-attributes
               (let [new-session-key (generate-new-random-key)]
@@ -213,6 +236,7 @@
                                :auth-type (get-in session [:data :auth-type])
                                :logged-in (boolean (:logged-in session))
                                :eidas-id (get-in session [:data :eidas-id])
+                               :person-oid (get-in session [:data :person-oid])
                                :seconds-left (or (:seconds_left session) 0)}]
           (response/ok trimmed-session))
         (catch Exception e
@@ -225,6 +249,7 @@
                           organization-service
                           ohjausparametrit-service
                           application-service
+                          koski-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
@@ -371,6 +396,22 @@
           job-runner
          (:old-secret request))
         (response/ok {})))
+    (api/GET "/tutkinnot/:henkilo-oid" []
+      :path-params [henkilo-oid :- s/Str]
+      :return [koski-schema/AtaruKoskiTutkintoResponse]
+      (if-let [suoritukset (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
+        (response/ok
+          (map (fn [suoritus] (-> {}
+                                  (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi]))
+                                  (assoc :koulutusohjelmanimi (get-in suoritus [:tyyppi :nimi]))
+                                  (assoc :toimipistenimi (get-in suoritus [:toimipiste :nimi]))
+                                  (assoc :valmistumispvm (get-in suoritus [:vahvistus :päivä]))
+                                  (assoc :koulutustyyppi
+                                         (select-keys
+                                           (get-in suoritus [:koulutusmoduuli :koulutustyyppi])
+                                           [:koodistoUri :koodiarvo]))))
+               (flatten (map :suoritukset (:opiskeluoikeudet suoritukset)))))
+        (response/not-found {})))
     (api/context "/files" []
       (api/GET "/signed-upload" []
         :summary "Permission to upload"
