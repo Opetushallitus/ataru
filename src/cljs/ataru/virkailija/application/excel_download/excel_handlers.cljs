@@ -121,6 +121,7 @@
  :application/excel-request-filters-init
  (fn [db [_ selected-form-key selected-hakukohde selected-hakukohderyhma]]
    (let [form-content (get-in db [:forms selected-form-key :content])
+         form-properties (get-in db [:forms selected-form-key :properties])
          all-hakukohteet (get-in db [:hakukohteet])
          form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma (delay all-hakukohteet)))
          new-filters-init-params {:selected-form-key selected-form-key
@@ -129,7 +130,9 @@
      (-> db
          (assoc-in-excel :filters (get-excel-checkbox-filter-defs
                                    (concat common-field-labels form-content)
-                                   form-field-belongs-to))
+                                   form-field-belongs-to
+                                   form-properties
+                                   ))
          (assoc-in-excel :filters-init-params new-filters-init-params)))))
 
 (reg-event-db

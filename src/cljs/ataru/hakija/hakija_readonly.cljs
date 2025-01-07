@@ -122,17 +122,20 @@
 (defn- tutkinto [children application lang ui idx tutkinto]
   (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
     [:div.application__tutkinto-wrapper-readonly
-     (doall
-      (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
-        (let [field-id (:id field)
-              label-id (str "koski-answer-label-" field-id "-" idx)
-              field-path (if (:multi-lang? field) [(:koski-tutkinto-field field) lang] [(:koski-tutkinto-field field)])]
-        ^{:key (str "koski-answer-" field-id "-" idx)}
-        [:div.application__form-field
-         [:div.application__form-field-label
-          {:id label-id}
-          [:span (:text field)]]
-         [readonly-text field-id label-id (get-in tutkinto field-path)]])))
+     (when tutkinto
+       (doall
+        (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
+          (let [field-id (:id field)
+                label-id (str "koski-answer-label-" field-id "-" idx)
+                field-path (if (:multi-lang? field)
+                             [(:koski-tutkinto-field field) lang]
+                             [(:koski-tutkinto-field field)])]
+          ^{:key (str "koski-answer-" field-id "-" idx)}
+          [:div.application__form-field
+           [:div.application__form-field-label
+            {:id label-id}
+            [:span (:text field)]]
+           [readonly-text field-id label-id (get-in tutkinto field-path)]]))))
      (doall (child-fields non-koski-content application lang ui idx))]))
 
 (defn tutkinto-wrapper [_ _ _ _]
