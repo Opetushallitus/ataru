@@ -13,6 +13,7 @@
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
             [ataru.util :as util]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [clojure.string :as string]))
 
 (def ^:private language-names
@@ -116,7 +117,12 @@
 
 (defn- hakeminen-tunnistautuneena-lander [form lang]
   (let [header (or (-> form :tarjonta :haku-name lang)
-                   (-> form :name lang))]
+                   (-> form :name lang))
+        tunnistaudu-ensin-texts (cond-> [(translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
+                                        (tutkinto-util/koski-tutkinto-levels-in-form form)
+                                        (concat [" " (translations/get-hakija-translation :ht-tunnistaudu-ensin-tutkinto-fetch-notice lang)])
+                                        true
+                                        (concat [" " (translations/get-hakija-translation :ht-tunnistaudu-ensin-post-notice lang)]))]
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
      [:h1 (translations/get-hakija-translation :ht-lander-header lang)]
      [:div.application__hakeminen-tunnistautuneena-lander-haku-header header]
@@ -128,7 +134,7 @@
         {:src "/hakemus/images/suomifi_tunnus.svg"}]
        [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]]
       [:p.application__hakeminen-tunnistautuneena-lander-main-text
-       [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]]
+       [:span (apply str tunnistaudu-ensin-texts)]]
       [:p.application__hakeminen-tunnistautuneena-lander-main-text
        [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text-2 lang)]]
       [:button.application__tunnistaudu-button

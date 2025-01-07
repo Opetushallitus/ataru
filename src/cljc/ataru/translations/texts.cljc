@@ -644,9 +644,15 @@
    :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ja täytä hakulomake"
                                                  :sv "Identifiera dig och fyll i ansökningsblanketten"
                                                  :en "Identify and fill in the application form"}
-   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
-                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
-                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically. You can modify your contact information on the application form."}
+   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
+                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten."
+                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically."}
+   :ht-tunnistaudu-ensin-tutkinto-fetch-notice  {:fi "Myös tutkintotietosi tuodaan lomakkeelle, jos tunnistaudut."
+                                                 :sv "SV: Myös tutkintotietosi tuodaan lomakkeelle, jos tunnistaudut."
+                                                 :en ""}
+   :ht-tunnistaudu-ensin-post-notice            {:fi "Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
+                                                 :sv "Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
+                                                 :en "You can modify your contact information on the application form."}
    :ht-tunnistaudu-ensin-text-2                 {:fi "Sinulla on tunnistautumisen jälkeen neljä tuntia aikaa täyttää ja lähettää hakulomake, minkä jälkeen istuntosi aikakatkaistaan."
                                                  :sv "Efter att du har identifierat dig har du fyra timmar på dig att fylla i och skicka din ansökningsblankett. Efter detta avbryts din session."
                                                  :en "Once you have completed identification, you have four hours to fill in and send the application form. The session will expire after four hours."}
@@ -2981,6 +2987,9 @@
    :perusopetus-label                             {:fi "Perusopetus"
                                                    :sv "SV: Perusopetus"
                                                    :en ""}
+   :lukiokoulutus-label                           {:fi "Lukiokoulutus"
+                                                   :sv "SV: Lukiokoulutus"
+                                                   :en ""}
    :yo-tutkinnot-label                            {:fi "Ylioppilastutkinnot"
                                                    :sv "SV:Ylioppilastutkinnot"
                                                    :en ""}
@@ -2998,6 +3007,9 @@
                                                    :en ""}
    :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
                                                    :sv "SV: Ylemmät korkeakoulututkinnot"
+                                                   :en ""}
+   :lisensiaatti-tutkinnot-label                  {:fi "Lisensiaattitutkinnot"
+                                                   :sv "SV: Lisensiaattitutkinnot"
                                                    :en ""}
    :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
                                                    :sv "SV: Tohtoritutkinnot"

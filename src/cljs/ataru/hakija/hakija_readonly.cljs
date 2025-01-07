@@ -6,8 +6,8 @@
 ; in the future and already do to some extent.
 
 (ns ataru.hakija.hakija-readonly
-  (:require [ataru.hakija.components.tutkinnot :as tutkinnot]
-            [ataru.component-data.koski-tutkinnot-module :as ktm]
+  (:require [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
@@ -123,22 +123,23 @@
   (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
     [:div.application__tutkinto-wrapper-readonly
      (doall
-      (for [field (tutkinnot/get-tutkinto-field-mappings lang)]
+      (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
         (let [field-id (:id field)
-              label-id (str "koski-answer-label-" field-id "-" idx)]
+              label-id (str "koski-answer-label-" field-id "-" idx)
+              field-path (if (:multi-lang? field) [(:koski-tutkinto-field field) lang] [(:koski-tutkinto-field field)])]
         ^{:key (str "koski-answer-" field-id "-" idx)}
         [:div.application__form-field
          [:div.application__form-field-label
           {:id label-id}
           [:span (:text field)]]
-         [readonly-text field-id label-id (get-in tutkinto [(:koski-tutkinto-field field) lang])]])))
+         [readonly-text field-id label-id (get-in tutkinto field-path)]])))
      (doall (child-fields non-koski-content application lang ui idx))]))
 
 (defn tutkinto-wrapper [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [configuration-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) children)
-            itse-syotetyt-tutkinnot (tutkinnot/itse-syotetty-tutkinnot-content configuration-component)
+            itse-syotetyt-tutkinnot (tutkinto-util/itse-syotetty-tutkinnot-content configuration-component)
             additional-content (filterv #(not (ktm/is-tutkinto-configuration-component? %)) children)]
         [:div.application__wrapper-element
           [:div.application__wrapper-heading
@@ -146,10 +147,10 @@
             [application-field/scroll-to-anchor content]]
             [:div.application__wrapper-contents
              (doall
-               (for [koski-item @(subscribe [:application/koski-tutkinnot])
+               (for [koski-item (:koski-tutkinnot application)
                  :let [level (:level koski-item)
-                       question-group-of-level (tutkinnot/get-question-group-of-level configuration-component level)
-                       answer-idx (tutkinnot/get-tutkinto-idx level (:id koski-item))]
+                       question-group-of-level (tutkinto-util/get-question-group-of-level configuration-component level)
+                       answer-idx (tutkinto-util/get-tutkinto-idx level (:id koski-item) (:answers application))]
                  :when (some? answer-idx)]
                    ^{:key (str "tutkinto-" level "-" answer-idx)}
                    [tutkinto (:children question-group-of-level) application lang ui answer-idx koski-item]))
