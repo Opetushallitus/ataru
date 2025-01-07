@@ -764,9 +764,12 @@
     (js/console.log (str "Handle oppija session error fetch, resp" response))
     {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
-(defn- tutkinnot-in-form?
+(defn- requested-koski-tutkinto-levels
   [db]
-  (some? (some #(= "koski-tutkinnot-wrapper" (:id %)) (:flat-form-content db))))
+  (let [selected-level-ids (filter #(not (= "itse-syotetty" %))
+                                   (get-in db [:form :properties :tutkinto-properties :selected-option-ids] []))]
+    (when (seq selected-level-ids)
+      (string/join "," selected-level-ids))))
 
 (defn- set-tutkinto-fetch-status-as-needed
   [db tutkinto-fetch-needed]
@@ -779,7 +782,8 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          tutkinto-fetch-needed (and (tutkinnot-in-form? db)
+          requested-koski-levels (requested-koski-tutkinto-levels db)
+          tutkinto-fetch-needed (and requested-koski-levels
                                      (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
@@ -793,7 +797,7 @@
                     (when (:logged-in session-data)
                       [:application/start-oppija-session-polling]
                       (when tutkinto-fetch-needed
-                        [:application/fetch-tutkinnot]))]})))
+                        [:application/fetch-tutkinnot requested-koski-levels]))]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
@@ -1001,7 +1005,7 @@
       (cond-> (assoc-in db [:application :answers id] answer)
               (some? limit-reached) (assoc-in [:application :answers id :limit-reached] limit-reached)))))
 
-(defn- set-empty-value-dispatch
+(defn set-empty-value-dispatch
   [group-idx field-descriptor]
   (match field-descriptor
          {:fieldType (:or "dropdown" "textField" "textArea")}

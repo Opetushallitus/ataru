@@ -56,9 +56,9 @@
    :metadata   metadata
    :params     {}})
 
-(defn externalDataElement [metadata]
-  {:fieldClass "externalDataElement"
-   :fieldType  "selectabletutkintolist"
+(defn question-group-embedded [metadata]
+  {:fieldClass "questionGroup"
+   :fieldType  "embedded"
    :id         (util/component-id)
    :label      {:fi "" :sv "" :en ""}
    :children   []

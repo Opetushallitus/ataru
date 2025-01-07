@@ -2,36 +2,49 @@
   (:require [ataru.schema.localized-schema :as localized-schema]
             [schema.core :as s]))
 
-(s/defschema KoskiItemWithLocalizedNimi
-  {s/Any  s/Any
-   (s/optional-key :koodiarvo) s/Str
+(s/defschema KoodistoValueWithOptionalNimi
+  {s/Any                   s/Any
+   :koodiarvo              s/Str
+   :koodistoUri            s/Str
    (s/optional-key :nimi)  localized-schema/LocalizedString})
 
-(s/defschema KoskiSuoritusKoulutustyyppiItem
+(defn- koodisto-value [koodisto-uri]
   {s/Any        s/Any
-   :koodistoUri s/Str
-   :koodiarvo   s/Str})
+   :koodiarvo   s/Str
+   :koodistoUri (s/eq koodisto-uri)})
+
+(s/defschema VirtaTiedot
+  {s/Any        s/Any
+   :virtaOpiskeluoikeudenTyyppi (koodisto-value "virtaopiskeluoikeudentyyppi")})
+
 (s/defschema KoskiSuoritusItem
-  {s/Any                s/Any
-   :koulutusmoduuli     {s/Any            s/Any
-                         :tunniste        KoskiItemWithLocalizedNimi
-                         (s/optional-key :koulutustyyppi)  KoskiSuoritusKoulutustyyppiItem}
-   :vahvistus           {:päivä       s/Str}
-   :toimipiste          KoskiItemWithLocalizedNimi
-   (s/optional-key :tyyppi)              KoskiItemWithLocalizedNimi})
+  {s/Any            s/Any
+   :koulutusmoduuli {s/Any                            s/Any
+                     :tunniste                        KoodistoValueWithOptionalNimi
+                     (s/optional-key :virtaNimi)      localized-schema/LocalizedString
+                     (s/optional-key :koulutustyyppi) KoodistoValueWithOptionalNimi}
+   :vahvistus       {:päivä   s/Str}
+   :toimipiste      {s/Any    s/Any
+                     :oid     s/Str
+                     :nimi    localized-schema/LocalizedString}})
 
-(s/defschema KoskiSuoritusResponse
-  {
-   s/Any              s/Any
-   :opiskeluoikeudet [{s/Any        s/Any
-                       :suoritukset [KoskiSuoritusItem]}]})
+(s/defschema KoskiResponse
+  {s/Any              s/Any
+   :opiskeluoikeudet [{s/Any                          s/Any
+                       (s/optional-key :oid)          s/Str
+                       (s/optional-key :lisätiedot)   VirtaTiedot
+                       :tyyppi                        KoodistoValueWithOptionalNimi
+                       :suoritukset                   [KoskiSuoritusItem]}]})
 
-(s/defschema AtaruKoskiTutkintoResponse
-  {:tutkintonimi                      localized-schema/LocalizedString
-   :koulutusohjelmanimi               s/Str;localized-schema/LocalizedString
-   :toimipistenimi                    localized-schema/LocalizedString
-   :valmistumispvm                    s/Str
-   (s/optional-key :koulutustyyppi)   KoskiSuoritusKoulutustyyppiItem})
+(def koski-levels
+  ["perusopetus" "yo" "amm" "amm-perus" "amm-erikois" "kk-alemmat" "kk-ylemmat" "tohtori"])
+(s/defschema AtaruKoskiTutkinto
+  {:id                                    s/Str
+   :tutkintonimi                          localized-schema/LocalizedString
+   (s/optional-key :koulutusohjelmanimi)  localized-schema/LocalizedString
+   (s/optional-key :toimipistenimi)       localized-schema/LocalizedString
+   :valmistumispvm                        s/Str
+   :level                                 (apply s/enum koski-levels)})
 
 (s/defschema Tutkinnot
   {:tutkinnot {:description localized-schema/LocalizedString

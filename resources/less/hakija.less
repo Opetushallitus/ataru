@@ -1020,6 +1020,10 @@ textarea.application__form-text-area__size-large {
   }
 }
 
+.embedded {
+  cursor: pointer;
+}
+
 input.application__form-checkbox {
   appearance: none;
   -webkit-appearance: none;
@@ -3171,17 +3175,17 @@ i.arkistoitu {
   }
 }
 
-.application__fixed-koski-tutkinto-container {
-  align-items: center;
+.application__fixed-koski-tutkinto-item {
+  align-items: flex-start;
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
   flex-flow: row nowrap;
   padding: 19px;
   margin-bottom: 1px;
   font-size: 14px;
-  font-weight: bold;
-  background-color: @primary-green-700;
-  color: @white;
+  background-color: @primary-green-100;
+  color: @neutral-grey-900;
 
   .inner-content {
     flex-flow: column wrap;
@@ -3193,5 +3197,22 @@ i.arkistoitu {
     .upper-row {
       font-weight: bold;
     }
+  }
+}
+
+.checked-koski-tutkinto {
+  background-color: @primary-green-700;
+  color: @white;
+}
+
+.application__tutkinto-wrapper-readonly {
+  border-bottom: solid 1px @review-separator-color;
+  margin-bottom: 30px;
+  min-height: 65px;
+  display: flex;
+  flex-direction: column;
+
+  &:last-child {
+    margin-bottom: 10px;
   }
 }

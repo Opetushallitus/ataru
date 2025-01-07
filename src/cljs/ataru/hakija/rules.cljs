@@ -9,7 +9,8 @@
             [clojure.string :as string]
             [ataru.hakija.ssn :as ssn]
             [ataru.hakija.form-tools :as form-tools]
-            [ataru.hakija.validation-error :as validation-error])
+            [ataru.hakija.validation-error :as validation-error]
+            [ataru.util :as util])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -129,24 +130,6 @@
           is-required-needed (not= "true" have-finnish-ssn)]
       (toggle-require-field db "email" is-required-needed))
     db))
-
-(defn- parse-birth-date-from-ssn
-  [ssn]
-  (let [century-sign (nth ssn 6)
-        day          (subs ssn 0 2)
-        month        (subs ssn 2 4)
-        year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
-    (str day "." month "." century year)))
-
-(defn- parse-gender-from-ssn
-  [ssn]
-  (if (zero? (mod (js/parseInt (nth ssn 9)) 2))
-    "2"                                                     ;; based on koodisto-values
-    "1"))
 
 (defn- birth-date-and-gender
   ^{:dependencies [:have-finnish-ssn :ssn]}
@@ -485,17 +468,11 @@
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 
-(defn- find-descendant-ids-by-parent-id
-  [db parent-id]
-  (let [descendant-ids (mapv :id (filter #(or (= parent-id (:followup-of %)) (= parent-id (:children-of %)))
-                                       (:flat-form-content db)))
-        nested-ids (flatten (map #(find-descendant-ids-by-parent-id db %) descendant-ids))]
-    (concat descendant-ids nested-ids)))
-
 (defn- show-descendants-of-property-options
   [db _]
-  (let [property-field-ids       (map :id (filter #(= "formPropertyField" (:fieldClass %)) (:flat-form-content db)))
-        all-descendant-ids (flatten (map #(find-descendant-ids-by-parent-id db %) property-field-ids))
+  (let [flat-form-content (:flat-form-content db)
+        property-field-ids       (map :id (filter #(= "formPropertyField" (:fieldClass %)) flat-form-content))
+        all-descendant-ids (flatten (map #(util/find-descendant-ids-by-parent-id flat-form-content %) property-field-ids))
         is-explicitly-hidden?     (fn [id] (get-in db [:flat-form-content (keyword id) :params :hidden] false))]
     (reduce
       (fn [db' descendant-id] (assoc-in db' [:application :ui (keyword descendant-id) :visible?]

@@ -86,6 +86,14 @@
                             (fn [generate-fn]
                               (dispatch [:generate-component generate-fn (conj path :children (count children))]))]))]]]))
 
+(defn embedded-question-group [_ path children]
+  [:div
+   [:div children]
+   (when-not @(subscribe [:editor/component-locked? path])
+     [toolbar/question-group-toolbar path
+      (fn [generate-fn]
+        (dispatch [:generate-component generate-fn (conj path :children (count children))]))])])
+
 (defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value (subscribe [:editor/get-component-value path])

@@ -49,6 +49,10 @@
                    [ec/component-group content path children]
 
                    {:fieldClass "questionGroup"
+                    :fieldType  "embedded"}
+                   [ec/embedded-question-group content path children]
+
+                   {:fieldClass "questionGroup"
                     :fieldType  "fieldset"}
                    [ec/component-group content path children]
 

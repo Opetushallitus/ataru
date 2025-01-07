@@ -1,0 +1,594 @@
+{
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.23380441347",
+      "versionumero": 2,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.67887034139",
+        "oppilaitosnumero": {
+          "koodiarvo": "07379",
+          "nimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Nostavan koulu",
+            "sv": "Nostavan koulu",
+            "en": "Nostavan koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Nostavan koulu",
+          "sv": "Nostavan koulu",
+          "en": "Nostavan koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.15738250156",
+        "nimi": {
+          "fi": "Hollolan kunta",
+          "sv": "Hollolan kunta",
+          "en": "Hollolan kunta"
+        },
+        "yTunnus": "0146248-5",
+        "kotipaikka": {
+          "koodiarvo": "098",
+          "nimi": {
+            "fi": "Hollola",
+            "sv": "Hollola"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2008-08-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-06-04",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.67887034139",
+            "nimi": {
+              "fi": "Nostavan koulu",
+              "sv": "Nostavan koulu",
+              "en": "Nostavan koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "098",
+              "nimi": {
+                "fi": "Hollola",
+                "sv": "Hollola"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-06-03"
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning",
+          "en": "Basic education"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2008-08-15",
+      "päättymispäivä": "2016-06-04"
+    },
+    {
+      "oid": "1.2.246.562.15.27766590106",
+      "versionumero": 2,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.11168857016",
+        "oppilaitosnumero": {
+          "koodiarvo": "10038",
+          "nimi": {
+            "fi": "Savon ammattiopisto",
+            "sv": "Savon ammattiopisto",
+            "en": "Savon ammattiopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Savon ammattiopisto",
+            "sv": "Savon ammattiopisto",
+            "en": "Savon ammattiopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Savon ammatti- ja aikuisopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.99191194051",
+        "nimi": {
+          "fi": "Savon Koulutuskuntayhtymä",
+          "sv": "Savon Koulutuskuntayhtymä",
+          "en": "Savon Koulutuskuntayhtymä"
+        },
+        "yTunnus": "1852679-9",
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2012-09-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "4",
+              "nimi": {
+                "fi": "Työnantajan kokonaan rahoittama",
+                "sv": "I sin helhet finansierad av arbetsgivaren"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-08-31",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "4",
+              "nimi": {
+                "fi": "Työnantajan kokonaan rahoittama",
+                "sv": "I sin helhet finansierad av arbetsgivaren"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "361902",
+              "nimi": {
+                "fi": "Luonto- ja ympäristöalan perustutkinto",
+                "sv": "Grundexamen i natur och miljö",
+                "en": "Vocational qualification in Natural and Environmental Protection"
+              },
+              "lyhytNimi": {
+                "fi": "Luonto- ja ympär.alan perust.",
+                "sv": "Grundexamen i natur och miljö",
+                "en": "Vocational qualification in Natural and Environmental Protection"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Ammatillinen perustutkinto",
+                "sv": "Yrkesinriktad grundexamen",
+                "en": "Vocational upper secondary qualification"
+              },
+              "lyhytNimi": {
+                "fi": "Ammatillinen perustutkinto",
+                "sv": "Yrkesinriktad grundexamen"
+              },
+              "koodistoUri": "koulutustyyppi"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.11168857016",
+            "nimi": {
+              "fi": "Savon ammatti- ja aikuisopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-08-30"
+          },
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning",
+          "en": "Vocational education and training"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2012-09-01",
+      "päättymispäivä": "2016-08-31"
+    },
+    {
+      "oid": "1.2.246.562.15.53337193568",
+      "versionumero": 4,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.81044480515",
+        "oppilaitosnumero": {
+          "koodiarvo": "01359",
+          "nimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "lyhytNimi": {
+            "fi": "Aitoon koulutuskeskus"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Aitoon kotitalousoppilaitos"
+        },
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.93864526376",
+        "nimi": {
+          "fi": "Aitoon Emäntäkoulu Oy"
+        },
+        "yTunnus": "0150951-1",
+        "kotipaikka": {
+          "koodiarvo": "635",
+          "nimi": {
+            "fi": "Pälkäne",
+            "sv": "Pälkäne"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "1999-05-21",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2000-05-21",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.81044480515",
+            "nimi": {
+              "fi": "Aitoon kotitalousoppilaitos"
+            },
+            "kotipaikka": {
+              "koodiarvo": "635",
+              "nimi": {
+                "fi": "Pälkäne",
+                "sv": "Pälkäne"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2000-05-21"
+          },
+          "tyyppi": {
+            "koodiarvo": "aikuistenperusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Aikuisten perusopetuksen oppimäärä",
+              "sv": "Lärökurs i den grundläggande utbildningen för vuxna",
+              "en": "Basic education for adults syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "1999-05-21",
+      "päättymispäivä": "2000-05-21"
+    },
+    {
+      "oid": "1.2.246.562.15.95408187094",
+      "versionumero": 3,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.32727448402",
+        "oppilaitosnumero": {
+          "koodiarvo": "07522",
+          "nimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Hatsalan klassillinen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Hatsalan klassillinen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.59286753021",
+        "nimi": {
+          "fi": "Kuopion kaupunki"
+        },
+        "yTunnus": "0171450-7",
+        "kotipaikka": {
+          "koodiarvo": "297",
+          "nimi": {
+            "fi": "Kuopio",
+            "sv": "Kuopio"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2016-05-20",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2019-05-21",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.32727448402",
+            "nimi": {
+              "fi": "Hatsalan klassillinen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "297",
+              "nimi": {
+                "fi": "Kuopio",
+                "sv": "Kuopio"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2019-05-21"
+          },
+          "tyyppi": {
+            "koodiarvo": "aikuistenperusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Aikuisten perusopetuksen oppimäärä",
+              "sv": "Lärökurs i den grundläggande utbildningen för vuxna",
+              "en": "Basic education for adults syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "aikuistenperusopetus",
+        "nimi": {
+          "fi": "Aikuisten perusopetus",
+          "sv": "Grundläggande utbildning för vuxna"
+        },
+        "lyhytNimi": {
+          "fi": "Aikuisten perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2016-05-20",
+      "päättymispäivä": "2019-05-21"
+    }
+  ]
+}
