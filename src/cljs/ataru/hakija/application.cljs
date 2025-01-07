@@ -32,13 +32,6 @@
                                        :values {:value nil
                                                 :valid true}}]
 
-            [{:id    "tutkinnot"
-              :label label}]
-            [:tutkinnot {:valid  true
-                         :label  label
-                         :value  nil
-                         :values {:value nil
-                         :valid true}}]
             ; Override default language based on selected form language
             [{:id    "language"
               :label label}]
@@ -84,6 +77,17 @@
                                   (:validators field))]
               [(keyword id) {:valid  (not required?)
                              :label  label
+                             :value  [""]
+                             :values [{:value ""
+                                       :valid (not required?)}]}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "textField"
+              :params     {:transparent true}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
                              :value  [""]
                              :values [{:value ""
                                        :valid (not required?)}]}])

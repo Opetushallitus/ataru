@@ -52,9 +52,18 @@
                     :fieldType  "fieldset"}
                    [ec/component-group content path children]
 
+                   {:fieldClass "questionGroup"
+                    :fieldType  "tutkintofieldset"}
+                   [ec/component-group content path children]
+
                    {:fieldClass "formField" :fieldType "textField"
                     :params     {:adjacent true}}
                    [ec/adjacent-text-field content path]
+
+                   ;not visible in editor
+                   {:fieldClass "formField" :fieldType "textField"
+                    :params     {:transparent true}}
+                   []
 
                    {:fieldClass "formField" :fieldType "textField"}
                    [ec/text-field content followups path]
@@ -91,15 +100,17 @@
                    [ec/hakukohteet-module content path]
 
                    {:fieldClass "formPropertyField"
-                    :fieldType  "multipleChoice"}
+                    :fieldType  "multipleOptions"}
                    [mcc/multiple-checkbox-component content followups path]
 
                    :else (do
                            (log/error content)
                            (throw (new js/Error (str "Unknown component type " content)))))]
-        [:div
-         [dnd/drag-n-drop-spacer path]
-         component]))))
+        (if (seq component)
+          [:div
+            [dnd/drag-n-drop-spacer path]
+            component]
+          [:div])))))
 
 (defn editor []
   (let [content (:content @(subscribe [:editor/selected-form]))]
