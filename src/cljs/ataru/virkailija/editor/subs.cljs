@@ -686,3 +686,10 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
     (get form-properties :closed false)))
+
+(re-frame/reg-sub
+  :editor/get-selected-property-options
+  (fn [[_ _] _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties [_ category default]]
+    (get-in form-properties [(keyword category) :selected-option-ids] default)))
