@@ -58,7 +58,8 @@
     :modal-info-element
     :attachment
     :adjacent-fieldset
-    :question-group})
+    :question-group
+    :tutkinnot})
 
 (def question-group-toolbar-element-names
   #{:text-field
@@ -89,11 +90,15 @@
                     component/text-field)})
 
 (defn- component-toolbar [_ _ _]
-  (fn [path elements generator]
+  (fn [path _elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
           pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])
           tutkinnot-component-exists? (subscribe [:editor/tutkinnot-component-exists?])
-          hakeminen-tunnistautuneena-not-allowed? (not @(subscribe [:editor/allow-hakeminen-tunnistautuneena?]))]
+          hakeminen-tunnistautuneena-not-allowed? (not @(subscribe [:editor/allow-hakeminen-tunnistautuneena?]))
+          tutkinto-question-group-allowed? @(subscribe [:editor/get-component-param :allow-tutkinto-question-group path])
+          elements (if tutkinto-question-group-allowed?
+                     (conj _elements [:question-group-tutkinto component/question-group-tutkinto])
+                     _elements)]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn {:keys [data-test-id]}] elements
                   :when (and (not (and (vector? path)

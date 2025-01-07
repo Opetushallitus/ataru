@@ -3,9 +3,9 @@
 
 (defn property-multiple-choice [metadata]
   {:fieldClass            "formPropertyField"
-   :fieldType             "multipleChoice"
+   :fieldType             "multipleOptions"
    :id                    (util/component-id)
-   :label                 {:fi "" :sv ""}
+   :label                 {:fi "" :sv "" :en ""}
    :metadata              metadata
    :exclude-from-answers  true})
 

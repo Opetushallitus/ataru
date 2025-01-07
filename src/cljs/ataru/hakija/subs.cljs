@@ -363,17 +363,13 @@
      (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
-     (re-frame/subscribe [:state-query [:oppija-session :tutkinnot-not-to-be-fetched]])
-     (re-frame/subscribe [:state-query [:oppija-session :tutkinnot-fetched]])
-     (re-frame/subscribe [:state-query [:oppija-session :tutkinto-fetch-errored]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinto-fetch-handled]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
      (re-frame/subscribe [:state-query [:application :secret]])
      (re-frame/subscribe [:application/demo?])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored
-        tutkinnot-not-to-be-fetched tukinnot-fetched tutkinto-fetch-errored
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored tutkinto-fetch-handled
         virkailija-secret hakija-secret demo?] _]
-    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)
-          tutkinto-fetch-handled (or tutkinnot-not-to-be-fetched tukinnot-fetched tutkinto-fetch-errored)]
+    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (or load-failure
           (and form
                (or (not ht-feature-enabled)

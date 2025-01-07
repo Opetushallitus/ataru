@@ -6,7 +6,8 @@
 ; in the future and already do to some extent.
 
 (ns ataru.hakija.hakija-readonly
-  (:require [clojure.string :as string]
+  (:require [ataru.hakija.components.tutkinnot :as tutkinnot]
+            [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
@@ -112,6 +113,21 @@
         [application-field/scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
+
+(defn tutkinto-wrapper [_ _ _ _]
+  (let [ui (subscribe [:state-query [:application :ui]])]
+    (fn [content application lang children]
+      (let [visible-children (flatten (map (fn [child] (if (tutkinnot/is-tutkinto-configuration-component? child)
+                                                         ;(flatten (map :followups (:options child)))
+                                                         (tutkinnot/itse-syotetty-tutkinnot-content child)
+                                                         [child]))
+                                           children))]
+        [:div.application__wrapper-element
+          [:div.application__wrapper-heading
+            [:h2 (util/from-multi-lang (:label content) lang)]
+            [application-field/scroll-to-anchor content]]
+            (into [:div.application__wrapper-contents]
+              (child-fields visible-children application lang ui nil))]))))
 
 (defn question-group [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
@@ -251,7 +267,9 @@
   (match field-descriptor
          {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper field-descriptor application lang children]
          {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper field-descriptor application lang children]
+         {:fieldClass "wrapperElement" :fieldType "tutkinnot" :children children}  [tutkinto-wrapper field-descriptor application lang children]
          {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group field-descriptor application lang children]
+         {:fieldClass "questionGroup" :fieldType "tutkintofieldset" :children children} [question-group field-descriptor application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset field-descriptor application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil

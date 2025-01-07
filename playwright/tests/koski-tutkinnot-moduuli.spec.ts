@@ -97,7 +97,7 @@ test.describe('Koski-tutkinnot -moduuli', (): void => {
       .properties
     expect(
       updatedProperties['tutkinto-properties']['selected-option-ids']
-    ).toStrictEqual(['perusopetus', 'ei-koskesta', 'tohtori'])
+    ).toStrictEqual(['perusopetus', 'itse-syotetty', 'tohtori'])
   })
 
   test('Poista moduuli lomakkeelta', async () => {

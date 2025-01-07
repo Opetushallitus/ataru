@@ -764,31 +764,36 @@
     (js/console.log (str "Handle oppija session error fetch, resp" response))
     {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
-(defn- tutkinnot-in-form
+(defn- tutkinnot-in-form?
   [db]
-  (not (nil? (some #(= "tutkinnot" (:id %)) (:flat-form-content db)))))
+  (some? (some #(= "koski-tutkinnot-wrapper" (:id %)) (:flat-form-content db))))
+
+(defn- set-tutkinto-fetch-status-as-needed
+  [db tutkinto-fetch-needed]
+  (if tutkinto-fetch-needed
+    db
+    (assoc-in db [:oppija-session :tutkinto-fetch-handled] true)))
 
 (reg-event-fx
   :application/handle-oppija-session-fetch
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          person-oid (get-in session-data [:person-oid])
-          tutkinto-fetch-needed (and (tutkinnot-in-form db)
-                                     person-oid
+          tutkinto-fetch-needed (and (tutkinnot-in-form? db)
                                      (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
-               (assoc-in [:oppija-session :tutkinnot-not-to-be-fetched] (not (tutkinto-fetch-needed)))
+               (set-tutkinto-fetch-status-as-needed tutkinto-fetch-needed)
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
-                    (when (:logged-in session-data) [:application/start-oppija-session-polling]
-                                                    (when (tutkinto-fetch-needed)
-                                                      [:application/fetch-tutkinnot person-oid]))]})))
+                    (when (:logged-in session-data)
+                      [:application/start-oppija-session-polling]
+                      (when tutkinto-fetch-needed
+                        [:application/fetch-tutkinnot]))]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session

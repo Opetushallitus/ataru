@@ -118,15 +118,18 @@
 (s/defschema FormPropertyField
   {:id                            s/Str
    :fieldClass                    (s/eq "formPropertyField")
-   :fieldType                     (apply s/enum ["multipleChoice"])
+   :fieldType                     (apply s/enum ["multipleOptions"])
    :category                      s/Str
    :exclude-from-answers          (s/eq true)
    :metadata                      element-metadata-schema/ElementMetadata
    :label                         localized-schema/LocalizedStringOptional
+   (s/optional-key :params)       params-schema/Params
+   (s/optional-key :rules)        {s/Keyword s/Any}
    (s/optional-key :description)  localized-schema/LocalizedStringOptional
    (s/optional-key :options)      [{:id                               s/Str
                                     :label                            localized-schema/LocalizedStringOptional
                                     (s/optional-key :default-value)   s/Bool
+                                    (s/optional-key :params)          params-schema/Params
                                     (s/optional-key :description)     localized-schema/LocalizedStringOptional
                                     (s/optional-key :forced)          s/Bool
                                     (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
@@ -145,7 +148,7 @@
 
 (s/defschema WrapperBase    {:fieldClass                                  (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                          s/Str
-                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot"])
+                             :fieldType                                   (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "tutkinnot" "tutkintofieldset"])
                              :children                                    [(s/conditional
                                                                              #(or (= "wrapperElement" (:fieldClass %))
                                                                                   (= "questionGroup" (:fieldClass %)))

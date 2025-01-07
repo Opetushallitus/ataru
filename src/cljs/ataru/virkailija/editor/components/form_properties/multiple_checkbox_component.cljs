@@ -26,13 +26,12 @@
       (let [option-count (count options)
             list-of-selected (mapv :id (filter #((keyword (:id %)) @option-check-statuses) options))
             update-option-state (fn [option-id checked?]
-                                  (let [option-currently-checked? ((keyword option-id) @option-check-statuses)]
-                                    (when (and checked? (not option-currently-checked?))
-                                      (dispatch [:editor/update-selected-property-options
-                                                 category (conj list-of-selected option-id)]))
-                                    (when (and (not checked?) option-currently-checked?)
-                                      (dispatch [:editor/update-selected-property-options
-                                                 category (vec (remove #(= option-id %) list-of-selected))]))))]
+                                  (let [option-currently-checked? ((keyword option-id) @option-check-statuses)
+                                        new-list-of-selected (if (and checked? (not option-currently-checked?))
+                                                               (conj list-of-selected option-id)
+                                                               (vec (remove #(= option-id %) list-of-selected)))]
+                                    (dispatch [:editor/update-selected-property-options
+                                               category new-list-of-selected])))]
         (when (or (nil? @show-followups)
                   (not (= (count @show-followups) option-count)))
           (reset! show-followups (vec (repeat option-count false))))

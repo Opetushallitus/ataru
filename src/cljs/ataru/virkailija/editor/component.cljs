@@ -52,7 +52,9 @@
         value @(subscribe [:editor/get-component-value path])
         group-header-text (case (:fieldClass content)
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-element])
-                            "questionGroup" @(subscribe [:editor/virkailija-translation :question-group]))
+                            "questionGroup" (case (:fieldType content)
+                                              "tutkintofieldset" @(subscribe [:editor/virkailija-translation :question-group-tutkinto])
+                                              @(subscribe [:editor/virkailija-translation :question-group])))
         header-label-text (case (:fieldClass content)
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-header])
                             "questionGroup" @(subscribe [:editor/virkailija-translation :group-header]))]
