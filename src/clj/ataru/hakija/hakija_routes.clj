@@ -387,7 +387,7 @@
             session (oss/read-session oppija-session)
             tutkinto-level-list (str/split tutkinto-levels #",")]
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
-          (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service henkilo-oid)]
+          (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service true henkilo-oid)]
             (response/ok (parse-koski-tutkinnot tutkinto-level-list (:opiskeluoikeudet oppija-response)))
             (response/not-found {}))
           (response/unauthorized {}))))

@@ -62,7 +62,7 @@
     (flatten (map :followups selected-levels))))
 
 (defn is-koski-tutkinto-id-field? [field-id]
-  (boolean (when (str/ends-with? field-id ktm/tutkinto-id-field-postfix)
+  (boolean (when (and field-id (str/ends-with? field-id ktm/tutkinto-id-field-postfix))
              (let [tutkinto-level (str/replace field-id (str "-" ktm/tutkinto-id-field-postfix) "")]
                (some #{tutkinto-level} ktm/koski-tutkinto-tasot)))))
 
