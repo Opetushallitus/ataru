@@ -4,7 +4,9 @@
 (s/defschema PaymentProperties
   {(s/optional-key :type)                             (s/maybe s/Str)
    (s/optional-key :processing-fee)                   (s/maybe s/Str)
-   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)
+   (s/optional-key :vat)                              (s/maybe s/Str)
+   (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
 
 (s/defschema FormCategoryProperties
              {(s/optional-key :selected-option-ids)  [s/Str]})

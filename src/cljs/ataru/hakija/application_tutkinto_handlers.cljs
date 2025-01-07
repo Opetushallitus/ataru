@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-tutkinto-handlers
   (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
-            [clojure.string :as s]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.hakija.application-handlers :refer [check-schema-interceptor set-empty-value-dispatch]]))
 
 (reg-event-fx
@@ -10,15 +10,12 @@
     (js/console.error (str "Handle tutkinto fetch error, response " response))
     {:db (assoc-in db [:oppija-session :tutkinto-fetch-handled] true)}))
 
-(defn- descending [a b]
-  (compare b a))
-
 (reg-event-db
   :application/handle-fetch-tutkinnot
   [check-schema-interceptor]
   (fn [db [_ {tutkinnot-response-body :body}]]
     (-> db
-        (assoc-in [:application :tutkinnot] (sort-by #(last (s/split (:id %) #"_")) descending tutkinnot-response-body))
+        (assoc-in [:application :koski-tutkinnot] (tutkinto-util/sort-koski-tutkinnot tutkinnot-response-body))
         (assoc-in [:oppija-session :tutkinto-fetch-handled] true))))
 
 (reg-event-fx

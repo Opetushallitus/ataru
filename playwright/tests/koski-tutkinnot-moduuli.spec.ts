@@ -64,6 +64,8 @@ test.describe('Koski-tutkinnot -moduuli', (): void => {
     lisaysLinkki = valikko.getByText(toolbarButtonText)
     await expect(lisaysLinkki).toBeHidden()
 
+    // @TODO Otetaan käyttöön siinä vaiheessa kun opintosuoritukset lisätään editoriin
+    /*
     const completedStudiesCheckbox = page.getByTestId(
       'completed-studies-question-id'
     )
@@ -78,6 +80,7 @@ test.describe('Koski-tutkinnot -moduuli', (): void => {
     expect(
       updatedProperties['tutkinto-properties']['show-completed-studies']
     ).toBe(true)
+     */
 
     const perusopetusCheckbox = page.getByRole('checkbox', {
       name: 'Perusopetus',
@@ -88,13 +91,16 @@ test.describe('Koski-tutkinnot -moduuli', (): void => {
     await expect(perusopetusCheckbox).not.toBeChecked()
     await expect(tohtoritutkinnotCheckbox).not.toBeChecked()
     await perusopetusCheckbox.click()
-    putRequestPromise = page.waitForRequest((req) => req.method() === 'PUT')
+    const putRequestPromise = page.waitForRequest(
+      (req) => req.method() === 'PUT'
+    )
     await tohtoritutkinnotCheckbox.click()
-    putRequest = await putRequestPromise
+    const putRequest = await putRequestPromise
     await expect(perusopetusCheckbox).toBeChecked()
     await expect(tohtoritutkinnotCheckbox).toBeChecked()
-    updatedProperties = JSON.parse(putRequest.postData() || '')[0]['new-form']
-      .properties
+    const updatedProperties = JSON.parse(putRequest.postData() || '')[0][
+      'new-form'
+    ].properties
     expect(
       updatedProperties['tutkinto-properties']['selected-option-ids']
     ).toStrictEqual(['perusopetus', 'itse-syotetty', 'tohtori'])

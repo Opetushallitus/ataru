@@ -26,6 +26,8 @@
             [ataru.application-common.hakukohde-specific-questions :as hsq]
             [ataru.virkailija.application.view.virkailija-application-icons :as icons]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :as pohjakoulutus-toinen-aste-view]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.constants :as constants]))
 
 (declare field)
@@ -76,6 +78,7 @@
                               selected-ei-jyemp-hakukohteet-and-ryhmat
                               selected-hakukohteet-and-ryhmat)))))
          (or (empty? (:children field-descriptor))
+             (and (= "wrapperElement" (:fieldClass field-descriptor))(= "tutkinnot" (:fieldType field-descriptor)))
              (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor)))
          (not (util/is-field-hidden-by-section-visibility-conditions @form (:answers application) field-descriptor))
          (or (some? (get-in application [:answers (keyword (:id field-descriptor))]))
@@ -190,6 +193,48 @@
    (when (some? side-content)
      [:div.application__wrapper-side-contents
       side-content])])
+
+(defn- tutkinto [children application hakukohteet-and-ryhmat lang idx tutkinto]
+  (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
+    [:div.application__tutkinto-wrapper-readonly
+     (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
+       (let [field-id (:id field)
+             label-id (str "koski-answer-label-" field-id "-" idx)
+             field-path (if (:multi-lang? field) [(:koski-tutkinto-field field) lang] [(:koski-tutkinto-field field)])]
+         ^{:key (str "koski-answer-" field-id "-" idx)}
+         [:div.application__form-field
+          [:div.application__form-field-label
+           {:id label-id}
+           [:span (:text field)]]
+          [text-form-field-values (:id field) (get-in tutkinto field-path)]]))
+     (for [child non-koski-content]
+       ^{:key (str "tutkinto-" (:id child) "-" idx)}
+       [field child application hakukohteet-and-ryhmat lang idx false])]))
+
+(defn tutkinto-wrapper [_ _ _ _]
+  (fn [content application hakukohteet-and-ryhmat lang children]
+    (let [configuration-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) children)
+          itse-syotetyt-tutkinnot (tutkinto-util/itse-syotetty-tutkinnot-content configuration-component)
+          additional-content (filterv #(not (ktm/is-tutkinto-configuration-component? %)) children)]
+      [:div.application__wrapper-element
+       [:div.application__wrapper-heading
+        [:h2 (util/from-multi-lang (:label content) lang)]
+        [scroll-to-anchor content]]
+       [:div.application__wrapper-contents
+        (for [koski-item (:koski-tutkinnot application)
+              :let [level (:level koski-item)
+                    question-group-of-level (tutkinto-util/get-question-group-of-level configuration-component level)
+                    answer-idx (tutkinto-util/get-tutkinto-idx level (:id koski-item) (:answers application))]
+              :when (some? answer-idx)]
+          ^{:key (str "tutkinto-" level "-" answer-idx)}
+          [tutkinto (:children question-group-of-level) application hakukohteet-and-ryhmat lang answer-idx koski-item])
+        (for [child itse-syotetyt-tutkinnot]
+          ^{:key (:id child)}
+          [field child application hakukohteet-and-ryhmat lang nil false])
+        (for [child additional-content]
+          ^{:key (:id child)}
+          [field child application hakukohteet-and-ryhmat lang nil false])
+        ]])))
 
 (defn row-container [_ _ _ _ group-idx person-info-field?]
   (fn [application hakukohteet-and-ryhmat lang children]
@@ -362,6 +407,11 @@
    question-group-children))
 
 (defn- question-group [content application hakukohteet-and-ryhmat lang children]
+  (if (= "tutkintofieldset" (:fieldType content))
+    (into [:div]
+      (for [idx (range (repeat-count application children))]
+        ^{:key (str "question-group-" (:id content) "-" idx)}
+        [tutkinto children application hakukohteet-and-ryhmat lang idx nil]))
   [:div.application__question-group
    [:h3.application__question-group-heading
     (util/from-multi-lang (:label content) lang)]
@@ -370,7 +420,7 @@
      [:div.application__question-group-repeat
       (for [child children]
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
-        [field child application hakukohteet-and-ryhmat lang idx false])])])
+        [field child application hakukohteet-and-ryhmat lang idx false])])]))
 
 (defn- nationality-field [field-descriptor application lang children]
   (let [field            (first children)
@@ -401,8 +451,10 @@
            (if person-info-field?
              (nationality-field content application lang children)
              [question-group content application hakukohteet-and-ryhmat lang children])
+      {:fieldClass "questionGroup" :fieldType "tutkintofieldset" :children children} [question-group content application hakukohteet-and-ryhmat lang children]
       {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application hakukohteet-and-ryhmat lang children group-idx person-info-field?]
       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
+      {:fieldClass "wrapperElement" :fieldType "tutkinnot" :children children}  [tutkinto-wrapper content application hakukohteet-and-ryhmat lang children]
       {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
       (if person-info-field?
         (text content application hakukohteet-and-ryhmat lang group-idx)

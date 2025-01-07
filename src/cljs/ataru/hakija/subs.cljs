@@ -1015,9 +1015,9 @@
 (re-frame/reg-sub
   :application/koski-tutkinnot
   (fn [db]
-    (get-in db [:application :tutkinnot] [])))
+    (get-in db [:application :koski-tutkinnot] [])))
 
 (re-frame/reg-sub
   :application/any-koski-tutkinnot?
   (fn [db]
-    (some? (not-empty (get-in db [:application :tutkinnot] {})))))
+    (some? (not-empty (get-in db [:application :koski-tutkinnot] {})))))
