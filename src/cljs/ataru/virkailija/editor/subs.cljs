@@ -554,6 +554,13 @@
          (some #(= "pohjakoulutusristiriita" (:id %))))))
 
 (re-frame/reg-sub
+  :editor/tutkinnot-component-exists?
+  (fn [db _]
+    (->> (get-selected-form-content db)
+         util/flatten-form-fields
+         (some #(= "tutkinnot" (:id %))))))
+
+(re-frame/reg-sub
   :editor/email-template
   (fn [db _]
     (get-email-template db)))

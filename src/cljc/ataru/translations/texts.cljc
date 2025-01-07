@@ -2972,6 +2972,20 @@
                               :sv "Anteckningar"
                               :en "EN: Notes"}})
 
+(def koski-tutkinnot-texts
+  {:section-label            {:fi "Tutkinnot"
+                              :sv "SV: Tutkinnot"
+                              :en ""}
+   :section-description      {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                              :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                              :en ""}
+   :info-label               {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                              :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                              :en ""}
+   :hakijan-tutkinnot        {:fi "Hakijan suoritetut tutkinnot"
+                              :sv "SV: Hakijan suoritetut tutkinnot"
+                              :en "EN: Hakijan suoritetut tutkinnot"}})
+
 (defn email-applied-error
   [email preferred-name]
   {:fi [:div.application__validation-error-dialog
