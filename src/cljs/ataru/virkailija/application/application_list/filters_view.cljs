@@ -305,6 +305,7 @@
         tutu-form?                                (subscribe [:payment/tutu-form? @form-key])
         astu-form?                                (subscribe [:payment/astu-form? @form-key])
         opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
+        opo-and-hak-pal-paakayttaja?               (subscribe [:editor/all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -319,7 +320,8 @@
           {:id       "open-application-filters"
            :on-click #(do
                         (when (and @opinto-ohjaaja-or-admin? @toisen-asteen-yhteishaku-selected?)
-                          (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
+                          (when (not @opo-and-hak-pal-paakayttaja?)
+                            (dispatch [:application/do-organization-query-for-schools-of-departure ""])))
                         (dispatch [:application/undo-filters])
                         (swap! filters-visible not))}
           [:span
