@@ -1684,3 +1684,9 @@
     (let [path (db/current-form-properties-path db [:closed])
           value (not (get-in db path))]
       (assoc-in db path value))))
+
+(reg-event-db
+  :editor/update-selected-property-options
+  (fn [db [_ category selected-option-ids]]
+    (let [path (vec (db/current-form-properties-path db [(keyword category)]))]
+      (assoc-in db (conj path :selected-option-ids) selected-option-ids))))
