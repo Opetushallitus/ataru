@@ -50,6 +50,22 @@
 (defn flatten-form-fields [fields]
   (vec (mapcat flatten-form-field fields)))
 
+(defn find-descendant-ids-by-parent-id
+  [flat-form-content parent-id]
+  (let [descendant-ids (mapv :id (filter #(or (= parent-id (:followup-of %)) (= parent-id (:children-of %)))
+                                         flat-form-content))
+        nested-ids (flatten (map #(find-descendant-ids-by-parent-id flat-form-content %) descendant-ids))]
+    (concat descendant-ids nested-ids)))
+
+(defn answered-in-group-idx [answer-entity idx]
+  (let [answer-arr (get answer-entity :value)]
+    (boolean (and (coll? answer-arr)
+                  (< idx (count answer-arr))
+                  (let [answer (get answer-arr idx)]
+                    (and
+                      (seq answer)
+                      (or (not (coll? answer)) (seq (first answer)))))))))
+
 (defn answerable? [field]
   (not (contains? #{"infoElement" "modalInfoElement" "wrapperElement" "questionGroup" "formPropertyField"}
                   (:fieldClass field))))
