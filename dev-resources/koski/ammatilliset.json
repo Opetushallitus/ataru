@@ -1,0 +1,739 @@
+{
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.70597301822",
+      "versionumero": 16,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.54019331674",
+        "oppilaitosnumero": {
+          "koodiarvo": "30029",
+          "nimi": {
+            "fi": "HAUS kehittämiskeskus Oy",
+            "sv": "HAUS kehittämiskeskus Oy",
+            "en": "HAUS kehittämiskeskus Oy"
+          },
+          "lyhytNimi": {
+            "fi": "HAUS kehittämiskeskus Oy",
+            "sv": "HAUS kehittämiskeskus Oy",
+            "en": "HAUS kehittämiskeskus Oy"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "HAUS kehittämiskeskus Oy",
+          "sv": "HAUS kehittämiskeskus Oy",
+          "en": "HAUS kehittämiskeskus Oy"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.39675935785",
+        "nimi": {
+          "fi": "Haus Kehittämiskeskus Oy",
+          "sv": "Haus Kehittämiskeskus Oy",
+          "en": "Haus Kehittämiskeskus Oy"
+        },
+        "yTunnus": "1778388-1",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2018-11-15",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2020-11-16",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "437109",
+              "nimi": {
+                "fi": "Talous- ja henkilöstöhallinnon erikoisammattitutkinto",
+                "sv": "Specialyrkesexamen i ekonomi- och personalförvaltning",
+                "en": "Specialist vocational qualification in Business Administration, Financing, Accounting and HR Management"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "12",
+              "nimi": {
+                "fi": "Erikoisammattitutkinto",
+                "sv": "Specialyrkesexamen",
+                "en": "Specialist vocational qualification"
+              },
+              "lyhytNimi": {
+                "fi": "Erikoisammattitutkinto",
+                "sv": "Specialyrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.54019331674",
+            "nimi": {
+              "fi": "HAUS kehittämiskeskus Oy",
+              "sv": "HAUS kehittämiskeskus Oy",
+              "en": "HAUS kehittämiskeskus Oy"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2020-11-16"
+          },
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2018-11-15",
+      "päättymispäivä": "2020-11-16"
+    },
+    {
+      "oid": "1.2.246.562.15.38824694152",
+      "versionumero": 3,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.52251087186",
+        "oppilaitosnumero": {
+          "koodiarvo": "10105",
+          "nimi": {
+            "fi": "Stadin ammatti- ja aikuisopisto",
+            "sv": "Stadin ammatti- ja aikuisopisto",
+            "en": "Stadin ammatti- ja aikuisopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Stadin ammatti- ja aikuisopisto",
+            "sv": "Stadin ammatti- ja aikuisopisto",
+            "en": "Stadin ammatti- ja aikuisopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Stadin ammatti- ja aikuisopisto",
+          "sv": "Stadin ammatti- ja aikuisopisto",
+          "en": "Stadin ammatti- ja aikuisopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.346830761110",
+        "nimi": {
+          "fi": "Helsingin kaupunki",
+          "sv": "Helsingfors stad",
+          "en": "Helsingin kaupunki"
+        },
+        "yTunnus": "0201256-6",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2012-09-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "4",
+              "nimi": {
+                "fi": "Työnantajan kokonaan rahoittama",
+                "sv": "I sin helhet finansierad av arbetsgivaren"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2019-09-15",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "4",
+              "nimi": {
+                "fi": "Työnantajan kokonaan rahoittama",
+                "sv": "I sin helhet finansierad av arbetsgivaren"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "351301",
+              "nimi": {
+                "fi": "Ajoneuvoalan perustutkinto",
+                "sv": "Grundexamen inom fordonsbranschen",
+                "en": "Vocational qualification in the Vehicle Sector"
+              },
+              "lyhytNimi": {
+                "fi": "Ajoneuvoalan perustutkinto",
+                "sv": "Grundexamen inom fordonsbranschen",
+                "en": "Vocational qualification in the Vehicle Sector"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Ammatillinen perustutkinto",
+                "sv": "Yrkesinriktad grundexamen",
+                "en": "Vocational upper secondary qualification"
+              },
+              "lyhytNimi": {
+                "fi": "Ammatillinen perustutkinto",
+                "sv": "Yrkesinriktad grundexamen"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.56139411567",
+            "nimi": {
+              "fi": "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka",
+              "sv": "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka",
+              "en": "Stadin ammatti- ja aikuisopisto, Abraham Wetterin tien toimipaikka"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-01-09"
+          },
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2012-09-01",
+      "päättymispäivä": "2019-09-15"
+    },
+    {
+      "oid": "1.2.246.562.15.59325592679",
+      "versionumero": 3,
+      "aikaleima": "2023-08-30T13:32:20.596036",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.52251087186",
+        "oppilaitosnumero": {
+          "koodiarvo": "10105",
+          "nimi": {
+            "fi": "Stadin ammatti- ja aikuisopisto",
+            "sv": "Stadin ammatti- ja aikuisopisto",
+            "en": "Stadin ammatti- ja aikuisopisto"
+          },
+          "lyhytNimi": {
+            "fi": "Stadin ammatti- ja aikuisopisto",
+            "sv": "Stadin ammatti- ja aikuisopisto",
+            "en": "Stadin ammatti- ja aikuisopisto"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Stadin ammatti- ja aikuisopisto",
+          "sv": "Stadin ammatti- ja aikuisopisto",
+          "en": "Stadin ammatti- ja aikuisopisto"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.346830761110",
+        "nimi": {
+          "fi": "Helsingin kaupunki",
+          "sv": "Helsingin kaupunki",
+          "en": "Helsingin kaupunki"
+        },
+        "yTunnus": "0201256-6",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "ostettu": false,
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2023-08-29",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education financed by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2023-08-30",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education financed by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "354345",
+              "nimi": {
+                "fi": "Ajoneuvoalan ammattitutkinto",
+                "sv": "Yrkesexamen inom fordonsbranschen",
+                "en": "Further vocational qualification in the Motor Vehicles Sector"
+              },
+              "lyhytNimi": {
+                "fi": "Ajoneuvoalan at",
+                "sv": "YE inom fordonsbranschen",
+                "en": "Further vocational qualification in the Motor Vehicles Sector"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "perusteenDiaarinumero": "OPH-1361-2018",
+            "perusteenNimi": {
+              "fi": "Ajoneuvoalan ammattitutkinto",
+              "sv": "Yrkesexamen inom fordonsbranschen",
+              "en": "Further Vocational Qualification in the Motor Vehicles Sector"
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "11",
+              "nimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen",
+                "en": "Further vocational qualification"
+              },
+              "lyhytNimi": {
+                "fi": "Ammattitutkinto",
+                "sv": "Yrkesexamen"
+              },
+              "koodistoUri": "koulutustyyppi"
+            }
+          },
+          "suoritustapa": {
+            "koodiarvo": "reformi",
+            "nimi": {
+              "fi": "Reformin mukainen näyttö",
+              "sv": "Reform",
+              "en": "Reform"
+            },
+            "lyhytNimi": {
+              "fi": "Reformi"
+            },
+            "koodistoUri": "ammatillisentutkinnonsuoritustapa",
+            "koodistoVersio": 1
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.52251087186",
+            "oppilaitosnumero": {
+              "koodiarvo": "10105",
+              "nimi": {
+                "fi": "Stadin ammatti- ja aikuisopisto",
+                "sv": "Stadin ammatti- ja aikuisopisto",
+                "en": "Stadin ammatti- ja aikuisopisto"
+              },
+              "lyhytNimi": {
+                "fi": "Stadin ammatti- ja aikuisopisto",
+                "sv": "Stadin ammatti- ja aikuisopisto",
+                "en": "Stadin ammatti- ja aikuisopisto"
+              },
+              "koodistoUri": "oppilaitosnumero",
+              "koodistoVersio": 1
+            },
+            "nimi": {
+              "fi": "Stadin ammatti- ja aikuisopisto",
+              "sv": "Stadin ammatti- ja aikuisopisto",
+              "en": "Stadin ammatti- ja aikuisopisto"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2023-08-30",
+            "paikkakunta": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            },
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.52251087186",
+              "oppilaitosnumero": {
+                "koodiarvo": "10105",
+                "nimi": {
+                  "fi": "Stadin ammatti- ja aikuisopisto",
+                  "sv": "Stadin ammatti- ja aikuisopisto",
+                  "en": "Stadin ammatti- ja aikuisopisto"
+                },
+                "lyhytNimi": {
+                  "fi": "Stadin ammatti- ja aikuisopisto",
+                  "sv": "Stadin ammatti- ja aikuisopisto",
+                  "en": "Stadin ammatti- ja aikuisopisto"
+                },
+                "koodistoUri": "oppilaitosnumero",
+                "koodistoVersio": 1
+              },
+              "nimi": {
+                "fi": "Stadin ammatti- ja aikuisopisto",
+                "sv": "Stadin ammatti- ja aikuisopisto",
+                "en": "Stadin ammatti- ja aikuisopisto"
+              },
+              "kotipaikka": {
+                "koodiarvo": "091",
+                "nimi": {
+                  "fi": "Helsinki",
+                  "sv": "Helsingfors"
+                },
+                "koodistoUri": "kunta",
+                "koodistoVersio": 2
+              }
+            },
+            "myöntäjäHenkilöt": [
+              {
+                "nimi": "Repe Reksi",
+                "titteli": {
+                  "fi": "Rehtori"
+                },
+                "organisaatio": {
+                  "oid": "1.2.246.562.10.52251087186",
+                  "oppilaitosnumero": {
+                    "koodiarvo": "10105",
+                    "nimi": {
+                      "fi": "Stadin ammatti- ja aikuisopisto",
+                      "sv": "Stadin ammatti- ja aikuisopisto",
+                      "en": "Stadin ammatti- ja aikuisopisto"
+                    },
+                    "lyhytNimi": {
+                      "fi": "Stadin ammatti- ja aikuisopisto",
+                      "sv": "Stadin ammatti- ja aikuisopisto",
+                      "en": "Stadin ammatti- ja aikuisopisto"
+                    },
+                    "koodistoUri": "oppilaitosnumero",
+                    "koodistoVersio": 1
+                  },
+                  "nimi": {
+                    "fi": "Stadin ammatti- ja aikuisopisto",
+                    "sv": "Stadin ammatti- ja aikuisopisto",
+                    "en": "Stadin ammatti- ja aikuisopisto"
+                  },
+                  "kotipaikka": {
+                    "koodiarvo": "091",
+                    "nimi": {
+                      "fi": "Helsinki",
+                      "sv": "Helsingfors"
+                    },
+                    "koodistoUri": "kunta",
+                    "koodistoVersio": 2
+                  }
+                }
+              }
+            ]
+          },
+          "suorituskieli": {
+            "koodiarvo": "FI",
+            "nimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "lyhytNimi": {
+              "fi": "suomi",
+              "sv": "finska",
+              "en": "Finnish"
+            },
+            "koodistoUri": "kieli",
+            "koodistoVersio": 1
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "200900",
+                  "nimi": {
+                    "fi": "Ajoneuvo- tai konemyynnin toteuttaminen"
+                  },
+                  "lyhytNimi": {
+                    "fi": "Ajoneuvo- tai konemyynnin toteuttaminen"
+                  },
+                  "koodistoUri": "tutkinnonosat",
+                  "koodistoVersio": 2
+                },
+                "pakollinen": false,
+                "laajuus": {
+                  "arvo": 37.0,
+                  "yksikkö": {
+                    "koodiarvo": "6",
+                    "nimi": {
+                      "fi": "osaamispistettä",
+                      "sv": "kompetenspoäng",
+                      "en": "ECVET competence points"
+                    },
+                    "lyhytNimi": {
+                      "fi": "osp",
+                      "sv": "kp",
+                      "en": "competence points"
+                    },
+                    "koodistoUri": "opintojenlaajuusyksikko",
+                    "koodistoVersio": 1
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "nimi": {
+                      "fi": "4"
+                    },
+                    "lyhytNimi": {
+                      "fi": "4"
+                    },
+                    "koodistoUri": "arviointiasteikkoammatillinen15",
+                    "koodistoVersio": 1
+                  },
+                  "päivä": "2023-08-30",
+                  "hyväksytty": true
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ammatillisentutkinnonosa",
+                "nimi": {
+                  "fi": "Ammatillisen tutkinnon osa",
+                  "sv": "Yrkesexamensdel",
+                  "en": "A vocational education qualification unit"
+                },
+                "koodistoUri": "suorituksentyyppi",
+                "koodistoVersio": 1
+              }
+            }
+          ],
+          "tyyppi": {
+            "koodiarvo": "ammatillinentutkinto",
+            "nimi": {
+              "fi": "Ammatillinen tutkinto",
+              "sv": "Yrkesinriktad examen",
+              "en": "Vocational education  qualification"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          },
+          "keskiarvo": 4.0
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ammatillinenkoulutus",
+        "nimi": {
+          "fi": "Ammatillinen koulutus",
+          "sv": "Yrkesutbildning",
+          "en": "Vocational education and training"
+        },
+        "lyhytNimi": {
+          "fi": "Ammatillinen koulutus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2023-08-29",
+      "päättymispäivä": "2023-08-30"
+    }
+  ]
+}
