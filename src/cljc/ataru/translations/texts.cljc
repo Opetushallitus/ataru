@@ -2940,19 +2940,60 @@
                               :en "EN: Notes"}})
 
 (def koski-tutkinnot-texts
-  {:section-label            {:fi "Tutkinnot"
-                              :sv "SV: Tutkinnot"
-                              :en ""}
-   :section-description      {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
-                              :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syyttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
-                              :en ""}
-   :info-label               {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
-                              :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
-                              :en ""}
-   :hakijan-tutkinnot        {:fi "Hakijan suoritetut tutkinnot"
-                              :sv "SV: Hakijan suoritetut tutkinnot"
-                              :en "EN: Hakijan suoritetut tutkinnot"}})
-
+  {:section-label                           {:fi "Tutkinnot"
+                                             :sv "SV: Tutkinnot"
+                                             :en ""}
+   :section-description                     {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                             :sv "SV: Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi syöttää puuttuvia tutkintotietoja. Kirjautumaton hakija syöttää aina omat tutkintotietonsa."
+                                             :en ""}
+   :info-label                              {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                             :sv "SV: Valitse ne tutkinnot, jotka haluat liittää hakemukseen"
+                                             :en ""}
+   :tutkintotaso-label                      {:fi "Tutkintotasot"
+                                             :sv "SV: Tutkintotasot"
+                                             :en ""}
+   :tutkintotaso-description                {:fi "Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                             :sv "SV: Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+                                             :en ""}
+   :perusopetus-label                       {:fi "Perusopetus"
+                                             :sv "SV: Perusopetus"
+                                             :en ""}
+   :yo-tutkinnot-label                      {:fi "Ylioppilastutkinnot"
+                                             :sv "SV:Ylioppilastutkinnot"
+                                             :en ""}
+   :amm-perustutkinnot-label                {:fi "Ammatilliset perustutkinnot"
+                                             :sv "SV: Ammatilliset perustutkinnot"
+                                             :en ""}
+   :amm-tutkinnot-label                     {:fi "Ammattitutkinnot"
+                                             :sv "SV: Ammattitutkinnot"
+                                             :en ""}
+   :amm-erikoistutkinnot-label              {:fi "Erikoisammattitutkinnot"
+                                             :sv "SV: Erikoisammattitutkinnot"
+                                             :en ""}
+   :alemmat-kk-tutkinnot-label              {:fi "Alemmat korkeakoulututkinnot"
+                                             :sv "SV: Alemmat korkeakoulututkinnot"
+                                             :en ""}
+   :ylemmat-kk-tutkinnot-label              {:fi "Ylemmät korkeakoulututkinnot"
+                                             :sv "SV: Ylemmät korkeakoulututkinnot"
+                                             :en ""}
+   :tohtori-tutkinnot-label                 {:fi "Tohtoritutkinnot"
+                                             :sv "SV: Tohtoritutkinnot"
+                                             :en ""}
+   :ei-koski-tutkinnot-label                {:fi "Suoritus, joka ei ole Koskessa"
+                                             :sv "SV: Suoritus, joka ei ole Koskessa"
+                                             :en ""}
+   :koski-followup-label                    {:fi "Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                             :sv "SV: Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                             :en ""}
+   :ei-koski-followup-label                 {:fi "Kysymykset"
+                                             :sv "SV: Kysymykset"
+                                             :en ""}
+   :ei-koski-tutkinto-followup-label        {:fi "Tutkinto"
+                                             :sv "SV: Tutkinto"
+                                             :en ""}
+   :ei-koski-koulutusohjelma-followup-label {:fi "Koulutusohjelma"
+                                             :sv "SV: Koulutusohjelma"
+                                             :en ""}})
 (defn email-applied-error
   [email preferred-name]
   {:fi [:div.application__validation-error-dialog
