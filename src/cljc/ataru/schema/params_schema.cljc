@@ -18,6 +18,7 @@
                      (s/optional-key :question-group-id)                s/Int
                      (s/optional-key :max-length)                       s/Str
                      (s/optional-key :hidden)                           s/Bool
+                     (s/optional-key :transparent)                      (s/maybe s/Bool)
                      (s/optional-key :size)                             s/Str
                      (s/optional-key :haku-oid)                         s/Str
                      (s/optional-key :placeholder)                      localized-schema/LocalizedString
@@ -27,4 +28,5 @@
                      (s/optional-key :info-text)                        (s/maybe info-text-schema/InfoText)
                      (s/optional-key :info-text-collapse)               (s/maybe s/Bool)
                      (s/optional-key :show-only-for-identified)         (s/maybe s/Bool)
+                     (s/optional-key :allow-tutkinto-question-group)    (s/maybe s/Bool)
                      (s/optional-key :invalid-values)                   [s/Str]})
