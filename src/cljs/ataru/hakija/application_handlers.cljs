@@ -12,6 +12,7 @@
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.ht-util :as ht-util]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
@@ -699,12 +700,14 @@
                                [_
                                 {:keys [secret virkailija-secret]}
                                 response]]
-  (let [{:keys [application person form]} (:body response)
+  (let [{:keys [application person form koski-tutkinnot]} (:body response)
         [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
                                             [:secret secret]
                                             [:virkailija-secret virkailija-secret])]
     (util/set-query-param "application-key" (:key application))
-    {:db       (-> db
+    {:db       (-> (if koski-tutkinnot
+                     (assoc-in db [:application :koski-tutkinnot] (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
+                     db)
                    (assoc-in [:application :application-identifier] (:application-identifier application))
                    (assoc-in [:application :editing?] true)
                    (assoc-in [:application secret-kwd] secret-val)
@@ -764,13 +767,6 @@
     (js/console.log (str "Handle oppija session error fetch, resp" response))
     {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
-(defn- requested-koski-tutkinto-levels
-  [db]
-  (let [selected-level-ids (filter #(not (= "itse-syotetty" %))
-                                   (get-in db [:form :properties :tutkinto-properties :selected-option-ids] []))]
-    (when (seq selected-level-ids)
-      (string/join "," selected-level-ids))))
-
 (defn- set-tutkinto-fetch-status-as-needed
   [db tutkinto-fetch-needed]
   (if tutkinto-fetch-needed
@@ -782,7 +778,7 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          requested-koski-levels (requested-koski-tutkinto-levels db)
+          requested-koski-levels (tutkinto-util/koski-tutkinto-levels-in-form (:form db))
           tutkinto-fetch-needed (and requested-koski-levels
                                      (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
