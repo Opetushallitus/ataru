@@ -1793,57 +1793,43 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   flex-direction: column;
   row-gap: 8px;
   margin-left: -5px;
+
+  .label {
+    color: @blue-text-color;
+    font-size: 14px;
+    margin-left: 4px;
+    cursor: default;
+  }
+
+  .choice {
+    margin-left: 0;
+    row-gap: normal;
+    flex-direction: row;
+    align-items: center;
+
+    .label {
+      color: @blue-text-color;
+      font-size: 14px;
+      margin-top: 2px;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+
+  }
 }
 
-.editor-form__radio {
-  display: none;
-}
-
-.editor-form__radio + label{
-  display: flex;
-  flex-flow: row nowrap;
-  color: @blue-text-color;
+.editor-form__plain-radio {
+  padding: 0;
+  background-color: transparent;
+  border: 2px solid @neutral-grey-700;
+  border-radius: 0.20rem;
+  outline: none;
+  appearance: auto;
+  width: 1.25em;
+  height: 1.25em;
+  min-width: 1.25em;
+  margin-right: 0.375em;
+  font-size: inherit;
+  vertical-align: middle;
   cursor: pointer;
-  font-size: 14px;
-  margin-left: 4px;
-}
-
-.editor-form__radio--unchecked {
-  content: "";
-  height: 20px;
-  width: 20px;
-  min-width: 19px;
-  background-size: 20px 20px;
-  background-image: url('/lomake-editori/images/radio-button-grey-unchecked.png');
-  background-repeat: no-repeat;
-  margin-right: 6px;
-}
-
-.editor-form__radio + label::before {
-  .editor-form__radio--unchecked
-}
-
-.editor-form__radio:disabled + label::before {
-  .editor-form__radio--unchecked;
-  cursor: not-allowed;
-}
-
-.editor-form__radio--checked {
-  content: "";
-  height: 20px;
-  width: 20px;
-  min-width: 19px;
-  background-size: 20px 20px;
-  background-image: url('/lomake-editori/images/radio-button-grey-checked.png');
-  background-repeat: no-repeat;
-  margin-right: 6px;
-}
-
-.editor-form__radio:checked + label::before {
-  .editor-form__radio--checked
-}
-
-.editor-form__radio:checked:disabled + label::before {
-  .editor-form__radio--checked;
-  cursor: not-allowed;
 }

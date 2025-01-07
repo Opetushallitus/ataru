@@ -4,7 +4,8 @@
 
 (s/defschema KoskiItemWithLocalizedNimi
   {s/Any  s/Any
-   :nimi  localized-schema/LocalizedString})
+   (s/optional-key :koodiarvo) s/Str
+   (s/optional-key :nimi)  localized-schema/LocalizedString})
 
 (s/defschema KoskiSuoritusKoulutustyyppiItem
   {s/Any        s/Any
@@ -14,10 +15,10 @@
   {s/Any                s/Any
    :koulutusmoduuli     {s/Any            s/Any
                          :tunniste        KoskiItemWithLocalizedNimi
-                         :koulutustyyppi  KoskiSuoritusKoulutustyyppiItem}
+                         (s/optional-key :koulutustyyppi)  KoskiSuoritusKoulutustyyppiItem}
    :vahvistus           {:päivä       s/Str}
    :toimipiste          KoskiItemWithLocalizedNimi
-   :tyyppi              KoskiItemWithLocalizedNimi})
+   (s/optional-key :tyyppi)              KoskiItemWithLocalizedNimi})
 
 (s/defschema KoskiSuoritusResponse
   {
@@ -26,12 +27,12 @@
                        :suoritukset [KoskiSuoritusItem]}]})
 
 (s/defschema AtaruKoskiTutkintoResponse
-  {:tutkintonimi          localized-schema/LocalizedString
-   :koulutusohjelmanimi   localized-schema/LocalizedString
-   :toimipistenimi        localized-schema/LocalizedString
-   :valmistumispvm        s/Str
-   :koulutustyyppi        KoskiSuoritusKoulutustyyppiItem})
+  {:tutkintonimi                      localized-schema/LocalizedString
+   :koulutusohjelmanimi               s/Str;localized-schema/LocalizedString
+   :toimipistenimi                    localized-schema/LocalizedString
+   :valmistumispvm                    s/Str
+   (s/optional-key :koulutustyyppi)   KoskiSuoritusKoulutustyyppiItem})
 
 (s/defschema Tutkinnot
-  {:description localized-schema/LocalizedString
-   :field-list localized-schema/LocalizedString})
+  {:tutkinnot {:description localized-schema/LocalizedString
+               :field-list localized-schema/LocalizedString}})
