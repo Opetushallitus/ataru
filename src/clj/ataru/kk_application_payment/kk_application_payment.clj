@@ -6,6 +6,7 @@
   (:require [ataru.cache.cache-service :as cache]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
@@ -243,12 +244,69 @@
 (defn- is-finnish-citizen? [person]
   (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
+(defn- keep-if-deadline-passed
+  [field-deadlines haku haku-grace-days now review]
+  (let [id             (:attachment-key review)
+        field-deadline (some->> field-deadlines
+                                (filter #(= id (:field-id %)))
+                                first
+                                :deadline)
+        passed         (if (some? field-deadline)
+                         (time/after? now field-deadline)
+                         (not (utils/time-is-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
+    (when passed
+      review)))
+
+(defn- haku-grace-days
+  [ohjausparametrit-service haku]
+  (let [default-grace-days (-> config
+                               :public-config
+                               (get :attachment-modify-grace-period-days 14))
+        ohjausparametrit   (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku))
+        custom-grace-days  (-> ohjausparametrit :PH_LMT :value)]
+    (or custom-grace-days default-grace-days)))
+
+(defn- includes-fields-with-passed-deadlines?
+  "Returns true when one or more of the fields in the input reviews have their deadlines passed / overdue"
+  [tarjonta-service ohjausparametrit-service application field-reviews]
+  (let [now              (time/now)
+        application-key  (:key application)
+        haku-oid         (:haku application)
+        haku             (tarjonta/get-haku tarjonta-service haku-oid)
+        field-deadlines  (store/get-field-deadlines application-key)
+        haku-grace-days  (haku-grace-days ohjausparametrit-service haku)
+        passed           (remove nil?
+                                 (map (partial keep-if-deadline-passed
+                                               field-deadlines haku haku-grace-days now) field-reviews))]
+    (when (seq passed)
+      (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
+      true)))
+
+(defn- get-invalid-attachment-reviews
+  "Returns reviews for those fields that are (still) in missing or incomplete state."
+  [application-key]
+  (let [attachment-keys payment-module/kk-application-payment-exempt-attachment-keys
+        invalid-states  #{"attachment-missing" "incomplete-attachment"}
+        reviews         (application-store/get-application-attachment-reviews application-key)
+        invalid-reviews (filter (fn [review]
+                                  (and (contains? attachment-keys (:attachment-key review))
+                                       (contains? invalid-states  (:state review))))
+                                reviews)]
+    invalid-reviews))
+
+(defn- attachments-invalid-and-deadline-passed?
+  "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
+   the applicant is not exempt by application even if the exemption question was answered as such."
+  [tarjonta-service ohjausparametrit-service application]
+  (when-let [invalid-field-reviews (seq (get-invalid-attachment-reviews (:key application)))]
+    (includes-fields-with-passed-deadlines? tarjonta-service ohjausparametrit-service application invalid-field-reviews)))
+
 (defn- exemption-in-application?
-  [application]
+  [tarjonta-service ohjausparametrit-service application]
   (let [answers (util/application-answers-by-key application)]
-    (if-let [exemption-answer (exemption-form-field-name answers)]
-      (contains? exemption-field-ok-values (:value exemption-answer))
-      false)))
+    (when-let [exemption-answer (exemption-form-field-name answers)]
+      (and (contains? exemption-field-ok-values (:value exemption-answer))
+           (not (attachments-invalid-and-deadline-passed? tarjonta-service ohjausparametrit-service application))))))
 
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
@@ -344,7 +402,7 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [person-service tarjonta-service _ get-haut-cache person-oid term year]
+  [ohjausparametrit-service person-service tarjonta-service _ get-haut-cache person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
@@ -354,31 +412,25 @@
                           (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
     (when (get-in config [:kk-application-payments :enabled?])
       (if (= 0 (count applications))
-        (do
-          (log/info "Not updating kk payment status for person" person-oid "term" term "year" year
-                    "with all person aliases" aliases "because no matching applications were found.")
-          {})
-        (do
-          (log/info "Updating kk payment status for person" person-oid "term" term "year" year
-                    "with all person aliases" aliases "and application keys" (map :key applications))
-          (let [payment-by-application (into {}
-                                             (map (fn [payment] [(:application-key payment) payment]))
-                                             (get-raw-payments (map :key applications)))
-                applications-payments  (map (fn [application]
-                                              {:application application
-                                               :payment     (get payment-by-application (:key application))})
-                                            applications)
-                payment-state-set      (->> (vals payment-by-application) (map :state) set)
-                is-finnish-citizen?    (is-finnish-citizen? person)
-                has-exemption?         (some true? (map exemption-in-application? applications))
-                has-existing-payment?  (contains? payment-state-set (:paid all-states))]
-            (log/info "Updating application level kk application payment status for person" person-oid "term" term "year" year
-                      "is-finnish-citizen?" (boolean is-finnish-citizen?) "has-exemption?" (boolean has-exemption?)
-                      "has-existing-payment?" (boolean has-existing-payment?))
-            {:person            person
-             :existing-payments applications-payments
-             :modified-payments (update-payments-for-applications
-                                  applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)}))))))
+        []
+        (let [payment-by-application (into {}
+                                           (map (fn [payment] [(:application-key payment) payment]))
+                                           (get-raw-payments (map :key applications)))
+              applications-payments  (map (fn [application]
+                                            {:application application
+                                             :payment     (get payment-by-application (:key application))})
+                                          applications)
+              payment-state-set      (->> (vals payment-by-application) (map :state) set)
+              is-finnish-citizen?    (is-finnish-citizen? person)
+              has-exemption?         (some true?
+                                           (map
+                                             (partial exemption-in-application? tarjonta-service ohjausparametrit-service)
+                                             applications))
+              has-existing-payment?  (contains? payment-state-set (:paid all-states))]
+          {:person            person
+           :existing-payments applications-payments
+           :modified-payments (update-payments-for-applications
+                                applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)})))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.

@@ -14,7 +14,16 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.kk-application-payment.utils :as payment-utils]
-            [ataru.applications.application-store :as application-store]))
+            [ataru.applications.application-store :as application-store]
+            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
+
+(defn- store-field-deadline [deadline]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (jdbc/insert! conn "field_deadlines" deadline)))
+
+(defn- save-reviews-to-db! [reviews]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (application-store/store-reviews reviews {:connection conn})))
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (mock-tarjonta-service/->MockTarjontaKoutaService))
@@ -27,16 +36,24 @@
 
 (def fake-haku-cache (reify cache-service/Cache
                        (get-from [_ _]
-                         [{:haku "payment-info-test-kk-haku"}])
+                         [{:haku "payment-info-test-kk-haku"}
+                          {:haku "payment-info-test-kk-haku-future"}
+                          {:haku "payment-info-test-kk-haku-past"}
+                          {:haku "payment-info-test-kk-haku-custom-grace"}])
                        (get-many-from [_ _])
                        (remove-from [_ _])
                        (clear-all [_])))
+
+(def fake-ohjausparametrit-service
+  (->MockOhjausparametritService))
 
 (declare conn)
 (defn- delete-states-and-events! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/delete! conn :kk_application_payments [])
-                            (jdbc/delete! conn :kk_application_payments_history [])))
+                            (jdbc/delete! conn :kk_application_payments_history [])
+                            (jdbc/delete! conn :application_hakukohde_attachment_reviews [])
+                            (jdbc/delete! conn :field_deadlines [])))
 
 (def term-fall "kausi_s")
 (def year-ok 2025)
@@ -157,6 +174,35 @@
           (it "should throw an exception when trying to set maksut secret for nonexisting payment"
               (should-throw (payment/set-maksut-secret "1.2.3.4.5.1234" "1234ABCD5678EFGH"))))
 
+(def exempt-test-oid "1.2.3.4.5.303") ; FakePersonService returns non-EU nationality for this one
+
+(defn create-payment-exempt-by-application [merge-map]
+  (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                     (merge
+                                                       application-fixtures/application-with-hakemusmaksu-exemption
+                                                       {:person-oid exempt-test-oid}
+                                                       merge-map) nil)
+        application-key (:key (application-store/get-application application-id))]
+    application-key))
+
+(defn create-future-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-future"}))
+
+(defn create-past-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-past"}))
+
+(defn create-past-payment-exempt-by-application-with-custom-grace-days []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
+
+(defn update-exempt-payment [application-key]
+  (let [changed         (:modified-payments
+                          (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                            fake-person-service fake-tarjonta-service
+                                                                            fake-koodisto-cache fake-haku-cache
+                                                                            exempt-test-oid term-fall year-ok))
+        payment (first (payment/get-raw-payments [application-key]))]
+    [changed payment]))
+
 (describe "update-payment-status"
           (tags :unit :kk-application-payment)
 
@@ -178,7 +224,8 @@
                                                       application-fixtures/application-without-hakemusmaksu-exemption
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
-                              states (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                              states (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                       fake-person-service fake-tarjonta-service
                                                                                        fake-koodisto-cache fake-haku-cache
                                                                                        oid term-fall year-ok)]
                           (should= 0 (count states))))
@@ -192,9 +239,10 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-paid application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 0 (count changed))
                           (should= initial-payment payment)
@@ -214,7 +262,8 @@
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (:modified-payments
-                                        (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                        (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                          fake-person-service fake-tarjonta-service
                                                                                           fake-koodisto-cache fake-haku-cache
                                                                                           oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -237,9 +286,10 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-ok-by-proxy application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -256,9 +306,10 @@
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -274,9 +325,10 @@
                                                                                {:person-oid oid}) nil)
                                 application-key (:key (application-store/get-application application-id))
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                          fake-koodisto-cache fake-haku-cache
-                                                                                          oid term-fall year-ok))
+                                         (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                           fake-person-service fake-tarjonta-service
+                                                                                           fake-koodisto-cache fake-haku-cache
+                                                                                           oid term-fall year-ok))
                                 payment (first (payment/get-raw-payments [application-key]))]
                             (should= 1 (count changed))
                             (should= payment (first changed))
@@ -298,9 +350,10 @@
                                 linked-application-key (:key (application-store/get-application (second application-ids)))
                                 _ (payment/set-application-fee-overdue linked-application-key nil)
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                          fake-koodisto-cache fake-haku-cache
-                                                                                          oid term-fall year-ok))
+                                         (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                           fake-person-service fake-tarjonta-service
+                                                                                           fake-koodisto-cache fake-haku-cache
+                                                                                           oid term-fall year-ok))
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 1 (count changed))
@@ -311,20 +364,146 @@
                                                        :reason nil} linked-payment)))))
 
           (describe "with exemption"
-                    (before (delete-states-and-events!))
+                    (around [spec]
+                            (delete-states-and-events!)
+                            (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)]
+                              (spec)))
 
                     (it "should set payment status for non eu citizen with exemption as not required"
-                        (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
-                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                                           (merge
-                                                                             application-fixtures/application-with-hakemusmaksu-exemption
-                                                                             {:person-oid oid}) nil)
-                              application-key (:key (application-store/get-application application-id))
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
-                                                                                        fake-koodisto-cache fake-haku-cache
-                                                                                        oid term-fall year-ok))
-                              payment (first (payment/get-raw-payments [application-key]))]
+                        (let [application-key   (create-payment-exempt-by-application {})
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as not required if an exemption attachment is missing before deadline"
+                        (let [application-key   (create-future-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "missing-attachment"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as not required if an exemption attachment is incomplete before deadline"
+                        (let [application-key   (create-future-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "incomplete-attachment"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as not required if an exemption attachments are ok after deadline"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as not required if an unrelated attachment is missing or incomplete after deadline"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "none-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "missing-attachment"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "foobar-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "incomplete-attachment"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as required if an exemption attachment is incomplete after deadline"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "incomplete-attachment"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status as required if an exemption attachment is missing after deadline"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should use custom application field deadline date"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (store-field-deadline {:application_key application-key
+                                                                       :field_id "brexit-permit-attachment"
+                                                                       :deadline (time/plus (time/now) (time/days 1))})
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should use custom ohjausparametrit deadline days"
+                        ; Mock ohjausparametrit returns grace days 10000 for the attached haku...
+                        (let [application-key   (create-past-payment-exempt-by-application-with-custom-grace-days)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
