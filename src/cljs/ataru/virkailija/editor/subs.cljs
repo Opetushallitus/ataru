@@ -558,7 +558,7 @@
   (fn [db _]
     (->> (get-selected-form-content db)
          util/flatten-form-fields
-         (some #(= "tutkinnot" (:id %))))))
+         (some #(= "koski-tutkinnot-wrapper" (:id %))))))
 
 (re-frame/reg-sub
   :editor/email-template
@@ -693,3 +693,10 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties [_ category default]]
     (get-in form-properties [(keyword category) :selected-option-ids] default)))
+
+(re-frame/reg-sub
+  :editor/get-property-value
+  (fn [[_ _] _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties [_ category property]]
+    (get-in form-properties [(keyword category)(keyword property)])))
