@@ -4,7 +4,7 @@
             [ataru.config.url-helper :as url-helper]
             [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [cheshire.core :as json]))
-(s/defn ^:always-validate get-tutkinnot-for-oppija-oid :- (s/maybe koski-schema/KoskiSuoritusResponse)
+(s/defn ^:always-validate get-tutkinnot-for-oppija-oid :- (s/maybe koski-schema/KoskiResponse)
   [oppija-oid :- s/Str
    cas-client]
   (let [url (url-helper/resolve-url :koski.hakemuspalvelu)
