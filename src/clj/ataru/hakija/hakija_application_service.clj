@@ -781,8 +781,7 @@
         koski-tutkinnot       (future (some->> (when requested-tutkinto-levels (:person-oid application))
                                                (koski-service/get-tutkinnot-for-oppija koski-service)
                                                :opiskeluoikeudet
-                                               (parse-koski-tutkinnot
-                                                 (string/split requested-tutkinto-levels #","))))
+                                               (parse-koski-tutkinnot requested-tutkinto-levels)))
         new-person (application-service/get-person-for-securelink application-service application)
         filtered-person (if (= actor-role :virkailija)
                           new-person

@@ -16,6 +16,9 @@
 (def kk-ylemmat-option-id "kk-ylemmat")
 (def lisensiaatti-option-id "lisensiaatti")
 (def tohtori-option-id "tohtori")
+(def koski-tutkinto-tasot [perusopetus-option-id lukiokoulutus-option-id yo-option-id amm-perus-option-id amm-option-id
+                         amm-erikois-option-id kk-alemmat-option-id kk-ylemmat-option-id lisensiaatti-option-id
+                         tohtori-option-id])
 (def tutkinto-id-field-postfix "tutkinto-id")
 (def tutkinto-nimi-field-postfix "tutkinto-nimi")
 (def koulutusohjelma-field-postfix "koulutusohjelma")
@@ -33,6 +36,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                     :id (str perusopetus-option-id "-" tutkinto-id-field-postfix)
+                    :label (:perusopetus-label koski-tutkinnot-texts)
                     :params {:transparent true})])]}
    {:id lukiokoulutus-option-id
     :label (:lukiokoulutus-label koski-tutkinnot-texts)
@@ -43,6 +47,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str lukiokoulutus-option-id "-" tutkinto-id-field-postfix)
+                     :label (:lukiokoulutus-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id yo-option-id
     :label (:yo-tutkinnot-label koski-tutkinnot-texts)
@@ -53,6 +58,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str yo-option-id "-" tutkinto-id-field-postfix)
+                     :label (:yo-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id amm-perus-option-id
     :label (:amm-perustutkinnot-label koski-tutkinnot-texts)
@@ -63,6 +69,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str amm-perus-option-id "-" tutkinto-id-field-postfix)
+                     :label (:amm-perustutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id amm-option-id
     :label (:amm-tutkinnot-label koski-tutkinnot-texts)
@@ -73,6 +80,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str amm-option-id "-" tutkinto-id-field-postfix)
+                     :label (:amm-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id amm-erikois-option-id
     :label (:amm-erikoistutkinnot-label koski-tutkinnot-texts)
@@ -83,6 +91,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str amm-erikois-option-id "-" tutkinto-id-field-postfix)
+                     :label (:amm-erikoistutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id kk-alemmat-option-id
     :label (:alemmat-kk-tutkinnot-label koski-tutkinnot-texts)
@@ -93,6 +102,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str kk-alemmat-option-id "-" tutkinto-id-field-postfix)
+                     :label (:alemmat-kk-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id kk-ylemmat-option-id
     :label (:ylemmat-kk-tutkinnot-label koski-tutkinnot-texts)
@@ -103,6 +113,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str kk-ylemmat-option-id "-" tutkinto-id-field-postfix)
+                     :label (:ylemmat-kk-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id lisensiaatti-option-id
     :label (:lisensiaatti-tutkinnot-label koski-tutkinnot-texts)
@@ -113,6 +124,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str lisensiaatti-option-id "-" tutkinto-id-field-postfix)
+                     :label (:lisensiaatti-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id tohtori-option-id
     :label (:tohtori-tutkinnot-label koski-tutkinnot-texts)
@@ -123,6 +135,7 @@
                   :children
                   [(assoc (component/text-field metadata)
                      :id (str tohtori-option-id "-" tutkinto-id-field-postfix)
+                     :label (:tohtori-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
    {:id itse-syotetty-option-id
     :label (:itse-syotetty-tutkinnot-label koski-tutkinnot-texts)
