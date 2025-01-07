@@ -753,7 +753,7 @@
                                                     ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))
                                                     tutkinnot                    (some->> (when
                                                                                             (tutkinto-util/koski-tutkinnot-in-application? application) (:person-oid application))
-                                                                                          (koski/get-tutkinnot-for-oppija koski-service)
+                                                                                          (koski/get-tutkinnot-for-oppija koski-service false)
                                                                                           :opiskeluoikeudet
                                                                                           (parse-koski-tutkinnot tutkinto-levels)
                                                                                           (tutkinto-util/sort-koski-tutkinnot))]

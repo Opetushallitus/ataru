@@ -137,7 +137,7 @@
 
 (defrecord MockKoskiTutkintoService [koski-cas-client]
   KoskiTutkintoService
-  (get-tutkinnot-for-oppija [_ _] {}))
+  (get-tutkinnot-for-oppija [_ _ _] {}))
 
 (defn- default-get-parametri [_ _] {:jarjestetytHakutoiveet true})
 
