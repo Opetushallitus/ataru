@@ -37,6 +37,7 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.applications.application-service :as application-service]
+            [ataru.koski.koski-service :as koski-service]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ataru.db.db :as db]
             [ataru.temp-file-storage.s3-client :as s3-client])
@@ -235,6 +236,12 @@
                                 (-> config :siirtotiedostot :s3-bucket)
                                 (-> config :siirtotiedostot :transferFileTargetRoleArn))
 
+    :koski-client (cas/new-client "/koski" "cas/virkailija" "koskiUser"
+                                  "1.2.246.562.10.00000000001.ataru-hakija.frontend")
+    :koski-service (component/using
+                     (koski-service/map->IntegratedKoskiTutkintoService {})
+                     {:koski-cas-client :koski-client})
+
     :application-service (component/using
                            (application-service/new-application-service)
                            [:liiteri-cas-client
@@ -248,7 +255,8 @@
                             :job-runner
                             :suoritus-service
                             :form-by-id-cache
-                            :valintalaskentakoostepalvelu-service])
+                            :valintalaskentakoostepalvelu-service
+                            :koski-service])
 
     :siirtotiedosto-service (component/using
                               (siirtotiedosto-service/new-siirtotiedosto-service)
