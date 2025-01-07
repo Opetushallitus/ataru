@@ -20,10 +20,10 @@
         header-label-text @(subscribe [:editor/virkailija-translation :wrapper-header])
         description (get-in content [:tutkinnot :description])
         field-list (get-in content [:tutkinnot :field-list])
-        completed-studies-question-id (util/new-uuid)
+        ;completed-studies-question-id (util/new-uuid)
         koski-update-policy-only-once-id (util/new-uuid)
         koski-update-policy-allways-id (util/new-uuid)
-        completed-studies-checked? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :show-completed-studies]))
+        ;completed-studies-checked? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :show-completed-studies]))
         koski-update-allways? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :koski-update-allways]))]
     [:div.editor-form__component-wrapper
      {:data-test-id "tutkinnot-wrapper"}
@@ -53,20 +53,21 @@
           :header? true)
         [:div.editor-form__component-content-wrapper--no-indent
          [:div.editor-form__checkbox-container
-          [:input.editor-form__checkbox
-           {:id        completed-studies-question-id
-            :data-test-id "completed-studies-question-id"
-            :type      "checkbox"
-            :disabled  @component-locked?
-            :checked   (boolean @completed-studies-checked?)
-            :on-change (fn [event]
-                         (.preventDefault event)
-                         (dispatch
-                           [:editor/set-property-value :tutkinto-properties :show-completed-studies (-> event .-target .-checked)]))}]
-          [:label.editor-form__checkbox-label
-           {:for completed-studies-question-id}
-           (get-in koski-tutkinnot-texts [:completed-study-question-label virkailija-lang])]]
-         ]
+          ; @TODO Otetaan käyttöön kun opintosuoritukset lisätään
+          ;[:input.editor-form__checkbox
+          ; {:id        completed-studies-question-id
+          ;  :data-test-id "completed-studies-question-id"
+          ;  :type      "checkbox"
+          ;  :disabled  @component-locked?
+          ;  :checked   (boolean @completed-studies-checked?)
+          ;  :on-change (fn [event]
+          ;               (.preventDefault event)
+          ;               (dispatch
+          ;                 [:editor/set-property-value :tutkinto-properties :show-completed-studies (-> event .-target .-checked)]))}]
+          ; [:label.editor-form__checkbox-label
+          ; {:for completed-studies-question-id}
+          ; (get-in koski-tutkinnot-texts [:completed-study-question-label virkailija-lang])]
+          ]]
         [:div.editor-form__single-choice-button-container
          {:role "radiogroup"}
          [:label.editor-form__single-choice-button-container.label (get-in koski-tutkinnot-texts [:koski-update-policy-label virkailija-lang])]
