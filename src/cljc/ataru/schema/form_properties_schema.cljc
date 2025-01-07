@@ -1,6 +1,11 @@
 (ns ataru.schema.form-properties-schema
   (:require [schema.core :as s]))
 
+(s/defschema PaymentProperties
+  {(s/optional-key :type)                             (s/maybe s/Str)
+   (s/optional-key :processing-fee)                   (s/maybe s/Str)
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)})
+
 (s/defschema FormCategoryProperties
              {(s/optional-key :selected-option-ids)  [s/Str]})
 
@@ -17,4 +22,5 @@
               (s/optional-key :demo-validity-start)              (s/maybe s/Str)
               (s/optional-key :demo-validity-end)                (s/maybe s/Str)
               (s/optional-key :closed)                           s/Bool
+              (s/optional-key :payment)                          (s/maybe PaymentProperties)
               (s/optional-key :tutkinto-properties)              TutkintoProperties})
