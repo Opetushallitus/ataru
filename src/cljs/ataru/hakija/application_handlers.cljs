@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [ataru.config :as config]
+            [ataru.constants :as constants]
             [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
@@ -763,29 +764,40 @@
     (js/console.log (str "Handle oppija session error fetch, resp" response))
     {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
+(defn- tutkinnot-in-form
+  [db]
+  (not (nil? (some #(= "tutkinnot" (:id %)) (:flat-form-content db)))))
+
 (reg-event-fx
   :application/handle-oppija-session-fetch
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
-    (let [session-data (get-in response [:body])]
+    (let [session-data (get-in response [:body])
+          person-oid (get-in session-data [:person-oid])
+          tutkinto-fetch-needed (and (tutkinnot-in-form db)
+                                     person-oid
+                                     (= (:auth-type session-data) constants/auth-type-strong))]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
+               (assoc-in [:oppija-session :tutkinnot-not-to-be-fetched] (not (tutkinto-fetch-needed)))
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
-                    (when (:logged-in session-data) [:application/start-oppija-session-polling])]})))
+                    (when (:logged-in session-data) [:application/start-oppija-session-polling]
+                                                    (when (tutkinto-fetch-needed)
+                                                      [:application/fetch-tutkinnot person-oid]))]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ session-data]]
-    (let [haku-oid             (get-in db [:form :tarjonta :haku-oid])
+    (let [haku-oid (get-in db [:form :tarjonta :haku-oid])
           can-submit-multiple? (get-in db [:form :tarjonta :can-submit-multiple-applications])
-          ssn                  (get-in session-data [:fields :ssn :value])
-          eidas-id             (get-in session-data [:eidas-id])
+          ssn (get-in session-data [:fields :ssn :value])
+          eidas-id (get-in session-data [:eidas-id])
           body {:haku-oid haku-oid
                 :ssn      ssn
                 :eidas-id eidas-id}]

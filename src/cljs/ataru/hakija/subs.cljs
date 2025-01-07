@@ -354,6 +354,7 @@
            (clojure.string/blank? hakija-secret)
            (not already-declined)
            (not logged-in)))))
+
 (re-frame/reg-sub
   :application/loading-complete?
   (fn [_ _]
@@ -362,11 +363,17 @@
      (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinnot-not-to-be-fetched]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinnot-fetched]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinto-fetch-errored]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
      (re-frame/subscribe [:state-query [:application :secret]])
      (re-frame/subscribe [:application/demo?])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret demo?] _]
-    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored
+        tutkinnot-not-to-be-fetched tukinnot-fetched tutkinto-fetch-errored
+        virkailija-secret hakija-secret demo?] _]
+    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)
+          tutkinto-fetch-handled (or tutkinnot-not-to-be-fetched tukinnot-fetched tutkinto-fetch-errored)]
       (or load-failure
           (and form
                (or (not ht-feature-enabled)
@@ -374,7 +381,7 @@
                    (or (not (clojure.string/blank? virkailija-secret))
                        (not (clojure.string/blank? hakija-secret))
                        (not form-allows-ht)
-                       (or session-fetched
+                       (or (and session-fetched tutkinto-fetch-handled)
                            session-fetch-errored))))))))
 
 (re-frame/reg-sub
@@ -1003,3 +1010,21 @@
        (= "payment-type-kk" payment-type)
        was-previously-finnish-citizen-or-empty?
        is-not-a-finnish-citizen?))))
+
+(re-frame/reg-sub
+  :application/tutkinnot-raw
+  (fn [db _]
+    (get-in db [:application :tutkinnot])))
+
+(re-frame/reg-sub
+  :application/tutkinnot
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tutkinnot-raw])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[tutkinto-result language] _]
+    (let [sorted-results (sort-by (comp language :nimi :tutkintonimi) tutkinto-result)]
+      (map
+        (fn [item idx]
+          (assoc item :key (str "tutkinto_" idx)))
+        sorted-results
+        (range (count sorted-results))))))
