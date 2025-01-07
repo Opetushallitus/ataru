@@ -793,7 +793,7 @@
                     (when (:logged-in session-data)
                       [:application/start-oppija-session-polling]
                       (when tutkinto-fetch-needed
-                        [:application/fetch-tutkinnot requested-koski-levels]))]})))
+                        [:application/fetch-tutkinnot (string/join "," requested-koski-levels)]))]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
