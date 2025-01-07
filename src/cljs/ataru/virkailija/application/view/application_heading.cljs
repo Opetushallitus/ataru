@@ -32,6 +32,7 @@
           selected-review-hakukohde     @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           show-not-latest-form?         (some? @(subscribe [:state-query [:application :latest-form]]))
           show-creating-henkilo-failed? @(subscribe [:application/show-creating-henkilo-failed?])
+          show-tutkinto-fetch-failed?   @(subscribe [:application/show-tutkinto-fetch-failed?])
           show-henkilo-info-incomplete? (and (some? person-oid)
                                              (not (-> application :person :language)))
           show-not-yksiloity?           (and (some? person-oid)
@@ -56,6 +57,8 @@
                                         (select-application (:key application) selected-review-hakukohde true))}])
           (when show-creating-henkilo-failed?  ; henkilo details are missing entirely
             [notification {:text :creating-henkilo-failed}])
+          (when show-tutkinto-fetch-failed?
+            [notification {:text      :koski-tutkinto-fetch-failed}])
           (when show-henkilo-info-incomplete?  ; henkilo is missing some essential information, such as language
             [notification {:text      :henkilo-info-incomplete
                            :link-text :review-in-henkilopalvelu
