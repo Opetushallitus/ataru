@@ -3053,16 +3053,16 @@
    :itse-syotetty-tutkinto-group-label            {:fi "Tutkinto"
                                                    :sv "SV: Tutkinto"
                                                    :en ""}
-   :itse-syotetty-tutkinto-followup-label         {:fi "Tutkinto"
+   :tutkinto-followup-label                       {:fi "Tutkinto"
                                                    :sv "SV: Tutkinto"
                                                    :en ""}
-   :itse-syotetty-koulutusohjelma-followup-label  {:fi "Koulutusohjelma"
+   :koulutusohjelma-followup-label                {:fi "Koulutusohjelma"
                                                    :sv "SV: Koulutusohjelma"
                                                    :en ""}
-   :itse-syotetty-oppilaitos-followup-label       {:fi "Oppilaitos"
+   :oppilaitos-followup-label                     {:fi "Oppilaitos"
                                                    :sv "SV: Oppilaitos"
                                                    :en ""}
-   :itse-syotetty-valmistumispvm-followup-label   {:fi "Valmistumispäivä"
+   :valmistumispvm-followup-label                 {:fi "Valmistumispäivä"
                                                    :sv "SV: Valmistumispäivä"
                                                    :en ""}
    :itse-syotetty-valimistumispvm-infotext-label  {:fi "Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"

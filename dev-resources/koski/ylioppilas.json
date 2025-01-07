@@ -1,0 +1,604 @@
+{
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.12968160312",
+      "versionumero": 9,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.55307037873",
+        "oppilaitosnumero": {
+          "koodiarvo": "03769",
+          "nimi": {
+            "fi": "Latokartanon peruskoulu",
+            "sv": "Latokartanon peruskoulu",
+            "en": "Latokartanon peruskoulu"
+          },
+          "lyhytNimi": {
+            "fi": "Latokartanon peruskoulu",
+            "sv": "Latokartanon peruskoulu",
+            "en": "Latokartanon peruskoulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Latokartanon peruskoulu",
+          "sv": "Latokartanon peruskoulu",
+          "en": "Latokartanon peruskoulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.346830761110",
+        "nimi": {
+          "fi": "Helsingin kaupunki",
+          "sv": "Helsingfors stad"
+        },
+        "yTunnus": "0201256-6",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2004-11-08",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2007-11-08",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "201101",
+              "nimi": {
+                "fi": "Perusopetus",
+                "sv": "Grundläggande utbildning",
+                "en": "Basic education"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 11
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.55307037873",
+            "nimi": {
+              "fi": "Latokartanon peruskoulu",
+              "sv": "Latokartanon peruskoulu",
+              "en": "Latokartanon peruskoulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2005-11-08"
+          },
+          "tyyppi": {
+            "koodiarvo": "perusopetuksenoppimaara",
+            "nimi": {
+              "fi": "Perusopetuksen oppimäärä",
+              "sv": "Grundläggande utbildningens lärokurs",
+              "en": "Basic education syllabus"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "perusopetus",
+        "nimi": {
+          "fi": "Perusopetus",
+          "sv": "Grundläggande utbildning"
+        },
+        "lyhytNimi": {
+          "fi": "Perusopetus"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2004-11-08",
+      "päättymispäivä": "2007-11-08"
+    },
+    {
+      "oid": "1.2.246.562.51.22419471986",
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.43628088406",
+        "nimi": {
+          "fi": "Ylioppilastutkintolautakunta",
+          "sv": "Studentexamensnämnden",
+          "en": "The Matriculation Examination Board"
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.43628088406",
+        "nimi": {
+          "fi": "Ylioppilastutkintolautakunta",
+          "sv": "Studentexamensnämnden",
+          "en": "The Matriculation Examination Board"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2012-06-02",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "301000",
+              "nimi": {
+                "fi": "Ylioppilastutkinto",
+                "sv": "Studentexamen",
+                "en": "Matriculation Examination"
+              },
+              "lyhytNimi": {
+                "fi": "Ylioppilastutkinto",
+                "sv": "Studentexamen",
+                "en": "Matriculation Examination"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.43628088406",
+            "nimi": {
+              "fi": "Ylioppilastutkintolautakunta",
+              "sv": "Studentexamensnämnden",
+              "en": "The Matriculation Examination Board"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2012-06-02"
+          },
+          "tyyppi": {
+            "koodiarvo": "ylioppilastutkinto",
+            "nimi": {
+              "fi": "Ylioppilastutkinto",
+              "sv": "Studentexamen",
+              "en": "Matriculation examination"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ylioppilastutkinto",
+        "nimi": {
+          "fi": "Ylioppilastutkinto",
+          "sv": "Studentexamen",
+          "en": "Matriculation Examination"
+        },
+        "lyhytNimi": {
+          "fi": "Ylioppilastutkinto"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "päättymispäivä": "2012-06-02"
+    },
+    {
+      "oid": "1.2.246.562.15.94023150991",
+      "versionumero": 1,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.45093614456",
+        "oppilaitosnumero": {
+          "koodiarvo": "00085",
+          "nimi": {
+            "fi": "Helsingin Saksalainen koulu",
+            "sv": "Helsingin Saksalainen koulu",
+            "en": "Helsingin Saksalainen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Helsingin Saksalainen koulu",
+            "sv": "Helsingin Saksalainen koulu",
+            "en": "Helsingin Saksalainen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Helsingin Saksalainen koulu",
+          "sv": "Helsingin Saksalainen koulu",
+          "en": "Helsingin Saksalainen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.64976109716",
+        "nimi": {
+          "fi": "Kouluyhdistys Pestalozzi Schulverein Skolföreningen r.y.",
+          "sv": "Kouluyhdistys Pestalozzi Schulverein Skolföreningen r.y.",
+          "en": "Kouluyhdistys Pestalozzi Schulverein Skolföreningen r.y."
+        },
+        "yTunnus": "0201528-1",
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2012-09-01",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education funded by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2016-06-04",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            },
+            "opintojenRahoitus": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "Valtionosuusrahoitteinen koulutus",
+                "sv": "Statsandelsfinansierad utbildning",
+                "en": "Education funded by the state"
+              },
+              "koodistoUri": "opintojenrahoitus",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "301103",
+              "nimi": {
+                "fi": "Deutsche Internationale Abitur; Reifeprüfung",
+                "sv": "Deutsche Internationale Abitur; Reifeprüfung",
+                "en": "Deutsche Internationale Abitur; Reifeprüfung-Examination"
+              },
+              "lyhytNimi": {
+                "fi": "Deutsche Internationale Abitur; Reifeprüfung",
+                "sv": "Deutsche Internationale Abitur; Reifeprüfung",
+                "en": "Deutsche Internationale Abitur; Reifeprüfung"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.45093614456",
+            "nimi": {
+              "fi": "Helsingin Saksalainen koulu",
+              "sv": "Helsingin Saksalainen koulu",
+              "en": "Helsingin Saksalainen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2016-06-04"
+          },
+          "tyyppi": {
+            "koodiarvo": "diatutkintovaihe",
+            "nimi": {
+              "fi": "DIA-tutkintovaihe",
+              "sv": "DIA-examen",
+              "en": "Deutsches Internationales Abitur qualification phase"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "diatutkinto",
+        "nimi": {
+          "fi": "DIA-tutkinto",
+          "sv": "DIA-examen",
+          "en": "Deutsches Internationales Abitur degree (DIA)"
+        },
+        "lyhytNimi": {
+          "fi": "DIA-tutkinto"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2012-09-01",
+      "päättymispäivä": "2016-06-04"
+    },
+    {
+      "oid": "1.2.246.562.15.26987362527",
+      "versionumero": 3,
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.13349113236",
+        "oppilaitosnumero": {
+          "koodiarvo": "03782",
+          "nimi": {
+            "fi": "Helsingin eurooppalainen koulu",
+            "sv": "Helsingin eurooppalainen koulu",
+            "en": "Helsingin eurooppalainen koulu"
+          },
+          "lyhytNimi": {
+            "fi": "Helsingin eurooppalainen koulu",
+            "sv": "Helsingin eurooppalainen koulu",
+            "en": "Helsingin eurooppalainen koulu"
+          },
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
+        },
+        "nimi": {
+          "fi": "Helsingin eurooppalainen koulu",
+          "sv": "Helsingin eurooppalainen koulu",
+          "en": "Helsingin eurooppalainen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.962346066210",
+        "nimi": {
+          "fi": "Helsingin eurooppalainen koulu",
+          "sv": "Helsingin eurooppalainen koulu",
+          "en": "Helsingin eurooppalainen koulu"
+        },
+        "kotipaikka": {
+          "koodiarvo": "091",
+          "nimi": {
+            "fi": "Helsinki",
+            "sv": "Helsingfors"
+          },
+          "koodistoUri": "kunta",
+          "koodistoVersio": 2
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2023-06-14",
+            "tila": {
+              "koodiarvo": "lasna",
+              "nimi": {
+                "fi": "Läsnä",
+                "sv": "Närvarande",
+                "en": "Present"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          },
+          {
+            "alku": "2024-07-10",
+            "tila": {
+              "koodiarvo": "valmistunut",
+              "nimi": {
+                "fi": "Valmistunut",
+                "sv": "Utexaminerad",
+                "en": "Graduated"
+              },
+              "koodistoUri": "koskiopiskeluoikeudentila",
+              "koodistoVersio": 1
+            }
+          }
+        ]
+      },
+      "suoritukset": [
+        {
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "301104",
+              "nimi": {
+                "fi": "EB-tutkinto (European Baccalaureate)",
+                "sv": "EB-examen (European Baccalaureate)",
+                "en": "EB Examination"
+              },
+              "lyhytNimi": {
+                "fi": "EB-tutkinto",
+                "sv": "EB-examen (European Bacc.)",
+                "en": "European Baccalaureate Examination"
+              },
+              "koodistoUri": "koulutus",
+              "koodistoVersio": 12
+            },
+            "curriculum": {
+              "koodiarvo": "2023",
+              "nimi": {
+                "fi": "Curriculum 2023",
+                "en": "Curriculum 2023"
+              },
+              "lyhytNimi": {
+                "fi": "Curriculum 2023",
+                "en": "Curriculum 2023"
+              },
+              "koodistoUri": "europeanschoolofhelsinkicurriculum",
+              "koodistoVersio": 1
+            },
+            "koulutustyyppi": {
+              "koodiarvo": "21",
+              "nimi": {
+                "fi": "EB, RP, ISH",
+                "sv": "EB, RP, ISH",
+                "en": "EB, RP, ISH"
+              },
+              "lyhytNimi": {
+                "fi": "EB, RP, ISH",
+                "sv": "EB, RP, ISH",
+                "en": "EB, RP, ISH"
+              },
+              "koodistoUri": "koulutustyyppi",
+              "koodistoVersio": 2
+            }
+          },
+          "vahvistus": {
+            "päivä": "2023-06-15"
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.13349113236",
+            "nimi": {
+              "fi": "Helsingin eurooppalainen koulu",
+              "sv": "Helsingin eurooppalainen koulu",
+              "en": "Helsingin eurooppalainen koulu"
+            },
+            "kotipaikka": {
+              "koodiarvo": "091",
+              "nimi": {
+                "fi": "Helsinki",
+                "sv": "Helsingfors"
+              },
+              "koodistoUri": "kunta",
+              "koodistoVersio": 2
+            }
+          },
+          "tyyppi": {
+            "koodiarvo": "ebtutkinto",
+            "nimi": {
+              "fi": "European Baccalaureate",
+              "sv": "European Baccalaureate",
+              "en": "European Baccalaureate"
+            },
+            "koodistoUri": "suorituksentyyppi",
+            "koodistoVersio": 1
+          }
+        }
+      ],
+      "tyyppi": {
+        "koodiarvo": "ebtutkinto",
+        "nimi": {
+          "fi": "EB-tutkinto",
+          "sv": "EB-examen",
+          "en": "EB diploma"
+        },
+        "lyhytNimi": {
+          "fi": "EB-tutkinto"
+        },
+        "koodistoUri": "opiskeluoikeudentyyppi",
+        "koodistoVersio": 1
+      },
+      "alkamispäivä": "2023-06-14",
+      "päättymispäivä": "2024-07-10"
+    }
+  ]
+}
