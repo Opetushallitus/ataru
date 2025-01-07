@@ -92,7 +92,8 @@
   (fn [path elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
           pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])
-          tutkinnot-component-exists? (subscribe [:editor/tutkinnot-component-exists?])]
+          tutkinnot-component-exists? (subscribe [:editor/tutkinnot-component-exists?])
+          hakeminen-tunnistautuneena-not-allowed? (not @(subscribe [:editor/allow-hakeminen-tunnistautuneena?]))]
       (into [:ul.form__add-component-toolbar--list]
             (for [[component-name generate-fn {:keys [data-test-id]}] elements
                   :when (and (not (and (vector? path)
@@ -102,7 +103,7 @@
                                        (contains? #{:base-education-module :kk-base-education-module :base-education-module-2nd} component-name)))
                              (not (and @pohjakoulutusristiriita-exists?
                                        (= :pohjakoulutusristiriita component-name)))
-                             (not (and @tutkinnot-component-exists?
+                             (not (and (or hakeminen-tunnistautuneena-not-allowed? @tutkinnot-component-exists?)
                                        (= :tutkinnot component-name))))]
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]

@@ -35,7 +35,7 @@
      {:disabled true}
      @(subscribe [:editor/virkailija-translation :copy-element])]))
 
-(defn- remove-component-button [path & {:keys [data-test-id]}]
+(defn- remove-component-button [path & {:keys [data-test-id property-key]}]
   (case @(subscribe [:editor/component-button-state path :remove])
     :enabled
     [:button.editor-form__component-button
@@ -45,7 +45,7 @@
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__component-button.editor-form__component-button--confirm
-      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))
+      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path {:property-key property-key}]))
        :data-test-id (some-> data-test-id (str "-confirm"))}
       @(subscribe [:editor/virkailija-translation :confirm-delete])]
      [:button.editor-form__component-button
@@ -81,7 +81,8 @@
                                     can-cut?
                                     can-remove?
                                     sub-header
-                                    data-test-id]
+                                    data-test-id
+                                    property-key]
                              :or   {foldable?   true
                                     can-copy?   true
                                     can-cut?    true
@@ -122,4 +123,5 @@
      (when can-remove?
        [remove-component-button
         path
-        :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
+        :data-test-id (some-> data-test-id (str "-remove-component-button"))
+        :property-key property-key])]))

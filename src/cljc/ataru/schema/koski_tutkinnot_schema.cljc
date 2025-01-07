@@ -33,4 +33,5 @@
    :koulutustyyppi        KoskiSuoritusKoulutustyyppiItem})
 
 (s/defschema Tutkinnot
-  {:description localized-schema/LocalizedString})
+  {:description localized-schema/LocalizedString
+   :field-list localized-schema/LocalizedString})

@@ -34,12 +34,23 @@
     :default-value true
     :followup-label (:ei-koski-followup-label koski-tutkinnot-texts)
     :forced true
-    :followups  [(assoc (component/dropdown metadata)
-                   :label (:ei-koski-tutkinto-followup-label koski-tutkinnot-texts)
-                   :koodisto-source {:uri            "tutkinto"
-                                     :version        2
-                                     :title          "Tutkinto"
-                                     :allow-invalid? true})]}])
+    :followups  [(assoc (component/text-field metadata)
+                   :label (:ei-koski-tutkinto-followup-label koski-tutkinnot-texts))
+                 (assoc (component/text-field metadata)
+                   :label (:ei-koski-koulutusohjelma-followup-label koski-tutkinnot-texts))
+                 (assoc (component/text-field metadata)
+                   :label (:ei-koski-oppilaitos-followup-label koski-tutkinnot-texts))
+                 (assoc (component/text-field metadata)
+                   :label (:ei-koski-valmistumispvm-followup-label koski-tutkinnot-texts)
+                   :params {:info-text {:label (:ei-koski-valimistumispvm-infotext-label koski-tutkinnot-texts)}})
+                 (assoc (component/attachment metadata)
+                   :label (:ei-koski-liitteet-followup-label koski-tutkinnot-texts)
+                   :validators []
+                   :params {:mail-attachment? false
+                            :info-text {:enabled? true
+                                        :value (:ei-koski-liitteet-infotext-value koski-tutkinnot-texts)}})
+
+                 ]}])
 
 (defn koski-tutkinnot-questions [metadata]
     [(assoc (component/info-element metadata)
@@ -57,4 +68,5 @@
     :id "koski-tutkinnot-wrapper"
     :label (:section-label koski-tutkinnot-texts)
     :description (:section-description koski-tutkinnot-texts)
+    :field-list (:field-list koski-tutkinnot-texts)
     :children (koski-tutkinnot-questions metadata)))
