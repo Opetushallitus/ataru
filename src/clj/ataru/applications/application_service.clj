@@ -527,8 +527,7 @@
             koski-tutkinnot       (future (some->> (when requested-tutkinto-levels (:person-oid application))
                                                    (koski/get-tutkinnot-for-oppija koski-service)
                                                    :opiskeluoikeudet
-                                                   (parse-koski-tutkinnot
-                                                     (str/split requested-tutkinto-levels #","))))]
+                                                   (parse-koski-tutkinnot requested-tutkinto-levels)))]
         (util/remove-nil-values {:application           (-> application
                                                             (dissoc :person-oid)
                                                             (assoc :person (get-person this application))
@@ -589,7 +588,8 @@
                                                                        tarjonta-service
                                                                        koodisto-cache
                                                                        organization-service
-                                                                       ohjausparametrit-service))]
+                                                                       ohjausparametrit-service
+                                                                       koski-service))]
           xls
           (throw (new RuntimeException "Excelin muodostaminen ei onnistunut"))))))
 
