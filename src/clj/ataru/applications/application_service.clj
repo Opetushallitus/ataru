@@ -524,8 +524,8 @@
                                              :person-oid
                                              (person-service/get-person person-service)
                                              :oppijanumero))
-            koski-tutkinnot       (future (some->> (when requested-tutkinto-levels (:person-oid application))
-                                                   (koski/get-tutkinnot-for-oppija koski-service)
+            koski-tutkinnot       (future (some->> (when (tutkinto-util/koski-tutkinnot-in-application? application) (:person-oid application))
+                                                   (koski/get-tutkinnot-for-oppija koski-service false)
                                                    :opiskeluoikeudet
                                                    (parse-koski-tutkinnot requested-tutkinto-levels)))]
         (util/remove-nil-values {:application           (-> application
