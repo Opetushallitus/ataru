@@ -197,19 +197,26 @@
 (defn- tutkinto [children application hakukohteet-and-ryhmat lang idx tutkinto]
   (let [non-koski-content (filter #(not (get-in % [:params :transparent])) children)]
     [:div.application__tutkinto-wrapper-readonly
-     (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
-       (let [field-id (:id field)
-             label-id (str "koski-answer-label-" field-id "-" idx)
-             field-path (if (:multi-lang? field) [(:koski-tutkinto-field field) lang] [(:koski-tutkinto-field field)])]
-         ^{:key (str "koski-answer-" field-id "-" idx)}
-         [:div.application__form-field
-          [:div.application__form-field-label
-           {:id label-id}
-           [:span (:text field)]]
-          [text-form-field-values (:id field) (get-in tutkinto field-path)]]))
-     (for [child non-koski-content]
-       ^{:key (str "tutkinto-" (:id child) "-" idx)}
-       [field child application hakukohteet-and-ryhmat lang idx false])]))
+     [:div.application__tutkinto-wrapper-readonly.tutkinto-contents
+       (when tutkinto
+         (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
+           (let [field-id (:id field)
+                 label-id (str "koski-answer-label-" field-id "-" idx)
+                 field-path (if (:multi-lang? field) [(:koski-tutkinto-field field) lang] [(:koski-tutkinto-field field)])]
+             ^{:key (str "koski-answer-" field-id "-" idx)}
+             [:div.application__form-field
+              [:div.application__form-field-label
+               {:id label-id}
+               [:span (:text field)]]
+              [text-form-field-values (:id field) (get-in tutkinto field-path)]]))
+         )
+       (for [child non-koski-content]
+         ^{:key (str "tutkinto-" (:id child) "-" idx)}
+         [field child application hakukohteet-and-ryhmat lang idx false])]
+     (when tutkinto
+       [:div.application__tutkinto-wrapper-readonly.koski-originated-tutkinto-tag
+        [:span @(subscribe [:editor/virkailija-translation :koski-originated-tutkinto-tag-first-row])]
+        [:span @(subscribe [:editor/virkailija-translation :koski-originated-tutkinto-tag-second-row])]])]))
 
 (defn tutkinto-wrapper [_ _ _ _]
   (fn [content application hakukohteet-and-ryhmat lang children]

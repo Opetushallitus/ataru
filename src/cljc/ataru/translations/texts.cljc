@@ -2645,7 +2645,17 @@
                                                               :en "EN: Hakija ei ole maksuvelvollinen"}
    :tutkinnot                                                {:fi "Tutkintotiedot Koski-Palvelusta"
                                                               :sv "SV: Tutkintotiedot Koski-Palvelusta"
-                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}})
+                                                              :en "EN: Tutkintotiedot Koski-Palvelusta"}
+   :koski-originated-tutkinto-tag-first-row                  {:fi "Tutkinnon tiedot haettu"
+                                                              :sv "SV: Tutkinnon tiedot haettu"
+                                                              :en "EN: Tutkinnon tiedot haettu"}
+   :koski-originated-tutkinto-tag-second-row                 {:fi "KOSKI-järjestelmästä"
+                                                              :sv "SV: KOSKI-järjestelmästä"
+                                                              :en "EN: KOSKI-järjestelmästä"}
+   :koski-tutkinto-fetch-failed                              {:fi "Tutkintotietojen haku KOSKI-järjestelmästä epäonnistui"
+                                                              :sv "SV: Tutkintotietojen haku KOSKI-järjestelmästä epäonnistui"
+                                                              :en "EN: Tutkintotietojen haku KOSKI-järjestelmästä epäonnistui"}})
+
 (def state-translations
   {:active                       {:fi "Aktiivinen"
                                   :sv "Aktiv"
