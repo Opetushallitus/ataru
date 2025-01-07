@@ -57,15 +57,6 @@
         nested-ids (flatten (map #(find-descendant-ids-by-parent-id flat-form-content %) descendant-ids))]
     (concat descendant-ids nested-ids)))
 
-(defn answered-in-group-idx [answer-entity idx]
-  (let [answer-arr (get answer-entity :value)]
-    (boolean (and (coll? answer-arr)
-                  (< idx (count answer-arr))
-                  (let [answer (get answer-arr idx)]
-                    (and
-                      (seq answer)
-                      (or (not (coll? answer)) (seq (first answer)))))))))
-
 (defn answerable? [field]
   (not (contains? #{"infoElement" "modalInfoElement" "wrapperElement" "questionGroup" "formPropertyField"}
                   (:fieldClass field))))
@@ -221,11 +212,28 @@
 (defn not-blank [s]
   (when (not-blank? s) s))
 
+(defn non-blank-answer? [answer-entity]
+  (let [value (:value answer-entity)]
+    (if (vector? value)
+      (if (or (vector? (first value)) (nil? (first value)))
+        (some #(and (not-blank? (first %)) (every? some? %)) value)
+        (and (not-blank? (first value)) (every? some? value)))
+      (not-blank? value))))
+
 (defn application-in-processing? [application-hakukohde-reviews]
   (boolean (some #(and (= "processing-state" (:requirement %))
                        (not (contains? #{"unprocessed" "information-request"}
                               (:state %))))
              application-hakukohde-reviews)))
+
+(defn answered-in-group-idx [answer-entity idx]
+  (let [answer-arr (get answer-entity :value)]
+    (boolean (and (vector? answer-arr)
+                  (< idx (count answer-arr))
+                  (let [answer (get answer-arr idx)]
+                    (if (vector? answer)
+                      (not-blank? (first answer))
+                      (not-blank? answer)))))))
 
 (defn remove-nil-values [m]
   (->> m

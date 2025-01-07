@@ -204,14 +204,6 @@
                                               (:validators field)))
                            :value  []
                            :values []
-                           :label  label}]
-
-            [{:id             id
-              :special-field  "koski-tutkinto-option"
-              :label          label}]
-            [(keyword id) {:valid  true
-                           :value  []
-                           :values []
                            :label  label}])))
        (into {})))
 
