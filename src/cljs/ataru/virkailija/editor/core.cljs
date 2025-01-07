@@ -39,6 +39,10 @@
                     :fieldType  "adjacentfieldset"}
                    [ec/adjacent-fieldset content path children]
 
+                   {:fieldClass "wrapperElement"
+                    :fieldType  "tutkinnot"}
+                   [ec/tutkinnot-wrapper content path children]
+
                    {:fieldClass "wrapperElement"}
                    [ec/component-group content path children]
 
