@@ -5,7 +5,11 @@
   (get-tutkinnot-for-oppija [this oppija-oid]
     "Gets all available tutkinnot for oppija"))
 
+;TODO korjaa tai poista logitus
 (defrecord IntegratedKoskiTutkintoService [koski-cas-client]
   KoskiTutkintoService
   (get-tutkinnot-for-oppija [_ oppija-oid]
-    (koski-client/get-tutkinnot-for-oppija-oid oppija-oid koski-cas-client)))
+    (try
+      (koski-client/get-tutkinnot-for-oppija-oid oppija-oid koski-cas-client)
+      (catch Exception exp
+        (println (str "!!!!!!!!!!!!!!!!!!!! error " exp))))))
