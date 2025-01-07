@@ -6,9 +6,10 @@
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol :refer [OhjausparametritService]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [clojure.string :as clj-string]
             [ring.mock.request :as mock]
@@ -134,6 +135,10 @@
   OhjausparametritService
   (get-parametri [this haku-oid] (get-param this haku-oid)))
 
+(defrecord MockKoskiTutkintoService [koski-cas-client]
+  KoskiTutkintoService
+  (get-tutkinnot-for-oppija [_ _] {}))
+
 (defn- default-get-parametri [_ _] {:jarjestetytHakutoiveet true})
 
 (def liiteri-cas-client nil)
@@ -159,7 +164,8 @@
                                       (tarjonta-service/new-tarjonta-service)
                                       test-koodisto-cache
                                       (organization-service/new-organization-service)
-                                      (->MockOhjausparametritServiceWithGetParametri default-get-parametri))))
+                                      (->MockOhjausparametritServiceWithGetParametri default-get-parametri)
+                                      MockKoskiTutkintoService)))
 
 (defn with-excel-workbook [excel-data run-test]
   (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]

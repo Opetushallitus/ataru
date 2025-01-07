@@ -12,6 +12,9 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [ataru.util :as util :refer [to-vec]]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.koski.koski-service :as koski]
+            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.core.match :refer [match]]
@@ -277,8 +280,23 @@
           :else
           value)))
 
+(defn- ->tutkinto-values [id-answer-value tutkinnot lang]
+  (let [ids (flatten id-answer-value)
+        selected-tutkinnot (filter #(some #{(:id %)} ids) tutkinnot)
+        field-mappings (tutkinto-util/get-tutkinto-field-mappings lang)]
+    (mapv
+      (fn [tutkinto]
+        (->> (filter some? (map
+                             #(if (:multi-lang? %)
+                                (get-in tutkinto [(:koski-tutkinto-field %) lang])
+                                ((:koski-tutkinto-field %) tutkinto))
+                            field-mappings))
+             (clojure.string/join ";")
+             (util/to-vec)))
+      selected-tutkinnot)))
+
 (defn- write-answer-value-for-excel!
-  [liiteri-cas-client writer person header form-fields-by-key get-koodisto-options application]
+  [liiteri-cas-client writer person header form-fields-by-key get-koodisto-options application lang tutkinnot]
   (when-let [answer (first (filter #(= (:id header) (:key %)) (:answers application)))]
     (try
       (let [column                 (:column header)
@@ -286,7 +304,13 @@
             field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
                                      (get form-fields-by-key (first (string/split answer-key #"_")))
                                      (get form-fields-by-key answer-key))
-            value-or-values        (get person (keyword answer-key) (:value answer))
+            value-or-values        (cond
+                                     (contains? person (keyword answer-key))
+                                     (get person (keyword answer-key))
+                                     (tutkinto-util/is-koski-tutkinto-id-field? answer-key)
+                                     (->tutkinto-values (:value answer) tutkinnot lang)
+                                     :else
+                                     (:value answer))
             ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
             value                  (cond
                                      (util/is-question-group-answer? value-or-values)
@@ -352,7 +376,8 @@
                            headers
                            form-fields-by-key
                            get-koodisto-options
-                           lang]
+                           lang
+                           tutkinnot]
   (doseq [header headers]
     (if-let [meta-field (get application-meta-fields-by-id (:id header))]
       (let [value-from  {:application              application
@@ -362,7 +387,7 @@
                          :ehdollinen?              ehdollinen?}]
         (write-meta-field! writer meta-field value-from lang (:column header)))
       (write-answer-value-for-excel! liiteri-cas-client writer person header form-fields-by-key
-                                     get-koodisto-options application))))
+                                     get-koodisto-options application lang tutkinnot))))
 
 (defn- pick-header
   [form-fields-by-id form-field]
@@ -656,7 +681,8 @@
    tarjonta-service
    koodisto-cache
    organization-service
-   ohjausparametrit-service]
+   ohjausparametrit-service
+   koski-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
@@ -712,7 +738,8 @@
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
-                                                         (util/flatten-form-fields (:content form)))]
+                                                         (util/flatten-form-fields (:content form)))
+                              tutkinto-levels   (tutkinto-util/koski-tutkinto-levels-in-form form)]
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers)
                           (->> applications
@@ -723,7 +750,13 @@
                                                     review-notes-for-application (get application-review-notes (:key application))
                                                     person                       (:person application)
                                                     ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen-column is included.
-                                                    ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))]
+                                                    ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))
+                                                    tutkinnot                    (some->> (when
+                                                                                            (tutkinto-util/koski-tutkinnot-in-application? application) (:person-oid application))
+                                                                                          (koski/get-tutkinnot-for-oppija koski-service)
+                                                                                          :opiskeluoikeudet
+                                                                                          (parse-koski-tutkinnot tutkinto-levels)
+                                                                                          (tutkinto-util/sort-koski-tutkinnot))]
                                                 (write-application! liiteri-cas-client
                                                                     row-writer
                                                                     application
@@ -734,7 +767,8 @@
                                                                     headers
                                                                     form-fields-by-key
                                                                     get-koodisto-options
-                                                                    lang))))
+                                                                    lang
+                                                                    tutkinnot))))
                                (dorun))
                           (.createFreezePane applications-sheet 0 1 0 1))))
          (dorun))
