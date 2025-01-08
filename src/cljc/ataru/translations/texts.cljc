@@ -742,69 +742,72 @@
                                                  :en "Your name and date of birth have been prefilled on the application form via identification."}
    :add-tutkinto                                {:fi "Lisää tutkinto"
                                                  :sv "SV: Lisää tutkinto"
-                                                 :en ""}})
+                                                 :en ""}
+   :information-request-reminder-subject-prefix {:fi "Muistutus"
+                                                 :en "Reminder"
+                                                 :sv "Påminnelse"}})
 
 (def oppiaine-translations
-  {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
-                :sv "Modersmål och litteratur"
-                :en "Äidinkieli ja kirjallisuus"}
-   :oppiaine-a1 {:fi "A1-kieli"
-                 :sv "A1-språk"
-                 :en "A1-kieli"}
-   :oppiaine-a2 {:fi "A2-kieli"
-                 :sv "A2-språk"
-                 :en "A2-kieli"}
-   :oppiaine-b1 {:fi "B1-kieli"
-                 :sv "B1-språk"
-                 :en "B1-kieli"}
-   :oppiaine-b2 {:fi "B2-kieli"
-                 :sv "B2-språk"
-                 :en "B2-kieli"}
-   :oppiaine-b3 {:fi "B3-kieli"
-                 :sv "B3-språk"
-                 :en "B3-kieli"}
-   :oppiaine-ma {:fi "Matematiikka"
-                 :sv "Matematik"
-                 :en "Matematiikka"}
-   :oppiaine-bi {:fi "Biologia"
-                 :sv "Biologi"
-                 :en "Biologia"}
-   :oppiaine-ge {:fi "Maantieto"
-                 :sv "Geografi"
-                 :en "Maantieto"}
-   :oppiaine-fy {:fi "Fysiikka"
-                 :sv "Fysik"
-                 :en "Fysiikka"}
-   :oppiaine-ke {:fi "Kemia"
-                 :sv "Kemi"
-                 :en "Kemia"}
-   :oppiaine-tt {:fi "Terveystieto"
-                 :sv "Hälsokunskap"
-                 :en "Terveystieto"}
-   :oppiaine-ty {:fi "Uskonto tai elämänkatsomustieto"
-                 :sv "Religion eller livsåskådningskunskap"
-                 :en "Uskonto tai elämänkatsomustieto"}
-   :oppiaine-hi {:fi "Historia"
-                 :sv "Historia"
-                 :en "Historia"}
-   :oppiaine-yh {:fi "Yhteiskuntaoppi"
-                 :sv "Samhällslära"
-                 :en "Yhteiskuntaoppi"}
-   :oppiaine-mu {:fi "Musiikki"
-                 :sv "Musik"
-                 :en "Musiikki"}
-   :oppiaine-ku {:fi "Kuvaamataito"
-                 :sv "Bildkonst"
-                 :en "Kuvaamataito"}
-   :oppiaine-ka {:fi "Käsityö"
-                 :sv "Slöjd"
-                 :en "Käsityö"}
-   :oppiaine-li {:fi "Liikunta"
-                 :sv "Gymnastik"
-                 :en "Liikunta"}
-   :oppiaine-ko {:fi "Kotitalous"
-                 :sv "Huslig ekonomi"
-                 :en "Kotitalous"}
+  {:oppiaine-a                 {:fi "Äidinkieli ja kirjallisuus"
+                                :sv "Modersmål och litteratur"
+                                :en "Äidinkieli ja kirjallisuus"}
+   :oppiaine-a1                {:fi "A1-kieli"
+                                :sv "A1-språk"
+                                :en "A1-kieli"}
+   :oppiaine-a2                {:fi "A2-kieli"
+                                :sv "A2-språk"
+                                :en "A2-kieli"}
+   :oppiaine-b1                {:fi "B1-kieli"
+                                :sv "B1-språk"
+                                :en "B1-kieli"}
+   :oppiaine-b2                {:fi "B2-kieli"
+                                :sv "B2-språk"
+                                :en "B2-kieli"}
+   :oppiaine-b3                {:fi "B3-kieli"
+                                :sv "B3-språk"
+                                :en "B3-kieli"}
+   :oppiaine-ma                {:fi "Matematiikka"
+                                :sv "Matematik"
+                                :en "Matematiikka"}
+   :oppiaine-bi                {:fi "Biologia"
+                                :sv "Biologi"
+                                :en "Biologia"}
+   :oppiaine-ge                {:fi "Maantieto"
+                                :sv "Geografi"
+                                :en "Maantieto"}
+   :oppiaine-fy                {:fi "Fysiikka"
+                                :sv "Fysik"
+                                :en "Fysiikka"}
+   :oppiaine-ke                {:fi "Kemia"
+                                :sv "Kemi"
+                                :en "Kemia"}
+   :oppiaine-tt                {:fi "Terveystieto"
+                                :sv "Hälsokunskap"
+                                :en "Terveystieto"}
+   :oppiaine-ty                {:fi "Uskonto tai elämänkatsomustieto"
+                                :sv "Religion eller livsåskådningskunskap"
+                                :en "Uskonto tai elämänkatsomustieto"}
+   :oppiaine-hi                {:fi "Historia"
+                                :sv "Historia"
+                                :en "Historia"}
+   :oppiaine-yh                {:fi "Yhteiskuntaoppi"
+                                :sv "Samhällslära"
+                                :en "Yhteiskuntaoppi"}
+   :oppiaine-mu                {:fi "Musiikki"
+                                :sv "Musik"
+                                :en "Musiikki"}
+   :oppiaine-ku                {:fi "Kuvaamataito"
+                                :sv "Bildkonst"
+                                :en "Kuvaamataito"}
+   :oppiaine-ka                {:fi "Käsityö"
+                                :sv "Slöjd"
+                                :en "Käsityö"}
+   :oppiaine-li                {:fi "Liikunta"
+                                :sv "Gymnastik"
+                                :en "Liikunta"}
+   :oppiaine-ko                {:fi "Kotitalous"
+                                :sv "Huslig ekonomi"
+                                :en "Kotitalous"}
    :oppiaine-valinnainen-kieli {:fi "Valinnainen kieli"
                                 :sv "Valfritt språk"
                                 :en "Valinnainen kieli"}})
@@ -984,101 +987,101 @@
                                              :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}})
 
 (def base-education-cotinuous-admissions-module-texts
-  {:section-title                           {:fi "Pohjakoulutuksesi"
-                                             :sv "Grundutbildning"
-                                             :en "Your educational background"}
-   :choose-base-education                   {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
-                                             :sv "Välj den grundutbildning med vilken du söker till utbildningen"
-                                             :en "Fill in the education that you have completed"}
-   :choose-base-education-info              {:fi "Jos olet suorittanut useamman pohjakoulutuksen, \nvalitse ylin koulutuksesi."
-                                             :sv "Om du har avlagt mer än en grundutbildning, välj \ndin högsta utbildning."
-                                             :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
-   :base-education                          {:fi "Perusopetuksen oppimäärä"
-                                             :sv "Den grundläggande utbildningens lärokurs"
-                                             :en "EN: Perusopetuksen oppimäärä"}})
+  {:section-title              {:fi "Pohjakoulutuksesi"
+                                :sv "Grundutbildning"
+                                :en "Your educational background"}
+   :choose-base-education      {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
+                                :sv "Välj den grundutbildning med vilken du söker till utbildningen"
+                                :en "Fill in the education that you have completed"}
+   :choose-base-education-info {:fi "Jos olet suorittanut useamman pohjakoulutuksen, \nvalitse ylin koulutuksesi."
+                                :sv "Om du har avlagt mer än en grundutbildning, välj \ndin högsta utbildning."
+                                :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
+   :base-education             {:fi "Perusopetuksen oppimäärä"
+                                :sv "Den grundläggande utbildningens lärokurs"
+                                :en "EN: Perusopetuksen oppimäärä"}})
 
 (def kk-application-payment-module-texts
-  {:section-title                           {:fi "Hakemusmaksu ja lukuvuosimaksu"
-                                             :sv "Ansökningsavgift och läsårsavgift"
-                                             :en "Application fee and tuition fee"}
-   :document-option-title                   {:fi "Minulla on seuraava dokumentti"
-                                             :sv "Jag har följande dokument"
-                                             :en "I have the following document"}
-   :document-option-info                    {:fi "Hakemusmaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään 100 euron suuruinen hakemusmaksu, kun hakija hakee tutkintoon johtavaan koulutukseen. \nHakemusmaksu on lukukausikohtainen, eli voit hakea useissa hauissa samana lukuvuotena alkaviin koulutuksiin ja riittää, että maksat hakemusmaksun vain kerran. \nSinun ei tarvitse maksaa hakemusmaksua, jos sinulla on jokin alla mainituista dokumenteista. \nHuomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää hakemusmaksuista [Opintopolku.fi -sivulta](https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu). \n\nLukuvuosimaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta, joka hyväksytään muuhun kuin suomen- tai ruotsinkieliseen koulutukseen, peritään lukuvuosimaksu. Sinun ei tarvitse maksaa lukuvuosimaksua, jos sinulla on jokin alla mainituista dokumenteista. Huomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää lukuvuosimaksuista [Opintopolku.fi-sivulta](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#lukuvuosimaksu-korkeakoulujen-vieraskielisissa-koulutuksissa). Tarkemmat tiedot lukuvuosimaksuista ja apurahan hakemisesta löydät korkeakoulujen omilta verkkosivuilta ja [Opintopolku.fi](http://opintopolku.fi/) -sivustolla olevista hakukohteiden valintaperustetiedoista. "
-                                             :sv "Ansökningsavgift\n\nEn ansökningsavgift på 100 euro tas ut av medborgare utanför EU- och EES-området samt Schweiz i samband med ansökan till utbildning som leder till högskoleexamen.\n\nAnsökningsavgiften gäller för en termin, det vill säga att du kan söka till utbildningar som börjar samma läsår i flera olika ansökningar och det räcker att du betalar ansökningsavgiften endast en gång.\n\nDu är befriad från att betala ansökningsavgiften om du har något av dokumenten nedan.\n\nVänligen notera att du måste ladda upp en kopia av det dokument som befriar dig från att betala avgiften.\n\nDu kan läsa mer om ansökningsavgiften [på Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift).\n\nLäsårsavgift\n\nMedborgare utanför EU- och EES-området samt Schweiz som antas till annan än finsk- eller svenskspråkig utbildning ska betala en läsårsavgift. Du behöver inte betala läsårsavgift om du har något av nedanstående dokument. Observera att du till ansökan ska bifoga en kopia av det dokument som befriar från avgiften.\n\nLäs mer om läsårsavgifter på [Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#lasarsavgift-fr-hgskolornas-utbildningar-pa-frammande-sprak). Närmare information om läsårsavgifter och att ansöka om stipendium finns på högskolornas webbsidor och i utbildningarnas uppgifter om ansökningsmål och antagningskriterier i [Studieinfo.fi](https://opintopolku.fi/konfo/sv/)."
-                                             :en "Application fee\n\nIf you are not an EU/EEA or Swiss citizen, you will need to pay an application fee to the sum of 100 euros when you apply to a programme leading to a Bachelor's or Master's degree. \n\nIf you apply in multiple application rounds to study programmes starting in the same academic term (e.g. fall 2025), you only need to pay the application fee once. \n\nIf you have one of the following documents, you do not need to pay the application fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the application fee to the application form. \n\nYou can read more about application fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/application-fee).\n\nTuition fee\n\nIf you are not an EU/EEA or Swiss citizen and you are offered admission to a degree programme that is not in Finnish or Swedish, you need to pay an annual tuition fee. \n\nIf you have one of the following documents, you do not need to pay the tuition fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the tuition fee to the application form. \n\nYou can read more about tuition fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on [Studyinfo.fi](http://studyinfo.fi/)."}
-   :passport-option                         {:fi "Passi (tai henkilökortti), josta ilmenee EU- tai ETA-maan tai Sveitsin kansalaisuus"
-                                             :sv "Pass (eller identitetskort) som visar medborgarskap i EU/EES/Schweiz"
-                                             :en "Passport (or identity card) to indicate the citizenship of EU/EEA/Switzerland "}
-   :eu-blue-card-option                     {:fi "EU:n sininen kortti Suomessa"
-                                             :sv "EU-blåkort i Finland"
-                                             :en "EU Blue Card in Finland"}
-   :continuous-residence-option             {:fi "Jatkuva oleskelulupakortti Suomessa, oleskelulupatyyppi A, myönnetty muulla kuin opiskelun perusteella"
-                                             :sv "Kontinuerligt uppehållstillstånd i Finland, tillståndstyp A, som beviljats av annan orsak än för studier"
-                                             :en "Continuous residence permit in Finland,  Type A permit issued for purposes other than studies"}
-   :longterm-residence-option               {:fi "Pitkään oleskelleen kolmannen maan kansalaisen EU-oleskelulupakortti Suomessa, oleskelulupatyyppi P-EU"
-                                             :sv "EU-uppehållstillstånd för varaktigt bosatta tredjelandsmedborgare med permanent uppehållstillstånd i Finland, tillståndstyp P-EU"
-                                             :en "EU residence permit for third-country citizens with long-term residence permit card in Finland (Type P-EU)"}
-   :brexit-option                           {:fi "Brexit-oleskelulupakortti, lupatyyppi SEU-sopimuksen 50 artikla = Erosopimuksen piiriin kuuluva oleskeluoikeus, tai  P SEU-sopimuksen 50 artikla = Erosopimuksen mukainen pysyvä oleskeluoikeus"
-                                             :sv "Brexit-uppehållstillståndskort, tillståndstyp SEU-sopimuksen 50 artikla = Uppehållsrätt i enlighet med utträdesavtalet, eller P SEU-sopimuksen 50 artikla = Permanent uppehållsrätt i enlighet med utträdesavtalet"
-                                             :en "Brexit residence permit card, Type SEU = Right of residence under the withdrawal agreement, or P SEU = Right of permanent residence under the withdrawal agreement"}
-   :permanent-residence-option              {:fi "Pysyvä oleskelulupakortti Suomessa, oleskelulupa P"
-                                             :sv "Permanent uppehållstillstånd i Finland, tillståndstyp P"
-                                             :en "Permanent residence permit card in Finland, Type P permit"}
-   :eu-family-member-option                 {:fi "EU-kansalaisen perheenjäsenen oleskelukortti Suomessa"
-                                             :sv "Uppehållstillståndkort som EU medborgares familjemedlem i Finland"
-                                             :en "EU Family Member's Residence Card in Finland "}
-   :temporary-protection-option             {:fi "Tilapäisen suojelun oleskelulupakortti Suomessa"
-                                             :sv "Uppehållstillstånd på grund av tillfälligt skydd i Finland"
-                                             :en "Residence permit card on the basis of temporary protection in Finland"}
-   :no-document-option                      {:fi "Minulla ei ole mitään edellä mainituista dokumenteista"
-                                             :sv "Jag har inget av de ovannämnda"
-                                             :en "I do not have any of the above"}
-   :asiakasnumero-migri                     {:fi "Asiakasnumero"
-                                             :sv "Kundnummer"
-                                             :en "Customer number"}
-   :asiakasnumero-migri-info                {:fi "Kirjoita tähän asiakasnumerosi Maahanmuuttovirastossa. Löydät asiakasnumerosi oleskelulupakortistasi. "
-                                             :sv "Fyll i ditt kundnummer hos Migrationsverket. Du hittar ditt kundnummer på ditt uppehållstillståndskort."
-                                             :en "Write your customer number at the Finnish Immigration Service. You can find your customer number on your residence permit card."}
-   :continuous-residence-info               {:fi "Jatkuva oleskelulupa (oleskelulupatyyppi A) voi vapauttaa sinut lukuvuosimaksuvelvollisuudesta, jos se on myönnetty muulla perusteella kuin opiskelua varten. Jatkuva oleskelulupa ei kuitenkaan vapauta lukuvuosimaksuvelvollisuudesta seuraavissa tapauksissa: \n- Jos ensimmäinen oleskelulupasi Suomessa on myönnetty opiskelua varten, olet hakemus- ja/tai lukuvuosimaksuvelvollinen, vaikka olisit myöhemmin saanut jatkuvan oleskeluluvan (oleskelulupatyyppi A) muulla perusteella. \n- Jos sinulla on jatkuva oleskelulupa (oleskelulupatyyppi A) perhesiteen perusteella ja perheenjäsenesi on alun perin saapunut Suomeen opiskelua varten myönnetyllä oleskeluluvalla, olet myös hakemus- ja/tai lukuvuosimaksuvelvollinen."
-                                             :sv "Ett kontinuerligt uppehållstillstånd (typ A) kan befria dig från att betala ansöknings- och/eller läsårsavgift om det beviljas på annan grund än studier. Du är dock skyldig att betala ansöknings- och/eller läsårsavgift i följande fall: \n- Om ditt första uppehållstillstånd i Finland beviljades för studier är du skyldig att betala ansöknings- och/eller läsårsavgift även om du senare fick ett kontinuerligt uppehållstillstånd (typ A) av annan orsak. \n- Om du har ett kontinuerligt uppehållstillstånd (typ A) på grund av familjeband och din familjemedlem ursprungligen kom till Finland med uppehållstillstånd för studier, måste du betala ansöknings- och/eller läsårsavgift."
-                                             :en "A continuous residence permit (type A) may exempt you from paying application and/or tuition fees if it is granted on grounds other than studying. However, you are required to pay application and/or tuition fees in the following cases: \n- If your first residence permit in Finland was granted for the purpose of studying, you are required to pay application and/or tuition fees, even if you later obtained a continuous residence permit (type A) on other grounds. \n- If you have a continuous residence permit (type A) based on family ties, and your family member originally came to Finland on a residence permit granted for studying, you are also required to pay application and/or tuition fees."}
-   :attachment-info                         {:fi "Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä. \n\nNimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_oleskelulupakortti.\n\n Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi oleskelulupakortin tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin. \n\nSuositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX."
-                                             :sv "Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor. \n\nNamnge bilagorna i formen \"Efternamn\\_Förnamn\\_dokument\", t.ex. Svensson\\_Sven\\_uppehållskort.\n\n Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga. Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska uppehållskortet ingå i en fil, som dock kan innehålla flera sidor. Kontrollera att dokumenten i filen är rättvända. \n\nRekommenderade filformat är PDF, JPG, PNG och DOCX."
-                                             :en "Submit the attachment within 7 (seven) days after the application period has closed. The exact deadline is available next to the attachment request. \n\nName the attachment file(s) in the following way: \"Lastname\\_First name\\_description/name of document\". For example, Smith\\_Mary\\_residence_permit. \n\nScan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, a residence permit should be in one file that can include several pages. Check that the documents are all positioned in the same way upright. \n\nRecommended file formats are: PDF, JPG, PNG and DOCX."}
-   :attachment-deadline                     {:fi "Voimassaolon viimeinen päivä (pp/kk/vvvv)"
-                                             :sv "Det sista giltighetsdatum (dd/mm/åååå)"
-                                             :en "Valid until (dd/mm/yyyy)"}
-   :passport-attachment                     {:fi "Kopio passista tai henkilökortista"
-                                             :sv "Pass eller identitetskort"
-                                             :en "Copy of passport or identity card"}
-   :eu-blue-card-attachment                 {:fi "Kopio oleskeluluvasta (EU:n sininen kortti) Suomeen"
-                                             :sv "Uppehållstillstånd (EU-blåkort) i Finland"
-                                             :en "Copy of residence permit (EU Blue Card) to Finland"}
-   :continuous-permit-front-attachment      {:fi "Kopio oleskeluluvasta (A) Suomeen - etupuoli"
-                                             :sv "Uppehållstillstånd (A) i Finland - framsida"
-                                             :en "Copy of residence permit (A) to Finland - frontside"}
-   :continuous-permit-back-attachment      {:fi "Kopio oleskeluluvasta (A) Suomeen - takapuoli"
-                                             :sv "Uppehållstillstånd (A) i Finland - baksida"
-                                             :en "Copy of residence permit (A) to Finland - backside"}
-   :longterm-permit-attachment             {:fi "Kopio oleskeluluvasta (P-EU) Suomeen"
-                                            :sv "Uppehållstillstånd (P-EU) i Finland"
-                                            :en "Copy of residence permit (P-EU) to Finland"}
-   :brexit-permit-attachment               {:fi "Kopio Brexit-oleskeluluvasta (SEU tai P SEU) Suomeen"
-                                            :sv "Kopian av Brexit-uppehållstillstånd (SEU eller P SEU) i Finland"
-                                            :en "Copy of Brexit residence permit (SEU or P SEU) to Finland"}
-   :permanent-permit-attachment            {:fi "Kopio oleskeluluvasta (P) Suomeen"
-                                            :sv "Uppehållstillstånd (P) i Finland"
-                                            :en "Copy of residence permit (P) to Finland"}
-   :eu-family-member-attachment            {:fi "Kopio oleskeluluvasta (EU-kansalaisen perheenjäsenen oleskelukortti) Suomeen"
-                                            :sv "Uppehållstillstånd (Uppehållstillståndkort som EU medborgares familjemedlem) i Finland"
-                                            :en "Copy of residence permit (EU Family Member's Residence Card) to Finland"}
-   :temporary-protection-attachment        {:fi "Tilapäisen suojelun oleskelulupakortti"
-                                            :sv "Uppehållstillståndskort på grund av tillfälligt skydd"
-                                            :en "Residence permit card on the basis of temporary protection"}
-   :none-passport-info                     {:fi "Ilmoittamiesi tietojen perusteella sinulla ei ole maksusta vapauttavia dokumentteja, joten sinun tulee maksaa 100 euron suuruinen hakemusmaksu viimeistään 7 vuorokauden kuluttua hakemuksen lähettämisestä. Saat hakulomakkeen lähettämisen jälkeen hakemusmaksun maksuohjeet sähköpostiisi.\n\nJos olet jo maksanut hakemusmaksun toisen haun yhteydessä, sinun ei tarvitse maksaa hakemusmaksua uudelleen. Et saa tällöin uutta maksulinkkiä.\n\nHuomioithan, että hakemusmaksun maksaminen ei vielä tarkoita, että sinut hyväksytään koulutukseen.\n\nJos haet muuhun kuin suomen- tai ruotsinkieliseen koulutukseen, sinun tulee maksaa myös lukuvuosimaksu, jos sinut hyväksytään koulutukseen."
-                                            :sv "Enligt de uppgifter som du angett har du inte dokument som befriar dig från ansökningsavgiften. Du måste alltså betala en ansökningsavgift på 100 euro inom 7 dygn från att du skickat ansökningsblanketten. Efter att du skickat ansökningsblanketten får du anvisningar för hur du betalar ansökningsavgiften till din e-post.\n\nObservera att betalning av ansökningsavgift ännu inte innebär att du blir antagen till utbildningen.\n\nOm du söker till annat än svensk- eller finskspråkig utbildning, ska du också betala en läsårsavgift ifall du blir antagen till utbildningen."
-                                            :en "According to the information you have provided you do not have any documents that free you from paying the application fee. You need to pay the application in the sum of 100 euros in seven (7) days after sending in the application. You will be sent instructions on how to pay the application fee as well as a link to the payment after you have sent in the application.\n\nIf you have already paid the application fee after sending in another application, you do not need to pay the application fee again. In this case, you will not be sent a new payment link.\n\nPlease note that paying the application fee does not mean that you will be automatically offered admission.\n\nIf you are applying to degree programmes that are not in Finnish or Swedish, please note that you also need to pay an annual tuition fee if you are offered admission."}})
+  {:section-title                      {:fi "Hakemusmaksu ja lukuvuosimaksu"
+                                        :sv "Ansökningsavgift och läsårsavgift"
+                                        :en "Application fee and tuition fee"}
+   :document-option-title              {:fi "Minulla on seuraava dokumentti"
+                                        :sv "Jag har följande dokument"
+                                        :en "I have the following document"}
+   :document-option-info               {:fi "Hakemusmaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään 100 euron suuruinen hakemusmaksu, kun hakija hakee tutkintoon johtavaan koulutukseen. \nHakemusmaksu on lukukausikohtainen, eli voit hakea useissa hauissa samana lukuvuotena alkaviin koulutuksiin ja riittää, että maksat hakemusmaksun vain kerran. \nSinun ei tarvitse maksaa hakemusmaksua, jos sinulla on jokin alla mainituista dokumenteista. \nHuomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää hakemusmaksuista [Opintopolku.fi -sivulta](https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu). \n\nLukuvuosimaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta, joka hyväksytään muuhun kuin suomen- tai ruotsinkieliseen koulutukseen, peritään lukuvuosimaksu. Sinun ei tarvitse maksaa lukuvuosimaksua, jos sinulla on jokin alla mainituista dokumenteista. Huomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää lukuvuosimaksuista [Opintopolku.fi-sivulta](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#lukuvuosimaksu-korkeakoulujen-vieraskielisissa-koulutuksissa). Tarkemmat tiedot lukuvuosimaksuista ja apurahan hakemisesta löydät korkeakoulujen omilta verkkosivuilta ja [Opintopolku.fi](http://opintopolku.fi/) -sivustolla olevista hakukohteiden valintaperustetiedoista. "
+                                        :sv "Ansökningsavgift\n\nEn ansökningsavgift på 100 euro tas ut av medborgare utanför EU- och EES-området samt Schweiz i samband med ansökan till utbildning som leder till högskoleexamen.\n\nAnsökningsavgiften gäller för en termin, det vill säga att du kan söka till utbildningar som börjar samma läsår i flera olika ansökningar och det räcker att du betalar ansökningsavgiften endast en gång.\n\nDu är befriad från att betala ansökningsavgiften om du har något av dokumenten nedan.\n\nVänligen notera att du måste ladda upp en kopia av det dokument som befriar dig från att betala avgiften.\n\nDu kan läsa mer om ansökningsavgiften [på Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift).\n\nLäsårsavgift\n\nMedborgare utanför EU- och EES-området samt Schweiz som antas till annan än finsk- eller svenskspråkig utbildning ska betala en läsårsavgift. Du behöver inte betala läsårsavgift om du har något av nedanstående dokument. Observera att du till ansökan ska bifoga en kopia av det dokument som befriar från avgiften.\n\nLäs mer om läsårsavgifter på [Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#lasarsavgift-fr-hgskolornas-utbildningar-pa-frammande-sprak). Närmare information om läsårsavgifter och att ansöka om stipendium finns på högskolornas webbsidor och i utbildningarnas uppgifter om ansökningsmål och antagningskriterier i [Studieinfo.fi](https://opintopolku.fi/konfo/sv/)."
+                                        :en "Application fee\n\nIf you are not an EU/EEA or Swiss citizen, you will need to pay an application fee to the sum of 100 euros when you apply to a programme leading to a Bachelor's or Master's degree. \n\nIf you apply in multiple application rounds to study programmes starting in the same academic term (e.g. fall 2025), you only need to pay the application fee once. \n\nIf you have one of the following documents, you do not need to pay the application fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the application fee to the application form. \n\nYou can read more about application fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/application-fee).\n\nTuition fee\n\nIf you are not an EU/EEA or Swiss citizen and you are offered admission to a degree programme that is not in Finnish or Swedish, you need to pay an annual tuition fee. \n\nIf you have one of the following documents, you do not need to pay the tuition fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the tuition fee to the application form. \n\nYou can read more about tuition fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on [Studyinfo.fi](http://studyinfo.fi/)."}
+   :passport-option                    {:fi "Passi (tai henkilökortti), josta ilmenee EU- tai ETA-maan tai Sveitsin kansalaisuus"
+                                        :sv "Pass (eller identitetskort) som visar medborgarskap i EU/EES/Schweiz"
+                                        :en "Passport (or identity card) to indicate the citizenship of EU/EEA/Switzerland "}
+   :eu-blue-card-option                {:fi "EU:n sininen kortti Suomessa"
+                                        :sv "EU-blåkort i Finland"
+                                        :en "EU Blue Card in Finland"}
+   :continuous-residence-option        {:fi "Jatkuva oleskelulupakortti Suomessa, oleskelulupatyyppi A, myönnetty muulla kuin opiskelun perusteella"
+                                        :sv "Kontinuerligt uppehållstillstånd i Finland, tillståndstyp A, som beviljats av annan orsak än för studier"
+                                        :en "Continuous residence permit in Finland,  Type A permit issued for purposes other than studies"}
+   :longterm-residence-option          {:fi "Pitkään oleskelleen kolmannen maan kansalaisen EU-oleskelulupakortti Suomessa, oleskelulupatyyppi P-EU"
+                                        :sv "EU-uppehållstillstånd för varaktigt bosatta tredjelandsmedborgare med permanent uppehållstillstånd i Finland, tillståndstyp P-EU"
+                                        :en "EU residence permit for third-country citizens with long-term residence permit card in Finland (Type P-EU)"}
+   :brexit-option                      {:fi "Brexit-oleskelulupakortti, lupatyyppi SEU-sopimuksen 50 artikla = Erosopimuksen piiriin kuuluva oleskeluoikeus, tai  P SEU-sopimuksen 50 artikla = Erosopimuksen mukainen pysyvä oleskeluoikeus"
+                                        :sv "Brexit-uppehållstillståndskort, tillståndstyp SEU-sopimuksen 50 artikla = Uppehållsrätt i enlighet med utträdesavtalet, eller P SEU-sopimuksen 50 artikla = Permanent uppehållsrätt i enlighet med utträdesavtalet"
+                                        :en "Brexit residence permit card, Type SEU = Right of residence under the withdrawal agreement, or P SEU = Right of permanent residence under the withdrawal agreement"}
+   :permanent-residence-option         {:fi "Pysyvä oleskelulupakortti Suomessa, oleskelulupa P"
+                                        :sv "Permanent uppehållstillstånd i Finland, tillståndstyp P"
+                                        :en "Permanent residence permit card in Finland, Type P permit"}
+   :eu-family-member-option            {:fi "EU-kansalaisen perheenjäsenen oleskelukortti Suomessa"
+                                        :sv "Uppehållstillståndkort som EU medborgares familjemedlem i Finland"
+                                        :en "EU Family Member's Residence Card in Finland "}
+   :temporary-protection-option        {:fi "Tilapäisen suojelun oleskelulupakortti Suomessa"
+                                        :sv "Uppehållstillstånd på grund av tillfälligt skydd i Finland"
+                                        :en "Residence permit card on the basis of temporary protection in Finland"}
+   :no-document-option                 {:fi "Minulla ei ole mitään edellä mainituista dokumenteista"
+                                        :sv "Jag har inget av de ovannämnda"
+                                        :en "I do not have any of the above"}
+   :asiakasnumero-migri                {:fi "Asiakasnumero"
+                                        :sv "Kundnummer"
+                                        :en "Customer number"}
+   :asiakasnumero-migri-info           {:fi "Kirjoita tähän asiakasnumerosi Maahanmuuttovirastossa. Löydät asiakasnumerosi oleskelulupakortistasi. "
+                                        :sv "Fyll i ditt kundnummer hos Migrationsverket. Du hittar ditt kundnummer på ditt uppehållstillståndskort."
+                                        :en "Write your customer number at the Finnish Immigration Service. You can find your customer number on your residence permit card."}
+   :continuous-residence-info          {:fi "Jatkuva oleskelulupa (oleskelulupatyyppi A) voi vapauttaa sinut lukuvuosimaksuvelvollisuudesta, jos se on myönnetty muulla perusteella kuin opiskelua varten. Jatkuva oleskelulupa ei kuitenkaan vapauta lukuvuosimaksuvelvollisuudesta seuraavissa tapauksissa: \n- Jos ensimmäinen oleskelulupasi Suomessa on myönnetty opiskelua varten, olet hakemus- ja/tai lukuvuosimaksuvelvollinen, vaikka olisit myöhemmin saanut jatkuvan oleskeluluvan (oleskelulupatyyppi A) muulla perusteella. \n- Jos sinulla on jatkuva oleskelulupa (oleskelulupatyyppi A) perhesiteen perusteella ja perheenjäsenesi on alun perin saapunut Suomeen opiskelua varten myönnetyllä oleskeluluvalla, olet myös hakemus- ja/tai lukuvuosimaksuvelvollinen."
+                                        :sv "Ett kontinuerligt uppehållstillstånd (typ A) kan befria dig från att betala ansöknings- och/eller läsårsavgift om det beviljas på annan grund än studier. Du är dock skyldig att betala ansöknings- och/eller läsårsavgift i följande fall: \n- Om ditt första uppehållstillstånd i Finland beviljades för studier är du skyldig att betala ansöknings- och/eller läsårsavgift även om du senare fick ett kontinuerligt uppehållstillstånd (typ A) av annan orsak. \n- Om du har ett kontinuerligt uppehållstillstånd (typ A) på grund av familjeband och din familjemedlem ursprungligen kom till Finland med uppehållstillstånd för studier, måste du betala ansöknings- och/eller läsårsavgift."
+                                        :en "A continuous residence permit (type A) may exempt you from paying application and/or tuition fees if it is granted on grounds other than studying. However, you are required to pay application and/or tuition fees in the following cases: \n- If your first residence permit in Finland was granted for the purpose of studying, you are required to pay application and/or tuition fees, even if you later obtained a continuous residence permit (type A) on other grounds. \n- If you have a continuous residence permit (type A) based on family ties, and your family member originally came to Finland on a residence permit granted for studying, you are also required to pay application and/or tuition fees."}
+   :attachment-info                    {:fi "Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä. \n\nNimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_oleskelulupakortti.\n\n Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi oleskelulupakortin tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin. \n\nSuositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX."
+                                        :sv "Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor. \n\nNamnge bilagorna i formen \"Efternamn\\_Förnamn\\_dokument\", t.ex. Svensson\\_Sven\\_uppehållskort.\n\n Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga. Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska uppehållskortet ingå i en fil, som dock kan innehålla flera sidor. Kontrollera att dokumenten i filen är rättvända. \n\nRekommenderade filformat är PDF, JPG, PNG och DOCX."
+                                        :en "Submit the attachment within 7 (seven) days after the application period has closed. The exact deadline is available next to the attachment request. \n\nName the attachment file(s) in the following way: \"Lastname\\_First name\\_description/name of document\". For example, Smith\\_Mary\\_residence_permit. \n\nScan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, a residence permit should be in one file that can include several pages. Check that the documents are all positioned in the same way upright. \n\nRecommended file formats are: PDF, JPG, PNG and DOCX."}
+   :attachment-deadline                {:fi "Voimassaolon viimeinen päivä (pp/kk/vvvv)"
+                                        :sv "Det sista giltighetsdatum (dd/mm/åååå)"
+                                        :en "Valid until (dd/mm/yyyy)"}
+   :passport-attachment                {:fi "Kopio passista tai henkilökortista"
+                                        :sv "Pass eller identitetskort"
+                                        :en "Copy of passport or identity card"}
+   :eu-blue-card-attachment            {:fi "Kopio oleskeluluvasta (EU:n sininen kortti) Suomeen"
+                                        :sv "Uppehållstillstånd (EU-blåkort) i Finland"
+                                        :en "Copy of residence permit (EU Blue Card) to Finland"}
+   :continuous-permit-front-attachment {:fi "Kopio oleskeluluvasta (A) Suomeen - etupuoli"
+                                        :sv "Uppehållstillstånd (A) i Finland - framsida"
+                                        :en "Copy of residence permit (A) to Finland - frontside"}
+   :continuous-permit-back-attachment  {:fi "Kopio oleskeluluvasta (A) Suomeen - takapuoli"
+                                        :sv "Uppehållstillstånd (A) i Finland - baksida"
+                                        :en "Copy of residence permit (A) to Finland - backside"}
+   :longterm-permit-attachment         {:fi "Kopio oleskeluluvasta (P-EU) Suomeen"
+                                        :sv "Uppehållstillstånd (P-EU) i Finland"
+                                        :en "Copy of residence permit (P-EU) to Finland"}
+   :brexit-permit-attachment           {:fi "Kopio Brexit-oleskeluluvasta (SEU tai P SEU) Suomeen"
+                                        :sv "Kopian av Brexit-uppehållstillstånd (SEU eller P SEU) i Finland"
+                                        :en "Copy of Brexit residence permit (SEU or P SEU) to Finland"}
+   :permanent-permit-attachment        {:fi "Kopio oleskeluluvasta (P) Suomeen"
+                                        :sv "Uppehållstillstånd (P) i Finland"
+                                        :en "Copy of residence permit (P) to Finland"}
+   :eu-family-member-attachment        {:fi "Kopio oleskeluluvasta (EU-kansalaisen perheenjäsenen oleskelukortti) Suomeen"
+                                        :sv "Uppehållstillstånd (Uppehållstillståndkort som EU medborgares familjemedlem) i Finland"
+                                        :en "Copy of residence permit (EU Family Member's Residence Card) to Finland"}
+   :temporary-protection-attachment    {:fi "Tilapäisen suojelun oleskelulupakortti"
+                                        :sv "Uppehållstillståndskort på grund av tillfälligt skydd"
+                                        :en "Residence permit card on the basis of temporary protection"}
+   :none-passport-info                 {:fi "Ilmoittamiesi tietojen perusteella sinulla ei ole maksusta vapauttavia dokumentteja, joten sinun tulee maksaa 100 euron suuruinen hakemusmaksu viimeistään 7 vuorokauden kuluttua hakemuksen lähettämisestä. Saat hakulomakkeen lähettämisen jälkeen hakemusmaksun maksuohjeet sähköpostiisi.\n\nJos olet jo maksanut hakemusmaksun toisen haun yhteydessä, sinun ei tarvitse maksaa hakemusmaksua uudelleen. Et saa tällöin uutta maksulinkkiä.\n\nHuomioithan, että hakemusmaksun maksaminen ei vielä tarkoita, että sinut hyväksytään koulutukseen.\n\nJos haet muuhun kuin suomen- tai ruotsinkieliseen koulutukseen, sinun tulee maksaa myös lukuvuosimaksu, jos sinut hyväksytään koulutukseen."
+                                        :sv "Enligt de uppgifter som du angett har du inte dokument som befriar dig från ansökningsavgiften. Du måste alltså betala en ansökningsavgift på 100 euro inom 7 dygn från att du skickat ansökningsblanketten. Efter att du skickat ansökningsblanketten får du anvisningar för hur du betalar ansökningsavgiften till din e-post.\n\nObservera att betalning av ansökningsavgift ännu inte innebär att du blir antagen till utbildningen.\n\nOm du söker till annat än svensk- eller finskspråkig utbildning, ska du också betala en läsårsavgift ifall du blir antagen till utbildningen."
+                                        :en "According to the information you have provided you do not have any documents that free you from paying the application fee. You need to pay the application in the sum of 100 euros in seven (7) days after sending in the application. You will be sent instructions on how to pay the application fee as well as a link to the payment after you have sent in the application.\n\nIf you have already paid the application fee after sending in another application, you do not need to pay the application fee again. In this case, you will not be sent a new payment link.\n\nPlease note that paying the application fee does not mean that you will be automatically offered admission.\n\nIf you are applying to degree programmes that are not in Finnish or Swedish, please note that you also need to pay an annual tuition fee if you are offered admission."}})
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
@@ -1151,9 +1154,9 @@
                           :sv "dd.mm.åååå"
                           :en "dd.mm.yyyy"}})
 
-(def email-link-section-texts {:default {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan."
-                                         :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet om du använder en offentlig dator.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen."
-                                         :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place."}
+(def email-link-section-texts {:default              {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa hakuaikana. Oma Opintopolku -palvelussa voit lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan."
+                                                      :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet om du använder en offentlig dator.\n\nOm du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och under ansökningstiden göra ändringarna i tjänsten Min Studieinfo. I tjänsten kan du också, se antagningsresultaten och ta emot studieplatsen."
+                                                      :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place."}
                                :no-hakuaika-mentions {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta.\n\nJos sinulla on verkkopankkitunnukset, mobiilivarmenne tai sähköinen henkilökortti, voit vaihtoehtoisesti kirjautua sisään [Opintopolku.fi](https://www.opintopolku.fi):ssä, ja tehdä muutoksia hakemukseesi Oma Opintopolku -palvelussa."
                                                       :sv "Om du vill ändra din ansökan, kan du göra ändringar via länken ovan. Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet om du använder en offentlig dator. Om du har nätbankskoder, mobilcertifikat eller ett elektroniskt ID-kort, kan du alternativt logga in i [Studieinfo.fi](https://www.studieinfo.fi) och göra ändringarna i tjänsten Min Studieinfo."
                                                       :en "If you wish to edit your application, you can use the link above to make changes to your application. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application. If you have Finnish online banking credentials, an electronic ID-card or mobile certificate, you can also log in at [Studyinfo.fi](https://www.studyinfo.fi) and make the changes in the My Studyinfo -service."}})
@@ -1200,8 +1203,8 @@
                                                               :sv ". Eller använda: "
                                                               :en ". Or use: "}
    :return-latest                                            {:fi "Palautettava viimeistään"
-                                                             :sv "Sista leveransdatum"
-                                                             :en "Deadline in"}
+                                                              :sv "Sista leveransdatum"
+                                                              :en "Deadline in"}
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
                                                               :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                               :en "Valintatieto tuotu valintarekisteristä"}
@@ -2174,6 +2177,9 @@
    :sending-information-request                              {:fi "Täydennyspyyntöä lähetetään"
                                                               :sv "Begäran om komplettering skickas"
                                                               :en "Message has been sent"}
+   :information-request-send-reminder                        {:fi "Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
+                                                              :sv "SV Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
+                                                              :en "EN Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"}
    :set-haku-to-form                                         {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                               :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                               :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
