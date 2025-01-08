@@ -2183,6 +2183,12 @@
    :information-request-send-reminder                        {:fi "Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
                                                               :sv "SV Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"
                                                               :en "EN Hakijalle lähtee muistutusviesti vastaamattomasta täydennyspyynnöstä"}
+   :information-request-reminder-will-be-sent                {:fi "Muistutusviesti lähetetään"
+                                                              :sv "SV Muistutusviesti lähetetään"
+                                                              :en "EN Muistutusviesti lähetetään"}
+   :information-request-reminder-after                       {:fi "päivän kuluttua"
+                                                              :sv "SV päivän kuluttua"
+                                                              :en "EN päivän kuluttua"}
    :set-haku-to-form                                         {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                               :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                               :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}

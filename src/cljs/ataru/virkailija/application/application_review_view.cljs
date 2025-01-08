@@ -807,24 +807,24 @@
 (defn- application-information-request-reminder-days []
   (let [reminder-days @(subscribe [:application/information-request-reminder-days])
         days-options (take 14 (iterate inc 1))]
-    [:div.editor-form__text-field-wrapper
-     [:label.editor-form__component-item-header
-      "Muistutusviesti lähetetään"]
-     [:select.editor-form__select
-      {:data-test-id "astu-order-id-prefix-input"
-       :value        reminder-days
-       :required     true
-       :disabled     false
-       :on-change    #(dispatch [:application/set-information-request-reminder-days (.-value (.-target %))])}
-      (map
-        #(list [:option {:value %} %])
-        days-options)]
-     [:p "päivän kuluttua"]]))
+    [:div.application-handling__information-request-reminder-days
+     [:p [:b @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])]]
+     [:div.application-handling__information-request-reminder-days-select-container
+      [:select
+       {:data-test-id "information-request-reminder-days-input"
+        :value        reminder-days
+        :required     true
+        :disabled     false
+        :on-change    #(dispatch [:application/set-information-request-reminder-days (.-value (.-target %))])}
+       (map
+         #(list [:option {:value %} %])
+         days-options)]
+      [:p @(subscribe [:editor/virkailija-translation :information-request-reminder-after])]]]))
 
 (defn- application-information-request-send-reminder []
   (let [send-reminder? @(subscribe [:application/information-request-send-reminder])]
     [:<>
-     [:div.application-handling__review-filters
+     [:div.application-handling__information-request-send-reminder
       [:input.application-handling__attachment-download-checkbox
        {:id        "application-handling__information-request-send-reminder"
         :type      "checkbox"
