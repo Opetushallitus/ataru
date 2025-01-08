@@ -179,30 +179,38 @@
                                                                 person-service tarjonta-service
                                                                 koodisto-cache get-haut-cache
                                                                 person-oid application-term application-year)]
-          (log/info "Update kk application payment status handler for"
-                    person-oid application-term application-year
-                    "returned" (count existing-payments) "created or modified payments and"
-                    (count modified-payments) "existing payments before creating / modifying.")
-          (doseq [payment modified-payments]
-            (let [new-state (:state payment)]
-              (cond
-                (= (:awaiting payment/all-states) new-state)
-                (do
-                  (create-payment-and-send-email job-runner maksut-service payment)
-                  ; If application payment is required, tuition fee will be always required as well.
-                  (mark-tuition-fee-obligated job-runner (:application-key payment)))
+          (if (or (some? modified-payments) (some? existing-payments))
+            (do
+              (log/info "Update kk application payment status handler for"
+                        person-oid application-term application-year
+                        "returned" (count existing-payments) "created or modified payments and"
+                        (count modified-payments) "existing payments before creating / modifying.")
+              (doseq [payment modified-payments]
+                (let [new-state (:state payment)]
+                  (cond
+                    (= (:awaiting payment/all-states) new-state)
+                    (do
+                      (create-payment-and-send-email job-runner maksut-service payment)
+                      ; If application payment is required, tuition fee will be always required as well.
+                      (mark-tuition-fee-obligated job-runner (:application-key payment)))
 
-                (= (:ok-by-proxy payment/all-states) new-state)
-                (mark-tuition-fee-obligated job-runner (:application-key payment)))))
+                    (= (:ok-by-proxy payment/all-states) new-state)
+                    (mark-tuition-fee-obligated job-runner (:application-key payment)))))
+              (doseq [application-payment existing-payments]
+                (let [{:keys [application payment]} application-payment]
+                  (cond
+                    (needs-reminder-sent? payment)
+                    (send-reminder-email-and-mark-sent job-runner payment application))))
 
-          (doseq [application-payment existing-payments]
-            (let [{:keys [application payment]} application-payment]
-              (cond
-                (needs-reminder-sent? payment)
-                (send-reminder-email-and-mark-sent job-runner payment application))))
+              (invalidate-maksut-payments-if-needed maksut-service modified-payments)
+            (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 
-          (invalidate-maksut-payments-if-needed maksut-service modified-payments)
-          (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
+            ; Here we've already established there should be a person with at least one application, but for the first
+            ; applications in haku, get-haku-cache may still be refreshing so it doesn't return any applications for
+            ; the specific haku. That's a temporary error, and quite short-lived, so let's try again later.
+            (throw (ex-info "Could not find or create a payment status for person" {:person-oid person-oid
+                                                                                    :term application-term
+                                                                                    :year application-year}))))
         (log/warn "Update kk payment status handler not run for params"
                   person_oid term year application_id application_key
                   "because no valid payment info was found.")))))
