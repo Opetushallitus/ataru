@@ -877,7 +877,11 @@
 (reg-event-db
   :application/toggle-information-request-send-reminder
   (fn [db [_ send-reminder?]]
-    (assoc-in db [:application :information-request :send-reminder?] (not send-reminder?))))
+    (if send-reminder?
+      (assoc-in db [:application :information-request :send-reminder?] false)
+      (-> db
+          (assoc-in [:application :information-request :send-reminder?] true)
+          (assoc-in [:application :information-request :reminder-days] "12")))))
 
 (reg-event-db
   :application/set-information-request-reminder-days
@@ -892,7 +896,7 @@
       :http {:method              :post
              :path                "/lomake-editori/api/applications/information-request"
              :params              (-> db :application :information-request
-                                      (select-keys [:message :subject])
+                                      (select-keys [:message :subject :send-reminder? :reminder-days])
                                       (assoc :recipient-target "hakija")
                                       (assoc :application-key application-key)
                                       (assoc :add-update-link true))
