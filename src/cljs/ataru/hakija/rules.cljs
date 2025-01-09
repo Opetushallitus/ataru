@@ -98,7 +98,7 @@
   ^{:dependencies [:nationality]}
   [db]
   (let [values (get-in db [:application :answers :nationality :values])]
-    (if (empty? (filter (fn [[v & _]] (= (:value v) finland-country-code)) values))
+    (if (empty? (filter (fn [[v & _]] (or (nil? (:value v)) (= "" (:value v)) (= (:value v) finland-country-code))) values))
       (-> db
           (update-in [:application :answers :have-finnish-ssn]
                      (fn [a]
