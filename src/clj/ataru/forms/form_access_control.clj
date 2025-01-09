@@ -180,10 +180,8 @@
 (defn upsert-kk-application-payment-module [form-key session audit-logger]
   (log/info (str "Upserting kk-application-payment-module to form " form-key))
   (when (not (-> session :identity :superuser)) (throw (user-feedback-exception "Ei oikeuksia muokata lomaketta")))
-  (let [form (form-store/fetch-by-key-for-kk-payment-module-job form-key)
-        has-applications? (form-store/form-has-applications form-key)]
+  (let [form (form-store/fetch-by-key-for-kk-payment-module-job form-key)]
     (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
-    (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
     (if (payment-utils/has-payment-module? form)
       (update-payment-module-to-form form session audit-logger)
       (add-payment-module-to-form form session audit-logger))))

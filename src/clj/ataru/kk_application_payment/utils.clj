@@ -143,8 +143,14 @@
   (let [sections (:content form)
         payment-section (kk-application-payment-module)
         update-fn (fn[section]
-                    (if (= (:id section) kk-application-payment-wrapper-key)
+                    (cond
+                      (= (:id section) kk-application-payment-wrapper-key)
                       payment-section
+
+                      (= :person-info (keyword (:module section)))
+                      (person-info-module :onr-kk-application-payment)
+
+                      :else
                       section))
         updated-content (map update-fn sections)]
     (assoc form :content updated-content)))
