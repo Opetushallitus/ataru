@@ -84,7 +84,7 @@
                                  :rules           (if gender?
                                                     {:toggle-ssn-based-fields nil}
                                                     {:toggle-ssn-based-fields-without-gender nil})
-                                 :koodisto-source {:uri "maatjavaltiot2" :version 2 :default-option "Suomi"}})]})))
+                                 :koodisto-source {:uri "maatjavaltiot2" :version 2}})]})))
 
 (defn- country-of-residence-component
   [metadata]
