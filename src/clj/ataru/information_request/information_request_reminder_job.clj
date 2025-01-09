@@ -16,7 +16,7 @@
         (assoc information-request :reminder? true)
         connection))))
 
-(defn- handler [job-runner]
+(defn- handler [_ job-runner]
   (let [information-requests (ir-store/get-information-requests-to-remind)]
     (doseq [information-request information-requests]
       (handle-reminder information-request job-runner)
@@ -24,4 +24,4 @@
 
 (def job-definition {:handler handler
                      :type    (-> *ns* ns-name str)
-                     :schedule "0 12 * * *"})
+                     :schedule "0 12,16 * * *"})
