@@ -40,3 +40,4 @@ npm-debug.log*
 /blob-report/
 /playwright/.cache/
 .testcontainers.properties
+.vscode/
