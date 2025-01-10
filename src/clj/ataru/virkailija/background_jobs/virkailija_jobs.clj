@@ -35,6 +35,8 @@
                                                                 {:queue default-retry-strategy})
    (:type kk-updater-job/updater-job-definition)         (merge kk-updater-job/updater-job-definition
                                                                 {:queue default-retry-strategy})
+   (:type kk-updater-job/periodical-updater-job-definition) (merge kk-updater-job/periodical-updater-job-definition
+                                                                   {:queue default-retry-strategy})
    (:type kk-payment-module-job/job-definition)          (merge kk-payment-module-job/job-definition
                                                                 {:queue default-retry-strategy})
    (:type kk-email-job/job-definition)                   (merge kk-email-job/job-definition

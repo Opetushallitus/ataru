@@ -74,7 +74,7 @@
               "URL" payment-url "application-key" application-key)
     (if mail-content
       (let [job-id (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                             (job/start-job job-runner conn job-type mail-content))]
+                     (job/start-job job-runner conn job-type mail-content))]
         (log/info "Created kk application payment" type-str "email job" job-id "for application" application-key))
       (log/warn "Creating kk application payment" type-str "mail to application" application-key "failed"))))
 
@@ -219,37 +219,47 @@
   [job-runner person-oid term year]
   (when (get-in config [:kk-application-payments :enabled?])
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                              (job/start-job job-runner
-                                             conn
-                                             "kk-application-payment-person-status-update-job"
-                                             {:person_oid person-oid :term term :year year}))))
+      (job/start-job job-runner
+                     conn
+                     "kk-application-payment-person-status-update-job"
+                     {:person_oid person-oid :term term :year year}))))
 
 (defn start-update-kk-payment-status-for-application-key-job
   [job-runner application-key]
   (when (get-in config [:kk-application-payments :enabled?])
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                              (job/start-job job-runner
-                                             conn
-                                             "kk-application-payment-person-status-update-job"
-                                             {:application_key application-key}))))
+      (job/start-job job-runner
+                     conn
+                     "kk-application-payment-person-status-update-job"
+                     {:application_key application-key}))))
 
 (defn start-update-kk-payment-status-for-application-id-job
   [job-runner application-id]
   (when (get-in config [:kk-application-payments :enabled?])
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                              (job/start-job job-runner
-                                             conn
-                                             "kk-application-payment-person-status-update-job"
-                                             {:application_id application-id}))))
+      (job/start-job job-runner
+                     conn
+                     "kk-application-payment-person-status-update-job"
+                     {:application_id application-id}))))
 
 (defn start-update-kk-payment-status-for-all-job
   [job-runner]
   (when (get-in config [:kk-application-payments :enabled?])
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                              (job/start-job job-runner
-                                             conn
-                                             "kk-application-payment-status-update-scheduler-job"
-                                             {}))))
+      (job/start-job job-runner
+                     conn
+                     "kk-application-payment-status-update-scheduler-job"
+                     {}))))
+
+; Called only from the scheduler job.
+(defn start-periodical-update-kk-payment-status-for-person-job
+  [job-runner person-oid term year]
+  (when (get-in config [:kk-application-payments :enabled?])
+    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+      (job/start-job job-runner
+                     conn
+                     "kk-application-payment-periodical-person-status-update-job"
+                     {:person_oid person-oid :term term :year year}))))
 
 ; TODO: we might be updating status of a single person multiple times if they have applications in multiple hakus.
 (defn update-statuses-for-haku
@@ -262,7 +272,7 @@
         person-oids (distinct (application-store/get-application-person-oids-for-haku haku-oid))]
     (log/info "Found" (count person-oids) "distinct oids for haku" haku-oid "- updating kk application payment statuses.")
     (doseq [person-oid person-oids]
-      (start-update-kk-payment-status-for-person-job job-runner person-oid term year))))
+      (start-periodical-update-kk-payment-status-for-person-job job-runner person-oid term year))))
 
 (defn get-hakus-and-update
   "Finds active hakus that still need to have kk application payment statuses updated,
@@ -283,6 +293,12 @@
 
 (def updater-job-definition {:handler update-kk-payment-status-for-person-handler
                              :type    "kk-application-payment-person-status-update-job"})
+
+; This uses the same handler as the person updater job, but is only called from the daily scheduler job.
+; This way we get separate queues for the daily updates so that the person updater job is not blocked by
+; the daily updates.
+(def periodical-updater-job-definition {:handler update-kk-payment-status-for-person-handler
+                                        :type    "kk-application-payment-periodical-person-status-update-job"})
 
 (def scheduler-job-definition {:handler  update-kk-payment-status-for-all-handler
                                :type     "kk-application-payment-status-update-scheduler-job"
