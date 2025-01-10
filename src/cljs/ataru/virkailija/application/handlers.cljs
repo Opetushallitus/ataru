@@ -881,12 +881,12 @@
       (assoc-in db [:application :information-request :send-reminder?] false)
       (-> db
           (assoc-in [:application :information-request :send-reminder?] true)
-          (assoc-in [:application :information-request :reminder-days] "12")))))
+          (assoc-in [:application :information-request :reminder-days] 12)))))
 
 (reg-event-db
   :application/set-information-request-reminder-days
   (fn [db [_ days]]
-    (assoc-in db [:application :information-request :reminder-days] days)))
+    (assoc-in db [:application :information-request :reminder-days] (js/parseInt days))))
 
 (reg-event-fx
  :application/submit-information-request
