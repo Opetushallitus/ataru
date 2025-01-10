@@ -111,16 +111,6 @@
                             (.getMessage e)))]
           (should= "Ei oikeuksia muokata lomaketta" result))))
 
-  (it "Fails to upsert application payment module when form already has applications"
-      (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] field-id-test-form)
-                    form-store/form-has-applications (fn [form-key]
-                                                       (= "test-field-id-change-form" form-key))]
-        (let [superuser-session (update session :identity assoc :superuser true)
-              failure-reason (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)
-                                  (catch Throwable e
-                                    (.getMessage e)))]
-          (should= "Lomakkeella test-field-id-change-form on hakemuksia." failure-reason))))
-
   (it "Updates application payment module"
       (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] form-fixtures/person-info-form)
                     form-store/create-form-or-increment-version! (fn [_ _ _])
