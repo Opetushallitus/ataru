@@ -106,7 +106,7 @@
          (-> information-request :message-type u/not-blank?)]}
     (let [add-update-link (:add-update-link information-request)
           send-reminder-time (when (:send-reminder? information-request)
-                               (time/plus (time/today-at 6 0) (time/days (Integer/parseInt (:reminder-days information-request)))))
+                               (time/plus (time/today-at 6 0) (time/days (:reminder-days information-request))))
           information-request (information-request-store/add-information-request
                                 (assoc
                                   information-request
