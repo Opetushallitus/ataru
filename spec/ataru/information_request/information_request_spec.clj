@@ -13,7 +13,7 @@
             [ataru.information-request.information-request-service :as ir-service]
             [ataru.information-request.information-request-reminder-job :refer [handler]]
             [ataru.log.audit-log :as audit-log]
-            [speclj.core :refer [describe tags it should= before-all after around with-stubs stub should-not-have-invoked]]
+            [speclj.core :refer [describe tags it should= before-all after around with-stubs stub should-have-invoked should-not-have-invoked]]
             [yesql.core :as sql]))
 
 (declare conn)
@@ -94,11 +94,13 @@
 
           (describe "reminder-job"
                     (it "should set reminder_processed_time for handled information requests"
-                        (doseq [ir (information-requests-to-remind @application-key)]
-                          (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                                                    (ir-store/add-information-request ir "1.2.246.562.11.11111111111" conn)))
-                        (handler nil runner)
-                        (should= 0 (count (ir-store/get-information-requests-to-remind))))
+                        (with-redefs [ir-service/start-email-job (stub :start-email-job)]
+                          (doseq [ir (information-requests-to-remind @application-key)]
+                            (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                                                      (ir-store/add-information-request ir "1.2.246.562.11.11111111111" conn)))
+                          (handler nil runner)
+                          (should= 0 (count (ir-store/get-information-requests-to-remind)))
+                          (should-have-invoked :start-email-job {:times 4})))
                     (it "should not send reminder if application has changed"
                         (with-redefs [ir-service/start-email-job (stub :start-email-job)]
                           (doseq [ir (information-requests-to-remind @application-key)]
