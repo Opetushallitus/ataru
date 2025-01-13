@@ -1,6 +1,5 @@
 (ns ataru.information-request.information-request-spec
   (:require [ataru.db.db :as db]
-            [ataru.fixtures.application :as application-fixtures]
             [clj-time.core :as c]
             [clojure.java.jdbc :as jdbc]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
@@ -50,10 +49,10 @@
                                                     :last_name  "Täydennyspyytäjä"})
             (let [id (unit-test-db/init-db-fixture
                        minimal-form
-                       (assoc
-                         application-fixtures/application-without-hakemusmaksu-exemption
-                         :form
-                         (:id minimal-form))
+                       {:form       (:id minimal-form),
+                        :lang       "fi"
+                        :person-oid "1.2.3.4.5.6"
+                        :answers [{:key "first-name" :value "Aku Petteri" :fieldType "textField" :label {:fi "Etunimet" :sv "Förnamn"}}]}
                        nil)]
               (reset! application-key (:key (application-store/get-application id)))))
 
