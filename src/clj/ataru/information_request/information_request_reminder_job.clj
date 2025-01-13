@@ -16,7 +16,7 @@
         connection
         (assoc information-request :reminder? true)))))
 
-(defn- handler [_ job-runner]
+(defn handler [_ job-runner]
   (let [information-requests (ir-store/get-information-requests-to-remind)]
     (doseq [information-request information-requests]
       (handle-reminder information-request job-runner)
