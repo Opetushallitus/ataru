@@ -384,7 +384,24 @@
                             (should-be-matching-state {:application-key primary-application-key, :state state-not-required
                                                        :reason reason-exemption} primary-payment)
                             (should-be-matching-state {:application-key linked-application-key, :state state-paid
-                                                       :reason nil} linked-payment)))))
+                                                       :reason nil} linked-payment)))
+
+                    (it "should not set exempt application status when application has already been marked as overdue"
+                        (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-with-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              _ (payment/set-application-fee-overdue application-key nil)
+                              changed (:modified-payments
+                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 0 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-overdue
+                                                     :reason nil} payment)))))
 
 (defn save-and-check-single-state
   [application-key state-func desired-state desired-reason]
