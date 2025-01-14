@@ -132,7 +132,7 @@
   :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
-  :jvm-opts ^:replace ["-Xmx2g"]
+  :jvm-opts ^:replace ["-Xmx8g"]
 
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11"]
@@ -288,6 +288,7 @@
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]
+                                               [org.clojure/data.csv "1.1.0"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
@@ -305,6 +306,7 @@
                                                :aws-secret-key "localhost"}}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
+                                               [org.clojure/data.csv "1.1.0"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
