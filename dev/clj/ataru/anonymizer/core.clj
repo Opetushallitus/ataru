@@ -1,6 +1,7 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
-            [cheshire.core :as json]
+            [clojure.data.csv :as csv]
+            [clojure.java.io :as io]
             clojure.string
             clojure.walk
             [taoensso.timbre :as log]))
@@ -76,17 +77,20 @@
 (defn file->fake-persons [file]
   (log/info "Indexing persons")
   (time
-    (->> file
-         (slurp)
-         (clojure.string/split-lines)
-         (map (comp fake-person->ataru-person
-                    clojure.walk/keywordize-keys
-                    json/parse-string))
-         (group-by :person-oid))))
+    (with-open [reader (io/reader file)]
+      (group-by :person-oid
+        (->> (let [data (csv/read-csv reader)]
+               (map zipmap
+                    (->> (first data)
+                         (map keyword)
+                         repeat)
+                    (rest data)))
+             (map fake-person->ataru-person))))))
 
 (defn anonymize-data [& args]
   (assert (not (clojure.string/blank? (second args))))
   (let [fake-persons     (file->fake-persons (first args))
+        _                (log/info "Found" (count (keys fake-persons)) "persons")
         attachment-key   (second args)
         application-ids  (application-store/get-all-application-ids)
         last-id          (last application-ids)]

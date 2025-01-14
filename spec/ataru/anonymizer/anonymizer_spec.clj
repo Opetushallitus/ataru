@@ -187,7 +187,7 @@
                                    (create-answer {:value ["huoltajaY@oph.fi"] :key "guardian-email-secondary"})]))
   (it "should anonymize application"
     (let [initial-application (store/get-application @test-application-id)]
-      (core/anonymize-data "dev-resources/anonymized-persons.json" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
+      (core/anonymize-data "dev-resources/anonymized-persons.csv" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
       (let [anonymized-application (store/get-application @test-application-id)]
         (should= (expected-anonymized-application)
                  (-> anonymized-application

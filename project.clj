@@ -288,6 +288,7 @@
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]
+                                               [org.clojure/data.csv "1.1.0"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
@@ -305,6 +306,7 @@
                                                :aws-secret-key "localhost"}}
 
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
+                                               [org.clojure/data.csv "1.1.0"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
