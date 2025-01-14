@@ -582,7 +582,17 @@
            [:span.application-handling__event-row--message-subject
             (:subject event)]
            [:span.application-handling__event-row--message-body
-            (:message event)]]]
+            (:message event)]
+           (when (some? (:send-reminder-time event))
+             [:span.application-handling__event-row--message-body
+              @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])
+              ": "
+              (temporal/time->date (:send-reminder-time event))])]]
+
+         {:event-type "information-request-reminder-sent"}
+         [[:span
+           @(subscribe [:editor/virkailija-translation :information-request-reminder-sent])]
+          nil]
 
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]

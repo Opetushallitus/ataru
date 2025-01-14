@@ -894,7 +894,9 @@
                                  :created-time    #?(:clj  org.joda.time.DateTime
                                                      :cljs s/Str)
                                  :first-name      s/Str
-                                 :last-name       s/Str})
+                                 :last-name       s/Str
+                                 :send-reminder-time #?(:clj  (s/maybe org.joda.time.DateTime)
+                                                        :cljs (s/maybe s/Str))})
 
 (s/defschema ReviewSetting {:setting-kwd s/Str
                             :enabled     s/Bool})

@@ -829,7 +829,6 @@
                                                       (-> "single-information-request")
                                                       (-> "information-request"))))
                                          job-runner)
-              (dissoc :send-reminder-time)
               (dissoc :reminder-processed-time)
               (assoc :first-name (get-in session [:identity :first-name])
                      :last-name (get-in session [:identity :last-name]))
