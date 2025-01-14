@@ -34,3 +34,6 @@
 
 (defn set-information-request-reminder-processed-time-by-id! [id]
   (exec-db :db yesql-set-information-request-reminder-processed-time-by-id! {:id id}))
+
+(defn set-information-request-reminder-processed-time-by-id-in-tx! [conn id]
+  (yesql-set-information-request-reminder-processed-time-by-id! {:id id} {:connection conn}))

@@ -27,7 +27,8 @@ SELECT
   ir.created_time,
   ir.message_type,
   v.first_name,
-  v.last_name
+  v.last_name,
+  ir.send_reminder_time
 FROM information_requests ir
 LEFT JOIN virkailija v ON ir.virkailija_oid = v.oid
 WHERE application_key = :application_key;
