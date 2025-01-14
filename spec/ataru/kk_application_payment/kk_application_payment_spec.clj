@@ -328,7 +328,33 @@
                           (should= 1 (count changed))
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
-                                                     :reason reason-exemption} payment)))))
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should not set payment status of non eu citizens another application based on a previous exemption"
+                        (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
+                              linked-oid (str oid "2")                  ; See FakePersonService
+                              application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                            [(merge
+                                                                               application-fixtures/application-with-hakemusmaksu-exemption
+                                                                               {:person-oid oid})
+                                                                             (merge
+                                                                               application-fixtures/application-without-hakemusmaksu-exemption
+                                                                               {:person-oid linked-oid})])
+                              primary-application-key (:key (application-store/get-application (first application-ids)))
+                              linked-application-key (:key (application-store/get-application (second application-ids)))
+                              changed (:modified-payments
+                                       (payment/update-payments-for-person-term-and-year fake-person-service fake-tarjonta-service
+                                                                                        fake-koodisto-cache fake-haku-cache
+                                                                                        oid term-fall year-ok))
+                              primary-payment (first (payment/get-raw-payments [primary-application-key]))
+                              linked-payment (first (payment/get-raw-payments [linked-application-key]))]
+                            (should= 2 (count changed))
+                            (should= primary-payment (first changed))
+                            (should= linked-payment (second changed))
+                            (should-be-matching-state {:application-key primary-application-key, :state state-not-required
+                                                       :reason reason-exemption} primary-payment)
+                            (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
+                                                       :reason nil} linked-payment)))))
 
 (defn save-and-check-single-state
   [application-key state-func desired-state desired-reason]
