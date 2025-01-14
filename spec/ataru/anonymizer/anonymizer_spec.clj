@@ -89,13 +89,13 @@
                          :value     "1"
                          :fieldType "textField"}
                         {:key       "first-name"
-                         :value     "Måns Testi"
+                         :value     "Testi Henkilö"
                          :fieldType "textField"}
                         {:key       "preferred-name"
-                         :value     "Måns"
+                         :value     "Testi"
                          :fieldType "textField"}
                         {:key       "last-name"
-                         :value     "Sarkkinen-Testi"
+                         :value     "Virtanen-Testi"
                          :fieldType "textField"}
                         {:key       "address"
                          :value     "Metelitie 393"
@@ -110,13 +110,13 @@
                          :value     "hakija-47904641@oph.fi"
                          :fieldType "textField"}
                         {:key       "postal-code"
-                         :value     "00100"
+                         :value     "00200"
                          :fieldType "textField"}
                         {:key       "birth-date"
                          :value     "09.02.1996"
                          :fieldType "textField"}
                         {:key       "postal-office"
-                         :value     "HELSINKI"
+                         :value     "Helsinki"
                          :fieldType "textField"}
                         {:key       "home-town"
                          :value     "091"
@@ -187,7 +187,7 @@
                                    (create-answer {:value ["huoltajaY@oph.fi"] :key "guardian-email-secondary"})]))
   (it "should anonymize application"
     (let [initial-application (store/get-application @test-application-id)]
-      (core/anonymize-data "dev-resources/anonymized-persons.json" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
+      (core/anonymize-data "dev-resources/anonymized-persons.csv" "dev-resources/anonymized-contacts.csv" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
       (let [anonymized-application (store/get-application @test-application-id)]
         (should= (expected-anonymized-application)
                  (-> anonymized-application
