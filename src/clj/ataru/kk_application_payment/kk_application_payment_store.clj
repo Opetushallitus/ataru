@@ -6,6 +6,7 @@
             [clj-time.core :as time]))
 
 (defqueries "sql/kk-application-payment-queries.sql")
+(defqueries "sql/field-deadline-queries.sql")
 
 (declare yesql-get-awaiting-kk-application-payments)
 (declare yesql-get-kk-application-payments-for-application-keys)
@@ -13,6 +14,7 @@
 (declare yesql-upsert-kk-application-payment<!)
 (declare yesql-update-maksut-secret!)
 (declare yesql-mark-reminder-sent!)
+(declare yesql-get-field-deadlines)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
@@ -30,6 +32,12 @@
 (defn- exec-db
   [ds-key query params]
   (db/exec ds-key query params))
+
+; This is here to avoid messy cyclic dependency conflicts. If kk-application-payment was refactored into a service
+; we might do better using dependency injections and ataru.applications.field-deadline
+(defn get-field-deadlines
+  ([application-key]
+   (db/exec :db yesql-get-field-deadlines {:application_key application-key})))
 
 (defn mark-reminder-sent!
   [application-key]

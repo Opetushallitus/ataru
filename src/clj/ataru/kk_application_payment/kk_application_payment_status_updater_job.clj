@@ -9,6 +9,7 @@
             [clj-time.core :as time]
             [clj-time.format :as f]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
@@ -120,6 +121,36 @@
       (payment/get-valid-payment-info-for-application-id tarjonta-service application-id)
       (payment/get-valid-payment-info-for-application-key tarjonta-service application-key))))
 
+(defn- needs-tuition-fee?
+  [hakukohde]
+  (let [codes (->> (:opetuskieli-koodi-urit hakukohde)
+                   (map #(first (str/split % #"#")))
+                   set)]
+    (and (seq codes)
+         (not (contains? codes "oppilaitoksenopetuskieli_1"))    ; fi
+         (not (contains? codes "oppilaitoksenopetuskieli_2"))    ; sv
+         (not (contains? codes "oppilaitoksenopetuskieli_3"))))) ; fi/sv
+
+(defn- mark-tuition-fee-obligated
+  "Marks tuition fee (lukuvuosimaksu) obligation for application key for every hakukohde that does not organize
+  studies in Finnish and/or Swedish."
+  [{:keys [tarjonta-service]} application-key]
+  (let [application            (application-store/get-latest-application-by-key application-key)
+        hakukohde-oids         (:hakukohde application)
+        hakukohteet            (tarjonta/get-hakukohteet
+                                 tarjonta-service
+                                 (remove nil? hakukohde-oids))
+        tuition-hakukohde-oids (remove nil?
+                                       (map #(when (needs-tuition-fee? %) (:oid %)) hakukohteet))]
+    (doseq [hakukohde-oid tuition-hakukohde-oids]
+      (log/info "Marking tuition payment obligation due to kk application fee eligibility for application key"
+                application-key "and hakukohde oid" hakukohde-oid)
+      (application-store/save-payment-obligation-automatically-changed
+        application-key
+        hakukohde-oid
+        "payment-obligation"
+        "obligated"))))
+
 (defn- invalidate-maksut-payments-if-needed
   "Whenever a payment for a term is made, other payment invoices for the person and term
   should be invalidated to avoid accidental double payments."
@@ -133,16 +164,19 @@
 
 (defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year) either directly or
-  via an application id/key. Creates payments and sends e-mails when necessary. Marking status as paid/overdue
-  is done separately via kk-application-payment-maksut-poller-job, never here."
+  via an application id/key. Creates payments and sends e-mails when necessary. Also marks tuition fee obligation
+  if necessary. Marking status as paid/overdue is done separately via kk-application-payment-maksut-poller-job,
+  never here."
   [{:keys [person_oid term year application_id application_key]}
-   {:keys [person-service tarjonta-service koodisto-cache get-haut-cache maksut-service] :as job-runner}]
+   {:keys [ohjausparametrit-service person-service tarjonta-service
+           koodisto-cache get-haut-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
         (let [{:keys [modified-payments existing-payments]}
-              (payment/update-payments-for-person-term-and-year person-service tarjonta-service
+              (payment/update-payments-for-person-term-and-year ohjausparametrit-service
+                                                                person-service tarjonta-service
                                                                 koodisto-cache get-haut-cache
                                                                 person-oid application-term application-year)]
           (if (or (some? modified-payments) (some? existing-payments))
@@ -155,7 +189,13 @@
                 (let [new-state (:state payment)]
                   (cond
                     (= (:awaiting payment/all-states) new-state)
-                    (create-payment-and-send-email job-runner maksut-service payment))))
+                    (do
+                      (create-payment-and-send-email job-runner maksut-service payment)
+                      ; If application payment is required, tuition fee will be always required as well.
+                      (mark-tuition-fee-obligated job-runner (:application-key payment)))
+
+                    (= (:ok-by-proxy payment/all-states) new-state)
+                    (mark-tuition-fee-obligated job-runner (:application-key payment)))))
 
               (doseq [application-payment existing-payments]
                 (let [{:keys [application payment]} application-payment]

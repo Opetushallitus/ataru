@@ -6,6 +6,7 @@
   (:require [ataru.cache.cache-service :as cache]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
@@ -49,9 +50,8 @@
                        (time/plus (time/today-at 12 0 0)
                                   (time/days kk-application-payment-due-days))))
 
-; This could be done automatically on every DB select, but needed so rarely that let's just convert on demand.
 (defn parse-due-date
-  "Convert due date retrieved from db to local date, interpreting it in correct time zone"
+  "Convert due date timestamp retrieved from db to local date"
   [due-date]
     (time/local-date (time/year due-date) (time/month due-date) (time/day due-date)))
 
@@ -243,12 +243,69 @@
 (defn- is-finnish-citizen? [person]
   (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
+(defn- keep-if-deadline-passed
+  [field-deadlines haku haku-grace-days now review]
+  (let [id             (:attachment-key review)
+        field-deadline (some->> field-deadlines
+                                (filter #(= id (:field-id %)))
+                                first
+                                :deadline)
+        passed         (if (some? field-deadline)
+                         (time/after? now field-deadline)
+                         (not (utils/time-is-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
+    (when passed
+      review)))
+
+(defn- haku-grace-days
+  [ohjausparametrit-service haku]
+  (let [default-grace-days (-> config
+                               :public-config
+                               (get :attachment-modify-grace-period-days 14))
+        ohjausparametrit   (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku))
+        custom-grace-days  (-> ohjausparametrit :PH_LMT :value)]
+    (or custom-grace-days default-grace-days)))
+
+(defn- includes-fields-with-passed-deadlines?
+  "Returns true when one or more of the fields in the input reviews have their deadlines passed / overdue"
+  [tarjonta-service ohjausparametrit-service application field-reviews]
+  (let [now              (time/now)
+        application-key  (:key application)
+        haku-oid         (:haku application)
+        haku             (tarjonta/get-haku tarjonta-service haku-oid)
+        field-deadlines  (store/get-field-deadlines application-key)
+        haku-grace-days  (haku-grace-days ohjausparametrit-service haku)
+        passed           (remove nil?
+                                 (map (partial keep-if-deadline-passed
+                                               field-deadlines haku haku-grace-days now) field-reviews))]
+    (when (seq passed)
+      (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
+      true)))
+
+(defn- get-invalid-attachment-reviews
+  "Returns reviews for those fields that are (still) in missing or incomplete state."
+  [application-key]
+  (let [attachment-keys payment-module/kk-application-payment-exempt-attachment-keys
+        invalid-states  #{"attachment-missing" "incomplete-attachment"}
+        reviews         (application-store/get-application-attachment-reviews application-key)
+        invalid-reviews (filter (fn [review]
+                                  (and (contains? attachment-keys (:attachment-key review))
+                                       (contains? invalid-states  (:state review))))
+                                reviews)]
+    invalid-reviews))
+
+(defn- attachments-invalid-and-deadline-passed?
+  "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
+   the applicant is not exempt by application even if the exemption question was answered as such."
+  [tarjonta-service ohjausparametrit-service application]
+  (when-let [invalid-field-reviews (seq (get-invalid-attachment-reviews (:key application)))]
+    (includes-fields-with-passed-deadlines? tarjonta-service ohjausparametrit-service application invalid-field-reviews)))
+
 (defn- exemption-in-application?
-  [application]
+  [tarjonta-service ohjausparametrit-service application]
   (let [answers (util/application-answers-by-key application)]
-    (if-let [exemption-answer (exemption-form-field-name answers)]
-      (contains? exemption-field-ok-values (:value exemption-answer))
-      false)))
+    (when-let [exemption-answer (exemption-form-field-name answers)]
+      (and (contains? exemption-field-ok-values (:value exemption-answer))
+           (not (attachments-invalid-and-deadline-passed? tarjonta-service ohjausparametrit-service application))))))
 
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
@@ -346,7 +403,7 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [person-service tarjonta-service _ get-haut-cache person-oid term year]
+  [ohjausparametrit-service person-service tarjonta-service _ get-haut-cache person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
@@ -371,7 +428,7 @@
                                                :payment     (get payment-by-application (:key application))})
                                             applications)
                 payment-state-set      (->> (vals payment-by-application) (map :state) set)
-                exempt-keys            (set (map :key (filter exemption-in-application? applications)))
+                exempt-keys            (set (map :key (filter #(exemption-in-application? tarjonta-service ohjausparametrit-service %) applications)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
             (log/info "Updating application level kk application payment status for person" person-oid "term" term "year" year
