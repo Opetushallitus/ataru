@@ -303,14 +303,17 @@
        (map :oid)))
 
 (defn- set-payment
-  [new-state state-change-fn {:keys [application payment]}]
-  (let [current-state   (:state payment)
-        application-key (:key application)
-        person-oid      (:person-oid application)]
+  [exempt-keys desired-state state-change-fn {:keys [application payment]}]
+  (let [current-state            (:state payment)
+        application-key          (:key application)
+        person-oid               (:person-oid application)
+        [new-state new-state-fn] (if (contains? exempt-keys application-key) ; Exemptions only apply to individual applications
+                                   [(:not-required all-states) set-application-fee-not-required-for-exemption]
+                                   [desired-state state-change-fn])]
     (cond
       (= current-state new-state)
       (log/info "Application" application-key "with person-oid" person-oid "already has kk payment status" current-state
-                ", not changing kk application payment state")
+                "not changing kk application payment state")
 
       (= current-state (:paid all-states))
       (log/info "Application" application-key "with person-oid" person-oid
@@ -325,16 +328,15 @@
       (do
        (log/info "Changing kk application payment state for application" application-key
                  "with person-oid" person-oid "to" new-state)
-       (state-change-fn (:key application) payment)))))
+       (new-state-fn (:key application) payment)))))
 
 (defn- update-payments-for-applications
-  [applications-payments is-finnish-citizen? has-exemption? has-existing-payment?]
+  [applications-payments exempt-keys is-finnish-citizen? has-existing-payment?]
   (let [map-payments (fn [new-state state-change-fn]
                        (doall
-                         (remove nil? (map #(set-payment new-state state-change-fn %) applications-payments))))]
+                         (remove nil? (map #(set-payment exempt-keys new-state state-change-fn %) applications-payments))))]
     (cond
       is-finnish-citizen?   (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
-      has-exemption?        (map-payments (:not-required all-states) set-application-fee-not-required-for-exemption)
       has-existing-payment? (map-payments (:ok-by-proxy all-states) set-application-fee-ok-by-proxy)
       :else                 (map-payments (:awaiting all-states) set-application-fee-required))))
 
@@ -369,16 +371,15 @@
                                                :payment     (get payment-by-application (:key application))})
                                             applications)
                 payment-state-set      (->> (vals payment-by-application) (map :state) set)
+                exempt-keys            (set (map :key (filter exemption-in-application? applications)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
-                has-exemption?         (some true? (map exemption-in-application? applications))
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
             (log/info "Updating application level kk application payment status for person" person-oid "term" term "year" year
-                      "is-finnish-citizen?" (boolean is-finnish-citizen?) "has-exemption?" (boolean has-exemption?)
-                      "has-existing-payment?" (boolean has-existing-payment?))
+                      "is-finnish-citizen?" (boolean is-finnish-citizen?) "has-existing-payment?" (boolean has-existing-payment?))
             {:person            person
              :existing-payments applications-payments
              :modified-payments (update-payments-for-applications
-                                  applications-payments is-finnish-citizen? has-exemption? has-existing-payment?)}))))))
+                                  applications-payments exempt-keys is-finnish-citizen? has-existing-payment?)}))))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
