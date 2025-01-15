@@ -878,14 +878,19 @@
 (defn- length-at-most-200 [s]
   (<= (count s) 200))
 
-(s/defschema NewInformationRequest {:subject         (s/constrained s/Str length-at-most-200)
-                                    (s/optional-key :recipient-target) s/Str
-                                    :message         s/Str
-                                    :application-key s/Str
-                                    :add-update-link s/Bool
-                                    (s/optional-key :single-message) s/Bool
-                                    (s/optional-key :send-reminder?) s/Bool
-                                    (s/optional-key :reminder-days) (s/maybe s/Int)})
+(s/defschema NewInformationRequest (s/constrained
+                                     {:subject         (s/constrained s/Str length-at-most-200)
+                                      (s/optional-key :recipient-target) s/Str
+                                      :message         s/Str
+                                      :application-key s/Str
+                                      :add-update-link s/Bool
+                                      (s/optional-key :single-message) s/Bool
+                                      (s/optional-key :send-reminder?) s/Bool
+                                      (s/optional-key :reminder-days) (s/maybe s/Int)}
+                                     (fn [{:keys [send-reminder? reminder-days]}]
+                                       (or (and send-reminder? (pos? reminder-days))
+                                           (and (not send-reminder?) (nil? reminder-days))))
+                                     'reminder-days-only-when-send-reminder-true))
 
 (s/defschema InformationRequest {:subject         s/Str
                                  (s/optional-key :recipient-target) s/Str
