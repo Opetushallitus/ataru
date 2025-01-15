@@ -733,10 +733,7 @@
                                                  :en "Your name and date of birth have been prefilled on the application form via identification."}
    :information-request-reminder-subject-prefix {:fi "Muistutus"
                                                  :en "Reminder"
-                                                 :sv "Påminnelse"}
-   :information-request-reminder-sent           {:fi "Täydennyspyynnön muistutusviesti lähetetty"
-                                                 :en "EN Täydennyspyynnön muistutusviesti lähetetty"
-                                                 :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}})
+                                                 :sv "Påminnelse"}})
 
 (def oppiaine-translations
   {:oppiaine-a                 {:fi "Äidinkieli ja kirjallisuus"
@@ -1745,6 +1742,9 @@
    :information-request-sent                                 {:fi "Täydennyspyyntö lähetetty"
                                                               :sv "Begäran om komplettering har skickats"
                                                               :en "Information request email has been sent"}
+   :information-request-reminder-sent                        {:fi "Täydennyspyynnön muistutusviesti lähetetty"
+                                                              :en "EN Täydennyspyynnön muistutusviesti lähetetty"
+                                                              :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}
    :single-information-request-sent                          {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
