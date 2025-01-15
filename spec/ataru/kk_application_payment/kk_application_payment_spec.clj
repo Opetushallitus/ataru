@@ -517,11 +517,11 @@
                               linked-oid (str oid "2")                  ; See FakePersonService
                               application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                             [(merge
-                                                                               application-fixtures/application-with-hakemusmaksu-exemption
-                                                                               {:person-oid oid})
+                                                                              application-fixtures/application-with-hakemusmaksu-exemption
+                                                                              {:person-oid oid})
                                                                              (merge
-                                                                               application-fixtures/application-without-hakemusmaksu-exemption
-                                                                               {:person-oid linked-oid})])
+                                                                              application-fixtures/application-without-hakemusmaksu-exemption
+                                                                              {:person-oid linked-oid})])
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               changed (:modified-payments
@@ -529,11 +529,13 @@
                                                                                          fake-person-service fake-tarjonta-service
                                                                                          fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
+                              primary-changed (first (filter #(= primary-application-key (:application-key %)) changed))
+                              linked-changed (first (filter #(= linked-application-key (:application-key %)) changed))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 2 (count changed))
-                            (should= primary-payment (first changed))
-                            (should= linked-payment (second changed))
+                            (should= primary-payment primary-changed)
+                            (should= linked-payment linked-changed)
                             (should-be-matching-state {:application-key primary-application-key, :state state-not-required
                                                        :reason reason-exemption} primary-payment)
                             (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
