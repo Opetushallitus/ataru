@@ -32,10 +32,10 @@
                                    (:children field-descriptor))
                            [[:application/set-repeatable-application-field id-field-descriptor (dec repeat-count) nil tutkinto-id]])})))
 
-(reg-event-fx
+(reg-event-db
   :application/reset-tutkinto-answers
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ fields]]
+  (fn [db [_ fields]]
     (let [fields-and-descendants    (autil/flatten-form-fields fields)
           question-groups           (map :id (filter #(= "questionGroup" (:fieldClass %)) fields-and-descendants))
           initial-answers-of-fields (create-initial-answers fields-and-descendants nil nil)
@@ -47,6 +47,6 @@
                                                    (fn [id] [(keyword id)
                                                              (merge ((keyword id) current-ui-values) {:count 1})])
                                                    question-groups)))]
-      {:db  (-> db
-                (assoc-in [:application :answers] merged-answers)
-                (assoc-in [:application :ui] merged-ui-values))})))
+      (-> db
+          (assoc-in [:application :answers] merged-answers)
+          (assoc-in [:application :ui] merged-ui-values)))))

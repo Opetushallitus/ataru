@@ -69,3 +69,6 @@
 (defn koski-tutkinnot-in-application? [application]
   (let [tutkinto-id-answers (filter #(is-koski-tutkinto-id-field? (:key %)) (:answers application))]
     (some #(util/non-blank-answer? %) tutkinto-id-answers)))
+
+(defn save-koski-tutkinnot? [form]
+  (get-in form [:properties :tutkinto-properties :save-koski-tutkinnot] false))

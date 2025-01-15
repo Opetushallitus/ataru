@@ -501,7 +501,8 @@
    (s/optional-key :person-oid)         (s/maybe s/Str)
    (s/optional-key :strict-warnings-on-unchanged-edits?) (s/maybe s/Bool)
    (s/optional-key :tunnistautunut)     (s/maybe s/Bool)
-   (s/optional-key :tunnistautuminen)   (s/maybe s/Str)})
+   (s/optional-key :tunnistautuminen)   (s/maybe s/Str)
+   (s/optional-key :save-koski-tutkinnot) (s/maybe s/Bool) })
 
 (s/defschema Person
   {(s/optional-key :oid)         s/Str

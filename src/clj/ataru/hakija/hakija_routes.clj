@@ -43,7 +43,8 @@
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
             [ataru.feature-config :as fc]
             [ataru.koski.koski-service :as koski]
-            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]])
+            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -304,7 +305,8 @@
                    session
                    liiteri-cas-client
                    maksut-service
-                   oppija-session-from-db)
+                   oppija-session-from-db
+                   koski-service)
                  {:passed? false :failures failures :code code}
                  (response/bad-request {:failures failures :code code})
 
@@ -389,7 +391,7 @@
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
           (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service true henkilo-oid)]
             (response/ok (parse-koski-tutkinnot tutkinto-level-list (:opiskeluoikeudet oppija-response)))
-            (response/not-found {}))
+            (response/ok []))
           (response/unauthorized {}))))
     (api/context "/files" []
       (api/GET "/signed-upload" []

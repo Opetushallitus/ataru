@@ -294,7 +294,7 @@
                                                          (:form db)
                                                          (get-in db [:form :selected-language])
                                                          (:strict-warnings-on-unchanged-edits? db)
-                                                         (get-in db [:oppija-session :logged-in] false))
+                                                         (:oppija-session db))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
 

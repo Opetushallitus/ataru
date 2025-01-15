@@ -95,6 +95,16 @@
             (recur))
         secret))))
 
+(defn add-new-koski-tutkinnot-for-application
+  [application-key tutkinnot]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+      (queries/yesql-add-koski-tutkinnot<! {:application_key application-key
+                                            :tutkinnot (json/generate-string {:tutkinnot tutkinnot})}
+                                           {:connection conn})))
+
+(defn koski-tutkinnot-for-application [application-key]
+  (:tutkinnot (:tutkinnot (first (exec-db :db queries/yesql-get-koski-tutkinnot-for-application {:key application-key})))))
+
 (defn- intersect?
   [set1 set2]
   (not-empty (clojure.set/intersection set1 set2)))

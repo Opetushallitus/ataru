@@ -1,6 +1,8 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [ataru.util :as util]
+  (:require [ataru.constants :as constants]
+            [ataru.util :as util]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
@@ -295,7 +297,7 @@
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
         (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 
-(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? tunnistautunut?]
+(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? session-data]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
              :strict-warnings-on-unchanged-edits? (if (nil? strict-warnings-on-unchanged-edits?)
@@ -306,7 +308,10 @@
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
              :answers   (create-answers-to-submit (:answers application) form (:ui application))
-             :tunnistautunut tunnistautunut?}
+             :tunnistautunut (:logged-in session-data)
+             :save-koski-tutkinnot (and (= (:auth-type session-data) constants/auth-type-strong)
+                                        (tutkinto-util/koski-tutkinto-levels-in-form form)
+                                        (tutkinto-util/save-koski-tutkinnot? form))}
 
             (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 
