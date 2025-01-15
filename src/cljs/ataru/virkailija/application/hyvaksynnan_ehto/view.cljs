@@ -231,8 +231,9 @@
       (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-valintatapajonoissa? application-key hakukohde-oids])
         [[ehto-valintatapajonoissa application-key hakukohde-oids]]
         [[:div.hyvaksynnan-ehto-error
-          (let [errors @(re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])]
-            (when (seq errors)
+          (let [errors     @(re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])
+                in-flight? @(re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])]
+            (when (and (seq errors) (not in-flight?))
               [:span.hyvaksynnan-ehto-error__text
                @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])]))]
          (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi? application-key hakukohde-oids])
