@@ -579,15 +579,15 @@
            " "
            (virkailija-initials-span event)]
           [:div.application-handling__event-row--message
+           (when (some? (:send-reminder-time event))
+             [:span.application-handling__event-row--message-subject
+              @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])
+              ": "
+              (temporal/time->date (:send-reminder-time event))])
            [:span.application-handling__event-row--message-subject
             (:subject event)]
            [:span.application-handling__event-row--message-body
-            (:message event)]
-           (when (some? (:send-reminder-time event))
-             [:span.application-handling__event-row--message-body
-              @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])
-              ": "
-              (temporal/time->date (:send-reminder-time event))])]]
+            (:message event)]]]
 
          {:event-type "information-request-reminder-sent"}
          [[:span
