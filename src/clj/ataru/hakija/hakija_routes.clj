@@ -43,8 +43,7 @@
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
             [ataru.feature-config :as fc]
             [ataru.koski.koski-service :as koski]
-            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
-            [ataru.tutkinto.tutkinto-util :as tutkinto-util])
+            [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
