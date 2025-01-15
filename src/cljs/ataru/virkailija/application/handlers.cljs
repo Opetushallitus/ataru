@@ -878,7 +878,9 @@
   :application/toggle-information-request-send-reminder
   (fn [db [_ send-reminder?]]
     (if send-reminder?
-      (assoc-in db [:application :information-request :send-reminder?] false)
+      (-> db
+          (assoc-in [:application :information-request :send-reminder?] false)
+          (assoc-in [:application :information-request :reminder-days] nil))
       (-> db
           (assoc-in [:application :information-request :send-reminder?] true)
           (assoc-in [:application :information-request :reminder-days] 12)))))

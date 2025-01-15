@@ -885,7 +885,7 @@
                                     :add-update-link s/Bool
                                     (s/optional-key :single-message) s/Bool
                                     (s/optional-key :send-reminder?) s/Bool
-                                    (s/optional-key :reminder-days) s/Int})
+                                    (s/optional-key :reminder-days) (s/maybe s/Int)})
 
 (s/defschema InformationRequest {:subject         s/Str
                                  (s/optional-key :recipient-target) s/Str
