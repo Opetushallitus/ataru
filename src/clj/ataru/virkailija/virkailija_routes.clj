@@ -825,12 +825,13 @@
               [(:application-key information-request)]
               [:edit-applications])
           (-> (information-request/store session
-                                         (assoc information-request
-                                           :message-type
-                                                      (if (information-request :single-message)
-                                                        (-> "single-information-request")
-                                                        (-> "information-request")))
+                                         (-> information-request
+                                             (assoc :message-type
+                                                    (if (information-request :single-message)
+                                                      (-> "single-information-request")
+                                                      (-> "information-request"))))
                                          job-runner)
+              (dissoc :reminder-processed-time)
               (assoc :first-name (get-in session [:identity :first-name])
                      :last-name (get-in session [:identity :last-name]))
               response/ok)
