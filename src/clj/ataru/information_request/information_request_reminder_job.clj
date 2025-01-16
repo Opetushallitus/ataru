@@ -3,6 +3,7 @@
             [ataru.information-request.information-request-store :as ir-store]
             [ataru.information-request.information-request-service :as ir-service]
             [ataru.applications.application-store :as application-store]
+            [ataru.config.core :refer [config]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]))
 
@@ -34,4 +35,4 @@
 
 (def job-definition {:handler handler
                      :type    (-> *ns* ns-name str)
-                     :schedule "0 12,16 * * *"})
+                     :schedule (get-in config [:jobs :information-request-reminder-job-cron])})
