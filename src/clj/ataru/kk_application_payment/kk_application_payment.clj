@@ -47,9 +47,13 @@
    :exemption-field "exemption-field"})
 
 (defn get-due-date-for-todays-payment []
-  (time-format/unparse default-time-format
-                       (time/plus (new DateTime)
-                                  (time/days kk-application-payment-due-days))))
+  (let [time-now (new DateTime)
+        due-date (time-format/unparse default-time-format
+                                      (time/plus time-now
+                                                 (time/days kk-application-payment-due-days))) ]
+    (log/info "time now: " time-now)
+    (log/info "result formatted finnish time: " due-date)
+    due-date))
 
 (defn parse-due-date
   "Convert due date timestamp retrieved from db to local date"
