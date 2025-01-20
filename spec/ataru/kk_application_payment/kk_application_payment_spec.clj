@@ -14,8 +14,10 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.kk-application-payment.utils :as payment-utils]
+            [ataru.test-utils :refer [set-fixed-time]]
             [ataru.applications.application-store :as application-store]
-            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
+            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]])
+  (:import (org.joda.time DateTime DateTimeZone)))
 
 (defn- store-field-deadline [deadline]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -627,14 +629,26 @@
                           "1.2.3.4.5.10" payment/set-application-fee-overdue state-overdue nil)))
 
           (describe "due date"
-                    (it "should store and retrieve due date correctly"
-                        (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
-                              due-date-stored (payment/parse-due-date (:due-date data))
-                              due-date-midday (time/plus (time/today-at 12 0 0)
-                                                         (time/days payment/kk-application-payment-due-days))]
-                          (should= (time/year due-date-stored) (time/year due-date-midday))
-                          (should= (time/month due-date-stored) (time/month due-date-midday))
-                          (should= (time/day due-date-stored) (time/day due-date-midday)))))
+                    (it "should store and retrieve due date correctly when Europe/Helsinki-time is already on the next day compared to UTC-time"
+                        (let [fixed-date-str-in-finland "2020-01-02T01:22:01"];This time is selected so that in UTC time it's still 2020-01-01, but in Finland timezone the date is already 2020-01-02.
+                          (set-fixed-time fixed-date-str-in-finland)
+                          (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                                due-date-stored (payment/parse-due-date (:due-date data))
+                                comparison-date (time/plus (new DateTime fixed-date-str-in-finland)
+                                                           (time/days payment/kk-application-payment-due-days))]
+                            (should= (time/year due-date-stored) (time/year comparison-date))
+                            (should= (time/month due-date-stored) (time/month comparison-date))
+                            (should= (time/day due-date-stored) (time/day comparison-date)))))
+                    (it "should store and retrieve due date correctly when Europe/Helsinki-time is on the same day as UTC-time"
+                        (let [fixed-date-str-in-finland "2020-01-02T23:01:01"];This time is selected so that the UTC vs Finland timezones make no difference to yyyy-mm-dd.
+                          (set-fixed-time fixed-date-str-in-finland)
+                          (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
+                                due-date-stored (payment/parse-due-date (:due-date data))
+                                comparison-date (time/plus (new DateTime fixed-date-str-in-finland (DateTimeZone/forID "Europe/Helsinki"))
+                                                           (time/days payment/kk-application-payment-due-days))]
+                            (should= (time/year due-date-stored) (time/year comparison-date))
+                            (should= (time/month due-date-stored) (time/month comparison-date))
+                            (should= (time/day due-date-stored) (time/day comparison-date))))))
 
           (describe "preserving and overwriting previous state data"
                     (it "should reset approved state data when fee is required"
