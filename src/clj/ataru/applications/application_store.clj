@@ -1432,20 +1432,22 @@
       (audit-log/log audit-logger audit-log-entry))
     true))
 
+(defn add-application-event-in-tx [conn event session]
+  (-> {:event_type               nil
+       :new_review_state         nil
+       :virkailija_oid           (-> session :identity :oid)
+       :virkailija_organizations (some-> session edit-application-right-organizations->json)
+       :hakukohde                nil
+       :review_key               nil}
+      (merge (transform-keys ->snake_case event))
+      (queries/yesql-add-application-event<! {:connection conn})
+      (dissoc :virkailija_oid)
+      (merge (select-keys (:identity session) [:first-name :last-name]))
+      (->kebab-case-kw)))
+
 (defn add-application-event [event session]
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
-    (let [conn {:connection db}]
-      (-> {:event_type               nil
-           :new_review_state         nil
-           :virkailija_oid           (-> session :identity :oid)
-           :virkailija_organizations (some-> session edit-application-right-organizations->json)
-           :hakukohde                nil
-           :review_key               nil}
-          (merge (transform-keys ->snake_case event))
-          (queries/yesql-add-application-event<! conn)
-          (dissoc :virkailija_oid)
-          (merge (select-keys (:identity session) [:first-name :last-name]))
-          (->kebab-case-kw)))))
+                            (add-application-event-in-tx db event session)))
 
 (defn get-applications-newer-than [date limit offset]
   (exec-db :db queries/yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))

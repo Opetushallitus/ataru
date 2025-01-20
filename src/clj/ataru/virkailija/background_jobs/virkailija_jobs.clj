@@ -3,6 +3,7 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-service :as information-request-service]
+            [ataru.information-request.information-request-reminder-job :as information-request-reminder-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
@@ -23,6 +24,8 @@
                                                                 {:queue default-retry-strategy})
    (:type information-request-job/job-definition)        (merge information-request-job/job-definition
                                                                 {:queue default-retry-strategy})
+   (:type information-request-reminder-job/job-definition) (merge information-request-reminder-job/job-definition
+                                                                  {:queue default-retry-strategy})
    (:type harkinnanvaraisuus-job/job-definition)         (merge harkinnanvaraisuus-job/job-definition
                                                                 {:queue default-retry-strategy})
    (:type harkinnanvaraisuus-job/recheck-job-definition) (merge harkinnanvaraisuus-job/recheck-job-definition

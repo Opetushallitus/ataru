@@ -14,7 +14,8 @@
             [selmer.parser :as selmer]
             [clojure.string :as string]
             [ataru.background-job.job :as job]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clj-time.core :as time]))
 
 (defn- information-request-email-template-filename
   [lang]
@@ -25,6 +26,7 @@
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
+
 (defn- initial-state [connection information-request guardian?]
   (let [add-update-link? (:add-update-link information-request)]
     (when add-update-link?
@@ -47,14 +49,20 @@
           {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
           body             (selmer/render-file (information-request-email-template-filename lang)
                                                (merge {:message (->safe-html (:message information-request))}
-                                                      (if (or guardian? (not add-update-link?))
+                                                      (if (or guardian?
+                                                              (not (or add-update-link?
+                                                                       (:reminder? information-request))))
                                                         {}
                                                         {:application-url application-url
                                                          :application-url-text (->safe-html application-url-text)
                                                          :oma-opintopolku-link oma-opintopolku-link})
                                                       translations))
           subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
-                                         (:subject information-request) (:application-key information-request) lang)]
+                                         (if (:reminder? information-request)
+                                           (str (:information-request-reminder-subject-prefix translations)
+                                                ": "
+                                                (:subject information-request))
+                                           (:subject information-request)) (:application-key information-request) lang)]
       (when (not-empty recipient-emails)
         (-> (select-keys information-request [:application-key :id])
             (merge {:from       "no-reply@opintopolku.fi"
@@ -62,7 +70,7 @@
                     :body       body})
             (assoc :subject subject-with-application-key))))))
 
-(defn- start-email-job [job-runner connection information-request]
+(defn start-email-job [job-runner connection information-request]
   (let [job-type (:type information-request-job/job-definition)
         target (:recipient-target information-request)]
     (when (or (= "hakija" target)
@@ -97,10 +105,15 @@
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
     (let [add-update-link (:add-update-link information-request)
+          send-reminder-time (when (:send-reminder? information-request)
+                               (time/plus (time/today-at 6 0) (time/days (:reminder-days information-request))))
           information-request (information-request-store/add-information-request
-                             information-request
-                             (-> session :identity :oid)
-                             connection)
+                                (assoc
+                                  information-request
+                                  :send-reminder-time
+                                  send-reminder-time)
+                                (-> session :identity :oid)
+                                connection)
           information-request-with-add-update-link (assoc information-request :add-update-link add-update-link)]
     (start-email-job job-runner connection information-request-with-add-update-link)
     (audit-log/log (:audit-logger job-runner)

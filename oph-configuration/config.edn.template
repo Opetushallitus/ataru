@@ -39,7 +39,8 @@
                        :kouta-hakus-by-form-key {{ataru_cache_ttl_amounts_kouta_hakus_by_form_key | default('3')}}
                        :hakukohde-search {{ataru_cache_ttl_amounts_hakukohde_search | default('3')}}}}
  :redis {:uri "{{ataru_redis_uri}}"}
- :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"}
+ :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"
+        :information-request-reminder-job-cron "{{ataru_jobs_information_request_reminder_job_cron | default('0 9,16 * * *')}}"}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
