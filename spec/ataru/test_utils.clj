@@ -11,6 +11,9 @@
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [clj-time.coerce :as coerce]
+            [clj-time.core :as time]
+            [clj-time.format :as format]
             [clojure.string :as clj-string]
             [ring.mock.request :as mock]
             [speclj.core :refer [should-contain should-not-be-nil
@@ -19,7 +22,8 @@
 
   (:import [java.io File FileOutputStream]
            [java.util UUID]
-           [org.apache.poi.ss.usermodel WorkbookFactory]))
+           [org.apache.poi.ss.usermodel WorkbookFactory]
+           (org.joda.time DateTimeUtils)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 (declare yesql-upsert-virkailija<!)
@@ -204,3 +208,14 @@
   </cas:serviceResponse>")
 
 
+(defonce formatter (format/with-zone (format/formatter "yyyy-MM-dd'T'HH:mm:ss") (time/time-zone-for-id "Europe/Helsinki")))
+
+; Muunnetaan lokaali timestamp UTC-millisekunneiksi, jotta voidaan väärentää järjestelmän kello olemaan
+; UTC-ajassa antamalla lokaali timestamp
+(defn local-timestamp-to-utc-millis [timestamp]
+  (coerce/to-long (time/to-time-zone (format/parse formatter timestamp) (time/time-zone-for-id "UTC"))))
+
+(defn set-fixed-time [timestamp]
+  (let [millis (local-timestamp-to-utc-millis timestamp)]
+    (println (str "Setting fixed millis " timestamp ", formatted with Helsinki timezone " (format/parse formatter timestamp) ", result millis " millis))
+    (DateTimeUtils/setCurrentMillisFixed millis)))

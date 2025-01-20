@@ -16,9 +16,10 @@
             [ataru.config.core :refer [config]]
             [clj-time.format :as time-format]
             [clj-time.core :as time]
-            [ataru.component-data.kk-application-payment-module :as payment-module]))
+            [ataru.component-data.kk-application-payment-module :as payment-module])
+  (:import (org.joda.time DateTime)))
 
-(def default-time-format (time-format/formatters :year-month-day))
+(def default-time-format (time-format/with-zone (time-format/formatter "yyyy-MM-dd") (time/time-zone-for-id "Europe/Helsinki")))
 
 (def kk-application-payment-origin "kkhakemusmaksu")
 (def kk-application-payment-order-id-prefix "KKHA")
@@ -46,9 +47,13 @@
    :exemption-field "exemption-field"})
 
 (defn get-due-date-for-todays-payment []
-  (time-format/unparse default-time-format
-                       (time/plus (time/today-at 12 0 0)
-                                  (time/days kk-application-payment-due-days))))
+  (let [time-now (new DateTime)
+        due-date (time-format/unparse default-time-format
+                                      (time/plus time-now
+                                                 (time/days kk-application-payment-due-days))) ]
+    (log/info "time now: " time-now)
+    (log/info "result formatted finnish time: " due-date)
+    due-date))
 
 (defn parse-due-date
   "Convert due date timestamp retrieved from db to local date"
