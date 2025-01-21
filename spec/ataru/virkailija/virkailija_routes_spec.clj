@@ -246,6 +246,22 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- post-mass-inactivate-applications [application-keys reason-of-inactivation]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-inactivate?reason-of-inactivation=" reason-of-inactivation)
+                    (json/generate-string {:application-keys application-keys}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-mass-reactivate-applications [application-keys reason-of-reactivation]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-reactivate?reason-of-reactivation=" reason-of-reactivation)
+                    (json/generate-string {:application-keys application-keys}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (declare resp)
 
 (describe "GET /lomake-editori"
@@ -576,6 +592,74 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(describe "Mass inactivate applications"
+          (tags :unit :api-applications)
+
+          (it "Should mass inactivate valid applications"
+              (let [application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    resp (post-mass-inactivate-applications application-keys "test")
+                    not-inactivated (get-in resp [:body :not-inactivated-keys])
+                    status (:status resp)]
+                (should= 200 status)
+                (should-not-be-nil not-inactivated)
+                (should= 0 (count not-inactivated))))
+
+          (it "Should not mass inactivate applications that are already inactive"
+              (let [application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    _ (post-mass-inactivate-applications application-keys "test")
+                    resp (post-mass-inactivate-applications application-keys "test")
+                    not-inactivated (get-in resp [:body :not-inactivated-keys])
+                    status (:status resp)]
+                (should= 200 status)
+                (should-not-be-nil not-inactivated)
+                (should= 2 (count not-inactivated)))))
+
+(describe "Mass reactivate applications"
+          (tags :unit :api-applications)
+
+          (it "Should mass reactivate valid applications"
+              (let [application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    _ (post-mass-inactivate-applications application-keys "test")
+                    resp (post-mass-reactivate-applications application-keys "test")
+                    not-reactivated (get-in resp [:body :not-reactivated-keys])
+                    status (:status resp)]
+                (should= 200 status)
+                (should-not-be-nil not-reactivated)
+                (should= 0 (count not-reactivated))))
+
+          (it "Should not reactivate applications that are already active"
+              (let [application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    resp (post-mass-reactivate-applications application-keys "test")
+                    not-reactivated (get-in resp [:body :not-reactivated-keys])
+                    status (:status resp)]
+                (should= 200 status)
+                (should-not-be-nil not-reactivated)
+                (should= 2 (count not-reactivated)))))
 
 (describe "/synthetic-application"
           (tags :unit :api-applications)
