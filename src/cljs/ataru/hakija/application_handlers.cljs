@@ -878,7 +878,7 @@
       {:db       (assoc-in db [:application :answers id :verify] verify-value)
        :dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]})))
 
-(defn- set-repeatable-field-values
+(defn set-repeatable-field-values
   [db id group-idx data-idx value]
   (cond (some? group-idx)
         (let [data-idx (or data-idx 0)]
@@ -918,7 +918,7 @@
           (update-in [:application :answers id :values group-idx] toggle))
       (update-in db [:application :answers id :values] toggle))))
 
-(defn- set-repeatable-field-value
+(defn set-repeatable-field-value
   [db id]
   (let [values (get-in db [:application :answers id :values])]
     (assoc-in db [:application :answers id :value]

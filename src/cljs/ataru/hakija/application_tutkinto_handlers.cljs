@@ -1,7 +1,6 @@
 (ns ataru.hakija.application-tutkinto-handlers
   (:require [ataru.util :as util]
             [re-frame.core :refer [reg-event-db reg-event-fx]]
-            [ataru.util :as autil]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.hakija.application :refer [create-initial-answers]]
             [ataru.hakija.application-handlers :refer [check-schema-interceptor set-empty-value-dispatch
@@ -53,7 +52,7 @@
     (let [id                              (keyword (:id field-descriptor))
           id-field-id                     (keyword (:id id-field-descriptor))
           repeat-count                    (get-in db [:application :ui id :count] 1)
-          new-question-group-row-needed   (autil/answered-in-group-idx
+          new-question-group-row-needed   (util/answered-in-group-idx
                                             (get-in db [:application :answers id-field-id])
                                             (dec repeat-count))]
       (if new-question-group-row-needed
@@ -85,7 +84,7 @@
   :application/reset-tutkinto-answers
   [check-schema-interceptor]
   (fn [db [_ fields hide?]]
-    (let [fields-and-descendants    (autil/flatten-form-fields fields)
+    (let [fields-and-descendants    (util/flatten-form-fields fields)
           question-groups           (map :id (filter #(= "questionGroup" (:fieldClass %)) fields-and-descendants))
           initial-answers-of-fields (create-initial-answers fields-and-descendants nil nil)
           merged-answers            (merge (get-in db [:application :answers]) initial-answers-of-fields)
