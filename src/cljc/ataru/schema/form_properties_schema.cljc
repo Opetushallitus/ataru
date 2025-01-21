@@ -9,7 +9,8 @@
    (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
 
 (s/defschema FormCategoryProperties
-             {(s/optional-key :selected-option-ids)  [s/Str]})
+             {(s/optional-key :selected-option-ids)  [s/Str]
+              (s/optional-key :mandatory)            s/Bool})
 
 (s/defschema TutkintoProperties
              (merge FormCategoryProperties

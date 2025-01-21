@@ -14,11 +14,9 @@
 (def amm-erikois-option-id "amm-erikois")
 (def kk-alemmat-option-id "kk-alemmat")
 (def kk-ylemmat-option-id "kk-ylemmat")
-(def lisensiaatti-option-id "lisensiaatti")
 (def tohtori-option-id "tohtori")
 (def koski-tutkinto-tasot [perusopetus-option-id lukiokoulutus-option-id yo-option-id amm-perus-option-id amm-option-id
-                         amm-erikois-option-id kk-alemmat-option-id kk-ylemmat-option-id lisensiaatti-option-id
-                         tohtori-option-id])
+                         amm-erikois-option-id kk-alemmat-option-id kk-ylemmat-option-id tohtori-option-id])
 (def tutkinto-id-field-postfix "tutkinto-id")
 (def tutkinto-nimi-field-postfix "tutkinto-nimi")
 (def koulutusohjelma-field-postfix "koulutusohjelma")
@@ -115,17 +113,6 @@
                      :id (str kk-ylemmat-option-id "-" tutkinto-id-field-postfix)
                      :label (:ylemmat-kk-tutkinnot-label koski-tutkinnot-texts)
                      :params {:transparent true})])]}
-   {:id lisensiaatti-option-id
-    :label (:lisensiaatti-tutkinnot-label koski-tutkinnot-texts)
-    :followup-label (:koski-followup-label koski-tutkinnot-texts)
-    :allow-user-followups false
-    :followups [(assoc (component/question-group-embedded metadata)
-                  :id (str lisensiaatti-option-id "-" question-group-of-level)
-                  :children
-                  [(assoc (component/text-field metadata)
-                     :id (str lisensiaatti-option-id "-" tutkinto-id-field-postfix)
-                     :label (:lisensiaatti-tutkinnot-label koski-tutkinnot-texts)
-                     :params {:transparent true})])]}
    {:id tohtori-option-id
     :label (:tohtori-tutkinnot-label koski-tutkinnot-texts)
     :followup-label (:koski-followup-label koski-tutkinnot-texts)
@@ -150,36 +137,39 @@
                    :children
                    [(assoc (component/text-field metadata)
                       :id (str itse-syotetty-option-id "-" tutkinto-nimi-field-postfix)
-                      :validators []
+                      :validators ["required"]
                       :label (:tutkinto-followup-label koski-tutkinnot-texts))
                     (assoc (component/text-field metadata)
                       :id (str itse-syotetty-option-id "-" koulutusohjelma-field-postfix)
-                      :validators []
+                      :validators ["required"]
                       :label (:koulutusohjelma-followup-label koski-tutkinnot-texts))
                     (assoc (component/text-field metadata)
                       :id (str itse-syotetty-option-id "-" oppilaitos-field-postfix)
-                      :validators []
+                      :validators ["required"]
                       :label (:oppilaitos-followup-label koski-tutkinnot-texts))
                     (assoc (component/text-field metadata)
                       :id (str itse-syotetty-option-id "-" valmistumispvm-field-postfix)
-                      :validators []
+                      :validators ["required"]
                       :label (:valmistumispvm-followup-label koski-tutkinnot-texts)
                       :params {:info-text {:label (:itse-syotetty-valimistumispvm-infotext-label koski-tutkinnot-texts)}})
                     (assoc (component/attachment metadata)
                       :label (:itse-syotetty-liitteet-followup-label koski-tutkinnot-texts)
-                      :validators []
+                      :validators ["required"]
                       :params {:mail-attachment? false
                                :info-text {:enabled? true
                                            :value (:itse-syotetty-liitteet-infotext-value koski-tutkinnot-texts)}})])]}])
 
 (defn koski-tutkinnot-questions [metadata]
     [(assoc (component/info-element metadata)
-        :label (:info-label koski-tutkinnot-texts))
+        :label (:info-label koski-tutkinnot-texts)
+        :params {:show-only-for-identified true})
      (assoc (form-property-component/property-multiple-choice metadata)
         :category tutkinto-property-component-category
         :label (:tutkintotaso-label koski-tutkinnot-texts)
         :description (:tutkintotaso-description koski-tutkinnot-texts)
-        :options (tutkinto-tasot metadata))])
+        :options (tutkinto-tasot metadata)
+        :mandatory true
+        :validate-info (:tutkintotaso-validation-info koski-tutkinnot-texts))])
 
 
 (defn koski-tutkinnot-module [metadata]

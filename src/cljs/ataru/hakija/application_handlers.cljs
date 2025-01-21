@@ -717,7 +717,8 @@
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) (get-in response [:headers "date"]) form))
-     :dispatch [:application/post-handle-form-dispatches]}))
+     :dispatch-n [[:application/set-itse-syotetyt-visibility (not (seq koski-tutkinnot))]
+                  [:application/post-handle-form-dispatches]]}))
 
 (reg-event-fx
   :application/handle-get-application

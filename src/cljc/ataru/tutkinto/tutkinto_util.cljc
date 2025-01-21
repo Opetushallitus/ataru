@@ -72,3 +72,26 @@
 
 (defn save-koski-tutkinnot? [form]
   (get-in form [:properties :tutkinto-properties :save-koski-tutkinnot] false))
+
+(defn koski-tutkinto-field-without-selections? [field-descriptor flat-form-content answers koski-tutkinto-levels-in-form]
+  (let [tutkinto-id-fields (map #(str % "-" ktm/tutkinto-id-field-postfix) koski-tutkinto-levels-in-form)
+        id-fields-wo-answers (filter #(not (util/non-blank-answer? ((keyword %) answers))) tutkinto-id-fields)
+        question-groups-wo-answers (map #(str/replace % ktm/tutkinto-id-field-postfix ktm/question-group-of-level)
+                                        id-fields-wo-answers)
+        descendants-wo-selections (mapcat #(util/find-descendant-ids-by-parent-id flat-form-content %)
+                                          question-groups-wo-answers)]
+    (some? (some #{(:id field-descriptor)} descendants-wo-selections))))
+
+(defn- find-option-by-id [fields id]
+  (cond (empty? fields)
+        nil
+        (= id (:id (first fields)))
+        (first fields)
+        :else
+        (recur (into (rest fields)
+                     (concat (:children (first fields))
+                             (:options (first fields))))
+               id)))
+(defn find-itse-syotetty-tutkinto-content [form]
+  (let [itse-syotetty-option (find-option-by-id (:content form) ktm/itse-syotetty-option-id)]
+    (:followups itse-syotetty-option)))

@@ -124,7 +124,8 @@
     [:div.application__tutkinto-wrapper-readonly
      (when tutkinto
        (doall
-        (for [field (tutkinto-util/get-tutkinto-field-mappings lang)]
+        (for [field (tutkinto-util/get-tutkinto-field-mappings lang)
+              :when (get tutkinto (:koski-tutkinto-field field))]
           (let [field-id (:id field)
                 label-id (str "koski-answer-label-" field-id "-" idx)
                 field-path (if (:multi-lang? field)

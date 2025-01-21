@@ -2,7 +2,9 @@
   (:require [clojure.set :as set]
             [clojure.string :as string]
             [ataru.application.option-visibility :as option-visibility]
-            [ataru.util :as u]))
+            [ataru.util :as u]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
@@ -147,6 +149,14 @@
      (ylioppilastutkinto? db)
      (applies-as-identified? db)
      (selected-hakukohteet-and-ryhmat db)))
+  ([db field-descriptor visible?]
+   (set-field-visibility
+     db
+     field-descriptor
+     visible?
+     (ylioppilastutkinto? db)
+     (applies-as-identified? db)
+     (selected-hakukohteet-and-ryhmat db)))
   ([db
     field-descriptor
     visible?
@@ -172,11 +182,19 @@
                                                           selected-ei-jyemp-hakukohteet-and-ryhmat
                                                           selected-hakukohteet-and-ryhmat)))))
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
-                                     (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor)))
+                                     (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor))
+                                     (not (tutkinto-util/koski-tutkinto-field-without-selections?
+                                            field-descriptor
+                                            (:flat-form-content db)
+                                            answers
+                                            (tutkinto-util/koski-tutkinto-levels-in-form form))))
+         children               (if (ktm/is-tutkinto-configuration-component? field-descriptor)
+                                  (concat (:children field-descriptor) (flatten (map :followups (:options field-descriptor))))
+                                  (:children field-descriptor))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
                                           db
-                                          (:children field-descriptor)))
+                                          children))
          option-visibility      (fn [db]
                                   (reduce #(set-option-visibility %1 %2 visible? id selected-hakukohteet-and-ryhmat)
                                           db
@@ -186,9 +204,12 @@
                                             [:application :ui id :visible?]
                                             (boolean
                                               (and visible?
-                                                   (or (empty? (:children field-descriptor))
+                                                   (or (empty? children)
                                                        (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
-                                                             (:children field-descriptor)))))))]
+                                                             children))))))
+
+         ]
+     (js/console.log (str "!!!!!!!!!!!!!!!!!!! set visibility " (:id field-descriptor) ", " visible?))
      (cond-> (-> db
                  child-visibility
                  option-visibility

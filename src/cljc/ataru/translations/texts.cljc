@@ -2994,8 +2994,11 @@
    :tutkintotaso-label                            {:fi "Tutkintotasot"
                                                    :sv "SV: Tutkintotasot"
                                                    :en ""}
-   :tutkintotaso-description                      {:fi "Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
-                                                   :sv "SV: Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja. Vain valitun tutkintotason tiedot ovat valittavissa tutkinto-, koulutusohjelma- ja oppilaitosvalikosta."
+   :tutkintotaso-description                      {:fi "Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja."
+                                                   :sv "SV: Valitse tutkintotasot, joita haku koskee. Koskesta tuodaan vain tätä valintaa vastaavia tutkintotietoja."
+                                                   :en ""}
+   :tutkintotaso-validation-info                  {:fi "Pakollinen tieto, hakijan on valittava vähintään yksi Koskesta tuotu tutkinto, tai syötettävä itse vähintään yksi."
+                                                   :sv "SV: Pakollinen tieto, hakijan on valittava vähintään yksi Koskesta tuotu tutkinto, tai syötettävä itse vähintään yksi."
                                                    :en ""}
    :perusopetus-label                             {:fi "Perusopetus"
                                                    :sv "SV: Perusopetus"
@@ -3020,9 +3023,6 @@
                                                    :en ""}
    :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
                                                    :sv "SV: Ylemmät korkeakoulututkinnot"
-                                                   :en ""}
-   :lisensiaatti-tutkinnot-label                  {:fi "Lisensiaattitutkinnot"
-                                                   :sv "SV: Lisensiaattitutkinnot"
                                                    :en ""}
    :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
                                                    :sv "SV: Tohtoritutkinnot"
