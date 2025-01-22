@@ -50,7 +50,8 @@
                    :tutu-default-processing-fee         "100.00"
                    :attachment-modify-grace-period-days 14
                    :attachment-file-max-size-bytes      10485760
-                   :attachment-file-part-max-size-bytes 5242880}
+                   :attachment-file-part-max-size-bytes 5242880
+                   :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :background-job  {:exec-interval-seconds 15}
  :log             {:virkailija-base-path "/tmp"

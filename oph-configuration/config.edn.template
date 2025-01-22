@@ -39,8 +39,7 @@
                        :kouta-hakus-by-form-key {{ataru_cache_ttl_amounts_kouta_hakus_by_form_key | default('3')}}
                        :hakukohde-search {{ataru_cache_ttl_amounts_hakukohde_search | default('3')}}}}
  :redis {:uri "{{ataru_redis_uri}}"}
- :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"
-        :information-request-reminder-job-cron "{{ataru_jobs_information_request_reminder_job_cron | default('0 9,16 * * *')}}"}
+ :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
@@ -68,7 +67,8 @@
                  :attachment-preview-pages-to-display {{liiteri_attachment_preview_pages_to_display}}
                  :job-failure-alert-recipients "{{ataru_job_failure_alert_recipients}}"
                  :send-job-failure-alert-emails {{ataru_send_job_failure_alert_emails | default('true')}}
-                 :tutu-default-processing-fee "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"}
+                 :tutu-default-processing-fee "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"
+                 :information-request-reminder-job-hour {{ataru_jobs_information_request_reminder_job_hour | default('9')}}}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"

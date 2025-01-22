@@ -892,7 +892,8 @@
                                            (and (not send-reminder?) (nil? reminder-days))))
                                      'reminder-days-only-when-send-reminder-true))
 
-(s/defschema InformationRequest {:subject         s/Str
+(s/defschema InformationRequest {:id              s/Num
+                                 :subject         s/Str
                                  (s/optional-key :recipient-target) s/Str
                                  :message         s/Str
                                  :application-key s/Str
