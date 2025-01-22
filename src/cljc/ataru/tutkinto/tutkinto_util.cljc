@@ -95,3 +95,12 @@
 (defn find-itse-syotetty-tutkinto-content [form]
   (let [itse-syotetty-option (find-option-by-id (:content form) ktm/itse-syotetty-option-id)]
     (:followups itse-syotetty-option)))
+
+(defn tutkinnot-required-and-missing [flat-form-content answers]
+  (let [tutkinto-conf-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) flat-form-content)
+        required? (:mandatory tutkinto-conf-component)]
+    (if required?
+      (not (util/any-answered? answers
+                               (util/find-descendant-ids-by-parent-id flat-form-content (:id tutkinto-conf-component))))
+      false
+    )))

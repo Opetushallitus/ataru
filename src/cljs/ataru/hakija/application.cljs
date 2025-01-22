@@ -3,6 +3,7 @@
   (:require [ataru.constants :as constants]
             [ataru.util :as util]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.translations.texts :refer [koski-tutkinnot-texts]]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
@@ -229,14 +230,17 @@
            first))))
 
 (defn answers->valid-status [all-answers ui flat-form-content]
-  {:invalid-fields (for [field flat-form-content
-                         :let  [key (keyword (:id field))
-                                answer (get all-answers key)]
-                         :when (and (some? answer)
-                                    (not (:valid answer))
-                                    (get-in ui [key :visible?] true))]
-                     {:key   key
-                      :label (:label answer)})})
+  (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content all-answers)]
+    {:invalid-fields (cond-> (for [field flat-form-content
+                              :let  [key (keyword (:id field))
+                                  answer (get all-answers key)]
+                              :when (and (some? answer)
+                                         (not (:valid answer))
+                                         (get-in ui [key :visible?] true))]
+                               {:key   key
+                                :label (:label answer)})
+                             tutkinnot-required-and-missing?
+                             (conj {:key nil :label (:tutkinto-validation-error-msg koski-tutkinnot-texts)}))}))
 
 (defn- sanitize-attachment-value-by-state [value values]
   (when (not= :deleting (:status values))

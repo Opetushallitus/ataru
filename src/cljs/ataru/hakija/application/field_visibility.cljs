@@ -207,9 +207,7 @@
                                                    (or (empty? children)
                                                        (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
                                                              children))))))
-
          ]
-     (js/console.log (str "!!!!!!!!!!!!!!!!!!! set visibility " (:id field-descriptor) ", " visible?))
      (cond-> (-> db
                  child-visibility
                  option-visibility
