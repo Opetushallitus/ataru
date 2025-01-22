@@ -6,14 +6,16 @@
             [ataru.fixtures.form :refer [minimal-form]]
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]
+            [ataru.config.core :refer [config]]
             [ataru.applications.application-store :as application-store]
             [ataru.information-request.fixtures :refer [information-requests-to-remind]]
             [ataru.information-request.information-request-store :as ir-store]
             [ataru.information-request.information-request-service :as ir-service]
             [ataru.information-request.information-request-reminder-job :refer [handler]]
             [ataru.log.audit-log :as audit-log]
-            [speclj.core :refer [describe tags it should= before-all after around with-stubs stub should-have-invoked should-not-have-invoked]]
-            [yesql.core :as sql]))
+            [speclj.core :refer [describe tags it should should= before-all after around with-stubs stub should-have-invoked should-not-have-invoked]]
+            [yesql.core :as sql])
+  (:import (org.joda.time DateTime)))
 
 (declare conn)
 (declare spec)
@@ -78,8 +80,14 @@
                                                      {:identity {:oid "1.2.246.562.11.11111111111"}}
                                                      information-request
                                                      runner))]
-                          (should= (c/plus (c/today-at 6 0) (c/days 12))
-                                   send-reminder-time))))
+                          (should (c/equal?
+                                    (c/plus
+                                      (-> (new DateTime)
+                                          (.withTime
+                                            (get-in config [:public-config :information-request-reminder-job-hour])
+                                            0 0 0))
+                                      (c/days 12))
+                                    send-reminder-time)))))
 
           (describe "store"
                     (it "should return correct information requests to remind"
