@@ -2,6 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
+            [ataru.config :as config]
             [ataru.util :as util]
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.application-authorization-subs]
@@ -583,16 +584,24 @@
              [:span.application-handling__event-row--message-subject
               @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])
               ": "
-              (temporal/time->date (:send-reminder-time event))])
+              (temporal/time->short-str (:send-reminder-time event))])
            [:span.application-handling__event-row--message-subject
             (:subject event)]
            [:span.application-handling__event-row--message-body
             (:message event)]]]
 
          {:event-type "information-request-reminder-sent"}
-         [[:span
-           @(subscribe [:editor/virkailija-translation :information-request-reminder-sent])]
-          nil]
+         (let [ir (some #(when (= (:review-key event) (str (:id %))) %) @(subscribe [:state-query [:application :information-requests]]))]
+           [[:span
+             @(subscribe [:editor/virkailija-translation :information-request-reminder-sent])]
+            (when (some? ir)
+              [:div.application-handling__event-row--message
+               [:span.application-handling__event-row--message-subject
+                @(subscribe [:editor/virkailija-translation :information-request-reminder-subject-prefix])
+                ": "
+                (:subject ir)]
+               [:span.application-handling__event-row--message-body
+                (:message ir)]])])
 
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]
@@ -829,7 +838,10 @@
        (map
          #(list [:option {:value %} %])
          days-options)]
-      [:p @(subscribe [:editor/virkailija-translation :information-request-reminder-after])]]]))
+      [:p @(subscribe [:editor/virkailija-translation :information-request-reminder-after])
+       " "
+       (config/get-public-config [:information-request-reminder-job-hour])
+       ":00"]]]))
 
 (defn- application-information-request-send-reminder []
   (let [send-reminder? @(subscribe [:application/information-request-send-reminder])]

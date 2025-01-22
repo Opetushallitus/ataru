@@ -24,7 +24,8 @@
       (application-store/add-application-event-in-tx
         connection
         {:application-key (:application-key information-request)
-         :event-type "information-request-reminder-sent"}
+         :event-type "information-request-reminder-sent"
+         :review-key (str (:id information-request))}
         nil)
       (ir-store/set-information-request-reminder-processed-time-by-id-in-tx! connection (:id information-request)))))
 
@@ -33,6 +34,8 @@
     (doseq [information-request information-requests]
       (handle-reminder information-request job-runner))))
 
+(def job-cron (str "0 " (get-in config [:public-config :information-request-reminder-job-hour]) " * * *"))
+
 (def job-definition {:handler handler
                      :type    (-> *ns* ns-name str)
-                     :schedule (get-in config [:jobs :information-request-reminder-job-cron])})
+                     :schedule job-cron})

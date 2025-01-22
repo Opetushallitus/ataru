@@ -51,7 +51,8 @@
                    :attachment-file-part-max-size-bytes 5242880
                    :job-failure-alert-recipients        "testi@example.org"
                    :send-job-failure-alert-emails        true
-                   :features {:schema-validation true}}
+                   :features {:schema-validation true}
+                   :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
  :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.test.edn-tiedostosta"

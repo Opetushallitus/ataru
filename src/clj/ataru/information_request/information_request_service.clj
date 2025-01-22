@@ -10,12 +10,14 @@
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.application-store :as app-store]
+            [ataru.config.core :refer [config]]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
             [clojure.string :as string]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]
-            [clj-time.core :as time]))
+            [clj-time.core :as time])
+  (:import (org.joda.time DateTime)))
 
 (defn- information-request-email-template-filename
   [lang]
@@ -106,7 +108,12 @@
          (-> information-request :message-type u/not-blank?)]}
     (let [add-update-link (:add-update-link information-request)
           send-reminder-time (when (:send-reminder? information-request)
-                               (time/plus (time/today-at 6 0) (time/days (:reminder-days information-request))))
+                               (time/plus
+                                 (-> (new DateTime)
+                                     (.withTime
+                                       (get-in config [:public-config :information-request-reminder-job-hour])
+                                       0 0 0))
+                                 (time/days (:reminder-days information-request))))
           information-request (information-request-store/add-information-request
                                 (assoc
                                   information-request

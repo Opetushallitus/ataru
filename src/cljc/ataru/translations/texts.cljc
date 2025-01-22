@@ -1751,6 +1751,9 @@
    :information-request-reminder-sent                        {:fi "Täydennyspyynnön muistutusviesti lähetetty"
                                                               :en "EN Täydennyspyynnön muistutusviesti lähetetty"
                                                               :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}
+   :information-request-reminder-subject-prefix              {:fi "Muistutus"
+                                                              :en "Reminder"
+                                                              :sv "Påminnelse"}
    :single-information-request-sent                          {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
@@ -2186,9 +2189,9 @@
    :information-request-reminder-will-be-sent                {:fi "Muistutusviesti lähetetään"
                                                               :sv "SV Muistutusviesti lähetetään"
                                                               :en "EN Muistutusviesti lähetetään"}
-   :information-request-reminder-after                       {:fi "päivän kuluttua"
-                                                              :sv "SV päivän kuluttua"
-                                                              :en "EN päivän kuluttua"}
+   :information-request-reminder-after                       {:fi "päivän kuluttua klo"
+                                                              :sv "SV päivän kuluttua klo"
+                                                              :en "EN päivän kuluttua klo"}
    :set-haku-to-form                                         {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                               :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                               :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
