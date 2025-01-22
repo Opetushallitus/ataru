@@ -21,6 +21,7 @@ INSERT INTO information_requests (
 -- name: yesql-get-information-requests
 -- Get all information requests belonging to an application
 SELECT
+  ir.id,
   ir.application_key,
   ir.subject,
   ir.message,
@@ -47,7 +48,7 @@ SELECT
 FROM information_requests ir
 LEFT JOIN latest_applications a ON ir.application_key = a.key
 WHERE ir.reminder_processed_time IS NULL
-AND ir.send_reminder_time <= now();
+AND ir.send_reminder_time::date <= current_date;
 
 -- name: yesql-set-information-request-reminder-processed-time-by-id!
 -- Set reminder-processed-time to now
