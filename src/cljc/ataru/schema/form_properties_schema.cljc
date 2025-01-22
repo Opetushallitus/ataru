@@ -9,12 +9,13 @@
    (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
 
 (s/defschema FormCategoryProperties
-             {(s/optional-key :selected-option-ids)  [s/Str]})
+             {(s/optional-key :selected-option-ids)  [s/Str]
+              (s/optional-key :mandatory)            s/Bool})
 
 (s/defschema TutkintoProperties
              (merge FormCategoryProperties
                     {(s/optional-key :show-completed-studies)   s/Bool
-                     (s/optional-key :koski-update-allways)     s/Bool}))
+                     (s/optional-key :save-koski-tutkinnot)     s/Bool}))
 
 (s/defschema FormProperties
              {(s/optional-key :auto-expand-hakukohteet)          s/Bool

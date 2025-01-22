@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.components.form-properties.multiple-checkbox-component
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [ataru.cljs-util :as util]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [ataru.virkailija.editor.components.text-header-component :as text-header-component]
@@ -31,7 +32,8 @@
                                                   (fn [option] {(keyword (:id option))
                                                                 (not (nil? (some #(= (:id option) %)
                                                                                  currently-checked)))})
-                                                  options))))]
+                                                  options))))
+        is-mandatory? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :mandatory]))]
     (fn [content followups path]
       (let [option-count (count options)
             list-of-selected (mapv :id (filter #((keyword (:id %)) @option-check-statuses) options))
@@ -41,7 +43,8 @@
                                                                (conj list-of-selected option-id)
                                                                (vec (remove #(= option-id %) list-of-selected)))]
                                     (dispatch [:editor/update-selected-property-options
-                                               category new-list-of-selected])))]
+                                               category new-list-of-selected])))
+            validator-setting-id (util/new-uuid)]
         (when (or (nil? @show-followups)
                   (not (= (count @show-followups) option-count)))
           (reset! show-followups (vec (repeat option-count false))))
@@ -53,10 +56,21 @@
           path
           [:div.editor-form__multi-question-wrapper
            [:div.editor-form__text-field-checkbox-wrapper
-            (when (some? (:description content))
-              [:div.editor-form__component-item-description
-               [:span (get-in content [:description @virkailija-lang])]]
-              )
+            [:div.editor-form__property-component-info-wrapper
+              [:div.editor-form__component-item-description.embedded
+                [:span (get-in content [:description @virkailija-lang])]]
+              [:div.editor-form__checkbox-container
+                [:input.editor-form__checkbox
+                 {:type     "checkbox"
+                  :id       validator-setting-id
+                  :checked   @is-mandatory?
+                  :disabled @component-locked
+                  :on-change (fn [event]
+                               (let [checked (boolean (-> event .-target .-checked))]
+                                 (dispatch [:editor/set-property-value :tutkinto-properties :mandatory checked])))}]
+                [:label.editor-form__checkbox-label
+                 {:for   validator-setting-id}
+                 (get-in content [:validate-info @virkailija-lang])]]]
             (doall (map-indexed (fn [idx item]
                                   ^{:key (str "options-" idx)}
                                   [:div

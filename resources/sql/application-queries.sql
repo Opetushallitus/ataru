@@ -1390,3 +1390,10 @@ WHERE la.id IS NULL AND
       a.haku in (:haku_oids) AND
       a.person_oid in (:person_oids) AND
       ar.state <> 'inactivated';
+
+-- name: yesql-add-koski-tutkinnot<!
+INSERT INTO application_koski_tutkinnot (application_key, tutkinnot)
+VALUES (:application_key, :tutkinnot::jsonb);
+
+-- name: yesql-get-koski-tutkinnot-for-application
+SELECT tutkinnot FROM application_koski_tutkinnot WHERE application_key = :key;
