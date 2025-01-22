@@ -175,32 +175,3 @@
              (.write output)))
       (run-test (WorkbookFactory/create file))
       (finally (.delete file)))))
-
-(def successful-oppija-auth-response-strong "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
-  <cas:authenticationSuccess>
-  <cas:user>suomi.fi,210281-1111</cas:user>
-  <cas:attributes>
-  <cas:clientName>suomi.fi</cas:clientName>
-  <cas:displayName>Nordea Demo</cas:displayName>
-  <cas:givenName>Nordea</cas:givenName>
-  <cas:VakinainenKotimainenLahiosoitePostitoimipaikkaR>ÅBO</cas:VakinainenKotimainenLahiosoitePostitoimipaikkaR>
-  <cas:VakinainenKotimainenLahiosoiteS>Mansikkatie 11</cas:VakinainenKotimainenLahiosoiteS>
-  <cas:VakinainenKotimainenLahiosoitePostitoimipaikkaS>TURKU</cas:VakinainenKotimainenLahiosoitePostitoimipaikkaS>
-  <cas:VakinainenKotimainenLahiosoiteR>Smultronvägen 11</cas:VakinainenKotimainenLahiosoiteR>
-  <cas:cn>Demo Nordea</cas:cn>
-  <cas:notBefore>2023-11-06T13:08:09.546Z</cas:notBefore>
-  <cas:personOid>1.2.246.562.24.46919363724</cas:personOid>
-  <cas:firstName>Nordea</cas:firstName>
-  <cas:VakinainenKotimainenLahiosoitePostinumero>04530</cas:VakinainenKotimainenLahiosoitePostinumero>
-  <cas:KotikuntaKuntanumero>853</cas:KotikuntaKuntanumero>
-  <cas:vtjVerified>true</cas:vtjVerified>
-  <cas:KotikuntaKuntaS>Turku</cas:KotikuntaKuntaS>
-  <cas:notOnOrAfter>2023-11-06T13:13:09.546Z</cas:notOnOrAfter>
-  <cas:KotikuntaKuntaR>Åbo</cas:KotikuntaKuntaR>
-  <cas:sn>Demo</cas:sn>
-  <cas:nationalIdentificationNumber>210281-1111</cas:nationalIdentificationNumber>
-  </cas:attributes>
-  </cas:authenticationSuccess>
-  </cas:serviceResponse>")
-
-

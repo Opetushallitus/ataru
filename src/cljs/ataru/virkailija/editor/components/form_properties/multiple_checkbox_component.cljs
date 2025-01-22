@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.components.form-properties.multiple-checkbox-component
   (:require [ataru.cljs-util :as util]
-            [re-frame.core :refer [subscribe dispatch]]
+            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.ratom :refer-macros [reaction]]
             [reagent.core :as r]
             [ataru.virkailija.editor.components.text-header-component :as text-header-component]
@@ -33,7 +33,7 @@
                                                                 (not (nil? (some #(= (:id option) %)
                                                                                  currently-checked)))})
                                                   options))))
-        is-mandatory? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :mandatory]))]
+        is-mandatory? (reaction @(subscribe [:editor/get-component-value path :mandatory]))]
     (fn [content followups path]
       (let [option-count (count options)
             list-of-selected (mapv :id (filter #((keyword (:id %)) @option-check-statuses) options))
@@ -67,7 +67,7 @@
                   :disabled @component-locked
                   :on-change (fn [event]
                                (let [checked (boolean (-> event .-target .-checked))]
-                                 (dispatch [:editor/set-property-value :tutkinto-properties :mandatory checked])))}]
+                                 (dispatch-sync [:editor/set-component-value checked path :mandatory])))}]
                 [:label.editor-form__checkbox-label
                  {:for   validator-setting-id}
                  (get-in content [:validate-info @virkailija-lang])]]]

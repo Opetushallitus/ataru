@@ -236,7 +236,7 @@
                       (not-blank? answer)))))))
 
 (defn any-answered? [answers fields]
-  (let [field-ids (map #(keyword (:id %)) (flatten-form-fields fields))]
+  (let [field-ids (map #(keyword %) fields)]
     (some #(non-blank-answer? (get answers %)) field-ids)))
 
 (defn remove-nil-values [m]

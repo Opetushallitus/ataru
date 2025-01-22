@@ -12,8 +12,9 @@
   [check-schema-interceptor]
   (fn set-itse-syotetyt-visibility [db [_ show?]]
     (let [itse-syotetty-content (tutkinto-util/find-itse-syotetty-tutkinto-content (:form db))
+          itse-syotetyt-fields (map :id (util/flatten-form-fields itse-syotetty-content))
           do-show? (boolean
-                     (or show? (util/any-answered? (get-in db [:application :answers]) itse-syotetty-content)))]
+                     (or show? (util/any-answered? (get-in db [:application :answers]) itse-syotetyt-fields)))]
       (reduce (fn [db field] (field-visibility/set-field-visibility db field do-show?))
               (assoc-in db [:application :ui :show-itse-syotetyt-tutkinnot?] do-show?)
               itse-syotetty-content))))
