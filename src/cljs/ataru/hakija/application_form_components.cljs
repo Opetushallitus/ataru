@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-form-components
   (:require [ataru.hakija.application-view-icons :as icons]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common
              :as application-field
