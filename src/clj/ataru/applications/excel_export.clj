@@ -8,6 +8,7 @@
                                         kasittelymerkinnat-field-labels]]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
+            [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
@@ -751,12 +752,13 @@
                                                     person                       (:person application)
                                                     ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen-column is included.
                                                     ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))
-                                                    tutkinnot                    (some->> (when
-                                                                                            (tutkinto-util/koski-tutkinnot-in-application? application) (:person-oid application))
-                                                                                          (koski/get-tutkinnot-for-oppija koski-service false)
-                                                                                          :opiskeluoikeudet
-                                                                                          (parse-koski-tutkinnot tutkinto-levels)
-                                                                                          (tutkinto-util/sort-koski-tutkinnot))]
+                                                    tutkinnot                    (when (tutkinto-util/koski-tutkinnot-in-application? application)
+                                                                                   (if (tutkinto-util/save-koski-tutkinnot? form)
+                                                                                     (application-store/koski-tutkinnot-for-application (:key application))
+                                                                                     (some->> (:person-oid application)
+                                                                                               (koski/get-tutkinnot-for-oppija koski-service false)
+                                                                                               :opiskeluoikeudet
+                                                                                               (parse-koski-tutkinnot tutkinto-levels))))]
                                                 (write-application! liiteri-cas-client
                                                                     row-writer
                                                                     application

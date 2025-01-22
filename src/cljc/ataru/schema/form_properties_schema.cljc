@@ -14,7 +14,8 @@
 (s/defschema TutkintoProperties
              (merge FormCategoryProperties
                     {(s/optional-key :show-completed-studies)   s/Bool
-                     (s/optional-key :save-koski-tutkinnot)     s/Bool}))
+                     (s/optional-key :save-koski-tutkinnot)     s/Bool
+                     (s/optional-key :koski-update-allways)     s/Bool}))
 
 (s/defschema FormProperties
              {(s/optional-key :auto-expand-hakukohteet)          s/Bool
