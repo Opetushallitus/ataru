@@ -1764,8 +1764,10 @@
   (log/info "Mass inactivating" (count application-keys) "applications" application-keys)
   (let [not-inactivated-keys (conj [] (doall
                                        (map (partial inactivate-application session reason-of-inactivation audit-logger)
-                                            application-keys)))]
-    (remove nil? (vec (flatten not-inactivated-keys)))))
+                                            application-keys)))
+        not-inactivated-filtered (remove nil? (vec (flatten not-inactivated-keys)))]
+    (log/info "Inactivated" (count not-inactivated-filtered) "applications")
+    not-inactivated-filtered))
 
 (defn mass-reactivate-applications
   "Reactivates a number of applications. Returns keys of applications that were not reactivated."
@@ -1773,8 +1775,10 @@
   (log/info "Reactivating" (count application-keys) "applications" application-keys)
   (let [not-reactivated-keys (conj [] (doall
                                         (map (partial reactivate-application session reason-of-reactivation audit-logger)
-                                             application-keys)))]
-    (remove nil? (vec (flatten not-reactivated-keys)))))
+                                             application-keys)))
+        not-reactivated-filtered (remove nil? (vec (flatten not-reactivated-keys)))]
+    (log/info "Reactivated" (count not-reactivated-filtered) "applications")
+    not-reactivated-filtered))
 
 (defn get-latest-applications-for-kk-payment-processing
   [person-oids haku-oids]
