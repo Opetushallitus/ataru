@@ -82,6 +82,12 @@
                                           question-groups-wo-answers)]
     (some? (some #{(:id field-descriptor)} descendants-wo-selections))))
 
+(defn koski-tutkinto-level-without-selections? [field-descriptor answers koski-tutkinto-levels-in-form]
+  (let [id (:id field-descriptor)]
+    (if (some #{id} koski-tutkinto-levels-in-form)
+      (not (util/non-blank-answer? ((keyword (str id "-" ktm/tutkinto-id-field-postfix)) answers)))
+      false)))
+
 (defn- find-option-by-id [fields id]
   (cond (empty? fields)
         nil
@@ -90,15 +96,17 @@
         :else
         (recur (into (rest fields)
                      (concat (:children (first fields))
-                             (:options (first fields))))
+                             (:options (first fields))
+                             (:followups (first fields))
+                             ))
                id)))
 (defn find-itse-syotetty-tutkinto-content [form]
   (let [itse-syotetty-option (find-option-by-id (:content form) ktm/itse-syotetty-option-id)]
     (:followups itse-syotetty-option)))
 
-(defn tutkinnot-required-and-missing [flat-form-content answers]
+(defn tutkinnot-required-and-missing [flat-form-content ui answers]
   (let [tutkinto-conf-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) flat-form-content)
-        required? (:mandatory tutkinto-conf-component)]
+        required? (and (get-in ui [:koski-tutkinnot-wrapper :visible?]) (:mandatory tutkinto-conf-component))]
     (if required?
       (not (util/any-answered? answers
                                (util/find-descendant-ids-by-parent-id flat-form-content (:id tutkinto-conf-component))))
