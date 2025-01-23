@@ -182,17 +182,21 @@
                                                           selected-ei-jyemp-hakukohteet-and-ryhmat
                                                           selected-hakukohteet-and-ryhmat)))))
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
-                                     (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor))
-                                     (not (tutkinto-util/koski-tutkinto-field-without-selections?
+                                     (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor)))
+         children               (cond (ktm/is-tutkinto-configuration-component? field-descriptor)
+                                      (concat (:children field-descriptor) (:options field-descriptor))
+                                      (ktm/is-tutkinto-taso-option? field-descriptor)
+                                      (concat (:children field-descriptor) (:followups field-descriptor))
+                                      :else
+                                      (:children field-descriptor))
+         children-visible?      (and visible?
+                                     (not (tutkinto-util/koski-tutkinto-level-without-selections?
                                             field-descriptor
-                                            (:flat-form-content db)
-                                            answers
-                                            (tutkinto-util/koski-tutkinto-levels-in-form form))))
-         children               (if (ktm/is-tutkinto-configuration-component? field-descriptor)
-                                  (concat (:children field-descriptor) (flatten (map :followups (:options field-descriptor))))
-                                  (:children field-descriptor))
+                                            answers (tutkinto-util/koski-tutkinto-levels-in-form form)))
+                                     (or (not (= ktm/itse-syotetty-option-id (:id field-descriptor)))
+                                         (get-in db [:application :ui :show-itse-syotetyt-tutkinnot?] true)))
          child-visibility       (fn [db]
-                                  (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
+                                  (reduce #(set-field-visibility %1 %2 children-visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
                                           db
                                           children))
          option-visibility      (fn [db]

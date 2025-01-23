@@ -17,6 +17,7 @@
 (def tohtori-option-id "tohtori")
 (def koski-tutkinto-tasot [perusopetus-option-id lukiokoulutus-option-id yo-option-id amm-perus-option-id amm-option-id
                          amm-erikois-option-id kk-alemmat-option-id kk-ylemmat-option-id tohtori-option-id])
+(def all-tutkinto-tasot (conj koski-tutkinto-tasot itse-syotetty-option-id))
 (def tutkinto-id-field-postfix "tutkinto-id")
 (def tutkinto-nimi-field-postfix "tutkinto-nimi")
 (def koulutusohjelma-field-postfix "koulutusohjelma")
@@ -183,3 +184,6 @@
 
 (defn is-tutkinto-configuration-component? [field-descriptor]
   (= tutkinto-property-component-category (:category field-descriptor)))
+
+(defn is-tutkinto-taso-option? [field-descriptor]
+  (some? (some #{(:id field-descriptor)} all-tutkinto-tasot)))

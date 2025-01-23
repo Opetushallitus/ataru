@@ -230,7 +230,7 @@
            first))))
 
 (defn answers->valid-status [all-answers ui flat-form-content]
-  (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content all-answers)]
+  (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content ui all-answers)]
     {:invalid-fields (cond-> (for [field flat-form-content
                               :let  [key (keyword (:id field))
                                   answer (get all-answers key)]
