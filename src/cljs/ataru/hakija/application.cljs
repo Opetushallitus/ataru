@@ -312,7 +312,7 @@
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
              :answers   (create-answers-to-submit (:answers application) form (:ui application))
-             :tunnistautunut (some? (:logged-in session-data))
+             :tunnistautunut (boolean (:logged-in session-data))
              :save-koski-tutkinnot (and (= (:auth-type session-data) constants/auth-type-strong)
                                         (tutkinto-util/koski-tutkinto-levels-in-form form)
                                         (tutkinto-util/save-koski-tutkinnot? form))}
