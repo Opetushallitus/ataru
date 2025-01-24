@@ -137,6 +137,23 @@ FROM latest_forms
 LEFT JOIN virkailija ON locked_by = virkailija.oid
 WHERE key = :key;
 
+-- name: yesql-fetch-latest-version-by-key-for-kk-payment-module-job
+SELECT
+  id,
+  key,
+  name,
+  content,
+  created_by,
+  created_time,
+  languages,
+  deleted,
+  organization_oid,
+  locked,
+  properties,
+  locked_by
+FROM latest_forms
+WHERE key = :key;
+
 -- name: yesql-fetch-latest-version-by-id-lock-for-update
 SELECT
   id,

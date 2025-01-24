@@ -202,6 +202,17 @@
   font-size: 14px;
 }
 
+.editor-form__requires-kk-application-payment {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.editor-form__requires-kk-application-payment i {
+  font-size: 20px;
+  color: @warning-yellow;
+}
+
+
 .editor-form__haku-preview-link {
   font-size: 14px;
 }
@@ -937,7 +948,6 @@
   height: 33px;
   font-size: 14px;
   border: 1px solid #C1C1C1;
-  border-radius: 2px;
   margin-bottom: 15px;
 }
 
@@ -1705,4 +1715,42 @@ input.editor-form__text-field ~ .editor-form__markdown-anchor {
   display: block;
   width: auto;
   padding: 0 20px;
+}
+
+.editor-form__maksutoiminto-wrapper {
+  margin: 8px 0 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editor-form__radio {
+  background-image: none;
+}
+
+.editor-form__payment-properties-wrapper {
+  margin: 0 0 8px 16px;
+  display: flex;
+  flex-direction: row;
+  .editor-form__text-field {
+    width: 200px;
+  }
+  label {
+    font-weight: bold;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  .editor-form__payment-properties-wrapper input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    margin: 0;
+  }
+  .editor-form__select {
+    font-size: 16px;
+    width: 200px;
+    height: 43px;
+    margin-bottom: 0;
+    option {
+      width: 250px
+    }
+  }
 }

@@ -33,7 +33,8 @@
     [taoensso.timbre :as log]
     [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
     [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
-    [ataru.tarjonta.haku :as h]))
+    [ataru.tarjonta.haku :as h]
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session]
   {:pre [(boolean? is-modify?)]}
@@ -292,8 +293,7 @@
                                              koodisto-cache
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)
-                                             field-deadlines
-                                             false))
+                                             field-deadlines))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -493,25 +493,31 @@
    job-runner
    application-id))
 
+(defn- tutu-form? [form]
+  (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+      (let [tutu-keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")]
+        (boolean
+          (and (some? tutu-keys) (some #(= (:key form) %) tutu-keys))))))
+
 (defn- handle-tutu-form [form-by-id-cache id application]
   (let [app-key    (-> (application-store/get-application id) :key)
-        form       (:form application)
-        tutu-keys   (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")
-        form-key   (when (some? form)
-                         (-> (cache/get-from form-by-id-cache (str form)) :key))
-        tutu-form? (boolean
-                     (and (some? tutu-keys) (some #(= form-key %) tutu-keys)))
-
+        form-id    (:form application)
+        form       (when (some? form-id)
+                     (-> (cache/get-from form-by-id-cache (str form-id))))
         get-field  (fn [key] (->> (:answers application)
                                   (filter #(= key (:key %)))
                                   (map :value)
                                   first))
-        req-fn     (fn [] {:application-key app-key
+        amount     (or (get-in form [:properties :payment :processing-fee])
+                       (-> config :tutkintojen-tunnustaminen :maksut :decision-amount))
+        req-fn     (fn [] {:reference app-key
+                           :origin "tutu"
+                           :due-days 14
                            :first-name (get-field "first-name")
                            :last-name (get-field "last-name")
                            :email (get-field "email")
-                           :amount (-> config :tutkintojen-tunnustaminen :maksut :decision-amount)})]
-    {:tutu-form? tutu-form?
+                           :amount amount})]
+    {:tutu-form? (tutu-form? form)
      :req-fn     req-fn
      :lang       (:lang application)}))
 
@@ -729,6 +735,7 @@
                                      (application-store/application-exists-with-secret? secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
+        kk-payment                 (future (kk-application-payment/get-kk-payment-state application false))
         lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key
@@ -775,7 +782,8 @@
     [(when full-application
        {:application full-application
         :person      filtered-person
-        :form        form})
+        :form        form
+        :kk-payment  @kk-payment})
      secret-expired?
      lang-override
      inactivated?]))

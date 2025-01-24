@@ -53,6 +53,8 @@ const haeOtsikko = (page: Page) => page.getByTestId('properties-header')
 const haeDemoAlkaa = (page: Page) => page.getByTestId('demo-validity-start')
 const haeDemoPaattyy = (page: Page) => page.getByTestId('demo-validity-end')
 const haeLinkkiDemoon = (page: Page) => page.getByTestId('demo-link')
+const haeTogglePayment = (page: Page) =>
+  page.getByTestId('toggle-maksutoiminto')
 
 test.describe('Lomake-editori Yleiset asetukset -osio', () => {
   test('Näyttää Yleiset asetukset', async () => {
@@ -84,5 +86,11 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
     await demoPaattyy.fill('2021-12-31')
     await expect(demoAlkaa).toHaveValue('2021-01-01')
     await expect(demoPaattyy).toHaveValue('2021-12-31')
+  })
+
+  test('Maksutietojen muuttamiseen tarvitsee rekisterinpitäjän oikeudet', async () => {
+    const togglePayment = haeTogglePayment(page)
+
+    await expect(togglePayment).toBeDisabled()
   })
 })

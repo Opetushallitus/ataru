@@ -5,6 +5,7 @@
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
             [clojure.core.match :as match]
+            [clojure.string :as str]
             [schema.coerce :as c]))
 
 (defn throw-error [msg]
@@ -57,8 +58,26 @@
                                          " status: " (:status result)
                                          " response body: " (:body result))))))
 
+(defn- post-invalidate-laskut
+  "Invalidates maksut invoices with defined references (aka application keys).
+   Invalidated invoices cannot be paid or modified, but can still be viewed via secret link."
+  [maksut-cas-client keys]
+  (let [url    (url/resolve-url :maksut-service.virkailija-invalidate)
+        req    {:keys keys}
+        result (cas/cas-authenticated-post maksut-cas-client url req)]
+    (match/match result
+                 {:status 200 :body body}
+                 (parse-and-validate body [maksut-schema/LaskuStatus])
+
+                 :else (throw-error (str "Could not invalidate laskut for keys " (str/join ", " keys)
+                                         " status: " (:status result)
+                                         " response body: " (:body result))))))
+
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
+
+  (create-kk-application-payment-lasku [_ lasku]
+    (create-lasku-post maksut-cas-client lasku))
 
   (create-kasittely-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
@@ -66,7 +85,9 @@
 
   (create-paatos-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
-                  (assoc lasku :index 2)))
+                  (cond-> lasku
+                          (= "tutu" (:origin lasku))
+                          (assoc :index 2))))
 
   (list-laskut-by-application-key [_ application-key]
     (list-get maksut-cas-client application-key))
@@ -75,7 +96,10 @@
     (list-statuses maksut-cas-client keys))
 
   (download-receipt [_ order-id]
-    (receipt-get maksut-cas-client order-id)))
+    (receipt-get maksut-cas-client order-id))
+
+  (invalidate-laskut [_ keys]
+    (post-invalidate-laskut maksut-cas-client keys)))
 
 (defn new-maksut-service []
   (map->MaksutService {}))

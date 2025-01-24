@@ -18,6 +18,8 @@
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
                                                       http post put]]
+            [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
+            [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
             [cljs.core.match :refer-macros [match]]
@@ -1459,6 +1461,15 @@
               :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
 
 (reg-event-fx
+ :application/do-organization-query-for-schools-of-departure-without-lahtokoulu
+ (fn [{db :db} [_]]
+   (when (empty? (get-in db [:editor :organizations :select]))
+     {:http {:method              :get
+             :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&lahtokoulu-only=false&results-page=10000"
+             :skip-parse-times?   true
+             :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
+
+(reg-event-fx
   :editor/update-organization-query-results
   (fn [{db :db} [_ results]]
     {:db (assoc-in db [:editor :organizations :matches] results)}))
@@ -1613,6 +1624,59 @@
     (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])
           value (not (get-in db path))]
     (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-lomakkeeseen-liittyy-maksutoiminto
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:payment])
+          value (get-in db path)]
+      (if (not-empty value)
+        (assoc-in db path {})
+        (assoc-in
+          db
+          path
+          {:type "payment-type-tutu"
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])})))))
+
+(reg-event-db
+  :editor/change-maksutyyppi
+  (fn [db [_ maksutyyppi]]
+    (let [path (db/current-form-properties-path db [:payment])]
+      (assoc-in
+        db
+        path
+        (case maksutyyppi
+          "payment-type-tutu"
+          {:type maksutyyppi
+           :decision-fee nil
+           :processing-fee (config/get-public-config
+                             [:tutu-default-processing-fee])}
+          "payment-type-astu"
+          {:type maksutyyppi
+           :decision-fee nil
+           :processing-fee nil
+           :vat "0"
+           :order-id-prefix (first astu-order-id-prefixes)})))))
+
+(reg-event-db
+  :editor/change-processing-fee
+  (fn [db [_ processing-fee]]
+    (let [path (db/current-form-properties-path db [:payment :processing-fee])]
+      (assoc-in db path processing-fee))))
+
+(reg-event-db
+  :editor/change-vat
+  (fn [db [_ vat]]
+    (let [path (db/current-form-properties-path db [:payment :vat])]
+      (assoc-in db path vat))))
+
+(reg-event-db
+  :editor/change-order-id-prefix
+  (fn [db [_ order-id-prefix]]
+    (let [path (db/current-form-properties-path db [:payment :order-id-prefix])]
+      (assoc-in db path order-id-prefix))))
 
 (reg-event-db
   :editor/toggle-close-form

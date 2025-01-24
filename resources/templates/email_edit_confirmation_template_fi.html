@@ -79,7 +79,7 @@
         <td style="padding-left: 20px; padding-top: 20px;">
           Muutokset hakemukseesi on tallennettu. Voit tehdä muutoksia
           hakemukseesi seuraavan linkin kautta
-          hakuaikana: <a style="color: #0093C4;"
+          {% if not no-hakuaika-mentions %}hakuaikana{% endif %}: <a style="color: #0093C4;"
           href="{{application-url|safe}}">{{application-url|safe}}</a>. Älä
           jaa linkkiä ulkopuolisille.
         </td>
@@ -89,7 +89,7 @@
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Muutokset hakemukseesi on tallennettu. Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
-                                                  href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a> hakuaikana.
+                                                  href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a>{% if not no-hakuaika-mentions%} hakuaikana{% endif %}.
           Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos Oma Opintopolku-palvelusta.
         </td>
       </tr>

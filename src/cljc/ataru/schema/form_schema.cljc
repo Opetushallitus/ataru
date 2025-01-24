@@ -18,7 +18,9 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]])
+  #?(:clj (:import [org.joda.time DateTime])))
+
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -179,6 +181,13 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
+(s/defschema PaymentProperties
+  {(s/optional-key :type)                             (s/maybe s/Str)
+   (s/optional-key :processing-fee)                   (s/maybe s/Str)
+   (s/optional-key :decision-fee)                     (s/maybe s/Str)
+   (s/optional-key :vat)                              (s/maybe s/Str)
+   (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
+
 (s/defschema FormProperties
   {(s/optional-key :auto-expand-hakukohteet)          s/Bool
    (s/optional-key :order-hakukohteet-by-opetuskieli) s/Bool
@@ -186,7 +195,8 @@
    (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
    (s/optional-key :demo-validity-start)              (s/maybe s/Str)
    (s/optional-key :demo-validity-end)                (s/maybe s/Str)
-   (s/optional-key :closed)                           s/Bool})
+   (s/optional-key :closed)                           s/Bool
+   (s/optional-key :payment)                          (s/maybe PaymentProperties)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -262,7 +272,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
    (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
-   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime) 
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema FormTarjontaMetadata
@@ -275,7 +285,10 @@
    :can-submit-multiple-applications   s/Bool
    :kohdejoukko-uri                    s/Str
    :hakutapa-uri                       s/Str
-   :yhteishaku                         (s/maybe s/Bool)})
+   :yhteishaku                         (s/maybe s/Bool)
+   (s/optional-key :kohdejoukon-tarkenne-uri) (s/maybe s/Str)
+   (s/optional-key :alkamiskausi)      (s/maybe s/Str)
+   (s/optional-key :alkamisvuosi)      (s/maybe s/Int)})
 
 (s/defschema Haku
   {:oid                                        s/Str
@@ -292,11 +305,15 @@
                                                  :start                org.joda.time.DateTime
                                                  (s/optional-key :end) org.joda.time.DateTime}]
    :haun-tiedot-url                            s/Str
+   (s/optional-key :kohdejoukon-tarkenne-uri)  (s/maybe s/Str)
+   (s/optional-key :alkamiskausi)              (s/maybe s/Str)
+   (s/optional-key :alkamisvuosi)              (s/maybe s/Int)
    (s/optional-key :hakukausi-vuosi)           s/Int
    (s/optional-key :ataru-form-key)            s/Str
    (s/optional-key :max-hakukohteet)           s/Int
    (s/optional-key :valinnat-estetty-time-window) (s/maybe {:dateStart (s/maybe s/Int)
-                                                            :dateEnd   (s/maybe s/Int)})})
+                                                            :dateEnd   (s/maybe s/Int)})
+   (s/optional-key :admission-payment-required?) s/Bool})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
@@ -330,6 +347,7 @@
    (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
    (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)
    (s/optional-key :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?)     (s/maybe s/Bool)
+   (s/optional-key :tutkintoon-johtava?)                                         s/Bool
    (s/optional-key :opetuskieli-koodi-urit)                                      [s/Str]})
 
 (s/defschema HakukohdeSearchResult
@@ -368,7 +386,7 @@
                                        :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
    (s/optional-key :deleted)        (s/maybe #?(:clj  org.joda.time.DateTime
                                                 :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))
-   (s/optional-key :preview-status) (s/enum "not_supported" "not_generated" "finished" "error")
+   (s/optional-key :preview-status) (s/enum "not_supported" "not_generated" "finished" "error" "started")
    (s/optional-key :previews)       [Preview]
    (s/optional-key :content-disposition) (s/maybe s/Str)})
 
@@ -447,7 +465,8 @@
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
    :eligibility-set-automatically                   [s/Str]
-   (s/optional-key :tunnistautuminen)                 (s/maybe s/Str)})
+   (s/optional-key :tunnistautuminen)               (s/maybe s/Str)
+   (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
@@ -484,6 +503,28 @@
    (s/optional-key :ssn)         s/Str
    (s/optional-key :minor)       s/Bool})
 
+(s/defschema PaymentStatus
+  {:application-key  s/Str
+   :state            s/Str
+   :reason           (s/maybe s/Str)
+   :due-date         #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :total-sum        (s/maybe s/Str)
+   :created-at       #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :modified-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :required-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :reminder-sent-at #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))
+   :approved-at      #?(:clj  (s/maybe DateTime)
+                        :cljs (s/maybe s/Str))})
+
+(s/defschema KkPaymentState
+  {(s/optional-key :payment) PaymentStatus
+   (s/optional-key :history) (s/maybe [PaymentStatus])})
+
 (s/defschema ApplicationWithPerson
   (-> Application
       (st/dissoc :person-oid)
@@ -491,24 +532,26 @@
       (st/assoc :rights-by-hakukohde {s/Str [user-rights/Right]})
       (st/assoc :person Person)))
 
-(s/defschema ApplicationWithPersonAndForm
+(s/defschema ApplicationWithPersonFormAndPayment
   {:application (-> Application
                     (st/assoc (s/optional-key :application-identifier) s/Str)
                     (st/dissoc :person-oid)
                     (st/assoc :cannot-edit-because-in-processing s/Bool))
    :person      Person
    :form        (s/conditional #(contains? % :tarjonta) FormWithContentAndTarjontaMetadata
-                               :else FormWithContent)})
+                               :else FormWithContent)
+   :kk-payment  KkPaymentState})
 
 (s/defschema OmatsivutApplication
   {:oid s/Str
    :key s/Str
    :state s/Str
    :secret s/Str
-   :haku s/Str
+   :haku (s/maybe s/Str)
    :email s/Str
    :hakukohteet [s/Str]
-   :submitted org.joda.time.DateTime})
+   :submitted org.joda.time.DateTime
+   :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
   {:processingState     s/Str
@@ -990,3 +1033,8 @@
 
    :toisenAsteenSuoritus    s/Str
    :toisenAsteenSuoritusmaa (s/maybe s/Str)})
+
+(s/defschema FormPaymentInfo
+  {:paymentType                    (s/maybe s/Str)
+   (s/optional-key :processingFee) s/Str
+   (s/optional-key :decisionFee)   s/Str})

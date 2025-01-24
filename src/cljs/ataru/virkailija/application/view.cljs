@@ -35,7 +35,7 @@
   (let [list-opened (r/atom false)
         open-list   #(reset! list-opened true)
         close-list  #(reset! list-opened false)
-        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])
+        only-opinto-ohjaaja?       (subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
         toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn [[haku-oid
           selected-hakukohde-oid
@@ -47,7 +47,7 @@
         (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
           haku-name
           [:i.zmdi.zmdi-spinner.spin])]
-       (when (not @opinto-ohjaaja)
+       (when (not @only-opinto-ohjaaja?)
          (closed-row (if @list-opened close-list open-list)
                      (cond (some? selected-hakukohde-oid)
                            @(subscribe [:application/hakukohde-name

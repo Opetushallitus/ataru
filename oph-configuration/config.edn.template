@@ -14,7 +14,7 @@
                              :attachment-total-size-limit {{ataru_tutkintojen_tunnustaminen_size_limit}}
                              :maksut                      {:enabled?                {{ataru_tutkintojen_tunnustaminen_maksut_enabled | default('false')}}
                                                            :poll-interval-minutes   {{ataru_tutkintojen_tunnustaminen_maksut_poll_interval | default('5')}}
-                                                           :decision-amount         "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('70.00')}}"
+                                                           :decision-amount         "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"
                                                            :form-keys      			"{{ataru_tutkintojen_tunnustaminen_maksut_form_key}}"}
                              :ftp                         {:host               "{{ataru_tutkintojen_tunnustaminen_ftp_host}}"
                                                            :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
@@ -23,11 +23,23 @@
                                                            :verify-certificate true
                                                            :path               "{{ataru_tutkintojen_tunnustaminen_ftp_path}}"
                                                            :timeout-seconds    {{ataru_tutkintojen_tunnustaminen_ftp_timeout_seconds | default('300')}}}}
+ :kk-application-payments {:processing-fee {{ataru_kk_application_payments_processing_fee | default('100.00')}}
+                           :enabled? {{ataru_kk_application_payments_enabled | default('false')}}
+                           :status-updater-enabled? {{ataru_kk_application_payments_status_updater_enabled | default('false')}}
+                           :maksut-poller-enabled? {{ataru_kk_application_payments_maksut_poller_enabled | default('false')}}
+                           :start-year {{ataru_kk_application_payments_start_year | default('2025')}}
+                           :start-month {{ataru_kk_application_payments_start_month | default('1')}}
+                           :start-day {{ataru_kk_application_payments_start_day | default('1')}}}
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
  :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
- :cache {:type {{ataru_cache_type}}}
+ :cache {:type {{ataru_cache_type}}
+         :ttl-amounts {:haku {{ataru_cache_ttl_amounts_haku | default('3')}}
+                       :hakukohde {{ataru_cache_ttl_amounts_hakukohde | default('3')}}
+                       :kouta-hakus-by-form-key {{ataru_cache_ttl_amounts_kouta_hakus_by_form_key | default('3')}}
+                       :hakukohde-search {{ataru_cache_ttl_amounts_hakukohde_search | default('3')}}}}
  :redis {:uri "{{ataru_redis_uri}}"}
+ :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
@@ -54,7 +66,8 @@
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}
                  :attachment-preview-pages-to-display {{liiteri_attachment_preview_pages_to_display}}
                  :job-failure-alert-recipients "{{ataru_job_failure_alert_recipients}}"
-                 :send-job-failure-alert-emails {{ataru_send_job_failure_alert_emails | default('true')}}}
+                 :send-job-failure-alert-emails {{ataru_send_job_failure_alert_emails | default('true')}}
+                 :tutu-default-processing-fee "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('100.00')}}"}
  :cas {:username "{{ataru_cas_username}}"
        :password "{{ataru_cas_password}}"}
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"

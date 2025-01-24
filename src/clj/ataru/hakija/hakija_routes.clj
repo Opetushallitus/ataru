@@ -332,7 +332,7 @@
       :summary "Get submitted application by secret"
       :query-params [{secret :- s/Str nil}
                      {virkailija-secret :- s/Str nil}]
-      :return ataru-schema/ApplicationWithPersonAndForm
+      :return ataru-schema/ApplicationWithPersonFormAndPayment
       (cond (not-blank? secret)
             (get-application form-by-id-cache
                              koodisto-cache

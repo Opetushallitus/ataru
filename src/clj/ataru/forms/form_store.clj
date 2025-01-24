@@ -26,6 +26,7 @@
 (declare yesql-latest-id-by-key)
 (declare yesql-add-form<!)
 (declare yesql-get-latest-form-by-name)
+(declare yesql-fetch-latest-version-by-key-for-kk-payment-module-job)
 
 (defn- languages->vec [form]
   (update form :languages :languages))
@@ -118,6 +119,11 @@
 (defn fetch-by-key [key & [conn]]
   (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))
 
+; Query fetch-by-key returns virkailija name in locked_by instead of the oid stored in the column.
+; This causes issues when form is updated with payment module, so let's use a separate query for that for now.
+(defn fetch-by-key-for-kk-payment-module-job [key & [conn]]
+  (first (execute yesql-fetch-latest-version-by-key-for-kk-payment-module-job {:key key} conn)))
+
 (defn latest-id-by-key [key]
   (:id (first (execute yesql-latest-id-by-key {:key key}))))
 
@@ -146,7 +152,7 @@
               (update :deleted identity)
               (update :properties (fnil identity {})))))))
 
-(defn increment-version [{:keys [key id] :as form} _]
+(defn- increment-version [{:keys [key id] :as form} _]
   {:pre [(some? key)
          (some? id)]}
   (first

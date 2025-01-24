@@ -137,10 +137,13 @@ SELECT
   a.haku      AS haku,
   a.email     AS email,
   a.hakukohde AS hakukohteet,
-  a.submitted AS submitted
+  a.submitted AS submitted,
+  f.name      AS form_name
 FROM applications AS a
 JOIN application_reviews AS ar
   ON ar.application_key = a.key
+JOIN forms AS f
+  ON f.id = a.form_id
 LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    FROM application_secrets
                    WHERE application_key = a.key
@@ -148,7 +151,6 @@ LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    LIMIT 1) AS las
   ON las.age < (interval '1 day' * :secret_link_valid_days - '1 day')
 WHERE a.person_oid = :person_oid AND
-      a.haku IS NOT NULL AND
       ar.state <> 'inactivated' AND
       NOT EXISTS (SELECT 1
                   FROM applications AS a2
@@ -1367,3 +1369,24 @@ FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
 WHERE a.id in (:ids);
+
+--name: yesql-get-latest-applications-for-kk-payment-processing
+SELECT
+  a.key,
+  a.submitted,
+  a.haku,
+  a.hakukohde,
+  a.person_oid AS "person-oid",
+  (SELECT content
+  FROM answers_as_content
+  WHERE application_id = a.id) AS content
+FROM applications AS a
+LEFT JOIN applications AS la
+   ON la.key = a.key AND
+      la.id > a.id
+LEFT JOIN application_reviews AS ar
+  ON ar.application_key = a.key
+WHERE la.id IS NULL AND
+      a.haku in (:haku_oids) AND
+      a.person_oid in (:person_oids) AND
+      ar.state <> 'inactivated';
