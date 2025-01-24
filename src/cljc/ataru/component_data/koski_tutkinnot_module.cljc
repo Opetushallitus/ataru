@@ -5,6 +5,7 @@
     [ataru.component-data.form-property-component :as form-property-component]))
 
 (def tutkinto-property-component-category "tutkinto-properties")
+(def koski-module-id "koski-tutkinnot-wrapper")
 (def itse-syotetty-option-id "itse-syotetty")
 (def perusopetus-option-id "perusopetus")
 (def lukiokoulutus-option-id "lukiokoulutus")
@@ -176,7 +177,7 @@
 (defn koski-tutkinnot-module [metadata]
   (assoc (component/form-section metadata)
     :fieldType "tutkinnot"
-    :id "koski-tutkinnot-wrapper"
+    :id koski-module-id
     :label (:section-label koski-tutkinnot-texts)
     :tutkinnot {:description (:section-description koski-tutkinnot-texts)
                 :field-list (:field-list koski-tutkinnot-texts)}

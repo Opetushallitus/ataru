@@ -2,6 +2,7 @@
   "Pure functions handling application data"
   (:require [ataru.constants :as constants]
             [ataru.util :as util]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.translations.texts :refer [koski-tutkinnot-texts]]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
@@ -240,7 +241,8 @@
                                {:key   key
                                 :label (:label answer)})
                              tutkinnot-required-and-missing?
-                             (conj {:key nil :label (:tutkinto-validation-error-msg koski-tutkinnot-texts)}))}))
+                             (conj {:key ktm/koski-module-id
+                                    :label (:tutkinto-validation-error-msg koski-tutkinnot-texts)}))}))
 
 (defn- sanitize-attachment-value-by-state [value values]
   (when (not= :deleting (:status values))

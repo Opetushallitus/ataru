@@ -3000,8 +3000,8 @@
    :tutkintotaso-validation-info                  {:fi "Pakollinen tieto, hakijan on valittava vähintään yksi Koskesta tuotu tutkinto, tai syötettävä itse vähintään yksi."
                                                    :sv "SV: Pakollinen tieto, hakijan on valittava vähintään yksi Koskesta tuotu tutkinto, tai syötettävä itse vähintään yksi."
                                                    :en ""}
-   :tutkinto-validation-error-msg                 {:fi "Vähintään yksi tutkinto"
-                                                   :sv "SV: Vähintään yksi tutkinto"
+   :tutkinto-validation-error-msg                 {:fi "Valitse tai lisää vähintään yksi tutkinto"
+                                                   :sv "SV: Valitse tai lisää vähintään yksi tutkinto"
                                                    :en ""}
    :perusopetus-label                             {:fi "Perusopetus"
                                                    :sv "SV: Perusopetus"
