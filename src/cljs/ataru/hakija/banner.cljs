@@ -44,9 +44,7 @@
                                label-text (if (empty? label)
                                             (translations/get-hakija-translation :missing-input @lang)
                                             label)]
-                           (if (:key field)
-                             [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label-text]]
-                             [:div.application__validation-error-item label-text])))
+                             [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label-text]]))
                        (:invalid-fields @valid-status)))])]))))
 
 (defn sent-indicator []

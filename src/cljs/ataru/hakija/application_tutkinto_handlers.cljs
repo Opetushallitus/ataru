@@ -70,7 +70,7 @@
   (fn remove-tutkinto-row [{db :db} [_ field-descriptor answer-idx]]
     (let [id (keyword (:id field-descriptor))]
       (if (= 1 (get-in db [:application :ui id :count] 1))
-        {:dispatch [:application/reset-tutkinto-answers [field-descriptor] false]}
+        {:dispatch [:application/reset-tutkinto-answers [field-descriptor] true]}
         {:dispatch [:application/remove-question-group-row field-descriptor answer-idx]}))))
 
 (reg-event-fx
