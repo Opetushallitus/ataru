@@ -69,17 +69,20 @@
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         loading?                   (subscribe [:application/fetching-applications?])
-        tutu-form-visible?         (subscribe [:payment/tutu-form-selected?])
+        form-key                   @(subscribe [:application/selected-form-key])
+        tutu-form?                 @(subscribe [:payment/tutu-form? form-key])
+        astu-form?                 @(subscribe [:payment/astu-form? form-key])
         allowed?                   (subscribe [:application/mass-information-request-allowed?])
-        processing-states          (if @tutu-form-visible?
-                                       review-states/application-hakukohde-processing-states
-                                       review-states/application-hakukohde-processing-states-normal)
+        processing-states          (cond
+                                     tutu-form? review-states/application-hakukohde-processing-states-tutu
+                                     astu-form? review-states/application-hakukohde-processing-states-astu
+                                     :else review-states/application-hakukohde-processing-states-normal)
         all-states                 (reduce (fn [acc [state _]]
-                                             (assoc acc state 0))
+                                             (assoc acc state (get @review-state-counts state 0)))
                                            {}
                                            processing-states)]
     (fn []
-      (let [from-states (merge all-states @review-state-counts)]
+      (let [from-states all-states]
         [:span.application-handling__mass-edit-review-states-container
          [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
           {:on-click (when @allowed? #(dispatch [:application/set-mass-update-popup-visibility true]))
