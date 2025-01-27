@@ -10,6 +10,7 @@ runs:
         distribution: 'corretto'
 
     - name: Set timezone to Europe/Helsinki
+      shell: bash
       run: |
         sudo timedatectl set-timezone Europe/Helsinki
         echo "Europe/Helsinki" | sudo tee /etc/timezone
