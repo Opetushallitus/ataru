@@ -14,7 +14,7 @@ env:
 
 jobs:
   test-integration:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
           ./bin/cibuild.sh run-browser-tests-integration
 
   test-spec-and-mocha:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
           ./bin/cibuild.sh run-spec-and-mocha-tests
 
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
