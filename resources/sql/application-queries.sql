@@ -1384,12 +1384,9 @@ FROM applications AS a
 LEFT JOIN applications AS la
    ON la.key = a.key AND
       la.id > a.id
-LEFT JOIN application_reviews AS ar
-  ON ar.application_key = a.key
 WHERE la.id IS NULL AND
       a.haku in (:haku_oids) AND
-      a.person_oid in (:person_oids) AND
-      ar.state <> 'inactivated';
+      a.person_oid in (:person_oids);
 
 -- name: yesql-add-koski-tutkinnot<!
 INSERT INTO application_koski_tutkinnot (application_key, tutkinnot)
