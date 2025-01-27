@@ -144,15 +144,17 @@
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         loading?                   (subscribe [:application/fetching-applications?])
-        tutu-form-visible?         (subscribe [:payment/tutu-form-selected?])
-        processing-states          (if @tutu-form-visible?
-                                     review-states/application-hakukohde-processing-states
-                                     review-states/application-hakukohde-processing-states-normal)
-        all-states                 (reduce (fn [acc [state _]]
-                                             (assoc acc state 0))
+        form-key                   @(subscribe [:application/selected-form-key])
+        tutu-form?                 @(subscribe [:payment/tutu-form? form-key])
+        astu-form?                 @(subscribe [:payment/astu-form? form-key])
+        processing-states          (cond
+                                     tutu-form? review-states/application-hakukohde-processing-states-tutu
+                                     astu-form? review-states/application-hakukohde-processing-states-astu
+                                     :else review-states/application-hakukohde-processing-states-normal)
+        from-states                 (reduce (fn [acc [state _]]
+                                             (assoc acc state (get @review-state-counts state 0)))
                                            {}
-                                           processing-states)
-        from-states (merge all-states @review-state-counts)]
+                                           processing-states)]
     (fn []
       [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
        [mass-update-application-title]
