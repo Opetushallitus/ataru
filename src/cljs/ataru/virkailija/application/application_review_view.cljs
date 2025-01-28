@@ -3,6 +3,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
             [ataru.config :as config]
+            [ataru.translations.texts :as texts]
             [ataru.util :as util]
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.application-authorization-subs]
@@ -595,13 +596,15 @@
            [[:span
              @(subscribe [:editor/virkailija-translation :information-request-reminder-sent])]
             (when (some? ir)
-              [:div.application-handling__event-row--message
-               [:span.application-handling__event-row--message-subject
-                @(subscribe [:editor/virkailija-translation :information-request-reminder-subject-prefix])
-                ": "
-                (:subject ir)]
-               [:span.application-handling__event-row--message-body
-                (:message ir)]])])
+              (let [prefix (:information-request-reminder-subject-prefix texts/translation-mapping)
+                    lang (keyword (:lang @(subscribe [:application/selected-application])))]
+                [:div.application-handling__event-row--message
+                 [:span.application-handling__event-row--message-subject
+                  (get lang prefix (:fi prefix))
+                  ": "
+                  (:subject ir)]
+                 [:span.application-handling__event-row--message-body
+                  (:message ir)]]))])
 
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]

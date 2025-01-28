@@ -1739,9 +1739,6 @@
    :information-request-reminder-sent                        {:fi "Täydennyspyynnön muistutusviesti lähetetty"
                                                               :en "EN Täydennyspyynnön muistutusviesti lähetetty"
                                                               :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}
-   :information-request-reminder-subject-prefix              {:fi "Muistutus"
-                                                              :en "Reminder"
-                                                              :sv "Påminnelse"}
    :single-information-request-sent                          {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
