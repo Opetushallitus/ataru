@@ -106,6 +106,7 @@ jobs:
           docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $(docker build -f ./test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -q .)
           docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
           docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
+          echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
 
       - name: Run Spec and Mocha tests
         run: |
