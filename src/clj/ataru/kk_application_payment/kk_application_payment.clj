@@ -35,6 +35,23 @@
   "Any of these values should be considered as exemption to payment"
   (set (map val payment-module/kk-application-payment-document-exempt-options)))
 
+; Korkeakoulujen hakemusmaksu peritään EU-/ETA-alueen ulkopuolisilta hakijoilta kerran per opintojen aloituskausi (esimerkiksi syksy 2025).
+; Tilalogiikka lyhyesti:
+;
+; 1. "not-required": hakemusmaksua ei vaadita. Tämä tila on ainoa, jonka yhteydessä asetetaan myös "reason"-tieto, ja sellainen tulee olla aina seuraavasti:
+;    - "eu-citizen": hakija on Suomen tai EU:n kansalainen - tarkistetaan automaattisesti ONR:sta, toistaiseksi käytössä ainoastaan suomen kansalaisille
+;    - "exemption-field": hakemukselta löytyy validi hakemusmaksusta vapautuksen syy, esimerkiksi oleskelulupa tai EU-passi
+; 2. "awaiting": hakemus odottaa vaadittua hakemusmaksua: maksut-palveluun on luotu maksupyyntö hakemukselle ja "maksut-secret" on asetettu
+; 3. "ok-by-proxy": hakemusmaksu on maksettu toisen saman aloituskauden hakemuksen yhteydessä
+; 4. "paid": hakemusmaksu on maksettu onnistuneesti maksut-palvelussa
+; 5. "overdue": hakemusmaksun eräpäivä maksut-palvelussa on ylitetty, eikä maksua voi enää suorittaa
+;
+; Huomaa, että "paid" ja "overdue"-tiloihin päästään vain "awaiting"-tilasta. Paid ja overdue ovat myös päätetiloja:
+; kun hakemus on kerran maksettu tai sen eräpäivä on ylittynyt, maksun tila ei enää muutu automaattisesti.
+;
+; Kun maksu on tilassa "awaiting" tai "overdue", hakemuksen olemassaolo piilotetaan rajapintatasolla suurimmalta osalta muita palveluita.
+; Muissa tiloissa olevat hakemukset näkyvät ulospäin normaalisti.
+
 (def all-states
   {:not-required "not-required"
    :awaiting     "awaiting"
