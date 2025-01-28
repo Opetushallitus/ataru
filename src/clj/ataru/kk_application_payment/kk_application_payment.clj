@@ -35,18 +35,22 @@
   "Any of these values should be considered as exemption to payment"
   (set (map val payment-module/kk-application-payment-document-exempt-options)))
 
-; Quick state summary for kk application payments:
+; Korkeakoulujen hakemusmaksu peritään EU-/ETA-alueen ulkopuolisilta hakijoilta kerran per opintojen aloituskausi (esimerkiksi syksy 2025).
+; Tilalogiikka lyhyesti:
 ;
-; 1. "not-required": application is exempt from payment. This is the ONLY state that uses (and must use) the separate "reason" field, as follows:
-;    - "eu-citizen": exempt due to person being Finnish/EU citizen. Right now should be only used for Finnish citizens, other EU citizens via ONR data TBD.
-;    - "exemption-field": exempt due to application data. The applicant has chosen one of the valid exemption reasons in the application form.
-; 2. "awaiting": application requires payment, but has not yet been paid (a maksut invoice has been created and maksut-secret has been set)
-; 3. "ok-by-proxy": application fee has been paid by another application, e.g. a previous application for the same starting term
-; 4. "paid": this application has a successful payment: payment with the application oid has been confirmed paid by maksut service
-; 5. "overdue": application required a payment, but was not paid by the due date, as checked from maksut service
+; 1. "not-required": hakemusmaksua ei vaadita. Tämä tila on ainoa, jonka yhteydessä asetetaan myös "reason"-tieto, ja sellainen tulee olla aina seuraavasti:
+;    - "eu-citizen": hakija on Suomen tai EU:n kansalainen - tarkistetaan automaattisesti ONR:sta, toistaiseksi käytössä ainoastaan suomen kansalaisille
+;    - "exemption-field": hakemukselta löytyy validi hakemusmaksusta vapautuksen syy, esimerkiksi oleskelulupa tai EU-passi
+; 2. "awaiting": hakemus odottaa vaadittua hakemusmaksua: maksut-palveluun on luotu maksupyyntö hakemukselle ja "maksut-secret" on asetettu
+; 3. "ok-by-proxy": hakemusmaksu on maksettu toisen saman aloituskauden hakemuksen yhteydessä
+; 4. "paid": hakemusmaksu on maksettu onnistuneesti maksut-palvelussa
+; 5. "overdue": hakemusmaksun eräpäivä maksut-palvelussa on ylitetty, eikä maksua voi enää suorittaa
 ;
-; Note, that "paid" and "overdue" states can only be reached in the logic via "awaiting" state. They are also terminal states:
-; once an application is paid or overdue, it will not be changed to any other state automatically any more.
+; Huomaa, että "paid" ja "overdue"-tiloihin päästään vain "awaiting"-tilasta. Paid ja overdue ovat myös päätetiloja:
+; kun hakemus on kerran maksettu tai sen eräpäivä on ylittynyt, maksun tila ei enää muutu automaattisesti.
+;
+; Kun maksu on tilassa "awaiting" tai "overdue", hakemuksen olemassaolo piilotetaan rajapintatasolla suurimmalta osalta muita palveluita.
+; Muissa tiloissa olevat hakemukset näkyvät ulospäin normaalisti.
 
 (def all-states
   {:not-required "not-required"
