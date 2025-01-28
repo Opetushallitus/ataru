@@ -40,7 +40,7 @@
 ; 1. "not-required": application is exempt from payment. This is the ONLY state that uses (and must use) the separate "reason" field, as follows:
 ;    - "eu-citizen": exempt due to person being Finnish/EU citizen. Right now should be only used for Finnish citizens, other EU citizens via ONR data TBD.
 ;    - "exemption-field": exempt due to application data. The applicant has chosen one of the valid exemption reasons in the application form.
-; 2. "awaiting": application requires payment, but has not yet paid (a maksut invoice has been created and maksut-secret has been set)
+; 2. "awaiting": application requires payment, but has not yet been paid (a maksut invoice has been created and maksut-secret has been set)
 ; 3. "ok-by-proxy": application fee has been paid by another application, e.g. a previous application for the same starting term
 ; 4. "paid": this application has a successful payment: payment with the application oid has been confirmed paid by maksut service
 ; 5. "overdue": application required a payment, but was not paid by the due date, as checked from maksut service
