@@ -79,4 +79,6 @@
                                    SET secret = ?
                                    WHERE id = ?"]
                                  (map vector (repeatedly (fn [] (crypto/url-part 34))) id-chunk))
-                           {:multi? true}))))
+                           {:multi? true}))
+    (log/info "Removing non-anonymized application secrets")
+    (delete-non-anonymized-secrets! {} {:connection connection})))

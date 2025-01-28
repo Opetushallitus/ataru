@@ -64,6 +64,9 @@ WHERE group_answer_values.application_id = :application_id AND
 -- name: sql-application-secret-ids
 SELECT id FROM application_secrets;
 
+-- name: delete-non-anonymized-secrets!
+DELETE FROM application_secrets WHERE NOT EXISTS(SELECT NULL FROM applications a WHERE a.key = application_key);
+
 -- name: sql-update-multi-by-key!
 UPDATE multi_answer_values SET value = :val WHERE key = :key;
 
