@@ -1,6 +1,9 @@
 -- name: sql-get-all-applications
 SELECT id FROM applications ORDER BY id;
 
+-- name: sql-delete-application!
+DELETE FROM applications WHERE id = :id;
+
 -- name: sql-get-application
 SELECT id, person_oid, tunnistautuminen, content
 FROM applications

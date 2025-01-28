@@ -12,6 +12,10 @@
 (defn get-all-application-ids []
   (map :id (db/exec :db sql-get-all-applications {})))
 
+(defn delete-application [id]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (sql-delete-application! {:id id} {:connection connection})))
+
 (defn get-application [id]
   (first (db/exec :db sql-get-application {:id id})))
 

@@ -136,8 +136,10 @@
                       (do (application-store/update-application (anonymize fake-person attachment-key application))
                         (when (or (= last-id id)
                                   (= 0 (mod id 1000)))
-                          (log/info "Anonymized application id" (:id application))))
-                      (log/info "Did not anonymize application" (:id application)))))
+                          (log/info "Anonymized application id" id)))
+                      (do
+                        (log/info "Could not anonymize application" id "- deleting it")
+                        (application-store/delete-application id)))))
                 application-ids)))
       (log/info "Anonymize guardians")
       (time (application-store/anonymize-guardian!))
