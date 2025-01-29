@@ -225,6 +225,7 @@
                       application-key (:key (application-store/get-application application-id))
                       check-mail-fn (fn [mail-content]
                                       (and
+                                        (= "aku@ankkalinna.com" (first (:recipients mail-content)))
                                         (str/includes? (:subject mail-content) "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään")
                                         (str/includes? (:body mail-content) "Olet hakenut haussa: testing2")
                                         (str/includes? (:body mail-content) "Emme ole vielä saaneet maksusuoritustasi hakemusmaksua koskien")
