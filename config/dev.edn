@@ -52,7 +52,8 @@
                    :job-failure-alert-recipients        "testi@example.org"
                    :send-job-failure-alert-emails        true
                    :features {:schema-validation true
-                              :hakeminen-tunnistautuneena true}}
+                              :hakeminen-tunnistautuneena true}
+                   :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
  :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.dev.edn-tiedostosta"

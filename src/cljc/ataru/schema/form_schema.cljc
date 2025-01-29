@@ -786,7 +786,8 @@
                          "field-deadline-set"
                          "field-deadline-unset"
                          "person-found-matching"
-                         "person-dob-or-gender-conflict"))
+                         "person-dob-or-gender-conflict"
+                         "information-request-reminder-sent"))
 
 (s/defschema Event
   {:event-type                                event-types
@@ -892,14 +893,22 @@
 (defn- length-at-most-200 [s]
   (<= (count s) 200))
 
-(s/defschema NewInformationRequest {:subject         (s/constrained s/Str length-at-most-200)
-                                    (s/optional-key :recipient-target) s/Str
-                                    :message         s/Str
-                                    :application-key s/Str
-                                    :add-update-link s/Bool
-                                    (s/optional-key :single-message) s/Bool})
+(s/defschema NewInformationRequest (s/constrained
+                                     {:subject         (s/constrained s/Str length-at-most-200)
+                                      (s/optional-key :recipient-target) s/Str
+                                      :message         s/Str
+                                      :application-key s/Str
+                                      :add-update-link s/Bool
+                                      (s/optional-key :single-message) s/Bool
+                                      (s/optional-key :send-reminder?) s/Bool
+                                      (s/optional-key :reminder-days) (s/maybe s/Int)}
+                                     (fn [{:keys [send-reminder? reminder-days]}]
+                                       (or (and send-reminder? (pos? reminder-days))
+                                           (and (not send-reminder?) (nil? reminder-days))))
+                                     'reminder-days-only-when-send-reminder-true))
 
-(s/defschema InformationRequest {:subject         s/Str
+(s/defschema InformationRequest {:id              s/Num
+                                 :subject         s/Str
                                  (s/optional-key :recipient-target) s/Str
                                  :message         s/Str
                                  :application-key s/Str
@@ -907,7 +916,9 @@
                                  :created-time    #?(:clj  org.joda.time.DateTime
                                                      :cljs s/Str)
                                  :first-name      s/Str
-                                 :last-name       s/Str})
+                                 :last-name       s/Str
+                                 :send-reminder-time #?(:clj  (s/maybe org.joda.time.DateTime)
+                                                        :cljs (s/maybe s/Str))})
 
 (s/defschema ReviewSetting {:setting-kwd s/Str
                             :enabled     s/Bool})
