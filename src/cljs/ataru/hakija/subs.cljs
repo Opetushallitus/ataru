@@ -1006,6 +1006,11 @@
     (some? (not-empty (get-in db [:application :koski-tutkinnot] {})))))
 
 (re-frame/reg-sub
+  :application/show-itse-syotetyt-tutkinnot?
+  (fn [db]
+    (get-in db [:application :ui :show-itse-syotetyt-tutkinnot?] true)))
+
+(re-frame/reg-sub
   :application/any-answered?
   (fn [_ _]
     [(re-frame/subscribe [:application/answers])])

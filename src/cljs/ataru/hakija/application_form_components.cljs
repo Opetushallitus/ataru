@@ -895,21 +895,17 @@
 (defn tutkinnot-wrapper-field
   [field-descriptor]
   (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
-        lang @(subscribe [:application/form-language])
-        always-show-itse-syotetyt? (r/atom false)]
+        lang @(subscribe [:application/form-language])]
     (fn [field-descriptor]
       (let [any-koski-tutkinnot? @(subscribe [:application/any-koski-tutkinnot?])
+            show-itse-syotetyt? @(subscribe [:application/show-itse-syotetyt-tutkinnot?])
             itse-syotetty-content (tutkinto-util/find-itse-syotetty-content-beneath field-descriptor)
             on-click-to-show-additional-itse-syotetyt (fn [event]
                                                         (.preventDefault event)
-                                                        (reset! always-show-itse-syotetyt? true))
+                                                        (dispatch [:application/set-itse-syotetyt-visibility true]))
             on-click-to-hide-additional-itse-syotetyt (fn [event]
                                                         (.preventDefault event)
-                                                        (dispatch-sync [:application/reset-tutkinto-answers
-                                                                   itse-syotetty-content])
-                                                        (reset! always-show-itse-syotetyt? false))]
-        (when (and (not @always-show-itse-syotetyt?) @(subscribe [:application/any-answered? itse-syotetty-content]))
-          (reset! always-show-itse-syotetyt? true))
+                                                        (dispatch [:application/clear-and-hide-itse-syotetyt]))]
         [:div.application__wrapper-element
          [:div.application__wrapper-heading
           [:h2 label]
@@ -930,7 +926,7 @@
                                    on-toggle (fn [event]
                                                (.preventDefault event)
                                                (if answer-idx
-                                                 (dispatch [:application/remove-question-group-row
+                                                 (dispatch [:application/remove-tutkinto-row
                                                             question-group-of-level
                                                             answer-idx])
                                                  (dispatch [:application/add-tutkinto-row
@@ -955,12 +951,11 @@
                                                           {:key (str (:id followup) "-" answer-idx)})))])))])))
                      (when any-koski-tutkinnot?
                        [:div
-                        (if @always-show-itse-syotetyt?
+                        (if show-itse-syotetyt?
                           [tutkinnot/hide-additional-tutkinnot-button on-click-to-hide-additional-itse-syotetyt lang]
                           [tutkinnot/add-button on-click-to-show-additional-itse-syotetyt lang])])]
-                    (when (or @always-show-itse-syotetyt? (not any-koski-tutkinnot?))
-                      (for [followup itse-syotetty-content]
-                        (with-meta [render-field followup nil] {:key (:id followup)})))]
+                     (for [followup itse-syotetty-content]
+                        (with-meta [render-field followup nil] {:key (:id followup)}))]
                    (with-meta [render-field child nil] {:key (:id child)}))))]))))
 
 (defn- render-component [{:keys [field-descriptor
