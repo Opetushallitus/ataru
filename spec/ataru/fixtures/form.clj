@@ -3,6 +3,7 @@
             [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [clojure.string :as string]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
@@ -245,6 +246,9 @@
    :locked     nil
    :locked-by  nil
    :content    [(component/hakukohteet)
+                (assoc-in (ktm/koski-tutkinnot-module metadata)
+                          [:children 1 :options 9 :followups 0 :children 4 :id]
+                          "itse-syotetty-tutkintotodistus")
                 (assoc (component/single-choice-button metadata)
                        :id "choice_1"
                        :options [{:value     "0"
@@ -352,3 +356,19 @@
   (merge minimal-form
          {:id  909909
           :key "payment-exemption-test-form"}))
+
+(def tutkinto-test-form
+  (merge minimal-form
+         (-> {:content [(ktm/koski-tutkinnot-module metadata)]}
+             (assoc-in [:content 0 :children 1 :options 1 :followups 0 :children 1]
+                       {:params {:question-group-id :lukiokoulutus-question-group},
+                        :validators ["required"],
+                        :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
+                        :label {:fi "Miten menee??", :sv ""},
+                        :id "additional-field-for-lukiokoulutus"})
+             (assoc-in [:content 0 :children 1 :options 6 :followups 0 :children 1]
+                       {:params {:question-group-id :lukiokoulutus-question-group},
+                        :validators ["required"],
+                        :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
+                        :label {:fi "Miten menee??", :sv ""},
+                        :id "additional-field-for-kk-alemmat"}))))

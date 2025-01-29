@@ -84,7 +84,6 @@
 (defn- resolve-subtype-of-korkeakoulututkinto [virta-tyyppi-koodi]
   (cond (some #{virta-tyyppi-koodi} ["1" "2"]) "kk-alemmat"
         (some #{virta-tyyppi-koodi} ["3" "4"]) "kk-ylemmat"
-        (some #{virta-tyyppi-koodi} ["6"]) "lisensiaatti"
         (some #{virta-tyyppi-koodi} ["7"]) "tohtori"))
 
 (defn- parse-korkeakoulututkinnot [koski-opiskeluoikeus]
@@ -95,10 +94,8 @@
              (let [virtanimi (get-in suoritus [:koulutusmoduuli :virtaNimi])]
                (cond-> (-> (parse-common-fields suoritus)
                            (assoc :level tutkinto-type)
-                           (assoc :tutkintonimi virtanimi)
-                           (assoc :koulutusohjelmanimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi])))
-                       (nil? virtanimi) (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi])
-                                               :koulutusohjelmanimi (get-in koski-opiskeluoikeus [:tyyppi :nimi])))))
+                           (assoc :tutkintonimi (get-in suoritus [:koulutusmoduuli :tunniste :nimi])))
+                       (some? virtanimi) (assoc :koulutusohjelmanimi virtanimi))))
            (:suoritukset koski-opiskeluoikeus))
       [])))
 
@@ -118,7 +115,7 @@
                            (any-requested? "amm" "amm-perus" "amm-erikois"))
                       parse-ammatilliset
                       (and (is-korkeakoulututkinto? koski-opiskeluoikeus)
-                           (any-requested? "kk-alemmat" "kk-ylemmat" "lisensiaatti" "tohtori"))
+                           (any-requested? "kk-alemmat" "kk-ylemmat" "tohtori"))
                       parse-korkeakoulututkinnot)]
     (if list-fn
       (filter #(and (:tutkintonimi %) (:valmistumispvm %)) (list-fn koski-opiskeluoikeus))

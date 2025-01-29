@@ -522,7 +522,8 @@
                            :amount amount})]
     {:tutu-form? (tutu-form? form)
      :req-fn     req-fn
-     :lang       (:lang application)}))
+     :lang       (:lang application)
+     :app-key    app-key}))
 
 (defn remove-empty-arrays [answers]
   (filter #(not= (:value %) [[]]) answers))
@@ -548,7 +549,8 @@
    session
    liiteri-cas-client
    maksut-service
-   oppija-session]
+   oppija-session
+   koski-service]
   (log/info "Application submitted:" application)
   (let [answers-empty-removed (remove-empty-answers (:answers application))
         application-empty-answers-removed (assoc application :answers answers-empty-removed)
@@ -566,7 +568,7 @@
                             false
                             session
                             oppija-session)
-        {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
+        {:keys [tutu-form? req-fn lang app-key]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
         virkailija-secret (:virkailija-secret application-empty-answers-removed)]
 
     (if passed?
@@ -574,6 +576,16 @@
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
 
+        (when (:save-koski-tutkinnot application-empty-answers-removed)
+          (when-let [tutkinto-levels (some->> (:form application-empty-answers-removed)
+                                              (str)
+                                              (cache/get-from form-by-id-cache)
+                                              (tutkinto-util/koski-tutkinto-levels-in-form))]
+            (when-let [tutkinnot (some->> (get-in oppija-session [:data :person-oid])
+                                          (koski-service/get-tutkinnot-for-oppija koski-service true)
+                                          :opiskeluoikeudet
+                                          (parse-koski-tutkinnot tutkinto-levels))]
+              (application-store/add-new-koski-tutkinnot-for-application app-key tutkinnot))))
         (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service (req-fn)))
               url (when tutu-form? (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang))]
           (when invoice
@@ -770,12 +782,14 @@
                                                                       nil
                                                                       application-in-processing?
                                                                       field-deadlines))
-        requested-tutkinto-levels (tutkinto-util/koski-tutkinto-levels-in-form form)
-        koski-tutkinnot       (future (some->> (when (tutkinto-util/koski-tutkinnot-in-application? application)
-                                                 (:person-oid application))
-                                               (koski-service/get-tutkinnot-for-oppija koski-service true)
-                                               :opiskeluoikeudet
-                                               (parse-koski-tutkinnot requested-tutkinto-levels)))
+        requested-tutkinto-levels  (tutkinto-util/koski-tutkinto-levels-in-form form)
+        koski-tutkinnot            (future (when requested-tutkinto-levels
+                                             (if (tutkinto-util/save-koski-tutkinnot? form)
+                                              (application-store/koski-tutkinnot-for-application (:key application))
+                                              (some->> (:person-oid application)
+                                                       (koski-service/get-tutkinnot-for-oppija koski-service true)
+                                                       :opiskeluoikeudet
+                                                       (parse-koski-tutkinnot requested-tutkinto-levels)))))
         new-person (application-service/get-person-for-securelink application-service application)
         filtered-person (if (= actor-role :virkailija)
                           new-person

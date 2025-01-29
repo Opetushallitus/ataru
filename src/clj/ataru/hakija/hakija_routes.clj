@@ -304,7 +304,8 @@
                    session
                    liiteri-cas-client
                    maksut-service
-                   oppija-session-from-db)
+                   oppija-session-from-db
+                   koski-service)
                  {:passed? false :failures failures :code code}
                  (response/bad-request {:failures failures :code code})
 
@@ -389,7 +390,7 @@
          (if-let [henkilo-oid (get-in session [:data :person-oid])]
           (if-let [oppija-response (koski/get-tutkinnot-for-oppija koski-service true henkilo-oid)]
             (response/ok (parse-koski-tutkinnot tutkinto-level-list (:opiskeluoikeudet oppija-response)))
-            (response/not-found {}))
+            (response/ok []))
           (response/unauthorized {}))))
     (api/context "/files" []
       (api/GET "/signed-upload" []
