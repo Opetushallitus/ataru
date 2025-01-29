@@ -434,3 +434,6 @@
   (if (vector? val) val [val]))
 
 (defn koodi-uri-base [koodi-uri] (-> koodi-uri (string/split #"#") first))
+
+(defn find-children-from-flat-content [field-descriptor flat-form-content]
+  (filter #(= (:children-of %) (:id field-descriptor)) flat-form-content))

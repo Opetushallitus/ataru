@@ -112,3 +112,22 @@
                                (util/find-descendant-ids-by-parent-id flat-form-content (:id tutkinto-conf-component))))
       false
     )))
+
+(defn- is-question-group-of-koski-level [field-descriptor]
+  (let [id (:id field-descriptor)]
+    (boolean (some #(and (str/starts-with? id %)
+                         (str/ends-with? id ktm/question-group-of-level))
+                   ktm/koski-tutkinto-tasot))))
+
+(defn- find-itse-syotetty-field-ids-beneath [conf-field-id flat-form-content]
+  (let [tutkinto-level-fields (filter #(= (:followup-of %) conf-field-id) flat-form-content)
+        top-level-itse-syotetty-fields (filter #(not (is-question-group-of-koski-level %)) tutkinto-level-fields)]
+    (mapcat #(if (util/answerable? %)
+               [(:id %)]
+               (util/find-descendant-ids-by-parent-id flat-form-content (:id %)))
+            top-level-itse-syotetty-fields)))
+
+(defn tutkinto-option-selected [_ field flat-form-content answers]
+  (if (is-question-group-of-koski-level field)
+    (boolean (util/any-answered? answers (map :id (util/find-children-from-flat-content field flat-form-content))))
+    (boolean (util/any-answered? answers (find-itse-syotetty-field-ids-beneath (:followup-of field) flat-form-content)))))
