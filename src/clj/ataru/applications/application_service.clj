@@ -439,6 +439,8 @@
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
   (get-ensisijainen-application-counts-for-haku [this haku-oid])
   (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete])
+  (mass-inactivate-applications [this session application-keys reason-of-inactivation])
+  (mass-reactivate-applications [this session application-keys reason-of-reactivation])
   (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
   (valinta-ui-applications [this session query]))
 
@@ -1006,7 +1008,36 @@
         application-keys
         delete-ordered-by
         reason-of-delete
-        audit-logger))))
+        audit-logger)))
+
+  (mass-inactivate-applications
+    [_ session application-keys reason-of-inactivation]
+    (when (aac/applications-access-authorized?
+            organization-service
+            tarjonta-service
+            session
+            application-keys
+            [:edit-applications])
+      (application-store/mass-inactivate-applications
+        session
+        application-keys
+        reason-of-inactivation
+        audit-logger)))
+
+  (mass-reactivate-applications
+    [_ session application-keys reason-of-reactivation]
+    (when (aac/applications-access-authorized?
+            organization-service
+            tarjonta-service
+            session
+            application-keys
+            [:edit-applications])
+      (application-store/mass-reactivate-applications
+        session
+        application-keys
+        reason-of-reactivation
+        audit-logger)))
+  )
 
 (s/defn ^:always-validate query-applications-paged
   [application-service

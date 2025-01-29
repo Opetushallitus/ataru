@@ -31,7 +31,8 @@
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
-            [yesql.core :as sql]))
+            [yesql.core :as sql]
+            [clojure.string :as str]))
 
 (declare yesql-get-latest-application-by-key)
 (declare yesql-get-application-by-id)
@@ -241,6 +242,24 @@
 (defn- update-payment-info [key payment-info]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/update-payment-info")
                     (json/generate-string payment-info))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-mass-inactivate-applications [application-keys reason-of-inactivation]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-inactivate?reason-of-inactivation=" 
+                               (str/replace reason-of-inactivation " " "+"))
+                    (json/generate-string {:application-keys application-keys}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-mass-reactivate-applications [application-keys reason-of-reactivation]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-reactivate?reason-of-reactivation=" 
+                               (str/replace reason-of-reactivation " " "+"))
+                    (json/generate-string {:application-keys application-keys}))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
       (mock/content-type "application/json")
       ((deref virkailija-routes))
@@ -576,6 +595,107 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(describe "Mass inactivate applications"
+          (tags :unit :api-applications)
+
+          (it "Should mass inactivate valid applications"
+              (let [message         "Applications are missing mandatory information"
+                    ; Here we just create two applications with the same form - the fixtures used bear no significance
+                    application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    resp (post-mass-inactivate-applications application-keys message)
+                    not-inactivated (get-in resp [:body :not-inactivated-keys])
+                    application-reviews (->> application-keys
+                                            (map application-store/get-application-review))
+                    application-notes (->> application-keys
+                                           (map application-store/get-application-review-notes)
+                                           (map first))
+                    status (:status resp)]
+                (should= 200 status)
+                (should= 2 (count application-notes))
+                (should= 2 (count application-reviews))
+                (should= message (-> application-notes first :notes))
+                (should= message (-> application-notes second :notes))
+                (should= "inactivated" (-> application-reviews first :state))
+                (should= "inactivated" (-> application-reviews second :state))
+                (should= [] not-inactivated)))
+
+          (it "Should not mass inactivate applications that are already inactive"
+              (let [message         "Applications are missing mandatory information"
+                    application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    _ (post-mass-inactivate-applications application-keys message)
+                    resp (post-mass-inactivate-applications application-keys message)
+                    not-inactivated (get-in resp [:body :not-inactivated-keys])
+                    application-reviews (->> application-keys
+                                             (map application-store/get-application-review))
+                    status (:status resp)]
+                (should= 200 status)
+                (should= "inactivated" (-> application-reviews first :state))
+                (should= "inactivated" (-> application-reviews second :state))
+                (should-not-be-nil not-inactivated)
+                (should= 2 (count not-inactivated)))))
+
+(describe "Mass reactivate applications"
+          (tags :unit :api-applications)
+
+          (it "Should mass reactivate valid applications"
+              (let [message         "Applications were mistakenly inactivated"
+                    application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    _ (post-mass-inactivate-applications application-keys message)
+                    resp (post-mass-reactivate-applications application-keys message)
+                    not-reactivated (get-in resp [:body :not-reactivated-keys])
+                    application-reviews (->> application-keys
+                                            (map application-store/get-application-review))
+                    application-notes (->> application-keys
+                                           (map application-store/get-application-review-notes)
+                                           (map first))
+                    status (:status resp)]
+                (should= 200 status)
+                (should= [] not-reactivated)
+                (should= 2 (count application-notes))
+                (should= 2 (count application-reviews))
+                (should= message (-> application-notes first :notes))
+                (should= message (-> application-notes second :notes))
+                (should= "active" (-> application-reviews first :state))
+                (should= "active" (-> application-reviews second :state))))
+
+          (it "Should not reactivate applications that are already active"
+              (let [message         "Applications were mistakenly inactivated"
+                    application-ids (db/init-db-fixture
+                                     fixtures/minimal-form
+                                     [(assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                                      (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))])
+                    application-keys (->> application-ids
+                                          (map get-application-by-id)
+                                          (map :key))
+                    resp (post-mass-reactivate-applications application-keys message)
+                    not-reactivated (get-in resp [:body :not-reactivated-keys])
+                    application-reviews (->> application-keys
+                                            (map application-store/get-application-review))
+                    status (:status resp)]
+                (should= 200 status)
+                (should-not-be-nil not-reactivated)
+                (should= 2 (count not-reactivated))
+                (should= "active" (-> application-reviews first :state))
+                (should= "active" (-> application-reviews second :state)))))
 
 (describe "/synthetic-application"
           (tags :unit :api-applications)
