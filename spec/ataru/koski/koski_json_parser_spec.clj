@@ -66,16 +66,14 @@
 
           (it "should parse korkeakoulu-tutkinnot from Koski-JSON"
               (let [parsed (parser/parse-koski-tutkinnot
-                             ["kk-alemmat" "kk-ylemmat" "lisensiaatti" "tohtori"]
+                             ["kk-alemmat" "kk-ylemmat" "tohtori"]
                              (read-opiskeluoikeudet-from-json "korkeakoulutukset.json"))
                     kk-alemmat (filter #(= "kk-alemmat" (:level %)) parsed)
                     kk-ylemmat (filter #(= "kk-ylemmat" (:level %)) parsed)
-                    lisensiaatti (filter #(= "lisensiaatti" (:level %)) parsed)
                     tohtori (filter #(= "tohtori" (:level %)) parsed)]
-                (should= 4 (count (levels parsed)))
+                (should= 3 (count (levels parsed)))
                 (should= 4 (count kk-alemmat))
-                (should= 8 (count kk-ylemmat))
-                (should= 1 (count lisensiaatti))
+                (should= 9 (count kk-ylemmat))
                 (should= 1 (count tohtori))
                 (should= ["1.2.246.562.10.38515028629_672501_2011-12-07" "1.2.246.562.10.78305677532_623404_2010-09-20"
                           "1.2.246.562.10.38515028629_642102_2010-12-10" "1.2.246.562.10.38515028629_633501_2013-04-15"]
@@ -83,9 +81,9 @@
                 (should= ["1.2.246.562.10.38515028629_772501_2014-08-06" "1.2.246.562.10.78305677532_726404_2012-06-20"
                           "1.2.246.562.10.38515028629_772501_2016-12-19" "1.2.246.562.10.38515028629_772401_2009-11-16"
                           "1.2.246.562.10.38515028629_672401_2006-05-17" "1.2.246.562.10.38515028629_733501_2014-10-07"
-                          "1.2.246.562.10.57572539237_771218_2014-12-11" "1.2.246.562.10.38515028629_733203_2004-10-22"]
+                          "1.2.246.562.10.57572539237_771218_2014-12-11" "1.2.246.562.10.38515028629_772201_2017-01-25"
+                          "1.2.246.562.10.38515028629_733203_2004-10-22"]
                          (mapv :id kk-ylemmat))
-                (should= "1.2.246.562.10.38515028629_772201_2017-01-25" (:id (first lisensiaatti)))
                 (should= "1.2.246.562.10.38515028629_875401_2017-10-17" (:id (first tohtori)))))
 
           (it "should return empty when returned tutkinnot not in requested level list"

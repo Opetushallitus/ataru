@@ -40,10 +40,11 @@
                     {:on-click toggle-show-details}
                     "x"]]
                   (map (fn [field]
-                         (let [label (util/non-blank-val (:label field) @languages)]
-                           [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (if (empty? label)
-                                                                                       (translations/get-hakija-translation :missing-input @lang)
-                                                                                       label)]]))
+                         (let [label (util/non-blank-val (:label field) @languages)
+                               label-text (if (empty? label)
+                                            (translations/get-hakija-translation :missing-input @lang)
+                                            label)]
+                             [:a {:href (str "#scroll-to-" (name (:key field)))} [:div label-text]]))
                        (:invalid-fields @valid-status)))])]))))
 
 (defn sent-indicator []

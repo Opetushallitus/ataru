@@ -240,7 +240,23 @@
                  [{:oid "hakukohde1"}]
                  false
                  fields-by-id
-                 #{}))))
+                 #{}))
+      (should== [{:application_key "application-oid"
+                  :attachment_key  "itse-syotetty-tutkintotodistus"
+                  :state           "attachment-missing"
+                  :updated?        false
+                  :hakukohde       "hakukohde1"}]
+                (store/create-application-attachment-reviews
+                  "application-oid"
+                  (store/filter-visible-attachments {:itse-syotetty-tutkinto-nimi {:value [["tutkinto1"]]}}
+                                                    flat-form-content
+                                                    fields-by-id)
+                  {:itse-syotetty-tutkinto-nimi {:value [["tutkinto1"]]}}
+                  nil
+                  [{:oid "hakukohde1"}]
+                  false
+                  fields-by-id
+                  #{}))))
 
   (it "should update attachment reviews for application without hakukohteet"
     (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))

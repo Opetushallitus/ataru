@@ -294,7 +294,7 @@
                                                          (:form db)
                                                          (get-in db [:form :selected-language])
                                                          (:strict-warnings-on-unchanged-edits? db)
-                                                         (get-in db [:oppija-session :logged-in] false))
+                                                         (:oppija-session db))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
 
@@ -717,7 +717,8 @@
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) (get-in response [:headers "date"]) form))
-     :dispatch [:application/post-handle-form-dispatches]}))
+     :dispatch-n [[:application/set-itse-syotetyt-visibility (not (seq koski-tutkinnot))]
+                  [:application/post-handle-form-dispatches]]}))
 
 (reg-event-fx
   :application/handle-get-application
@@ -877,7 +878,7 @@
       {:db       (assoc-in db [:application :answers id :verify] verify-value)
        :dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]})))
 
-(defn- set-repeatable-field-values
+(defn set-repeatable-field-values
   [db id group-idx data-idx value]
   (cond (some? group-idx)
         (let [data-idx (or data-idx 0)]
@@ -917,7 +918,7 @@
           (update-in [:application :answers id :values group-idx] toggle))
       (update-in db [:application :answers id :values] toggle))))
 
-(defn- set-repeatable-field-value
+(defn set-repeatable-field-value
   [db id]
   (let [values (get-in db [:application :answers id :values])]
     (assoc-in db [:application :answers id :value]

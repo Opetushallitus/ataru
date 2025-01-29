@@ -24,7 +24,8 @@
         koski-update-policy-only-once-id (util/new-uuid)
         koski-update-policy-allways-id (util/new-uuid)
         ;completed-studies-checked? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :show-completed-studies]))
-        koski-update-allways? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :koski-update-allways]))]
+        save-koski-tutkinnot? (reaction @(subscribe [:editor/get-property-value :tutkinto-properties :save-koski-tutkinnot]))
+        is-superuser? @(subscribe [:application/superuser?])]
     [:div.editor-form__component-wrapper
      {:data-test-id "tutkinnot-wrapper"}
      [text-header-component/text-header id group-header-text path (:metadata content)
@@ -75,32 +76,32 @@
           [:input.editor-form__plain-radio
            {:type      "radio"
             :value     false
-            :id        koski-update-policy-only-once-id
-            :data-test-id "koski-update-policy-only-once-id"
-            :checked   (not (boolean @koski-update-allways?))
-            :disabled  @component-locked?
+            :id        koski-update-policy-allways-id
+            :data-test-id "koski-update-policy-allways-id"
+            :checked   (not (boolean @save-koski-tutkinnot?))
+            :disabled  (or @component-locked? (not is-superuser?))
             :on-change (fn [event]
                          (.preventDefault event)
                          (dispatch
-                           [:editor/set-property-value :tutkinto-properties :koski-update-allways false]))}]
+                           [:editor/set-property-value :tutkinto-properties :save-koski-tutkinnot false]))}]
           [:label.editor-form__single-choice-button-container.choice.label
-           {:for koski-update-policy-only-once-id}
-           (get-in koski-tutkinnot-texts [:koski-update-option-only-once-label virkailija-lang])]]
+           {:for koski-update-policy-allways-id}
+           (get-in koski-tutkinnot-texts [:koski-update-option-allways-label virkailija-lang])]]
          [:div.editor-form__single-choice-button-container.choice
           [:input.editor-form__plain-radio
            {:type      "radio"
             :value     true
-            :id        koski-update-policy-allways-id
-            :data-test-id "koski-update-policy-allways-id"
-            :checked   (boolean @koski-update-allways?)
-            :disabled  @component-locked?
+            :id        koski-update-policy-only-once-id
+            :data-test-id "koski-update-policy-only-once-id"
+            :checked   (boolean @save-koski-tutkinnot?)
+            :disabled  (or @component-locked? (not is-superuser?))
             :on-change (fn [event]
                          (.preventDefault event)
                          (dispatch
-                           [:editor/set-property-value :tutkinto-properties :koski-update-allways true]))}]
+                           [:editor/set-property-value :tutkinto-properties :save-koski-tutkinnot true]))}]
           [:label.editor-form__single-choice-button-container.choice.label
-           {:for koski-update-policy-allways-id}
-           (get-in koski-tutkinnot-texts [:koski-update-option-allways-label virkailija-lang])]]]]
+           {:for koski-update-policy-only-once-id}
+           (get-in koski-tutkinnot-texts [:koski-update-option-only-once-label virkailija-lang])]]]]
        [:div.editor-form__wrapper-element-well
         children]
        [dnd/drag-n-drop-spacer (conj path :children (count children))]

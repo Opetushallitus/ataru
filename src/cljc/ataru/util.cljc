@@ -235,6 +235,10 @@
                       (not-blank? (first answer))
                       (not-blank? answer)))))))
 
+(defn any-answered? [answers fields]
+  (let [field-ids (map #(keyword %) fields)]
+    (some #(non-blank-answer? (get answers %)) field-ids)))
+
 (defn remove-nil-values [m]
   (->> m
        (remove #(nil? (second %)))
@@ -430,3 +434,6 @@
   (if (vector? val) val [val]))
 
 (defn koodi-uri-base [koodi-uri] (-> koodi-uri (string/split #"#") first))
+
+(defn find-children-from-flat-content [field-descriptor flat-form-content]
+  (filter #(= (:children-of %) (:id field-descriptor)) flat-form-content))

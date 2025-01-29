@@ -317,10 +317,11 @@
                                        :value "Joroinen",
                                        :fieldType "textField",
                                        :label {:fi "ulkokenttä", :sv ""}})
-                           :tunnistautunut false})
+                           :tunnistautunut false
+                           :save-koski-tutkinnot false})
 
 (deftest application-to-submit-is-correct
-  (let [result (create-application-to-submit application-data-to-submit form1 "fi" true false)]
+  (let [result (create-application-to-submit application-data-to-submit form1 "fi" true {})]
     (is (= expected-application result))))
 
 (def form2

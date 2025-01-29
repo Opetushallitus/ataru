@@ -1,6 +1,10 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [ataru.util :as util]
+  (:require [ataru.constants :as constants]
+            [ataru.util :as util]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.translations.texts :refer [koski-tutkinnot-texts]]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
@@ -227,14 +231,18 @@
            first))))
 
 (defn answers->valid-status [all-answers ui flat-form-content]
-  {:invalid-fields (for [field flat-form-content
-                         :let  [key (keyword (:id field))
-                                answer (get all-answers key)]
-                         :when (and (some? answer)
-                                    (not (:valid answer))
-                                    (get-in ui [key :visible?] true))]
-                     {:key   key
-                      :label (:label answer)})})
+  (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content ui all-answers)]
+    {:invalid-fields (cond-> (for [field flat-form-content
+                              :let  [key (keyword (:id field))
+                                  answer (get all-answers key)]
+                              :when (and (some? answer)
+                                         (not (:valid answer))
+                                         (get-in ui [key :visible?] true))]
+                               {:key   key
+                                :label (:label answer)})
+                             tutkinnot-required-and-missing?
+                             (conj {:key ktm/koski-module-id
+                                    :label (:tutkinto-validation-error-msg koski-tutkinnot-texts)}))}))
 
 (defn- sanitize-attachment-value-by-state [value values]
   (when (not= :deleting (:status values))
@@ -295,7 +303,7 @@
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
         (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 
-(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? tunnistautunut?]
+(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? session-data]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
              :strict-warnings-on-unchanged-edits? (if (nil? strict-warnings-on-unchanged-edits?)
@@ -306,7 +314,10 @@
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
              :answers   (create-answers-to-submit (:answers application) form (:ui application))
-             :tunnistautunut tunnistautunut?}
+             :tunnistautunut (boolean (:logged-in session-data))
+             :save-koski-tutkinnot (and (= (:auth-type session-data) constants/auth-type-strong)
+                                        (tutkinto-util/koski-tutkinto-levels-in-form form)
+                                        (tutkinto-util/save-koski-tutkinnot? form))}
 
             (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 
