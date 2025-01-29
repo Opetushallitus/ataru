@@ -406,6 +406,9 @@
                                        (:haku-oid hakukohde)
                                        roles)))
 
+(defn fetch-latest-version-by-id [form-id]
+  (form-store/fetch-latest-version form-id))
+
 (def form-coercer (sc/coercer! form-schema/FormWithContentAndTarjontaMetadata
                                coerce/json-schema-coercion-matcher))
 

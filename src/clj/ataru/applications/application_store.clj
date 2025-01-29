@@ -4,6 +4,7 @@
             [ataru.application.option-visibility :refer [visibility-checker]]
             [ataru.application.review-states :as application-review-states]
             [ataru.component-data.base-education-module-higher :as higher-module]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
@@ -11,6 +12,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
             [ataru.util :refer [answers-by-key] :as util]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.random :as crypto]
@@ -95,6 +97,16 @@
             (recur))
         secret))))
 
+(defn add-new-koski-tutkinnot-for-application
+  [application-key tutkinnot]
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+      (queries/yesql-add-koski-tutkinnot<! {:application_key application-key
+                                            :tutkinnot (json/generate-string {:tutkinnot tutkinnot})}
+                                           {:connection conn})))
+
+(defn koski-tutkinnot-for-application [application-key]
+  (:tutkinnot (:tutkinnot (first (exec-db :db queries/yesql-get-koski-tutkinnot-for-application {:key application-key})))))
+
 (defn- intersect?
   [set1 set2]
   (not-empty (clojure.set/intersection set1 set2)))
@@ -141,12 +153,15 @@
          (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp))))
 
 (defn- followup-option-selected?
-  [field parent-field answers]
+  [field parent-field fields answers]
   (let [parent-value (get-in answers [(keyword (:id parent-field)) :value])]
-    (->> (:options parent-field)
-         (filter (visibility-checker parent-field parent-value))
-         (some #(= (:option-value field) (:value %)))
-         boolean)))
+    (cond-> (:options parent-field)
+            (ktm/is-tutkinto-configuration-component? parent-field)
+            (tutkinto-util/tutkinto-option-selected field fields answers)
+            (not (ktm/is-tutkinto-configuration-component? parent-field))
+            (->> (filter (visibility-checker parent-field parent-value))
+                 (some #(= (:option-value field) (:value %)))
+                 boolean))))
 
 (defn filter-visible-attachments
   [answers fields fields-by-id]
@@ -160,6 +175,7 @@
                          (:followup-of followup)
                          (followup-option-selected? followup
                                                     (get fields-by-id (keyword (:followup-of followup)))
+                                                    fields
                                                     answers)
                          :else
                          true))))
