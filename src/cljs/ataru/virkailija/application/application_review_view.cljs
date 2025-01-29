@@ -600,7 +600,7 @@
                     lang (keyword (:lang @(subscribe [:application/selected-application])))]
                 [:div.application-handling__event-row--message
                  [:span.application-handling__event-row--message-subject
-                  (get lang prefix (:fi prefix))
+                  (get prefix lang)
                   ": "
                   (:subject ir)]
                  [:span.application-handling__event-row--message-body
