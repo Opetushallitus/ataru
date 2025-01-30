@@ -143,13 +143,12 @@
                 application-ids)))
       (log/info "Anonymize guardians")
       (time (application-store/anonymize-guardian!))
-      (log/info "Anonymize long textareas")
+      (log/info "Anonymize long textareas and application secrets")
       (time
         (dorun (pcalls application-store/anonymize-long-textareas-group!
                        application-store/anonymize-long-textareas-multi!
-                       application-store/anonymize-long-textareas!)))
-      (log/info "Regenerate application secrets")
-      (time (application-store/regenerate-application-secrets!)))
+                       application-store/anonymize-long-textareas!
+                       application-store/regenerate-application-secrets!))))
     (when-not skip-shutdown
       (log/info "Shutting down")
       (shutdown-agents))))

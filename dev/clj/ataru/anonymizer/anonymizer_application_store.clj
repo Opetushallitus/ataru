@@ -70,15 +70,16 @@
       (sql-update-application-group-answer-values! update-answers-args {:connection connection}))))
 
 (defn regenerate-application-secrets! []
-  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (doseq [id-chunk (->> (sql-application-secret-ids {} {:connection connection})
                           (map :id)
                           (partition 1000 1000 nil))]
-      (jdbc/db-do-prepared connection false
+      (jdbc/db-do-prepared connection true
                            (into ["UPDATE application_secrets
                                    SET secret = ?
                                    WHERE id = ?"]
                                  (map vector (repeatedly (fn [] (crypto/url-part 34))) id-chunk))
-                           {:multi? true}))
-    (log/info "Removing non-anonymized application secrets")
+                           {:multi? true})))
+  (log/info "Removing non-anonymized application secrets")
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (delete-non-anonymized-secrets! {} {:connection connection})))
