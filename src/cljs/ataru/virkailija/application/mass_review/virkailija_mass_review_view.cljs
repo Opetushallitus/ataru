@@ -151,10 +151,9 @@
                                      tutu-form? review-states/application-hakukohde-processing-states-tutu
                                      astu-form? review-states/application-hakukohde-processing-states-astu
                                      :else review-states/application-hakukohde-processing-states-normal)
-        from-states                 (reduce (fn [acc [state _]]
-                                             (assoc acc state (get @review-state-counts state 0)))
-                                           {}
-                                           processing-states)]
+        processing-states-with-counts (->> processing-states
+                                           (map (fn [[state]] [state (get @review-state-counts state 0)]))
+                                           (into {}))]
     (fn []
       [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
        [mass-update-application-title]
@@ -172,29 +171,29 @@
        (if @from-list-open?
          (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
                 {:on-click #(swap! from-list-open? not)}]
-               (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
+               (opened-mass-review-state-list selected-from-review-state processing-states-with-counts @review-state-counts true))
          (mass-review-state-selected-row
-          (fn []
-            (swap! from-list-open? not)
-            (reset! submit-button-state :submit))
-          (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
+           (fn []
+             (swap! from-list-open? not)
+             (reset! submit-button-state :submit))
+           (selected-or-default-mass-review-state-label selected-from-review-state processing-states-with-counts @review-state-counts)))
 
        [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :to-state])]
 
        (if @to-list-open?
          (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-               (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
+                {:on-click #(when (-> processing-states-with-counts (keys) (count) (pos?)) (swap! to-list-open? not))}]
+               (opened-mass-review-state-list selected-to-review-state processing-states-with-counts @review-state-counts false))
          (mass-review-state-selected-row
-          (fn []
-            (swap! to-list-open? not)
-            (reset! submit-button-state :submit))
-          (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
+           (fn []
+             (swap! to-list-open? not)
+             (reset! submit-button-state :submit))
+           (selected-or-default-mass-review-state-label selected-to-review-state processing-states-with-counts @review-state-counts)))
 
        (case @submit-button-state
          :submit
-         (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                       (selected-or-default-mass-review-state selected-to-review-state all-states))
+         (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state processing-states-with-counts)
+                                       (selected-or-default-mass-review-state selected-to-review-state processing-states-with-counts))
                                     @loading?)]
            [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
             {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
@@ -208,8 +207,8 @@
          :confirm
          [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
           {:on-click (fn []
-                       (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
-                             to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
+                       (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state processing-states-with-counts)
+                             to-state-name   (selected-or-default-mass-review-state selected-to-review-state processing-states-with-counts)]
                          (dispatch [:application/mass-update-application-reviews
                                     from-state-name
                                     to-state-name])
@@ -235,7 +234,7 @@
            (case @open-tab
              :mass-update       [mass-update-applications-view]
              :mass-inactivation [mass-update-inactivation-view]
-             [mass-update-applications-view]))])))
+             [mass-update-applications-view]))]))
 
 (defn- mass-review-notes-popup
   []
