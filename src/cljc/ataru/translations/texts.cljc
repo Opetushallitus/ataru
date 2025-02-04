@@ -1439,6 +1439,12 @@
    :compare                                                  {:fi "Vertaile"
                                                               :sv "Jämför"
                                                               :en "Compare"}
+   :inactivate                                               {:fi "Passivoi hakemukset"
+                                                              :sv "Passivera ansökningar"
+                                                              :en "Inactivate applications"}
+   :confirm-inactivation                                     {:fi "Vahvista passivointi"
+                                                              :sv "Bekräfta passiveringen"
+                                                              :en "Confirm inactivation"}
    :confirm-change                                           {:fi "Vahvista muutos"
                                                               :sv "Bekräfta ändringen"
                                                               :en "Confirm the change"}
@@ -1799,6 +1805,18 @@
    :mass-edit                                                {:fi "Massamuutos"
                                                               :sv "Massändring"
                                                               :en "Mass editing"}
+   :mass-edit-header                                         {:fi "Muuta käsittelyvaihetta"
+                                                              :sv "Ändra behandlingsstatus"
+                                                              :en "Change processing status"}
+   :mass-inactivation-header                                 {:fi "Passivoi hakemukset"
+                                                              :sv "Passivisera ansökningar"
+                                                              :en "Inactivate applications"}
+   :mass-inactivation-n-applications                         {:fi "Olet passivoimassa %d hakemusta"
+                                                              :sv "Du är på väg att passivisera %d ansökningar"
+                                                              :en "You're about to inactivate %d applications"}
+   :mass-inactivation-note-title                             {:fi "Muistiinpano"
+                                                              :sv "Anteckning"
+                                                              :en "Note"}
    :mass-review-notes                                        {:fi "Massamuistiinpano"
                                                               :sv "SV: Massanteckningar"
                                                               :en "EN: Mass notes"}
