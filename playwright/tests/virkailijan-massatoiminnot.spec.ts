@@ -92,4 +92,97 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     await showResultsBtn.click()
     await expect(page.getByTestId('mass-review-notes-button')).toBeVisible()
   })
+
+  test('Massamuutos tilalistauksessa oikeat tilat', async () => {
+    await avaaHaunHakemuksetVirkailijanNakymassa(
+      page,
+      '1.2.246.562.29.00000000000000018308'
+    )
+    const massUpdate = page.getByTestId('mass-update')
+    await massUpdate.click()
+    await massUpdate.locator('.application-handling__review-state-row').click()
+    const states = massUpdate
+      .locator('.application-handling__review-state-row')
+      .locator('span')
+
+    const expectedStates = [
+      'Käsittelemättä',
+      'Käsittelyssä',
+      'Kutsuttu haast.',
+      'Kutsuttu valintak.',
+      'Arvioinnissa',
+      'Valintaesitys',
+      'Käsitelty',
+      'Täydennyspyyntö',
+    ]
+
+    for (const state in expectedStates) {
+      await expect(states.getByText(state)).toBeVisible()
+    }
+  })
+
+  test('Massamuutos tilalistauksessa oikeat tilat astu-lomakkeelle', async () => {
+    await avaaHaunHakemuksetVirkailijanNakymassa(
+      page,
+      '1.2.246.562.29.00000000000000018308'
+    )
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('astuLomake.json')
+    )
+    const massUpdate = page.getByTestId('mass-update')
+    await massUpdate.click()
+    await massUpdate.locator('.application-handling__review-state-row').click()
+    const states = massUpdate
+      .locator('.application-handling__review-state-row')
+      .locator('span')
+
+    const expectedStates = [
+      'Käsittelemättä',
+      'Käsittelyssä',
+      'Käsitelty',
+      'Täydennyspyyntö',
+      'Päätösmaksu avoin',
+      'Päätös maksamatta',
+      'Päätös maksettu',
+    ]
+
+    for (const state in expectedStates) {
+      await expect(states.getByText(state)).toBeVisible()
+    }
+  })
+
+  test('Massamuutos tilalistauksessa oikeat tilat tutu-lomakkeelle', async () => {
+    await avaaHaunHakemuksetVirkailijanNakymassa(
+      page,
+      '1.2.246.562.29.00000000000000018308'
+    )
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('tutuLomake.json')
+    )
+    const massUpdate = page.getByTestId('mass-update')
+    await massUpdate.click()
+    await massUpdate.locator('.application-handling__review-state-row').click()
+    const states = massUpdate
+      .locator('.application-handling__review-state-row')
+      .locator('span')
+
+    const expectedStates = [
+      'Käsittelemättä',
+      'Käsittelyssä',
+      'Käsitelty',
+      'Täydennyspyyntö',
+      'Käsittely maksamatta',
+      'Käsittely maksettu',
+      'Päätösmaksu avoin',
+      'Päätös maksamatta',
+      'Päätös maksettu',
+      'Laskutuksessa',
+    ]
+
+    for (const state in expectedStates) {
+      await expect(states.getByText(state)).toBeVisible()
+    }
+  })
 })
