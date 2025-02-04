@@ -1,0 +1,855 @@
+{
+  "name": {
+    "fi": "Uusi lomake"
+  },
+  "content": [
+    {
+      "params": {},
+      "validators": [
+        "hakukohteet"
+      ],
+      "fieldClass": "formField",
+      "label": {
+        "fi": "Hakukohteet",
+        "sv": "Ansökningsmål",
+        "en": "Application options"
+      },
+      "id": "hakukohteet",
+      "options": [],
+      "exclude-from-answers-if-hidden": true,
+      "metadata": {
+        "created-by": {
+          "name": "system",
+          "oid": "system",
+          "date": "1970-01-01T00:00:00Z"
+        },
+        "modified-by": {
+          "name": "system",
+          "oid": "system",
+          "date": "1970-01-01T00:00:00Z"
+        }
+      },
+      "fieldType": "hakukohteet"
+    },
+    {
+      "children": [
+        {
+          "fieldClass": "wrapperElement",
+          "fieldType": "rowcontainer",
+          "id": "91b4fcad-1ba4-463d-9ed5-304f1e96f770",
+          "children": [
+            {
+              "params": {
+                "size": "M"
+              },
+              "rules": {},
+              "blur-rules": {
+                "prefill-preferred-first-name": "main-first-name"
+              },
+              "validators": [
+                "required"
+              ],
+              "fieldClass": "formField",
+              "label": {
+                "fi": "Etunimet",
+                "sv": "Förnamn",
+                "en": "First/given names"
+              },
+              "id": "first-name",
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "fieldType": "textField"
+            },
+            {
+              "fieldClass": "formField",
+              "fieldType": "textField",
+              "label": {
+                "fi": "Kutsumanimi",
+                "sv": "Tilltalsnamn",
+                "en": "Preferred first/given name"
+              },
+              "id": "preferred-name",
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "params": {
+                "size": "S"
+              },
+              "rules": {},
+              "validators": [
+                "required",
+                "main-first-name"
+              ]
+            }
+          ],
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {}
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Sukunimi",
+            "sv": "Efternamn",
+            "en": "Last name"
+          },
+          "id": "last-name",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "required"
+          ]
+        },
+        {
+          "fieldClass": "questionGroup",
+          "fieldType": "fieldset",
+          "id": "585068e0-46fd-4183-88e1-adc9d7659179",
+          "label": {
+            "fi": "",
+            "sv": ""
+          },
+          "children": [
+            {
+              "params": {},
+              "koodisto-source": {
+                "uri": "maatjavaltiot2",
+                "version": 2,
+                "default-option": "Suomi"
+              },
+              "rules": {
+                "toggle-ssn-based-fields": null
+              },
+              "validators": [
+                "required"
+              ],
+              "fieldClass": "formField",
+              "label": {
+                "fi": "Kansalaisuus",
+                "sv": "Medborgarskap",
+                "en": "Nationality"
+              },
+              "id": "nationality",
+              "options": [],
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "fieldType": "dropdown"
+            }
+          ],
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {}
+        },
+        {
+          "params": {},
+          "rules": {
+            "toggle-ssn-based-fields": null
+          },
+          "fieldClass": "formField",
+          "label": {
+            "fi": "Onko sinulla suomalainen henkilötunnus?",
+            "sv": "Har du en finländsk personbeteckning?",
+            "en": "Do you have a Finnish personal identity code?"
+          },
+          "id": "have-finnish-ssn",
+          "exclude-from-answers": true,
+          "no-blank-option": true,
+          "options": [
+            {
+              "value": "true",
+              "label": {
+                "en": "Yes",
+                "fi": "Kyllä",
+                "sv": "Ja"
+              },
+              "default-value": true
+            },
+            {
+              "value": "false",
+              "label": {
+                "en": "No",
+                "fi": "Ei",
+                "sv": "Nej"
+              }
+            }
+          ],
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "fieldType": "dropdown"
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "fieldType": "rowcontainer",
+          "id": "1a603262-128b-4b10-8c45-9f0d5ae585db",
+          "children": [
+            {
+              "fieldClass": "formField",
+              "fieldType": "textField",
+              "label": {
+                "fi": "Henkilötunnus",
+                "sv": "Personbeteckning",
+                "en": "Finnish personal identity code"
+              },
+              "id": "ssn",
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "params": {
+                "size": "S"
+              },
+              "rules": {
+                "toggle-ssn-based-fields": null
+              },
+              "validators": [
+                "ssn",
+                "required"
+              ]
+            },
+            {
+              "fieldClass": "wrapperElement",
+              "fieldType": "rowcontainer",
+              "id": "d580e146-3b5d-4c78-8893-bbce12365ae7",
+              "children": [
+                {
+                  "fieldClass": "formField",
+                  "fieldType": "textField",
+                  "label": {
+                    "fi": "Syntymäaika",
+                    "sv": "Födelsetid",
+                    "en": "Date of birth"
+                  },
+                  "id": "birth-date",
+                  "metadata": {
+                    "created-by": {
+                      "name": "system",
+                      "oid": "system",
+                      "date": "1970-01-01T00:00:00Z"
+                    },
+                    "modified-by": {
+                      "name": "system",
+                      "oid": "system",
+                      "date": "1970-01-01T00:00:00Z"
+                    }
+                  },
+                  "params": {
+                    "size": "S",
+                    "placeholder": {
+                      "fi": "pp.kk.vvvv",
+                      "sv": "dd.mm.åååå",
+                      "en": "dd.mm.yyyy"
+                    }
+                  },
+                  "rules": {
+                    "toggle-birthdate-based-fields": null
+                  },
+                  "validators": [
+                    "past-date",
+                    "required"
+                  ]
+                },
+                {
+                  "fieldClass": "formField",
+                  "fieldType": "dropdown",
+                  "id": "gender",
+                  "label": {
+                    "fi": "Sukupuoli",
+                    "sv": "Kön",
+                    "en": "Gender"
+                  },
+                  "params": {},
+                  "metadata": {
+                    "created-by": {
+                      "name": "system",
+                      "oid": "system",
+                      "date": "1970-01-01T00:00:00Z"
+                    },
+                    "modified-by": {
+                      "name": "system",
+                      "oid": "system",
+                      "date": "1970-01-01T00:00:00Z"
+                    }
+                  },
+                  "validators": [
+                    "required"
+                  ],
+                  "koodisto-source": {
+                    "uri": "sukupuoli",
+                    "version": 1
+                  }
+                }
+              ],
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "params": {}
+            }
+          ],
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {},
+          "child-validator": "birthdate-and-gender-component"
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Syntymäpaikka ja -maa",
+            "sv": "Födelseort och -land",
+            "en": "Place and country of birth"
+          },
+          "id": "birthplace",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "birthplace"
+          ]
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Passin numero",
+            "sv": "Passnummer",
+            "en": "Passport number"
+          },
+          "id": "passport-number",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": []
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Kansallinen ID-tunnus",
+            "sv": "Nationellt ID-signum",
+            "en": "National ID number"
+          },
+          "id": "national-id-number",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": []
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Sähköpostiosoite",
+            "sv": "E-postadress",
+            "en": "E-mail address"
+          },
+          "id": "email",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "required",
+            "email"
+          ]
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Matkapuhelin",
+            "sv": "Mobiltelefonnummer",
+            "en": "Mobile phone number"
+          },
+          "id": "phone",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "required",
+            "phone"
+          ]
+        },
+        {
+          "params": {},
+          "koodisto-source": {
+            "uri": "maatjavaltiot2",
+            "version": 2,
+            "default-option": "Suomi"
+          },
+          "rules": {
+            "change-country-of-residence": null
+          },
+          "validators": [
+            "required"
+          ],
+          "fieldClass": "formField",
+          "label": {
+            "fi": "Asuinmaa",
+            "sv": "Bosättningsland",
+            "en": "Country of residence"
+          },
+          "id": "country-of-residence",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "fieldType": "dropdown"
+        },
+        {
+          "fieldClass": "formField",
+          "fieldType": "textField",
+          "label": {
+            "fi": "Katuosoite",
+            "sv": "Näradress",
+            "en": "Address"
+          },
+          "id": "address",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "required"
+          ]
+        },
+        {
+          "fieldClass": "wrapperElement",
+          "fieldType": "rowcontainer",
+          "id": "2c500b2b-70ef-4aa6-8f38-0422a0004a3f",
+          "children": [
+            {
+              "fieldClass": "formField",
+              "fieldType": "textField",
+              "label": {
+                "fi": "Postinumero",
+                "sv": "Postnummer",
+                "en": "Postal code"
+              },
+              "id": "postal-code",
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "params": {
+                "size": "S"
+              },
+              "rules": {
+                "select-postal-office-based-on-postal-code": "postal-office"
+              },
+              "validators": [
+                "postal-code"
+              ]
+            },
+            {
+              "params": {
+                "size": "M"
+              },
+              "rules": {},
+              "validators": [
+                "postal-office"
+              ],
+              "fieldClass": "formField",
+              "label": {
+                "fi": "Postitoimipaikka",
+                "sv": "Postkontor",
+                "en": "Town/city"
+              },
+              "id": "postal-office",
+              "exclude-from-answers-if-hidden": true,
+              "metadata": {
+                "created-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                },
+                "modified-by": {
+                  "name": "system",
+                  "oid": "system",
+                  "date": "1970-01-01T00:00:00Z"
+                }
+              },
+              "fieldType": "textField"
+            }
+          ],
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "params": {}
+        },
+        {
+          "params": {},
+          "koodisto-source": {
+            "uri": "kunta",
+            "version": 1
+          },
+          "validators": [
+            "home-town"
+          ],
+          "fieldClass": "formField",
+          "label": {
+            "fi": "Kotikunta",
+            "sv": "Hemkommun",
+            "en": "Municipality of residence"
+          },
+          "id": "home-town",
+          "exclude-from-answers-if-hidden": true,
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "fieldType": "dropdown"
+        },
+        {
+          "params": {
+            "size": "M"
+          },
+          "rules": {},
+          "validators": [
+            "city"
+          ],
+          "fieldClass": "formField",
+          "label": {
+            "fi": "Kaupunki ja maa",
+            "sv": "Stad och land",
+            "en": "City and country"
+          },
+          "id": "city",
+          "exclude-from-answers-if-hidden": true,
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "fieldType": "textField"
+        },
+        {
+          "params": {},
+          "koodisto-source": {
+            "uri": "kieli",
+            "version": 1,
+            "default-option": "suomi"
+          },
+          "rules": {
+            "toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet": null
+          },
+          "validators": [
+            "required"
+          ],
+          "fieldClass": "formField",
+          "label": {
+            "fi": "Äidinkieli",
+            "sv": "Modersmål",
+            "en": "Native language"
+          },
+          "id": "language",
+          "metadata": {
+            "created-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            },
+            "modified-by": {
+              "name": "system",
+              "oid": "system",
+              "date": "1970-01-01T00:00:00Z"
+            }
+          },
+          "fieldType": "dropdown"
+        }
+      ],
+      "params": {},
+      "module": "person-info",
+      "fieldClass": "wrapperElement",
+      "label": {
+        "fi": "Henkilötiedot",
+        "sv": "Personuppgifter",
+        "en": "Personal information"
+      },
+      "id": "onr",
+      "label-amendment": {
+        "fi": "(Osio lisätään automaattisesti lomakkeelle)",
+        "sv": "Denna del införs automatiskt i blanketten",
+        "en": "The section will be automatically added to the application"
+      },
+      "metadata": {
+        "created-by": {
+          "name": "system",
+          "oid": "system",
+          "date": "1970-01-01T00:00:00Z"
+        },
+        "modified-by": {
+          "name": "system",
+          "oid": "system",
+          "date": "1970-01-01T00:00:00Z"
+        }
+      },
+      "fieldType": "fieldset"
+    },
+    {
+      "fieldClass": "formField",
+      "fieldType": "singleChoice",
+      "id": "6413b9b6-7e0b-4f85-a8c1-895e27827da8",
+      "label": {
+        "fi": "Testikysymys",
+        "sv": ""
+      },
+      "params": {},
+      "metadata": {
+        "created-by": {
+          "oid": "1.2.246.562.24.88548681369",
+          "name": "Jaakko Ketola",
+          "date": "2021-09-16T04:44:01Z"
+        },
+        "modified-by": {
+          "oid": "1.2.246.562.24.88548681369",
+          "name": "Jaakko Ketola",
+          "date": "2021-09-16T04:44:07Z"
+        }
+      },
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "fi": "Valinta1",
+            "sv": ""
+          }
+        },
+        {
+          "value": "1",
+          "label": {
+            "fi": "Valinta2",
+            "sv": ""
+          }
+        }
+      ]
+    }
+  ],
+  "languages": [
+    "fi"
+  ],
+  "locked": null,
+  "locked-by": null,
+  "properties": {
+    "payment": {
+      "type": "payment-type-tutu",
+      "processing-fee": "100.00",
+      "decision-fee": null
+    }
+  }
+}
