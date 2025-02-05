@@ -550,26 +550,25 @@
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session]
     (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service person-service session application-keys [:view-applications :edit-applications])
-      (let [applications                     (application-store/get-applications-by-keys application-keys)
-            application-reviews                      (->> applications
-                                                          (map :key)
-                                                          application-store/get-application-reviews-by-keys
-                                                          (reduce #(assoc %1 (:application-key %2) %2) {}))
-            application-review-notes                 (->> applications
-                                                          (map :key)
-                                                          application-store/get-application-review-notes-by-keys
-                                                          (group-by :application-key))
-            onr-persons                              (->> (map :person-oid applications)
-                                                          distinct
-                                                          (filter some?)
-                                                          (person-service/get-persons person-service))
-            applications-with-persons-and-tutkinnot  (map (fn [application]
-                                                            (assoc application
-                                                              :person (->> (:person-oid application)
-                                                                          (get onr-persons)
-                                                                          (person-service/parse-person-with-master-oid application))))
-                                                          applications)
-                                                          ;TODO lisää tutkinnot
+      (let [applications               (application-store/get-applications-by-keys application-keys)
+            application-reviews        (->> applications
+                                            (map :key)
+                                            application-store/get-application-reviews-by-keys
+                                            (reduce #(assoc %1 (:application-key %2) %2) {}))
+            application-review-notes   (->> applications
+                                            (map :key)
+                                            application-store/get-application-review-notes-by-keys
+                                            (group-by :application-key))
+            onr-persons                (->> (map :person-oid applications)
+                                            distinct
+                                            (filter some?)
+                                            (person-service/get-persons person-service))
+            applications-with-persons  (map (fn [application]
+                                              (assoc application
+                                                :person (->> (:person-oid application)
+                                                             (get onr-persons)
+                                                             (person-service/parse-person-with-master-oid application))))
+                                            applications)
             hakukohteiden-ehdolliset         (delay (hakukohteiden-ehdolliset valinta-tulos-service applications))
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                                (<= 200000 (count applications))
@@ -577,7 +576,7 @@
             lang                             (keyword (or (-> session :identity :lang) :fi))]
         (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
         (if-let [xls (ByteArrayInputStream. (excel/export-applications liiteri-cas-client
-                                                                       applications-with-persons-and-tutkinnot
+                                                                       applications-with-persons
                                                                        application-reviews
                                                                        application-review-notes
                                                                        selected-hakukohde

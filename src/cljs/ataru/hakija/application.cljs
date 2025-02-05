@@ -87,17 +87,6 @@
 
             [{:id         id
               :fieldClass "formField"
-              :fieldType  "textField"
-              :params     {:transparent true}}]
-            (let [required? (some #(contains? required-validators %)
-                                  (:validators field))]
-              [(keyword id) {:valid  (not required?)
-                             :value  [""]
-                             :values [{:value ""
-                                       :valid (not required?)}]}])
-
-            [{:id         id
-              :fieldClass "formField"
               :fieldType  (:or "textField" "textArea")
               :label      label}]
             (let [required? (some #(contains? required-validators %)
@@ -230,19 +219,25 @@
            (filter some?)
            first))))
 
+(defn- field-value-invalid? [key answer ui tutkinnot-required-and-missing?]
+  (or (and (some? answer)
+           (not (:valid answer))
+           (get-in ui [key :visible?] true))
+      (and tutkinnot-required-and-missing? (= ktm/koski-module-id (name key)))))
+
+(defn- get-label-for-invalid-field [key answer tutkinnot-required-and-missing?]
+  (if (and tutkinnot-required-and-missing? (= ktm/koski-module-id (name key)))
+    (:tutkinto-validation-error-msg koski-tutkinnot-texts)
+    (:label answer)))
+
 (defn answers->valid-status [all-answers ui flat-form-content]
   (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content ui all-answers)]
-    {:invalid-fields (cond-> (for [field flat-form-content
-                              :let  [key (keyword (:id field))
-                                  answer (get all-answers key)]
-                              :when (and (some? answer)
-                                         (not (:valid answer))
-                                         (get-in ui [key :visible?] true))]
-                               {:key   key
-                                :label (:label answer)})
-                             tutkinnot-required-and-missing?
-                             (conj {:key ktm/koski-module-id
-                                    :label (:tutkinto-validation-error-msg koski-tutkinnot-texts)}))}))
+    {:invalid-fields (for [field flat-form-content
+                            :let  [key (keyword (:id field))
+                                   answer (get all-answers key)]
+                            :when (field-value-invalid? key answer ui tutkinnot-required-and-missing?)]
+                             {:key   key
+                              :label (get-label-for-invalid-field key answer tutkinnot-required-and-missing?)})}))
 
 (defn- sanitize-attachment-value-by-state [value values]
   (when (not= :deleting (:status values))

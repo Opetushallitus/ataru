@@ -139,7 +139,19 @@
                                     (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
                                     (s/optional-key :followups)       [(s/if (comp some? :children)
                                                                          (s/recursive #'WrapperElement)
-                                                                         (s/recursive #'BasicElement))]}]})
+                                                                         (s/recursive #'BasicElement))]}]
+   (s/optional-key :property-options) [{:id                               s/Str
+                                        :label                            localized-schema/LocalizedStringOptional
+                                        (s/optional-key :default-value)   s/Bool
+                                        (s/optional-key :params)          params-schema/Params
+                                        (s/optional-key :description)     localized-schema/LocalizedStringOptional
+                                        (s/optional-key :forced)          s/Bool
+                                        (s/optional-key
+                                          :allow-user-followups)          s/Bool
+                                        (s/optional-key :followup-label)  localized-schema/LocalizedStringOptional
+                                        (s/optional-key :followups)       [(s/if (comp some? :children)
+                                                                           (s/recursive #'WrapperElement)
+                                                                           (s/recursive #'BasicElement))]}]})
 
 (s/defschema BasicElement
   (s/conditional
