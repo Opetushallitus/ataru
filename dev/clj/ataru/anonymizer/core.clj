@@ -5,8 +5,39 @@
             clojure.string
             clojure.walk
             [taoensso.timbre :as log])
-  (:import (java.time LocalDate)
+  (:import (java.text Normalizer Normalizer$Form)
+           (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
+
+(defn- deaccent
+  "Poistaa diakriittiset merkit merkkijonosta ja palauttaa muokatun
+  merkkijonon."
+  [utf8-string]
+  (clojure.string/replace (Normalizer/normalize utf8-string Normalizer$Form/NFD)
+                          #"\p{InCombiningDiacriticalMarks}+"
+                          ""))
+
+(defn- normalize
+  "Convert non-alphanumeric characters to underscore characters  (`_`) and
+  make letters lower case. If the resulting string has an underscore character
+  as a prefix or postfix, those underscore characters are removed."
+  [string]
+  (-> (deaccent string)
+      (clojure.string/replace #"\W+" "_")
+      (clojure.string/replace #"(^_|_$)" "")
+      (clojure.string/lower-case)))
+
+(defn- generate-email-address
+  [first-name last-name oid]
+  (str (normalize (str first-name " " last-name)) "-" (last (clojure.string/split oid #"\.")) "@testiopintopolku.fi"))
+
+(defn- generate-phone-number
+  [oid]
+  (str "+35848" (subs (last (clojure.string/split oid #"\.")) 0 8)))
+
+(defn- generate-address
+  [oid]
+  (str "Testitie " (last (clojure.string/split oid #"\."))))
 
 (defn- anonymize-attachment
   [answer attachment-key]
@@ -85,15 +116,20 @@
        :birth-date           (when (re-find #"^\d{4}-\d{2}-\d{2}" syntymaaika)
                                (subs syntymaaika 0 10))
        :gender               sukupuoli
-       :email                (get-contact-value person-contacts "YHTEYSTIETO_SAHKOPOSTI")
-       :phone                (get-contact-value person-contacts "YHTEYSTIETO_PUHELINNUMERO")
+       :email                (or (get-contact-value person-contacts "YHTEYSTIETO_SAHKOPOSTI")
+                                 (generate-email-address etunimet sukunimi henkilo_oid))
+       :phone                (or (get-contact-value person-contacts "YHTEYSTIETO_PUHELINNUMERO")
+                                 (generate-phone-number henkilo_oid))
        ; maata ei voida käyttää sellaisenaan, YHTEYSTIETO_MAA on tekstimuodossa mitä sattuu,
        ; ja :country-of-residence odottaa numeerista maakoodia
        ;:country-of-residence (get-contact-value person-contacts "YHTEYSTIETO_MAA")
-       :address              (get-contact-value person-contacts "YHTEYSTIETO_KATUOSOITE")
-       :postal-code          (get-contact-value person-contacts "YHTEYSTIETO_POSTINUMERO")
+       :address              (or (get-contact-value person-contacts "YHTEYSTIETO_KATUOSOITE")
+                                 (generate-address henkilo_oid))
+       :postal-code          (or (get-contact-value person-contacts "YHTEYSTIETO_POSTINUMERO")
+                                 "00100")
        :postal-office        (or (get-contact-value person-contacts "YHTEYSTIETO_KAUPUNKI")
-                                 (get-contact-value person-contacts "YHTEYSTIETO_KUNTA"))
+                                 (get-contact-value person-contacts "YHTEYSTIETO_KUNTA")
+                                 "HELSINKI")
        :home-town            kotikunta
        :language             aidinkieli})))
 
