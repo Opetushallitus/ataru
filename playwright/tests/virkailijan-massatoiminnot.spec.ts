@@ -169,10 +169,15 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     )
     const massUpdate = page.getByTestId('mass-update')
     await massUpdate.click()
-    await massUpdate.locator('.application-handling__review-state-row').click()
-    const states = massUpdate
+    const fromStates = page
+      .getByTestId('from-states')
       .locator('.application-handling__review-state-row')
-      .locator('span')
+    const toStates = page
+      .getByTestId('to-states')
+      .locator('.application-handling__review-state-row')
+
+    await fromStates.click()
+    await toStates.click()
 
     const expectedStates = [
       'Käsittelemättä',
@@ -188,7 +193,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     ]
 
     for (const state in expectedStates) {
-      await expect(states.getByText(state)).toBeVisible()
+      await expect(fromStates.getByText(state)).toBeVisible()
+      await expect(toStates.getByText(state)).toBeVisible()
     }
   })
 })
