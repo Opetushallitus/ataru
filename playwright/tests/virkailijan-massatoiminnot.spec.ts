@@ -102,10 +102,15 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     await showResultsBtn.click()
     const massUpdate = page.getByTestId('mass-update')
     await massUpdate.click()
-    await massUpdate.locator('.application-handling__review-state-row').click()
-    const states = massUpdate
+    const fromStates = page
+      .getByTestId('from-list')
       .locator('.application-handling__review-state-row')
-      .locator('span')
+    const toStates = page
+      .getByTestId('to-list')
+      .locator('.application-handling__review-state-row')
+
+    await fromStates.click()
+    await toStates.click()
 
     const expectedStates = [
       'Käsittelemättä',
@@ -119,27 +124,33 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     ]
 
     for (const state in expectedStates) {
-      await expect(states.getByText(state)).toBeVisible()
+      await expect(fromStates.getByText(state)).toBeVisible()
+      await expect(toStates.getByText(state)).toBeVisible()
     }
   })
 
   test('Massamuutos tilalistauksessa oikeat tilat astu-lomakkeelle', async () => {
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('astuLomake.json')
+    )
     await avaaHaunHakemuksetVirkailijanNakymassa(
       page,
       '1.2.246.562.29.00000000000000018308'
     )
     const showResultsBtn = page.getByTestId('show-results')
     await showResultsBtn.click()
-    await page.route(
-      '**/lomake-editori/api/forms/latest/*',
-      fixtureFromFile('astuLomake.json')
-    )
     const massUpdate = page.getByTestId('mass-update')
     await massUpdate.click()
-    await massUpdate.locator('.application-handling__review-state-row').click()
-    const states = massUpdate
+    const fromStates = page
+      .getByTestId('from-list')
       .locator('.application-handling__review-state-row')
-      .locator('span')
+    const toStates = page
+      .getByTestId('to-list')
+      .locator('.application-handling__review-state-row')
+
+    await fromStates.click()
+    await toStates.click()
 
     const expectedStates = [
       'Käsittelemättä',
@@ -152,28 +163,29 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     ]
 
     for (const state in expectedStates) {
-      await expect(states.getByText(state)).toBeVisible()
+      await expect(fromStates.getByText(state)).toBeVisible()
+      await expect(toStates.getByText(state)).toBeVisible()
     }
   })
 
   test('Massamuutos tilalistauksessa oikeat tilat tutu-lomakkeelle', async () => {
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('tutuLomake.json')
+    )
     await avaaHaunHakemuksetVirkailijanNakymassa(
       page,
       '1.2.246.562.29.00000000000000018308'
     )
     const showResultsBtn = page.getByTestId('show-results')
     await showResultsBtn.click()
-    await page.route(
-      '**/lomake-editori/api/forms/latest/*',
-      fixtureFromFile('tutuLomake.json')
-    )
     const massUpdate = page.getByTestId('mass-update')
     await massUpdate.click()
     const fromStates = page
-      .getByTestId('from-states')
+      .getByTestId('from-list')
       .locator('.application-handling__review-state-row')
     const toStates = page
-      .getByTestId('to-states')
+      .getByTestId('to-list')
       .locator('.application-handling__review-state-row')
 
     await fromStates.click()
