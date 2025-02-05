@@ -102,7 +102,6 @@
 (reg-event-fx
  :application/handle-mass-inactivate-applications
  (fn [_ _]
-   (println "handle-mass-inactivate-applications")
    {:dispatch-n [[:application/set-mass-inactivation-message ""]
                  [:application/reload-applications]]}))
 
