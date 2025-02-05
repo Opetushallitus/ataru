@@ -155,13 +155,14 @@
 (defn- followup-option-selected?
   [field parent-field fields answers]
   (let [parent-value (get-in answers [(keyword (:id parent-field)) :value])]
-    (cond-> (:options parent-field)
-            (ktm/is-tutkinto-configuration-component? parent-field)
-            (tutkinto-util/tutkinto-option-selected field fields answers)
-            (not (ktm/is-tutkinto-configuration-component? parent-field))
-            (->> (filter (visibility-checker parent-field parent-value))
-                 (some #(= (:option-value field) (:value %)))
-                 boolean))))
+    (cond
+      (ktm/is-tutkinto-configuration-component? parent-field)
+      (tutkinto-util/tutkinto-option-selected field fields answers)
+      :else
+      (->>  (:options parent-field)
+            (filter (visibility-checker parent-field parent-value))
+            (some #(= (:option-value field) (:value %)))
+            boolean))))
 
 (defn filter-visible-attachments
   [answers fields fields-by-id]

@@ -31,20 +31,27 @@
 
 (declare flatten-form-fields)
 
+(defn- find-option-fields [field]
+  (filter #(contains? field %) [:options :property-options]))
+
+(defn get-all-options [field]
+  (reduce (fn [options option-field] (concat options (option-field field))) [] (find-option-fields field)))
+
 (defn- flatten-form-field [field]
   (let [children  (->> (:children field)
                        (map #(assoc % :children-of (:id field)))
                        flatten-form-fields)
-        followups (->> (:options field)
+        followups (->> (get-all-options field)
                        (mapcat (fn [option]
                                  (map #(assoc %
                                               :followup-of (:id field)
                                               :option-value (:value option))
                                       (:followups option))))
                        flatten-form-fields)]
-    (cons (cond-> (dissoc field :children)
-                  (contains? field :options)
-                  (update :options (partial mapv #(dissoc % :followups))))
+    (cons (reduce
+            (fn [field' option] (update field' option (partial mapv #(dissoc % :followups))))
+            (dissoc field :children)
+            (find-option-fields field))
           (concat children followups))))
 
 (defn flatten-form-fields [fields]
@@ -69,21 +76,23 @@
         :else
         (recur (into (rest fields)
                      (concat (:children (first fields))
-                             (mapcat :followups (:options (first fields)))))
+                             (mapcat :followups (get-all-options (first fields)))))
                id)))
 
 (declare map-form-fields)
 
 (defn map-form-field [f field]
   (let [new-field (f field)]
-    (cond-> new-field
-            (contains? new-field :children)
-            (update :children (partial map-form-fields f))
-            (contains? new-field :options)
-            (update :options (partial mapv (fn [option]
-                                             (cond-> option
-                                                     (contains? option :followups)
-                                                     (update :followups (partial map-form-fields f)))))))))
+    (reduce
+      (fn [field' option-field]
+        (update field' option-field (partial mapv (fn [option]
+                                                    (cond-> option
+                                                            (contains? option :followups)
+                                                            (update :followups (partial map-form-fields f)))))))
+      (if (contains? new-field :children)
+        (update new-field :children (partial map-form-fields f))
+        new-field)
+      (find-option-fields new-field))))
 
 (defn map-form-fields [f fields]
   (mapv (partial map-form-field f) fields))
@@ -142,7 +151,7 @@
            (f init field)
            (concat fs
                    (:children field)
-                   (mapcat :followups (:options field))))))
+                   (mapcat :followups (get-all-options field))))))
 
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))

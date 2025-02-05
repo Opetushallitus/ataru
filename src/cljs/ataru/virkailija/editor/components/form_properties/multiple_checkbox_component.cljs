@@ -18,7 +18,7 @@
 
 (defn multiple-checkbox-component [content _ path]
   (let [category (keyword (:category content))
-        options (:options content)
+        options (:property-options content)
         show-followups (r/atom nil)
         virkailija-lang (subscribe [:editor/virkailija-lang])
         component-locked (subscribe [:editor/component-locked? path])

@@ -169,7 +169,7 @@
         :category tutkinto-property-component-category
         :label (:tutkintotaso-label koski-tutkinnot-texts)
         :description (:tutkintotaso-description koski-tutkinnot-texts)
-        :options (tutkinto-tasot metadata)
+        :property-options (tutkinto-tasot metadata)
         :mandatory true
         :validate-info (:tutkintotaso-validation-info koski-tutkinnot-texts))])
 

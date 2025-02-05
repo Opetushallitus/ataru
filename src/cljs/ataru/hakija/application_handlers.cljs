@@ -515,19 +515,21 @@
          update-followups (fn [option] (update option :followups (partial map set-question-group-id)))]
      (if (= "questionGroup" (:fieldClass field))
        (update field :children (partial map update-group-child))
-       (cond-> field
-         (contains? field :children)
-         (update :children (partial map set-question-group-id))
-         (contains? field :options)
-         (update :options (partial map update-followups))))))
+       (reduce
+         (fn [field' option-field] (update field' option-field (partial map update-followups)))
+         (if (contains? field :children)
+           (update field :children (partial map set-question-group-id))
+           field)
+         (autil/find-option-fields field)))))
   ([question-group-id field]
    (let [update-child (partial set-question-group-id question-group-id)
          update-followups (fn [option] (update option :followups (partial map update-child)))]
-     (cond-> (assoc-in field [:params :question-group-id] question-group-id)
-       (contains? field :children)
-       (update :children (partial map update-child))
-       (contains? field :options)
-       (update :options (partial map update-followups))))))
+     (reduce
+       (fn [field' option-field] (update field' option-field (partial map update-followups)))
+       (cond-> (assoc-in field [:params :question-group-id] question-group-id)
+               (contains? field :children)
+               (update :children (partial map update-child)))
+       (autil/find-option-fields field)))))
 
 (defn- set-adjacent-field-id
   [field-descriptor]

@@ -16,7 +16,7 @@
       (.indexOf checked-tutkinto-ids id)))))
 
 (defn get-question-group-of-level [conf-field-descriptor level]
-  (let [level-item (some #(when (= level (:id %)) %) (:options conf-field-descriptor))
+  (let [level-item (some #(when (= level (:id %)) %) (:property-options conf-field-descriptor))
         level-question-group-id (str level "-" ktm/question-group-of-level)]
     (some #(when (= level-question-group-id (:id %)) %) (:followups level-item))))
 
@@ -35,7 +35,7 @@
                 {:label-id :valmistumispvm-followup-label :koski-tutkinto-field :valmistumispvm :multi-lang? false}]))
 
 (defn itse-syotetty-tutkinnot-content [conf-field-descriptor]
-  (get-in (some #(when (= ktm/itse-syotetty-option-id (:id %)) %) (:options conf-field-descriptor)) [:followups] []))
+  (get-in (some #(when (= ktm/itse-syotetty-option-id (:id %)) %) (:property-options conf-field-descriptor)) [:followups] []))
 
 (defn find-itse-syotetty-content-beneath [field-descriptor]
   (let [tutkinto-conf-component (some #(when (ktm/is-tutkinto-configuration-component? %) %) (:children field-descriptor))]
@@ -97,9 +97,11 @@
         (recur (into (rest fields)
                      (concat (:children (first fields))
                              (:options (first fields))
+                             (:property-options (first fields))
                              (:followups (first fields))
                              ))
                id)))
+
 (defn find-itse-syotetty-tutkinto-content [form]
   (let [itse-syotetty-option (find-option-by-id (:content form) ktm/itse-syotetty-option-id)]
     (:followups itse-syotetty-option)))
@@ -127,7 +129,7 @@
                (util/find-descendant-ids-by-parent-id flat-form-content (:id %)))
             top-level-itse-syotetty-fields)))
 
-(defn tutkinto-option-selected [_ field flat-form-content answers]
+(defn tutkinto-option-selected [field flat-form-content answers]
   (if (is-question-group-of-koski-level field)
     (boolean (util/any-answered? answers (map :id (util/find-children-from-flat-content field flat-form-content))))
     (boolean (util/any-answered? answers (find-itse-syotetty-field-ids-beneath (:followup-of field) flat-form-content)))))
