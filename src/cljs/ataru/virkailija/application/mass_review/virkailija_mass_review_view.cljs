@@ -166,29 +166,31 @@
 
        [mass-update-application-tabs]
 
-       [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :from-state])]
+          [:div
+           {:data-test-id "from-list"}
+           [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :from-state])]
+           (if @from-list-open?
+            (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                   {:on-click #(swap! from-list-open? not)}]
+                  (opened-mass-review-state-list selected-from-review-state processing-states-with-counts @review-state-counts true))
+            (mass-review-state-selected-row
+              (fn []
+                (swap! from-list-open? not)
+                (reset! submit-button-state :submit))
+              (selected-or-default-mass-review-state-label selected-from-review-state processing-states-with-counts @review-state-counts)))]
 
-       (if @from-list-open?
-         (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                {:on-click #(swap! from-list-open? not)}]
-               (opened-mass-review-state-list selected-from-review-state processing-states-with-counts @review-state-counts true))
-         (mass-review-state-selected-row
-           (fn []
-             (swap! from-list-open? not)
-             (reset! submit-button-state :submit))
-           (selected-or-default-mass-review-state-label selected-from-review-state processing-states-with-counts @review-state-counts)))
-
-       [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :to-state])]
-
-       (if @to-list-open?
-         (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                {:on-click #(when (-> processing-states-with-counts (keys) (count) (pos?)) (swap! to-list-open? not))}]
-               (opened-mass-review-state-list selected-to-review-state processing-states-with-counts @review-state-counts false))
-         (mass-review-state-selected-row
-           (fn []
-             (swap! to-list-open? not)
-             (reset! submit-button-state :submit))
-           (selected-or-default-mass-review-state-label selected-to-review-state processing-states-with-counts @review-state-counts)))
+       [:div
+           {:data-test-id "to-list"}
+           [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :to-state])]
+           (if @to-list-open?
+             (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                    {:on-click #(when (-> processing-states-with-counts (keys) (count) (pos?)) (swap! to-list-open? not))}]
+                   (opened-mass-review-state-list selected-to-review-state processing-states-with-counts @review-state-counts false))
+             (mass-review-state-selected-row
+               (fn []
+                 (swap! to-list-open? not)
+                 (reset! submit-button-state :submit))
+               (selected-or-default-mass-review-state-label selected-to-review-state processing-states-with-counts @review-state-counts)))]
 
        (case @submit-button-state
          :submit
