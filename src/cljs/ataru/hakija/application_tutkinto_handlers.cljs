@@ -3,13 +3,12 @@
             [re-frame.core :refer [reg-event-db reg-event-fx]]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.hakija.application :refer [create-initial-answers]]
-            [ataru.hakija.application-handlers :refer [check-schema-interceptor set-empty-value-dispatch
+            [ataru.hakija.application-handlers :refer [set-empty-value-dispatch
                                                        set-repeatable-field-values set-repeatable-field-value]]
             [ataru.hakija.application.field-visibility :as field-visibility]))
 
 (reg-event-db
   :application/set-itse-syotetyt-visibility
-  [check-schema-interceptor]
   (fn set-itse-syotetyt-visibility [db [_ show?]]
     (let [itse-syotetty-content (tutkinto-util/find-itse-syotetty-tutkinto-content (:form db))
           itse-syotetyt-fields (map :id (util/flatten-form-fields itse-syotetty-content))
@@ -21,7 +20,6 @@
 
 (reg-event-fx
   :application/handle-fetch-tutkinnot
-  [check-schema-interceptor]
   (fn [{db :db} [_ {tutkinnot-response-body :body}]]
     {:db (-> db
                      (assoc-in [:application :koski-tutkinnot]
@@ -31,7 +29,6 @@
 
 (reg-event-fx
   :application/fetch-tutkinnot
-  [check-schema-interceptor]
   (fn [_ [_ requested-koski-levels]]
     {:http {:method         :get
             :url            (str "/hakemus/api/omat-tutkinnot?tutkinto-levels=" requested-koski-levels)
@@ -39,7 +36,6 @@
 
 (reg-event-db
   :application/add-tutkinto-selection
-  [check-schema-interceptor]
   (fn add-tutkinto-selection [db [_ field-descriptor question-group-idx selection-field-id tutkinto-id]]
     (-> db
         (set-repeatable-field-values selection-field-id question-group-idx nil tutkinto-id)
@@ -48,7 +44,6 @@
 
 (reg-event-fx
   :application/add-tutkinto-row
-  [check-schema-interceptor]
   (fn add-tutkinto-row [{db :db} [_ field-descriptor id-field-descriptor tutkinto-id]]
     (let [id                              (keyword (:id field-descriptor))
           id-field-id                     (keyword (:id id-field-descriptor))
@@ -66,7 +61,6 @@
 
 (reg-event-fx
   :application/remove-tutkinto-row
-  [check-schema-interceptor]
   (fn remove-tutkinto-row [{db :db} [_ field-descriptor answer-idx]]
     (let [id (keyword (:id field-descriptor))]
       (if (= 1 (get-in db [:application :ui id :count] 1))
@@ -75,7 +69,6 @@
 
 (reg-event-fx
   :application/clear-and-hide-itse-syotetyt
-  [check-schema-interceptor]
   (fn clear-and-hide-itse-syotetyt [{db :db}]
     (let [itse-syotetty-content (tutkinto-util/find-itse-syotetty-tutkinto-content (:form db))]
       {:db (assoc-in db [:application :ui :show-itse-syotetyt-tutkinnot?] false)
@@ -83,7 +76,6 @@
 
 (reg-event-db
   :application/reset-tutkinto-answers
-  [check-schema-interceptor]
   (fn [db [_ fields hide?]]
     (let [fields-and-descendants    (util/flatten-form-fields fields)
           question-groups           (map :id (filter #(= "questionGroup" (:fieldClass %)) fields-and-descendants))

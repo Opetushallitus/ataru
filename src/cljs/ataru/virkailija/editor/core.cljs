@@ -22,6 +22,9 @@
                         :question-group-element? (= (:fieldClass content)
                                                     "questionGroup")])
                      (:children content))
+          option-key (if (:property-options content)
+                       :property-options
+                       :options)
           followups (map-indexed
                      (fn [option-index option]
                        (map-indexed
@@ -29,9 +32,9 @@
                           ^{:key (str "followup-" option-index "-" followup-index)}
                           [soresu->reagent
                            followup
-                           (vec (concat path [:options option-index :followups followup-index]))])
+                           (vec (concat path [option-key option-index :followups followup-index]))])
                         (:followups option)))
-                     (:options content))]
+                     (option-key content))]
       (when-let [component
                  (match content
                    {:module _}
