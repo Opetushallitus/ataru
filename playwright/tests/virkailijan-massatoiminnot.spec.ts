@@ -98,6 +98,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       page,
       '1.2.246.562.29.00000000000000018308'
     )
+    const showResultsBtn = page.getByTestId('show-results')
+    await showResultsBtn.click()
     const massUpdate = page.getByTestId('mass-update')
     await massUpdate.click()
     await massUpdate.locator('.application-handling__review-state-row').click()
@@ -126,6 +128,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       page,
       '1.2.246.562.29.00000000000000018308'
     )
+    const showResultsBtn = page.getByTestId('show-results')
+    await showResultsBtn.click()
     await page.route(
       '**/lomake-editori/api/forms/latest/*',
       fixtureFromFile('astuLomake.json')
@@ -157,6 +161,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       page,
       '1.2.246.562.29.00000000000000018308'
     )
+    const showResultsBtn = page.getByTestId('show-results')
+    await showResultsBtn.click()
     await page.route(
       '**/lomake-editori/api/forms/latest/*',
       fixtureFromFile('tutuLomake.json')
