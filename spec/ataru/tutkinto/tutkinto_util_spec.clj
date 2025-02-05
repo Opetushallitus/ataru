@@ -34,14 +34,9 @@
                                          :values [[{:value "Supertutkinto", :valid true}]],
                                          :original-value [[""]], :errors []})
 
-(def itse-syotetty-nongrouped-answer {:valid true, :label {:fi "Miten menee??", :sv "", :en ""},
-                                      :value "ihan ok",
-                                      :values {:value "ihan ok", :valid true},
-                                      :original-value "", :errors []})
-
 (def flat-form-content (util/flatten-form-fields (:content form-fixtures/tutkinto-test-form)))
 (def flat-form-content-with-nongrouped-itsesyotetty
-  (util/flatten-form-fields (:content (assoc-in form-fixtures/tutkinto-test-form [:content 0 :children 1 :options 9 :followups]
+  (util/flatten-form-fields (:content (assoc-in form-fixtures/tutkinto-test-form [:content 0 :children 1 :property-options 9 :followups]
                               [{:params {},
                                 :validators [],
                                 :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
