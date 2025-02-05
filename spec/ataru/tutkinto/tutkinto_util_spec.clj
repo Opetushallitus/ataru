@@ -80,37 +80,31 @@
           (tags :unit)
           (it "should detect selected koski-tutkinto level"
               (should= true
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "kk-alemmat-question-group" flat-form-content)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "kk-alemmat-question-group" flat-form-content)
                                                                flat-form-content
                                                                answers)))
           (it "should ignore non-selected koski-tutkinto level"
               (should= false
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "perusopetus-question-group" flat-form-content)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "perusopetus-question-group" flat-form-content)
                                                                flat-form-content
                                                                answers)))
           (it "should detect itse syötetty as selected when values in question group"
               (should= true
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "itse-syotetty-question-group" flat-form-content)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "itse-syotetty-question-group" flat-form-content)
                                                                flat-form-content
                                                                (assoc answers :itse-syotetty-tutkinto-nimi itse-syotetty-tutkinto-nimi-answer))))
           (it "should detect itse syötetty as non-selected when no values in question group"
               (should= false
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "itse-syotetty-question-group" flat-form-content)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "itse-syotetty-question-group" flat-form-content)
                                                                flat-form-content
                                                                answers)))
           (it "should detect itse syötetty as selected when non grouped values"
               (should= true
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "itse-syotetty-question-2" flat-form-content-with-nongrouped-itsesyotetty)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "itse-syotetty-question-2" flat-form-content-with-nongrouped-itsesyotetty)
                                                                flat-form-content-with-nongrouped-itsesyotetty
                                                                (assoc answers :itse-syotetty-question-1 itse-syotetty-tutkinto-nimi-answer))))
           (it "should detect itse syötetty as non-selected when no values (neither non-grouped nor in question group)"
               (should= false
-                       (tutkinto-util/tutkinto-option-selected nil
-                                                               (find-from-flat-content "itse-syotetty-question-1" flat-form-content-with-nongrouped-itsesyotetty)
+                       (tutkinto-util/tutkinto-option-selected (find-from-flat-content "itse-syotetty-question-1" flat-form-content-with-nongrouped-itsesyotetty)
                                                                flat-form-content-with-nongrouped-itsesyotetty
                                                                answers))))
