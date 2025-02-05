@@ -536,6 +536,16 @@
       (remove-empty-arrays)
       (remove-arrays-with-quotations-only)))
 
+(defn save-koski-tutkinnot [form-id app-key form-by-id-cache oppija-session koski-service]
+  (when-let [tutkinnot (some->> (get-in oppija-session [:data :person-oid])
+                                (koski-service/get-tutkinnot-for-oppija koski-service true)
+                                :opiskeluoikeudet
+                                (parse-koski-tutkinnot (->> form-id
+                                                            (str)
+                                                            (cache/get-from form-by-id-cache)
+                                                            (tutkinto-util/koski-tutkinto-levels-in-form))))]
+    (application-store/add-new-koski-tutkinnot-for-application app-key tutkinnot)))
+
 (defn handle-application-submit
   [form-by-id-cache
    koodisto-cache
@@ -577,15 +587,13 @@
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
 
         (when (:save-koski-tutkinnot application-empty-answers-removed)
-          (when-let [tutkinto-levels (some->> (:form application-empty-answers-removed)
-                                              (str)
-                                              (cache/get-from form-by-id-cache)
-                                              (tutkinto-util/koski-tutkinto-levels-in-form))]
-            (when-let [tutkinnot (some->> (get-in oppija-session [:data :person-oid])
-                                          (koski-service/get-tutkinnot-for-oppija koski-service true)
-                                          :opiskeluoikeudet
-                                          (parse-koski-tutkinnot tutkinto-levels))]
-              (application-store/add-new-koski-tutkinnot-for-application app-key tutkinnot))))
+          (save-koski-tutkinnot
+            (:form application-empty-answers-removed)
+            app-key
+            form-by-id-cache
+            oppija-session
+            koski-service))
+
         (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service (req-fn)))
               url (when tutu-form? (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang))]
           (when invoice

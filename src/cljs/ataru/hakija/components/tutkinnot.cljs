@@ -1,7 +1,11 @@
 (ns ataru.hakija.components.tutkinnot
-  (:require [clojure.string :refer [join]]
+  (:require [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.util :as util]
+            [clojure.string :refer [join]]
             [re-frame.core :refer [dispatch subscribe]]
-            [ataru.translations.translation-util :as tu]))
+            [ataru.translations.translation-util :as tu]
+            [ataru.application-common.application-field-common :refer [scroll-to-anchor]]))
 
 (defn tutkinto-group [label field-descriptor idx can-remove lang child-components]
   [:div.application__tutkinto-group-container
@@ -65,3 +69,74 @@
           [:span.application__fixed-koski-tutkinto-item.inner-content.upper-row (set-checked-as-needed) upper-row]
           (when lower-row
             [:span lower-row])]]))))
+
+(defn- visible-tutkinto-field? [field-descriptor]
+  (and @(subscribe [:application/visible? (keyword (:id field-descriptor))])
+       (not (get-in field-descriptor [:params :transparent]))))
+
+(defn tutkinnot-wrapper-field
+  [field-descriptor _ _]
+  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
+        lang @(subscribe [:application/form-language])]
+    (fn [field-descriptor _ render-field]
+      (let [any-koski-tutkinnot? @(subscribe [:application/any-koski-tutkinnot?])
+            show-itse-syotetyt? @(subscribe [:application/show-itse-syotetyt-tutkinnot?])
+            itse-syotetty-content (tutkinto-util/find-itse-syotetty-content-beneath field-descriptor)
+            on-click-to-show-additional-itse-syotetyt (fn [event]
+                                                        (.preventDefault event)
+                                                        (dispatch [:application/set-itse-syotetyt-visibility true]))
+            on-click-to-hide-additional-itse-syotetyt (fn [event]
+                                                        (.preventDefault event)
+                                                        (dispatch [:application/clear-and-hide-itse-syotetyt]))]
+        [:div.application__wrapper-element
+         [:div.application__wrapper-heading
+          [:h2 label]
+          [scroll-to-anchor field-descriptor]]
+         (into [:div.application__wrapper-contents]
+               (for [child (:children field-descriptor)
+                     :when @(subscribe [:application/visible? (keyword (:id child))])]
+                 (if (ktm/is-tutkinto-configuration-component? child)
+                   [:div
+                    [:div
+                     (into [:div]
+                           (for [koski-item @(subscribe [:application/koski-tutkinnot])]
+                             (let [id (:id koski-item)
+                                   level (:level koski-item)
+                                   question-group-of-level (tutkinto-util/get-question-group-of-level child level)
+                                   answer-idx (tutkinto-util/get-tutkinto-idx level id)
+                                   checked? (some? answer-idx)
+                                   on-toggle (fn [event]
+                                               (.preventDefault event)
+                                               (if answer-idx
+                                                 (dispatch [:application/remove-tutkinto-row
+                                                            question-group-of-level
+                                                            answer-idx])
+                                                 (dispatch [:application/add-tutkinto-row
+                                                            question-group-of-level
+                                                            (tutkinto-util/id-field-of-level question-group-of-level level)
+                                                            (:id koski-item)])))]
+                               ^{:key id}
+                               [:div.application__tutkinto-group-container
+                                [:div
+                                 {:on-click on-toggle}
+                                 [fixed-tutkinto-item koski-item id checked?]]
+                                (when checked?
+                                  (let [additional-followups (filter visible-tutkinto-field?
+                                                                     (:children question-group-of-level))]
+                                    (when (seq additional-followups)
+                                      [:div.application__form-multi-choice-followups-outer-container
+                                       {:tab-index 0}
+                                       [:div.application__form-multi-choice-followups-indicator]
+                                       (into [:div.application__tutkinto-entity-container]
+                                             (for [followup additional-followups]
+                                               (with-meta [render-field followup answer-idx]
+                                                          {:key (str (:id followup) "-" answer-idx)})))])))])))
+                     (when any-koski-tutkinnot?
+                       [:div
+                        (if show-itse-syotetyt?
+                          [hide-additional-tutkinnot-button on-click-to-hide-additional-itse-syotetyt lang]
+                          [add-button on-click-to-show-additional-itse-syotetyt lang])])]
+                    (for [followup itse-syotetty-content]
+                      (with-meta [render-field followup nil] {:key (:id followup)}))]
+                   (with-meta [render-field child nil] {:key (:id child)}))))]))))
+
