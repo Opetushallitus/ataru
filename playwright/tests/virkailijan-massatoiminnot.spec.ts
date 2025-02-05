@@ -123,7 +123,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       'Täydennyspyyntö',
     ]
 
-    for (const state in expectedStates) {
+    for (const state of expectedStates) {
       await expect(fromStates.getByText(state)).toBeVisible()
       await expect(toStates.getByText(state)).toBeVisible()
     }
@@ -162,7 +162,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       'Päätös maksettu',
     ]
 
-    for (const state in expectedStates) {
+    for (const state of expectedStates) {
       await expect(fromStates.getByText(state)).toBeVisible()
       await expect(toStates.getByText(state)).toBeVisible()
     }
@@ -204,7 +204,7 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       'Laskutuksessa',
     ]
 
-    for (const state in expectedStates) {
+    for (const state of expectedStates) {
       await expect(fromStates.getByText(state)).toBeVisible()
       await expect(toStates.getByText(state)).toBeVisible()
     }
