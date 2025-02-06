@@ -98,10 +98,9 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       page,
       '1.2.246.562.29.00000000000000018308'
     )
-    const showResultsBtn = page.getByTestId('show-results')
-    await showResultsBtn.click()
-    const massUpdate = page.getByTestId('mass-update')
-    await massUpdate.click()
+    await page.getByTestId('show-results').click()
+    await page.getByTestId('mass-update').click()
+
     const fromStates = page
       .getByTestId('from-list')
       .locator('.application-handling__review-state-row')
@@ -129,5 +128,90 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
     }
     await expect(fromStates.getByText('Päätös maksettu')).toBeHidden()
     await expect(fromStates.getByText('Laskutuksessa')).toBeHidden()
+  })
+
+  test('Massamuutos tilalistauksessa oikeat tilat astu-lomakkeelle', async () => {
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('astuLomake.json')
+    )
+    await page.route(
+      '**/lomake-editori/api/applications/list',
+      fixtureFromFile('astuHakemukset.json')
+    )
+    await page.goto(
+      '/lomake-editori/applications/12462c02-b1eb-4a6e-8fad-a93ba8a1cb41?ensisijaisesti=false'
+    )
+    await page.getByTestId('show-results').click()
+    await page.getByTestId('mass-update').click()
+
+    const fromStates = page
+      .getByTestId('from-list')
+      .locator('.application-handling__review-state-row')
+    const toStates = page
+      .getByTestId('to-list')
+      .locator('.application-handling__review-state-row')
+
+    await fromStates.click()
+    await toStates.click()
+
+    const expectedStates = [
+      'Käsittelemättä',
+      'Käsittelyssä',
+      'Käsitelty',
+      'Täydennyspyyntö',
+      'Päätösmaksu avoin',
+      'Päätös maksamatta',
+      'Päätös maksettu',
+    ]
+
+    for (const state of expectedStates) {
+      await expect(fromStates.getByText(state)).toBeVisible()
+      await expect(toStates.getByText(state)).toBeVisible()
+    }
+  })
+
+  test('Massamuutos tilalistauksessa oikeat tilat tutu-lomakkeelle', async () => {
+    await page.route(
+      '**/lomake-editori/api/forms/latest/*',
+      fixtureFromFile('tutuLomake.json')
+    )
+    await page.route(
+      '**/lomake-editori/api/applications/list',
+      fixtureFromFile('tutuHakemukset.json')
+    )
+    await page.goto(
+      '/lomake-editori/applications/ac234541-c5f0-49e7-8096-08e2b8e88a8a?ensisijaisesti=false'
+    )
+    await page.getByTestId('show-results').click()
+    await page.getByTestId('mass-update').click()
+
+    const fromStates = page
+      .getByTestId('from-list')
+      .locator('.application-handling__review-state-row')
+    const toStates = page
+      .getByTestId('to-list')
+      .locator('.application-handling__review-state-row')
+
+    await fromStates.click()
+    await toStates.click()
+
+    const expectedStates = [
+      'Käsittelemättä',
+      'Käsittelyssä',
+      'Käsitelty',
+      'Täydennyspyyntö',
+      'Käsittely maksamatta',
+      'Käsittely maksettu',
+      'Päätösmaksu avoin',
+      'Päätös maksamatta',
+      'Päätös maksettu',
+      'Laskutuksessa',
+    ]
+
+    for (const state of expectedStates) {
+      await expect(fromStates.getByText(state)).toBeVisible()
+      await expect(toStates.getByText(state)).toBeVisible()
+    }
   })
 })
