@@ -131,6 +131,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
   })
 
   test('Massamuutos tilalistauksessa oikeat tilat astu-lomakkeelle', async () => {
+    await page.unroute('**/lomake-editori/api/forms/latest/*')
+    await page.unroute('**/lomake-editori/api/applications/list')
     await page.route(
       '**/lomake-editori/api/forms/latest/*',
       fixtureFromFile('astuLomake.json')
@@ -172,6 +174,8 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
   })
 
   test('Massamuutos tilalistauksessa oikeat tilat tutu-lomakkeelle', async () => {
+    await page.unroute('**/lomake-editori/api/forms/latest/*')
+    await page.unroute('**/lomake-editori/api/applications/list')
     await page.route(
       '**/lomake-editori/api/forms/latest/*',
       fixtureFromFile('tutuLomake.json')
