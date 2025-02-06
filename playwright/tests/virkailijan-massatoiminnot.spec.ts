@@ -164,7 +164,6 @@ test.describe('Hakemusten massatoiminnot ei-reskisterinpitäjälle hakemusten k�
       'Täydennyspyyntö',
       'Päätösmaksu avoin',
       'Päätös maksamatta',
-      'Päätös maksettu',
     ]
 
     for (const state of expectedStates) {
