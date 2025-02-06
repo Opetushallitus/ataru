@@ -31,7 +31,7 @@
 
 (declare flatten-form-fields)
 
-(defn- find-option-fields [field]
+(defn find-option-fields [field]
   (filter #(contains? field %) [:options :property-options]))
 
 (defn get-all-options [field]
