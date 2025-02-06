@@ -247,7 +247,7 @@
    :locked-by  nil
    :content    [(component/hakukohteet)
                 (assoc-in (ktm/koski-tutkinnot-module metadata)
-                          [:children 1 :options 9 :followups 0 :children 4 :id]
+                          [:children 1 :property-options 9 :followups 0 :children 4 :id]
                           "itse-syotetty-tutkintotodistus")
                 (assoc (component/single-choice-button metadata)
                        :id "choice_1"
@@ -360,13 +360,13 @@
 (def tutkinto-test-form
   (merge minimal-form
          (-> {:content [(ktm/koski-tutkinnot-module metadata)]}
-             (assoc-in [:content 0 :children 1 :options 1 :followups 0 :children 1]
+             (assoc-in [:content 0 :children 1 :property-options 1 :followups 0 :children 1]
                        {:params {:question-group-id :lukiokoulutus-question-group},
                         :validators ["required"],
                         :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
                         :label {:fi "Miten menee??", :sv ""},
                         :id "additional-field-for-lukiokoulutus"})
-             (assoc-in [:content 0 :children 1 :options 6 :followups 0 :children 1]
+             (assoc-in [:content 0 :children 1 :property-options 6 :followups 0 :children 1]
                        {:params {:question-group-id :lukiokoulutus-question-group},
                         :validators ["required"],
                         :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
