@@ -41,7 +41,7 @@
 
 (def flat-form-content (util/flatten-form-fields (:content form-fixtures/tutkinto-test-form)))
 (def flat-form-content-with-nongrouped-itsesyotetty
-  (util/flatten-form-fields (:content (assoc-in form-fixtures/tutkinto-test-form [:content 0 :children 1 :options 9 :followups]
+  (util/flatten-form-fields (:content (assoc-in form-fixtures/tutkinto-test-form [:content 0 :children 1 :property-options 9 :followups]
                               [{:params {},
                                 :validators [],
                                 :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
