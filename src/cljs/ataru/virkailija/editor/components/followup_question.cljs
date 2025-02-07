@@ -18,20 +18,22 @@
                                   :modified-by metadata})]
       (update-in db (util/flatten-path db option-path :followups) (fnil conj []) component))))
 
-(defn followup-question-overlay [option-index followups path show-followups]
+(defn followup-question-overlay
+  ([option-index followups path show-followups]
+   (followup-question-overlay option-index followups path (conj path :options option-index) show-followups))
+  ([option-index followups path option-path show-followups]
   (when (get @show-followups option-index)
-    (let [option-path (conj path :options option-index)]
-      [:div.editor-form__followup-question-overlay-parent
-       [:div.editor-form__followup-question-overlay-outer
-        [:div.editor-form__followup-indicator]
-        [:div.editor-form__followup-indicator-inlay]
-        [:div.editor-form__followup-question-overlay
-         followups
-         [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
-         (when-not @(subscribe [:editor/component-locked? path])
-           [toolbar/followup-toolbar option-path
-            (fn [generate-fn]
-              (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]])))
+    [:div.editor-form__followup-question-overlay-parent
+     [:div.editor-form__followup-question-overlay-outer
+      [:div.editor-form__followup-indicator]
+      [:div.editor-form__followup-indicator-inlay]
+      [:div.editor-form__followup-question-overlay
+       followups
+       [dnd/drag-n-drop-spacer (conj option-path :followups (count followups))]
+       (when-not @(subscribe [:editor/component-locked? path])
+         [toolbar/followup-toolbar option-path
+          (fn [generate-fn]
+            (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]])))
 
 (defn followup-question-overlay-readonly [option-index followups show-followups]
   (when (get @show-followups option-index)

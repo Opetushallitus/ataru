@@ -133,3 +133,11 @@
   (if (is-question-group-of-koski-level field)
     (boolean (util/any-answered? answers (map :id (util/find-children-from-flat-content field flat-form-content))))
     (boolean (util/any-answered? answers (find-itse-syotetty-field-ids-beneath (:followup-of field) flat-form-content)))))
+
+(defn find-tutkinnot-root-element [form]
+  (let [flat-form-content (util/flatten-form-fields (:content form))]
+    (loop [root-candidate (some #(when (= ktm/koski-module-id (:id %)) %) flat-form-content)]
+      (let [parent-id (or (:children-of root-candidate) (:followup-of root-candidate))]
+        (if parent-id
+          (recur (some #(when (= parent-id (:id %)) %) flat-form-content))
+          (util/find-field (:content form) (:id root-candidate)))))))
