@@ -95,7 +95,8 @@
                                          [followup-question/followup-question
                                           idx followups-of-item show-followups followup-label (followup-count item)]]
                                       (if (get item :allow-user-followups true)
-                                        [followup-question/followup-question-overlay idx followups-of-item path show-followups]
-                                        [followup-question/followup-question-overlay-readonly idx followups-of-item show-followups]
-                                        )]))])
+                                        [followup-question/followup-question-overlay
+                                         idx followups-of-item path (conj path :property-options idx) show-followups]
+                                        [followup-question/followup-question-overlay-readonly
+                                         idx followups-of-item show-followups])]))])
                                 options))]]]]))))
