@@ -13,10 +13,11 @@
     (let [itse-syotetty-content (tutkinto-util/find-itse-syotetty-tutkinto-content (:form db))
           itse-syotetyt-fields (map :id (util/flatten-form-fields itse-syotetty-content))
           do-show? (boolean
-                     (or show? (util/any-answered? (get-in db [:application :answers]) itse-syotetyt-fields)))]
-      (reduce (fn [db field] (field-visibility/set-field-visibility db field do-show?))
+                     (or show? (util/any-answered? (get-in db [:application :answers]) itse-syotetyt-fields)))
+          tutkinto-root-element (tutkinto-util/find-tutkinnot-root-element (:form db))]
+      (reduce (fn [db field] (field-visibility/set-field-visibility db field))
               (assoc-in db [:application :ui :show-itse-syotetyt-tutkinnot?] do-show?)
-              itse-syotetty-content))))
+              [tutkinto-root-element]))))
 
 (reg-event-fx
   :application/handle-fetch-tutkinnot
