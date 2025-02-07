@@ -66,9 +66,10 @@
         haku            (tarjonta/get-haku tarjonta-service (:haku application))
         haku-name       (get-in haku [:name lang] (get-in haku [:name :fi]))
         due-date-str    (due-date-to-printable-datetime lang (:due-date payment))
-        mail-content    (utils/payment-email lang email-address {:payment-url   payment-url
-                                                                 :due-date-time due-date-str
-                                                                 :haku-name     haku-name}
+        mail-content    (utils/payment-email lang email-address {:payment-url     payment-url
+                                                                 :due-date-time   due-date-str
+                                                                 :haku-name       haku-name
+                                                                 :application-key (:key application)}
                                              (params-fn lang due-date-str))]
     (log/info "Generate kk application payment " type-str " for email" email-address
               "URL" payment-url "application-key" application-key)
