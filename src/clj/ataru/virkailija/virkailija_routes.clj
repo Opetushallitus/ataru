@@ -1800,7 +1800,7 @@
                           :window-end   (or modifiedBefore (.format
                                                              (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                                              (Date.)))
-                          :execution-uuidid (str (UUID/randomUUID))}]
+                          :execution-uuid (str (UUID/randomUUID))}]
               (log/info "Siirtotiedosto params: " params)
               (let [combined-result (siirtotiedosto-service/siirtotiedosto-everything siirtotiedosto-service params)]
                 (log/info "Siirtotiedosto result" combined-result)
