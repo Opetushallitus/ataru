@@ -6,7 +6,9 @@
             [ataru.koodisto.koodisto :as koodisto]
             [clojure.string :as str]
             [clojure.set :as set]
-            [ataru.application.application-answer-search-tools :as answer-tools]))
+            [ataru.application.application-answer-search-tools :as answer-tools]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]))
 
 (defn- nationalities-value-contains-finland?
   [value]
@@ -115,6 +117,23 @@
   (or (belongs-to-correct-hakukohde? field hakukohteet)
       (belongs-to-correct-hakukohderyhma? field hakukohderyhmat)))
 
+(defn- find-answerable-itse-syotetty-field-ids [fields]
+  (let [allowed-fields (filter #(not (or (get-in % [:params :hidden] false)
+                                         (get-in % [:hidden] false)
+                                         (get-in % [:exclude-from-answers])
+                                         (= "infoElement" (:fieldClass %))
+                                         (= "modalInfoElement" (:fieldClass %)))) fields)]
+    (mapcat (fn [field]
+              (if (= "questionGroup" (:fieldClass field))
+                (find-answerable-itse-syotetty-field-ids (:children field))
+                [(keyword (:id field))])) allowed-fields)))
+
+(defn- empty-results-for-tutkinto-fields [koski-levels itse-syotetty-content]
+  (let [koski-tutkinto-id-fields (map #(keyword (str % "-" ktm/tutkinto-id-field-postfix)) koski-levels)]
+  (into {} (map (fn [field] [field nil])
+                (concat koski-tutkinto-id-fields
+                        (find-answerable-itse-syotetty-field-ids itse-syotetty-content))))))
+
 (defn build-results
   [koodisto-cache has-applied answers-by-key form fields flattened-form-fields hakukohderyhmat virkailija?]
   (let [hakukohteet (-> answers-by-key :hakukohteet :value set)]
@@ -140,6 +159,38 @@
                                               answer)
                                         [id answer]))))
                             (into results)))
+
+                (and (= "formPropertyField" (:fieldClass field))
+                     (= ktm/tutkinto-property-component-category (:category field)))
+                (let [mandatory? (:mandatory field)
+                      allowed-tutkinto-levels (set (tutkinto-util/koski-tutkinto-levels-in-form form))
+                      answered-koski-levels (set (filter #(get answers-by-key (keyword (str % "-" ktm/tutkinto-id-field-postfix))) ktm/koski-tutkinto-tasot))
+                      non-allowed-answered-koski-levels (set/difference answered-koski-levels allowed-tutkinto-levels)
+                      allowed-answered-koski-levels (set/difference answered-koski-levels non-allowed-answered-koski-levels)
+                      answered-koski-options (filter #(contains? allowed-answered-koski-levels (:id %)) (:property-options field))
+                      non-allowed-koski-level-results (->> non-allowed-answered-koski-levels
+                                                           (map (fn [level]
+                                                                  (let [id (keyword (str level "-" ktm/tutkinto-id-field-postfix))]
+                                                                    [id (get answers-by-key id)])))
+                                                           (into {}))
+                      itse-syotetty-content (tutkinto-util/itse-syotetty-tutkinnot-content field)
+                      itse-syotetyt-entered (some #(get answers-by-key (keyword %))
+                                                  (map :id (util/flatten-form-fields itse-syotetty-content)))]
+                  (cond (and mandatory? (empty? allowed-answered-koski-levels) (not itse-syotetyt-entered))
+                        (recur (rest fields)
+                               (merge results
+                                      (empty-results-for-tutkinto-fields allowed-tutkinto-levels itse-syotetty-content)
+                                      non-allowed-koski-level-results))
+                        (or (seq allowed-answered-koski-levels) itse-syotetyt-entered)
+                        (recur (cond-> (rest fields)
+                                       (seq allowed-answered-koski-levels)
+                                       (concat (map (fn [f] [idx false f]) (mapcat :followups answered-koski-options)))
+                                       itse-syotetyt-entered
+                                       (concat (map (fn [f] [idx false f]) itse-syotetty-content)))
+                               (merge results non-allowed-koski-level-results))
+                        :else
+                        (recur (rest fields)
+                               (merge results non-allowed-koski-level-results))))
 
                 (or (:exclude-from-answers field)
                     (= "infoElement" (:fieldClass field))

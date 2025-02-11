@@ -367,7 +367,7 @@
                         :label {:fi "Miten menee??", :sv ""},
                         :id "additional-field-for-lukiokoulutus"})
              (assoc-in [:content 0 :children 1 :property-options 6 :followups 0 :children 1]
-                       {:params {:question-group-id :lukiokoulutus-question-group},
+                       {:params {:question-group-id :kk-alemmat-question-group},
                         :validators ["required"],
                         :fieldClass "formField", :fieldType "textField", :cannot-edit false, :cannot-view false,
                         :label {:fi "Miten menee??", :sv ""},
