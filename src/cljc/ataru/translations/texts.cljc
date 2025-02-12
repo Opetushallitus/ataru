@@ -3062,13 +3062,13 @@
                                                    :en "Specialist vocational qualifications"}
    :alemmat-kk-tutkinnot-label                    {:fi "Alemmat korkeakoulututkinnot"
                                                    :sv "Lägre högskoleexamina"
-                                                   :en ""}
+                                                   :en "Batchelor's degrees"}
    :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
                                                    :sv "Högre högskoleexamina"
-                                                   :en ""}
+                                                   :en "Master's degrees"}
    :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
                                                    :sv "Doktorsexamina"
-                                                   :en "Doctoral degree"}
+                                                   :en "Doctoral degrees"}
    :itse-syotetty-tutkinnot-label                 {:fi "Tutkinto, joka ei ole Koski-palvelussa"
                                                    :sv "Examen som inte finns i Koski-tjänsten"
                                                    :en "Degree that is not available in the Koski service"}
