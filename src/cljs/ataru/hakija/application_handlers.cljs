@@ -1705,7 +1705,7 @@
                                                (set-repeatable-application-field-top-level-valid id true))))
                                        count-decremented-db
                                        descendants)
-          attachment-descendants (filter #(= "attachment" (:fieldType %)) (:children field-descriptor))]
+          attachment-descendants (filter #(= "attachment" (:fieldType %)) descendants)]
       {:db         (field-visibility/set-field-visibility
                      descendants-modified
                      field-descriptor)
