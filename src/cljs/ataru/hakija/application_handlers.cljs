@@ -1693,7 +1693,7 @@
           descendants          (->> (:children field-descriptor)
                                     autil/flatten-form-fields
                                     (filter autil/answerable?))
-          count-decremented    (-> db
+          count-decremented-db    (-> db
                                    (update-in [:application :ui id :count] dec)
                                    (update-in [:application :ui id] dissoc :mouse-over-remove-button))
           descendants-modified (reduce (fn [db child]
@@ -1703,14 +1703,20 @@
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
                                                (set-repeatable-field-value id)
                                                (set-repeatable-application-field-top-level-valid id true))))
-                                       count-decremented
-                                       descendants)]
+                                       count-decremented-db
+                                       descendants)
+          attachment-descendants (filter #(= "attachment" (:fieldType %)) (:children field-descriptor))]
       {:db         (field-visibility/set-field-visibility
-                    descendants-modified
-                    field-descriptor)
-       :dispatch-n  (conj (mapv (fn [descendant]
-                           [:application/run-rules (:rules descendant)])
-                         descendants) [:application/handle-section-visibility-conditions])})))
+                     descendants-modified
+                     field-descriptor)
+       :dispatch-n  (conj
+                      (into (mapv (fn [descendant]
+                                    [:application/run-rules (:rules descendant)])
+                                  descendants)
+                            (mapv (fn [child-descriptor]
+                                    [:application/handle-attachment-delete child-descriptor idx nil nil nil])
+                                  attachment-descendants))
+                      [:application/handle-section-visibility-conditions])})))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
