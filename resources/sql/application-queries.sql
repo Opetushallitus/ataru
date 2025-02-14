@@ -1048,9 +1048,11 @@ SELECT a.key AS key,
        (SELECT content
         FROM answers_as_content
         WHERE application_id = a.id) AS content
-FROM latest_applications AS a
+FROM applications AS a
+                     LEFT JOIN applications AS newer_a ON a.key = newer_a.key AND newer_a.id > a.id
 JOIN forms AS f ON f.id = a.form_id
 WHERE a.person_oid IN (:person_oids)
+  AND newer_a.id IS NULL
 ORDER BY a.created_time DESC;
 
 --name: yesql-add-review-note<!
