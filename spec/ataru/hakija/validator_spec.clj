@@ -7,7 +7,8 @@
             [speclj.core :refer [describe tags it should should= should-not]]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
-            [ataru.fixtures.person-info-form :refer [form]]))
+            [ataru.fixtures.person-info-form :refer [form]]
+            [ataru.fixtures.form :refer [tutkinto-test-form]]))
 
 (def f form)
 (def a answer)
@@ -180,6 +181,18 @@
                       (get-many-from [_ _])
                       (remove-from [_ _])
                       (clear-all [_])))
+
+(def tutkinto-form (-> tutkinto-test-form
+                       (assoc-in [:properties :tutkinto-properties :selected-option-ids]
+                                 ["lukiokoulutus", "kk-alemmat", "kk-ylemmat", "itse-syotetty"])
+                       (assoc-in  [:content 0 :children 1 :property-options 9 :followups 1]
+                                  {:validators ["required"],
+                                   :fieldClass "formField", :fieldType "textField",
+                                   :cannot-edit false, :cannot-view false,
+                                   :label {:fi "Millai muuten??", :sv ""},
+                                   :id "additional-itse-syotetty-field"})))
+
+(def flattened-tutkinto-form (util/flatten-form-fields (:content tutkinto-form)))
 
 (describe "application validation"
   (tags :unit :backend-validation)
@@ -565,4 +578,82 @@
       (should= '() (validator/validate-tunnistautunut-oppija-fields answers-by-key
                                                                     (-> base-oppija-session
                                                                         (assoc-in [:data :fields :first-name] (get-in answers-by-key [:first-name :value]))
-                                                                        (assoc-in [:data :fields :ssn] (get-in answers-by-key [:ssn :value])))))))
+                                                                        (assoc-in [:data :fields :ssn] (get-in answers-by-key [:ssn :value]))))))
+
+  (it "passes validation when valid koski tutkinnot"
+      (should= {}
+               (validator/build-results koodisto-cache
+                                        has-never-applied
+                                        (-> answers-by-key
+                                            (assoc-in [:kk-ylemmat-tutkinto-id :value]
+                                                      [["1.2.246.562.10.78305677532_623404_2010-09-20"]])
+                                            (assoc-in [:itse-syotetty-tutkinto-nimi :value] [["tutkinto"]])
+                                            (assoc-in [:itse-syotetty-koulutusohjelma :value] [["ohjelma"]])
+                                            (assoc-in [:itse-syotetty-oppilaitos :value] [["laitos"]])
+                                            (assoc-in [:itse-syotetty-valmistumispvm :value] [["11.02.2025"]])
+                                            (assoc-in
+                                              [(keyword
+                                                 (get-in tutkinto-form
+                                                         [:content 0 :children 1 :property-options 9 :followups 0 :children 4 :id]))
+                                               :value]
+                                              [["something.pdf"]])
+                                            (assoc-in [:additional-itse-syotetty-field :value] "joo"))
+                                        tutkinto-form
+                                        (:content tutkinto-form)
+                                        flattened-tutkinto-form
+                                        #{}
+                                        false)))
+
+  (it "passes validation when not mandatory"
+      (let [form (assoc-in tutkinto-form [:content 0 :children 1 :mandatory] false)]
+        (should= {}
+               (validator/build-results koodisto-cache
+                                        has-never-applied
+                                        answers-by-key
+                                        form
+                                        (:content form)
+                                        (util/flatten-form-fields (:content form))
+                                        #{}
+                                        false))))
+
+  (it "fails validation when mandatory and no values given"
+      (let [tutkintotodistus-id (keyword (get-in tutkinto-form
+                                                 [:content 0 :children 1 :property-options 9 :followups 0 :children 4 :id]))]
+        (should= {:lukiokoulutus-tutkinto-id nil, :kk-ylemmat-tutkinto-id nil, :kk-alemmat-tutkinto-id nil,
+                  :itse-syotetty-tutkinto-nimi nil, :itse-syotetty-oppilaitos nil, :itse-syotetty-valmistumispvm nil,
+                  :itse-syotetty-koulutusohjelma nil, tutkintotodistus-id nil, :additional-itse-syotetty-field nil}
+                 (validator/build-results koodisto-cache
+                                          has-never-applied
+                                          answers-by-key
+                                          tutkinto-form
+                                          (:content tutkinto-form)
+                                          flattened-tutkinto-form
+                                          #{}
+                                          false))))
+  (it "fails validation when required values missing"
+      (let [tutkintotodistus-id (keyword (get-in tutkinto-form
+                                                 [:content 0 :children 1 :property-options 9 :followups 0 :children 4 :id]))]
+        (should= {:additional-field-for-kk-alemmat nil, :additional-field-for-lukiokoulutus nil,
+                  :itse-syotetty-valmistumispvm nil, :itse-syotetty-koulutusohjelma nil, :itse-syotetty-oppilaitos nil,
+                  tutkintotodistus-id nil, :additional-itse-syotetty-field nil,
+                  :tohtori-tutkinto-id {:value [["not-allowed-because-level-not-selected"]]},
+                  :yo-tutkinto-id {:value [["not-allowed-because-level-not-selected"]]}}
+                 (validator/build-results koodisto-cache
+                                          has-never-applied
+                                          (-> answers-by-key
+                                              (assoc-in [:lukiokoulutus-tutkinto-id :value]
+                                                        [["1.2.246.562.10.78305677532_623404_2010-09-20"]])
+                                              (assoc-in [:kk-alemmat-tutkinto-id :value]
+                                                        [["1.2.246.562.10.78305677532_623404_2010-09-20"]])
+                                              (assoc-in [:itse-syotetty-tutkinto-nimi :value] [["tutkinto"]])
+                                              (assoc-in [:yo-tutkinto-id :value]
+                                                        [["not-allowed-because-level-not-selected"]])
+                                              (assoc-in [:tohtori-tutkinto-id :value]
+                                                        [["not-allowed-because-level-not-selected"]]))
+                                          tutkinto-form
+                                          (:content tutkinto-form)
+                                          flattened-tutkinto-form
+                                          #{}
+                                          false))))
+
+          )
