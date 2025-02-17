@@ -1809,10 +1809,10 @@
                                                               :sv "Ändra behandlingsstatus"
                                                               :en "Change processing status"}
    :mass-inactivation-header                                 {:fi "Passivoi hakemukset"
-                                                              :sv "Passivisera ansökningar"
+                                                              :sv "Passivera ansökningar"
                                                               :en "Inactivate applications"}
    :mass-inactivation-n-applications                         {:fi "Olet passivoimassa %d hakemusta"
-                                                              :sv "Du är på väg att passivisera %d ansökningar"
+                                                              :sv "Du är på väg att passivera %d ansökningar"
                                                               :en "You're about to inactivate %d applications"}
    :mass-inactivation-note-title                             {:fi "Muistiinpano"
                                                               :sv "Anteckning"
