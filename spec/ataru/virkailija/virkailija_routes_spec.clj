@@ -31,8 +31,7 @@
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
-            [yesql.core :as sql]
-            [clojure.string :as str]))
+            [yesql.core :as sql]))
 
 (declare yesql-get-latest-application-by-key)
 (declare yesql-get-application-by-id)
@@ -248,18 +247,18 @@
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- post-mass-inactivate-applications [application-keys reason-of-inactivation]
-  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-inactivate?reason-of-inactivation=" 
-                               (str/replace reason-of-inactivation " " "+"))
-                    (json/generate-string {:application-keys application-keys}))
+  (-> (mock/request :post "/lomake-editori/api/applications/mass-inactivate"
+                    (json/generate-string {:application-keys application-keys
+                                           :message reason-of-inactivation}))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
       (mock/content-type "application/json")
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- post-mass-reactivate-applications [application-keys reason-of-reactivation]
-  (-> (mock/request :post (str "/lomake-editori/api/applications/mass-reactivate?reason-of-reactivation=" 
-                               (str/replace reason-of-reactivation " " "+"))
-                    (json/generate-string {:application-keys application-keys}))
+  (-> (mock/request :post "/lomake-editori/api/applications/mass-reactivate"
+                    (json/generate-string {:application-keys application-keys
+                                           :message reason-of-reactivation}))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
       (mock/content-type "application/json")
       ((deref virkailija-routes))
