@@ -1771,8 +1771,8 @@
                                             application-keys)))
         not-inactivated-filtered (remove nil? (vec (flatten not-inactivated-keys)))
         inactivated-keys (remove (set not-inactivated-filtered) application-keys)]
-    (log/info "Inactivated" (count inactivated-keys) "applications:" inactivated-keys)
-    (log/info "Failed to inactivate" (count not-inactivated-filtered) "applications:" not-inactivated-filtered)
+    (log/info "Inactivated" (count inactivated-keys) "applications, failed to inactivate" (count not-inactivated-filtered)
+              "applications. Inactivated keys:" inactivated-keys "not inactivated keys:" not-inactivated-filtered)
     not-inactivated-filtered))
 
 (defn mass-reactivate-applications
@@ -1784,8 +1784,8 @@
                                              application-keys)))
         not-reactivated-filtered (remove nil? (vec (flatten not-reactivated-keys)))
         reactivated-keys (remove (set not-reactivated-filtered) application-keys)]
-    (log/info "Reactivated" (count reactivated-keys) "applications:" reactivated-keys)
-    (log/info "Failed to reactivate" (count not-reactivated-filtered) "applications:" not-reactivated-filtered)
+    (log/info "Reactivated" (count reactivated-keys) "applications, failed to reactivate" (count not-reactivated-filtered)
+              "applications. Reactivated keys:" reactivated-keys "not reactivated keys:" not-reactivated-filtered)
     not-reactivated-filtered))
 
 (defn get-latest-applications-for-kk-payment-processing
