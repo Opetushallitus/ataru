@@ -1701,22 +1701,35 @@
                                            (-> db
                                                (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
+                                               (update-in [:application :answers id] dissoc :errors);Remove errors - async validators will be run again by validate-debounced-n.
                                                (set-repeatable-field-value id)
                                                (set-repeatable-application-field-top-level-valid id true))))
                                        count-decremented-db
                                        descendants)
-          attachment-descendants (filter #(= "attachment" (:fieldType %)) descendants)]
-      {:db         (field-visibility/set-field-visibility
-                     descendants-modified
-                     field-descriptor)
-       :dispatch-n  (conj
-                      (into (mapv (fn [descendant]
-                                    [:application/run-rules (:rules descendant)])
-                                  descendants)
-                            (mapv (fn [child-descriptor]
-                                    [:application/handle-attachment-delete child-descriptor idx nil nil nil])
-                                  attachment-descendants))
-                      [:application/handle-section-visibility-conditions])})))
+          new-db (-> descendants-modified
+                     (field-visibility/set-field-visibility field-descriptor)
+                     (set-validator-processing id))
+          debounce-n-params (map (fn [child-descriptor]
+                                   (let [id     (keyword (:id child-descriptor))]
+                                     {:value                        (get-in new-db [:application :answers id :values])
+                                      :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
+                                      :answers-by-key               (get-in new-db [:application :answers])
+                                      :field-descriptor             child-descriptor
+                                      :editing?                     (get-in new-db [:application :editing?])
+                                      :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                                      :on-validated                 (fn [[valid? errors]]
+                                                                      (dispatch [:application/set-attachment-valid
+                                                                                 child-descriptor
+                                                                                 valid?
+                                                                                 errors]))}))
+                                 descendants)
+          ]
+      {:db         new-db
+       :dispatch-n  (conj (mapv (fn [descendant]
+                                  [:application/run-rules (:rules descendant)])
+                                descendants)
+                      [:application/handle-section-visibility-conditions])
+       :validate-debounced-n debounce-n-params})))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
