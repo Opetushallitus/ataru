@@ -1701,9 +1701,7 @@
                                            (-> db
                                                (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
-                                               (update-in [:application :answers id] dissoc :errors);Remove errors - async validators will be run again by validate-debounced-n.
-                                               (set-repeatable-field-value id)
-                                               (set-repeatable-application-field-top-level-valid id true))))
+                                               (set-repeatable-field-value id))))
                                        count-decremented-db
                                        descendants)
           new-db (-> descendants-modified
