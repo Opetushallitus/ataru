@@ -1721,12 +1721,13 @@
                                            (-> db
                                                (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
-                                               (set-repeatable-field-value id))))
+                                               (set-repeatable-field-value id)
+                                               ;Set validator-processing for all children. These should be cleared by on-validated function in debounce-n-params.
+                                               (set-validator-processing id))))
                                        count-decremented-db
                                        descendants)
           new-db (-> descendants-modified
-                     (field-visibility/set-field-visibility field-descriptor)
-                     (set-validator-processing id))
+                     (field-visibility/set-field-visibility field-descriptor))
           debounce-n-params (map (fn [child-descriptor]
                                    (let [id     (keyword (:id child-descriptor))]
                                      {:value                        (get-in new-db [:application :answers id :values])
