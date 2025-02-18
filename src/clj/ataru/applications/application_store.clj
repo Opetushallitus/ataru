@@ -1726,6 +1726,68 @@
                                          application-keys)))]
     (remove nil? (vec (flatten not-deleted-keys)))))
 
+
+(defn- inactivate-application
+  [session reason-of-inactivation audit-logger application-key]
+  (if (contains? #{"active" "processing" "unprocessed"}
+                 (:state (get-application-review application-key)))
+    (do
+      (log/info "Inactivating application for application key" application-key)
+      (try
+        (save-application-review {:application-key application-key :state "inactivated"} session audit-logger)
+        (add-review-note {:application-key application-key :notes reason-of-inactivation} session)
+        nil
+        (catch Exception e
+          (log/error e "Inactivation failed for application key" application-key "exception:" e)
+          application-key)))
+    (do
+      (log/warn "Application" application-key "was not found or active - inactivation skipped.")
+      application-key)))
+
+(defn- reactivate-application
+  [session reason-of-reactivation audit-logger application-key]
+  (if (= (:state (get-application-review application-key)) "inactivated")
+    (do
+      (log/info "Reactivating application for application key" application-key)
+      (try
+        (save-application-review {:application-key application-key
+                                  :state application-review-states/initial-application-review-state}
+                                 session audit-logger)
+        (add-review-note {:application-key application-key :notes reason-of-reactivation} session)
+        nil
+        (catch Exception e
+          (log/error e "Reactivation failed for application key" application-key "exception:" e)
+          application-key)))
+    (do
+      (log/warn "Application" application-key "was not inactivated or found - reactivation skipped.")
+      application-key)))
+
+(defn mass-inactivate-applications
+  "Marks a number of applications as inactivated. Returns keys of applications that were not inactivated."
+  [session application-keys reason-of-inactivation audit-logger]
+  (log/info "Mass inactivating" (count application-keys) "applications" application-keys)
+  (let [not-inactivated-keys (conj [] (doall
+                                       (map (partial inactivate-application session reason-of-inactivation audit-logger)
+                                            application-keys)))
+        not-inactivated-filtered (remove nil? (vec (flatten not-inactivated-keys)))
+        inactivated-keys (remove (set not-inactivated-filtered) application-keys)]
+    (log/info "Inactivated" (count inactivated-keys) "applications, failed to inactivate" (count not-inactivated-filtered)
+              "applications. Inactivated keys:" inactivated-keys "not inactivated keys:" not-inactivated-filtered)
+    not-inactivated-filtered))
+
+(defn mass-reactivate-applications
+  "Reactivates a number of applications. Returns keys of applications that were not reactivated."
+  [session application-keys reason-of-reactivation audit-logger]
+  (log/info "Reactivating" (count application-keys) "applications" application-keys)
+  (let [not-reactivated-keys (conj [] (doall
+                                        (map (partial reactivate-application session reason-of-reactivation audit-logger)
+                                             application-keys)))
+        not-reactivated-filtered (remove nil? (vec (flatten not-reactivated-keys)))
+        reactivated-keys (remove (set not-reactivated-filtered) application-keys)]
+    (log/info "Reactivated" (count reactivated-keys) "applications, failed to reactivate" (count not-reactivated-filtered)
+              "applications. Reactivated keys:" reactivated-keys "not reactivated keys:" not-reactivated-filtered)
+    not-reactivated-filtered))
+
 (defn get-latest-applications-for-kk-payment-processing
   [person-oids haku-oids]
   (exec-db :db queries/yesql-get-latest-applications-for-kk-payment-processing {:person_oids person-oids

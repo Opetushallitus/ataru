@@ -931,8 +931,36 @@
                                               " poisto ei ole sallittu")}))
           (response/unauthorized {:error (str "Delete-secret ei vastaa haluttua. Hakemusten "
                                               (clojure.string/join ", " (:application-keys body))
-                                              " poisto ei ole sallittu")})
-          )))
+                                              " poisto ei ole sallittu")})))
+
+    (api/POST "/mass-inactivate" {session :session}
+      :body [body {:application-keys [s/Str]
+                   :message s/Str}]
+      :summary "Inactivate applications by list of application keys. Returns list of application keys that were not inactivated."
+      (if-let [result (application-service/mass-inactivate-applications
+                       application-service
+                       session
+                       (:application-keys body)
+                       (:message body))]
+        (response/ok {:not-inactivated-keys result})
+        (response/unauthorized {:error (str "Hakemusten "
+                                            (clojure.string/join ", " (:application-keys body))
+                                            " passivointi ei ole sallittu")})))
+
+    (api/POST "/mass-reactivate" {session :session}
+       :body [body {:application-keys [s/Str]
+                    :message s/Str}]
+       :summary "Reactivate inactive applications by list of application keys. Returns list of application keys that were not reactivated."
+       (if-let [result (application-service/mass-reactivate-applications
+                        application-service
+                        session
+                        (:application-keys body)
+                        (:message body))]
+         (response/ok {:not-reactivated-keys result})
+         (response/unauthorized {:error (str "Hakemusten "
+                                             (clojure.string/join ", " (:application-keys body))
+                                             " aktivointi ei ole sallittu")}))))
+
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}

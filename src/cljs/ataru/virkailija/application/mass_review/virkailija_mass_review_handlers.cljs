@@ -8,6 +8,11 @@
     (assoc-in db [:application :mass-update :visible?] visible?)))
 
 (reg-event-db
+ :application/set-mass-update-popup-tab
+ (fn [db [_ tab-name]]
+   (assoc-in db [:application :mass-update :open-tab] tab-name)))
+
+(reg-event-db
  :application/set-mass-review-notes-popup-visibility
  (fn [db [_ visible?]]
    (assoc-in db [:application :mass-review-notes :visible?] visible?)))
@@ -24,6 +29,15 @@
                                   :hakukohde-oids-for-hakukohderyhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+
+(reg-event-fx
+ :application/mass-inactivate-applications
+ (fn [{:keys [db]} _]
+   {:http {:method              :post
+           :params              {:application-keys (map :key (get-in db [:application :applications]))
+                                 :message          (get-in db [:application :mass-inactivation :message])}
+           :path                "/lomake-editori/api/applications/mass-inactivate"
+           :handler-or-dispatch :application/handle-mass-inactivate-applications}}))
 
 (reg-event-db
  :application/set-mass-review-notes
@@ -85,3 +99,14 @@
     :db         (update-in db [:application :applications]
                            (partial map #(assoc % :new-application-modifications 0)))}))
 
+(reg-event-fx
+ :application/handle-mass-inactivate-applications
+ (fn [_ _]
+   {:dispatch-n [[:application/set-mass-inactivation-message ""]
+                 [:application/reload-applications]]}))
+
+
+(reg-event-db
+ :application/set-mass-inactivation-message
+ (fn [db [_ message]]
+   (assoc-in db [:application :mass-inactivation :message] message)))
