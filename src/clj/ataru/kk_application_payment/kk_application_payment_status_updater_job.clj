@@ -97,8 +97,9 @@
     (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link")))
 
 (defn- send-reminder-email-and-mark-sent
-  [job-runner payment-data application]
-  (let [application-key (:application-key payment-data)]
+  [job-runner payment-data]
+  (let [application-key (:application-key payment-data)
+        application     (application-store/get-latest-application-by-key application-key)]
     (log/info "Scheduling kk application payment reminder e-mail for application" application-key)
     (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder")
     (payment/mark-reminder-sent application-key)))
@@ -199,10 +200,10 @@
                     (mark-tuition-fee-obligated job-runner (:application-key payment)))))
 
               (doseq [application-payment existing-payments]
-                (let [{:keys [application payment]} application-payment]
+                (let [{:keys [payment]} application-payment]
                   (cond
                     (needs-reminder-sent? payment)
-                    (send-reminder-email-and-mark-sent job-runner payment application))))
+                    (send-reminder-email-and-mark-sent job-runner payment))))
 
               (invalidate-maksut-payments-if-needed maksut-service modified-payments)
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
