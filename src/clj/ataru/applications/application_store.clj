@@ -1614,7 +1614,10 @@
         application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
         application-review-notes (or (:application-review-notes application) [])
-        application-payment-states (or (:application-payment-states application) [])]
+        application-payment-states (or (:application-payment-states application) [])
+        submitted-formatted (.print JodaFormatter (:submitted application))
+        created-formatted (.print JodaFormatter (:created application))
+        modified-formatted (.print JodaFormatter (:modified application))]
   (-> application
       (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
       (assoc :attachments attachments)
@@ -1623,6 +1626,9 @@
       (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
       (assoc :application-review-notes application-review-notes)
       (assoc :application-payment-states application-payment-states)
+      (assoc :submitted submitted-formatted)
+      (assoc :created created-formatted)
+      (assoc :modified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn siirto-applications [hakukohde-oid application-keys modified-after]
