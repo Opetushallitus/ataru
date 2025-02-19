@@ -1137,6 +1137,9 @@ SELECT
    WHERE application_id = a.id) AS content,
   a.lang,
   lf.organization_oid AS "organization-oid",
+  a.submitted AS submitted,
+  a.created_time AS created,
+  a.modified_time AS modified, --todo, varmista että tämä päivittyy aina kun tarpeen - vaatii ehkä lisää triggereitä
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -1146,7 +1149,17 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews ahar
-   WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews"
+   WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+  (SELECT json_agg(json_build_object('state', state,
+                                     'reason', reason,
+                                     'due-date', due_date))
+   FROM kk_application_payments kkap
+   WHERE kkap.application_key = a.key) AS "application-payment-states",
+  (SELECT json_agg(json_build_object('notes', notes,
+                                     'state', state_name,
+                                     'hakukohde', hakukohde))
+   FROM application_review_notes arn
+   WHERE arn.application_key = a.key) AS "application-review-notes"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 JOIN forms AS f ON form_id = f.id

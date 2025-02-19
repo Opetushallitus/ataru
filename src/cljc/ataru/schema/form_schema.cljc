@@ -751,12 +751,21 @@
    :hakutoiveet [s/Str]
    :attachments {s/Str Value}
    :keyValues   {s/Str Value}
+   :submitted    org.joda.time.DateTime
+   :created      org.joda.time.DateTime
+   :modified     org.joda.time.DateTime
    :hakukohdeReviews             [{:requirement   s/Str
                                    :state         s/Str
                                    :hakukohde     s/Str}]
    :hakukohdeAttachmentReviews   [{:attachment    s/Str
                                    :state         s/Str
-                                   :hakukohde     s/Str}]})
+                                   :hakukohde     s/Str}]
+   :application-review-notes [{:notes s/Str
+                               :state (s/maybe s/Str)
+                               :hakukohde (s/maybe s/Str)}]
+   :application-payment-states [{:state (s/maybe s/Str)
+                                 :reason (s/maybe s/Str)
+                                 :due-date (s/maybe s/Str)}]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"

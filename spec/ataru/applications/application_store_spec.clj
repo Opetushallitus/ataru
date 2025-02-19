@@ -63,7 +63,7 @@
                                               expected)]
 
                   (should= {"A__1" "attachment1", "A__2" "attachment2"}
-                           (-> (store/siirto-applications "1" ["2"])
+                           (-> (store/siirto-applications "1" ["2"] nil)
                                first
                                :attachments))))))
 
