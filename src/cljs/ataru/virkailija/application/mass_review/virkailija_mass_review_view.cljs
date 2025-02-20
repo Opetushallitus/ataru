@@ -229,7 +229,8 @@
     (fn []
       [:span.application-handling__mass-edit-review-states-container
          [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-          {:on-click (when @allowed? #(dispatch [:application/set-mass-update-popup-visibility true]))
+          {:data-test-id "mass-update"
+           :on-click (when @allowed? #(dispatch [:application/set-mass-update-popup-visibility true]))
            :class (when (not @allowed?) "application-handling__button--disabled")}
           @(subscribe [:editor/virkailija-translation :mass-edit])]
          (when @visible?
