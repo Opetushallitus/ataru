@@ -1,0 +1,65 @@
+{
+  "sort": {
+    "order-by": "applicant-name",
+    "order": "asc"
+  },
+  "applications": [
+    {
+      "haku": null,
+      "person": {
+        "oid": "1.2.246.562.24.59408321866",
+        "preferred-name": "awd",
+        "last-name": "dawdwa",
+        "yksiloity": false,
+        "ssn": "110501A939N",
+        "dob": "12.02.1994"
+      },
+      "key": "1.2.246.562.11.00000000000000000081",
+      "eligibility-set-automatically": [],
+      "state": "active",
+      "submitted": "2025-01-22T09:53:18.969Z",
+      "lang": "en",
+      "tunnistautuminen": null,
+      "new-application-modifications": 0,
+      "id": 81,
+      "score": null,
+      "hakukohde": [],
+      "form": 134,
+      "application-hakukohde-reviews": [
+        {
+          "requirement": "processing-state",
+          "state": "processing",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "language-requirement",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "degree-requirement",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "eligibility-state",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "payment-obligation",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "selection-state",
+          "state": "incomplete",
+          "hakukohde": "form"
+        }
+      ],
+      "created-time": "2025-01-22T09:53:18.969Z",
+      "base-education": [],
+      "application-attachment-reviews": []
+    }
+  ]
+}
