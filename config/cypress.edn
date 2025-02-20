@@ -40,7 +40,8 @@
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
                    :features {:schema-validation true
-                              :arvosanat true}}
+                              :arvosanat true}
+                   :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
  :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.cypress.edn-tiedostosta"
