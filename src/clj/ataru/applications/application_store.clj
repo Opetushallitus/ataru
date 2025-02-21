@@ -1631,18 +1631,29 @@
                             (filter #(not= "hakukohteet" (:key %)))
                             flatten-application-answers)
         application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
-        application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])]
+        application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
+        application-review-notes (or (:application-review-notes application) [])
+        application-payment-states (or (:application-payment-states application) [])
+        submitted-formatted (.print JodaFormatter (:submitted application))
+        created-formatted (.print JodaFormatter (:created application))
+        modified-formatted (.print JodaFormatter (:modified application))]
   (-> application
       (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
       (assoc :hakukohdeReviews application-hakukohde-reviews)
       (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
+      (assoc :application-review-notes application-review-notes)
+      (assoc :application-payment-states application-payment-states)
+      (assoc :submitted submitted-formatted)
+      (assoc :created created-formatted)
+      (assoc :modified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
-(defn siirto-applications [hakukohde-oid application-keys]
+(defn siirto-applications [hakukohde-oid application-keys modified-after]
   (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
-                                                       :application_keys (cons "" application-keys)})
+                                                       :application_keys (cons "" application-keys)
+                                                       :modified_after   modified-after})
        (map unwrap-siirto-application)))
 
 (defn siirtotiedosto-applications-for-ids [ids]
