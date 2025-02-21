@@ -1871,7 +1871,7 @@
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
         (if (and (nil? hakukohdeOid)
-                 (nil? modifiedAfter)
+                 ;(nil? modifiedAfter) for now, additional filters are required for modifiedAfter - otherwise it's far too easy to try and fetch a million applications. Could use support for filtering by hakuOid.
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/siirto-applications
