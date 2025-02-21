@@ -1155,7 +1155,7 @@ SELECT
   (SELECT json_agg(json_build_object('state', state,
                                      'reason', reason,
                                      'dueDate', due_date,
-                                     'totalSum', total_sum,
+                                     'total', total_sum,
                                      'reminderSentAt', reminder_sent_at,
                                      'modified', modified_at))
    FROM kk_application_payments kkap
