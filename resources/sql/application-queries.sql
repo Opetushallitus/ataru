@@ -1164,7 +1164,8 @@ SELECT
                                      'created', created_time,
                                      'virkailijaOid', virkailija_oid))
    FROM application_review_notes arn
-   WHERE arn.application_key = a.key) AS "application-review-notes"
+   WHERE arn.application_key = a.key
+   and arn.removed is null) AS "application-review-notes"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 JOIN forms AS f ON form_id = f.id
