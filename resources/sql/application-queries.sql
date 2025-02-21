@@ -1152,12 +1152,17 @@ SELECT
    WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
   (SELECT json_agg(json_build_object('state', state,
                                      'reason', reason,
-                                     'due-date', due_date))
+                                     'dueDate', due_date,
+                                     'total', total_sum,
+                                     'reminderSentAt', reminder_sent_at,
+                                     'modified', modified_at))
    FROM kk_application_payments kkap
    WHERE kkap.application_key = a.key) AS "application-payment-states",
   (SELECT json_agg(json_build_object('notes', notes,
                                      'state', state_name,
-                                     'hakukohde', hakukohde))
+                                     'hakukohde', hakukohde,
+                                     'created', created_time,
+                                     'virkailijaOid', virkailija_oid))
    FROM application_review_notes arn
    WHERE arn.application_key = a.key) AS "application-review-notes"
 FROM latest_applications AS a
@@ -1167,6 +1172,7 @@ JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid IS NOT NULL
   AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (a.hakukohde))
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
+  AND (:modified_after::TEXT IS NULL OR a.modified_time >= :modified_after::timestamptz)
   AND ar.state <> 'inactivated';
 
 --name: yesql-kouta-application-count-for-hakukohde

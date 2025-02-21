@@ -1633,7 +1633,8 @@
 
 (defn siirto-applications [hakukohde-oid application-keys modified-after]
   (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
-                                                       :application_keys (cons "" application-keys)})
+                                                       :application_keys (cons "" application-keys)
+                                                       :modified_after   modified-after})
        (map unwrap-siirto-application)))
 
 (defn siirtotiedosto-applications-for-ids [ids]
