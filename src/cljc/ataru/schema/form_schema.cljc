@@ -751,9 +751,9 @@
    :hakutoiveet [s/Str]
    :attachments {s/Str Value}
    :keyValues   {s/Str Value}
-   :submitted    org.joda.time.DateTime
-   :created      org.joda.time.DateTime
-   :modified     org.joda.time.DateTime
+   :submitted    s/Str
+   :created      s/Str
+   :modified     s/Str
    :hakukohdeReviews             [{:requirement   s/Str
                                    :state         s/Str
                                    :hakukohde     s/Str}]

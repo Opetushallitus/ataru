@@ -989,6 +989,9 @@
 (def JodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss")
                               (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
 
+(def ZonedJodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
+                              (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time submitted person_oid lang email content
            payment-obligations eligibilities attachment_reviews]}]
@@ -1615,9 +1618,9 @@
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
         application-review-notes (or (:application-review-notes application) [])
         application-payment-states (or (:application-payment-states application) [])
-        submitted-formatted (.print JodaFormatter (:submitted application))
-        created-formatted (.print JodaFormatter (:created application))
-        modified-formatted (.print JodaFormatter (:modified application))]
+        submitted-formatted (.print ZonedJodaFormatter (:submitted application))
+        created-formatted (.print ZonedJodaFormatter (:created application))
+        modified-formatted (.print ZonedJodaFormatter (:modified application))]
   (-> application
       (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
       (assoc :attachments attachments)
