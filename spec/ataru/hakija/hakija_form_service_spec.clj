@@ -30,17 +30,17 @@
 (describe "flag-uneditable-and-unviewable-field"
   (describe "when role is hakija"
     (it "should mark field with sensitive-answer as not viewable and not editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false sensitive-answer-field)]
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false false sensitive-answer-field)]
         (should-be true? (:cannot-view new-field))
         (should-be true? (:cannot-edit new-field))))
 
     (it "should mark ssn field as not viewable and not editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false ssn-field)]
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false false ssn-field)]
         (should-be true? (:cannot-view new-field))
         (should-be true? (:cannot-edit new-field))))
 
     (it "should mark normal field as viewable and editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false normal-field)]
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false false normal-field)]
         (should-be false? (:cannot-view new-field))
         (should-be false? (:cannot-edit new-field))))
 
@@ -48,38 +48,48 @@
       (let [field normal-field
             field-deadlines {(:id field) {:field-id (:id field)
                                           :deadline past-date}}
-            new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false field-deadlines false normal-field)]
+            new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false field-deadlines false false normal-field)]
         (should-be false? (:cannot-view new-field))
-        (should-be true? (:cannot-edit new-field)))))
+        (should-be true? (:cannot-edit new-field))))
+
+    (it "should mark normal field with overdue kk payment as viewable but not editable"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:hakija] false nil false true normal-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field)))))
 
   (describe "when role is virkailija"
     (it "should mark field with sensitive-answer as viewable and editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false sensitive-answer-field)]
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false false sensitive-answer-field)]
         (should-be false? (:cannot-view new-field))
         (should-be false? (:cannot-edit new-field))))
 
     (it "should mark ssn field as viewable and editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false ssn-field)]
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false false ssn-field)]
         (should-be false? (:cannot-view new-field))
         (should-be false? (:cannot-edit new-field))))
 
-    (it "should not mark normal field as viewable and editable"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false normal-field)]
+    (it "should mark normal field as viewable and editable"
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false false normal-field)]
         (should-be false? (:cannot-view new-field))
         (should-be false? (:cannot-edit new-field))))
+
+    (it "should mark normal field with overdue kk payment as viewable and editable"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false true normal-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
 
     (describe "when using toisen asteen yhteishaku restrictions"
       (it "should mark normal field as viewable but not editable"
-        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true normal-field)]
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true false normal-field)]
           (should-be false? (:cannot-view new-field))
           (should-be true? (:cannot-edit new-field))))
 
       (it "should mark lupatieto field as viewable and editable"
-        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true lupatieto-field)]
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true false lupatieto-field)]
           (should-be false? (:cannot-view new-field))
           (should-be false? (:cannot-edit new-field))))
 
       (it "should mark allowed person info field as viewable and editable"
-        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true allowed-to-edit-person-field)]
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true false allowed-to-edit-person-field)]
           (should-be false? (:cannot-view new-field))
           (should-be false? (:cannot-edit new-field)))))))
