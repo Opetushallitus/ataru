@@ -128,7 +128,7 @@
 }
 
 .application-handling__popup {
-  .arrow(top, white);
+  .arrow(top, white, 8px, 40%);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
   box-sizing: border-box;
   display: block;
@@ -139,7 +139,7 @@
   left: -56px;
   text-align: start;
   background-color: white;
-  min-width: 300px;
+  min-width: 400px;
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
@@ -185,6 +185,35 @@
   margin-bottom: 10px;
 }
 
+.application-handling__mass-edit-review-states-tabs {
+  display: flex;
+  border-bottom: 2px solid @neutral-grey-200;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.application-handling__mass-edit-review-states-radio {
+  display: inline-flex;
+  align-items: center;
+  line-height: 30px;
+  gap: 7px;
+  padding-right: 2px;
+
+  &>* {
+    cursor: pointer;
+  }
+
+  input {
+    margin: 0;
+    accent-color: @link-color;
+  }
+
+  &:has(> input:checked) {
+    border-bottom: 2px solid @link-color;
+    margin-bottom: -2px;
+  }
+}
+
 .application-handling__popup-close-button {
   font-size: 18px;
   color: @sg-color-gray-2;
@@ -207,7 +236,7 @@
 }
 
 .application-handling__mass-edit-review-states-heading {
-  margin: 0px 0px 10px 0px;
+  margin: 10px 0px 10px 0px;
   color: @text-color;
 }
 
@@ -1322,6 +1351,26 @@ i.arkistoitu {
   justify-content: center;
 }
 
+.application-handling__information-request-send-reminder {
+  input {
+    margin: auto;
+  }
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.application-handling__information-request-reminder-days-select-container {
+  select {
+    width: 80px;
+  }
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .application-handling__download-attachments-button {
   color: @white;
   background-color: @link-color;
@@ -1546,7 +1595,7 @@ i.arkistoitu {
 }
 
 .application-handling__review-state-row--mass-update {
-  width: 270px;
+  width: 370px;
 }
 
 .application-handling__review-state-row--enabled {

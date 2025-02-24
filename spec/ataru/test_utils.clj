@@ -191,3 +191,6 @@
   (let [millis (local-timestamp-to-utc-millis timestamp)]
     (println (str "Setting fixed millis " timestamp ", formatted with Helsinki timezone " (format/parse formatter timestamp) ", result millis " millis))
     (DateTimeUtils/setCurrentMillisFixed millis)))
+
+(defn reset-fixed-time! []
+  (DateTimeUtils/setCurrentMillisSystem))

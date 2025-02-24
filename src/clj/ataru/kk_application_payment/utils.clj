@@ -1,14 +1,16 @@
 (ns ataru.kk-application-payment.utils
-  (:require [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [ataru.util :as util]
-            [clojure.string :as str]
-            [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [ataru.translations.translation-util :as translations]
-            [selmer.parser :as selmer]
-            [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key kk-application-payment-module]]
+  (:require [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-module
+                                                                        kk-application-payment-wrapper-key]]
             [ataru.component-data.person-info-module :refer [person-info-module]]
-            [ataru.config.core :refer [config]]))
+            [ataru.config.core :refer [config]]
+            [ataru.email.email-util :as email-util]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.translations.translation-util :as translations]
+            [ataru.util :as util]
+            [clj-time.coerce :as coerce]
+            [clj-time.core :as time]
+            [clojure.string :as str]
+            [selmer.parser :as selmer]))
 
 (def payment-config
   (get config :kk-application-payments))
@@ -37,9 +39,10 @@
   (let [template-path    template-path
         translations     (translations/get-translations lang)
         emails           (list email)
-        subject          (if subject-suffix
+        subject-prefix   (if subject-suffix
                            (str (subject-key translations) " " subject-suffix)
                            (subject-key translations))
+        subject          (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:application-key data) lang)
         body             (selmer/render-file template-path
                                              (merge data translations))]
     (when (not-empty emails)
@@ -76,8 +79,7 @@
                                       (map :end hakuajat)
                                       [(coerce/from-long (get-in haku [:hakuaika :end]))])
         end-times-with-grace-period (map
-                                      #(time/with-time-at-start-of-day
-                                         (time/plus % (time/days grace-days)))
+                                      #(time/plus % (time/days grace-days))
                                       hakuajat-end)]
     (boolean
       (some #(not (time/before? % now)) end-times-with-grace-period))))

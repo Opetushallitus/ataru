@@ -2,6 +2,8 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
+            [ataru.config :as config]
+            [ataru.translations.texts :as texts]
             [ataru.util :as util]
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.application-authorization-subs]
@@ -579,10 +581,30 @@
            " "
            (virkailija-initials-span event)]
           [:div.application-handling__event-row--message
+           (when (some? (:send-reminder-time event))
+             [:span.application-handling__event-row--message-subject
+              @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])
+              ": "
+              (temporal/time->short-str (:send-reminder-time event))])
            [:span.application-handling__event-row--message-subject
             (:subject event)]
            [:span.application-handling__event-row--message-body
             (:message event)]]]
+
+         {:event-type "information-request-reminder-sent"}
+         (let [ir (some #(when (= (:review-key event) (str (:id %))) %) @(subscribe [:state-query [:application :information-requests]]))]
+           [[:span
+             @(subscribe [:editor/virkailija-translation :information-request-reminder-sent])]
+            (when (some? ir)
+              (let [prefix (:information-request-reminder-subject-prefix texts/translation-mapping)
+                    lang (keyword (:lang @(subscribe [:application/selected-application])))]
+                [:div.application-handling__event-row--message
+                 [:span.application-handling__event-row--message-subject
+                  (get prefix lang)
+                  ": "
+                  (:subject ir)]
+                 [:span.application-handling__event-row--message-body
+                  (:message ir)]]))])
 
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]
@@ -804,6 +826,41 @@
    [:div.application-handling__information-request-submitted-checkmark]
    [:span.application-handling__information-request-submitted-text @(subscribe [:editor/virkailija-translation :information-request-sent])]])
 
+(defn- application-information-request-reminder-days []
+  (let [reminder-days @(subscribe [:application/information-request-reminder-days])
+        days-options (take 14 (iterate inc 1))]
+    [:div.application-handling__information-request-reminder-days
+     [:p [:b @(subscribe [:editor/virkailija-translation :information-request-reminder-will-be-sent])]]
+     [:div.application-handling__information-request-reminder-days-select-container
+      [:select
+       {:data-test-id "information-request-reminder-days-input"
+        :value        reminder-days
+        :required     true
+        :disabled     false
+        :on-change    #(dispatch [:application/set-information-request-reminder-days (.-value (.-target %))])}
+       (map
+         #(list [:option {:value %} %])
+         days-options)]
+      [:p @(subscribe [:editor/virkailija-translation :information-request-reminder-after])
+       " "
+       (config/get-public-config [:information-request-reminder-job-hour])
+       ":00"]]]))
+
+(defn- application-information-request-send-reminder []
+  (let [send-reminder? @(subscribe [:application/information-request-send-reminder])]
+    [:<>
+     [:div.application-handling__information-request-send-reminder
+      [:input.application-handling__attachment-download-checkbox
+       {:id        "application-handling__information-request-send-reminder"
+        :type      "checkbox"
+        :checked   send-reminder?
+        :on-change #(dispatch [:application/toggle-information-request-send-reminder send-reminder?])}]
+      [:label
+       {:for "application-handling__information-request-send-reminder"}
+       @(subscribe [:editor/virkailija-translation :information-request-send-reminder])]]
+     (when send-reminder?
+       [application-information-request-reminder-days])]))
+
 (defn- application-information-request []
   (let [window-visible?      (subscribe [:state-query [:application :information-request :visible?]])
         request-window-open? (reaction (if-some [visible? @window-visible?]
@@ -822,6 +879,7 @@
                   [application-information-request-subject]
                   [application-information-request-message]
                   [application-information-request-contains-modification-link]
+                  [application-information-request-send-reminder]
                   [application-information-request-submit-button])))
         [:div.application-handling__information-request-show-container-link
          [:a
