@@ -26,18 +26,12 @@
 (def kk-application-payment-exempt-attachment-keys
   #{"passport-attachment"
     "eu-blue-card-attachment"
-    "eu-passport-attachment"
     "eu-family-member-permit"
-    "eu-family-passport-attachment"
     "continuous-residence-permit-front"
     "continuous-residence-permit-back"
-    "continuous-residence-passport-attachment"
     "longterm-permit-attachment"
-    "longterm-passport-attachment"
     "brexit-permit-attachment"
-    "brexit-passport-attachment"
     "permanent-residence-permit"
-    "permanent-residence-passport-attachment"
     "temporary-protection-permit"})
 
 (defn- kk-option-attachment [metadata id label-key]
