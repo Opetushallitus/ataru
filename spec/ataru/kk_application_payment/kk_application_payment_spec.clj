@@ -384,11 +384,11 @@
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}
+                                                                       :state "missing-attachment"}
                                                                       {:application_key application-key
                                                                        :attachment_key "brexit-passport-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "missing-attachment"}])
+                                                                       :state "not-checked"}])
                               [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -400,18 +400,18 @@
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}
+                                                                       :state "incomplete-attachment"}
                                                                       {:application_key application-key
                                                                        :attachment_key "brexit-passport-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}])
+                                                                       :state "not-checked"}])
                               [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
-                    (it "should set payment status as not required if an exemption attachments are ok after deadline"
+                    (it "should set payment status as not required if an exemption attachment is ok after deadline"
                         (let [application-key   (create-past-payment-exempt-by-application)
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
@@ -448,11 +448,11 @@
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}
+                                                                       :state "incomplete-attachment"}
                                                                       {:application_key application-key
                                                                        :attachment_key "brexit-passport-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}])
+                                                                       :state "not-checked"}])
                               [changed payment] (update-exempt-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -474,6 +474,22 @@
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                      :reason nil} payment)))
+
+                    (it "should not set payment status as required if a passport attachment is missing after deadline"
+                        (let [application-key   (create-past-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
 
                     (it "should use custom application field deadline date"
                         (let [application-key   (create-past-payment-exempt-by-application)
@@ -519,11 +535,11 @@
                               linked-oid (str oid "2")                  ; See FakePersonService
                               application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                             [(merge
-                                                                               application-fixtures/application-with-hakemusmaksu-exemption
-                                                                               {:person-oid oid})
+                                                                              application-fixtures/application-with-hakemusmaksu-exemption
+                                                                              {:person-oid oid})
                                                                              (merge
-                                                                               application-fixtures/application-without-hakemusmaksu-exemption
-                                                                               {:person-oid linked-oid})])
+                                                                              application-fixtures/application-without-hakemusmaksu-exemption
+                                                                              {:person-oid linked-oid})])
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               changed (:modified-payments
@@ -535,13 +551,13 @@
                               linked-changed (first (filter #(= linked-application-key (:application-key %)) changed))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
-                            (should= 2 (count changed))
-                            (should= primary-payment primary-changed)
-                            (should= linked-payment linked-changed)
-                            (should-be-matching-state {:application-key primary-application-key, :state state-not-required
-                                                       :reason reason-exemption} primary-payment)
-                            (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
-                                                       :reason nil} linked-payment)))
+                          (should= 2 (count changed))
+                          (should= primary-payment primary-changed)
+                          (should= linked-payment linked-changed)
+                          (should-be-matching-state {:application-key primary-application-key, :state state-not-required
+                                                     :reason reason-exemption} primary-payment)
+                          (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
+                                                     :reason nil} linked-payment)))
 
                     (it "should not set override exempt application status to ok by proxy when another application has been paid"
                         ; Sanity check that the exemption doesn't get overridden by an "inherited" state.
@@ -564,12 +580,12 @@
                                                                                          oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
-                            (should= 1 (count changed))
-                            (should= primary-payment (first changed))
-                            (should-be-matching-state {:application-key primary-application-key, :state state-not-required
-                                                       :reason reason-exemption} primary-payment)
-                            (should-be-matching-state {:application-key linked-application-key, :state state-paid
-                                                       :reason nil} linked-payment)))
+                          (should= 1 (count changed))
+                          (should= primary-payment (first changed))
+                          (should-be-matching-state {:application-key primary-application-key, :state state-not-required
+                                                     :reason reason-exemption} primary-payment)
+                          (should-be-matching-state {:application-key linked-application-key, :state state-paid
+                                                     :reason nil} linked-payment)))
 
                     (it "should not set exempt application status when application has already been marked as overdue"
                         (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
