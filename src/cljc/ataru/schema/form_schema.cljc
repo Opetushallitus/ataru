@@ -786,7 +786,7 @@
    :application-payment-states [{:state (s/maybe s/Str)
                                  :reason (s/maybe s/Str)
                                  :dueDate (s/maybe s/Str)
-                                 :total (s/maybe s/Int)
+                                 :total (s/maybe s/Num)
                                  :modified org.joda.time.DateTime
                                  :reminderSentAt (s/maybe org.joda.time.DateTime)}]})
 

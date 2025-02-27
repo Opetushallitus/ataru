@@ -1636,7 +1636,7 @@
         application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
         application-review-notes (or (:application-review-notes application) [])
-        application-payment-states (or (:application-payment-states application) [])
+        application-payment-states (map (fn [state] (update state :total #(edn/read-string %))) (or (:application-payment-states application) []))
         submitted-formatted (.print ZonedJodaFormatter (:submitted application))
         created-formatted (.print ZonedJodaFormatter (:created application))
         modified-formatted (.print ZonedJodaFormatter (:modified application))]
