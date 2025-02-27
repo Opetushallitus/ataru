@@ -79,8 +79,7 @@
                                       (map :end hakuajat)
                                       [(coerce/from-long (get-in haku [:hakuaika :end]))])
         end-times-with-grace-period (map
-                                      #(time/with-time-at-start-of-day
-                                         (time/plus % (time/days grace-days)))
+                                      #(time/plus % (time/days grace-days))
                                       hakuajat-end)]
     (boolean
       (some #(not (time/before? % now)) end-times-with-grace-period))))
