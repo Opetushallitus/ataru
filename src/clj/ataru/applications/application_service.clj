@@ -767,13 +767,14 @@
       {:unauthorized nil}))
 
   (siirto-applications
-    [_ session hakukohde-oid application-keys modified-after]
+    [_ session hakukohde-oid haku-oid application-keys modified-after]
     (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                             (aac/siirto-applications
                               tarjonta-service
                               organization-service
                               session
                               hakukohde-oid
+                              haku-oid
                               application-keys
                               modified-after)
                             :hakemusOid)]
