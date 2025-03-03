@@ -317,7 +317,7 @@
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
         (assoc-in  [:person :kansalaisuudet] kansalaisuudet)
-        (dissoc :personOid :lang))))
+        (dissoc :lang))))
 
 (defn- add-asiointikieli [henkilot application]
   (let [asiointikieli (or (get {"1" "fi"
