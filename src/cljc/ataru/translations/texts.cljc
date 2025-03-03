@@ -1,5 +1,6 @@
 (ns ataru.translations.texts
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [ataru.number :refer [gte lte numeric-matcher]]))
 
 (def translation-mapping
   {:lisaa-kieli                                 {:fi "Lisää kieli"
@@ -3124,6 +3125,79 @@
             [:p (:sv texts)]]
        :en [:div.application__person-info-validation-error-dialog {:class msg-key}
             [:p (:en texts)]]})))
+
+(defn- numeric-validation-error-texts [key params]
+  (get
+    {:not-a-number {:fi "Kirjoita vastaus numeroina."
+                    :sv "NaN på svenska"
+                    :en "NaN"}
+     :not-an-integer {:fi "Vastauksen oltava kokonaisluku."
+                      :sv "Vastauksen oltava kokonaisluku."
+                      :en "Vastauksen oltava kokonaisluku."}
+     :too-many-decimals {:fi (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :sv (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :en (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")}
+     :not-in-range {:fi (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
+                    :sv (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
+                    :en (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")}
+     :too-big      {:fi (str "Numeron oltava pienempi kuin " (:max-value params) ".")
+                    :sv (str "Numeron oltava pienempi kuin " (:max-value params) ".")
+                    :en (str "Numeron oltava pienempi kuin " (:max-value params) ".")}
+     :too-small    {:fi (str "Numeron oltava suurempi kuin " (:min-value params) ".")
+                    :sv (str "Numeron oltava suurempi kuin " (:min-value params) ".")
+                    :en (str "Numeron oltava suurempi kuin " (:min-value params) ".")}}
+    key))
+
+(defn- numeric-validation-error-key
+  [value params]
+  (let [[_ _ integer-part _ _ decimal-part] (re-matches numeric-matcher value)
+        decimal-places (:decimals params)
+        min-value (:min-value params)
+        max-value (:max-value params)]
+    (cond
+      (not integer-part)
+      :not-a-number
+
+      (and decimal-part
+           (not decimal-places))
+      :not-an-integer
+
+      (and decimal-part
+           (> (count decimal-part)
+              decimal-places))
+      :too-many-decimals
+
+      (and (some? max-value)
+           (some? min-value)
+           (or (gte value max-value)
+               (lte value min-value)))
+      :not-in-range
+
+      (and (some? max-value) (gte value max-value))
+      :too-big
+
+      (and (some? min-value) (lte value min-value))
+      :too-small
+
+      :else
+      :not-a-number)))
+
+(defn- numeric-validation-error [{:keys [field-descriptor value]}]
+  (let [params                      (-> field-descriptor :params)
+        error-key (numeric-validation-error-key value params)
+        texts (numeric-validation-error-texts
+                error-key params)]
+    {:fi [:div.application__person-info-validation-error-dialog {:class error-key}
+          [:p (:fi texts)]]
+     :sv [:div.application__person-info-validation-error-dialog {:class error-key}
+          [:p (:sv texts)]]
+     :en [:div.application__person-info-validation-error-dialog {:class error-key}
+          [:p (:en texts)]]}))
+
+(defn validation-error [msg-key params]
+  (cond
+    (= msg-key :numeric) (numeric-validation-error params)
+    :else (person-info-validation-error msg-key)))
 
 (defn ssn-applied-error
   [preferred-name]

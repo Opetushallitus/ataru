@@ -333,10 +333,11 @@
 
 (defn validate
   [{:keys [validator] :as params}]
-  (if-let [pure-validator ((keyword validator) pure-validators)]
-    (let [valid? (pure-validator params)]
-      (if valid? (async/go [valid? []])
-                 (async/go [valid? [{(keyword validator) [(texts/person-info-validation-error (keyword validator))]}]])))
-    (if-let [async-validator ((keyword validator) async-validators)]
-      (async-validator params)
-      (async/go [false []]))))
+  (let [validator-key (keyword validator)]
+    (if-let [pure-validator (validator-key pure-validators)]
+      (let [valid? (pure-validator params)]
+        (if valid? (async/go [valid? []])
+                   (async/go [valid? [{validator-key [(texts/validation-error validator-key params)]}]])))
+      (if-let [async-validator (validator-key async-validators)]
+        (async-validator params)
+        (async/go [false []])))))
