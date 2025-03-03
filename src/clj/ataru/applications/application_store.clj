@@ -1634,8 +1634,9 @@
       (assoc :modified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
-(defn siirto-applications [hakukohde-oid application-keys modified-after]
+(defn siirto-applications [hakukohde-oid haku-oid application-keys modified-after]
   (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
+                                                       :haku_oid         haku-oid
                                                        :application_keys (cons "" application-keys)
                                                        :modified_after   modified-after})
        (map unwrap-siirto-application)))

@@ -1866,18 +1866,20 @@
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
-        :query-params [{hakukohdeOid :- s/Str nil}
+        :query-params [{hakukohdeOid  :- s/Str nil}
+                       {hakuOid       :- s/Str nil}
                        {modifiedAfter :- s/Str nil}] ;2025-02-19 12:54:24.773122 +00:00
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
         (if (and (nil? hakukohdeOid)
-                 ;(nil? modifiedAfter) for now, additional filters are required for modifiedAfter - otherwise it's far too easy to try and fetch a million applications. Could use support for filtering by hakuOid.
+                 (nil? hakuOid)
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/siirto-applications
                    application-service
                    session
                    hakukohdeOid
+                   hakuOid
                    (not-empty applicationOids)
                    modifiedAfter)
                  {:unauthorized _}
