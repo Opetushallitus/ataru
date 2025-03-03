@@ -1174,6 +1174,7 @@ JOIN forms AS f ON form_id = f.id
 JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid IS NOT NULL
   AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (a.hakukohde))
+  AND (:haku_oid::TEXT IS NULL OR :haku_oid = a.haku)
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND (:modified_after::TEXT IS NULL OR a.modified_time >= :modified_after::timestamptz)
   AND ar.state <> 'inactivated';

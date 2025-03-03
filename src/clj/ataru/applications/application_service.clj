@@ -320,7 +320,7 @@
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
         (assoc-in  [:person :kansalaisuudet] kansalaisuudet)
-        (dissoc :personOid :lang))))
+        (dissoc :lang))))
 
 (defn- add-asiointikieli [henkilot application]
   (let [asiointikieli (or (get {"1" "fi"
@@ -430,7 +430,7 @@
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
-  (siirto-applications [this session hakukohde-oid application-keys modified-after])
+  (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (suoritusrekisteri-person-info [this haku-oid hakukohde-oids offset])

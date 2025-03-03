@@ -754,6 +754,7 @@
 
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
+   :personOid   s/Str
    :person      {:oidHenkilo    s/Str
                  :etunimet      s/Str
                  :syntymaaika   s/Str
