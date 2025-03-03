@@ -59,7 +59,7 @@
                 (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                               (should= :db ds-key)
                                               (should= "yesql-siirto-applications" (-> query-fn .meta :name))
-                                              (should= {:hakukohde_oid "1" :application_keys ["" "2"] :modified_after nil} params)
+                                              (should= {:hakukohde_oid "1" :haku_oid nil :application_keys ["" "2"] :modified_after nil} params)
                                               expected)]
 
                   (should= {"A__1" "attachment1", "A__2" "attachment2"}
