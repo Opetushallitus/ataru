@@ -96,6 +96,7 @@
                                       :first-name "Aku Petteri"
                                       :last-name "Ankka"
                                       :email "aku@ankkalinna.com"
+                                      :extend-deadline true
                                       :metadata {:haku-name {:fi "testing2", :sv "testing3", :en "testing4"}
                                                  :alkamiskausi "kausi_s"
                                                  :alkamisvuosi 2025}}]
