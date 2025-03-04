@@ -768,6 +768,8 @@
                          "payment-obligation-automatically-changed"
                          "attachment-review-state-change"
                          "modification-link-sent"
+                         "kk-application-payment-reminder-email-sent"
+                         "kk-application-payment-email-resent"
                          "field-deadline-set"
                          "field-deadline-unset"
                          "person-found-matching"

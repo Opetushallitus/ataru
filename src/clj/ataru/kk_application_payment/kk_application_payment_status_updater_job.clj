@@ -91,10 +91,14 @@
       (payment/set-maksut-secret application-key (:secret invoice))
       (start-payment-email-job job-runner application (:secret invoice) payment-link-email-params "maksut-link"))))
 
-(defn resend-payment-email [job-runner application-key]
+(defn resend-payment-email [job-runner application-key session]
   (let [application     (application-store/get-latest-application-by-key application-key)
         payment         (first (payment/get-raw-payments [application-key]))]
-    (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link")))
+    (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link")
+    (application-store/add-application-event
+      {:application-key application-key
+       :event-type "kk-application-payment-email-resent"}
+      session)))
 
 (defn- send-reminder-email-and-mark-sent
   [job-runner payment-data]
@@ -102,7 +106,11 @@
         application     (application-store/get-latest-application-by-key application-key)]
     (log/info "Scheduling kk application payment reminder e-mail for application" application-key)
     (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder")
-    (payment/mark-reminder-sent application-key)))
+    (payment/mark-reminder-sent application-key)
+    (application-store/add-application-event
+      {:application-key (:application-key payment-data)
+       :event-type "kk-application-payment-reminder-email-sent"}
+      nil)))
 
 (defn needs-reminder-sent?
   [payment]

@@ -294,7 +294,7 @@
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
-      :summary "Get content for form" 
+      :summary "Get content for form"
       (ok (form-store/fetch-form id)))
 
     (api/PUT "/forms/:id" {session :session}
@@ -1129,7 +1129,7 @@
         :summary "Lähettää hakemusmaksu sähköpostin"
         (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
           (do
-            (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid)
+            (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid session)
             (response/ok))
           (response/unauthorized)))
 
