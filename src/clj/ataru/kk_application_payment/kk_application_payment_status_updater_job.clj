@@ -102,7 +102,11 @@
         application     (application-store/get-latest-application-by-key application-key)]
     (log/info "Scheduling kk application payment reminder e-mail for application" application-key)
     (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder")
-    (payment/mark-reminder-sent application-key)))
+    (payment/mark-reminder-sent application-key)
+    (application-store/add-application-event
+      {:application-key (:application-key payment-data)
+       :event-type "kk-application-payment-reminder-sent"}
+      nil)))
 
 (defn needs-reminder-sent?
   [payment]
