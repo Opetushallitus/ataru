@@ -3240,59 +3240,24 @@
                            :sv "Din e-postadress är i fel form. E-postadressen ska anges i formen namn@adress.fi."
                            :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}})
 
-(defn person-info-validation-error [msg-key]
-  (when (some? msg-key)
-    (when-let [texts (get person-info-module-validation-error-texts msg-key)]
-      {:fi [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:fi texts)]]
-       :sv [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:sv texts)]]
-       :en [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:en texts)]]})))
-
-(defn ssn-applied-error
-  [preferred-name]
-  {:fi [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Hei " preferred-name "!")
-              "Hei!")]
-        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
-         [:strong "Olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
-         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
-         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
-        [:p "Jos haluat "
-         [:strong "muuttaa hakemustasi"]
-         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
-         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
-        [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-   :sv [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Hej " preferred-name "!")
-              "Hej!")]
-        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
-         [:strong "Du redan har skickat en ansökning"]
-         " i denna ansökan och därför kan du inte skicka en annan
-          ansökning. Om du skickar in flera beaktas endast den som
-          du skickat in senast och alla tidigare ansökningar raderas."]
-        [:p "Om du vill "
-         [:strong "ändra din ansökning"]
-         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
-         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
-        [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]
-   :en [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Dear " preferred-name ",")
-              "Dear applicant,")]
-        [:p "You can only submit one (1) application form in this application."
-         [:strong "You have already submitted an application"]
-         " to this admission and therefore cannot submit another
-          application. If you submit several applications, only the latest one
-          will be taken into consideration and all others will be deleted."]
-        [:p "If you want to, you can "
-         [:strong "make changes"]
-         " to your application during the application period by using
-         the link in the confirmation email or by logging in to My Studyinfo."]
-        [:p "If you have any problems, please contact the educational
-         institution."]]})
+(defn numeric-validation-error-texts [key params]
+  (get
+    {:not-a-number {:fi "Kirjoita vastaus numeroina."
+                    :sv "NaN på svenska"
+                    :en "NaN"}
+     :not-an-integer {:fi "Vastauksen oltava kokonaisluku."
+                      :sv "Vastauksen oltava kokonaisluku."
+                      :en "Vastauksen oltava kokonaisluku."}
+     :too-many-decimals {:fi (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :sv (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :en (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")}
+     :not-in-range {:fi (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
+                    :sv (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
+                    :en (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")}
+     :too-big      {:fi (str "Numeron oltava pienempi kuin " (:max-value params) ".")
+                    :sv (str "Numeron oltava pienempi kuin " (:max-value params) ".")
+                    :en (str "Numeron oltava pienempi kuin " (:max-value params) ".")}
+     :too-small    {:fi (str "Numeron oltava suurempi kuin " (:min-value params) ".")
+                    :sv (str "Numeron oltava suurempi kuin " (:min-value params) ".")
+                    :en (str "Numeron oltava suurempi kuin " (:min-value params) ".")}}
+    key))
