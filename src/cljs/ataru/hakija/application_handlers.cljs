@@ -27,7 +27,7 @@
             [cljs-time.format :as f]
             [cljs-time.coerce :refer [to-long]]
             [ataru.hakija.demo :as demo]
-            [ataru.translations.texts :as texts]))
+            [ataru.hakija.validation-error :as validation-error]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -1214,7 +1214,7 @@
           (set-repeatable-application-field-top-level-valid id false)
           (update-in [:application :answers :postal-code]
                      merge {:valid  false
-                            :errors [(texts/person-info-validation-error :postal-office-missing)]})))))
+                            :errors [(validation-error/person-info-validation-error :postal-office-missing)]})))))
 
 (reg-event-fx
   :application/set-multiple-choice-option-valid

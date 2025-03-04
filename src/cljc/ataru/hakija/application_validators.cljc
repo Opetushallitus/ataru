@@ -7,6 +7,7 @@
             [ataru.preferred-name :as pn]
             [ataru.number :refer [gte lte numeric-matcher]]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
+            [ataru.hakija.validation-error :as validation-error]
             #?(:clj  [clojure.core.async :as async]
                :cljs [cljs.core.async :as async])
             #?(:clj  [clj-time.core :as c]
@@ -70,11 +71,11 @@
         modifying?     (some? original-value)]
     (async/go
       (cond (not (ssn/ssn? value))
-            [false [{:ssn [(texts/person-info-validation-error :ssn)]}]]
+            [false [{:ssn [(validation-error/person-info-validation-error :ssn)]}]]
             (and (not multiple?)
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
-            [false [{:ssn [(texts/ssn-applied-error (when (:valid preferred-name)
+            [false [{:ssn [(validation-error/ssn-applied-error (when (:valid preferred-name)
                                                (:value preferred-name)))]}]]
             :else
             [true []]))))
@@ -93,10 +94,10 @@
           verify-value   (:verify this-answer)]
       (async/go
         (cond (not (email/email? value))
-              [false [{:email-main-error [(texts/person-info-validation-error :email)]}]]
+              [false [{:email-main-error [(validation-error/person-info-validation-error :email)]}]]
               (and verify-value
                    (not= verify-value value))
-              [false [{:email-verify-error [(texts/person-info-validation-error :different-email)]}]]
+              [false [{:email-verify-error [(validation-error/person-info-validation-error :different-email)]}]]
               (and modifying? (= value original-value))
               [true []]
               (and (not multiple?)
@@ -337,7 +338,7 @@
     (if-let [pure-validator (validator-key pure-validators)]
       (let [valid? (pure-validator params)]
         (if valid? (async/go [valid? []])
-                   (async/go [valid? [{validator-key [(texts/validation-error validator-key params)]}]])))
+                   (async/go [valid? [{validator-key [(validation-error/validation-error validator-key params)]}]])))
       (if-let [async-validator (validator-key async-validators)]
         (async-validator params)
         (async/go [false []])))))
