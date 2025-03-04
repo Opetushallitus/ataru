@@ -55,7 +55,7 @@
           (tags :unit)
 
           (it "should add field :attachments to application"
-              (let [expected (filter #(= "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81_1" (:key %)) fixtures/applications)]
+              (let [expected fixtures/siirto-applications]
                 (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                               (should= :db ds-key)
                                               (should= "yesql-siirto-applications" (-> query-fn .meta :name))
