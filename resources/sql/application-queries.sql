@@ -1139,6 +1139,7 @@ SELECT
    WHERE application_id = a.id) AS content,
   a.lang,
   lf.organization_oid AS "organization-oid",
+  ar.state,
   a.submitted AS submitted,
   a.created_time AS created,
   a.modified_time AS modified, --todo, varmista että tämä päivittyy aina kun tarpeen - vaatii ehkä lisää triggereitä

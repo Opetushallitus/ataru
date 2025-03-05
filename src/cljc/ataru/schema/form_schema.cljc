@@ -770,6 +770,7 @@
    :hakutoiveet [s/Str]
    :attachments {s/Str Value}
    :keyValues   {s/Str Value}
+   :state        s/Str
    :submitted    s/Str
    :created      s/Str
    :modified     s/Str
