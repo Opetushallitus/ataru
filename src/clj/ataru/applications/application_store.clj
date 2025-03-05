@@ -1622,7 +1622,7 @@
         created-formatted (.print ZonedJodaFormatter (:created application))
         modified-formatted (.print ZonedJodaFormatter (:modified application))]
   (-> application
-      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
+      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
       (assoc :hakukohdeReviews application-hakukohde-reviews)
