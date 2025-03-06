@@ -58,8 +58,9 @@
     form))
 
 (defn assoc-flattened-content [form]
-  (assoc form :flat-content (util/flatten-form-fields (:content form))))
-
+  (-> form
+      (assoc :flat-content (util/flatten-form-fields (:content form)))
+      (assoc :content {})))
 
 (defn- postprocess [result]
   (->> (if (or (seq? result) (list? result) (vector? result)) result [result])
@@ -107,8 +108,7 @@
 (defn fetch-forms-by-ids [ids]
   (log/info "Fetching forms for" (count ids) "ids.")
   (->> (execute yesql-get-forms-by-ids {:ids ids} nil)
-       ;(map assoc-flattened-content)
-       ))
+       (map assoc-flattened-content)))
 
 (def fetch-form fetch-latest-version)
 
