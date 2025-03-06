@@ -3118,21 +3118,21 @@
 (defn numeric-validation-error-texts [key params]
   (get
     {:not-a-number {:fi "Kirjoita vastaus numeroina."
-                    :sv "NaN på svenska"
+                    :sv "Skriv svaret med siffror."
                     :en "NaN"}
      :not-an-integer {:fi "Vastauksen oltava kokonaisluku."
-                      :sv "Vastauksen oltava kokonaisluku."
+                      :sv "Svaret måste vara ett heltal."
                       :en "Vastauksen oltava kokonaisluku."}
      :too-many-decimals {:fi (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
-                         :sv (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :sv (str "Svaret får ha högst " (:decimals params) " decimaler.")
                          :en (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")}
      :not-in-range {:fi (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
-                    :sv (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")
+                    :sv (str "Siffran är inte inom det angivna värdeintervallet: " (:min-value params) " - " (:max-value params) ".")
                     :en (str "Numero ei ole määritetyn arvoalueen sisällä: " (:min-value params) " - " (:max-value params) ".")}
-     :too-big      {:fi (str "Numeron oltava pienempi kuin " (:max-value params) ".")
-                    :sv (str "Numeron oltava pienempi kuin " (:max-value params) ".")
+     :too-big      {:fi (str "Numeron on oltava " (:max-value params) " tai pienempi.")
+                    :sv (str "Siffran måste vara " (:max-value params) " eller mindre.")
                     :en (str "Numeron oltava pienempi kuin " (:max-value params) ".")}
-     :too-small    {:fi (str "Numeron oltava suurempi kuin " (:min-value params) ".")
-                    :sv (str "Numeron oltava suurempi kuin " (:min-value params) ".")
+     :too-small    {:fi (str "Numeron on oltava " (:min-value params) " tai suurempi.")
+                    :sv (str "Siffran måste vara " (:min-value params) " eller större.")
                     :en (str "Numeron oltava suurempi kuin " (:min-value params) ".")}}
     key))
