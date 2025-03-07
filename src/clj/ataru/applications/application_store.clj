@@ -1641,16 +1641,16 @@
         created-formatted (.print ZonedJodaFormatter (:created application))
         modified-formatted (.print ZonedJodaFormatter (:modified application))]
   (-> application
-      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states)
+      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states :submitted :created :modified)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
       (assoc :hakukohdeReviews application-hakukohde-reviews)
       (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
       (assoc :applicationReviewNotes application-review-notes)
       (assoc :applicationPaymentStates application-payment-states)
-      (assoc :submitted submitted-formatted)
-      (assoc :created created-formatted)
-      (assoc :modified modified-formatted)
+      (assoc :originallySubmitted submitted-formatted)
+      (assoc :versionCreated created-formatted)
+      (assoc :versionModified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn siirto-applications [hakukohde-oid haku-oid application-keys modified-after]

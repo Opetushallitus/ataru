@@ -771,9 +771,9 @@
    :attachments {s/Str Value}
    :keyValues   {s/Str Value}
    :state        s/Str
-   :submitted    s/Str
-   :created      s/Str
-   :modified     s/Str
+   :originallySubmitted s/Str
+   :versionCreated      s/Str
+   :versionModified     s/Str
    :hakukohdeReviews             [{:requirement   s/Str
                                    :state         s/Str
                                    :hakukohde     s/Str}]
