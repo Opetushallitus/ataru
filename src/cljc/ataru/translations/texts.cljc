@@ -3252,12 +3252,12 @@
                          :sv (str "Svaret får ha högst " (:decimals params) " decimaler.")
                          :en (str "The response can include a maximum of " (:decimals params) " decimals")}
      :not-in-range {:fi (str "Valitse numero " (:min-value params) " ja " (:max-value params) " väliltä.")
-                    :sv (str "Siffran är inte inom det angivna värdeintervallet: " (:min-value params) " - " (:max-value params) ".")
+                    :sv (str "Välj ett nummer mellan " (:min-value params) " och " (:max-value params) ".")
                     :en (str "Insert a number between " (:min-value params) " and " (:max-value params) ".")}
      :too-big      {:fi (str "Numeron on oltava " (:max-value params) " tai pienempi.")
                     :sv (str "Siffran måste vara " (:max-value params) " eller mindre.")
-                    :en (str "The number has to be smaller than " (:max-value params) ".")}
+                    :en (str "The number has to be " (:max-value params) " or smaller.")}
      :too-small    {:fi (str "Numeron on oltava " (:min-value params) " tai suurempi.")
                     :sv (str "Siffran måste vara " (:min-value params) " eller större.")
-                    :en (str "The number has to be greater than " (:min-value params) ".")}}
+                    :en (str "The number has to be " (:min-value params) " or greater.")}}
     key))
