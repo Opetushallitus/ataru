@@ -159,7 +159,8 @@
                                 :person                        {:turvakielto true
                                                                 :first-name  "Person-etunimi"}
                                 :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
-                                                                {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
+                                                                {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
+                                                                {:requirement "eligibility-state" :state "uneligible" :hakukohde "hakukohde.oid"}]
                                 :answers                       [{:key       "first-name"
                                                                  :label     {:fi "Etunimi"}
                                                                  :value     "Lomake-etunimi"}
@@ -235,4 +236,12 @@
                             :hakukohde       nil
                             :state-name      nil
                             :first-name      "Ajilia"
-                            :last-name       "Kriv"}]})
+                            :last-name       "Kriv"}
+                           {:id              3
+                            :application-key "application_3424_key"
+                            :created-time    (c/date-time 2018 7 30 15 12 14)
+                            :notes           "Ei käy"
+                            :hakukohde       nil
+                            :state-name      "eligibility-state"
+                            :first-name      "Tarkastaja"
+                            :last-name       "Järvinen"}]})
