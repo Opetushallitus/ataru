@@ -576,22 +576,22 @@
                                  :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
                                                                 :paattyy "2025-01-01T15:00:00"}]})
-   :payment-info-test-kk-haku-future (merge
+   :payment-info-test-kk-haku-2030 (merge
                                        base-kouta-haku
-                                       {:oid                         "payment-info-test-kk-haku-future"
+                                       {:oid                         "payment-info-test-kk-haku-2030"
                                         :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                         :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                         :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                         :hakuajat                    [{:alkaa "2030-01-01T08:00:00",
                                                                        :paattyy "2030-06-01T15:00:00"}]})
-    :payment-info-test-kk-haku-past (merge
-                                      base-kouta-haku
-                                      {:oid                         "payment-info-test-kk-haku-past"
-                                       :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
-                                       :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                       :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
-                                       :hakuajat                    [{:alkaa "2024-06-01T08:00:00",
-                                                                      :paattyy "2024-08-01T15:00:00"}]})
+   :payment-info-test-kk-haku-daylight-savings (merge
+                                                base-kouta-haku
+                                                {:oid                         "payment-info-test-kk-haku-daylight-savings"
+                                                 :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                                 :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                                 :hakuajat                    [{:alkaa   "2030-01-01T08:00:00",
+                                                                                :paattyy "2030-03-25T15:00:00"}]})
    :payment-info-test-kk-haku-custom-grace (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku-custom-grace"
