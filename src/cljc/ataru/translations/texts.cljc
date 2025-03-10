@@ -997,7 +997,7 @@
                                         :en "I have the following document"}
    :document-option-info               {:fi "Hakemusmaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta peritään 100 euron suuruinen hakemusmaksu, kun hakija hakee tutkintoon johtavaan koulutukseen. \nHakemusmaksu on lukukausikohtainen, eli voit hakea useissa hauissa samana lukuvuotena alkaviin koulutuksiin ja riittää, että maksat hakemusmaksun vain kerran. \nSinun ei tarvitse maksaa hakemusmaksua, jos sinulla on jokin alla mainituista dokumenteista. \nHuomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää hakemusmaksuista [Opintopolku.fi -sivulta](https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu). \n\nLukuvuosimaksu\n\nEU- ja ETA-alueen sekä Sveitsin ulkopuoliselta kansalaiselta, joka hyväksytään muuhun kuin suomen- tai ruotsinkieliseen koulutukseen, peritään lukuvuosimaksu. Sinun ei tarvitse maksaa lukuvuosimaksua, jos sinulla on jokin alla mainituista dokumenteista. Huomioithan, että sinun tulee liittää hakemukselle kopio maksusta vapauttavasta dokumentista.\n\nVoit lukea lisää lukuvuosimaksuista [Opintopolku.fi-sivulta](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#lukuvuosimaksu-korkeakoulujen-vieraskielisissa-koulutuksissa). Tarkemmat tiedot lukuvuosimaksuista ja apurahan hakemisesta löydät korkeakoulujen omilta verkkosivuilta ja [Opintopolku.fi](http://opintopolku.fi/) -sivustolla olevista hakukohteiden valintaperustetiedoista. "
                                         :sv "Ansökningsavgift\n\nEn ansökningsavgift på 100 euro tas ut av medborgare utanför EU- och EES-området samt Schweiz i samband med ansökan till utbildning som leder till högskoleexamen.\n\nAnsökningsavgiften gäller för en termin, det vill säga att du kan söka till utbildningar som börjar samma läsår i flera olika ansökningar och det räcker att du betalar ansökningsavgiften endast en gång.\n\nDu är befriad från att betala ansökningsavgiften om du har något av dokumenten nedan.\n\nVänligen notera att du måste ladda upp en kopia av det dokument som befriar dig från att betala avgiften.\n\nDu kan läsa mer om ansökningsavgiften [på Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift).\n\nLäsårsavgift\n\nMedborgare utanför EU- och EES-området samt Schweiz som antas till annan än finsk- eller svenskspråkig utbildning ska betala en läsårsavgift. Du behöver inte betala läsårsavgift om du har något av nedanstående dokument. Observera att du till ansökan ska bifoga en kopia av det dokument som befriar från avgiften.\n\nLäs mer om läsårsavgifter på [Studieinfo.fi](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#lasarsavgift-fr-hgskolornas-utbildningar-pa-frammande-sprak). Närmare information om läsårsavgifter och att ansöka om stipendium finns på högskolornas webbsidor och i utbildningarnas uppgifter om ansökningsmål och antagningskriterier i [Studieinfo.fi](https://opintopolku.fi/konfo/sv/)."
-                                        :en "Application fee\n\nIf you are not an EU/EEA or Swiss citizen, you will need to pay an application fee to the sum of 100 euros when you apply to a programme leading to a Bachelor's or Master's degree. \n\nIf you apply in multiple application rounds to study programmes starting in the same academic term (e.g. fall 2025), you only need to pay the application fee once. \n\nIf you have one of the following documents, you do not need to pay the application fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the application fee to the application form. \n\nYou can read more about application fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/application-fee).\n\nTuition fee\n\nIf you are not an EU/EEA or Swiss citizen and you are offered admission to a degree programme that is not in Finnish or Swedish, you need to pay an annual tuition fee. \n\nIf you have one of the following documents, you do not need to pay the tuition fee. \n\nPlease not that you need to attach a copy of said document that frees you from paying the tuition fee to the application form. \n\nYou can read more about tuition fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on [Studyinfo.fi](http://studyinfo.fi/)."}
+                                        :en "Application fee\n\nIf you are not an EU/EEA or Swiss citizen, you will need to pay an application fee to the sum of 100 euros when you apply to a programme leading to a Bachelor's or Master's degree. \n\nIf you apply in multiple application rounds to study programmes starting in the same academic term (e.g. fall 2025), you only need to pay the application fee once. \n\nIf you have one of the following documents, you do not need to pay the application fee. \n\nPlease note that you need to attach a copy of said document that frees you from paying the application fee to the application form. \n\nYou can read more about application fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/application-fee).\n\nTuition fee\n\nIf you are not an EU/EEA or Swiss citizen and you are offered admission to a degree programme that is not in Finnish or Swedish, you need to pay an annual tuition fee. \n\nIf you have one of the following documents, you do not need to pay the tuition fee. \n\nPlease note that you need to attach a copy of said document that frees you from paying the tuition fee to the application form. \n\nYou can read more about tuition fees on [Studyinfo](https://opintopolku.fi/konfo/en/sivu/tuition-fees). Detailed information about tuition fees and scholarships can be found on the websites of the higher education institutions and from the programme descriptions on [Studyinfo.fi](http://studyinfo.fi/)."}
    :passport-option                    {:fi "Passi (tai henkilökortti), josta ilmenee EU- tai ETA-maan tai Sveitsin kansalaisuus"
                                         :sv "Pass (eller identitetskort) som visar medborgarskap i EU/EES/Schweiz"
                                         :en "Passport (or identity card) to indicate the citizenship of EU/EEA/Switzerland "}
@@ -3115,59 +3115,24 @@
                            :sv "Din e-postadress är i fel form. E-postadressen ska anges i formen namn@adress.fi."
                            :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}})
 
-(defn person-info-validation-error [msg-key]
-  (when (some? msg-key)
-    (when-let [texts (get person-info-module-validation-error-texts msg-key)]
-      {:fi [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:fi texts)]]
-       :sv [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:sv texts)]]
-       :en [:div.application__person-info-validation-error-dialog {:class msg-key}
-            [:p (:en texts)]]})))
-
-(defn ssn-applied-error
-  [preferred-name]
-  {:fi [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Hei " preferred-name "!")
-              "Hei!")]
-        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
-         [:strong "Olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
-         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
-         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
-        [:p "Jos haluat "
-         [:strong "muuttaa hakemustasi"]
-         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
-         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
-        [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-   :sv [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Hej " preferred-name "!")
-              "Hej!")]
-        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
-         [:strong "Du redan har skickat en ansökning"]
-         " i denna ansökan och därför kan du inte skicka en annan
-          ansökning. Om du skickar in flera beaktas endast den som
-          du skickat in senast och alla tidigare ansökningar raderas."]
-        [:p "Om du vill "
-         [:strong "ändra din ansökning"]
-         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
-         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
-        [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]
-   :en [:div.application__validation-error-dialog
-        [:p (if (not (string/blank? preferred-name))
-              (str "Dear " preferred-name ",")
-              "Dear applicant,")]
-        [:p "You can only submit one (1) application form in this application."
-         [:strong "You have already submitted an application"]
-         " to this admission and therefore cannot submit another
-          application. If you submit several applications, only the latest one
-          will be taken into consideration and all others will be deleted."]
-        [:p "If you want to, you can "
-         [:strong "make changes"]
-         " to your application during the application period by using
-         the link in the confirmation email or by logging in to My Studyinfo."]
-        [:p "If you have any problems, please contact the educational
-         institution."]]})
+(defn numeric-validation-error-texts [key params]
+  (get
+    {:not-a-number {:fi "Kirjoita vastaus numeroina."
+                    :sv "Skriv svaret med siffror."
+                    :en "Insert a number."}
+     :not-an-integer {:fi "Vastauksen oltava kokonaisluku."
+                      :sv "Svaret måste vara ett heltal."
+                      :en "Insert a number as an integer."}
+     :too-many-decimals {:fi (str "Vastauksessa saa olla enintään " (:decimals params) " desimaalia.")
+                         :sv (str "Svaret får ha högst " (:decimals params) " decimaler.")
+                         :en (str "The response can include a maximum of " (:decimals params) " decimals")}
+     :not-in-range {:fi (str "Valitse numero " (:min-value params) " ja " (:max-value params) " väliltä.")
+                    :sv (str "Välj ett nummer mellan " (:min-value params) " och " (:max-value params) ".")
+                    :en (str "Insert a number between " (:min-value params) " and " (:max-value params) ".")}
+     :too-big      {:fi (str "Numeron on oltava " (:max-value params) " tai pienempi.")
+                    :sv (str "Siffran måste vara " (:max-value params) " eller mindre.")
+                    :en (str "The number has to be " (:max-value params) " or smaller.")}
+     :too-small    {:fi (str "Numeron on oltava " (:min-value params) " tai suurempi.")
+                    :sv (str "Siffran måste vara " (:min-value params) " eller större.")
+                    :en (str "The number has to be " (:min-value params) " or greater.")}}
+    key))
