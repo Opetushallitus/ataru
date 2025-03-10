@@ -108,24 +108,47 @@
   [field]
   (contains? editing-allowed-person-info-field-ids (keyword (:id field))))
 
+(defn- editing-allowed-for-person-info-field?
+  [roles field]
+  (or (and (form-role/virkailija? roles)
+           (not (form-role/with-henkilo? roles)))
+      (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field))))))
+
+(defn- editing-allowed-by-deadlines?
+  [now field hakuajat roles application-in-processing-state? field-deadline]
+  (or (form-role/virkailija? roles)
+      (cond (some? field-deadline)
+            (time/before? now (:deadline field-deadline))
+            (custom-deadline field)
+            (editing-allowed-by-custom-deadline? now field)
+            :else
+            (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?))))
+
+(defn- application-not-in-processing?
+  [roles hakuajat application-in-processing-state?]
+  (or (form-role/virkailija? roles)
+      (not (and (empty? (:uniques hakuajat))
+                application-in-processing-state?))))
+
+(defn- editing-allowed-by-toisen-asteen-yhteishaku-restrictions?
+  [use-toisen-asteen-yhteishaku-restrictions? field]
+  (or (not use-toisen-asteen-yhteishaku-restrictions?)
+      (is-lupatieto-field? field)
+      (is-editing-allowed-person-info-field? field)))
+
+(defn- editing-allowed-by-kk-payment-status?
+  [roles has-overdue-payment?]
+  (or (form-role/virkailija? roles)
+      (not has-overdue-payment?)))
+
 (defn- uneditable?
-  [now field hakuajat roles application-in-processing-state? field-deadline use-toisen-asteen-yhteishaku-restrictions?]
-  (not (and (or (and (form-role/virkailija? roles)
-                     (not (form-role/with-henkilo? roles)))
-                (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
-            (or (form-role/virkailija? roles)
-                (cond (some? field-deadline)
-                      (time/before? now (:deadline field-deadline))
-                      (custom-deadline field)
-                      (editing-allowed-by-custom-deadline? now field)
-                      :else
-                      (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?)))
-            (or (form-role/virkailija? roles)
-                (not (and (empty? (:uniques hakuajat))
-                          application-in-processing-state?)))
-            (or (not use-toisen-asteen-yhteishaku-restrictions?)
-                (or (is-lupatieto-field? field)
-                    (is-editing-allowed-person-info-field? field))))))
+  [now field hakuajat roles application-in-processing-state? field-deadline
+   use-toisen-asteen-yhteishaku-restrictions? has-overdue-payment?]
+  (not (and (editing-allowed-for-person-info-field? roles field)
+            (editing-allowed-by-deadlines? now field hakuajat roles application-in-processing-state? field-deadline)
+            (application-not-in-processing? roles hakuajat application-in-processing-state?)
+            (editing-allowed-by-toisen-asteen-yhteishaku-restrictions? use-toisen-asteen-yhteishaku-restrictions? field)
+            (editing-allowed-by-kk-payment-status? roles has-overdue-payment?))))
 
 (defn- combine-old-priorisoivat-ryhmat-with-new
   [haku-oid old-priorisoivat hakukohderyhmat-with-settings]
@@ -162,7 +185,7 @@
     (not (form-role/virkailija? roles))))
 
 (defn flag-uneditable-and-unviewable-field
-  [now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions? field]
+  [now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions? has-overdue-payment? field]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (cannot-view-field? roles field)
           cannot-edit? (or cannot-view?
@@ -173,7 +196,8 @@
                             roles
                             application-in-processing-state?
                             (get field-deadlines (:id field))
-                            use-toisen-asteen-yhteishaku-restrictions?))]
+                            use-toisen-asteen-yhteishaku-restrictions?
+                            has-overdue-payment?))]
       (assoc field
              :cannot-view cannot-view?
              :cannot-edit cannot-edit?))
@@ -186,7 +210,8 @@
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
-   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool]
+   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
+   has-overdue-payment? :- s/Bool]
   (update form :content (partial util/map-form-fields
                                  (partial flag-uneditable-and-unviewable-field
                                           now
@@ -194,7 +219,8 @@
                                           roles
                                           application-in-processing-state?
                                           field-deadlines
-                                          use-toisen-asteen-yhteishaku-restrictions?))))
+                                          use-toisen-asteen-yhteishaku-restrictions?
+                                          has-overdue-payment?))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
@@ -256,7 +282,7 @@
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}]
-  (fetch-form-by-id id roles form-by-id-cache koodisto-cache hakukohteet application-in-processing-state? field-deadlines false false))
+  (fetch-form-by-id id roles form-by-id-cache koodisto-cache hakukohteet application-in-processing-state? field-deadlines false false false))
   ([id :- s/Any
    roles :- [form-role/FormRole]
    form-by-id-cache :- s/Any
@@ -265,7 +291,8 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
-   uses-payment-module? :- s/Bool]
+   uses-payment-module? :- s/Bool
+   has-overdue-payment? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (cache/get-from form-by-id-cache (str id))]
@@ -275,7 +302,9 @@
           (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
               (remove-required-hakija-validator-if-virkailija roles)
               (populate-attachment-deadlines now hakuajat field-deadlines)
-              (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions?)
+              (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state?
+                                                     field-deadlines use-toisen-asteen-yhteishaku-restrictions?
+                                                     has-overdue-payment?)
               (populate-demo-allowed hakuajat now))))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
@@ -307,7 +336,8 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    roles :- [form-role/FormRole]
-   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool]
+   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
+   has-overdue-payment? :- s/Bool]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])
         hakukohderyhmat (distinct (mapcat #(:hakukohderyhmat %) hakukohteet))
@@ -326,7 +356,8 @@
                application-in-processing-state?
                field-deadlines
                use-toisen-asteen-yhteishaku-restrictions?
-               uses-payment-module?)]
+               uses-payment-module?
+               has-overdue-payment?)]
     (if (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -348,7 +379,8 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    roles :- [form-role/FormRole]
-   is-rewrite-secret-used? :- s/Bool]
+   is-rewrite-secret-used? :- s/Bool
+   has-overdue-payment? :- s/Bool]
   (let [haku      (tarjonta/get-haku tarjonta-service haku-oid)
         use-toisen-asteen-yhteishaku-restrictions? (toisen-asteen-yhteishaku-logic/use-toisen-asteen-yhteishaku-restrictions?
                                                      roles
@@ -369,7 +401,8 @@
                                      application-in-processing-state?
                                      field-deadlines
                                      roles
-                                     use-toisen-asteen-yhteishaku-restrictions?))))
+                                     use-toisen-asteen-yhteishaku-restrictions?
+                                     has-overdue-payment?))))
 
 (defn latest-form-id-by-key
   [key]
@@ -428,6 +461,7 @@
                                               false
                                               {}
                                               (map keyword roles)
+                                              false
                                               false)]
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
