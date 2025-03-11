@@ -412,6 +412,18 @@
      application-keys
      [:view-applications :edit-applications])))
 
+(defn- remove-uneligibility-reasons-when-not-uneligible
+  [applications]
+  (map (fn [application]
+         (if (and (seq (:applicationReviewNotes application))
+                  (excel/uneligible? (:hakukohdeReviews application)))
+           (update application
+                   :applicationReviewNotes
+                   (fn [notes]
+                     (filter #(not= (:state %) "eligibility-state") notes)))
+           application))
+       applications))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -754,14 +766,14 @@
 
   (siirto-applications
     [_ session hakukohde-oid application-keys]
-    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
-                            (aac/siirto-applications
-                              tarjonta-service
-                              organization-service
-                              session
-                              hakukohde-oid
-                              application-keys)
-                            :hakemusOid)]
+    (if-let [applications (-> (aac/siirto-applications
+                                tarjonta-service
+                                organization-service
+                                session
+                                hakukohde-oid
+                                application-keys)
+                              (kk-application-payment/remove-kk-applications-with-unapproved-payments :hakemusOid)
+                              (remove-uneligibility-reasons-when-not-uneligible))]
       (let [henkilot        (->> applications
                                  (map :personOid)
                                  distinct
