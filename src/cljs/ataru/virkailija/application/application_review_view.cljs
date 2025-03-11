@@ -516,6 +516,14 @@
            (virkailija-initials-span event)]
           nil]
 
+         {:event-type "kk-application-payment-reminder-email-sent"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-application-payment-reminder-email-sent])]
+          nil]
+
+         {:event-type "kk-application-payment-email-resent"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-application-payment-email-resent])]
+          nil]
+
          {:event-type "modification-link-sent"}
          [[:span @(subscribe [:editor/virkailija-translation :confirmation-sent])]
           nil]
@@ -609,7 +617,7 @@
          {:event-type "kk-application-payment-reminder-sent"}
          [[:span @(subscribe [:editor/virkailija-translation :kk-application-payment-reminder-sent])]
           nil]
-         
+
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]
           nil]))
