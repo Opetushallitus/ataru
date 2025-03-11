@@ -9,9 +9,11 @@ runs:
         java-version: '17'
         distribution: 'corretto'
 
-    - uses: MathRobin/timezone-action@v1.1
-      with:
-        timezoneLinux: "Europe/Helsinki"
+    - name: Set timezone to Europe/Helsinki
+      shell: bash
+      run: |
+        sudo timedatectl set-timezone Europe/Helsinki
+        echo "Europe/Helsinki" | sudo tee /etc/timezone
 
     - name: Install clojure tools
       uses: DeLaGuardo/setup-clojure@12.5
