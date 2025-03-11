@@ -1493,6 +1493,12 @@
    :confirmation-sent                                        {:fi "Vahvistussähköposti lähetetty hakijalle"
                                                               :sv "E-post med bekräftelse har skickats till sökande"
                                                               :en "Confirmation email has been sent"}
+   :kk-application-payment-reminder-email-sent               {:fi "Hakemusmaksun muistutussähköposti lähetetty hakijalle"
+                                                              :sv "Påminnelse av ansökningsavgift har skickats till sökande"
+                                                              :en "Application payment reminder email has been sent"}
+   :kk-application-payment-email-resent                      {:fi "Hakemusmaksusähköposti lähetetty uudelleen hakijalle"
+                                                              :sv "E-post av ansökningsavgift har skickats igen till sökande"
+                                                              :en "Application payment email has been resent"}
    :contains-fields                                          {:fi "Sisältää kentät:"
                                                               :sv "Innehåller fälten:"
                                                               :en "Includes the areas:"}
