@@ -427,7 +427,7 @@
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
-  (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after])
+  (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after return-inactivated])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (suoritusrekisteri-person-info [this haku-oid hakukohde-oids offset])
@@ -753,7 +753,7 @@
       {:unauthorized nil}))
 
   (siirto-applications
-    [_ session hakukohde-oid haku-oid application-keys modified-after]
+    [_ session hakukohde-oid haku-oid application-keys modified-after return-inactivated]
     (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
                             (aac/siirto-applications
                               tarjonta-service
@@ -762,7 +762,8 @@
                               hakukohde-oid
                               haku-oid
                               application-keys
-                              modified-after)
+                              modified-after
+                              return-inactivated)
                             :hakemusOid)]
       (let [henkilot        (->> applications
                                  (map :personOid)

@@ -1176,7 +1176,7 @@ WHERE a.person_oid IS NOT NULL
   AND (:haku_oid::TEXT IS NULL OR :haku_oid = a.haku)
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND (:modified_after::TEXT IS NULL OR a.modified_time >= :modified_after::timestamptz)
-  AND ar.state <> 'inactivated';
+  AND (:return_inactivated::BOOLEAN IS TRUE OR ar.state <> 'inactivated');
 
 --name: yesql-kouta-application-count-for-hakukohde
 SELECT
