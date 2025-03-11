@@ -1653,11 +1653,12 @@
       (assoc :versionModified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
-(defn siirto-applications [hakukohde-oid haku-oid application-keys modified-after]
-  (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
-                                                       :haku_oid         haku-oid
-                                                       :application_keys (cons "" application-keys)
-                                                       :modified_after   modified-after})
+(defn siirto-applications [hakukohde-oid haku-oid application-keys modified-after return-inactivated]
+  (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid      hakukohde-oid
+                                                       :haku_oid           haku-oid
+                                                       :application_keys   (cons "" application-keys)
+                                                       :modified_after     modified-after
+                                                       :return_inactivated (boolean return-inactivated)})
        (map unwrap-siirto-application)))
 
 (defn siirtotiedosto-applications-for-ids [ids]
