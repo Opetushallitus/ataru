@@ -614,10 +614,6 @@
                  [:span.application-handling__event-row--message-body
                   (:message ir)]]))])
 
-         {:event-type "kk-application-payment-reminder-sent"}
-         [[:span @(subscribe [:editor/virkailija-translation :kk-application-payment-reminder-sent])]
-          nil]
-
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]
           nil]))
