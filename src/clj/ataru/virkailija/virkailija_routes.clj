@@ -307,7 +307,10 @@
     (api/PUT "/forms/:form-key/upsert-kk-application-payment-module" {session :session}
       :summary "Add or update kk-application-payment-module for given form"
       :path-params [form-key :- s/Str]
-      (let [message (access-controlled-form/upsert-kk-application-payment-module form-key session audit-logger)]
+      :query-params [{update-person-info :- s/Bool true}
+                     {update-payment :- s/Bool true}]
+      (let [message (access-controlled-form/upsert-kk-application-payment-module
+                      form-key update-payment update-person-info session audit-logger)]
         (ok message)))
 
     (api/PUT "/forms/:form-key/change-field-id" {session :session}
