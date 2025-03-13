@@ -88,7 +88,7 @@
                        (and (some? (:koodisto-source field-descriptor))
                             (not (:koodisto-ordered-by-user field-descriptor)))
                        (sort-by #(util/non-blank-option-label % @languages))
-                       (= "nationality" (:id field-descriptor))
+                       (= :nationality id)
                        (prepend-fi-option)))))]]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
