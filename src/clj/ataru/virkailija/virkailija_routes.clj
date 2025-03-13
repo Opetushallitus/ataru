@@ -1126,11 +1126,11 @@
 
       (api/POST "/hakemusmaksu/email/laheta/:hakemus-oid" {session :session}
         :path-params [hakemus-oid :- s/Str]
-        :summary "Lähettää hakemusmaksu sähköpostin"
+        :summary "Lähettää uudestaan hakemusmaksusähköpostin"
         (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
           (do
             (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid session)
-            (response/ok))
+            (response/ok {:events (application-service/get-application-events organization-service hakemus-oid)}))
           (response/unauthorized)))
 
       (api/POST "/maksupyynto" {session :session}
