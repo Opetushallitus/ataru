@@ -440,7 +440,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
-                    (it "should set payment status as not required if an unrelated attachment is missing or incomplete after deadline"
+                    (it "should set payment status as not required if only unrelated / non-triggering attachments are missing or incomplete after deadline"
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
@@ -533,6 +533,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
+                    ; Hakuaika ends at 15:00, so the attachment deadline should be at 15:00, regardless of daylight savings.
                     (it "should work correctly with daylight savings: deadline passed"
                         (let [fixed-date-str-in-finland "2030-04-08T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
@@ -552,6 +553,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                      :reason nil} payment)))
 
+                    ; Hakuaika ends at 15:00, so the attachment deadline should be at 15:00, regardless of daylight savings.
                     (it "should work correctly with daylight savings: deadline not passed"
                         (let [fixed-date-str-in-finland "2030-04-08T14:59:59"
                               _ (set-fixed-time fixed-date-str-in-finland)
