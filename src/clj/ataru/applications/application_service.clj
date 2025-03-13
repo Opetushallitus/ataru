@@ -120,7 +120,7 @@
           (update :virkailija-organizations
                   (partial organization-service/get-organizations-for-oids organization-service))))
 
-(defn- get-application-events
+(defn get-application-events
   [organization-service application-key]
   (map (partial enrich-virkailija-organizations organization-service)
        (application-store/get-application-events application-key)))
