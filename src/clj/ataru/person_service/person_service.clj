@@ -149,6 +149,14 @@
                              {:kansalaisuus [{:kansalaisuusKoodi "784"}]
                               :yksiloity true
                               :yksiloityVTJ true})
+      "1.2.3.4.5.808" (merge fake-onr-person
+                             {:kansalaisuus [{:kansalaisuusKoodi "250"}]
+                              :yksiloity true
+                              :yksiloityVTJ true})
+      "1.2.3.4.5.909" (merge fake-onr-person
+                       {:kansalaisuus [{:kansalaisuusKoodi "250"}]
+                        :yksiloity true
+                        :yksiloityVTJ false})
       (merge fake-onr-person
              {:oidHenkilo oid})))
 
