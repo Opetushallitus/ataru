@@ -257,7 +257,7 @@
   [hidden? demo?]
   (fn []
     (let [lang @(subscribe [:application/form-language])
-          may-need-kk-application-payment @(subscribe [:application/may-need-kk-application-payment])
+          may-newly-need-kk-application-payment @(subscribe [:application/may-newly-need-kk-application-payment])
           answers @(subscribe [:state-query [:application :answers]])]
       [:div.application__submitted-submit-notification
        {:role "alertdialog"
@@ -277,12 +277,12 @@
           {:id "submitted-submit-notification-confirmation"
            :role "text"}
           (translations/get-hakija-translation :application-confirmation lang)])
-       (when may-need-kk-application-payment
+       (when may-newly-need-kk-application-payment
          [:div.application__submitted-submit-notification-additional-info
           {:id "submitted-submit-notification-additional-info-1"
            :role "text"}
           (translations/get-hakija-translation :application-confirmation-kk-payment-info-1 lang)])
-       (when may-need-kk-application-payment
+       (when may-newly-need-kk-application-payment
          [:div.application__submitted-submit-notification-additional-info
           {:id "submitted-submit-notification-additional-info-2"
            :role "text"}

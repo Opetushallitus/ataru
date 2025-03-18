@@ -274,6 +274,9 @@
                                                      form-roles
                                                      rewrite?
                                                      haku)
+        kk-payment                 (kk-application-payment/get-kk-payment-state application false)
+        has-overdue-payment?       (= (get-in kk-payment [:payment :state])
+                                      (:overdue kk-application-payment/all-states))
         form                          (cond (some? (:haku application))
                                             (hakija-form-service/fetch-form-by-haku-oid-and-id
                                              form-by-id-cache
@@ -287,7 +290,8 @@
                                              (util/application-in-processing? application-hakukohde-reviews)
                                              field-deadlines
                                              form-roles
-                                              use-toisen-asteen-yhteishaku-restrictions?)
+                                             use-toisen-asteen-yhteishaku-restrictions?
+                                             has-overdue-payment?)
                                             (some? (:form application))
                                             (hakija-form-service/fetch-form-by-id
                                              (:form application)
@@ -759,7 +763,9 @@
                                      (application-store/application-exists-with-secret? secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
-        kk-payment                 (future (kk-application-payment/get-kk-payment-state application false))
+        kk-payment                 (kk-application-payment/get-kk-payment-state application false)
+        has-overdue-payment?       (= (get-in kk-payment [:payment :state])
+                                      (:overdue kk-application-payment/all-states))
         lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key
@@ -778,7 +784,8 @@
                                                                       application-in-processing?
                                                                       field-deadlines
                                                                       form-roles
-                                                                      is-rewrite-secret-valid?)
+                                                                      is-rewrite-secret-valid?
+                                                                      has-overdue-payment?)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                       (->> application
                                                                            :form
@@ -815,7 +822,7 @@
        (cond-> {:application full-application
                 :person      filtered-person
                 :form        form
-                :kk-payment  @kk-payment}
+                :kk-payment  kk-payment}
                @koski-tutkinnot
                (assoc :koski-tutkinnot @koski-tutkinnot)))
      secret-expired?

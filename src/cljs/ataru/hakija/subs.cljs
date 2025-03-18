@@ -976,19 +976,36 @@
     (get-in db [:application :answers :nationality :values])))
 
 (re-frame/reg-sub
+ :application/original-nationality-value
+ (fn [db _]
+   (get-in db [:application :answers :nationality :original-value])))
+
+
+(re-frame/reg-sub
   :application/payment-type
   (fn [db _]
     (get-in db [:form :properties :payment :type])))
 
+; Used for determining whether to show kk application payment info to the applicant.
+; Returns true when the applicant does not have Finnish citizenship AND has either previously had Finnish citizenship
+; or has not answered the nationality question before.
 (re-frame/reg-sub
-  :application/may-need-kk-application-payment
+  :application/may-newly-need-kk-application-payment
   (fn [_ _]
     [(re-frame/subscribe [:application/nationality-values])
+     (re-frame/subscribe [:application/original-nationality-value])
      (re-frame/subscribe [:application/payment-type])])
-  (fn [[nationality-values payment-type] _]
-    (and
-      (empty? (filter (fn [[v & _]] (= (:value v) finland-country-code)) nationality-values))
-      (= "payment-type-kk" payment-type))))
+  (fn [[nationality-values original-nationality-value payment-type] _]
+    (let [is-not-a-finnish-citizen?  (empty?
+                                      (filter (fn [[v & _]] (= (:value v) finland-country-code)) nationality-values))
+          original-nationality-values (map first original-nationality-value)
+          was-previously-finnish-citizen-or-empty? (or (empty? original-nationality-values)
+                                                       (nil? (first original-nationality-values))
+                                                       (contains? (set original-nationality-values) finland-country-code))]
+      (and
+       (= "payment-type-kk" payment-type)
+       was-previously-finnish-citizen-or-empty?
+       is-not-a-finnish-citizen?))))
 
 (re-frame/reg-sub
   :application/selected-tutkinto-levels

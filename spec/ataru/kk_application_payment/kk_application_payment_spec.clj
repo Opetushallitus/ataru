@@ -14,7 +14,7 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.kk-application-payment.utils :as payment-utils]
-            [ataru.test-utils :refer [set-fixed-time]]
+            [ataru.test-utils :refer [set-fixed-time reset-fixed-time!]]
             [ataru.applications.application-store :as application-store]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]])
   (:import (org.joda.time DateTime DateTimeZone)))
@@ -39,7 +39,8 @@
 (def fake-haku-cache (reify cache-service/Cache
                        (get-from [_ _]
                          [{:haku "payment-info-test-kk-haku"}
-                          {:haku "payment-info-test-kk-haku-future"}
+                          {:haku "payment-info-test-kk-haku-2030"}
+                          {:haku "payment-info-test-kk-haku-daylight-savings"}
                           {:haku "payment-info-test-kk-haku-past"}
                           {:haku "payment-info-test-kk-haku-custom-grace"}])
                        (get-many-from [_ _])
@@ -137,8 +138,12 @@
               (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
                             payment/get-haut-with-tarjonta-data
                             (constantly [(fixtures/haku-with-hakuajat
-                                           (-> (* payment-utils/haku-update-grace-days 2) time/days time/ago)
-                                           (-> (+ payment-utils/haku-update-grace-days 1) time/days time/ago))])]
+                                           (time/minus
+                                            (-> (* payment-utils/haku-update-grace-days 2) time/days time/ago)
+                                            (time/hours 1))
+                                           (time/minus
+                                            (-> (+ payment-utils/haku-update-grace-days 1) time/days time/ago)
+                                            (time/hours 1)))])]
                 (let [haut (payment/get-haut-for-update fake-haku-cache fake-tarjonta-service)]
                   (should= 0 (count haut))))))
 
@@ -188,11 +193,11 @@
         application-key (:key (application-store/get-application application-id))]
     application-key))
 
-(defn create-future-payment-exempt-by-application []
-  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-future"}))
+(defn create-2030-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-2030"}))
 
-(defn create-past-payment-exempt-by-application []
-  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-past"}))
+(defn create-daylight-savings-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
 
 (defn create-past-payment-exempt-by-application-with-custom-grace-days []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
@@ -370,7 +375,8 @@
                     (around [spec]
                             (delete-states-and-events!)
                             (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)]
-                              (spec)))
+                              (spec))
+                            (reset-fixed-time!))
 
                     (it "should set payment status for non eu citizen with exemption as not required"
                         (let [application-key   (create-payment-exempt-by-application {})
@@ -381,7 +387,9 @@
                                                      :reason reason-exemption} payment)))
 
                     (it "should set payment status as not required if an exemption attachment is missing before deadline"
-                        (let [application-key   (create-future-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-01-15T14:59:59"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -397,7 +405,9 @@
                                                      :reason reason-exemption} payment)))
 
                     (it "should set payment status as not required if an exemption attachment is incomplete before deadline"
-                        (let [application-key   (create-future-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-01-15T14:59:59"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -413,7 +423,9 @@
                                                      :reason reason-exemption} payment)))
 
                     (it "should set payment status as not required if an exemption attachments are ok after deadline"
-                        (let [application-key   (create-past-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -428,8 +440,10 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
-                    (it "should set payment status as not required if an unrelated attachment is missing or incomplete after deadline"
-                        (let [application-key   (create-past-payment-exempt-by-application)
+                    (it "should set payment status as not required if only unrelated / non-triggering attachments are missing or incomplete after deadline"
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "none-passport-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -445,7 +459,9 @@
                                                      :reason reason-exemption} payment)))
 
                     (it "should set payment status as required if an exemption attachment is incomplete after deadline"
-                        (let [application-key   (create-past-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -461,7 +477,9 @@
                                                      :reason nil} payment)))
 
                     (it "should set payment status as required if an exemption attachment is missing after deadline"
-                        (let [application-key   (create-past-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (save-reviews-to-db! [{:application_key application-key
                                                                        :attachment_key "brexit-permit-attachment"
                                                                        :hakukohde "payment-info-test-kk-hakukohde"
@@ -477,7 +495,9 @@
                                                      :reason nil} payment)))
 
                     (it "should use custom application field deadline date"
-                        (let [application-key   (create-past-payment-exempt-by-application)
+                        (let [fixed-date-str-in-finland "2030-06-01T01:22:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (store-field-deadline {:application_key application-key
                                                                        :field_id "brexit-permit-attachment"
                                                                        :deadline (time/plus (time/now) (time/days 1))})
@@ -494,6 +514,47 @@
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
+
+                    ; Hakuaika ends at 15:00, so the attachment deadline should be at 15:00, regardless of daylight savings.
+                    (it "should work correctly with daylight savings: deadline passed"
+                        (let [fixed-date-str-in-finland "2030-04-08T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              ; Hakuaika ends 2030-03-25 so the deadline is going to be after daylight savings adjustment
+                              application-key   (create-daylight-savings-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    ; Hakuaika ends at 15:00, so the attachment deadline should be at 15:00, regardless of daylight savings.
+                    (it "should work correctly with daylight savings: deadline not passed"
+                        (let [fixed-date-str-in-finland "2030-04-08T14:59:59"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                                                  ; Hakuaika ends 2030-03-25 so the deadline is going to be after daylight savings adjustment
+                              application-key   (create-daylight-savings-payment-exempt-by-application)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-permit-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "attachment-missing"}
+                                                                      {:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
 
                     (it "should use custom ohjausparametrit deadline days"
                         ; Mock ohjausparametrit returns grace days 10000 for the attached haku...
@@ -520,11 +581,11 @@
                               linked-oid (str oid "2")                  ; See FakePersonService
                               application-ids (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                             [(merge
-                                                                               application-fixtures/application-with-hakemusmaksu-exemption
-                                                                               {:person-oid oid})
+                                                                              application-fixtures/application-with-hakemusmaksu-exemption
+                                                                              {:person-oid oid})
                                                                              (merge
-                                                                               application-fixtures/application-without-hakemusmaksu-exemption
-                                                                               {:person-oid linked-oid})])
+                                                                              application-fixtures/application-without-hakemusmaksu-exemption
+                                                                              {:person-oid linked-oid})])
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               changed (:modified-payments
@@ -536,13 +597,13 @@
                               linked-changed (first (filter #(= linked-application-key (:application-key %)) changed))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
-                            (should= 2 (count changed))
-                            (should= primary-payment primary-changed)
-                            (should= linked-payment linked-changed)
-                            (should-be-matching-state {:application-key primary-application-key, :state state-not-required
-                                                       :reason reason-exemption} primary-payment)
-                            (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
-                                                       :reason nil} linked-payment)))
+                          (should= 2 (count changed))
+                          (should= primary-payment primary-changed)
+                          (should= linked-payment linked-changed)
+                          (should-be-matching-state {:application-key primary-application-key, :state state-not-required
+                                                     :reason reason-exemption} primary-payment)
+                          (should-be-matching-state {:application-key linked-application-key, :state state-awaiting
+                                                     :reason nil} linked-payment)))
 
                     (it "should not set override exempt application status to ok by proxy when another application has been paid"
                         ; Sanity check that the exemption doesn't get overridden by an "inherited" state.
@@ -565,12 +626,12 @@
                                                                                          oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
-                            (should= 1 (count changed))
-                            (should= primary-payment (first changed))
-                            (should-be-matching-state {:application-key primary-application-key, :state state-not-required
-                                                       :reason reason-exemption} primary-payment)
-                            (should-be-matching-state {:application-key linked-application-key, :state state-paid
-                                                       :reason nil} linked-payment)))
+                          (should= 1 (count changed))
+                          (should= primary-payment (first changed))
+                          (should-be-matching-state {:application-key primary-application-key, :state state-not-required
+                                                     :reason reason-exemption} primary-payment)
+                          (should-be-matching-state {:application-key linked-application-key, :state state-paid
+                                                     :reason nil} linked-payment)))
 
                     (it "should not set exempt application status when application has already been marked as overdue"
                         (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
@@ -630,6 +691,10 @@
                           "1.2.3.4.5.10" payment/set-application-fee-overdue state-overdue nil)))
 
           (describe "due date"
+                    (around [spec]
+                            (spec)
+                            (reset-fixed-time!))
+
                     (it "should store and retrieve due date correctly when Europe/Helsinki-time is already on the next day compared to UTC-time"
                         (let [fixed-date-str-in-finland "2020-01-02T01:22:01"];This time is selected so that in UTC time it's still 2020-01-01, but in Finland timezone the date is already 2020-01-02.
                           (set-fixed-time fixed-date-str-in-finland)
