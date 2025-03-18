@@ -2970,7 +2970,10 @@
                               :en "EN: Turvakielto"}
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
-                              :en "EN: Notes"}})
+                              :en "EN: Notes"}
+   :kk-payment-state         {:fi "Hakemusmaksu"
+                              :sv "Ansökningsavgift"
+                              :en "Application fee"}})
 
 (defn email-applied-error
   [email preferred-name]
