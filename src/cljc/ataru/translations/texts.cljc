@@ -3006,7 +3006,10 @@
                               :en "EN: Turvakielto"}
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
-                              :en "EN: Notes"}})
+                              :en "EN: Notes"}
+   :kk-payment-state         {:fi "Hakemusmaksu"
+                              :sv "Ansökningsavgift"
+                              :en "Application fee"}})
 
 (def koski-tutkinnot-texts
   {:section-label                                 {:fi "Tutkinnot"
