@@ -419,7 +419,7 @@
   [applications]
   (map (fn [application]
          (if (and (seq (:applicationReviewNotes application))
-                  (excel/uneligible? (:hakukohdeReviews application)))
+                  (not (excel/uneligible? (:hakukohdeReviews application))))
            (update application
                    :applicationReviewNotes
                    (fn [notes]
