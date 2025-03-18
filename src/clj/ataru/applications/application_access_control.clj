@@ -387,20 +387,20 @@
     #(application-store/get-applications-for-valintalaskenta hakukohde-oid application-keys)))
 
 (defn siirto-applications
-  [tarjonta-service organization-service session hakukohde-oid application-keys]
+  [tarjonta-service organization-service session hakukohde-oid haku-oid application-keys modified-after return-inactivated]
   (session-orgs/run-org-authorized
    session
    organization-service
    [:view-applications :edit-applications]
    (constantly nil)
-   #(->> (application-store/siirto-applications hakukohde-oid application-keys)
+   #(->> (application-store/siirto-applications hakukohde-oid haku-oid application-keys modified-after return-inactivated)
          (map (fn [a] (assoc a :hakukohde (:hakutoiveet a))))
          (filter-authorized tarjonta-service
                             (some-fn (partial authorized-by-form? %)
                                      (partial authorized-by-tarjoajat? %)))
          (map (fn [a] (dissoc a :hakukohde)))
          (map remove-organization-oid))
-   #(->> (application-store/siirto-applications hakukohde-oid application-keys)
+   #(->> (application-store/siirto-applications hakukohde-oid haku-oid application-keys modified-after return-inactivated)
          (map remove-organization-oid))))
 
 (defn kouta-application-count-for-hakukohde

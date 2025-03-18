@@ -55,15 +55,15 @@
           (tags :unit)
 
           (it "should add field :attachments to application"
-              (let [expected (filter #(= "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81_1" (:key %)) fixtures/applications)]
+              (let [expected fixtures/siirto-applications]
                 (with-redefs [store/exec-db (fn [ds-key query-fn params]
                                               (should= :db ds-key)
                                               (should= "yesql-siirto-applications" (-> query-fn .meta :name))
-                                              (should= {:hakukohde_oid "1" :application_keys ["" "2"]} params)
+                                              (should= {:hakukohde_oid "1" :haku_oid nil :application_keys ["" "2"] :modified_after nil :return_inactivated false} params)
                                               expected)]
 
                   (should= {"A__1" "attachment1", "A__2" "attachment2"}
-                           (-> (store/siirto-applications "1" ["2"])
+                           (-> (store/siirto-applications "1" nil ["2"] nil false)
                                first
                                :attachments))))))
 
