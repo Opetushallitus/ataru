@@ -306,7 +306,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                      :reason nil} payment)))
 
-                    (it "should set payment status for eu citizen as not required"
+                    (it "should set payment status for Finnish citizen as not required"
                         (let [oid "1.2.3.4.5.7"                       ; FakePersonService returns Finnish nationality by default
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                            (merge
@@ -324,7 +324,43 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
-                    (it "should set payment status for non eu citizen without exemption as required"
+                    (it "should set payment status for VTJ-yksilöity EU citizen as not required"
+                        (let [oid "1.2.3.4.5.808"                       ; FakePersonService returns French nationality for this one
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-without-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              changed (:modified-payments
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-eu-citizen} payment)))
+
+                    (it "should set payment status for non VTJ-yksilöity EU citizen as not required"
+                        (let [oid "1.2.3.4.5.909"                       ; FakePersonService returns French nationality but no yksiloityVTJ
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-without-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              changed (:modified-payments
+                                       (payment/update-payments-for-person-term-and-year fake-ohjausparametrit-service
+                                                                                         fake-person-service fake-tarjonta-service
+                                                                                         fake-koodisto-cache fake-haku-cache
+                                                                                         oid term-fall year-ok))
+                              payment (first (payment/get-raw-payments [application-key]))]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status for non EU citizen without exemption as required"
                         (with-redefs [payment/exemption-in-application? (constantly false)]
                           (let [oid "1.2.3.4.5.303"                       ; FakePersonService returns non-EU nationality for this one
                                 application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
