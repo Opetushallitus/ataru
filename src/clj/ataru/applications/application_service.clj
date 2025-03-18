@@ -556,6 +556,7 @@
                                                                           (get onr-persons)
                                                                           (person-service/parse-person-with-master-oid application))))
                                                   applications)
+            applications-with-persons-and-payment-states (populate-applications-with-kk-payment-status applications-with-persons)
             hakukohteiden-ehdolliset         (delay (hakukohteiden-ehdolliset valinta-tulos-service applications))
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                                (<= 200000 (count applications))
@@ -563,7 +564,7 @@
             lang                             (keyword (or (-> session :identity :lang) :fi))]
         (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
         (if-let [xls (ByteArrayInputStream. (excel/export-applications liiteri-cas-client
-                                                                       applications-with-persons
+                                                                       applications-with-persons-and-payment-states
                                                                        application-reviews
                                                                        application-review-notes
                                                                        selected-hakukohde
