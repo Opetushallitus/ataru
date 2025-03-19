@@ -74,6 +74,7 @@
                                            ["Hakijan henkilö-OID" nil]
                                            ["Turvakielto" "ei"]
                                            ["Muistiinpanot" nil]
+                                           ["Hakemusmaksu" nil]
                                            ["Kysymys 1" "Vastaus 1"]
                                            ["Kysymys 2" "Vastaus 2"]
                                            ["Etunimi" "Lomake-etunimi"]
@@ -108,6 +109,7 @@
                                            ["Hakijan henkilö-OID" "1.123.345456567123"]
                                            ["Turvakielto" "kyllä"]
                                            ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Hakemusmaksu" "Maksettu"]
                                            ["Kysymys 4" "Vastaus 4"]
                                            ["Etunimi" "Person-etunimi"]
                                            ["Kysymys 5" "Vastaus 5"]
@@ -144,6 +146,7 @@
                                                 ["Hakijan henkilö-OID" nil]
                                                 ["Turvakielto" "ei"]
                                                 ["Muistiinpanot" nil]
+                                                ["Hakemusmaksu" nil]
                                                 ["Kysymys 1" "Vastaus 1"]
                                                 ["Kysymys 2" "Vastaus 2"]
                                                 ["Etunimi" "Lomake-etunimi"]
@@ -166,6 +169,7 @@
                                                      ["Hakijan henkilö-OID" "1.123.345456567123"]
                                                      ["Turvakielto" "kyllä"]
                                                      ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                                     ["Hakemusmaksu" "Maksettu"]
                                                      ["Kysymys 4" "Vastaus 4"]
                                                      ["Etunimi" "Person-etunimi"]
                                                      ["Kysymys 5" "Vastaus 5"]
@@ -202,6 +206,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
@@ -237,6 +242,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Visible from form" nil]
                                              ["Should be visible because belongs-to-hakukohde is not specified" nil]
                                              ["Etunimi" "Person-etunimi"]
@@ -276,6 +282,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Visible from form 2" nil]
                                              ["Visible only if belongs to hakukohderyhmä1" nil]
                                              ["Visible because of parent's hakukohderyhmä" nil]
@@ -317,6 +324,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Visible from form 2" nil]
                                              ["Visible only if belongs to hakukohderyhmä1" nil]
                                              ["Visible because of parent's hakukohderyhmä" nil]
@@ -358,6 +366,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Should be visible because belongs-to-hakukohde is not specified" nil]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
@@ -396,6 +405,7 @@
                                              ["Hakijan henkilö-OID" "1.123.345456567123"]
                                              ["Turvakielto" "kyllä"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                             ["Hakemusmaksu" "Maksettu toisessa haussa"]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
@@ -411,7 +421,7 @@
            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
            (verify-row metadata-sheet 2 nil)
            (verify-row application-sheet 0 nil)))))
- 
+
   (it "should export applications to separate sheets when ids-only?=true and included-ids, grouped by form and only with columns valid for each form"
      (with-excel-workbook
        (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde]
