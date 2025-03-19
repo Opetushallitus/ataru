@@ -682,7 +682,7 @@
 
 (defn- haku-has-kk-application-payment? [haku-oid db]
   (let [haku (get-in db [:haut haku-oid])]
-    (:admission-payment-required? haku)))
+    (:maksullinen-kk-haku? haku)))
 
 (reg-event-fx
  :application/handle-fetch-application

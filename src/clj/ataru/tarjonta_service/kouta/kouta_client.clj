@@ -62,7 +62,8 @@
       :yhteishaku                                 (string/starts-with?
                                                    (:hakutapaKoodiUri haku)
                                                    "hakutapa_01")
-      :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
+      :ylioppilastutkinto-antaa-hakukelpoisuuden? false
+      :maksullinen-kk-haku?                        (:maksullinenKkHaku haku)}
      (when (get ohjausparametrit :hakutoiveidenMaaraRajoitettu false)
        {:max-hakukohteet (get ohjausparametrit :hakutoiveidenEnimmaismaara 1)})
      (when (seq hakuajat)
