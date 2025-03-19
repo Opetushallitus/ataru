@@ -109,7 +109,8 @@
            :alkamiskausi                     (:alkamiskausi haku)
            :alkamisvuosi                     (:alkamisvuosi haku)
            :hakutapa-uri                     (:hakutapa-uri haku)
-           :yhteishaku                       (:yhteishaku haku)}}))))
+           :yhteishaku                       (:yhteishaku haku)
+           :maksullinen-kk-haku?             (:maksullinen-kk-haku? haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
      (parse-tarjonta-info-by-haku koodisto-cache

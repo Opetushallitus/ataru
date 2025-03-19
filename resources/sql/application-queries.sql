@@ -1388,7 +1388,17 @@ SELECT
                             review_key = ae.review_key) AND
              ae.application_key = a.key AND
              ae.event_type = 'eligibility-state-automatically-changed' AND
-             ae.review_key = 'eligibility-state') AS "eligibility-set-automatically"
+             ae.review_key = 'eligibility-state') AS "eligibility-set-automatically",
+    (SELECT json_agg(json_build_object('state', state,
+                                       'reason', reason,
+                                       'dueDate', due_date,
+                                       'total', total_sum,
+                                       'reminderSentAt', reminder_sent_at,
+                                       'requiredAt', required_at,
+                                       'approvedAt', approved_at,
+                                       'modified', modified_at))
+     FROM kk_application_payments kkap
+     WHERE kkap.application_key = a.key) AS "application-payment-states"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
