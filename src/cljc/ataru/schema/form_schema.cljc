@@ -286,6 +286,7 @@
    :kohdejoukko-uri                    s/Str
    :hakutapa-uri                       s/Str
    :yhteishaku                         (s/maybe s/Bool)
+   (s/optional-key :maksullinen-kk-haku?) (s/maybe s/Bool)
    (s/optional-key :kohdejoukon-tarkenne-uri) (s/maybe s/Str)
    (s/optional-key :alkamiskausi)      (s/maybe s/Str)
    (s/optional-key :alkamisvuosi)      (s/maybe s/Int)})
@@ -313,7 +314,7 @@
    (s/optional-key :max-hakukohteet)           s/Int
    (s/optional-key :valinnat-estetty-time-window) (s/maybe {:dateStart (s/maybe s/Int)
                                                             :dateEnd   (s/maybe s/Int)})
-   (s/optional-key :admission-payment-required?) s/Bool})
+   (s/optional-key :maksullinen-kk-haku?) s/Bool})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str

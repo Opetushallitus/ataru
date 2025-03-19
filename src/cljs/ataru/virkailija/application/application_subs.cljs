@@ -1108,7 +1108,7 @@
   (fn [[selected-haku-oid haut]]
     (and
       (not (nil? selected-haku-oid))
-      (:admission-payment-required? (get haut selected-haku-oid)))))
+      (:maksullinen-kk-haku? (get haut selected-haku-oid)))))
 
 (re-frame/reg-sub
   :application/toisen-asteen-yhteishaku-oid?
