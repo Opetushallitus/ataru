@@ -21,7 +21,6 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
-            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -1025,9 +1024,7 @@
         (if (some? haku-oid)
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
-               :haut             {haku-oid (form-payment-info/add-admission-payment-info-for-haku
-                                             tarjonta-service
-                                             (tarjonta/get-haku tarjonta-service haku-oid))}
+               :haut             {haku-oid (tarjonta/get-haku tarjonta-service haku-oid)}
                :hakukohteet      (->> (tarjonta/hakukohde-search
                                         tarjonta-service
                                         haku-oid
@@ -1258,18 +1255,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
-              hakus-with-payment-flag (map
-                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
-                                        hakus)]
-        (-> hakus-with-payment-flag
+        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
             response/ok
-            (header "Cache-Control" "public, max-age=300"))))
+            (header "Cache-Control" "public, max-age=300")))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
-        (if-let [haku (form-payment-info/add-admission-payment-info-for-haku tarjonta-service
-                                                                             (tarjonta/get-haku tarjonta-service oid))]
+        (if-let [haku (tarjonta/get-haku tarjonta-service oid)]
           (-> (response/ok haku)
               (header "Cache-Control" "public, max-age=300"))
           (internal-server-error {:error "Internal server error"})))

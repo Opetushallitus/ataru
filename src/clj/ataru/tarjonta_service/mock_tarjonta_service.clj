@@ -483,7 +483,7 @@
 (def base-kouta-haku
   {:tila                                                 "julkaistu",
    :hakulomaketyyppi                                     "ataru"
-   :hakulomakeAtaruId                                    "41101b4f-1762-49af-9db0-e3603adae3ad",
+   :hakulomakeAtaruId                                    "41101b4f-1762-49af-9db0-e3603adae3ae",
    :hakutapaKoodiUri                                     "hakutapa_02#1",
    :modified                                             "2024-04-16T10:12:10",
    :nimi                                                 {:fi "testing2" :sv "testing3" :en "testing4"},
@@ -498,7 +498,8 @@
    :muokkaaja                                            "1.2.246.562.24.70906349358",
    :hakuajat                                             [{:alkaa "2024-03-13T08:00:00",
                                                            :paattyy "2024-04-30T15:00:00"}],
-   :canSubmitMultipleApplications                        true})
+   :canSubmitMultipleApplications                        true
+   :maksullinenKkHaku                                    false})
 
 (def base-kouta-hakukohde
   {:kaytetaanHaunAikataulua true
@@ -534,7 +535,8 @@
    :valintaperusteId "2306d148-9fa9-451b-9a1e-0c6ca0ca5d3f"
    :valintakokeet []
    :organisaatioOid "1.2.246.562.10.53642770753"
-   :painotetutArvosanat []})
+   :painotetutArvosanat []
+   :nimi {}})
 
 (def kouta-hakukohdes {
                        :1.2.246.562.20.00000000000000024371 (merge base-kouta-hakukohde
@@ -565,7 +567,21 @@
                        :payment-info-test-non-kk-hakukohde (merge
                                                              base-kouta-hakukohde
                                                              {:oid          "payment-info-test-non-kk-hakukohde"
-                                                              :johtaaTutkintoon true})})
+                                                              :johtaaTutkintoon true})
+                       :1.2.246.562.20.49028196523             (merge
+                                                                 base-kouta-hakukohde
+                                                                 {:oid                       "1.2.246.562.20.49028196523"
+                                                                  :hakuOid                   "1.2.246.562.29.65950024186"
+                                                                  :nimi
+                                                                  {:fi "Testihakukohde 1"
+                                                                   :sv "sv Testihakukohde 1"}})
+                       :1.2.246.562.20.49028196524             (merge
+                                                                 base-kouta-hakukohde
+                                                                 {:oid              "1.2.246.562.20.49028196524"
+                                                                  :hakuOid          "1.2.246.562.29.65950024186"
+                                                                  :nimi
+                                                                  {:fi "Testihakukohde 2"
+                                                                   :sv "sv Testihakukohde 2"}})})
 
 (def kouta-haut
   {:payment-info-test-kk-haku (merge
@@ -575,7 +591,8 @@
                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                  :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
-                                                                :paattyy "2025-01-01T15:00:00"}]})
+                                                                :paattyy "2025-01-01T15:00:00"}]
+                                 :maksullinenKkHaku           true})
    :payment-info-test-kk-haku-2030 (merge
                                        base-kouta-haku
                                        {:oid                         "payment-info-test-kk-haku-2030"
@@ -583,7 +600,8 @@
                                         :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                         :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                         :hakuajat                    [{:alkaa "2030-01-01T08:00:00",
-                                                                       :paattyy "2030-06-01T15:00:00"}]})
+                                                                       :paattyy "2030-06-01T15:00:00"}]
+                                        :maksullinenKkHaku           true})
    :payment-info-test-kk-haku-daylight-savings (merge
                                                 base-kouta-haku
                                                 {:oid                         "payment-info-test-kk-haku-daylight-savings"
@@ -591,7 +609,8 @@
                                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                                  :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                                  :hakuajat                    [{:alkaa   "2030-01-01T08:00:00",
-                                                                                :paattyy "2030-03-25T15:00:00"}]})
+                                                                                :paattyy "2030-03-25T15:00:00"}]
+                                                 :maksullinenKkHaku           true})
    :payment-info-test-kk-haku-custom-grace (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku-custom-grace"
@@ -599,7 +618,8 @@
                                               :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                               :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                               :hakuajat                    [{:alkaa "2024-06-01T08:00:00",
-                                                                             :paattyy "2024-08-01T15:00:00"}]})
+                                                                             :paattyy "2024-08-01T15:00:00"}]
+                                              :maksullinenKkHaku           true})
     :payment-info-test-kk-haku-custom-form (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku-custom-form"
@@ -608,7 +628,8 @@
                                               :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                               :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
                                               :hakuajat                    [{:alkaa   "2025-01-01T08:00:00",
-                                                                             :paattyy "2025-01-01T15:00:00"}]})
+                                                                             :paattyy "2025-01-01T15:00:00"}]
+                                              :maksullinenKkHaku           true})
     :payment-info-test-kk-no-tutkinto-haku (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku"
@@ -633,7 +654,22 @@
                                                   :hakulomakeAtaruId           custom-form-key
                                                   :kohdejoukkoKoodiUri         "haunkohdejoukko_11#1"
                                                   :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                                  :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})})
+                                                  :hakukohdeOids               ["payment-info-test-non-kk-hakukohde"]})
+    :1.2.246.562.29.65950024186 (merge
+                                 base-kouta-haku
+                                 {:oid                         "1.2.246.562.29.65950024186"
+                                  :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                  :hakukohdeOids               ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
+                                                                 :paattyy "2025-01-01T15:00:00"}]
+                                  :maksullinenKkHaku           true})})
+
+(def kouta-koulutukset
+  {:1.2.246.562.17.00000000000000006915 {:oid "1.2.246.562.17.00000000000000006915"
+                                         :koulutuskoodi-name   {}
+                                         :koulutusohjelma-name {}
+                                         :tutkintonimike-names []}})
 
 (defrecord MockTarjontaKoutaService []
   component/Lifecycle
@@ -717,10 +753,10 @@
       {:fi "testing2"}))
 
   (get-koulutus [_ koulutus-id]
-    ((keyword koulutus-id) koulutus))
+    ((keyword koulutus-id) kouta-koulutukset))
 
   (get-koulutukset [_ koulutus-oids]
-    (into {} (keep #(when-let [v (get koulutus (keyword %))]
+    (into {} (keep #(when-let [v (get kouta-koulutukset (keyword %))]
                       [% v])
                    koulutus-oids))))
 
