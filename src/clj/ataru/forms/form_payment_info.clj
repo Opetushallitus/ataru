@@ -1,8 +1,7 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [taoensso.timbre :as log]
-            [ataru.config.core :refer [config]]
-            [ataru.kk-application-payment.utils :as utils]))
+            [ataru.config.core :refer [config]]))
 
 (def form-payment-types
     #{:payment-type-tutu

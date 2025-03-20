@@ -21,7 +21,6 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
-            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
