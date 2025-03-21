@@ -217,7 +217,7 @@
                    :maksut-secret test-maksut-secret}
                   (select-keys payment [:application-key :state :maksut-secret]))))
 
-          (it "should create a reminder e-mail and a sending job"
+          (it "should create a reminder e-mail, a sending job and a sent event"
               (with-redefs [start-runner-job (stub :start-job)]
                 (let [reminder-maksut-secret "54215421ABCDABCD"
                       application-id (unit-test-db/init-db-fixture
@@ -249,8 +249,9 @@
                            :approved-at          nil})
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
-
-                      payment (first (payment/get-raw-payments [application-key]))]
+                      payment (first (payment/get-raw-payments [application-key]))
+                      events (filter #(= (:event-type %) "kk-application-payment-reminder-email-sent")
+                                     (application-store/get-application-events application-key))]
                   (should-have-invoked :start-job
                                        {:with [:* :*
                                                "ataru.kk-application-payment.kk-application-payment-email-job"
@@ -258,7 +259,8 @@
                   (should=
                     {:application-key application-key :state (:awaiting payment/all-states)
                      :maksut-secret reminder-maksut-secret}
-                    (select-keys payment [:application-key :state :maksut-secret])))))
+                    (select-keys payment [:application-key :state :maksut-secret]))
+                  (should= 1 (count events)))))
 
           (it "should not create a reminder e-mail and a sending job too early"
               (with-redefs [start-runner-job (stub :start-job)]
@@ -283,12 +285,15 @@
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
 
-                      payment (first (payment/get-raw-payments [application-key]))]
+                      payment (first (payment/get-raw-payments [application-key]))
+                      events (filter #(= (:event-type %) "kk-application-payment-reminder-email-sent")
+                                     (application-store/get-application-events application-key))]
                   (should-not-have-invoked :start-job)
                   (should=
                     {:application-key application-key :state (:awaiting payment/all-states)
                      :maksut-secret reminder-maksut-secret}
-                    (select-keys payment [:application-key :state :maksut-secret])))))
+                    (select-keys payment [:application-key :state :maksut-secret]))
+                  (should= 0 (count events)))))
 
           (it "should call maksut payment invalidation when changing payments status to ok-by-proxy"
               (with-redefs [invalidate-laskut-fn (stub :invalidate-laskut)]
@@ -414,7 +419,7 @@
                      :maksut-secret test-maksut-secret}
                     (select-keys payment [:application-key :state :maksut-secret])))))
 
-          (it "creates payment email sending job"
+          (it "creates payment email resending job and event"
               (with-redefs [start-runner-job (stub :start-job)]
                 (let [application-id (unit-test-db/init-db-fixture
                                        form-fixtures/payment-exemption-test-form
@@ -433,11 +438,14 @@
                            :required-at          "now()"
                            :notification-sent-at nil
                            :approved-at          nil})
-                      _ (updater-job/resend-payment-email runner application-key)]
+                      _ (updater-job/resend-payment-email runner application-key nil)
+                      events (filter #(= (:event-type %) "kk-application-payment-email-resent")
+                                     (application-store/get-application-events application-key))]
                   (should-have-invoked :start-job
                                        {:with [:* :*
                                                "ataru.kk-application-payment.kk-application-payment-email-job"
-                                               (partial check-mail-fn application-key)]}))))
+                                               (partial check-mail-fn application-key)]})
+                  (should= 1 (count events)))))
 
           (it "should set tuition fee obligation for non fi/sv hakukohde when payment state changes to awaiting"
               ; Initial state: hakukohde in the application has only english as teaching language,
