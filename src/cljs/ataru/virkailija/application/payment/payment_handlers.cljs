@@ -128,13 +128,17 @@
    {}))
 
 (re-frame/reg-event-fx
+ :payment/handle-resend-application-payment-email
+ (fn [{db :db} [_ body]]
+   {:db (assoc-in db [:application :events] (:events body))}))
+
+(re-frame/reg-event-fx
   :payment/resend-application-payment-email
   (fn [_ [_ application-key]]
     (ajax/http :post
                (str "/lomake-editori/api/maksut/hakemusmaksu/email/laheta/" application-key)
-               :payment/handle-processing-invoice
-               :id :resend-application-payment-email
-               :handler-args {:application-key key})))
+               :payment/handle-resend-application-payment-email
+               :id :resend-application-payment-email)))
 
 (re-frame/reg-fx
   :payment/fetch-payments
