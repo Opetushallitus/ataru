@@ -6,18 +6,13 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
-            [ataru.koodisto.koodisto-codes :as codes]
             [re-frame.core :as re-frame]
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
-(defn- prepend-fi-option [options]
-  (cons {:label {:en "Finland"
-                 :fi "Suomi"
-                 :sv "Finland"}
-         :key "finland-first"
-         :value codes/finland-country-code}
+(defn- prepend-option [prepend-option options]
+  (cons (assoc prepend-option :key (str "prepended-" (:value prepend-option)))
         options))
 
 (defn dropdown [field-descriptor idx render-field]
@@ -88,8 +83,8 @@
                        (and (some? (:koodisto-source field-descriptor))
                             (not (:koodisto-ordered-by-user field-descriptor)))
                        (sort-by #(util/non-blank-option-label % @languages))
-                       (= :nationality id)
-                       (prepend-fi-option)))))]]]
+                       (some? (:prepend-option field-descriptor))
+                       (prepend-option (:prepend-option field-descriptor))))))]]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]
