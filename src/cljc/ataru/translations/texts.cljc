@@ -2983,7 +2983,7 @@
    :hakukelpoisuus           {:fi "Hakukelpoisuus"
                               :sv "Ansökningsbehörighet"
                               :en "EN: Hakukelpoisuus"}
-   :maksuvelvollisuus        {:fi "Maksuvelvollisuus"
+   :maksuvelvollisuus        {:fi "Lukuvuosimaksuvelvollisuus"
                               :sv "Betalningsskyldighet"
                               :en "Obligated to pay"}
    :valinnan-tila            {:fi "Valinnan tila"
@@ -3007,9 +3007,9 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}
-   :kk-payment-state         {:fi "Hakemusmaksu"
-                              :sv "Ansökningsavgift"
-                              :en "Application fee"}})
+   :kk-payment-state         {:fi "Hakemusmaksun tila"
+                              :sv "Ansökningsavgiftens status"
+                              :en "Application fee state"}})
 
 (def koski-tutkinnot-texts
   {:section-label                                 {:fi "Tutkinnot"
