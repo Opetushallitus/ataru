@@ -347,6 +347,20 @@
         rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
         uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?])
+        _ (log/info (string/join ", "
+                                 ["!!! fetch-form-by-id("
+                                  id
+                                  roles
+                                  form-by-id-cache
+                                  koodisto-cache
+                                  hakukohteet
+                                  application-in-processing-state?
+                                  field-deadlines
+                                  use-toisen-asteen-yhteishaku-restrictions?
+                                  uses-payment-module?
+                                  has-overdue-payment?
+                                  ")"]))
+        _ (log/info (str "tarjonta-info: " tarjonta-info))
         form (fetch-form-by-id
                id
                roles
