@@ -1596,10 +1596,12 @@
                             :content
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
-                            get-raw-key-values)]
+                            get-raw-key-values)
+        payment-state   (first (or (:application-payment-states application) []))]
     (-> application
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
+        (assoc :applicationPaymentState payment-state)
         (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn- unwrap-siirto-application [application]
