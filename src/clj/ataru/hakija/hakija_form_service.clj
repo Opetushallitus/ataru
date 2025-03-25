@@ -291,7 +291,7 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
-   uses-payment-module? :- s/Bool
+   uses-payment-module? :- s/Any
    has-overdue-payment? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
