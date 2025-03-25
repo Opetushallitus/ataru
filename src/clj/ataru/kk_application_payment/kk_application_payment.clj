@@ -348,7 +348,6 @@
   [get-haut-cache tarjonta-service]
   (let [hakus (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
         active-hakus (filter-haut-for-update hakus)]
-    (println "!!!!!!!!!!!!!!!!!!!!haut " hakus)
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 
