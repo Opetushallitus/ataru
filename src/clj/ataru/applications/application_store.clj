@@ -1617,7 +1617,7 @@
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
                             get-raw-key-values)
-        payment-state   (first (or (:application-payment-states application) []))]
+        payment-state   (or (:application-payment-states application) {})]
     (-> application
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
