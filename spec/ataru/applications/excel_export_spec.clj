@@ -97,7 +97,45 @@
                                            ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                            ["Kielitaitovaatimus" "Tarkastamatta"]
                                            ["Tutkinnon kelpoisuus" "Tarkastamatta"]
-                                           ["Hakukelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Ei hakukelpoinen"]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" "2018-07-30 18:12:14 Tarkastaja Järvinen: Ei käy"]
+                                           ["Maksuvelvollisuus" "Tarkastamatta"]
+                                           ["Valinnan tila" "Hyväksytty"]
+                                           ["Ehdollinen" "ei"]
+                                           ["Pisteet" "12"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                           ["Turvakielto" "kyllä"]
+                                           ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Kysymys 4" "Vastaus 4"]
+                                           ["Etunimi" "Person-etunimi"]
+                                           ["Kysymys 5" "Vastaus 5"]
+                                           ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
+
+ (it "should export applications for a hakukohde with haku without uneligible reasons"
+     (with-excel-workbook
+       (export-test-excel [(assoc fixtures/application-for-hakukohde
+                                  :application-hakukohde-reviews
+                                  [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
+                                   {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
+                                   {:requirement "eligibility-state" :state "eligible" :hakukohde "hakukohde.oid"}])]
+                          {:skip-answers? false
+                           :ids-only? false})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                           ["Kielitaitovaatimus" "Tarkastamatta"]
+                                           ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Hakukelpoinen"]
                                            ["Hakukelpoisuus asetettu automaattisesti" nil]
                                            ["Hylkäyksen syy" nil]
                                            ["Maksuvelvollisuus" "Tarkastamatta"]
@@ -155,9 +193,9 @@
                                                      ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                                      ["Kielitaitovaatimus" "Tarkastamatta"]
                                                      ["Tutkinnon kelpoisuus" "Tarkastamatta"]
-                                                     ["Hakukelpoisuus" "Tarkastamatta"]
+                                                     ["Hakukelpoisuus" "Ei hakukelpoinen"]
                                                      ["Hakukelpoisuus asetettu automaattisesti" nil]
-                                                     ["Hylkäyksen syy" nil]
+                                                     ["Hylkäyksen syy" "2018-07-30 18:12:14 Tarkastaja Järvinen: Ei käy"]
                                                      ["Maksuvelvollisuus" "Tarkastamatta"]
                                                      ["Valinnan tila" "Hyväksytty"]
                                                      ["Ehdollinen" "ei"]
@@ -470,9 +508,9 @@
                                            ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                            ["Kielitaitovaatimus" "Tarkastamatta"]
                                            ["Tutkinnon kelpoisuus" "Tarkastamatta"]
-                                           ["Hakukelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Ei hakukelpoinen"]
                                            ["Hakukelpoisuus asetettu automaattisesti" nil]
-                                           ["Hylkäyksen syy" nil]
+                                           ["Hylkäyksen syy" "2018-07-30 18:12:14 Tarkastaja Järvinen: Ei käy"]
                                            ["Maksuvelvollisuus" "Tarkastamatta"]
                                            ["Valinnan tila" "Hyväksytty"]
                                            ["Ehdollinen" "ei"]

@@ -116,6 +116,16 @@
    {:label     (:created-by excel-texts)
     :field     :created-by}])
 
+(defn uneligible?
+  [hakukohde-reviews]
+  (some #(and (= "eligibility-state" (:requirement %))
+              (= "uneligible" (:state %)))
+        hakukohde-reviews))
+
+(defn- render-when-uneligible
+  [application]
+  (uneligible? (get-in application [:application :application-hakukohde-reviews])))
+
 (def ^:private application-meta-fields-by-id
   {"application-number"            {:field     [:application :key]}
    "application-submitted-time"    {:field     [:application :submitted]
@@ -144,7 +154,8 @@
    "eligibility-set-automatically" {:field     [:application :eligibility-set-automatically]
                                     :format-fn #(clojure.string/join "\n" %)}
    "ineligibility-reason"          {:field     [:application-review-notes]
-                                    :format-fn (partial application-review-notes-formatter "eligibility-state")}
+                                    :format-fn (partial application-review-notes-formatter "eligibility-state")
+                                    :render-when-fn render-when-uneligible}
    "maksuvelvollisuus"             {:field     [:application :application-hakukohde-reviews]
                                     :lang?     true
                                     :format-fn (partial hakukohde-review-formatter "payment-obligation")}
@@ -326,12 +337,15 @@
   (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
         value (if (delay? value-candidate) @value-candidate value-candidate)
         format-fn  (:format-fn meta-field)
+        render-when-fn (:render-when-fn meta-field)
         meta-value (if (some? format-fn)
                      (if (:lang? meta-field)
                        (format-fn value lang)
                        (format-fn value))
                      value)]
-    (writer 0 col meta-value)))
+    (when (or (nil? render-when-fn)
+              (render-when-fn value-from))
+      (writer 0 col meta-value))))
 
 (defn- write-form-meta!
   [writer form applications fields lang]
