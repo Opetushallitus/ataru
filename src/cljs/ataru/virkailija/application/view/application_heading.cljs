@@ -109,7 +109,7 @@
             [:div.application-handling__review-area-main-heading-oppilaitos-name-row
              [:span (str (util/from-multi-lang oppilaitos-name @lang) ", " luokka)]])
           [:div.application-handling__review-area-main-heading-application-oid-row
-           [:span hakemus-oid]]
+           [:span (str @(subscribe [:editor/virkailija-translation :application-number]) " " hakemus-oid)]]
           [:div.application-handling__review-area-main-heading-person-oid-row
            [:div.application-handling__applicant-links
             (when master-oid

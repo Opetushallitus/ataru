@@ -72,6 +72,16 @@
                                    WHERE secret = ? AND valid @> now()"
                                    secret])))))
 
+(defn virkailija-oid-with-rewrite-secret
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                           (:virkailija_oid
+                             (first
+                              (jdbc/query connection ["SELECT virkailija_oid
+                                                      FROM virkailija_rewrite_secrets
+                                                      WHERE secret = ? AND valid @> now()"
+                                                      secret])))))
+
 (defn invalidate-virkailija-update-and-rewrite-secret
   [secret]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -92,6 +102,17 @@
                                    FROM virkailija_update_secrets
                                    WHERE secret = ? AND valid @> now()"
                                   secret])))))
+
+(defn virkailija-oid-with-update-secret
+  [secret]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                           (:virkailija_oid
+                             (first
+                               (jdbc/query connection ["SELECT virkailija_oid
+                                                      FROM virkailija_update_secrets
+                                                      WHERE secret = ? AND valid @> now()"
+                                                       secret])))))
+
 
 (defn- get-virkailija-for-update [oid conn]
   (->> (yesql-get-virkailija-for-update {:oid oid}
