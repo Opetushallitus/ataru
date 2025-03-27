@@ -298,7 +298,7 @@
     (when-let [form (cache/get-from form-by-id-cache (str id))]
       (when (not (:deleted form))
         (if (and uses-payment-module? (not (has-payment-module? form)))
-          (throw (RuntimeException. (str "Haku should use payment module, but form " id " does not have one"))) ;todo, translation(?) & test error
+          (throw (RuntimeException. (str "Haku should use payment module, but form id " id " with key " (:key form) " does not have one")))
           (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
               (remove-required-hakija-validator-if-virkailija roles)
               (populate-attachment-deadlines now hakuajat field-deadlines)
