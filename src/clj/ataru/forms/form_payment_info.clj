@@ -1,8 +1,7 @@
 (ns ataru.forms.form-payment-info
   (:require [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [taoensso.timbre :as log]
-            [ataru.config.core :refer [config]]
-            [ataru.kk-application-payment.utils :as utils]))
+            [ataru.config.core :refer [config]]))
 
 (def form-payment-types
     #{:payment-type-tutu
@@ -98,10 +97,10 @@
         (add-fees payment-type-kw processing-fee-num decision-fee-num)
         (add-vat vat-num))))
 
-(defn- add-payment-info-if-higher-education
+(defn add-payment-info-if-higher-education
   "Set payment info if form is attached to one or more matching higher education admissions."
-  [form tarjonta-service haku hakukohde-oids]
-    (if (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)
+  [form haku]
+    (if (:maksullinen-kk-haku? haku)
       (add-payment-info-to-form form :payment-type-kk kk-processing-fee nil nil)
       form))
 
@@ -118,26 +117,3 @@
         (throw (user-feedback-exception
                  (str "Hakemusmaksua ei voi asettaa manuaalisesti: " [payment-type processing-fee decision-fee])))
         (add-payment-info-to-form form payment-type processing-fee decision-fee vat)))))
-
-(defn populate-form-with-payment-info
-  "Adds payment info for form. Should be always used to get payment info rather than querying
-   properties directly, because type and fees may be set and overridden dynamically."
-  [form tarjonta-service haku]
-  ; This should work with both full tarjonta data with extended hakukohde data and normal hakus with just OIDs so...
-  (let [hakukohde-oids (or (->> (:hakukohteet haku)
-                                (map #(:oid %))
-                                (filter some?)
-                                (not-empty))
-                           (:hakukohteet haku))
-        form-with-possible-kk-fees (add-payment-info-if-higher-education
-                                     form tarjonta-service haku hakukohde-oids)]
-    form-with-possible-kk-fees))
-
-(defn add-admission-payment-info-for-haku
-  "Adds info about admission payment requirement to a haku object"
-  [tarjonta-service haku]
-  (let [admission-payment-required? (utils/requires-higher-education-application-fee?
-                                      tarjonta-service
-                                      haku
-                                      (:hakukohteet haku))]
-    (assoc haku :admission-payment-required? admission-payment-required?)))

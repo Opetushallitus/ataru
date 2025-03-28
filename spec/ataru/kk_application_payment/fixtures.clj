@@ -45,4 +45,5 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden? false,
    :alkamisvuosi 2025,
    :ataru-form-key "41101b4f-1762-49af-9db0-e3603adae3ad",
-   :sijoittelu false})
+   :sijoittelu false
+   :maksullinen-kk-haku? true})
