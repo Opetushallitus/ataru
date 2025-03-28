@@ -822,7 +822,7 @@
        (cond-> {:application full-application
                 :person      filtered-person
                 :form        form
-                :kk-payment  @kk-payment}
+                :kk-payment  kk-payment}
                @koski-tutkinnot
                (assoc :koski-tutkinnot @koski-tutkinnot)))
      secret-expired?
