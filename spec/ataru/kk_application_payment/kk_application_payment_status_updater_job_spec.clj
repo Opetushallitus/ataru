@@ -241,7 +241,7 @@
                            :reason               nil
                            :due-date             (time-format/unparse payment/default-time-format
                                                                       (time/plus (time/today-at 12 0 0)
-                                                                                 (time/days 1)))
+                                                                                 (time/days 2)))
                            :total-sum            payment/kk-application-payment-amount
                            :maksut-secret        reminder-maksut-secret
                            :required-at          "now()"
