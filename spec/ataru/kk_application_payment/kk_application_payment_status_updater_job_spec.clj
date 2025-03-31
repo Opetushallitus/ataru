@@ -218,6 +218,9 @@
                   (select-keys payment [:application-key :state :maksut-secret]))))
 
           (it "should create a reminder e-mail, a sending job and a sent event"
+              ;Note! this testcase fails if executed within the timeframe of 1 or 2 days before the beginning of DST (kesäaika).
+              ;To bypass this, change the due-date of kk-application-payment below so that it is 1 day after current date,
+              ;instead of default 2 days. Or make some permanent correction to the test case.
               (with-redefs [start-runner-job (stub :start-job)]
                 (let [reminder-maksut-secret "54215421ABCDABCD"
                       application-id (unit-test-db/init-db-fixture
