@@ -1,22 +1,22 @@
 (ns ataru.tutkintojen-tunnustaminen-spec
   (:require [ataru.applications.application-store :as application-store]
             [ataru.cache.cache-service :as cache-service]
-            [ataru.files.file-store :as file-store]
-            [clojure.java.shell :refer [sh]]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
-            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
-                                                     tutkintojen-tunnustaminen-submit-job-handler
-                                                     tutkintojen-tunnustaminen-review-state-changed-job-step
-                                                     tutkintojen-tunnustaminen-information-request-sent-job-step]]
+            [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
-            [clojure.string :as string]
             [ataru.log.audit-log :as audit-log]
+            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
+                                                     tutkintojen-tunnustaminen-information-request-sent-job-step
+                                                     tutkintojen-tunnustaminen-review-state-changed-job-step
+                                                     tutkintojen-tunnustaminen-submit-job-handler]]
+            [clj-time.core :as t]
+            [clj-time.format :as f]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [around should-contain should-be should= it describe tags]]
+            [clojure.java.shell :refer [sh]]
+            [clojure.string :as string]
+            [speclj.core :refer [around describe it should-be should-contain should= tags]]
             [yesql.core :refer [defqueries]])
   (:import java.io.ByteArrayInputStream
            java.util.Base64))
@@ -242,20 +242,20 @@
                                                                           :properties           {}}
                                                                          {:connection connection})))
           payment-property-form-id (jdbc/with-db-transaction
-                                       [connection {:datasource (db/get-datasource :db)}]
-                                       (:id (yesql-add-form<!
-                                              {:name                 {:fi "Lomake"}
-                                               :content              {:content []}
-                                               :created_by           "testi"
-                                               :key                  (str (get-in config [:tutkintojen-tunnustaminen :form-key]) "-asd")
-                                               :languages            {:languages ["fi"]}
-                                               :organization_oid     "1.2.246.562.10.00000000001"
-                                               :deleted              false
-                                               :locked               nil
-                                               :locked_by            nil
-                                               :used_hakukohderyhmas []
-                                               :properties           {:payment {:type "payment-type-tutu"}}}
-                                              {:connection connection})))
+                                     [connection {:datasource (db/get-datasource :db)}]
+                                     (:id (yesql-add-form<!
+                                            {:name                 {:fi "Lomake"}
+                                             :content              {:content []}
+                                             :created_by           "testi"
+                                             :key                  (str (get-in config [:tutkintojen-tunnustaminen :form-key]) "-asd")
+                                             :languages            {:languages ["fi"]}
+                                             :organization_oid     "1.2.246.562.10.00000000001"
+                                             :deleted              false
+                                             :locked               nil
+                                             :locked_by            nil
+                                             :used_hakukohderyhmas []
+                                             :properties           {:payment {:type "payment-type-tutu"}}}
+                                            {:connection connection})))
           payment-property-form (form-store/fetch-by-id payment-property-form-id)
           application (application-store/get-application
                         (:id (application-store/add-application
@@ -359,13 +359,13 @@
                    nil)))
           payment-property-application (application-store/get-application
                                          (:id (application-store/add-application
-                                                {:form payment-property-form-id
-                                                 :answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                            :value     "024"
-                                                            :fieldType "dropdown"}]
-                                                 :lang "fi"
+                                                {:form      payment-property-form-id
+                                                 :answers   [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                              :value     "024"
+                                                              :fieldType "dropdown"}]
+                                                 :lang      "fi"
                                                  :hakukohde []
-                                                 :haku nil}
+                                                 :haku      nil}
                                                 []
                                                 payment-property-form
                                                 {}
