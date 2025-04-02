@@ -61,7 +61,7 @@
    secret
    liiteri-cas-client
    koski-service]
-  (let [[application-form-and-person secret-expired? lang-override inactivated?]
+  (let [[application-form-and-person secret-expired? lang-override inactivated? virkailija-oid]
         (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
@@ -81,7 +81,8 @@
                            {:new       application
                             :operation audit-log/operation-read
                             :session   session
-                            :id        {:applicationOid (:key application)}})
+                            :id        {:applicationOid (:key application)}
+                            :oid       virkailija-oid})
             (response/ok application-form-and-person))
 
           secret-expired?
