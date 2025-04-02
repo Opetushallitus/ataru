@@ -143,29 +143,29 @@
 
 (def koodisto-cache-mock
   (reify cache-service/Cache
-    (get-from [this key]
+    (get-from [_ _]
       [maatjavaltiot2-024 maatjavaltiot2-028])
-    (get-many-from [this keys])
-    (remove-from [this key])
-    (clear-all [this])))
+    (get-many-from [_ _])
+    (remove-from [_ _])
+    (clear-all [_])))
 
 (def form-by-id-cache-mock
   (reify cache-service/Cache
-    (get-from [this key]
+    (get-from [_ key]
       (form-store/fetch-by-id (Integer/valueOf key)))
-    (get-many-from [this keys])
-    (remove-from [this key])
-    (clear-all [this])))
+    (get-many-from [_ _])
+    (remove-from [_ _])
+    (clear-all [_])))
 
-(def ^:dynamic *form-id*)
-(def ^:dynamic *wrong-form-id*)
-(def ^:dynamic *application-id*)
-(def ^:dynamic *edited-application-id*)
-(def ^:dynamic *in-wrong-form-application-id*)
-(def ^:dynamic *in-wrong-form-application-key*)
-(def ^:dynamic *event-id*)
-(def ^:dynamic *application-key*)
-(def ^:dynamic *application-submitted*)
+(def ^:dynamic *form-id* nil)
+(def ^:dynamic *wrong-form-id* nil)
+(def ^:dynamic *application-id* nil)
+(def ^:dynamic *edited-application-id* nil)
+(def ^:dynamic *in-wrong-form-application-id* nil)
+(def ^:dynamic *in-wrong-form-application-key* nil)
+(def ^:dynamic *event-id* nil)
+(def ^:dynamic *application-key* nil)
+(def ^:dynamic *application-submitted* nil)
 
 (def liiteri-cas-client nil)
 
@@ -238,7 +238,6 @@
                                                  :used_hakukohderyhmas []
                                                  :properties           {}}
                                                 {:connection connection})))
-          wrong-form    (form-store/fetch-by-id wrong-form-id)
           application   (application-store/get-application
                           (:id (application-store/add-application
                             {:form      form-id
@@ -287,7 +286,7 @@
                                                                :virkailija_organizations nil}
                                                               {:connection connection})))
           _             (Thread/sleep 1000) ;; avoid equal created_time
-          edited        (:id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+          edited        (:id (jdbc/with-db-transaction [_ {:datasource (db/get-datasource :db)}]
                           (application-store/update-application
                            (update application :answers #(map (fn [answer]
                                                                 (cond (= (get-in config [:tutkintojen-tunnustaminen :country-question-id]) (:key answer))
@@ -380,7 +379,8 @@
                                        :subject "Täydennyspyyntö otsikko"
                                        :message "Hello world!"
                                        :message-type "information-request"}}
-                {})
+                {:form-by-id-cache form-by-id-cache-mock
+                 :koodisto-cache koodisto-cache-mock})
             message (xml/parse-str
                       (get-file (str *application-key* "_" *edited-application-id* "_taydennyspyynto_1.xml")))]
         (should= {:transition {:id :final}} r)
@@ -486,7 +486,8 @@
   (it "should send inactivated message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-review-state-changed-job-step
                    {:event-id *event-id*}
-                   {})
+                   {:form-by-id-cache form-by-id-cache-mock
+                    :koodisto-cache koodisto-cache-mock})
           message (xml/parse-str (get-file (str *application-key* "_" *application-id* "_" *event-id* ".xml")))]
       (should= {:transition {:id :final}} r)
       (should= :message (:tag message))
