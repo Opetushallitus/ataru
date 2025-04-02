@@ -82,10 +82,10 @@
    (application-store/get-application-attachment-reviews application-key)))
 
 (defn- populate-form-fields
-  [form koodisto-cache tarjonta-info tarjonta-service]
+  [form koodisto-cache tarjonta-info]
   (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
       (populate-hakukohde-answer-options tarjonta-info)
-      (payment-info/populate-form-with-payment-info tarjonta-service (:tarjonta tarjonta-info))
+      (payment-info/add-payment-info-if-higher-education (:tarjonta tarjonta-info))
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
 (defn fields-equal? [[new-in-left new-in-right]]
@@ -501,11 +501,11 @@
             form                  (populate-form-fields (if with-newest-form?
                                                           newest-form
                                                           form-in-application)
-                                                        koodisto-cache tarjonta-info tarjonta-service)
+                                                        koodisto-cache tarjonta-info)
             forms-differ?         (and (not with-newest-form?)
                                        (forms-differ? application tarjonta-info form
                                                       (populate-form-fields newest-form
-                                                                            koodisto-cache tarjonta-info tarjonta-service)))
+                                                                            koodisto-cache tarjonta-info)))
             alternative-form      (some-> (when forms-differ?
                                             newest-form)
                                           (assoc :content [])

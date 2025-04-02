@@ -242,15 +242,8 @@
                          :notification-sent-at (:notification-sent-at previous-state)})))
 
 (defn- haku-valid-for-kk-payments?
-  "Application payments are only collected for admissions starting on or after 1.1.2025
-   and for hakus with specific properties."
-  [tarjonta-service haku]
-  (let [hakukohde-oids (or (->> (:hakukohteet haku)
-                                (map #(:oid %))
-                                (filter some?)
-                                (not-empty))
-                           (:hakukohteet haku))]
-    (utils/requires-higher-education-application-fee? tarjonta-service haku hakukohde-oids)))
+  [haku]
+  (:maksullinen-kk-haku? haku))
 
 ; TODO: this may still be needed later for yksilöity EU citizen handling.
 ;(defn- is-eu-citizen? [koodisto-cache person]
@@ -345,8 +338,8 @@
 
 (defn filter-haut-for-update
   "filter haut that should have their kk payment status checked and updated at call time"
-  [tarjonta-service hakus]
-  (let [valid-hakus (filter (partial haku-valid-for-kk-payments? tarjonta-service) hakus)
+  [hakus]
+  (let [valid-hakus (filter haku-valid-for-kk-payments? hakus)
         active-hakus (filter utils/haku-active-for-updating valid-hakus)]
     active-hakus))
 
@@ -354,7 +347,7 @@
   "Get hakus that should have their kk payment status checked and updated at call time."
   [get-haut-cache tarjonta-service]
   (let [hakus (get-haut-with-tarjonta-data get-haut-cache tarjonta-service)
-        active-hakus (filter-haut-for-update tarjonta-service hakus)]
+        active-hakus (filter-haut-for-update hakus)]
     (log/info "Found" (count active-hakus) "active hakus for kk payment status updates")
     active-hakus))
 
@@ -365,7 +358,7 @@
         haku-oid           (:haku latest-application)
         person-oid         (:person-oid latest-application)
         haku               (when haku-oid (tarjonta/get-haku tarjonta-service haku-oid))
-        valid-haku?        (when haku (haku-valid-for-kk-payments? tarjonta-service haku))]
+        valid-haku?        (when haku (haku-valid-for-kk-payments? haku))]
     (when valid-haku?
       [person-oid (:alkamiskausi haku) (:alkamisvuosi haku)])))
 
@@ -378,7 +371,7 @@
 (defn- get-valid-haku-oids
   [get-haut-cache tarjonta-service term year]
   (->> (get-haut-for-start-term-and-year get-haut-cache tarjonta-service term year)
-       (filter (partial haku-valid-for-kk-payments? tarjonta-service))
+       (filter haku-valid-for-kk-payments?)
        (map :oid)))
 
 (defn- set-payment

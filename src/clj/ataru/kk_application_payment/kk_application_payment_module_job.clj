@@ -21,7 +21,7 @@
   (let [haut (->> haku-oids
                   (keep #(tarjonta/get-haku tarjonta-service %))
                   (filter #(some? (:ataru-form-key %)))
-                  (kk-application-payment/filter-haut-for-update tarjonta-service)
+                  (kk-application-payment/filter-haut-for-update)
                   seq)]
     (->> haut
          (map :ataru-form-key)
