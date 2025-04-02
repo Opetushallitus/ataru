@@ -1869,17 +1869,26 @@
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
-        :query-params [{hakukohdeOid :- s/Str nil}]
+        :query-params [{hakukohdeOid           :- s/Str nil}
+                       {hakuOid                :- s/Str nil}
+                       {modifiedAfter          :- s/Str nil}
+                       {returnInactivated      :- s/Bool false}
+                       {withUnapprovedPayments :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
         (if (and (nil? hakukohdeOid)
+                 (nil? hakuOid)
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/siirto-applications
                    application-service
                    session
                    hakukohdeOid
-                   (not-empty applicationOids))
+                   hakuOid
+                   (not-empty applicationOids)
+                   modifiedAfter
+                   returnInactivated
+                   withUnapprovedPayments)
                  {:unauthorized _}
                  (response/unauthorized {:error "Unauthorized"})
                  {:yksiloimattomat (_ :guard empty?)

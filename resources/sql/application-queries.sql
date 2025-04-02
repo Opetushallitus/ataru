@@ -1139,6 +1139,10 @@ SELECT
    WHERE application_id = a.id) AS content,
   a.lang,
   lf.organization_oid AS "organization-oid",
+  ar.state,
+  a.submitted AS submitted,
+  a.created_time AS created,
+  a.modified_time AS modified, --todo, varmista että tämä päivittyy aina kun tarpeen - vaatii ehkä lisää triggereitä
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -1148,15 +1152,33 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_attachment_reviews ahar
-   WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews"
+   WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+  (SELECT json_agg(json_build_object('state', state,
+                                     'reason', reason,
+                                     'dueDate', due_date,
+                                     'total', total_sum,
+                                     'reminderSentAt', reminder_sent_at,
+                                     'modified', modified_at))
+   FROM kk_application_payments kkap
+   WHERE kkap.application_key = a.key) AS "application-payment-states",
+  (SELECT json_agg(json_build_object('notes', notes,
+                                     'state', state_name,
+                                     'hakukohde', hakukohde,
+                                     'created', created_time,
+                                     'virkailijaOid', virkailija_oid))
+   FROM application_review_notes arn
+   WHERE arn.application_key = a.key
+   and arn.removed is null) AS "application-review-notes"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 JOIN forms AS f ON form_id = f.id
 JOIN latest_forms AS lf ON lf.key = f.key
 WHERE a.person_oid IS NOT NULL
   AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (a.hakukohde))
+  AND (:haku_oid::TEXT IS NULL OR :haku_oid = a.haku)
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
-  AND ar.state <> 'inactivated';
+  AND (:modified_after::TEXT IS NULL OR a.modified_time >= :modified_after::timestamptz)
+  AND (:return_inactivated::BOOLEAN IS TRUE OR ar.state <> 'inactivated');
 
 --name: yesql-kouta-application-count-for-hakukohde
 SELECT
