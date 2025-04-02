@@ -39,7 +39,10 @@
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
     [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
-    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment])
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
+    [ataru.koski.koski-service :as koski]
+    [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
+    [ataru.tutkinto.tutkinto-util :as tutkinto-util])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -453,7 +456,8 @@
                                      liiteri-cas-client
                                      suoritus-service
                                      form-by-id-cache
-                                     valintalaskentakoostepalvelu-service]
+                                     valintalaskentakoostepalvelu-service
+                                     koski-service]
   ApplicationService
   (get-person
     [_ application]
@@ -506,6 +510,7 @@
                                             newest-form)
                                           (assoc :content [])
                                           (dissoc :organization-oid))
+            requested-tutkinto-levels (tutkinto-util/koski-tutkinto-levels-in-form form)
             hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
             attachment-reviews    (future (parse-application-attachment-reviews application-key))
             events                (future (get-application-events organization-service application-key))
@@ -518,7 +523,14 @@
                                     (some->> application
                                              :person-oid
                                              (person-service/get-person person-service)
-                                             :oppijanumero))]
+                                             :oppijanumero))
+            koski-tutkinnot       (future (when (tutkinto-util/koski-tutkinnot-in-application? application)
+                                            (if (tutkinto-util/save-koski-tutkinnot? form)
+                                              (application-store/koski-tutkinnot-for-application (:key application))
+                                              (some->> (:person-oid application)
+                                                       (koski/get-tutkinnot-for-oppija koski-service false)
+                                                       :opiskeluoikeudet
+                                                       (parse-koski-tutkinnot requested-tutkinto-levels)))))]
         (util/remove-nil-values {:application           (-> application
                                                             (dissoc :person-oid)
                                                             (assoc :person (get-person this application))
@@ -532,30 +544,31 @@
                                  :review-notes          @review-notes
                                  :kk-payment            @kk-payment-state
                                  :information-requests  @information-requests
-                                 :master-oid            @master-oid}))))
+                                 :master-oid            @master-oid
+                                 :koski-tutkinnot       @koski-tutkinnot}))))
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session]
     (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service person-service session application-keys [:view-applications :edit-applications])
-      (let [applications                     (application-store/get-applications-by-keys application-keys)
-            application-reviews              (->> applications
-                                                  (map :key)
-                                                  application-store/get-application-reviews-by-keys
-                                                  (reduce #(assoc %1 (:application-key %2) %2) {}))
-            application-review-notes         (->> applications
-                                                  (map :key)
-                                                  application-store/get-application-review-notes-by-keys
-                                                  (group-by :application-key))
-            onr-persons                      (->> (map :person-oid applications)
-                                                  distinct
-                                                  (filter some?)
-                                                  (person-service/get-persons person-service))
-            applications-with-persons        (map (fn [application]
-                                                      (assoc application
-                                                             :person (->> (:person-oid application)
-                                                                          (get onr-persons)
-                                                                          (person-service/parse-person-with-master-oid application))))
-                                                  applications)
+      (let [applications               (application-store/get-applications-by-keys application-keys)
+            application-reviews        (->> applications
+                                            (map :key)
+                                            application-store/get-application-reviews-by-keys
+                                            (reduce #(assoc %1 (:application-key %2) %2) {}))
+            application-review-notes   (->> applications
+                                            (map :key)
+                                            application-store/get-application-review-notes-by-keys
+                                            (group-by :application-key))
+            onr-persons                (->> (map :person-oid applications)
+                                            distinct
+                                            (filter some?)
+                                            (person-service/get-persons person-service))
+            applications-with-persons  (map (fn [application]
+                                              (assoc application
+                                                :person (->> (:person-oid application)
+                                                             (get onr-persons)
+                                                             (person-service/parse-person-with-master-oid application))))
+                                            applications)
             hakukohteiden-ehdolliset         (delay (hakukohteiden-ehdolliset valinta-tulos-service applications))
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                                (<= 200000 (count applications))
@@ -578,7 +591,8 @@
                                                                        tarjonta-service
                                                                        koodisto-cache
                                                                        organization-service
-                                                                       ohjausparametrit-service))]
+                                                                       ohjausparametrit-service
+                                                                       koski-service))]
           xls
           (throw (new RuntimeException "Excelin muodostaminen ei onnistunut"))))))
 
@@ -1078,4 +1092,4 @@
           job-runner
           id)))))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil nil nil))

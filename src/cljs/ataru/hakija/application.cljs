@@ -1,6 +1,10 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
-  (:require [ataru.util :as util]
+  (:require [ataru.constants :as constants]
+            [ataru.util :as util]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]
+            [ataru.translations.texts :refer [koski-tutkinnot-texts]]
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
@@ -47,13 +51,13 @@
               :fieldType  (:or "textField" "textArea")
               :label      label
               :params     {:question-group-id _}}]
-            (let [required? (some #(contains? required-validators %)
-                                  (:validators field))]
-              [(keyword id) {:valid  (not required?)
-                             :label  label
-                             :value  [[""]]
-                             :values [[{:value ""
-                                        :valid (not required?)}]]}])
+                 (let [required? (some #(contains? required-validators %)
+                                       (:validators field))]
+                   [(keyword id) {:valid  (not required?)
+                                           :label  label
+                                           :value  [[""]]
+                                           :values [[{:value ""
+                                                      :valid (not required?)}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -97,16 +101,15 @@
               :fieldClass "formField"
               :fieldType  "dropdown"
               :label      label
-              :params     {:question-group-id _}
-              :options    options}]
-            (let [value     (some #(when (:default-value %) (:value %)) options)
-                  required? (some #(contains? required-validators %)
-                                  (:validators field))]
-              [(keyword id) {:valid  (or (some? value) (not required?))
-                             :label  label
-                             :value  [[(or value "")]]
-                             :values [[{:value (or value "")
-                                        :valid (or (some? value) (not required?))}]]}])
+              :params     {:question-group-id _}}]
+            (let [value     (some #(when (:default-value %) (:value %)) (:options field))
+                 required?  (some #(contains? required-validators %)
+                                 (:validators field))]
+             [(keyword id) {:valid  (or (some? value) (not required?))
+                                     :label  label
+                                     :value  [[(or value "")]]
+                                     :values [[{:value (or value "")
+                                                :valid (or (some? value) (not required?))}]]}])
 
             [{:id         id
               :fieldClass "formField"
@@ -133,11 +136,11 @@
               :label      label
               :params     {:question-group-id _}}]
             (let [required? (some #(contains? required-validators %)
-                                  (:validators field))]
+                                 (:validators field))]
               [(keyword id) {:valid  (not required?)
-                             :value  [nil]
-                             :values [nil]
-                             :label  label}])
+                                     :value  [nil]
+                                     :values [nil]
+                                     :label  label}])
 
             [{:id         id
               :fieldClass "formField"
@@ -159,10 +162,10 @@
               :label      label
               :params     {:question-group-id _}}]
             [(keyword id) {:valid  (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                           :value  [[]]
-                           :values [[]]
-                           :label  label}]
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"
@@ -181,10 +184,10 @@
               :label      label
               :params     {:question-group-id _}}]
             [(keyword id) {:valid  (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                           :value  [[]]
-                           :values [[]]
-                           :label  label}]
+                                                      (:validators field)))
+                                   :value  [[]]
+                                   :values [[]]
+                                   :label  label}]
 
             [{:id         id
               :fieldClass "formField"
@@ -216,15 +219,25 @@
            (filter some?)
            first))))
 
+(defn- field-value-invalid? [key answer ui tutkinnot-required-and-missing?]
+  (or (and (some? answer)
+           (not (:valid answer))
+           (get-in ui [key :visible?] true))
+      (and tutkinnot-required-and-missing? (= ktm/koski-module-id (name key)))))
+
+(defn- get-label-for-invalid-field [key answer tutkinnot-required-and-missing?]
+  (if (and tutkinnot-required-and-missing? (= ktm/koski-module-id (name key)))
+    (:tutkinto-validation-error-msg koski-tutkinnot-texts)
+    (:label answer)))
+
 (defn answers->valid-status [all-answers ui flat-form-content]
-  {:invalid-fields (for [field flat-form-content
-                         :let  [key (keyword (:id field))
-                                answer (get all-answers key)]
-                         :when (and (some? answer)
-                                    (not (:valid answer))
-                                    (get-in ui [key :visible?] true))]
-                     {:key   key
-                      :label (:label answer)})})
+  (let [tutkinnot-required-and-missing? (tutkinto-util/tutkinnot-required-and-missing flat-form-content ui all-answers)]
+    {:invalid-fields (cond-> (for [field flat-form-content
+                              :let  [key (keyword (:id field))
+                                     answer (get all-answers key)]
+                              :when (field-value-invalid? key answer ui tutkinnot-required-and-missing?)]
+                               {:key   key
+                                :label (get-label-for-invalid-field key answer tutkinnot-required-and-missing?)}))}))
 
 (defn- sanitize-attachment-value-by-state [value values]
   (when (not= :deleting (:status values))
@@ -285,7 +298,7 @@
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
         (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 
-(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? tunnistautunut?]
+(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? session-data]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
              :strict-warnings-on-unchanged-edits? (if (nil? strict-warnings-on-unchanged-edits?)
@@ -296,7 +309,10 @@
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
              :answers   (create-answers-to-submit (:answers application) form (:ui application))
-             :tunnistautunut tunnistautunut?}
+             :tunnistautunut (boolean (:logged-in session-data))
+             :save-koski-tutkinnot (and (= (:auth-type session-data) constants/auth-type-strong)
+                                        (tutkinto-util/koski-tutkinto-levels-in-form form)
+                                        (tutkinto-util/save-koski-tutkinnot? form))}
 
             (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 

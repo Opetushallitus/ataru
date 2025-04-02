@@ -74,6 +74,53 @@
                 (should= kk-application-payment-wrapper-key
                          (:id (util/find-wrapper-parent flattened-form migri-field))))))
 
+(describe "checking group answers"
+          (tags :unit)
+          (it "accept non-empty answer"
+              (should (util/answered-in-group-idx {:value ["answer"]} 0)))
+          (it "accept two dimensional non-empty answer"
+              (should (util/answered-in-group-idx {:value [["answer"]]} 0)))
+          (it "reject empty answer"
+              (should-not (util/answered-in-group-idx {:value []} 0))
+              (should-not (util/answered-in-group-idx {:value [[]]} 0)))
+          (it "reject nil answer"
+              (should-not (util/answered-in-group-idx {:value [nil]} 0))
+              (should-not (util/answered-in-group-idx {:value [[nil]]} 0)))
+          (it "reject empty string"
+              (should-not (util/answered-in-group-idx {:value [""]} 0))
+              (should-not (util/answered-in-group-idx {:value [[""]]} 0)))
+          (it "reject blank string"
+              (should-not (util/answered-in-group-idx {:value [" "]} 0))
+              (should-not (util/answered-in-group-idx {:value [[" "]]} 0)))
+          (it "reject non-array answer"
+              (should-not (util/answered-in-group-idx {:value ""} 0)))
+          (it "reject index-out-of-bounds answer"
+              (should-not (util/answered-in-group-idx {:value [["answer"]]} 1))))
+
+(describe "checking non-blank answers"
+          (tags :unit)
+          (it "accept non-empty answer"
+              (should (util/non-blank-answer? {:value "answer"})))
+          (it "accept non-empty array"
+              (should (util/non-blank-answer? {:value ["answer"]})))
+          (it "accept two dimensional non-empty answer"
+              (should (util/non-blank-answer? {:value [["answer"]]})))
+          (it "reject empty answer"
+              (should-not (util/non-blank-answer? {:value []}))
+              (should-not (util/non-blank-answer? {:value [[]]})))
+          (it "reject nil answer"
+              (should-not (util/non-blank-answer? {:value nil}))
+              (should-not (util/non-blank-answer? {:value [nil]}))
+              (should-not (util/non-blank-answer? {:value [[nil]]})))
+          (it "reject empty string"
+              (should-not (util/non-blank-answer? {:value ""}))
+              (should-not (util/non-blank-answer? {:value [""]}))
+              (should-not (util/non-blank-answer? {:value [[""]]})))
+          (it "reject blank string"
+              (should-not (util/non-blank-answer? {:value " "}))
+              (should-not (util/non-blank-answer? {:value [" "]}))
+              (should-not (util/non-blank-answer? {:value [[" "]]}))))
+
 (def field-descriptor-id "64d4a625-370b-4814-ae4f-d5956e8881be")
 (def field-descriptor {:id         field-descriptor-id
                        :label      {:fi "Pohjakoulutuksesi?" :sv ""}

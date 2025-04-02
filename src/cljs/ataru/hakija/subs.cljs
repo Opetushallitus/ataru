@@ -354,6 +354,7 @@
            (clojure.string/blank? hakija-secret)
            (not already-declined)
            (not logged-in)))))
+
 (re-frame/reg-sub
   :application/loading-complete?
   (fn [_ _]
@@ -362,10 +363,12 @@
      (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
+     (re-frame/subscribe [:state-query [:oppija-session :tutkinto-fetch-handled]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
      (re-frame/subscribe [:state-query [:application :secret]])
      (re-frame/subscribe [:application/demo?])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret demo?] _]
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored tutkinto-fetch-handled
+        virkailija-secret hakija-secret demo?] _]
     (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (or load-failure
           (and form
@@ -374,7 +377,7 @@
                    (or (not (clojure.string/blank? virkailija-secret))
                        (not (clojure.string/blank? hakija-secret))
                        (not form-allows-ht)
-                       (or session-fetched
+                       (or (and session-fetched tutkinto-fetch-handled)
                            session-fetch-errored))))))))
 
 (re-frame/reg-sub
@@ -1003,3 +1006,31 @@
        (= "payment-type-kk" payment-type)
        was-previously-finnish-citizen-or-empty?
        is-not-a-finnish-citizen?))))
+
+(re-frame/reg-sub
+  :application/selected-tutkinto-levels
+  (fn [db]
+    (get-in db [:form :properties :tutkinto-properties :selected-option-ids] [])))
+
+(re-frame/reg-sub
+  :application/koski-tutkinnot
+  (fn [db]
+    (get-in db [:application :koski-tutkinnot] [])))
+
+(re-frame/reg-sub
+  :application/any-koski-tutkinnot?
+  (fn [db]
+    (some? (not-empty (get-in db [:application :koski-tutkinnot] {})))))
+
+(re-frame/reg-sub
+  :application/show-itse-syotetyt-tutkinnot?
+  (fn [db]
+    (get-in db [:application :ui :show-itse-syotetyt-tutkinnot?] true)))
+
+(re-frame/reg-sub
+  :application/any-answered?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/answers])])
+  (fn [[answers] [_ field-descriptors]]
+    (let [field-ids (map #(keyword (:id %)) (util/flatten-form-fields field-descriptors))]
+      (some #(util/non-blank-answer? (get answers %)) field-ids))))

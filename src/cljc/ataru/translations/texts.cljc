@@ -563,6 +563,9 @@
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}
+   :poista-osio                                 {:fi "Poista osio"
+                                                 :sv "Radera avsnitt"
+                                                 :en "Delete section"}
    :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
                                                  :sv "Övningsblankett – Dina uppgifter sparas inte!"
                                                  :en "Practice form  — Your information will not be saved!"}
@@ -644,9 +647,15 @@
    :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ja täytä hakulomake"
                                                  :sv "Identifiera dig och fyll i ansökningsblanketten"
                                                  :en "Identify and fill in the application form"}
-   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
-                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
-                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically. You can modify your contact information on the application form."}
+   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
+                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten."
+                                                 :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically."}
+   :ht-tunnistaudu-ensin-tutkinto-fetch-notice  {:fi "Myös tutkintotietosi tuodaan lomakkeelle, jos tunnistaudut."
+                                                 :sv "Om du identifierar dig, hämtas även dina examensuppgifter."
+                                                 :en "Your degree information will also be retrieved to the form if you identify yourself."}
+   :ht-tunnistaudu-ensin-post-notice            {:fi "Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
+                                                 :sv "Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
+                                                 :en "You can modify your contact information on the application form."}
    :ht-tunnistaudu-ensin-text-2                 {:fi "Sinulla on tunnistautumisen jälkeen neljä tuntia aikaa täyttää ja lähettää hakulomake, minkä jälkeen istuntosi aikakatkaistaan."
                                                  :sv "Efter att du har identifierat dig har du fyra timmar på dig att fylla i och skicka din ansökningsblankett. Efter detta avbryts din session."
                                                  :en "Once you have completed identification, you have four hours to fill in and send the application form. The session will expire after four hours."}
@@ -731,6 +740,9 @@
    :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
                                                  :sv "Ditt namn och födelsetid har hämtats till ansökningsblanketten via identifiering."
                                                  :en "Your name and date of birth have been prefilled on the application form via identification."}
+   :add-tutkinto                                {:fi "Lisää tutkinto"
+                                                 :sv "Lägg till examen"
+                                                 :en "Add degree"}
    :information-request-reminder-subject-prefix {:fi "Muistutus"
                                                  :en "Reminder"
                                                  :sv "Påminnelse"}})
@@ -2105,6 +2117,9 @@
    :question-group                                           {:fi "Kysymysryhmä"
                                                               :sv "Frågegrupp"
                                                               :en "Question group"}
+   :question-group-tutkinto                                  {:fi "Kysymysryhmä (tutkintokokonaisuus)"
+                                                              :sv "Frågegrupp (examenshelhet)"
+                                                              :en "Question group (degree module)"}
    :receiver                                                 {:fi "Vastaanottaja:"
                                                               :sv "Mottagare:"
                                                               :en "Receiver:"}
@@ -2627,7 +2642,19 @@
                                                               :en "Applicant payment liability unknown"}
    :payment-not-obligated                                    {:fi "Hakija ei ole maksuvelvollinen"
                                                               :sv "SV: Hakija ei ole maksuvelvollinen"
-                                                              :en "EN: Hakija ei ole maksuvelvollinen"}})
+                                                              :en "EN: Hakija ei ole maksuvelvollinen"}
+   :tutkinnot                                                {:fi "Tutkintotiedot Koski-palvelusta (beta)"
+                                                              :sv "Examensuppgifter från Koski-tjänsten (beta)"
+                                                              :en "Degree information from the Koski service (beta)"}
+   :koski-originated-tutkinto-tag-first-row                  {:fi "Tutkinnon tiedot haettu"
+                                                              :sv "Examensuppgifterna har hämtats"
+                                                              :en "Degree information retrieved"}
+   :koski-originated-tutkinto-tag-second-row                 {:fi "Koski-palvelusta"
+                                                              :sv "från Koski-tjänsten "
+                                                              :en "from the Koski service"}
+   :koski-tutkinto-fetch-failed                              {:fi "Tutkintotietojen haku Koski-palvelusta epäonnistui"
+                                                              :sv "Examensuppgifterna kunde inte hämtas från Koski-tjänsten"
+                                                              :en "Retrieval of degree information from the Koski service failed"}})
 
 (def state-translations
   {:active                       {:fi "Aktiivinen"
@@ -2977,6 +3004,104 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}})
+
+(def koski-tutkinnot-texts
+  {:section-label                                 {:fi "Tutkinnot"
+                                                   :sv "Examina"
+                                                   :en "Degrees"}
+   :section-description                           {:fi "Hakijalle tuodaan Koski-palvelusta valittujen koulutusasteiden tutkintotiedot. Lisäksi hakija voi ilmoittaa puuttuvia tutkintotietoja. Kirjautumaton hakija ilmoittaa aina omat tutkintotietonsa."
+                                                   :sv "Examensuppgifterna för de utbildningsstadier som den sökande valt hämtas från Koski-tjänsten. Den sökande kan även lägga till examensuppgifter som saknas. En sökande som inte loggat in lägger alltid till sina egna examensuppgifter."
+                                                   :en "Degree information for the selected levels of education is retrieved from the Koski service for the applicant. Additionally, the applicant can add missing degree information. Applicant, who has not identified via suomi.fi, must always add their own degree information."}
+   :field-list                                    {:fi "Tutkinto, Koulutusohjelma, Oppilaitos, Valmistumispäivä, Tutkintotodistus (liitepyyntö kirjautumattomille)."
+                                                   :sv "Examen, Utbildningsprogram, Läroanstalt, Examensdatum, Examensbetyg (begäran om bilaga för användare som inte är inloggade)."
+                                                   :en "Qualification, Study programme, Education institution, Date of graduation, Diploma (required application attachment users, who have not identified via suomi.fi)."}
+   :completed-study-question-label                {:fi "TBD: Hakijalle näytetään opintosuoritukset"
+                                                   :sv ""
+                                                   :en ""}
+   :koski-update-policy-label                     {:fi "Koski-palvelusta tuodun tutkintotiedon päivittyminen"
+                                                   :sv "Uppdatering av examensuppgifterna som hämtats från Koski-tjänsten"
+                                                   :en "Updating of degree information retrieved from Koski service"}
+   :koski-update-option-only-once-label           {:fi "Tiedot säilyvät samoina kuin ne ovat hakemushetkellä"
+                                                   :sv "Uppgifterna förblir de samma som vid tidpunkten för ansökan"
+                                                   :en "The information remains the same as at the time of the application"}
+   :koski-update-option-allways-label             {:fi "Tiedot voivat päivittyä hakemuksen teon jälkeen, päätöksentekoon asti"
+                                                   :sv "Uppgifterna kan uppdateras efter att ansökan har gjorts fram till att beslutet fattas"
+                                                   :en "The information may update after the application is submitted, up until the decision-making process"}
+   :info-label                                    {:fi "Valitse ne tutkinnot, jotka haluat liittää hakemukseen."
+                                                   :sv "Välj de examina som du vill bifoga till din ansökan."
+                                                   :en "Select the degrees you want to include in the application."}
+   :tutkintotaso-label                            {:fi "Tutkintotasot"
+                                                   :sv "Examensnivåer"
+                                                   :en "Degree levels"}
+   :tutkintotaso-description                      {:fi "Valitse tutkintotasot. Koski-palvelusta tuodaan vain tätä valintaa vastaavia tutkintotietoja."
+                                                   :sv "Välj examensnivåer. Från Koski-tjänsten hämtas endast examensuppgifter som motsvarar detta val."
+                                                   :en "Select degree levels. Only degree information matching this selection will be retrieved from the Koski service."}
+   :tutkintotaso-validation-info                  {:fi "Pakollinen tieto, hakijan on valittava vähintään yksi Koski-palvelusta tuotu tutkinto, tai ilmoitettava itse vähintään yksi tutkinto."
+                                                   :sv "Obligatorisk uppgift, den sökande måste välja minst en examen som hämtats från Koski-tjänsten eller själv lägga till minst en examen."
+                                                   :en "Required information, the applicant must select at least one degree retrieved from Koski service or manually add at least one degree."}
+   :tutkinto-validation-error-msg                 {:fi "Valitse tai lisää vähintään yksi tutkinto"
+                                                   :sv "Välj eller lägg till minst en examen"
+                                                   :en "Select or add at least one degree"}
+   :perusopetus-label                             {:fi "Perusopetus"
+                                                   :sv "Grundläggande utbildning"
+                                                   :en "Basic education"}
+   :lukiokoulutus-label                           {:fi "Lukiokoulutus"
+                                                   :sv "Gymnasieutbildning"
+                                                   :en "General upper secondary education"}
+   :yo-tutkinnot-label                            {:fi "Ylioppilastutkinnot"
+                                                   :sv "Studentexamina"
+                                                   :en "Matriculation examinations"}
+   :amm-perustutkinnot-label                      {:fi "Ammatilliset perustutkinnot"
+                                                   :sv "Yrkesinriktade grundexamina"
+                                                   :en "Vocational upper secondary qualifications"}
+   :amm-tutkinnot-label                           {:fi "Ammattitutkinnot"
+                                                   :sv "Yrkesexamina"
+                                                   :en "Further vocational qualifications"}
+   :amm-erikoistutkinnot-label                    {:fi "Erikoisammattitutkinnot"
+                                                   :sv "Specialyrkesexamina"
+                                                   :en "Specialist vocational qualifications"}
+   :alemmat-kk-tutkinnot-label                    {:fi "Alemmat korkeakoulututkinnot"
+                                                   :sv "Lägre högskoleexamina"
+                                                   :en "Batchelor's degrees"}
+   :ylemmat-kk-tutkinnot-label                    {:fi "Ylemmät korkeakoulututkinnot"
+                                                   :sv "Högre högskoleexamina"
+                                                   :en "Master's degrees"}
+   :tohtori-tutkinnot-label                       {:fi "Tohtoritutkinnot"
+                                                   :sv "Doktorsexamina"
+                                                   :en "Doctoral degrees"}
+   :itse-syotetty-tutkinnot-label                 {:fi "Tutkinto, joka ei ole Koski-palvelussa"
+                                                   :sv "Examen som inte finns i Koski-tjänsten"
+                                                   :en "Degree that is not available in the Koski service"}
+   :koski-followup-label                          {:fi "Lisäkysymykset Koskesta tuoduille tutkinnoille"
+                                                   :sv "Tilläggsfrågor om examina som hämtats från Koski"
+                                                   :en "Additional questions"}
+   :itse-syotetty-followup-label                  {:fi "Kysymykset"
+                                                   :sv "Frågor"
+                                                   :en "Questions"}
+   :itse-syotetty-tutkinto-group-label            {:fi "Tutkinto"
+                                                   :sv "Examen"
+                                                   :en "Degrees"}
+   :tutkinto-followup-label                       {:fi "Tutkinto"
+                                                   :sv "Examen"
+                                                   :en "Degrees"}
+   :koulutusohjelma-followup-label                {:fi "Koulutusohjelma"
+                                                   :sv "Utbildningsprogram"
+                                                   :en "Study programme"}
+   :oppilaitos-followup-label                     {:fi "Oppilaitos"
+                                                   :sv "Läroanstalt"
+                                                   :en "Education institution"}
+   :valmistumispvm-followup-label                 {:fi "Valmistumispäivä"
+                                                   :sv "Examensdatum"
+                                                   :en "Date of graduation"}
+   :itse-syotetty-valimistumispvm-infotext-label  {:fi "Päivämäärä muodossa pp.kk.vvvv, esim. 31.12.2024"
+                                                   :sv "Datum i formatet dd.mm.åååå, t.ex. 31.12.2024"
+                                                   :en "Date in the format dd.mm.yyyy, for example 31.12.2024"}
+   :itse-syotetty-liitteet-followup-label         {:fi "Tutkintotodistus"
+                                                   :sv "Examensbetyg"
+                                                   :en "Diploma"}
+   :itse-syotetty-liitteet-infotext-value         {:fi "Tallenna todistuksesi PDF- tai kuvatiedostona (esim. PNG tai JPEG)."
+                                                   :sv "Spara ditt examensbetyg som PDF eller bild (till exempel PNG eller JPEG)."
+                                                   :en "Save your certificate as a PDF or image file (for example, PNG or JPEG)."}})
 
 (defn email-applied-error
   [email preferred-name]

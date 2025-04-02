@@ -2,7 +2,9 @@
   (:require [clojure.set :as set]
             [clojure.string :as string]
             [ataru.application.option-visibility :as option-visibility]
-            [ataru.util :as u]))
+            [ataru.util :as u]
+            [ataru.component-data.koski-tutkinnot-module :as ktm]
+            [ataru.tutkinto.tutkinto-util :as tutkinto-util]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
@@ -138,12 +140,33 @@
                                         belongs-to
                                         selected-hakukohteet-and-ryhmat)))))))))
 
+(defn- set-tutkinto-visibility [db property-option parent-visible? answers form ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat]
+  (let [visible? (and parent-visible?
+                      (not (tutkinto-util/koski-tutkinto-level-without-selections?
+                             property-option
+                             answers
+                             (tutkinto-util/koski-tutkinto-levels-in-form form)))
+                      (or (not (= ktm/itse-syotetty-option-id (:id property-option)))
+                          (get-in db [:application :ui :show-itse-syotetyt-tutkinnot?] true)))]
+    (reduce
+      (fn [db' followup] (set-field-visibility db' followup visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat))
+      db
+      (:followups property-option))))
+
 (defn set-field-visibility
   ([db field-descriptor]
    (set-field-visibility
      db
      field-descriptor
      true
+     (ylioppilastutkinto? db)
+     (applies-as-identified? db)
+     (selected-hakukohteet-and-ryhmat db)))
+  ([db field-descriptor visible?]
+   (set-field-visibility
+     db
+     field-descriptor
+     visible?
      (ylioppilastutkinto? db)
      (applies-as-identified? db)
      (selected-hakukohteet-and-ryhmat db)))
@@ -173,25 +196,31 @@
                                                           selected-hakukohteet-and-ryhmat)))))
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
                                      (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor)))
+         children               (:children field-descriptor)
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
                                           db
-                                          (:children field-descriptor)))
+                                          children))
          option-visibility      (fn [db]
                                   (reduce #(set-option-visibility %1 %2 visible? id selected-hakukohteet-and-ryhmat)
                                           db
                                           (map-indexed vector (:options field-descriptor))))
+         tutkinto-visibility    (fn [db]
+                                  (reduce #(set-tutkinto-visibility %1 %2 visible? answers form ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
+                                          db
+                                          (:property-options field-descriptor)))
          field-visibility       (fn [db]
                                   (assoc-in db
                                             [:application :ui id :visible?]
                                             (boolean
                                               (and visible?
-                                                   (or (empty? (:children field-descriptor))
+                                                   (or (empty? children)
                                                        (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
-                                                             (:children field-descriptor)))))))]
+                                                             children))))))]
      (cond-> (-> db
                  child-visibility
                  option-visibility
+                 tutkinto-visibility
                  field-visibility)
              (#{"dropdown" "multipleChoice" "singleChoice" "textField"} (:fieldType field-descriptor))
              (set-followups-visibility field-descriptor visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)))))

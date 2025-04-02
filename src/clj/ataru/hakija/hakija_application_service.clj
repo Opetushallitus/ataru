@@ -15,11 +15,14 @@
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.hakija.validator :as validator]
+    [ataru.koski.koski-service :as koski-service]
+    [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
     [ataru.log.audit-log :as audit-log]
     [ataru.maksut.maksut-protocol :as maksut-protocol]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.tutkinto.tutkinto-util :as tutkinto-util]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -523,7 +526,8 @@
                            :amount amount})]
     {:tutu-form? (tutu-form? form)
      :req-fn     req-fn
-     :lang       (:lang application)}))
+     :lang       (:lang application)
+     :app-key    app-key}))
 
 (defn remove-empty-arrays [answers]
   (filter #(not= (:value %) [[]]) answers))
@@ -535,6 +539,16 @@
   (-> answers
       (remove-empty-arrays)
       (remove-arrays-with-quotations-only)))
+
+(defn save-koski-tutkinnot [form-id app-key form-by-id-cache oppija-session koski-service]
+  (when-let [tutkinnot (some->> (get-in oppija-session [:data :person-oid])
+                                (koski-service/get-tutkinnot-for-oppija koski-service true)
+                                :opiskeluoikeudet
+                                (parse-koski-tutkinnot (->> form-id
+                                                            (str)
+                                                            (cache/get-from form-by-id-cache)
+                                                            (tutkinto-util/koski-tutkinto-levels-in-form))))]
+    (application-store/add-new-koski-tutkinnot-for-application app-key tutkinnot)))
 
 (defn handle-application-submit
   [form-by-id-cache
@@ -549,7 +563,8 @@
    session
    liiteri-cas-client
    maksut-service
-   oppija-session]
+   oppija-session
+   koski-service]
   (log/info "Application submitted:" application)
   (let [answers-empty-removed (remove-empty-answers (:answers application))
         application-empty-answers-removed (assoc application :answers answers-empty-removed)
@@ -567,13 +582,21 @@
                             false
                             session
                             oppija-session)
-        {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
+        {:keys [tutu-form? req-fn lang app-key]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
         virkailija-secret (:virkailija-secret application-empty-answers-removed)]
 
     (if passed?
       (do
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
+
+        (when (:save-koski-tutkinnot application-empty-answers-removed)
+          (save-koski-tutkinnot
+            (:form application-empty-answers-removed)
+            app-key
+            form-by-id-cache
+            oppija-session
+            koski-service))
 
         (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service (req-fn)))
               url (when tutu-form? (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang))]
@@ -712,7 +735,8 @@
    tarjonta-service
    hakukohderyhma-settings-cache
    secret
-   liiteri-cas-client]
+   liiteri-cas-client
+   koski-service]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -773,6 +797,14 @@
                                                                       nil
                                                                       application-in-processing?
                                                                       field-deadlines))
+        requested-tutkinto-levels  (tutkinto-util/koski-tutkinto-levels-in-form form)
+        koski-tutkinnot            (future (when requested-tutkinto-levels
+                                             (if (tutkinto-util/save-koski-tutkinnot? form)
+                                              (application-store/koski-tutkinnot-for-application (:key application))
+                                              (some->> (:person-oid application)
+                                                       (koski-service/get-tutkinnot-for-oppija koski-service true)
+                                                       :opiskeluoikeudet
+                                                       (parse-koski-tutkinnot requested-tutkinto-levels)))))
         new-person (application-service/get-person-for-securelink application-service application)
         filtered-person (if (= actor-role :virkailija)
                           new-person
@@ -787,10 +819,12 @@
                                 (when (some? (:key application))
                                   {:application-identifier (application-service/mask-application-key (:key application))}))]
     [(when full-application
-       {:application full-application
-        :person      filtered-person
-        :form        form
-        :kk-payment  kk-payment})
+       (cond-> {:application full-application
+                :person      filtered-person
+                :form        form
+                :kk-payment  kk-payment}
+               @koski-tutkinnot
+               (assoc :koski-tutkinnot @koski-tutkinnot)))
      secret-expired?
      lang-override
      inactivated?]))

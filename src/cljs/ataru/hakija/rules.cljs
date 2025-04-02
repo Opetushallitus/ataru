@@ -9,7 +9,8 @@
             [clojure.string :as string]
             [ataru.hakija.ssn :as ssn]
             [ataru.hakija.form-tools :as form-tools]
-            [ataru.hakija.validation-error :as validation-error])
+            [ataru.hakija.validation-error :as validation-error]
+            [ataru.util :as util])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -129,24 +130,6 @@
           is-required-needed (not= "true" have-finnish-ssn)]
       (toggle-require-field db "email" is-required-needed))
     db))
-
-(defn- parse-birth-date-from-ssn
-  [ssn]
-  (let [century-sign (nth ssn 6)
-        day          (subs ssn 0 2)
-        month        (subs ssn 2 4)
-        year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
-    (str day "." month "." century year)))
-
-(defn- parse-gender-from-ssn
-  [ssn]
-  (if (zero? (mod (js/parseInt (nth ssn 9)) 2))
-    "2"                                                     ;; based on koodisto-values
-    "1"))
 
 (defn- birth-date-and-gender
   ^{:dependencies [:have-finnish-ssn :ssn]}
@@ -485,6 +468,18 @@
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 
+(defn- show-descendants-of-property-options
+  [db _]
+  (let [flat-form-content (:flat-form-content db)
+        property-field-ids       (map :id (filter #(= "formPropertyField" (:fieldClass %)) flat-form-content))
+        all-descendant-ids (flatten (map #(util/find-descendant-ids-by-parent-id flat-form-content %) property-field-ids))
+        is-explicitly-hidden?     (fn [id] (get-in db [:flat-form-content (keyword id) :params :hidden] false))]
+    (reduce
+      (fn [db' descendant-id] (assoc-in db' [:application :ui (keyword descendant-id) :visible?]
+                                      (not (is-explicitly-hidden? descendant-id))))
+      db
+      all-descendant-ids)))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -508,7 +503,9 @@
     :toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
     toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
     :set-oppiaine-valinnainen-kieli-value
-    set-oppiaine-valinnainen-kieli-value))
+    set-oppiaine-valinnainen-kieli-value
+    :show-descendants-of-property-options
+    show-descendants-of-property-options))
 
 (defn run-rules
   ([db rules]
