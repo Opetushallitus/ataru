@@ -1852,11 +1852,13 @@
           (response/bad-request {:error "Haku oid param required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:haku-oid     haku-oid
-                                         :execution-id (str (UUID/randomUUID))}]
-              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+                                         :execution-uuid (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for haku: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto success" applications-success)
-                (response/ok {:success applications-success})))
+                (if applications-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}
