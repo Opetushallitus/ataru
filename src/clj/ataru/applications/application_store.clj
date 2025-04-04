@@ -1006,6 +1006,9 @@
 (def JodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss")
                               (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
 
+(def ZonedJodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
+                              (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time submitted person_oid lang email content
            payment-obligations eligibilities attachment_reviews]}]
@@ -1631,18 +1634,31 @@
                             (filter #(not= "hakukohteet" (:key %)))
                             flatten-application-answers)
         application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
-        application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])]
+        application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
+        application-review-notes (or (:application-review-notes application) [])
+        application-payment-states (map (fn [state] (update state :total #(edn/read-string %))) (or (:application-payment-states application) []))
+        submitted-formatted (.print ZonedJodaFormatter (:submitted application))
+        created-formatted (.print ZonedJodaFormatter (:created application))
+        modified-formatted (.print ZonedJodaFormatter (:modified application))]
   (-> application
-      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews)
+      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states :submitted :created :modified)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
       (assoc :hakukohdeReviews application-hakukohde-reviews)
       (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
+      (assoc :applicationReviewNotes application-review-notes)
+      (assoc :applicationPaymentStates application-payment-states)
+      (assoc :originallySubmitted submitted-formatted)
+      (assoc :versionCreated created-formatted)
+      (assoc :versionModified modified-formatted)
       (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
-(defn siirto-applications [hakukohde-oid application-keys]
-  (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
-                                                       :application_keys (cons "" application-keys)})
+(defn siirto-applications [hakukohde-oid haku-oid application-keys modified-after return-inactivated]
+  (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid      hakukohde-oid
+                                                       :haku_oid           haku-oid
+                                                       :application_keys   (cons "" application-keys)
+                                                       :modified_after     modified-after
+                                                       :return_inactivated (boolean return-inactivated)})
        (map unwrap-siirto-application)))
 
 (defn siirtotiedosto-applications-for-ids [ids]
