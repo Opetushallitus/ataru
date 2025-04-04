@@ -1034,3 +1034,11 @@
   (fn [[answers] [_ field-descriptors]]
     (let [field-ids (map #(keyword (:id %)) (util/flatten-form-fields field-descriptors))]
       (some #(util/non-blank-answer? (get answers %)) field-ids))))
+
+(re-frame/reg-sub
+  :application/visible-koski-wrapper-child?
+  (fn [[_ field-descriptor] _]
+    [(re-frame/subscribe [:application/visible? (keyword (:id field-descriptor))])
+     (re-frame/subscribe [:application/any-koski-tutkinnot?])])
+  (fn [[visible? any-koski-tutkinnot?] [_ field-descriptor]]
+    (and visible? (or any-koski-tutkinnot? (not= "infoElement" (:fieldClass field-descriptor))))))
