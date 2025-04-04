@@ -289,7 +289,7 @@
   [henkilot application]
   (let [person         (get henkilot (:personOid application))
         kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
-        aidinkieli     (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi])
+        aidinkieli     (when (:aidinkieli person) (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi]))
         asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
