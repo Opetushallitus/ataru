@@ -40,7 +40,9 @@
    {:id        "pisteet"
     :label     (:pisteet excel-texts)}
    {:id        "application-review-notes"
-    :label     (:notes excel-texts)}])
+    :label     (:notes excel-texts)}
+   {:id        "kk-payment-state"
+    :label     (:kk-payment-state excel-texts)}])
 
 (def common-field-labels
   [{:id "hakemuksen-yleiset-tiedot"
