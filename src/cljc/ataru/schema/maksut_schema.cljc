@@ -74,7 +74,8 @@
      (s/optional-key :message) (s/maybe s/Str)
      (s/optional-key :index) (s/constrained s/Int #(<= 1 % 2) 'valid-maksu-index)
      (s/optional-key :metadata) LaskuMetadataCreate
-     (s/optional-key :vat) s/Str}
+     (s/optional-key :vat) s/Str
+     (s/optional-key :extend-deadline) s/Bool}
     (fn [{:keys [due-date due-days]}]
       (or due-date due-days))
     'must-have-either-due-date-or-due-days))
