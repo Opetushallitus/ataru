@@ -324,16 +324,20 @@
                   "Tutkintojen tunnustaminen attachment size limit not set")))
     cfg))
 
+(defn- tutu-form? [form]
+  (let [cfg-form-key (:form-key (get-configuration))]
+    (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
+        (form-key-matches? cfg-form-key (:key form)))))
+
 (defn- application-job-step
   [liiteri-cas-client form-by-id-cache koodisto-cache application-id edit?]
-  (let [{:keys [form-key
-                country-question-id
+  (let [{:keys [country-question-id
                 attachment-total-size-limit
                 ftp]} (get-configuration)
-        application   (get-application country-question-id application-id)]
-    (if (form-key-matches? form-key (:form-key application))
-      (let [form        (get-form form-by-id-cache koodisto-cache application)
-            attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
+        application   (get-application country-question-id application-id)
+        form          (get-form form-by-id-cache koodisto-cache application)]
+    (if (tutu-form? form)
+      (let [attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
             message     (if edit?
                           (->application-edited application form attachments)
                           (->application-submitted application form attachments))]
@@ -361,14 +365,14 @@
   (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
-  [{:keys [event-id]} _]
-  (let [{:keys [form-key
-                country-question-id
+  [{:keys [event-id]} {:keys [form-by-id-cache koodisto-cache]}]
+  (let [{:keys [country-question-id
                 ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
         application           (:application application-and-state)
-        application-id        (:id application)]
-    (if (and (form-key-matches? form-key (:form-key application))
+        application-id        (:id application)
+        form                  (get-form form-by-id-cache koodisto-cache application)]
+    (if (and (tutu-form? form)
              (nil? (:review-key application-and-state))
              (= "inactivated" (:state application-and-state)))
       (let [message (->application-inactivated application)]
@@ -386,11 +390,12 @@
 (defn timestamp [] (System/currentTimeMillis))
 
 (defn tutkintojen-tunnustaminen-information-request-sent-job-step
-  [{:keys [information-request]} _]
-  (let [{:keys [form-key country-question-id ftp]} (get-configuration)
+  [{:keys [information-request]} {:keys [form-by-id-cache koodisto-cache]}]
+  (let [{:keys [country-question-id ftp]} (get-configuration)
         application-id (:id (get-latest-application-id (:application-key information-request)))
-        application (get-application country-question-id application-id)]
-    (if (and (form-key-matches? form-key (:form-key application))
+        application    (get-application country-question-id application-id)
+        form           (get-form form-by-id-cache koodisto-cache application)]
+    (if (and (tutu-form? form)
              (= "information-request" (:message-type information-request)))
       (let [ts (timestamp)
             message (->application-information-request-sent application information-request ts)]
