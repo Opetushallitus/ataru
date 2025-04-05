@@ -1869,9 +1869,11 @@
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
+        :header-params [{content-type :- s/Str nil}]
         :query-params [{hakukohdeOid :- s/Str nil}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
+        (log/info (str "User: " (-> session :identity :oid) " | Content-type: " content-type " | HakukohdeOid: " hakukohdeOid " | Body: " applicationOids))
         (if (and (nil? hakukohdeOid)
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
