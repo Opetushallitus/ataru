@@ -325,9 +325,12 @@
     (try
       (let [column                 (:column header)
             answer-key             (:key answer)
-            field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
-                                     (get form-fields-by-key (first (string/split answer-key #"_")))
-                                     (get form-fields-by-key answer-key))
+            field-descriptor       (cond
+                                     (some? (:duplikoitu-kysymys-hakukohde-oid answer))
+                                     (:original-question answer)
+                                     (some? (:duplikoitu-followup-hakukohde-oid answer))
+                                     (:original-followup answer)
+                                     :else (get form-fields-by-key answer-key))
             value-or-values        (cond
                                      (contains? person (keyword answer-key))
                                      (get person (keyword answer-key))
