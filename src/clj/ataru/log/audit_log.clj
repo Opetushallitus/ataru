@@ -91,7 +91,7 @@
      (into {} (for [kw updated-kw]
                 [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-(defn- do-log [^Audit audit-logger {:keys [new old id operation session]}]
+(defn- do-log [^Audit audit-logger {:keys [new old id operation session oid]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
@@ -109,8 +109,8 @@
                              operation-oppija-login
                              operation-oppija-logout])]}
   (let [user      (User.
-                   (when-let [oid (-> session :identity :oid)]
-                     (Oid. oid))
+                   (when-let [logged-oid (or (-> session :identity :oid) oid)]
+                     (Oid. logged-oid))
                    (if-let [ip (:client-ip session)]
                      (InetAddress/getByName ip)
                      (InetAddress/getLocalHost))

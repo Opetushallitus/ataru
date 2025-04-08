@@ -746,12 +746,16 @@
 
                               :else
                               [:hakija nil])
-        is-rewrite-secret-valid?   (and (= actor-role :virkailija) (virkailija-edit/virkailija-rewrite-secret-valid? secret))
+        virkailija-oid-with-rewrite-secret (when (= actor-role :virkailija)
+                                             (virkailija-edit/virkailija-oid-with-rewrite-secret secret))
+        virkailija-oid-with-update-secret  (when (and (nil? virkailija-oid-with-rewrite-secret)
+                                                      (= actor-role :virkailija))
+                                             (virkailija-edit/virkailija-oid-with-update-secret secret))
         application                (cond
-                                     is-rewrite-secret-valid?
+                                     virkailija-oid-with-rewrite-secret
                                      (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
 
-                                     (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
+                                     virkailija-oid-with-update-secret
                                      (application-store/get-latest-application-for-virkailija-edit secret)
 
                                      (and (= actor-role :hakija) (some? secret))
@@ -761,6 +765,7 @@
                                      (conj :with-henkilo))
         secret-expired?            (when (nil? application)
                                      (application-store/application-exists-with-secret? secret))
+        virkailija-oid             (or virkailija-oid-with-rewrite-secret virkailija-oid-with-update-secret)
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
         kk-payment                 (kk-application-payment/get-kk-payment-state application false)
@@ -784,7 +789,7 @@
                                                                       application-in-processing?
                                                                       field-deadlines
                                                                       form-roles
-                                                                      is-rewrite-secret-valid?
+                                                                      (some? virkailija-oid-with-rewrite-secret)
                                                                       has-overdue-payment?)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                       (->> application
@@ -827,7 +832,8 @@
                (assoc :koski-tutkinnot @koski-tutkinnot)))
      secret-expired?
      lang-override
-     inactivated?]))
+     inactivated?
+     virkailija-oid]))
 
 (defn create-new-secret-and-send-link
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]

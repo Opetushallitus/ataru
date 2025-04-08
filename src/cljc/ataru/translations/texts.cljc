@@ -1175,9 +1175,9 @@
     :signature                  {:fi "Älä vastaa tähän viestiin - viesti on lähetetty automaattisesti.\n\nYstävällisin terveisin <br/>\nOpintopolku\n"
                                  :sv "Svara inte på detta meddelande, det har skickats automatiskt.\n\nMed vänliga hälsningar, <br/>\nStudieinfo\n"
                                  :en "This is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}
-   :hakemusnumero {:fi "Hakemusnumero"
-                   :sv "Ansökningsnummer"
-                   :en "Application number"}})
+   :hakemusnumero               {:fi "Hakemusnumero"
+                                 :sv "Ansökningsnummer"
+                                 :en "Application number"}})
 
 
 (def virkailija-texts
@@ -2279,6 +2279,9 @@
    :student-number                                           {:fi "Oppijanumero"
                                                                :sv "SV: Oppijanumero"
                                                                :en "Student number"}
+   :application-number                                       {:fi "Hakemusnumero"
+                                                              :sv "Ansökningsnummer"
+                                                              :en "Application number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
                                                               :sv "matade in ansökan"
                                                               :en "submitted"}
