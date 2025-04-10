@@ -346,7 +346,7 @@
         old-priorisoivat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
-        uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?])
+        uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?] false)
         form (fetch-form-by-id
                id
                roles
