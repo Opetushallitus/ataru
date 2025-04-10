@@ -292,7 +292,7 @@
   [henkilot application]
   (let [person         (get henkilot (:personOid application))
         kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
-        aidinkieli     (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi])
+        aidinkieli     (when (:aidinkieli person) (select-keys (:aidinkieli person) [:kieliKoodi :kieliTyyppi]))
         asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
@@ -320,7 +320,7 @@
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
         (assoc-in  [:person :kansalaisuudet] kansalaisuudet)
-        (dissoc :personOid :lang))))
+        (dissoc :lang))))
 
 (defn- add-asiointikieli [henkilot application]
   (let [asiointikieli (or (get {"1" "fi"
@@ -430,7 +430,7 @@
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
-  (siirto-applications [this session hakukohde-oid application-keys])
+  (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after return-inactivated with-unapproved-payments])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (suoritusrekisteri-person-info [this haku-oid hakukohde-oids offset])
@@ -767,16 +767,22 @@
       {:unauthorized nil}))
 
   (siirto-applications
-    [_ session hakukohde-oid application-keys]
-    (if-let [applications (kk-application-payment/remove-kk-applications-with-unapproved-payments
-                            (aac/siirto-applications
-                              tarjonta-service
-                              organization-service
-                              session
-                              hakukohde-oid
-                              application-keys)
-                            :hakemusOid)]
-      (let [henkilot        (->> applications
+    [_ session hakukohde-oid haku-oid application-keys modified-after return-inactivated with-unapproved-payments]
+    (if-let [applications (aac/siirto-applications
+                            tarjonta-service
+                            organization-service
+                            session
+                            hakukohde-oid
+                            haku-oid
+                            application-keys
+                            modified-after
+                            return-inactivated)]
+      (let [filtered-applications (if with-unapproved-payments
+                                    applications
+                                    (kk-application-payment/remove-kk-applications-with-unapproved-payments
+                                      applications
+                                      :hakemusOid))
+            henkilot        (->> filtered-applications
                                  (map :personOid)
                                  distinct
                                  (person-service/get-persons person-service))
@@ -788,7 +794,7 @@
                                  distinct
                                  seq)]
         {:yksiloimattomat yksiloimattomat
-         :applications    (map (partial add-henkilo henkilot) applications)})
+         :applications    (map (partial add-henkilo henkilot) filtered-applications)})
       {:unauthorized nil}))
 
   (kouta-application-count-for-hakukohde
