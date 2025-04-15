@@ -95,6 +95,8 @@
   {:pre [(not (nil? application-id))
          (not (nil? person-service))]}
   (let [application (application-store/get-application application-id)]
+    (log/info "About to add applicant from application id"
+              application-id "key" (:key application) "form-id" (:form application))
     (if (muu-person-info-module? application)
       (log/info "Not adding applicant from application"
                 application-id
