@@ -161,6 +161,7 @@
                                 :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
                                                                 {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
                                                                 {:requirement "eligibility-state" :state "uneligible" :hakukohde "hakukohde.oid"}]
+                                :kk-payment-state              "paid"
                                 :answers                       [{:key       "first-name"
                                                                  :label     {:fi "Etunimi"}
                                                                  :value     "Lomake-etunimi"}
@@ -192,6 +193,7 @@
                                                                        :first-name  "Person-etunimi"}
                                        :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
                                                                        {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
+                                       :kk-payment-state              "ok-by-proxy"
                                        :answers                       [{:key   "first-name"
                                                                         :label {:fi "Etunimi"}
                                                                         :value "Lomake-etunimi"}

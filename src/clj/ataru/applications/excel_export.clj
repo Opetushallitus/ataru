@@ -105,6 +105,15 @@
                 notes)))
         (clojure.string/join ",\n"))))
 
+(defn kk-payment-state-formatter
+  [state lang]
+  (or
+   (lang (->> review-states/kk-application-payment-states
+              (filter #(= (first %) state))
+              first
+              second))
+   ""))
+
 (def ^:private form-meta-fields
   [{:label     (:name excel-texts)
     :field     :name
@@ -169,7 +178,10 @@
                                     :format-fn ehdollinen-formatter}
    "pisteet"                       {:field     [:application-review :score]}
    "application-review-notes"      {:field     [:application-review-notes]
-                                    :format-fn application-review-notes-formatter}})
+                                    :format-fn application-review-notes-formatter}
+   "kk-payment-state"              {:field     [:application :kk-payment-state]
+                                    :lang?     true
+                                    :format-fn kk-payment-state-formatter}})
 
 (def ^:private application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
@@ -193,7 +205,8 @@
    "student-number"
    "applicant-oid"
    "turvakielto"
-   "application-review-notes"])
+   "application-review-notes"
+   "kk-payment-state"])
 
 (def ^:private old-application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
