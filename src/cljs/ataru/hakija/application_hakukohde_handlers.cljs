@@ -201,6 +201,133 @@
                                     (map #(keyword (:id %))))]
     (apply dissoc m duplicate-question-ids )))
 
+(defn filter-take-hakukohteet-and-ryhmat [data]
+  (filter (fn [v] (or
+                   (contains? v :belongs-to-hakukohteet)
+                   (contains? v :belongs-to-hakukohderyhma)
+                   (some (fn [opt]
+                           (or (contains? opt :belongs-to-hakukohteet)
+                               (contains? opt :belongs-to-hakukohderyhma)))
+                         (:options v))))
+          data))
+
+(defn- collect-root-ids-related-to-removable-hakukohde
+  [hakukohde-oid flat-content selected-hakukohteet]
+  (let [removable-ryhmat (:removable-ryhmat selected-hakukohteet)]
+    (->> flat-content
+         (filter
+          (fn [{:keys [belongs-to-hakukohteet belongs-to-hakukohderyhma options]}]
+            (or
+             (some #{hakukohde-oid} belongs-to-hakukohteet)
+             (seq (s/intersection removable-ryhmat (set belongs-to-hakukohderyhma)))
+             (some #(some #{hakukohde-oid} (:belongs-to-hakukohteet %)) options))))
+         (map :id)
+         set)))
+
+(defn- filter-by-children-id
+  [questions id-set]
+  (filter (fn [item]
+            (or (contains? id-set (:id item))
+                (some (fn [child]
+                        (contains? id-set (:id child)))
+                      (:children item))))
+          questions))
+
+
+(defn- prepare-hakukohteet-data [hakukohde-oid hakukohteet selected-hakukohteet-oids]
+  (let [removable-hakukohteet (->> hakukohteet
+                                   (filter #(= (:oid %) hakukohde-oid))
+                                   (map #(select-keys % [:hakukohderyhmat :oid :name])))
+        selected-hakukohteet  (->> hakukohteet
+                                   (filter #(some (fn [oid] (= (:oid %) oid)) selected-hakukohteet-oids))
+                                   (map #(select-keys % [:hakukohderyhmat :oid :name])))
+        selected-ryhmat       (->> selected-hakukohteet (mapcat :hakukohderyhmat) 
+                                   set)
+        removable-ryhmat      (->> removable-hakukohteet
+                                   (mapcat :hakukohderyhmat)
+                                   (filter #(not (contains? selected-ryhmat %))) 
+                                   set)]
+    {:selected-ryhmat selected-ryhmat
+     :removable-hakukohteet removable-hakukohteet
+     :removable-ryhmat removable-ryhmat}))
+
+(defn- removable-ids-from-answers
+  [hakukohde-oid form-content-filtered hakukohteet-form-data root-ids] 
+  (->> (util/flatten-form-fields form-content-filtered) 
+       (filter #(contains? root-ids (:id %)))
+       (mapcat
+        (fn [child]
+          (let [options (:options child)
+                valid-option-ids
+                (->> options
+                     (filter
+                      (fn [opt]
+                        (let [belongs (set (:belongs-to-hakukohderyhma opt))
+                              belongs-to-hakukohteet (:belongs-to-hakukohteet opt)]
+                          (or
+                           (= [hakukohde-oid] belongs-to-hakukohteet)
+                           (and (not (empty? (s/intersection belongs (:removable-ryhmat hakukohteet-form-data))))
+                                (empty? (s/intersection belongs (:selected-ryhmat hakukohteet-form-data))))))))
+                     (map
+                      (fn [opt]
+                        (or (:id opt) (:id child)))))] ;fallback to parent :id
+            (when (seq valid-option-ids)
+              valid-option-ids))))
+       (remove nil?) 
+       set))
+
+
+
+
+(defn- invalidate-answers [answers keys root-keys]
+  (reduce
+   (fn [acc k]
+     (if-let [entry (get acc k)]
+       (let [original-value (:value entry)
+             cleared-value (cond 
+                             (sequential? original-value) []
+                             (string? original-value) ""
+                             :else nil) 
+             updated-entry (-> entry
+                               (assoc :valid (not-any? #(= % k) root-keys))
+                               (assoc :value cleared-value)
+                               (update :values
+                                       (fn [v]
+                                         (cond
+                                           (and (map? v) (contains? v :valid)) (assoc v :valid false)
+                                           (sequential? v) []
+                                           :else v))))]
+         (assoc acc k updated-entry))
+       acc))
+   answers
+   keys))
+
+
+(reg-event-fx
+ :application/remove-answers-per-hakukohde-and-hakukohderyhma
+ (fn [{db :db} [_ hakukohde-oid]]
+   (let [questions (get-in db [:form :content])
+         answers (get-in db [:application :answers])
+         answers-without-duplicates (remove-duplicates-with-hakukohde answers questions hakukohde-oid)
+         flat-form-content (util/flatten-form-fields questions)
+         selected-hakukohteet-oids (get-in answers [:hakukohteet :value])
+         hakukohteet (get-in db [:form :tarjonta :hakukohteet])
+         hakukohteet-form-data (prepare-hakukohteet-data hakukohde-oid hakukohteet selected-hakukohteet-oids)
+         flat-content_hakukohteet-or-ryhmat-only (filter-take-hakukohteet-and-ryhmat flat-form-content)
+         root-ids-related-to-removable-hakukohde (collect-root-ids-related-to-removable-hakukohde
+                                                  hakukohde-oid flat-content_hakukohteet-or-ryhmat-only hakukohteet-form-data)
+         form-content-filtered (filter-by-children-id questions root-ids-related-to-removable-hakukohde)
+         removable-ids (removable-ids-from-answers
+                        hakukohde-oid
+                        form-content-filtered
+                        hakukohteet-form-data
+                        root-ids-related-to-removable-hakukohde)
+         invalidated-answers (invalidate-answers answers-without-duplicates
+                                                 (map keyword removable-ids)
+                                                 (map keyword root-ids-related-to-removable-hakukohde))]
+     {:db (-> db (assoc-in [:application :answers] invalidated-answers))})))
+
+
 (reg-event-fx
   :application/remove-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
@@ -246,7 +373,9 @@
                                              (mapv :value new-hakukohde-values))
                                    set-field-visibilities)]
       {:db                 db
-       :dispatch-n [[:application/validate-hakukohteet] [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/remove-questions-per-hakukohde hakukohde-oid]
+                    [:application/remove-answers-per-hakukohde-and-hakukohderyhma hakukohde-oid]]})))
 
 (reg-event-fx
   :application/hakukohde-remove-by-idx
