@@ -94,7 +94,7 @@
           [scroll-to-anchor field-descriptor]]
          (into [:div.application__wrapper-contents]
                (for [child (:children field-descriptor)
-                     :when @(subscribe [:application/visible? (keyword (:id child))])]
+                     :when @(subscribe [:application/visible-koski-wrapper-child? child])]
                  (if (ktm/is-tutkinto-configuration-component? child)
                    [:div
                     [:div

@@ -185,6 +185,3 @@
 
 (defn is-tutkinto-configuration-component? [field-descriptor]
   (= tutkinto-property-component-category (:category field-descriptor)))
-
-(defn is-tutkinto-taso-option? [field-descriptor]
-  (some? (some #{(:id field-descriptor)} all-tutkinto-tasot)))
