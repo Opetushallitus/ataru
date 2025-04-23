@@ -62,7 +62,9 @@
 (defn- passport-option [metadata]
   {:label (:passport-option kk-application-payment-module-texts)
    :value (:passport-option-value kk-application-payment-document-options)
-   :followups [(kk-option-attachment metadata "passport-attachment" :passport-attachment)]})
+   :followups [(merge (component/info-element metadata)
+                      {:text (:passport-info kk-application-payment-module-texts)})
+               (kk-option-attachment metadata "passport-attachment" :passport-attachment)]})
 
 (defn- eu-blue-card-option [metadata]
   {:label (:eu-blue-card-option kk-application-payment-module-texts)
@@ -110,7 +112,10 @@
 (defn- temporary-protection-option [metadata]
   {:label (:temporary-protection-option kk-application-payment-module-texts)
    :value (:temporary-protection-option-value kk-application-payment-document-options)
-   :followups [(kk-option-attachment metadata "temporary-protection-permit" :temporary-protection-attachment)]})
+   :followups [(merge (component/info-element metadata)
+                      {:text (:protection-info kk-application-payment-module-texts)})
+               (kk-option-attachment metadata "temporary-protection-permit" :temporary-protection-attachment)
+               (kk-option-attachment metadata "temporary-protection-passport-attachment" :passport-attachment)]})
 
 (defn- none-option [metadata]
   {:label (:no-document-option kk-application-payment-module-texts)
@@ -123,15 +128,15 @@
   (assoc (component/single-choice-button metadata)
     :id kk-application-payment-choice-key
     :label (:document-option-title kk-application-payment-module-texts)
-    :options [(passport-option metadata)
+    :options [(none-option metadata)
+              (passport-option metadata)
               (eu-blue-card-option metadata)
               (eu-family-member-residence-option metadata)
               (continuous-residence-permit-option metadata)
               (longterm-residence-permit-option metadata)
               (brexit-permit-option metadata)
               (permanent-residence-permit-option metadata)
-              (temporary-protection-option metadata)
-              (none-option metadata)]
+              (temporary-protection-option metadata)]
     :validators ["required"]
     :params {
              :info-text
