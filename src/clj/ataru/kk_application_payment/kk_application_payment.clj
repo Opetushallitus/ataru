@@ -108,14 +108,15 @@
                                   (filter #(= key (:key %)))
                                   (map :value)
                                   first))]
-    {:reference  (payment->maksut-reference payment)
-     :origin     kk-application-payment-origin
-     :amount     (str kk-application-payment-amount)
-     :due-days   kk-application-payment-due-days
-     :first-name (get-field "first-name")
-     :last-name  (get-field "last-name")
-     :email      (get-field "email")
-     :metadata   (create-invoice-metadata tarjonta-service application)}))
+    {:reference       (payment->maksut-reference payment)
+     :origin          kk-application-payment-origin
+     :amount          (str kk-application-payment-amount)
+     :due-days        kk-application-payment-due-days
+     :extend-deadline true ; Whenever the status is set back to awaiting, the deadline is reset to due-days from now
+     :first-name      (get-field "first-name")
+     :last-name       (get-field "last-name")
+     :email           (get-field "email")
+     :metadata        (create-invoice-metadata tarjonta-service application)}))
 
 (defn- validate-payment-data
   [{:keys [application-key state]}]
