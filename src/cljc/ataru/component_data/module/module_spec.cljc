@@ -36,10 +36,10 @@
    :has-multiple-configurations? false})
 
 (def kk-application-payment-module-spec
-  {:foldable?                    false
+  {:foldable?                    true
    :can-cut?                     true
-   :can-copy?                    false
-   :can-remove?                  false
+   :can-copy?                    true
+   :can-remove?                  true
    :show-child-component-names?  false
    :has-multiple-configurations? false
    })

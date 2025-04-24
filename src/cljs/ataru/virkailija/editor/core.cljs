@@ -37,6 +37,10 @@
                      (option-key content))]
       (when-let [component
                  (match content
+                   ; The module has to be editable, so we need to use the component-group
+                   {:module "kk-application-payment-module"}
+                   [ec/component-group content path children]
+
                    {:module _}
                    [ec/module content path]
 
