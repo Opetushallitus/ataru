@@ -5,7 +5,8 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
-            [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
+            [ataru.log.audit-log :refer [new-dummy-audit-logger]]
+            [clojure.set :as set]))
 
 (defonce payment-module-session {:user-agent "payment-module"})
 
@@ -19,7 +20,7 @@
 (defn check-and-update
   [tarjonta-service haku-oids]
   (let [existing-haut     (keep #(tarjonta/get-haku tarjonta-service %) haku-oids)
-        non-existing-oids (clojure.set/difference (set haku-oids) (set (map :oid existing-haut)))
+        non-existing-oids (set/difference (set haku-oids) (set (map :oid existing-haut)))
         maksulliset (filter #(:maksullinen-kk-haku? %) existing-haut)
         haut (->> existing-haut
                   (filter #(some? (:ataru-form-key %)))
