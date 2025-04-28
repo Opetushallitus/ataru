@@ -6,7 +6,7 @@
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
             [ataru.log.audit-log :as audit-log]
-            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
                                                      tutkintojen-tunnustaminen-information-request-sent-job-step
                                                      tutkintojen-tunnustaminen-review-state-changed-job-step
                                                      tutkintojen-tunnustaminen-submit-job-handler]]
@@ -409,7 +409,7 @@
                                                       wrong-form-id
                                                       payment-property-form-id])))))))
   (it "should send information request sent message to ASHA SFTP server"
-      (with-redefs [ataru.tutkintojen-tunnustaminen/timestamp (fn [] 1)]
+      (with-redefs [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen/timestamp (fn [] 1)]
         (let [r (tutkintojen-tunnustaminen-information-request-sent-job-step
                   {:information-request {:application-key *application-key*
                                          :subject         "Täydennyspyyntö otsikko"

@@ -5,7 +5,8 @@
             [ataru.information-request.information-request-service :as information-request-service]
             [ataru.information-request.information-request-reminder-job :as information-request-reminder-job]
             [ataru.person-service.person-integration :as person-integration]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-send-job :as tutkintojen-tunnustaminen-send-job]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
@@ -43,6 +44,8 @@
    (:type kk-payment-module-job/job-definition)          (merge kk-payment-module-job/job-definition
                                                                 {:queue default-retry-strategy})
    (:type kk-email-job/job-definition)                   (merge kk-email-job/job-definition
+                                                                {:queue default-retry-strategy})
+   (:type tutkintojen-tunnustaminen-send-job/job-definition) (merge tutkintojen-tunnustaminen-send-job/job-definition
                                                                 {:queue default-retry-strategy})
    "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                           :type    "automatic-payment-obligation-job"

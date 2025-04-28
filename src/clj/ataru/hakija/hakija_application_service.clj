@@ -23,7 +23,7 @@
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkinto.tutkinto-util :as tutkinto-util]
-    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [cheshire.core :as json]
