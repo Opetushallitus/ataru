@@ -13,12 +13,14 @@
 
 (defqueries "sql/maksut-queries.sql")
 
-(defn- start-maksut-poller-job [application-service maksut-service _ apps]
-   (maksut-poller-job/poll-maksut application-service maksut-service apps))
+(defn- start-maksut-poller-job [application-service maksut-service job-runner apps]
+   (maksut-poller-job/poll-maksut application-service maksut-service job-runner apps))
 
 (defn- find-applications
   [application-service maksut-service job-runner]
   (try
+    (log/info "FORM KEYS:")
+    (log/info (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #","))
     (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")}))]
       (do
         (log/info "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
