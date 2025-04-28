@@ -63,7 +63,7 @@
                                                    (:hakutapaKoodiUri haku)
                                                    "hakutapa_01")
       :ylioppilastutkinto-antaa-hakukelpoisuuden? false
-      :maksullinen-kk-haku?                        (:maksullinenKkHaku haku)}
+      :maksullinen-kk-haku?                        (or (:maksullinenKkHaku haku) false)}
      (when (get ohjausparametrit :hakutoiveidenMaaraRajoitettu false)
        {:max-hakukohteet (get ohjausparametrit :hakutoiveidenEnimmaismaara 1)})
      (when (seq hakuajat)

@@ -291,7 +291,7 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
-   uses-payment-module? :- s/Bool
+   uses-payment-module? :- (s/maybe s/Bool)
    has-overdue-payment? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
@@ -346,7 +346,7 @@
         old-priorisoivat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
-        uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?] false)
+        uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?])
         form (fetch-form-by-id
                id
                roles
