@@ -1776,6 +1776,21 @@
                      {:error      "Yksilöimättömiä hakijoita"
                       :personOids yksiloimattomat})))))
 
+      (api/POST "/valintalaskenta/application-oids" {session :session}
+        :summary "Get application oids for valintalaskenta"
+        :body [hakukohdeOids [s/Str]]
+        :return #{s/Str}
+        (if (empty? hakukohdeOids)
+          (response/bad-request {:error "List of hakukohde oids is required"})
+          (match (application-service/get-application-oids-for-valintalaskenta
+                   application-service
+                   session
+                   (not-empty hakukohdeOids))
+                 {:unauthorized _}
+                 (response/unauthorized {:error "Unauthorized"})
+                 {:application-oids application-oids}
+                 (response/ok application-oids))))
+
       (api/GET "/valintapiste" {session :session}
         :summary "Get application answers for Valintapiste Service"
         :query-params [hakuOid :- s/Str

@@ -1130,6 +1130,18 @@ WHERE la.id IS NULL
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND ar.state <> 'inactivated';
 
+--name: yesql-valintalaskenta-application-oids
+SELECT
+  a.key
+FROM applications AS a
+  LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+  JOIN application_reviews ar ON application_key = a.key
+WHERE la.id IS NULL
+  AND a.person_oid IS NOT NULL
+  AND a.haku IS NOT NULL
+  AND ARRAY[:hakukohde_oids]::VARCHAR[] && a.hakukohde
+  AND ar.state <> 'inactivated';
+
 --name: yesql-siirto-applications
 SELECT
   a.key,

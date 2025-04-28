@@ -1599,6 +1599,19 @@
            (partition partition-size partition-size nil)
            (mapcat fetch)))))
 
+(defn get-application-oids-for-valintalaskenta [hakukohde-oids]
+  (let [partition-size 10000
+        fetch          (fn [oid-partition]
+                         (->> (exec-db :db queries/yesql-valintalaskenta-application-oids
+                                       {:hakukohde_oids oid-partition})
+                              (map :key)))]
+    (if (empty? hakukohde-oids)
+      (fetch [])
+      (->> hakukohde-oids
+           (partition partition-size partition-size nil)
+           (mapcat fetch)
+           (set)))))
+
 (defn get-raw-key-values [answers]
   (reduce
     (fn [acc {:keys [key value]}]
