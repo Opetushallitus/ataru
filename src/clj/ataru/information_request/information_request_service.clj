@@ -8,7 +8,7 @@
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.application-store :as app-store]
             [ataru.config.core :refer [config]]
             [clojure.java.jdbc :as jdbc]

@@ -3,14 +3,16 @@
   (:require [clojure.core.match :refer [match]]
             [ataru.applications.application-service :as application-service]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [clojure.string :refer [ends-with?]]
             [taoensso.timbre :as log]))
 
-(defn poll-maksut [application-service maksut-service apps]
+(defn poll-maksut [application-service maksut-service job-runner apps]
     (let [keys      (map :key apps)
           key-state (into {} (map (fn [{:keys [key state]}] [key state]) apps))
           maksut    (maksut-protocol/list-lasku-statuses maksut-service keys)]
-
+      (log/info key-state)
+      (log/info maksut)
       (log/info "Received statuses for" (count maksut) "invoices")
 
       (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
@@ -39,9 +41,16 @@
                 toggle   #(application-service/payment-poller-processing-state-change application-service reference %)
                 response (match origin
                                "tutu" (match [type app-status maksu-status]
-                                             [:processing nil "paid"] (toggle "processing-fee-paid")
+                                             [:processing nil "paid"] (do
+                                                                        (toggle "processing-fee-paid")
+                                                                        (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-send-job
+                                                                          job-runner
+                                                                          reference))
                                              [:processing nil "overdue"] (toggle "processing-fee-overdue")
-                                             [:processing "unprocessed" "paid"] (toggle "processing-fee-paid")
+                                             [:processing "unprocessed" "paid"] (do (toggle "processing-fee-paid")
+                                                                                  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-send-job
+                                                                                    job-runner
+                                                                                    reference))
                                              [:processing "unprocessed" "overdue"] (toggle "processing-fee-overdue")
                                              [:decision   "decision-fee-outstanding" "paid"] (toggle "decision-fee-paid")
                                              [:decision   "decision-fee-outstanding" "overdue"] (toggle "decision-fee-overdue")
