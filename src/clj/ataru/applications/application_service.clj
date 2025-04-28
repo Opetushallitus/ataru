@@ -17,7 +17,7 @@
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]

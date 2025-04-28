@@ -61,6 +61,7 @@
                    :organisaatio-service-base-url       "http://localhost:55443"
                    :koodisto-service-base-url           "http://localhost:55443"
                    :ohjausparametrit-service-base-url   "http://localhost:55443"
+                   :tutu-service-base-url               "http://localhost:55443"
                    :valintalaskenta-ui-service-base-url "http://localhost:55443"
                    :editor-url                          "http://localhost:8350/lomake-editori"
                    :liiteri-url                         ""

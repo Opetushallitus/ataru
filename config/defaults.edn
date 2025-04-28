@@ -9,14 +9,14 @@
                    :henkilo-modified-queue {:enabled?      false
                                             :drain-failed? false
                                             :queue-url     ""}}
- :tutkintojen-tunnustaminen {:enabled?                    false
-                             :form-key                    ""
-                             :country-question-id         ""
+ :tutkintojen-tunnustaminen {:enabled?                    true
+                             :form-key                    "74825f61-e561-447e-bef4-1bb5be4ea44a"
+                             :country-question-id         "6e43a241-a3bd-4625-8035-40768a109461"
                              :attachment-total-size-limit 20
-                             :maksut                      {:enabled?                false
-                                                           :poll-interval-minutes   5
+                             :maksut                      {:enabled?                true
+                                                           :poll-interval-minutes   1
                                                            :decision-amount         "70.00"
-                                                           :form-keys      			    ""}
+                                                           :form-keys      			    "74825f61-e561-447e-bef4-1bb5be4ea44a"}
                              :ftp                         {:host               ""
                                                            :port               22
                                                            :user               ""

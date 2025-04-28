@@ -1,6 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
