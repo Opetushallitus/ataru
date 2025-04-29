@@ -323,7 +323,8 @@
                   :audit-logger
                   :liiteri-cas-client
                   :amazon-cloudwatch
-                  :maksut-service])
+                  :maksut-service
+                  :tutu-cas-client])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
