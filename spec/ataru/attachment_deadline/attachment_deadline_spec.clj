@@ -7,9 +7,6 @@
 (describe "Attachment end time"
           (tags :unit)
 
-          (it "fails"
-              (should= true false))
-
           (it "Returns attachment end time"
               (let [end (t/date-time 2024 02 14 9)
                     hakuajat {:attachment-modify-grace-period-days 7 :end (coerce/to-long end)}]
