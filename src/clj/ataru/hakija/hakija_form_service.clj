@@ -26,7 +26,8 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
-            [ataru.kk-application-payment.utils :refer [has-payment-module?]]))
+            [ataru.kk-application-payment.utils :refer [has-payment-module?]]
+            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -81,7 +82,7 @@
   (let [hakuaika            (hakuaika/select-hakuaika-for-field now field hakuajat)
         hakuaika-start      (some-> hakuaika :start t/from-long)
         hakuaika-end        (some-> hakuaika :end t/from-long)
-        attachment-edit-end (hakuaika/attachment-edit-end hakuaika)
+        attachment-edit-end (attachment-deadline/attachment-deadline-for-hakuaika hakuaika)
         hakukierros-end     (some-> hakuaika :hakukierros-end t/from-long)
         after?              (fn [t] (or (nil? t)
                                         (time/after? now t)))
