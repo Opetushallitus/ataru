@@ -327,10 +327,11 @@
             answer-key             (:key answer)
             field-descriptor       (cond
                                      (some? (:duplikoitu-kysymys-hakukohde-oid answer))
-                                     (:original-question answer)
+                                      (get form-fields-by-key (:original-question answer))
                                      (some? (:duplikoitu-followup-hakukohde-oid answer))
-                                     (:original-followup answer)
-                                     :else (get form-fields-by-key answer-key))
+                                      (get form-fields-by-key (:original-followup answer))
+                                     :else
+                                      (get form-fields-by-key answer-key))
             value-or-values        (cond
                                      (contains? person (keyword answer-key))
                                      (get person (keyword answer-key))
