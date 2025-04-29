@@ -2,6 +2,7 @@
   (:require [ataru.util :as util :refer [non-blank-val]]
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
+            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
             [clojure.walk :as walk]))
 
 (defn- koulutus->str
@@ -77,7 +78,7 @@
                                   (hakuaika/str->date-time)
                                   (hakuaika/date-time->localized-date-time))
                           (some-> (hakuaika/select-hakuaika-for-field now field hakuajat)
-                                  hakuaika/attachment-edit-end
+                                   attachment-deadline/attachment-deadline-for-hakuaika
                                   (hakuaika/date-time->localized-date-time))))]
     (assoc-in field [:params :deadline-label] label)
     field))
