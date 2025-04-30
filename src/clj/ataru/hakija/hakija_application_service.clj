@@ -3,7 +3,7 @@
     [ataru.applications.application-service :as application-service]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
-    [ataru.applications.field-deadline :as field-deadline]
+    [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
     [ataru.config.core :refer [config]]
@@ -266,7 +266,7 @@
                                               application-store/get-application-hakukohde-reviews)
         field-deadlines               (or (some->> latest-application
                                                    :key
-                                                   field-deadline/get-field-deadlines
+                                                   attachment-deadline/get-field-deadlines
                                                    (map #(dissoc % :last-modified))
                                                    (util/group-by-first :field-id))
                                           {})
@@ -774,7 +774,7 @@
         lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key
-                                                field-deadline/get-field-deadlines
+                                                attachment-deadline/get-field-deadlines
                                                 (map #(dissoc % :last-modified))
                                                 (util/group-by-first :field-id))
                                        {})
