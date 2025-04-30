@@ -1138,7 +1138,6 @@ FROM applications AS a
   JOIN application_reviews ar ON application_key = a.key
 WHERE la.id IS NULL
   AND a.person_oid IS NOT NULL
-  AND a.haku IS NOT NULL
   AND ARRAY[:hakukohde_oids]::VARCHAR[] && a.hakukohde
   AND ar.state <> 'inactivated';
 
