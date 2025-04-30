@@ -1,6 +1,6 @@
 (ns ataru.email.application-email
   (:require [ataru.applications.application-store :as application-store]
-            [ataru.applications.field-deadline :as field-deadline]
+            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
             [ataru.email.email-store :as email-store]
             [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
@@ -206,7 +206,7 @@
          hakukohteet                     (:hakukohteet tarjonta-info)
          hakuajat                        (hakuaika/index-hakuajat hakukohteet)
          field-deadlines                 (->> (:key application)
-                                              field-deadline/get-field-deadlines
+                                              attachment-deadline/get-field-deadlines
                                               (map #(dissoc % :last-modified))
                                               (util/group-by-first :field-id))
          form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines)
