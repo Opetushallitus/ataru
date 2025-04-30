@@ -9,6 +9,7 @@
             [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
+            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
             [ataru.applications.excel-export :as excel]
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
@@ -678,7 +679,7 @@
       (api/GET "/:application-key/field-deadline" {session :session}
         :path-params [application-key :- s/Str]
         :return [ataru-schema/FieldDeadline]
-        (let [response (field-deadline/get-field-deadlines
+        (let [response (attachment-deadline/get-field-deadlines
                          organization-service
                          tarjonta-service
                          audit-logger
