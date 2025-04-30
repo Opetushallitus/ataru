@@ -1777,7 +1777,7 @@
                       :personOids yksiloimattomat})))))
 
       (api/POST "/valintalaskenta/application-oids" {session :session}
-        :summary "Get application oids for valintalaskenta"
+        :summary "Get all application oids from applications that are non-inactive and yksilöity"
         :body [hakukohdeOids [s/Str]]
         :return #{s/Str}
         (if (empty? hakukohdeOids)
