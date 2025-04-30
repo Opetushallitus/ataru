@@ -11,8 +11,6 @@
     (let [keys      (map :key apps)
           key-state (into {} (map (fn [{:keys [key state]}] [key state]) apps))
           maksut    (maksut-protocol/list-lasku-statuses maksut-service keys)]
-      (log/info key-state)
-      (log/info maksut)
       (log/info "Received statuses for" (count maksut) "invoices")
 
       (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
