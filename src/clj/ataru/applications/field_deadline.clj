@@ -19,6 +19,8 @@
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
 
 (defn get-field-deadlines
+  "Returns all of the individually set field deadlines for an application. By default please use
+   ataru.attachment-deadline.attachment-deadline/get-field-deadlines instead of calling this directly."
   ([application-key]
    (db/exec :db yesql-get-field-deadlines {:application_key application-key}))
   ([organization-service tarjonta-service audit-logger session application-key]
