@@ -28,6 +28,7 @@
                                                                    (:kohdejoukko-uri haku)
                                                                    "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
+     :tarjoaja-oids                                               (:tarjoaja-oids hakukohde)
      :form-key                                                    (:ataru-form-key haku)
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
                                                                              (throw (new RuntimeException (str "Koulutus " % " not found"))))
