@@ -39,7 +39,13 @@
       {:from       "no-reply@opintopolku.fi"
        :recipients emails
        :subject    subject
-       :body       body})))
+       :body       body
+       :masks      (if-let [url (:payment-url data)]
+                     [{:secret url
+                       :mask   "https://maksulinkki-piilotettu.opintopolku.fi/"}]
+                     [])
+       :metadata   (email-util/->metadata (:application-key data) (:person-oid data))
+       :privileges (email-util/->hakemus-privileges (:organization-oids data))})))
 
 (defn get-application-language
   [application]

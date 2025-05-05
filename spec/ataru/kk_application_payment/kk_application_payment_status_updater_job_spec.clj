@@ -5,6 +5,8 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [clj-time.core :as time]
             [clj-time.format :as time-format]
             [clojure.java.jdbc :as jdbc]
@@ -30,6 +32,8 @@
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
+(def fake-organization-service (organization-service/->FakeOrganizationService))
+(def fake-ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
 
 (def test-maksut-secret "1234ABCD5678EFGH")
 
@@ -84,18 +88,22 @@
     (start-runner-job this connection job-type initial-state)))
 
 (def runner
-  (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
-                       :person-service   fake-person-service
-                       :get-haut-cache   fake-get-haut-cache
-                       :koodisto-cache   fake-koodisto-cache
-                       :maksut-service   mock-maksut-service}))
+  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
+                       :organization-service     fake-organization-service
+                       :ohjausparametrit-service fake-ohjausparametrit-service
+                       :person-service           fake-person-service
+                       :get-haut-cache           fake-get-haut-cache
+                       :koodisto-cache           fake-koodisto-cache
+                       :maksut-service           mock-maksut-service}))
 
 (def runner-with-empty-haku-cache
-  (map->FakeJobRunner {:tarjonta-service fake-tarjonta-service
-                       :person-service   fake-person-service
-                       :get-haut-cache   empty-get-haut-cache
-                       :koodisto-cache   fake-koodisto-cache
-                       :maksut-service   mock-maksut-service}))
+  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
+                       :organization-service     fake-organization-service
+                       :ohjausparametrit-service fake-ohjausparametrit-service
+                       :person-service           fake-person-service
+                       :get-haut-cache           empty-get-haut-cache
+                       :koodisto-cache           fake-koodisto-cache
+                       :maksut-service           mock-maksut-service}))
 
 (declare conn)
 (declare spec)

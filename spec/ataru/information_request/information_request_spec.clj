@@ -7,7 +7,11 @@
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]
             [ataru.config.core :refer [config]]
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.applications.application-store :as application-store]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.information-request.fixtures :refer [information-requests-to-remind]]
             [ataru.information-request.information-request-store :as ir-store]
             [ataru.information-request.information-request-service :as ir-service]
@@ -26,6 +30,15 @@
 
 (defn start-runner-job [_ _ _ _])
 
+(def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
+(def fake-organization-service (organization-service/->FakeOrganizationService))
+(def fake-ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
+(def fake-koodisto-cache (reify cache-service/Cache
+                                (get-from [_ _])
+                                (get-many-from [_ _])
+                                (remove-from [_ _])
+                                (clear-all [_])))
+
 (defrecord FakeJobRunner []
   component/Lifecycle
 
@@ -34,7 +47,10 @@
     (start-runner-job this conn job-type initial-state)))
 
 (def runner
-  (map->FakeJobRunner {}))
+  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
+                       :organization-service     fake-organization-service
+                       :ohjausparametrit-service fake-ohjausparametrit-service
+                       :koodisto-cache           fake-koodisto-cache}))
 
 (declare yesql-upsert-virkailija<!)
 (sql/defqueries "sql/virkailija-queries.sql")

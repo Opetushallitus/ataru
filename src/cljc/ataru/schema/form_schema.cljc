@@ -275,6 +275,7 @@
    (s/optional-key :archived)                                                    (s/maybe s/Bool)
    :kohdejoukko-korkeakoulu?                                                     s/Bool
    :tarjoaja-name                                                                localized-schema/LocalizedStringOptional
+   :tarjoaja-oids                                                                (s/maybe [s/Str])
    (s/optional-key :form-key)                                                    (s/maybe s/Str)
    :hakukohderyhmat                                                              [s/Str]
    :hakuaika                                                                     Hakuaika
