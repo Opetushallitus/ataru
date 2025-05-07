@@ -3,7 +3,7 @@
     [ataru.applications.application-service :as application-service]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
-    [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
+    [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
     [ataru.config.core :refer [config]]
@@ -223,6 +223,7 @@
 (defn- validate-and-store [liiteri-cas-client
                            form-by-id-cache
                            koodisto-cache
+                           attachment-deadline-service
                            tarjonta-service
                            organization-service
                            ohjausparametrit-service
@@ -266,7 +267,7 @@
                                               application-store/get-application-hakukohde-reviews)
         field-deadlines               (or (some->> latest-application
                                                    :key
-                                                   attachment-deadline/get-field-deadlines
+                                                   (attachment-deadline/get-field-deadlines attachment-deadline-service)
                                                    (map #(dissoc % :last-modified))
                                                    (util/group-by-first :field-id))
                                           {})
@@ -291,7 +292,8 @@
                                              field-deadlines
                                              form-roles
                                              use-toisen-asteen-yhteishaku-restrictions?
-                                             has-overdue-payment?)
+                                             has-overdue-payment?
+                                             attachment-deadline-service)
                                             (some? (:form application))
                                             (hakija-form-service/fetch-form-by-id
                                              (:form application)
@@ -300,7 +302,8 @@
                                              koodisto-cache
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)
-                                             field-deadlines))
+                                             field-deadlines
+                                             attachment-deadline-service))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -564,7 +567,8 @@
    liiteri-cas-client
    maksut-service
    oppija-session
-   koski-service]
+   koski-service
+   attachment-deadline-service]
   (log/info "Application submitted:" application)
   (let [answers-empty-removed (remove-empty-answers (:answers application))
         application-empty-answers-removed (assoc application :answers answers-empty-removed)
@@ -573,6 +577,7 @@
         (validate-and-store liiteri-cas-client
                             form-by-id-cache
                             koodisto-cache
+                            attachment-deadline-service
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
@@ -630,7 +635,7 @@
    session
    liiteri-cas-client
    _
-   ]
+   attachment-deadline-service]
   (log/info "Application edited:" input-application)
   (let [answers-empty-removed (remove-empty-answers (:answers input-application))
         application-empty-answers-removed (assoc input-application :answers answers-empty-removed)
@@ -639,6 +644,7 @@
         (validate-and-store liiteri-cas-client
                             form-by-id-cache
                             koodisto-cache
+                            attachment-deadline-service
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
@@ -736,7 +742,8 @@
    hakukohderyhma-settings-cache
    secret
    liiteri-cas-client
-   koski-service]
+   koski-service
+   attachment-deadline-service]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
@@ -774,7 +781,7 @@
         lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key
-                                                attachment-deadline/get-field-deadlines
+                                                (attachment-deadline/get-field-deadlines attachment-deadline-service)
                                                 (map #(dissoc % :last-modified))
                                                 (util/group-by-first :field-id))
                                        {})
@@ -790,7 +797,8 @@
                                                                       field-deadlines
                                                                       form-roles
                                                                       (some? virkailija-oid-with-rewrite-secret)
-                                                                      has-overdue-payment?)
+                                                                      has-overdue-payment?
+                                                                      attachment-deadline-service)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                       (->> application
                                                                            :form
@@ -801,7 +809,8 @@
                                                                       koodisto-cache
                                                                       nil
                                                                       application-in-processing?
-                                                                      field-deadlines))
+                                                                      field-deadlines
+                                                                      attachment-deadline-service))
         requested-tutkinto-levels  (tutkinto-util/koski-tutkinto-levels-in-form form)
         koski-tutkinnot            (future (when requested-tutkinto-levels
                                              (if (tutkinto-util/save-koski-tutkinnot? form)
