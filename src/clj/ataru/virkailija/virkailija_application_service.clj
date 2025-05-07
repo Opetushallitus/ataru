@@ -18,25 +18,11 @@
             [ataru.person-service.person-integration :as person-integration]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]))
 
-; In case of peruskoulun jälkeisen koulutuksen yhteishaku, it's specified
-; that lähtökoulu information should be based on whatever school the student
-; was in up to 1st of June of the application year. In other applications,
-; we use application end date.
-(defn get-lahtokoulu-cutoff-timestamp
-  [hakuvuosi tarjonta-info]
-  (let [haku-end (get-in tarjonta-info [:tarjonta :hakuaika :end])
-        lahtokoulu-yhteishaku-cutoff-date (time/date-time hakuvuosi 5 30)]
-    (if (haku/toisen-asteen-yhteishaku? (:tarjonta tarjonta-info))
-      (coerce/to-timestamp lahtokoulu-yhteishaku-cutoff-date)
-      haku-end)))
 
 (defn get-opiskelijan-luokkatieto
   [henkilo-oid haku-oid hakemus-datetime koodisto-cache tarjonta-service
    organization-service ohjausparametrit-service person-service suoritus-service]
-  (let [hakuvuosi   (->> hakemus-datetime
-                         (format/parse (:date-time format/formatters))
-                         (suoritus-filter/year-for-suoritus-filter))
-        luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
+  (let [luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
         tarjonta-info (when haku-oid
                         (tarjonta-parser/parse-tarjonta-info-by-haku
                           koodisto-cache
@@ -44,10 +30,9 @@
                           organization-service
                           ohjausparametrit-service
                           haku-oid))
-        cutoff-timestamp (get-lahtokoulu-cutoff-timestamp hakuvuosi tarjonta-info)
         linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
         aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-        opiskelijat (map #(suoritus-service/opiskelijan-luokkatieto suoritus-service % [hakuvuosi] luokkatasot cutoff-timestamp)
+        opiskelijat (map #(suoritus-service/opiskelijan-luokkatieto-for-hakemus suoritus-service % luokkatasot hakemus-datetime tarjonta-info)
                          aliases)]
     (when-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
       (let [[organization] (organization-service/get-organizations-for-oids
