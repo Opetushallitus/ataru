@@ -2,7 +2,7 @@
   (:require [ataru.util :as util :refer [non-blank-val]]
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
+            [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [clojure.walk :as walk]))
 
 (defn- koulutus->str
@@ -69,26 +69,28 @@
       (assoc-in form [:content hakukohteet-field-idx] updated-field))))
 
 (defn- populate-attachment-deadline
-  [now hakuajat field-deadlines field]
-  (if-let [label (and (= (:fieldType field) "attachment")
-                      (or (some-> (get field-deadlines (:id field))
-                                  :deadline
-                                  hakuaika/date-time->localized-date-time)
-                          (some-> (-> field :params :deadline)
-                                  (hakuaika/str->date-time)
-                                  (hakuaika/date-time->localized-date-time))
-                          (some-> (hakuaika/select-hakuaika-for-field now field hakuajat)
-                                   attachment-deadline/attachment-deadline-for-hakuaika
-                                  (hakuaika/date-time->localized-date-time))))]
-    (assoc-in field [:params :deadline-label] label)
-    field))
+  [now hakuajat field-deadlines attachment-deadline-service field]
+  (let [attachment-deadline-fn (partial attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service)]
+    (if-let [label (and (= (:fieldType field) "attachment")
+                        (or (some-> (get field-deadlines (:id field))
+                                    :deadline
+                                    hakuaika/date-time->localized-date-time)
+                            (some-> (-> field :params :deadline)
+                                    (hakuaika/str->date-time)
+                                    (hakuaika/date-time->localized-date-time))
+                            (some-> (hakuaika/select-hakuaika-for-field now field hakuajat)
+                                    attachment-deadline-fn
+                                    (hakuaika/date-time->localized-date-time))))]
+      (assoc-in field [:params :deadline-label] label)
+      field)))
 
-(defn populate-attachment-deadlines [form now hakuajat field-deadlines]
+(defn populate-attachment-deadlines [form now hakuajat field-deadlines attachment-deadline-service]
   (update form :content (partial util/map-form-fields
                                  (partial populate-attachment-deadline
                                           now
                                           hakuajat
-                                          field-deadlines))))
+                                          field-deadlines
+                                          attachment-deadline-service))))
 
 (defn populate-hakukohde-answer-options [form tarjonta-info]
   ; walking through entire content is very slow for large forms, so try a naive optimization first

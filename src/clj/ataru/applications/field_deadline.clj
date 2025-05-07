@@ -8,7 +8,6 @@
             [yesql.core :as yesql])
   (:import org.postgresql.util.PSQLException))
 
-(declare yesql-get-field-deadlines)
 (declare yesql-get-field-deadline)
 (declare yesql-add-application-event<!)
 (yesql/defqueries "sql/field-deadline-queries.sql")
@@ -17,27 +16,6 @@
 (def unique-violation "23505")
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
-
-(defn get-field-deadlines
-  "Returns all of the individually set field deadlines for an application. By default please use
-   ataru.attachment-deadline.attachment-deadline/get-field-deadlines instead of calling this directly."
-  ([application-key]
-   (db/exec :db yesql-get-field-deadlines {:application_key application-key}))
-  ([organization-service tarjonta-service audit-logger session application-key]
-   (if (aac/applications-access-authorized?
-        organization-service
-        tarjonta-service
-        session
-        [application-key]
-        [:view-applications :edit-applications])
-     (let [r (vec (get-field-deadlines application-key))]
-       (audit-log/log audit-logger
-                      {:new       r
-                       :id        {:applicationOid application-key}
-                       :session   session
-                       :operation audit-log/operation-read})
-       r)
-     :unauthorized)))
 
 (defn get-field-deadline
   [organization-service tarjonta-service audit-logger session application-key field-id]

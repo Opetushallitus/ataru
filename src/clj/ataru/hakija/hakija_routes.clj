@@ -60,7 +60,8 @@
    session
    secret
    liiteri-cas-client
-   koski-service]
+   koski-service
+   attachment-deadline-service]
   (let [[application-form-and-person secret-expired? lang-override inactivated? virkailija-oid]
         (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
@@ -71,7 +72,8 @@
                                                                      hakukohderyhma-settings-cache
                                                                      secret
                                                                      liiteri-cas-client
-                                                                     koski-service)]
+                                                                     koski-service
+                                                                     attachment-deadline-service)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated" :lang lang-override})
 
@@ -239,7 +241,8 @@
                           amazon-sqs
                           audit-logger
                           liiteri-cas-client
-                          hakukohderyhma-settings-cache]}]
+                          hakukohderyhma-settings-cache
+                          attachment-deadline-service]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -269,7 +272,8 @@
       :path-params [key :- s/Str]
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
-      (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache koodisto-cache nil false {})]
+      (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache
+                                                    koodisto-cache nil false {} attachment-deadline-service)]
         (response/ok form)
         (response/not-found {})))
     (api/POST "/feedback" []
@@ -306,7 +310,8 @@
                    liiteri-cas-client
                    maksut-service
                    oppija-session-from-db
-                   koski-service)
+                   koski-service
+                   attachment-deadline-service)
                  {:passed? false :failures failures :code code}
                  (response/bad-request {:failures failures :code code})
 
@@ -330,7 +335,8 @@
                application
                session
                liiteri-cas-client
-               maksut-service)
+               maksut-service
+               attachment-deadline-service)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -353,7 +359,8 @@
                              session
                              {:hakija secret}
                              liiteri-cas-client
-                             koski-service)
+                             koski-service
+                             attachment-deadline-service)
 
             (not-blank? virkailija-secret)
             (get-application form-by-id-cache
@@ -367,7 +374,8 @@
                              session
                              {:virkailija virkailija-secret}
                              liiteri-cas-client
-                             koski-service)
+                             koski-service
+                             attachment-deadline-service)
 
             :else
             (response/bad-request {:code  :secret-expired

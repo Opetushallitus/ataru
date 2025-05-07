@@ -40,7 +40,8 @@
             [ataru.koski.koski-service :as koski-service]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ataru.db.db :as db]
-            [ataru.temp-file-storage.s3-client :as s3-client])
+            [ataru.temp-file-storage.s3-client :as s3-client]
+            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service])
   (:import java.time.Duration
            [fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu]
            [java.util.concurrent TimeUnit]))
@@ -206,6 +207,10 @@
                      :application-service
                      :maksut-service])
 
+    :attachment-deadline-service (component/using
+                                  (attachment-deadline-service/map->AttachmentDeadlineService {})
+                                  [:ohjausparametrit-service])
+
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
@@ -220,7 +225,8 @@
                                          :ohjausparametrit-service
                                          :organization-service
                                          :tarjonta-service
-                                         :hakukohderyhma-settings-cache])
+                                         :hakukohderyhma-settings-cache
+                                         :attachment-deadline-service])
 
     :person-service (component/using
                      (person-service/new-person-service)
@@ -287,7 +293,8 @@
                             :application-service
                             :siirtotiedosto-service
                             :session-store
-                            :suoritus-service]
+                            :suoritus-service
+                            :attachment-deadline-service]
                            (map first caches))))
 
     :server-setup {:port      http-port
@@ -324,7 +331,8 @@
                   :liiteri-cas-client
                   :amazon-cloudwatch
                   :maksut-service
-                  :tutu-cas-client])
+                  :tutu-cas-client
+                  :attachment-deadline-service])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -342,7 +350,7 @@
     :amazon-cloudwatch (component/using
                   (cloudwatch/map->AmazonCloudwatch {:namespace (str (-> config :public-config :environment-name) "-ataru")})
                   [:credentials-provider])
-    
+
     :amazon-sqs (component/using
                  (sqs/map->AmazonSQS {})
                  [:credentials-provider])
