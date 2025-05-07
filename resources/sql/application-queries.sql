@@ -1103,30 +1103,43 @@ ORDER BY created_time DESC;
 
 --name: yesql-valintalaskenta-applications
 SELECT
-  key,
-  lang as asiointikieli,
-  person_oid,
-  haku,
-  hakukohde,
+  a.key,
+  a.lang as asiointikieli,
+  a.person_oid,
+  a.haku,
+  a.hakukohde,
   (SELECT content
    FROM answers_as_content
-   WHERE application_id = la.id) AS content,
+   WHERE application_id = a.id) AS content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews AS ahr
-   WHERE ahr.application_key = key) AS application_hakukohde_reviews,
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
   coalesce((SELECT jsonb_object_agg(hakukohde, state)
             FROM application_hakukohde_reviews AS ahr
-            WHERE ahr.application_key = key AND
+            WHERE ahr.application_key = a.key AND
                   ahr.requirement = 'payment-obligation'), '{}') AS maksuvelvollisuus
-FROM latest_applications AS la
-JOIN application_reviews ON application_key = la.key
-WHERE person_oid IS NOT NULL
-  AND haku IS NOT NULL
-  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
-  AND (array_length(ARRAY[:application_keys], 1) < 2 OR key IN (:application_keys))
-  AND state <> 'inactivated';
+FROM applications AS a
+  LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+  JOIN application_reviews ar ON application_key = a.key
+WHERE la.id IS NULL
+  AND a.person_oid IS NOT NULL
+  AND a.haku IS NOT NULL
+  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (a.hakukohde))
+  AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
+  AND ar.state <> 'inactivated';
+
+--name: yesql-valintalaskenta-application-oids
+SELECT
+  a.key
+FROM applications AS a
+  LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+  JOIN application_reviews ar ON application_key = a.key
+WHERE la.id IS NULL
+  AND a.person_oid IS NOT NULL
+  AND ARRAY[:hakukohde_oids]::VARCHAR[] && a.hakukohde
+  AND ar.state <> 'inactivated';
 
 --name: yesql-siirto-applications
 SELECT

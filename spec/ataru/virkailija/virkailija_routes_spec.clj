@@ -186,6 +186,14 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- post-valintalaskenta-application-oids-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta/application-oids"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-application-details [application-key]
   (-> (mock/request :get (str "/lomake-editori/api/applications/" application-key))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
@@ -939,7 +947,24 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 0 (count applications)))))
+                (should= 0 (count applications))))
+
+          (it "should return application oids"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-valintalaskenta-application-oids-query [(first (:hakukohde application))])
+                    status (:status resp)
+                    oids (:body resp)]
+                (should= 200 status)
+                (should= 1 (count oids))
+                (should= (:key application) (first oids))))
+
+          (it "should not return an application oid"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-valintalaskenta-application-oids-query ["hk"])
+                    status (:status resp)
+                    oids (:body resp)]
+                (should= 200 status)
+                (should= 0 (count oids)))))
 
 (describe "siirto"
           (tags :unit)
