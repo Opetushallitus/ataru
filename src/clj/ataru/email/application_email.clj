@@ -1,6 +1,6 @@
 (ns ataru.email.application-email
   (:require [ataru.applications.application-store :as application-store]
-            [ataru.attachment-deadline.attachment-deadline :as attachment-deadline]
+            [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.email.email-store :as email-store]
             [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
@@ -214,16 +214,17 @@
     (koodisto/get-attachment-type-label koodisto-cache attachment-type)))
 
 (defn create-emails
-  [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url]
+  [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url
+   attachment-deadline-service]
    (let [now                             (t/now)
          answers-by-key                  (-> application :answers util/answers-by-key)
          hakukohteet                     (:hakukohteet tarjonta-info)
          hakuajat                        (hakuaika/index-hakuajat hakukohteet)
          field-deadlines                 (->> (:key application)
-                                              attachment-deadline/get-field-deadlines
+                                              (attachment-deadline/get-field-deadlines attachment-deadline-service)
                                               (map #(dissoc % :last-modified))
                                               (util/group-by-first :field-id))
-         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines)
+         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines attachment-deadline-service)
          flat-form-fields                (util/flatten-form-fields (:content form))
          lang                            (keyword (:lang application))
          attachment-keys-without-answers (->> application-attachment-reviews
@@ -286,7 +287,7 @@
        render-file-fn)))
 
 (defn- create-emails-by-gathering-data
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian? payment-url]
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian? payment-url]
   (let [application                     (get-application application-id)
         tarjonta-info                   (get-tarjonta-info koodisto-cache tarjonta-service organization-service ohjausparametrit-service application)
         raw-form                        (forms/fetch-by-id (:form application))
@@ -294,37 +295,41 @@
         form-allows-ht?                 (boolean (get-in raw-form [:properties :allow-hakeminen-tunnistautuneena]))
         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form) form-allows-ht?))
         get-attachment-type             (get-attachment-type-fn koodisto-cache)]
-    (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url)))
+    (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url
+                   attachment-deadline-service)))
 
-(defn create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian? payment-url]
-  (create-emails-by-gathering-data koodisto-cache
-                 tarjonta-service organization-service ohjausparametrit-service
-                 nil
-                 submit-email-template-filename
-                 application-id
-                 guardian?
-                 payment-url))
+(defn create-submit-email [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian? payment-url]
+  (create-emails-by-gathering-data attachment-deadline-service
+                                   koodisto-cache
+                                   tarjonta-service organization-service ohjausparametrit-service
+                                   nil
+                                   submit-email-template-filename
+                                   application-id
+                                   guardian?
+                                   payment-url))
 
-(defn create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
-  (create-emails-by-gathering-data koodisto-cache
-                 tarjonta-service organization-service ohjausparametrit-service
-                 edit-email-subjects
-                 #(str "templates/email_edit_confirmation_template_"
-                       (name %)
-                       ".html")
-                 application-id
-                 guardian?
-                 nil))
+(defn create-edit-email [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+  (create-emails-by-gathering-data attachment-deadline-service
+                                   koodisto-cache
+                                   tarjonta-service organization-service ohjausparametrit-service
+                                   edit-email-subjects
+                                   #(str "templates/email_edit_confirmation_template_"
+                                         (name %)
+                                         ".html")
+                                   application-id
+                                   guardian?
+                                   nil))
 
 (defn create-refresh-secret-email
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-emails-by-gathering-data koodisto-cache
-                 tarjonta-service organization-service ohjausparametrit-service
-                 refresh-secret-email-subjects
-                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
-                 application-id
-                 false
-                 nil))
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
+  (create-emails-by-gathering-data attachment-deadline-service
+                                   koodisto-cache
+                                   tarjonta-service organization-service ohjausparametrit-service
+                                   refresh-secret-email-subjects
+                                   #(str "templates/email_refresh_secret_template_" (name %) ".html")
+                                   application-id
+                                   false
+                                   nil))
 
 (defn decision-info-email [order-id-prefix]
   (case order-id-prefix

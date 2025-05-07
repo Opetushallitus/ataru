@@ -59,7 +59,8 @@
                                                organization-service
                                                ohjausparametrit-service
                                                audit-logger
-                                               session]}]
+                                               session
+                                               attachment-deadline-service]}]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -78,7 +79,8 @@
                                                                  koodisto-cache
                                                                  nil
                                                                  false
-                                                                 {}))
+                                                                 {}
+                                                                 attachment-deadline-service))
         validation-result             (when form (validator/valid-application?
                                                   koodisto-cache
                                                   false ; TODO: has-applied OK?
