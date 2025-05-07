@@ -1,5 +1,5 @@
 (ns ataru.hakija.hakija-routes-spec
-  (:require [ataru.applications.field-deadline :as field-deadline]
+  (:require [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.util :as util]
             [ataru.log.audit-log :as audit-log]
@@ -70,6 +70,7 @@
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
         audit-logger                         (audit-log/new-dummy-audit-logger)
+        attachment-deadline-service          (attachment-deadline-service/->AttachmentDeadlineService ohjausparametrit-service)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [_ _])
                                                (get-many-from [_ _])
@@ -86,12 +87,14 @@
                                                :ohjausparametrit-service ohjausparametrit-service
                                                :organization-service     organization-service
                                                :tarjonta-service         tarjonta-service
-                                               :hakukohderyhma-settings-cache hakukohderyhma-settings-cache})]
+                                               :hakukohderyhma-settings-cache hakukohderyhma-settings-cache
+                                               :attachment-deadline-service   attachment-deadline-service})]
     (-> (routes/new-handler)
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)
         (assoc :ohjausparametrit-service ohjausparametrit-service)
+        (assoc :attachment-deadline-service attachment-deadline-service)
         (assoc :application-service application-service)
         (assoc :form-by-id-cache form-by-id-cache)
         (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
@@ -501,7 +504,7 @@
 
     (it "should get application with hakuaika ended but field deadline extended"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    field-deadline/get-field-deadlines (fn [_]
+                    attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
                                                            :deadline      (.plusDays (DateTime/now) 1)
                                                            :last-modified (DateTime/now)}])]
@@ -514,7 +517,7 @@
 
     (it "should get application with hakuaika ended and field deadline passed"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    field-deadline/get-field-deadlines (fn [_]
+                    attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
                                                            :deadline      (.minusDays (DateTime/now) 1)
                                                            :last-modified (DateTime/now)}])]
@@ -675,7 +678,7 @@
 
     (it "should disallow application edit after grace period to attachment with extended field deadline that has passed"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    field-deadline/get-field-deadlines (fn [_]
+                    attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
                                                            :deadline      (.minusDays (DateTime/now) 1)
                                                            :last-modified (DateTime/now)}])
@@ -685,7 +688,7 @@
 
     (it "should allow application edit after grace period to attachment with extended field deadline"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    field-deadline/get-field-deadlines (fn [_]
+                    attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
                                                            :deadline      (.plusDays (DateTime/now) 1)
                                                            :last-modified (DateTime/now)}])
