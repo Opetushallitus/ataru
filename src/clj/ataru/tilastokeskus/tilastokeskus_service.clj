@@ -75,7 +75,7 @@
            (when toinen-aste?
              (let [pohjakoulutus (:POHJAKOULUTUS koostedata)
                    opetuskieli (:perusopetuksen_kieli koostedata)
-                   luokkatieto (suoritus-service/opiskelijan-luokkatieto suoritus-service person-oid (vector hakuvuosi) (suoritus-filter/luokkatasot-for-suoritus-filter) nil)
+                   luokkatieto (suoritus-service/opiskelijan-luokkatieto suoritus-service person-oid (vector hakuvuosi) (suoritus-filter/luokkatasot-for-suoritus-filter))
                    lahtokoulu-oid (:oppilaitos-oid luokkatieto)]
                {:pohjakoulutus_2aste               pohjakoulutus
                 :pohjakoulutus_2aste_suorituskieli   opetuskieli
