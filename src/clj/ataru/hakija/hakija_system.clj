@@ -27,7 +27,8 @@
             [ataru.valinta-tulos-service.valintatulosservice-service :as valinta-tulos-service]
             [ataru.applications.application-service :as application-service]
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]
-            [ataru.koski.koski-service :as koski-service]))
+            [ataru.koski.koski-service :as koski-service]
+            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]))
 
 (defn new-system
   ([audit-logger]
@@ -133,6 +134,10 @@
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
                             {:cas-client :valinta-tulos-service-cas-client})
 
+    :attachment-deadline-service (component/using
+                                  (attachment-deadline-service/map->AttachmentDeadlineService {})
+                                  [:ohjausparametrit-service])
+
     :application-service (component/using
                            (application-service/new-application-service)
                            [:liiteri-cas-client
@@ -165,7 +170,8 @@
                       :amazon-sqs
                       :application-service
                       :koski-service
-                      :audit-logger]
+                      :audit-logger
+                      :attachment-deadline-service]
                      (map first caches)))
 
     :server-setup {:port      http-port
@@ -189,7 +195,8 @@
                   :hakukohderyhmapalvelu-service
                   :hakukohderyhma-settings-cache
                   :audit-logger
-                  :liiteri-cas-client])
+                  :liiteri-cas-client
+                  :attachment-deadline-service])
 
     :redis (redis/map->Redis {})
 
