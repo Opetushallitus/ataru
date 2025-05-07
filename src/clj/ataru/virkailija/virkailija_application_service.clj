@@ -9,11 +9,7 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-            [ataru.tarjonta.haku :as haku]
             [ataru.util :as util]
-            [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [clj-time.format :as format]
             [taoensso.timbre :as log]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]))
