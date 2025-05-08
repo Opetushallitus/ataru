@@ -1626,9 +1626,11 @@
     (-> application
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
-        (assoc :applicationPaymentState payment-state)
-        (dissoc :application-payment-states)
-        (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
+        (assoc :application-payment-states payment-state)
+        (clojure.set/rename-keys {:key :hakemusOid
+                                  :person-oid :personOid
+                                  :haku :hakuOid
+                                  :application-payment-states :applicationPaymentState}))))
 
 (defn- unwrap-siirto-application [application]
   (let [attachments (->> application
