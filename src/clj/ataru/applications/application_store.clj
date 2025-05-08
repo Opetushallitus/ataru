@@ -1622,6 +1622,7 @@
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
         (assoc :applicationPaymentState payment-state)
+        (dissoc :application-payment-states)
         (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn- unwrap-siirto-application [application]
