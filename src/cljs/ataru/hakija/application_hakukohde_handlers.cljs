@@ -211,7 +211,7 @@
                          (:options v))))
           data))
 
-(defn- collect-root-ids-related-to-removable-hakukohde
+(defn collect-root-ids-related-to-removable-hakukohde
   [hakukohde-oid flat-content selected-hakukohteet]
   (let [removable-ryhmat (:removable-ryhmat selected-hakukohteet)]
     (->> flat-content
@@ -224,7 +224,7 @@
          (map :id)
          set)))
 
-(defn- filter-by-children-id
+(defn filter-by-children-id
   [questions id-set]
   (filter (fn [item]
             (or (contains? id-set (:id item))
@@ -234,7 +234,7 @@
           questions))
 
 
-(defn- prepare-hakukohteet-data [hakukohde-oid hakukohteet selected-hakukohteet-oids]
+(defn prepare-hakukohteet-data [hakukohde-oid hakukohteet selected-hakukohteet-oids]
   (let [removable-hakukohteet (->> hakukohteet
                                    (filter #(= (:oid %) hakukohde-oid))
                                    (map #(select-keys % [:hakukohderyhmat :oid :name])))
