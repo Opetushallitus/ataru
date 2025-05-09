@@ -8,6 +8,11 @@
             [ataru.cljs-util :as util]
             [clojure.string]))
 
+(when-not (exists? js/config)
+  (set! js/config #js {:upploadUrl "/test-upload"}))
+
+(def upload-url (.-upploadUrl js/config))
+
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 (def max-part-size
   (get (js->clj js/config) "attachment-file-part-max-size-bytes" (* 1024 1024 5)))
