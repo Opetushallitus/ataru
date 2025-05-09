@@ -13,7 +13,6 @@
             [ataru.email.application-email-jobs :as application-email]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
@@ -30,7 +29,8 @@
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.component-data.kk-application-payment-module :as payment-module])
+            [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service])
   (:import org.joda.time.DateTime))
 
 (declare resp)
@@ -65,7 +65,7 @@
                                                (get-many-from [_ _])
                                                (remove-from [_ _])
                                                (clear-all [_]))
-        tarjonta-service                     (tarjonta-service/new-tarjonta-service)
+        tarjonta-service                     (tarjonta-service/->MockTarjontaKoutaService)
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
