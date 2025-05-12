@@ -22,8 +22,17 @@ runs:
 
     - name: Cache dependencies
       uses: actions/cache@v4
+      id: maven-cache
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
         restore-keys: |
           ${{ runner.os }}-m2-
+
+    - name: Install Clojure deps
+      env:
+        GITHUB_USERNAME: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ github.token }}
+      shell: bash
+      run: lein deps
+      if: steps.maven-cache.outputs.cache-hit != 'true'
