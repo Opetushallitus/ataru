@@ -60,7 +60,8 @@
       {:from       "no-reply@opintopolku.fi"
        :recipients emails
        :body       body
-       :subject subject})))
+       :subject    subject
+       :masks      []})))
 
 (defn- start-email-job [job-runner connection application]
   (let [job-type (:type harkinnanvaraisuus-email-job/job-definition)

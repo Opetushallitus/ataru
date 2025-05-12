@@ -39,7 +39,11 @@
       {:from       "no-reply@opintopolku.fi"
        :recipients emails
        :subject    subject
-       :body       body})))
+       :body       body
+       :masks      (if-let [url (:payment-url data)]
+                     [{:secret url
+                       :mask "<payment link redacted>"}]
+                     [])})))
 
 (defn get-application-language
   [application]
