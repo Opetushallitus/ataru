@@ -72,9 +72,7 @@
                     :body       body
                     :masks      (if application-url
                                   [{:secret application-url
-                                    :mask (or (when application-url-text
-                                                (str application-url-text " (link redacted)"))
-                                              "<application link redacted>")}]
+                                    :mask   "https://hakemuslinkki-poistettu.opintopolku.fi/"}]
                                   [])})
             (assoc :subject subject-with-application-key))))))
 

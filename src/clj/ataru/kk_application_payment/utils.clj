@@ -42,7 +42,7 @@
        :body       body
        :masks      (if-let [url (:payment-url data)]
                      [{:secret url
-                       :mask "<payment link redacted>"}]
+                       :mask   "https://maksulinkki-poistettu.opintopolku.fi/"}]
                      [])})))
 
 (defn get-application-language

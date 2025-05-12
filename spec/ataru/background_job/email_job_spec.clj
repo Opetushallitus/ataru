@@ -2,7 +2,7 @@
   (:require [speclj.core :refer [describe it should-be-nil should-throw should=]]
             [ataru.background-job.email-job :as job])
   (:import (java.util UUID Optional List)
-           (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl)
+           (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl MaskiImpl)
            (fi.oph.viestinvalitys ViestinvalitysClientImpl ViestinvalitysClientException)
            (fi.oph.viestinvalitys.vastaanotto.resource LuoLahetysSuccessResponseImpl LuoViestiSuccessResponseImpl)))
 
@@ -31,3 +31,11 @@
                          (new VastaanottajaImpl (Optional/empty) (Optional/of "foo@bar.com"))
                          (new VastaanottajaImpl (Optional/empty) (Optional/of "baz@bar.com")))
                        (job/vastaanottajat ["foo@bar.com" "baz@bar.com"]))))
+
+(describe "maskit"
+          (it "should return a list of masks"
+              (should= (List/of
+                         (new MaskiImpl (Optional/of "foo") (Optional/of "***"))
+                         (new MaskiImpl (Optional/of "bar") (Optional/of "baz")))
+                       (job/maskit [{:secret "foo" :mask "***"}
+                                    {:secret "bar" :mask "baz"}]))))
