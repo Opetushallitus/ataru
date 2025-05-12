@@ -20,10 +20,10 @@
 (describe "send-email"
           (it "should return nil when sending is successful"
               (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
-                (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body"))))
+                (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body" [{:secret "foo" :mask "****"}]))))
           (it "should throw client exception"
               (with-redefs [job/viestinvalitys-client (fn [] throwing-client-mock)]
-                (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body")))))
+                (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body" [])))))
 
 (describe "vastaanottaja"
           (it "should return a list of recipients"

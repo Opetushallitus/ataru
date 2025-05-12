@@ -27,13 +27,21 @@
       (ViestinvalitysBuilder/vastaanottajatBuilder)
       recipients)))
 
-(defn send-email [from recipients subject body]
+(defn maskit [masks]
+  (.build
+    (reduce
+     (fn [builder {:keys [secret mask]}]
+       (.withMaski builder secret (or mask "***")))
+     (ViestinvalitysBuilder/maskitBuilder)
+     masks)))
+
+(defn send-email [from recipients subject body masks]
   (let [client (viestinvalitys-client)
         lahetys-response (-> client
                              (.luoLahetys (-> (ViestinvalitysBuilder/lahetysBuilder)
                                               (.withOtsikko subject)
                                               (.withLahettavaPalvelu "hakemuspalvelu")
-                                              (.withLahettaja (Optional/empty) from)
+                                              (.withLahettaja (Optional/of "Opetushallitus") from)
                                               (.withNormaaliPrioriteetti)
                                               (.withSailytysaika 365)
                                               (.build))))
@@ -47,16 +55,17 @@
                                                    (.withKayttooikeus "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA" "1.2.246.562.10.00000000001")
                                                    (.build)))
                                              (.withLahetysTunniste (str (.getLahetysTunniste lahetys-response)))
+                                             (.withMaskit (maskit masks))
                                              (.build))))]
     (log/info "Got response" (str viesti-response) "from viestinvälityspalvelu")
     (when-not (instance? LuoViestiSuccessResponse viesti-response)
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
-(defn send-email-handler [{:keys [from recipients subject body]} _]
-  {:pre [(every? #(identity %) [from recipients subject body])]}
+(defn send-email-handler [{:keys [from recipients subject body masks]} _]
+  {:pre [(every? #(identity %) [from recipients subject body masks])]}
   (log/info "Trying to send email" subject "to" recipients "via viestinvälityspalvelu at address"
             (viestinvalityspalvelu-endpoint))
-  (send-email from recipients subject body)
+  (send-email from recipients subject body masks)
   (log/info "Successfully sent email to" recipients))
 
 (def job-definition {:handler send-email-handler
