@@ -33,7 +33,13 @@
       {:from (:from email-data)
        :recipients (:recipients email-data)
        :subject (:subject email-data)
-       :body body})))
+       :body body
+       :masks (if-let [url (:application-url template-params)]
+                [{:secret url
+                  :mask (or (when-let [text (:application-url-text template-params)]
+                              (str text " (link redacted)"))
+                            "<application link redacted>")}]
+                [])})))
 
 (defn make-email-data
   [recipients subject template-params]

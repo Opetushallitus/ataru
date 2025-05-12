@@ -69,7 +69,13 @@
         (-> (select-keys information-request [:application-key :id])
             (merge {:from       "no-reply@opintopolku.fi"
                     :recipients recipient-emails
-                    :body       body})
+                    :body       body
+                    :masks      (if application-url
+                                  [{:secret application-url
+                                    :mask (or (when application-url-text
+                                                (str application-url-text " (link redacted)"))
+                                              "<application link redacted>")}]
+                                  [])})
             (assoc :subject subject-with-application-key))))))
 
 (defn start-email-job [job-runner connection information-request]
