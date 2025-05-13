@@ -21,11 +21,11 @@
           (it "should return nil when sending is successful"
               (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
                 (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body"
-                                               [{:secret "foo" :mask "****"}] [{:key "foo" :values ["bar" "baz"]}]))))
+                                               [{:secret "foo" :mask "****"}] {:foo ["bar" "baz"]}))))
           (it "should throw client exception"
               (with-redefs [job/viestinvalitys-client (fn [] throwing-client-mock)]
                 (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body"
-                                                                            [] [])))))
+                                                                            [] {})))))
 
 (describe "vastaanottaja"
           (it "should return a list of recipients"
@@ -55,9 +55,12 @@
               (should= (Map/of
                          "foo" (List/of "bar" "baz")
                          "x" (List/of "y"))
-                       (job/metadatat [{:key "foo" :values ["bar" "baz"]}
-                                       {:key "x" :values '("y")}]))
+                       (job/metadatat {:foo ["bar" "baz"]
+                                       :x '("y")}))
               (should= (Map/of)
-                       (job/metadatat []))
+                       (job/metadatat {}))
               (should= (Map/of)
-                       (job/metadatat nil))))
+                       (job/metadatat nil))
+              (should= (Map/of
+                         "fooBar" (List/of "x"))
+                       (job/metadatat {:fooBar ["x"]}))))

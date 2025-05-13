@@ -69,6 +69,7 @@
         mail-content    (utils/payment-email lang email-address {:payment-url     payment-url
                                                                  :due-date-time   due-date-str
                                                                  :haku-name       haku-name
+                                                                 :person-oid      (:person-oid application)
                                                                  :application-key (:key application)}
                                              (params-fn lang due-date-str))]
     (log/info "Generate kk application payment " type-str " for email" email-address
