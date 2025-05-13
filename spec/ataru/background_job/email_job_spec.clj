@@ -32,7 +32,11 @@
               (should= (List/of
                          (new VastaanottajaImpl (Optional/empty) (Optional/of "foo@bar.com"))
                          (new VastaanottajaImpl (Optional/empty) (Optional/of "baz@bar.com")))
-                       (job/vastaanottajat ["foo@bar.com" "baz@bar.com"]))))
+                       (job/vastaanottajat ["foo@bar.com" "baz@bar.com"]))
+              (should= (List/of)
+                       (job/vastaanottajat []))
+              (should= (List/of)
+                       (job/vastaanottajat nil))))
 
 (describe "maskit"
           (it "should return a list of masks"
@@ -40,7 +44,11 @@
                          (new MaskiImpl (Optional/of "foo") (Optional/of "***"))
                          (new MaskiImpl (Optional/of "bar") (Optional/of "baz")))
                        (job/maskit [{:secret "foo" :mask "***"}
-                                    {:secret "bar" :mask "baz"}]))))
+                                    {:secret "bar" :mask "baz"}]))
+              (should= (List/of)
+                       (job/maskit []))
+              (should= (List/of)
+                       (job/maskit nil))))
 
 (describe "metadatat"
           (it "should return a map of metadata"
@@ -48,4 +56,8 @@
                          "foo" (List/of "bar" "baz")
                          "x" (List/of "y"))
                        (job/metadatat [{:key "foo" :values ["bar" "baz"]}
-                                       {:key "x" :values '("y")}]))))
+                                       {:key "x" :values '("y")}]))
+              (should= (Map/of)
+                       (job/metadatat []))
+              (should= (Map/of)
+                       (job/metadatat nil))))
