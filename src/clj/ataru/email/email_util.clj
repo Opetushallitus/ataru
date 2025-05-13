@@ -38,7 +38,9 @@
                 [{:secret url
                   :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                 [])
-       :metadata [{:key "hakemusOid" :values [(get-in email-data [:template-params :application-id])]}]})))
+       :metadata (if-let [oid (get-in email-data [:template-params :application-oid])]
+                   [{:key "hakemusOid" :values [oid]}]
+                   [])})))
 
 (defn make-email-data
   [recipients subject template-params]
