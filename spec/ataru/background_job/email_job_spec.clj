@@ -1,7 +1,7 @@
 (ns ataru.background-job.email-job-spec
   (:require [speclj.core :refer [describe it should-be-nil should-throw should=]]
             [ataru.background-job.email-job :as job])
-  (:import (java.util UUID Optional List)
+  (:import (java.util UUID Optional List Map)
            (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl MaskiImpl)
            (fi.oph.viestinvalitys ViestinvalitysClientImpl ViestinvalitysClientException)
            (fi.oph.viestinvalitys.vastaanotto.resource LuoLahetysSuccessResponseImpl LuoViestiSuccessResponseImpl)))
@@ -20,10 +20,12 @@
 (describe "send-email"
           (it "should return nil when sending is successful"
               (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
-                (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body" [{:secret "foo" :mask "****"}]))))
+                (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body"
+                                               [{:secret "foo" :mask "****"}] [{:key "foo" :values ["bar" "baz"]}]))))
           (it "should throw client exception"
               (with-redefs [job/viestinvalitys-client (fn [] throwing-client-mock)]
-                (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body" [])))))
+                (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body"
+                                                                            [] [])))))
 
 (describe "vastaanottaja"
           (it "should return a list of recipients"
@@ -39,3 +41,11 @@
                          (new MaskiImpl (Optional/of "bar") (Optional/of "baz")))
                        (job/maskit [{:secret "foo" :mask "***"}
                                     {:secret "bar" :mask "baz"}]))))
+
+(describe "metadatat"
+          (it "should return a map of metadata"
+              (should= (Map/of
+                         "foo" (List/of "bar" "baz")
+                         "x" (List/of "y"))
+                       (job/metadatat [{:key "foo" :values ["bar" "baz"]}
+                                       {:key "x" :values '("y")}]))))

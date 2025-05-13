@@ -52,8 +52,9 @@
        :body       body
        :masks      (if-let [url (:payment-url data)]
                      [{:secret url
-                       :mask   "https://maksulinkki-poistettu.opintopolku.fi/"}]
-                     [])})))
+                       :mask   "https://maksulinkki-piilotettu.opintopolku.fi/"}]
+                     [])
+       :metadata   [{:key "hakemusOid" :values [(:application-key data)]}]})))
 
 (defn get-application-language
   [application]

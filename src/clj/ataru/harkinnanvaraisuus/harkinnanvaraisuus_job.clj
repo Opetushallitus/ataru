@@ -61,7 +61,8 @@
        :recipients emails
        :body       body
        :subject    subject
-       :masks      []})))
+       :masks      []
+       :metadata   [{:key "hakemusOid" :values [(:key application)]}]})))
 
 (defn- start-email-job [job-runner connection application]
   (let [job-type (:type harkinnanvaraisuus-email-job/job-definition)

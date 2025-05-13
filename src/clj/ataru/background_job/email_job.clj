@@ -30,12 +30,20 @@
 (defn maskit [masks]
   (.build
     (reduce
-     (fn [builder {:keys [secret mask]}]
-       (.withMaski builder secret (or mask "***")))
-     (ViestinvalitysBuilder/maskitBuilder)
-     masks)))
+      (fn [builder {:keys [secret mask]}]
+        (.withMaski builder secret (or mask "********")))
+      (ViestinvalitysBuilder/maskitBuilder)
+      masks)))
 
-(defn send-email [from recipients subject body masks]
+(defn metadatat [metadata]
+  (.build
+    (reduce
+      (fn [builder {:keys [key values]}]
+        (.withMetadata builder key values))
+      (ViestinvalitysBuilder/metadatatBuilder)
+      metadata)))
+
+(defn send-email [from recipients subject body masks metadata]
   (let [client (viestinvalitys-client)
         lahetys-response (-> client
                              (.luoLahetys (-> (ViestinvalitysBuilder/lahetysBuilder)
@@ -56,16 +64,17 @@
                                                    (.build)))
                                              (.withLahetysTunniste (str (.getLahetysTunniste lahetys-response)))
                                              (.withMaskit (maskit masks))
+                                             (.withMetadatat (metadatat metadata))
                                              (.build))))]
     (log/info "Got response" (str viesti-response) "from viestinvälityspalvelu")
     (when-not (instance? LuoViestiSuccessResponse viesti-response)
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
-(defn send-email-handler [{:keys [from recipients subject body masks]} _]
-  {:pre [(every? #(identity %) [from recipients subject body masks])]}
+(defn send-email-handler [{:keys [from recipients subject body masks metadata]} _]
+  {:pre [(every? #(identity %) [from recipients subject body masks metadata])]}
   (log/info "Trying to send email" subject "to" recipients "via viestinvälityspalvelu at address"
             (viestinvalityspalvelu-endpoint))
-  (send-email from recipients subject body masks)
+  (send-email from recipients subject body masks metadata)
   (log/info "Successfully sent email to" recipients))
 
 (def job-definition {:handler send-email-handler
