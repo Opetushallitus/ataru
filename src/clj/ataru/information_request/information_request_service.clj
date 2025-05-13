@@ -72,8 +72,9 @@
                     :body       body
                     :masks      (if application-url
                                   [{:secret application-url
-                                    :mask   "https://hakemuslinkki-poistettu.opintopolku.fi/"}]
-                                  [])})
+                                    :mask   "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
+                                  [])
+                    :metadata   [{:key "hakemusOid" :values [(:application-key information-request)]}]})
             (assoc :subject subject-with-application-key))))))
 
 (defn start-email-job [job-runner connection information-request]
