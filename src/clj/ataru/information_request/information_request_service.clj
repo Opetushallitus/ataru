@@ -74,7 +74,8 @@
                                   [{:secret application-url
                                     :mask   "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                                   [])
-                    :metadata   [{:key "hakemusOid" :values [(:application-key information-request)]}]})
+                    :metadata   {:hakemusOid [(:application-key information-request)]
+                                 :henkiloOid [(:person-oid application)]}})
             (assoc :subject subject-with-application-key))))))
 
 (defn start-email-job [job-runner connection information-request]

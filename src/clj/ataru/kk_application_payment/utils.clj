@@ -44,7 +44,8 @@
                      [{:secret url
                        :mask   "https://maksulinkki-piilotettu.opintopolku.fi/"}]
                      [])
-       :metadata   [{:key "hakemusOid" :values [(:application-key data)]}]})))
+       :metadata   {:hakemusOid [(:application-key data)]
+                    :henkiloOid [(:person-oid data)]}})))
 
 (defn get-application-language
   [application]

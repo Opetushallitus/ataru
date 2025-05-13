@@ -250,6 +250,7 @@
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
+                                          :person-oid                 (:person-oid application)
                                           :application-url            application-url
                                           :application-url-text       (->safe-html application-url-text)
                                           :oma-opintopolku-link       oma-opintopolku-link

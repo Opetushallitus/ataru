@@ -38,8 +38,10 @@
 (defn metadatat [metadata]
   (.build
     (reduce
-      (fn [builder {:keys [key values]}]
-        (.withMetadata builder key values))
+      (fn [builder [key values]]
+        (.withMetadata builder
+                       (name key)
+                       values))
       (ViestinvalitysBuilder/metadatatBuilder)
       metadata)))
 
@@ -72,7 +74,7 @@
 
 (defn send-email-handler [{:keys [from recipients subject body masks metadata]} _]
   {:pre [(every? #(identity %) [from recipients subject body masks metadata])]}
-  (log/info "Trying to send email" subject "to" recipients "via viestinvälityspalvelu at address"
+  (log/info "Trying to send email" subject "to" recipients "and metadata" metadata "via viestinvälityspalvelu at address"
             (viestinvalityspalvelu-endpoint))
   (send-email from recipients subject body masks metadata)
   (log/info "Successfully sent email to" recipients))
