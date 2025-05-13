@@ -36,8 +36,9 @@
        :body body
        :masks (if-let [url (:application-url template-params)]
                 [{:secret url
-                  :mask "https://hakemuslinkki-poistettu.opintopolku.fi/"}]
-                [])})))
+                  :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
+                [])
+       :metadata [{:key "hakemusOid" :values [(get-in email-data [:template-params :application-id])]}]})))
 
 (defn make-email-data
   [recipients subject template-params]
