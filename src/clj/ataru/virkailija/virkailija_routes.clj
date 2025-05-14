@@ -1465,6 +1465,13 @@
         :return s/Any
         (if-let [application (application-store/get-tutu-application oid)]
           (response/ok application)
+          (response/not-found)))
+
+      (api/GET "/hakemukset" {session :session}
+        :summary "Get all tutu-applications"
+        :return s/Any
+        (if-let [applications (application-store/get-tutu-applications)]
+          (response/ok applications)
           (response/not-found))))
 
     (api/context "/external" []

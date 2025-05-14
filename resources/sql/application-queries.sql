@@ -1466,3 +1466,45 @@ SELECT
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
 WHERE a.key = :oid;
+
+--name: yesql-get-tutu-applications
+SELECT a.key,
+       a.person_oid                         AS "person-oid",
+       a.haku,
+       a.hakukohde                          AS hakutoiveet,
+       (SELECT content
+        FROM answers_as_content
+        WHERE application_id = a.id)        AS content,
+       a.lang,
+       ar.state,
+       a.submitted                          AS submitted,
+       a.created_time                       AS created,
+       a.modified_time                      AS modified,
+       (SELECT json_agg(json_build_object('requirement', requirement,
+                                          'state', state,
+                                          'hakukohde', hakukohde))
+        FROM application_hakukohde_reviews ahr
+        WHERE ahr.application_key = a.key)  AS "application-hakukohde-reviews",
+       (SELECT json_agg(json_build_object('attachment', attachment_key,
+                                          'state', state,
+                                          'hakukohde', hakukohde))
+        FROM application_hakukohde_attachment_reviews ahar
+        WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+       (SELECT json_agg(json_build_object('notes', notes,
+                                          'state', state_name,
+                                          'hakukohde', hakukohde,
+                                          'created', created_time,
+                                          'virkailijaOid', virkailija_oid))
+        FROM application_review_notes arn
+        WHERE arn.application_key = a.key
+          and arn.removed is null)          AS "application-review-notes"
+FROM latest_applications AS a
+         JOIN application_reviews AS ar ON ar.application_key = a.key
+WHERE a.key IN (SELECT a.key
+                FROM applications a
+                         LEFT OUTER JOIN application_hakukohde_reviews ahr ON (a.key = ahr.application_key)
+                WHERE a.form_id IN
+                      (SELECT id
+                       FROM forms f
+                       WHERE f.properties -> 'payment' ->> 'type' = 'payment-type-tutu')
+                  AND (ahr.state = 'processing-fee-paid'));
