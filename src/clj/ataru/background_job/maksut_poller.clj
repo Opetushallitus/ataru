@@ -13,8 +13,8 @@
 
 (defqueries "sql/maksut-queries.sql")
 
-(defn- start-maksut-poller-job [application-service maksut-service _ apps]
-   (maksut-poller-job/poll-maksut application-service maksut-service apps))
+(defn- start-maksut-poller-job [application-service maksut-service job-runner apps]
+   (maksut-poller-job/poll-maksut application-service maksut-service job-runner apps))
 
 (defn- find-applications
   [application-service maksut-service job-runner]

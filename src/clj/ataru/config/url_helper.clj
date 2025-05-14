@@ -29,6 +29,7 @@
                 organisaatio-service-base-url
                 koodisto-service-base-url
                 ohjausparametrit-service-base-url
+                tutu-service-base-url
                 valintalaskenta-ui-service-base-url
                 ataru-hakija-login-url
                 cas-oppija-url]} (:urls config)]
@@ -43,6 +44,7 @@
               (add-default! "baseurl-organisaatio-service" organisaatio-service-base-url)
               (add-default! "baseurl-koodisto-service" koodisto-service-base-url)
               (add-default! "baseurl-ohjausparametrit-service" ohjausparametrit-service-base-url)
+              (add-default! "baseurl-tutu-service" tutu-service-base-url)
               (add-default! "baseurl-valintalaskenta-ui-service" valintalaskenta-ui-service-base-url)
               (add-default! "ataru-hakija-login-url" ataru-hakija-login-url)
               (add-default! "cas-oppija-url" cas-oppija-url)))))
