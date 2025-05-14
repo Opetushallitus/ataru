@@ -2,7 +2,7 @@
   (:require [speclj.core :refer [describe it should-be-nil should-throw should=]]
             [ataru.background-job.email-job :as job])
   (:import (java.util UUID Optional List Map)
-           (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl MaskiImpl)
+           (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl MaskiImpl KayttooikeusImpl)
            (fi.oph.viestinvalitys ViestinvalitysClientImpl ViestinvalitysClientException)
            (fi.oph.viestinvalitys.vastaanotto.resource LuoLahetysSuccessResponseImpl LuoViestiSuccessResponseImpl)))
 
@@ -21,11 +21,11 @@
           (it "should return nil when sending is successful"
               (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
                 (should-be-nil (job/send-email "from" ["to1" "to2"] "subj" "body"
-                                               [{:secret "foo" :mask "****"}] {:foo ["bar" "baz"]}))))
+                                               [{:secret "foo" :mask "****"}] {:foo ["bar" "baz"]} []))))
           (it "should throw client exception"
               (with-redefs [job/viestinvalitys-client (fn [] throwing-client-mock)]
                 (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body"
-                                                                            [] {})))))
+                                                                            [] {} [])))))
 
 (describe "vastaanottaja"
           (it "should return a list of recipients"
@@ -64,3 +64,13 @@
               (should= (Map/of
                          "fooBar" (List/of "x"))
                        (job/metadatat {:fooBar ["x"]}))))
+
+(describe "kayttooikeusrajoitukset"
+          (it "should return a list of privileges"
+              (should= (List/of
+                         (new KayttooikeusImpl (Optional/of "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA") (Optional/of "1.2.246.562.10.00000000001"))
+                         (new KayttooikeusImpl (Optional/of "FOO") (Optional/of "1.2.246.562.10.00000000002")))
+                       (job/kayttooikeusrajoitukset [{:privilege "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA"
+                                                      :organization "1.2.246.562.10.00000000001"}
+                                                     {:privilege "FOO"
+                                                      :organization "1.2.246.562.10.00000000002"}]))))

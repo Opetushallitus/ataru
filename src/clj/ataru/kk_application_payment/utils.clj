@@ -55,7 +55,8 @@
                        :mask   "https://maksulinkki-piilotettu.opintopolku.fi/"}]
                      [])
        :metadata   {:hakemusOid [(:application-key data)]
-                    :henkiloOid [(:person-oid data)]}})))
+                    :henkiloOid [(:person-oid data)]}
+       :privileges (email-util/->hakemus-privileges (:organization-oids data))})))
 
 (defn get-application-language
   [application]

@@ -25,6 +25,12 @@
   (cond-> template-params
     guardian? (dissoc :application-url :content-ending)))
 
+(defn ->hakemus-privileges [organization-oids]
+  (map (fn [organization-oid]
+         {:privilege "APP_HAKEMUS_CRUD"
+          :organization organization-oid})
+       (or organization-oids [])))
+
 (defn- make-email-for-applicant-or-guardian
   [email-data render-file-fn guardian?]
   (when (seq (:recipients email-data))
@@ -39,7 +45,8 @@
                   :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                 [])
        :metadata {:hakemusOid [(get-in email-data [:template-params :application-oid])]
-                  :henkiloOid [(get-in email-data [:template-params :person-oid])]}})))
+                  :henkiloOid [(get-in email-data [:template-params :person-oid])]}
+       :privileges (->hakemus-privileges (:organization-oids template-params))})))
 
 (defn make-email-data
   [recipients subject template-params]
