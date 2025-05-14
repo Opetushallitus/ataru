@@ -16,6 +16,8 @@
             [ataru.config.core :refer [config]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [ataru.person-service.person-service :as person-service]
+            [ataru.email.application-email :as application-email]
+            [ataru.email.email-util :as email-util]
             [clojure.java.jdbc :as jdbc]
             [chime.core :as chime])
   (:import java.time.Instant))
@@ -41,21 +43,25 @@
        (map :value)
        (first)))
 
-(defn- harkinnanvarainen-email [application template-name]
-  (let [lang             (-> application
-                             (get :lang "fi")
-                             keyword)
-        guardian-emails  (distinct
-                           (flatten
-                             (filter some?
-                                     [(extract-answer-value "guardian-email" application)
-                                      (extract-answer-value "guardian-email-secondary" application)])))
-        emails           (->> [(extract-answer-value "email" application)]
-                              (concat guardian-emails)
-                              (remove empty?))
-        translations     (translations/get-translations lang)
-        subject          (:email-vain-harkinnanvaraisessa-subject translations)
-        body             (selmer/render-file template-name translations)]
+(defn- harkinnanvarainen-email [application template-name
+                                {:keys [tarjonta-service ohjausparametrit-service koodisto-cache organization-service]}]
+  (let [lang              (-> application
+                              (get :lang "fi")
+                              keyword)
+        guardian-emails   (distinct
+                            (flatten
+                              (filter some?
+                                      [(extract-answer-value "guardian-email" application)
+                                       (extract-answer-value "guardian-email-secondary" application)])))
+        emails            (->> [(extract-answer-value "email" application)]
+                               (concat guardian-emails)
+                               (remove empty?))
+        tarjonta-info     (application-email/get-tarjonta-info koodisto-cache tarjonta-service organization-service
+                                                               ohjausparametrit-service application)
+        organization-oids (application-email/organization-oids tarjonta-info application)
+        translations      (translations/get-translations lang)
+        subject           (:email-vain-harkinnanvaraisessa-subject translations)
+        body              (selmer/render-file template-name translations)]
     (when (not-empty emails)
       {:from       "no-reply@opintopolku.fi"
        :recipients emails
@@ -63,14 +69,15 @@
        :subject    subject
        :masks      []
        :metadata   {:hakemusOid [(:key application)]
-                    :henkiloOid [(:person-oid application)]}})))
+                    :henkiloOid [(:person-oid application)]}
+       :privileges (email-util/->hakemus-privileges organization-oids)})))
 
 (defn- start-email-job [job-runner connection application]
   (let [job-type (:type harkinnanvaraisuus-email-job/job-definition)
         template-name (if (:sure-harkinnanvarainen-only? application)
                         "templates/email_vain_harkinnanvaraisessa.html"
                         "templates/email_myos_pistevalinnassa.html")
-        email (harkinnanvarainen-email application template-name)]
+        email (harkinnanvarainen-email application template-name job-runner)]
     (if email
       (let [job-id (job/start-job job-runner
                                   connection

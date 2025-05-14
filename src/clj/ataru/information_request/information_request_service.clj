@@ -6,6 +6,7 @@
             [ataru.util :as u]
             [ataru.email.email-util :as email-util]
             [ataru.email.application-email-jobs :refer [->safe-html]]
+            [ataru.email.application-email :as application-email]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
@@ -29,36 +30,40 @@
        (map :value)
        (first)))
 
-(defn- initial-state [connection information-request guardian?]
+(defn- initial-state [connection information-request guardian?
+                      {:keys [tarjonta-service ohjausparametrit-service koodisto-cache organization-service]}]
   (let [add-update-link? (:add-update-link information-request)]
     (when add-update-link?
       (app-store/add-new-secret-to-application-in-tx
         connection
         (:application-key information-request)))
-    (let [application      (app-store/get-latest-application-by-key-in-tx
-                             connection
-                             (:application-key information-request))
+    (let [application       (app-store/get-latest-application-by-key-in-tx
+                              connection
+                              (:application-key information-request))
           form              (forms/fetch-by-id (:form application))
-          lang             (-> application :lang keyword)
-          recipient-emails (if guardian?
-                             (distinct
-                               (flatten
-                                 (filter some?
-                                         [(extract-answer-value "guardian-email" application)
-                                          (extract-answer-value "guardian-email-secondary" application)])))
-                             (remove string/blank? [(extract-answer-value "email" application)]))
-          translations     (translations/get-translations lang)
+          tarjonta-info     (application-email/get-tarjonta-info koodisto-cache tarjonta-service organization-service
+                                                                 ohjausparametrit-service application)
+          organization-oids (application-email/organization-oids tarjonta-info application)
+          lang              (-> application :lang keyword)
+          recipient-emails  (if guardian?
+                              (distinct
+                                (flatten
+                                  (filter some?
+                                          [(extract-answer-value "guardian-email" application)
+                                           (extract-answer-value "guardian-email-secondary" application)])))
+                              (remove string/blank? [(extract-answer-value "email" application)]))
+          translations      (translations/get-translations lang)
           {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
-          body             (selmer/render-file (information-request-email-template-filename lang)
-                                               (merge {:message (->safe-html (:message information-request))}
-                                                      (if (or guardian?
-                                                              (not (or add-update-link?
-                                                                       (:reminder? information-request))))
-                                                        {}
-                                                        {:application-url application-url
-                                                         :application-url-text (->safe-html application-url-text)
-                                                         :oma-opintopolku-link oma-opintopolku-link})
-                                                      translations))
+          body              (selmer/render-file (information-request-email-template-filename lang)
+                                                (merge {:message (->safe-html (:message information-request))}
+                                                       (if (or guardian?
+                                                               (not (or add-update-link?
+                                                                        (:reminder? information-request))))
+                                                         {}
+                                                         {:application-url application-url
+                                                          :application-url-text (->safe-html application-url-text)
+                                                          :oma-opintopolku-link oma-opintopolku-link})
+                                                       translations))
           subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
                                          (if (:reminder? information-request)
                                            (str (:information-request-reminder-subject-prefix translations)
@@ -75,7 +80,8 @@
                                     :mask   "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                                   [])
                     :metadata   {:hakemusOid [(:application-key information-request)]
-                                 :henkiloOid [(:person-oid application)]}})
+                                 :henkiloOid [(:person-oid application)]}
+                    :privileges (email-util/->hakemus-privileges organization-oids)})
             (assoc :subject subject-with-application-key))))))
 
 (defn start-email-job [job-runner connection information-request]
@@ -83,7 +89,7 @@
         target (:recipient-target information-request)]
     (when (or (= "hakija" target)
               (= "hakija_ja_huoltajat" target))
-      (if-let [job-state (initial-state connection information-request false)]
+      (if-let [job-state (initial-state connection information-request false job-runner)]
         (let [job-id (job/start-job job-runner
                                     connection
                                     job-type
@@ -95,7 +101,7 @@
                        " because application doesn't contain email"))))
     (when (or (= "huoltajat" target)
               (= "hakija_ja_huoltajat" target))
-      (if-let [job-state (initial-state connection information-request true)]
+      (if-let [job-state (initial-state connection information-request true job-runner)]
         (let [job-id (job/start-job job-runner
                                     connection
                                     job-type
