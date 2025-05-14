@@ -26,7 +26,7 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
-            [ataru.kk-application-payment.utils :refer [requires-higher-education-application-fee? has-payment-module?]]))
+            [ataru.kk-application-payment.utils :refer [has-payment-module?]]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -291,7 +291,7 @@
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
    use-toisen-asteen-yhteishaku-restrictions? :- s/Bool
-   uses-payment-module? :- s/Bool
+   uses-payment-module? :- (s/maybe s/Bool)
    has-overdue-payment? :- s/Bool]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
@@ -346,7 +346,7 @@
         old-priorisoivat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
         rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
-        uses-payment-module? (requires-higher-education-application-fee? tarjonta-service (:tarjonta tarjonta-info) (map :oid hakukohteet))
+        uses-payment-module? (get-in tarjonta-info [:tarjonta :maksullinen-kk-haku?])
         form (fetch-form-by-id
                id
                roles
@@ -363,7 +363,7 @@
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
-          (payment-info/populate-form-with-payment-info tarjonta-service (:tarjonta tarjonta-info))
+          (payment-info/add-payment-info-if-higher-education (:tarjonta tarjonta-info))
           (populate-hakukohde-answer-options tarjonta-info)
           (populate-can-submit-multiple-applications tarjonta-info))
       (log/warn "Form (id: " id ", haku-oid: " haku-oid ", hakukohteet: " hakukohteet ") cannot be fetched. Possible reason can be missing hakukohteet."))))

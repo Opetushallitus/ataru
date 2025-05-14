@@ -233,7 +233,7 @@
 
 (defn- requires-kk-application-payment-label [haku]
   (let [label @(subscribe [:editor/virkailija-translation :requires-kk-application-payment])]
-    (when (:admission-payment-required? haku)
+    (when (:maksullinen-kk-haku? haku)
       [:div.editor-form__requires-kk-application-payment
        [:span [:i.zmdi.zmdi-alert-triangle] (str " " label)]])))
 
@@ -509,7 +509,7 @@
 (defn- properties []
   (let [form-key              @(subscribe [:editor/selected-form-key])
         form-used-in-hakus    @(subscribe [:editor/form-used-in-hakus form-key])
-        kk-payments-required? (some true? (map :admission-payment-required? form-used-in-hakus))]
+        kk-payments-required? (some true? (map :maksullinen-kk-haku? form-used-in-hakus))]
     [:div.editor-form__component-wrapper
      [:div.editor-form__header-wrapper
       [:header.editor-form__component-header {:data-test-id "properties-header"}
