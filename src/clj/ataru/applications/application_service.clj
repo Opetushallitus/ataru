@@ -19,6 +19,7 @@
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
+    [ataru.tarjonta.haku :as haku]
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
@@ -350,11 +351,12 @@
      session
      query
      sort
-     states-and-filters]
+     states-and-filters
+     jatkuva-haku?]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews)
                                        populate-applications-with-kk-payment-status)
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications jatkuva-haku?)
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications
                                       (populate-applications-with-person-data person-service authorized-applications)
@@ -926,9 +928,10 @@
                                                  (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))
           edited-hakutoiveet?          (-> states-and-filters :filters :only-edited-hakutoiveet :edited)
           unedited-hakutoiveet?        (-> states-and-filters :filters :only-edited-hakutoiveet :unedited)
+          haku                         (when (some? haku-oid) (tarjonta-service/get-haku tarjonta-service haku-oid))
           person-oids                  (when-let [oppilaitos-oid (:school-filter states-and-filters)]
-                                         (let [hakuajat (if (some? haku-oid)
-                                                          (:hakuajat (tarjonta-service/get-haku tarjonta-service haku-oid))
+                                         (let [hakuajat (if (some? haku)
+                                                          (:hakuajat haku)
                                                           (->> (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)
                                                                :haku-oid
                                                                (tarjonta-service/get-haku tarjonta-service)
@@ -947,7 +950,8 @@
                                                            (contains? valitut-luokat (:luokka %))))
                                                 (map :person-oid)
                                                 (aac/linked-oids-for-person-oids person-service)
-                                                distinct)))]
+                                                distinct)))
+          jatkuva-haku?                    (haku/jatkuva-haku? haku)]
         (when-let [query (->and-query
                            (cond (some? form-key)
                                  (->form-query form-key)
@@ -1000,7 +1004,8 @@
                                                                 session
                                                                 query
                                                                 sort
-                                                                filters-with-hakukohteet)
+                                                                filters-with-hakukohteet
+                                                                jatkuva-haku?)
                                                               {:fetched-applications [] :filtered-applications []})
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                               (partial valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service)

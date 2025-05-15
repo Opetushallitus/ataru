@@ -16,6 +16,32 @@
 (def hakukohde-oid "hakukohde.oid")
 (def hakukohteen-tarjoaja-oid "1.2.246.562.10.10826252479")
 
+(defn- oppilaitoksen-opiskelijat
+  [oppilaitos-oid vuosi]
+  (let [alkupvm   (str vuosi "-01-01T00:00:00.000Z")
+        loppupvm1 (str vuosi "-05-31T00:00:00.000Z")
+        loppupvm2 (str vuosi "-12-31T00:00:00.000Z")]
+  (condp = oppilaitos-oid
+    organization-oid-1
+    [{:person-oid "opiskelija-1-oid"
+      :luokka     "9C"
+      :alkupaiva  alkupvm
+      :loppupaiva loppupvm1}
+     {:person-oid "opiskelija-2-oid"
+      :luokka     "9D"
+      :alkupaiva  alkupvm
+      :loppupaiva loppupvm2}]
+    organization-oid-2
+    [{:person-oid (str "opiskelija-3-oid-" vuosi)
+      :luokka     "9E"
+      :alkupaiva  alkupvm
+      :loppupaiva loppupvm1}
+     {:person-oid (str "opiskelija-4-oid-" vuosi)
+      :luokka     "9F"
+      :alkupaiva  alkupvm
+      :loppupaiva loppupvm2}]
+    [])))
+
 (defrecord FakeSuoritusService []
   suoritus-service/SuoritusService
 
@@ -29,14 +55,11 @@
 
   (oppilaitoksen-opiskelijat
     [this oppilaitos-oid vuosi luokkatasot]
-    (condp = oppilaitos-oid
-      organization-oid-1
-      [{:person-oid "opiskelija-1-oid"
-        :luokka     "9C"}
-       {:person-oid "opiskelija-2-oid"
-        :luokka     "9D"}]
+    (oppilaitoksen-opiskelijat oppilaitos-oid vuosi))
 
-      []))
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot]
+    (mapcat #(oppilaitoksen-opiskelijat oppilaitos-oid %) vuodet))
+
 
   (oppilaitoksen-luokat
     [this oppilaitos-oid vuosi luokkatasot]
@@ -114,7 +137,21 @@
           applications [{:person-oid "opiskelija-1-oid" :oid "application-1-oid" :hakukohde [hakukohde-oid]}]
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
       (should= 1 (count result))
-      (should-contain "application-1-oid" (map :oid result)))))
+      (should-contain "application-1-oid" (map :oid result))))
+  (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku"
+    (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
+          applications [{:created-time "2024-02-20T00:00:00.000Z" :oid "application-1-oid" :person-oid "opiskelija-3-oid-2024"}
+                        {:created-time "2024-02-20T00:00:00.000Z" :oid "application-2-oid" :person-oid "opiskelija-4-oid-2024"}]
+          result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications true)]
+      (should= 1 (count result))
+      (should-contain "application-1-oid" (map :oid result))))
+  (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku, application made in next year january"
+      (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
+            applications [{:created-time "2025-01-20T00:00:00.000Z" :oid "application-1-oid" :person-oid "opiskelija-4-oid-2024"}
+                          {:created-time "2025-01-20T00:00:00.000Z" :oid "application-2-oid" :person-oid "opiskelija-3-oid-2024"}]
+            result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications true)]
+        (should= 1 (count result))
+        (should-contain "application-1-oid" (map :oid result)))))
 
 (describe "application-edit-authorized?"
   (tags :unit)
