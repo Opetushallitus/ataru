@@ -442,6 +442,7 @@
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
+  (get-application-oids-for-valintalaskenta [this session hakukohde-oids])
   (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after return-inactivated with-unapproved-payments])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
@@ -777,6 +778,15 @@
                                       as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
+      {:unauthorized nil}))
+
+  (get-application-oids-for-valintalaskenta
+    [_ session hakukohde-oids]
+    (if-let [application-oids (aac/get-application-oids-for-valintalaskenta
+                                organization-service
+                                session
+                                hakukohde-oids)]
+      {:application-oids application-oids}
       {:unauthorized nil}))
 
   (siirto-applications
