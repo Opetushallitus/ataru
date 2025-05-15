@@ -2,6 +2,7 @@
   (:require
     [ataru.log.audit-log :as audit-log]
     [ataru.organization-service.session-organizations :as session-orgs]
+    [ataru.tarjonta.haku :as haku]
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-store :as application-store]
     [ataru.person-service.person-service :as person-service]
@@ -10,6 +11,7 @@
     [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
     [ataru.valintapiste.valintapiste-service :as valintapiste-service]
     [ataru.util :as util]
+    [clj-time.format :as format]
     [clojure.set :as set]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
@@ -94,44 +96,57 @@
   (let [onr-data (person-service/linked-oids person-service oids)]
     (mapcat vec (map :linked-oids (vals onr-data)))))
 
-(defn- person-oids-for-oppilaitos
-  [suoritus-service person-service oppilaitos-oid]
-  (let [now (time/now)]
-    (->>
-      (suoritus-service/oppilaitoksen-opiskelijat
-        suoritus-service
-        oppilaitos-oid
-        (suoritus-filter/year-for-suoritus-filter now)
-        (suoritus-filter/luokkatasot-for-suoritus-filter))
-      (map :person-oid)
-      (linked-oids-for-person-oids person-service))))
+(defn- person-oids-and-dates-for-oppilaitos
+  [suoritus-service person-service vuodet oppilaitos-oid]
+  (let [persons (->>
+                  (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
+                    suoritus-service
+                    oppilaitos-oid
+                    vuodet
+                    (suoritus-filter/luokkatasot-for-suoritus-filter))
+                  (into {} (map (fn [person] [(:person-oid person) (:loppupaiva person)]))))
+        linked-oids (person-service/linked-oids person-service (keys persons))]
+    (mapcat (fn [linked-oid-item]
+              (let [loppu-paiva (get persons (:master-oid linked-oid-item))]
+                (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids))))
 
-(defn- authorized-by-person-oid?
-  [authorized-person-oids application]
-  (let [application-person-oid (:person-oid application)]
-    (some #(= application-person-oid %) authorized-person-oids)))
+(defn- authorized-by-person-oid-and-hakukausi?
+  [authorized-person-oids-with-dates jatkuva-haku? application]
+  (let [application-person-oid (:person-oid application)
+        end-date (get authorized-person-oids-with-dates application-person-oid)]
+    (if jatkuva-haku?
+      (if end-date
+        (haku/filter-by-jatkuva-haku-hakemus-hakukausi
+                     (format/parse (:date-time format/formatters) (:created-time application))
+                     end-date)
+        false)
+      (some? end-date))))
 
 (defn- filter-applications-by-lahtokoulu
-  [suoritus-service person-service authorized-organization-oids applications]
-  (let [authorized-person-oids (mapcat (partial person-oids-for-oppilaitos suoritus-service person-service) authorized-organization-oids)]
+  [suoritus-service person-service authorized-organization-oids applications jatkuva-haku?]
+  (let [current-year (suoritus-filter/year-for-suoritus-filter (time/now))
+        lahtokoulu-vuodet (if jatkuva-haku? (set (mapcat #(haku/resolve-lahtokoulu-vuodet-jatkuva-haku %) applications)) [current-year])
+        authorized-person-oids-and-dates (into {} (mapcat
+                                                    (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
+                                                    authorized-organization-oids))]
     (->> applications
-      (filter (partial authorized-by-person-oid? authorized-person-oids))
+      (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates jatkuva-haku?))
       (map remove-organization-oid))))
 
 (defn- filter-authorized-by-lahtokoulu
-  [organization-service suoritus-service person-service session applications authorized-applications]
+  [organization-service suoritus-service person-service session applications authorized-applications jatkuva-haku?]
   (let [opinto-ohjaaja-authorized-organization-oids (organization-oids-for-opinto-ohjaaja organization-service session)]
     (if (and
           (some? opinto-ohjaaja-authorized-organization-oids)
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
-        (filter-applications-by-lahtokoulu suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
+        (filter-applications-by-lahtokoulu suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications jatkuva-haku?))
       [])))
 
 (defn- application-authorized-by-lahtokoulu?
   [organization-service suoritus-service person-service session application]
-  (-> (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session [application] [])
+  (-> (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session [application] [] false)
     seq
     boolean))
 
@@ -146,14 +161,16 @@
     (fn [] (constantly true))))
 
 (defn filter-authorized-by-session
-  [organization-service tarjonta-service suoritus-service person-service session applications]
+  ([organization-service tarjonta-service suoritus-service person-service session applications]
+   (filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications false))
+  ([organization-service tarjonta-service suoritus-service person-service session applications jatkuva-haku?]
   (let [organization-oid-authorized?     (organization-oid-authorized-by-session-pred organization-service session)
         normally-authorized-applications (filter-authorized-by-form-or-hakukohde tarjonta-service organization-oid-authorized? applications)
-        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications normally-authorized-applications)]
+        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications normally-authorized-applications jatkuva-haku?)]
     (if (= 0 (count opo-authorized-applications))
       normally-authorized-applications
       (->> (concat normally-authorized-applications opo-authorized-applications)
-           (distinct-by :key)))))
+           (distinct-by :key))))))
 
 (defn applications-access-authorized?
   ([organization-service tarjonta-service session application-keys rights]
@@ -199,7 +216,7 @@
 (defn- applications-opinto-ohjaaja-access-authorized?
   [organization-service suoritus-service person-service session application-keys]
   (let [applications-authorization-data (application-store/applications-authorization-data application-keys)
-        authorized-applications (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications-authorization-data [])]
+        authorized-applications (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications-authorization-data [] false)]
     (= (count authorized-applications) (count application-keys))))
 
 (defn application-edit-authorized?
@@ -280,7 +297,8 @@
                   suoritus-service
                   person-service
                   (organization-oids-for-opinto-ohjaaja organization-service session)
-                  [application])))
+                  [application]
+                  false)))
       (audit-log/log audit-logger
                      {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}

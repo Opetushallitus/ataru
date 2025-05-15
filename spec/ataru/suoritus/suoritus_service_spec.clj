@@ -9,8 +9,6 @@
 
 (def test-henkilo-oid "1.123.123.123")
 (def test-luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter))
-(def test-year "2023")
-(def test-application-datetime "2023-03-02T00:00:00.000Z")
 
 (defn str->timestamp [str] (coerce/to-timestamp (coerce/from-string str)))
 
@@ -100,23 +98,6 @@
          :core {:oppilaitosOid "1.4.444.444.444.444",
                 :luokkataso "TELMA",
                 :henkiloOid "1.123.123.123"}}))
-
-(describe "get-lahtokoulu-cutoff-timestamp"
-          (tags :unit)
-
-          (it "should return haku end timestamp for non-yhteishaku"
-              (should=
-                (str->timestamp "2023-05-05T00:00:00.000Z")
-                (suoritus-service/get-lahtokoulu-cutoff-timestamp 2023 non-yhteishaku-tarjonta)))
-
-          (it "should return timestamp for 1st of June on haku year for yhteishaku"
-              (should=
-                (str->timestamp "2016-05-30T00:00:00.000Z")
-                (suoritus-service/get-lahtokoulu-cutoff-timestamp 2016 yhteishaku-tarjonta)))
-
-          (it "should return nil, eg. no cutoff, when tarjonta data is completely missing"
-              (should-be-nil
-                (suoritus-service/get-lahtokoulu-cutoff-timestamp 2016 {}))))
 
 (describe "suoritus-service"
           (tags :unit :suoritus)
