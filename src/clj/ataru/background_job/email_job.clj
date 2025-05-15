@@ -45,7 +45,15 @@
       (ViestinvalitysBuilder/metadatatBuilder)
       metadata)))
 
-(defn send-email [from recipients subject body masks metadata]
+(defn kayttooikeusrajoitukset [privileges]
+  (.build
+    (reduce
+      (fn [builder {:keys [privilege organization]}]
+        (.withKayttooikeus builder privilege organization))
+      (ViestinvalitysBuilder/kayttooikeusrajoituksetBuilder)
+      privileges)))
+
+(defn send-email [from recipients subject body masks metadata privileges]
   (let [client (viestinvalitys-client)
         lahetys-response (-> client
                              (.luoLahetys (-> (ViestinvalitysBuilder/lahetysBuilder)
@@ -61,9 +69,10 @@
                                              (.withHtmlSisalto body)
                                              (.withVastaanottajat (vastaanottajat recipients))
                                              (.withKayttooikeusRajoitukset
-                                               (-> (ViestinvalitysBuilder/kayttooikeusrajoituksetBuilder)
-                                                   (.withKayttooikeus "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA" "1.2.246.562.10.00000000001")
-                                                   (.build)))
+                                               (kayttooikeusrajoitukset
+                                                 (conj privileges
+                                                       {:privilege "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA"
+                                                        :organization "1.2.246.562.10.00000000001"})))
                                              (.withLahetysTunniste (str (.getLahetysTunniste lahetys-response)))
                                              (.withMaskit (maskit masks))
                                              (.withMetadatat (metadatat metadata))
@@ -72,11 +81,11 @@
     (when-not (instance? LuoViestiSuccessResponse viesti-response)
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
-(defn send-email-handler [{:keys [from recipients subject body masks metadata]} _]
-  {:pre [(every? #(identity %) [from recipients subject body masks metadata])]}
-  (log/info "Trying to send email" subject "to" recipients "and metadata" metadata "via viestinvälityspalvelu at address"
-            (viestinvalityspalvelu-endpoint))
-  (send-email from recipients subject body masks metadata)
+(defn send-email-handler [{:keys [from recipients subject body masks metadata privileges]} _]
+  {:pre [(every? #(identity %) [from recipients subject body masks metadata privileges])]}
+  (log/info "Trying to send email" subject "to" recipients "with metadata" metadata "and privileges" privileges
+            "via viestinvälityspalvelu at address" (viestinvalityspalvelu-endpoint))
+  (send-email from recipients subject body masks metadata privileges)
   (log/info "Successfully sent email to" recipients))
 
 (def job-definition {:handler send-email-handler

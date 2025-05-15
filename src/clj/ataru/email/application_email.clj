@@ -17,6 +17,7 @@
             [selmer.parser :as selmer]
             [ataru.hakukohde.liitteet :as liitteet]
             [clojure.string :as string]
+            [taoensso.timbre :as log]
             [ataru.koodisto.koodisto :as koodisto])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
@@ -99,6 +100,18 @@
                           " - "
                           (util/non-blank-val tarjoaja-name [lang :fi :sv :en])))
                    hakukohteet))))
+
+(defn organization-oids [tarjonta-info application]
+  (if (:haku application)
+    (let [tarjonta-hakukohteet (util/group-by-first :oid (:hakukohteet tarjonta-info))
+          hakukohteet          (keep #(get tarjonta-hakukohteet %) (:hakukohde application))]
+      (-> (concat (map :tarjoaja-oids hakukohteet)
+                  (map #(map :ryhmaOid (:ryhmaliitokset %)) hakukohteet))
+          (flatten)
+          (distinct)))
+    (when-let [organization-oid (forms/get-organization-oid-by-id (:form-id application))]
+      (log/info "Form not connected to haku, using form's organization oid for email privileges" organization-oid)
+      [organization-oid])))
 
 (defn- add-blank-templates [templates form-allows-ht?]
   (as-> templates x
@@ -183,7 +196,7 @@
   [application-id]
   (application-store/get-application application-id))
 
-(defn- get-tarjonta-info
+(defn get-tarjonta-info
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application]
     (:tarjonta
       (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -249,6 +262,7 @@
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
+                                          :organization-oids          (organization-oids tarjonta-info application)
                                           :application-oid            (:key application)
                                           :person-oid                 (:person-oid application)
                                           :application-url            application-url

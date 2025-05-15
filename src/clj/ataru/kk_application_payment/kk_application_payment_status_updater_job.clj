@@ -12,6 +12,7 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
+            [ataru.email.application-email :as application-email]
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
             [ataru.kk-application-payment.utils :as utils])
   (:import java.util.Locale))
@@ -55,23 +56,31 @@
    :subject-key :email-kk-payment-link-subject
    :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
 
-(defn- start-payment-email-job [{:keys [tarjonta-service] :as job-runner}
+(defn- start-payment-email-job [{:keys [tarjonta-service ohjausparametrit-service koodisto-cache organization-service]
+                                 :as job-runner}
                                 application secret params-fn type-str]
-  (let [application-key (:key application)
-        job-type        (:type email-job/job-definition)
-        lang            (utils/get-application-language application)
-        email-address   (utils/get-application-email application)
-        payment-url     (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret (name lang))
-        payment         (first (payment/get-raw-payments [application-key]))
-        haku            (tarjonta/get-haku tarjonta-service (:haku application))
-        haku-name       (get-in haku [:name lang] (get-in haku [:name :fi]))
-        due-date-str    (due-date-to-printable-datetime lang (:due-date payment))
-        mail-content    (utils/payment-email lang email-address {:payment-url     payment-url
-                                                                 :due-date-time   due-date-str
-                                                                 :haku-name       haku-name
-                                                                 :person-oid      (:person-oid application)
-                                                                 :application-key (:key application)}
-                                             (params-fn lang due-date-str))]
+  (let [application-key   (:key application)
+        job-type          (:type email-job/job-definition)
+        lang              (utils/get-application-language application)
+        email-address     (utils/get-application-email application)
+        payment-url       (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret (name lang))
+        payment           (first (payment/get-raw-payments [application-key]))
+        haku              (tarjonta/get-haku tarjonta-service (:haku application))
+        haku-name         (get-in haku [:name lang] (get-in haku [:name :fi]))
+        due-date-str      (due-date-to-printable-datetime lang (:due-date payment))
+        tarjonta-info     (try
+                            (application-email/get-tarjonta-info koodisto-cache tarjonta-service organization-service
+                                                                 ohjausparametrit-service application)
+                            (catch Exception e
+                              (log/warn e "Error getting tarjonta info")))
+        organization-oids (application-email/organization-oids tarjonta-info application)
+        mail-content      (utils/payment-email lang email-address {:payment-url       payment-url
+                                                                   :due-date-time     due-date-str
+                                                                   :haku-name         haku-name
+                                                                   :person-oid        (:person-oid application)
+                                                                   :organization-oids organization-oids
+                                                                   :application-key   (:key application)}
+                                               (params-fn lang due-date-str))]
     (log/info "Generate kk application payment " type-str " for email" email-address
               "URL" payment-url "application-key" application-key)
     (if mail-content
