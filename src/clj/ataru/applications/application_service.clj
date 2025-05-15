@@ -22,7 +22,6 @@
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
-    [clj-time.format :as format]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [taoensso.timbre :as log]
