@@ -29,7 +29,7 @@
                                                         :queue   default-retry-strategy}
    "start-automatic-eligibility-if-ylioppilas-job-job" {:handler  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
                                                         :type     "start-automatic-eligibility-if-ylioppilas-job-job"
-                                                        :schedule "0 4 * * *"
+                                                        :schedule "0 7 * * *"
                                                         :queue    default-retry-strategy}
    "tutkintojen-tunnustaminen-submit-job"              {:handler    tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
                                                         :type       "tutkintojen-tunnustaminen-submit-job"
