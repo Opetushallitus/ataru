@@ -68,8 +68,7 @@
        :body       body
        :subject    subject
        :masks      []
-       :metadata   {:hakemusOid [(:key application)]
-                    :henkiloOid [(:person-oid application)]}
+       :metadata   (email-util/->metadata (:key application) (:person-oid application))
        :privileges (email-util/->hakemus-privileges organization-oids)})))
 
 (defn- start-email-job [job-runner connection application]

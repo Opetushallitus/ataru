@@ -31,6 +31,10 @@
           :organization organization-oid})
        (or organization-oids [])))
 
+(defn ->metadata [application-key person-oid]
+  (cond-> {:hakemusOid [application-key]}
+    (some? person-oid) (assoc :henkiloOid [person-oid])))
+
 (defn- make-email-for-applicant-or-guardian
   [email-data render-file-fn guardian?]
   (when (seq (:recipients email-data))
@@ -44,8 +48,8 @@
                 [{:secret url
                   :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                 [])
-       :metadata {:hakemusOid [(get-in email-data [:template-params :application-oid])]
-                  :henkiloOid [(get-in email-data [:template-params :person-oid])]}
+       :metadata (->metadata (get-in email-data [:template-params :application-oid])
+                             (get-in email-data [:template-params :person-oid]))
        :privileges (->hakemus-privileges (:organization-oids template-params))})))
 
 (defn make-email-data

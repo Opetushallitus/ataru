@@ -79,8 +79,7 @@
                                   [{:secret application-url
                                     :mask   "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
                                   [])
-                    :metadata   {:hakemusOid [(:application-key information-request)]
-                                 :henkiloOid [(:person-oid application)]}
+                    :metadata   (email-util/->metadata (:application-key information-request) (:person-oid application))
                     :privileges (email-util/->hakemus-privileges organization-oids)})
             (assoc :subject subject-with-application-key))))))
 
