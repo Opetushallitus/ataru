@@ -1,9 +1,9 @@
 (defproject ataru "0.1.0-SNAPSHOT"
-  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core "2.15.2"]
-                         [com.fasterxml.jackson.core/jackson-databind "2.15.2"]
-                         [com.fasterxml.jackson.core/jackson-annotations "2.15.2"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.15.2"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.15.2"]
+  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core "2.18.3"]
+                         [com.fasterxml.jackson.core/jackson-databind "2.18.3"]
+                         [com.fasterxml.jackson.core/jackson-annotations "2.18.3"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.18.3"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.18.3"]
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
                          [org.clojure/core.memoize "1.0.257"]
@@ -88,7 +88,7 @@
                  [org.clojure/java.jdbc "0.7.12"]
                  [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
                  [clj-time "0.15.2"]
-                 [cheshire/cheshire "5.13.0"]
+                 [cheshire/cheshire "6.0.0"]
                  [selmer "1.12.59"]
                  [metosin/ring-http-response "0.9.3"]
                  [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
@@ -109,6 +109,8 @@
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT"]
+                 [fi.oph.viestinvalitys/kirjasto "1.1.6-SNAPSHOT"]
+                 [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
@@ -120,7 +122,10 @@
 
   :min-lein-version "2.5.3"
 
-  :repositories [["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
+  :repositories [["github" {:url "https://maven.pkg.github.com/Opetushallitus/packages"
+                            :username :env/GITHUB_USERNAME
+                            :password :env/GITHUB_TOKEN}]
+                 ["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
                               :sign-releases false
                               :snapshots     false}]
                  ["snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
