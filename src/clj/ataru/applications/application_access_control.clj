@@ -1,6 +1,7 @@
 (ns ataru.applications.application-access-control
   (:require
     [ataru.log.audit-log :as audit-log]
+    [taoensso.timbre :as log]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.tarjonta.haku :as haku]
     [ataru.user-rights :as user-rights]
@@ -142,6 +143,7 @@
         authorized-person-oids-and-dates (into {} (mapcat
                                                     (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
                                                     authorized-organization-oids))]
+    (log/info (str "jatkuvat haut " application-oids-of-jatkuva-haku))
     (->> applications
       (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates application-oids-of-jatkuva-haku))
       (map remove-organization-oid))))
@@ -154,6 +156,7 @@
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
+        (log/info (str "filter by lahtokoulu, apps " (map :oid applications) ", unauth: " (map :oid unauthorized-applications) ", haut " (map :haku unauthorized-applications)))
         (filter-applications-by-lahtokoulu tarjonta-service suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
       [])))
 
