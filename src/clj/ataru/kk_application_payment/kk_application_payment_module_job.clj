@@ -5,8 +5,7 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
             [ataru.config.core :refer [config]]
-            [ataru.log.audit-log :refer [new-dummy-audit-logger]]
-            [clojure.set :as set]))
+            [ataru.log.audit-log :refer [new-dummy-audit-logger]]))
 
 (defonce payment-module-session {:user-agent "payment-module"})
 
