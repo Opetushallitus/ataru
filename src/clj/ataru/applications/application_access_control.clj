@@ -96,6 +96,13 @@
   (let [onr-data (person-service/linked-oids person-service oids)]
     (mapcat vec (map :linked-oids (vals onr-data)))))
 
+(defn- is-for-jatkuva-haku? [tarjonta-service application]
+  (let [haku-oid (:haku application)
+        haku (when (and tarjonta-service haku-oid) (tarjonta-protocol/get-haku tarjonta-service haku-oid))]
+    (if haku
+      (haku/jatkuva-haku? haku)
+      false)))
+
 (defn- person-oids-and-dates-for-oppilaitos
   [suoritus-service person-service vuodet oppilaitos-oid]
   (let [persons (->>
@@ -110,11 +117,15 @@
               (let [loppu-paiva (get persons (:master-oid linked-oid-item))]
                 (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids))))
 
+(defn- hakemus-in-oid-list [oid-list application]
+  (let [application-oid (:oid application)]
+    (some #(= application-oid %) oid-list)))
+
 (defn- authorized-by-person-oid-and-hakukausi?
-  [authorized-person-oids-with-dates jatkuva-haku? application]
+  [authorized-person-oids-with-dates application-oids-of-jatkuva-haku application]
   (let [application-person-oid (:person-oid application)
         end-date (get authorized-person-oids-with-dates application-person-oid)]
-    (if jatkuva-haku?
+    (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
       (if end-date
         (haku/filter-by-jatkuva-haku-hakemus-hakukausi
                      (format/parse (:date-time format/formatters) (:created-time application))
@@ -122,31 +133,36 @@
         false)
       (some? end-date))))
 
+
 (defn- filter-applications-by-lahtokoulu
-  [suoritus-service person-service authorized-organization-oids applications jatkuva-haku?]
+  [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
   (let [current-year (suoritus-filter/year-for-suoritus-filter (time/now))
-        lahtokoulu-vuodet (if jatkuva-haku? (set (mapcat #(haku/resolve-lahtokoulu-vuodet-jatkuva-haku %) applications)) [current-year])
+        application-oids-of-jatkuva-haku (map :oid (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))
+        lahtokoulu-vuodet (set (mapcat #(if (hakemus-in-oid-list application-oids-of-jatkuva-haku %)
+                                          (haku/resolve-lahtokoulu-vuodet-jatkuva-haku %)
+                                          [current-year]) applications))
         authorized-person-oids-and-dates (into {} (mapcat
                                                     (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
                                                     authorized-organization-oids))]
     (->> applications
-      (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates jatkuva-haku?))
+      (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates application-oids-of-jatkuva-haku))
       (map remove-organization-oid))))
 
 (defn- filter-authorized-by-lahtokoulu
-  [organization-service suoritus-service person-service session applications authorized-applications jatkuva-haku?]
+  [organization-service tarjonta-service suoritus-service person-service session applications authorized-applications]
   (let [opinto-ohjaaja-authorized-organization-oids (organization-oids-for-opinto-ohjaaja organization-service session)]
     (if (and
           (some? opinto-ohjaaja-authorized-organization-oids)
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
-        (filter-applications-by-lahtokoulu suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications jatkuva-haku?))
+        (filter-applications-by-lahtokoulu tarjonta-service suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
       [])))
 
+;@TODO Pitäisikö tässäkin tarkistaa jatkuvat-haut?? Tällöin tarjonta-service täytyisi välittää tännekin
 (defn- application-authorized-by-lahtokoulu?
   [organization-service suoritus-service person-service session application]
-  (-> (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session [application] [] false)
+  (-> (filter-authorized-by-lahtokoulu organization-service nil suoritus-service person-service session [application] [])
     seq
     boolean))
 
@@ -161,16 +177,14 @@
     (fn [] (constantly true))))
 
 (defn filter-authorized-by-session
-  ([organization-service tarjonta-service suoritus-service person-service session applications]
-   (filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications false))
-  ([organization-service tarjonta-service suoritus-service person-service session applications jatkuva-haku?]
+  [organization-service tarjonta-service suoritus-service person-service session applications]
   (let [organization-oid-authorized?     (organization-oid-authorized-by-session-pred organization-service session)
         normally-authorized-applications (filter-authorized-by-form-or-hakukohde tarjonta-service organization-oid-authorized? applications)
-        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications normally-authorized-applications jatkuva-haku?)]
+        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service tarjonta-service suoritus-service person-service session applications normally-authorized-applications)]
     (if (= 0 (count opo-authorized-applications))
       normally-authorized-applications
       (->> (concat normally-authorized-applications opo-authorized-applications)
-           (distinct-by :key))))))
+           (distinct-by :key)))))
 
 (defn applications-access-authorized?
   ([organization-service tarjonta-service session application-keys rights]
@@ -213,10 +227,11 @@
   (let [[application-authorization-data] (application-store/applications-authorization-data [application-key])]
     (application-authorized-by-lahtokoulu? organization-service suoritus-service person-service session application-authorization-data)))
 
+;@TODO Pitäisikö tässäkin tarkistaa jatkuvat-haut?? Tällöin tarjonta-service täytyisi välittää tännekin
 (defn- applications-opinto-ohjaaja-access-authorized?
   [organization-service suoritus-service person-service session application-keys]
   (let [applications-authorization-data (application-store/applications-authorization-data application-keys)
-        authorized-applications (filter-authorized-by-lahtokoulu organization-service suoritus-service person-service session applications-authorization-data [] false)]
+        authorized-applications (filter-authorized-by-lahtokoulu organization-service nil suoritus-service person-service session applications-authorization-data [])]
     (= (count authorized-applications) (count application-keys))))
 
 (defn application-edit-authorized?
@@ -294,11 +309,11 @@
                 rights-by-hakukohde)
               (seq
                 (filter-applications-by-lahtokoulu
+                  tarjonta-service
                   suoritus-service
                   person-service
                   (organization-oids-for-opinto-ohjaaja organization-service session)
-                  [application]
-                  false)))
+                  [application])))
       (audit-log/log audit-logger
                      {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}
