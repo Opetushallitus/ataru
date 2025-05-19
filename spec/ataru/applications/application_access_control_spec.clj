@@ -1,5 +1,6 @@
 (ns ataru.applications.application-access-control-spec
-  (:require [speclj.core :refer [describe tags it should should-not should-be should-contain should=]]
+  (:require [clj-time.format :as f]
+            [speclj.core :refer [describe tags it should should-not should-be should-contain should=]]
             [ataru.applications.application-access-control :as aac]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
@@ -140,15 +141,15 @@
       (should-contain "application-1-oid" (map :oid result))))
   (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku"
     (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
-          applications [{:created-time "2024-02-20T00:00:00.000Z" :oid "application-1-oid" :person-oid "opiskelija-3-oid-2024" :haku "jatkuva-haku"}
-                        {:created-time "2024-02-20T00:00:00.000Z" :oid "application-2-oid" :person-oid "opiskelija-4-oid-2024" :haku "jatkuva-haku"}]
+          applications [{:created-time (f/parse (:date-time f/formatters) "2024-02-20T00:00:00.000Z") :oid "application-1-oid" :person-oid "opiskelija-3-oid-2024" :haku "jatkuva-haku"}
+                        {:created-time (f/parse (:date-time f/formatters) "2024-02-20T00:00:00.000Z") :oid "application-2-oid" :person-oid "opiskelija-4-oid-2024" :haku "jatkuva-haku"}]
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
       (should= 1 (count result))
       (should-contain "application-1-oid" (map :oid result))))
   (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku, application made in next year january"
       (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
-            applications [{:created-time "2025-01-20T00:00:00.000Z" :oid "application-1-oid" :person-oid "opiskelija-4-oid-2024" :haku "jatkuva-haku"}
-                          {:created-time "2025-01-20T00:00:00.000Z" :oid "application-2-oid" :person-oid "opiskelija-3-oid-2024" :haku "jatkuva-haku"}]
+            applications [{:created-time (f/parse (:date-time f/formatters) "2025-01-20T00:00:00.000Z") :oid "application-1-oid" :person-oid "opiskelija-4-oid-2024" :haku "jatkuva-haku"}
+                          {:created-time (f/parse (:date-time f/formatters) "2025-01-20T00:00:00.000Z") :oid "application-2-oid" :person-oid "opiskelija-3-oid-2024" :haku "jatkuva-haku"}]
             result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
         (should= 1 (count result))
         (should-contain "application-1-oid" (map :oid result)))))

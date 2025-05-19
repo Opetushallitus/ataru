@@ -4,9 +4,7 @@
             #?(:clj  [clj-time.core :as t]
                :cljs [cljs-time.core :as t])
             #?(:clj  [clj-time.coerce :as c]
-               :cljs [cljs-time.coerce :as c])
-            #?(:clj  [clj-time.format :as f]
-               :cljs [cljs-time.format :as f])))
+               :cljs [cljs-time.coerce :as c])))
 
 (defn toisen-asteen-yhteishaku?
   [haku]
@@ -69,7 +67,7 @@
 
 (defn resolve-lahtokoulu-vuodet-jatkuva-haku
   [application]
-  (let [hakemus-datetime (f/parse (:date-time f/formatters) (:created-time application))
+  (let [hakemus-datetime (:created-time application)
         hakemus-year (t/year hakemus-datetime)]
     (if (in-datetime-period (t/date-time hakemus-year 1 1) (t/date-time hakemus-year 1 31) hakemus-datetime)
       [hakemus-year (- hakemus-year 1)]
