@@ -1,5 +1,6 @@
 (ns ataru.tarjonta.haku-spec
   (:require [clj-time.coerce :as coerce]
+            [clj-time.format :as f]
             [clj-time.format :as format]
             [speclj.core :refer :all]
             [ataru.tarjonta.haku :as haku]))
@@ -66,6 +67,6 @@
           (tags :unit)
 
           (it "should return just current year if hakuaika not in january"
-              (should= [2025] (haku/resolve-lahtokoulu-vuodet-jatkuva-haku {:created-time "2025-05-15T00:00:00.000Z"})))
+              (should= [2025] (haku/resolve-lahtokoulu-vuodet-jatkuva-haku {:created-time (f/parse (:date-time f/formatters) "2025-05-15T00:00:00.000Z")})))
           (it "should return also preceeding year if hakuaika in january"
-              (should= [2025 2024] (haku/resolve-lahtokoulu-vuodet-jatkuva-haku {:created-time "2025-01-15T00:00:00.000Z"}))))
+              (should= [2025 2024] (haku/resolve-lahtokoulu-vuodet-jatkuva-haku {:created-time (f/parse (:date-time f/formatters) "2025-01-15T00:00:00.000Z")}))))

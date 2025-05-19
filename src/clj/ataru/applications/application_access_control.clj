@@ -11,7 +11,6 @@
     [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
     [ataru.valintapiste.valintapiste-service :as valintapiste-service]
     [ataru.util :as util]
-    [clj-time.format :as format]
     [clojure.set :as set]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
@@ -127,8 +126,7 @@
         end-date (get authorized-person-oids-with-dates application-person-oid)]
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
       (if end-date
-        (haku/filter-by-jatkuva-haku-hakemus-hakukausi
-                     (format/parse (:date-time format/formatters) (:created-time application))
+        (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
                      end-date)
         false)
       (some? end-date))))
