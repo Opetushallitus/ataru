@@ -105,7 +105,6 @@
   (if (:haku application)
     (let [tarjonta-hakukohteet (util/group-by-first :oid (:hakukohteet tarjonta-info))
           hakukohteet          (keep #(get tarjonta-hakukohteet %) (:hakukohde application))]
-      (log/info "hakukohteet" hakukohteet)
       (->> (concat (map :tarjoaja-oids hakukohteet)
                    (map #(map :ryhmaOid (:hakukohderyhmat %)) hakukohteet))
            (flatten)
