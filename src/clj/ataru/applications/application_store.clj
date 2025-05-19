@@ -1837,3 +1837,9 @@
   [person-oids haku-oids]
   (exec-db :db queries/yesql-get-latest-applications-for-kk-payment-processing {:person_oids person-oids
                                                                                 :haku_oids (vec haku-oids)}))
+
+(defn get-tutu-application
+  [application-key]
+  (let [apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})]
+    (first apps)))
+

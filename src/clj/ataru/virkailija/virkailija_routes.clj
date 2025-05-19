@@ -1457,6 +1457,16 @@
             (fn [_] (delete))
             delete))))
 
+    (api/context "/tutu" []
+      :tags ["tutu-api"]
+      (api/GET "/hakemus/:oid" {session :session}
+        :summary "Get the tutu-applications with matching oid"
+        :path-params [oid :- s/Str]
+        :return s/Any
+        (if-let [application (application-store/get-tutu-application oid)]
+          (response/ok application)
+          (response/not-found))))
+
     (api/context "/external" []
       :tags ["external-api"]
       (api/GET "/omatsivut/applications/:person-oid" {session :session}
