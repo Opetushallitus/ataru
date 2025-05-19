@@ -35,6 +35,13 @@
   (cond-> {:hakemusOid [application-key]}
     (some? person-oid) (assoc :henkiloOid [person-oid])))
 
+(defn- ->masks [template-params]
+  (cond-> []
+    (some? (:application-url template-params)) (conj {:secret (:application-url template-params)
+                                                      :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"})
+    (some? (:payment-url template-params)) (conj {:secret (:payment-url template-params)
+                                                  :mask "https://maksulinkki-piilotettu.opintopolku.fi/"})))
+
 (defn- make-email-for-applicant-or-guardian
   [email-data render-file-fn guardian?]
   (when (seq (:recipients email-data))
@@ -44,10 +51,7 @@
        :recipients (:recipients email-data)
        :subject (:subject email-data)
        :body body
-       :masks (if-let [url (:application-url template-params)]
-                [{:secret url
-                  :mask "https://hakemuslinkki-piilotettu.opintopolku.fi/"}]
-                [])
+       :masks (->masks template-params)
        :metadata (->metadata (get-in email-data [:template-params :application-oid])
                              (get-in email-data [:template-params :person-oid]))
        :privileges (->hakemus-privileges (:organization-oids template-params))})))
