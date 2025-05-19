@@ -19,26 +19,14 @@
 
 (defn check-and-update
   [tarjonta-service haku-oids]
-  (let [existing-haut     (keep #(tarjonta/get-haku tarjonta-service %) haku-oids)
-        non-existing-oids (set/difference (set haku-oids) (set (map :oid existing-haut)))
-        maksulliset (filter #(:maksullinen-kk-haku? %) existing-haut)
-        haut (->> existing-haut
+  (let [haut (->> haku-oids
+                  (keep #(tarjonta/get-haku tarjonta-service %))
                   (filter #(some? (:ataru-form-key %)))
                   (kk-application-payment/filter-haut-for-update)
-                  seq)
-        forms (->> haut
-                   (map :ataru-form-key)
-                   (map form-store/fetch-by-key-for-kk-payment-module-job))]
-    (log/info "Found: " (count haku-oids)
-              ", special (1.2.246.562.29.00000000000000070336) detected: " (some? (some #{"1.2.246.562.29.00000000000000070336"} haku-oids))
-              ", special (1.2.246.562.29.00000000000000070336) contents: " (some #(when (= "1.2.246.562.29.00000000000000070336" (:oid %)) %) existing-haut)
-              ", non-existing: " non-existing-oids
-              ", maksulliset: " (map :oid maksulliset)
-              ", maksulliset with formkey: " (map :oid (filter #(some? (:ataru-form-key %)) maksulliset))
-              ", matching: " (map :oid haut)
-              ", without paymentmodule: " (map :id (filter #(not (or (nil? %) (has-payment-module? %))) forms)))
-
-    (->> forms
+                  seq)]
+    (->> haut
+         (map :ataru-form-key)
+         (map form-store/fetch-by-key-for-kk-payment-module-job)
          (filter #(not (or (nil? %) (has-payment-module? %))))
          (map add-payment-module-to-form)
          count)))
