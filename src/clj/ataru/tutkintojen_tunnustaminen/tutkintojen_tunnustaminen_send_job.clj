@@ -8,11 +8,12 @@
     ))
 
 
-(defn tutkintojen-tunnustaminen-send-handler [{:keys [application-id]} {:keys [tutu-cas-client]}]
-  (log/info "STARTING sending application" application-id)
+(defn tutkintojen-tunnustaminen-send-handler [{:keys [key country apply-reason]} {:keys [tutu-cas-client]}]
   (log/info tutu-cas-client)
   (let [url (resolve-url :tutu-service.hakemus)
-        req {:hakemusOid application-id}
+        req {:hakemusOid key
+             :maakoodi   country
+             :syykoodi   apply-reason}
         ;TODO: Switch to tutu-cas-client
         ;response (cas/cas-authenticated-post tutu-cas-client url req)
         response (client/post url {:as           :auto
@@ -20,10 +21,12 @@
                                    :content-type :application/json
                                    :body         (json/write-str req)})
         ]
+
     (log/info "Response" response)
     (when (not= 200 (:status response))
-      (throw (Exception. (str "Sending application " application-id " to Tutu failed"))))
-    (log/info (str "Application " application-id " successfully sent to Tutu"))))
+      (throw (Exception. (str "Sending application " (:application-key key) " to Tutu failed"))))
+    (log/info (str "Application " (:application-key key) " successfully sent to Tutu")))
+  )
 
 (def job-definition {:handler tutkintojen-tunnustaminen-send-handler
                      :type    (-> *ns* ns-name str)})
