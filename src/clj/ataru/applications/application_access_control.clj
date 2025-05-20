@@ -125,13 +125,14 @@
   [authorized-person-oids-with-dates application-oids-of-jatkuva-haku application]
   (let [application-person-oid (:person-oid application)
         end-date (get authorized-person-oids-with-dates application-person-oid)]
+    (log/info (str "enddate " end-date))
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
+      (do
       (log/info (str "jatkuvan haun hakemus " application))
       (if end-date
-        (log/info (str "enddate " end-date))
         (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
                      end-date)
-        false)
+        false))
       (some? end-date))))
 
 
