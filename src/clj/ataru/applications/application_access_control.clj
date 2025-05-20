@@ -99,6 +99,7 @@
 (defn- is-for-jatkuva-haku? [tarjonta-service application]
   (let [haku-oid (:haku application)
         haku (when (and tarjonta-service haku-oid) (tarjonta-protocol/get-haku tarjonta-service haku-oid))]
+    (log/info (str "checked haku " haku))
     (if haku
       (haku/jatkuva-haku? haku)
       false)))
@@ -113,6 +114,7 @@
                     (suoritus-filter/luokkatasot-for-suoritus-filter))
                   (into {} (map (fn [person] [(:person-oid person) (:loppupaiva person)]))))
         linked-oids (person-service/linked-oids person-service (keys persons))]
+    (log/info "persons " persons)
     (mapcat (fn [linked-oid-item]
               (let [loppu-paiva (get persons (:master-oid linked-oid-item))]
                 (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids))))
@@ -125,7 +127,6 @@
   [authorized-person-oids-with-dates application-oids-of-jatkuva-haku application]
   (let [application-person-oid (:person-oid application)
         end-date (get authorized-person-oids-with-dates application-person-oid)]
-    (log/info (str "enddate " end-date))
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
       (do
       (log/info (str "jatkuvan haun hakemus " application))
@@ -146,6 +147,8 @@
         authorized-person-oids-and-dates (into {} (mapcat
                                                     (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
                                                     authorized-organization-oids))]
+    (log/info (str "auths " authorized-person-oids-and-dates))
+    (log/info (str "jatkuvat " (vec application-oids-of-jatkuva-haku)))
     (->> applications
       (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates application-oids-of-jatkuva-haku))
       (map remove-organization-oid))))
@@ -158,7 +161,6 @@
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
-        (log/info (str "filter by lahtokoulu, unauth: " unauthorized-applications))
         (filter-applications-by-lahtokoulu tarjonta-service suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
       [])))
 
