@@ -27,20 +27,20 @@
     [{:person-oid "opiskelija-1-oid"
       :luokka     "9C"
       :alkupaiva  alkupvm
-      :loppupaiva loppupvm1}
+      :loppuPaiva loppupvm1}
      {:person-oid "opiskelija-2-oid"
       :luokka     "9D"
       :alkupaiva  alkupvm
-      :loppupaiva loppupvm2}]
+      :loppuPaiva loppupvm2}]
     organization-oid-2
     [{:person-oid (str "opiskelija-3-oid-" vuosi)
       :luokka     "9E"
       :alkupaiva  alkupvm
-      :loppupaiva loppupvm1}
+      :loppuPaiva loppupvm1}
      {:person-oid (str "opiskelija-4-oid-" vuosi)
       :luokka     "9F"
       :alkupaiva  alkupvm
-      :loppupaiva loppupvm2}]
+      :loppuPaiva loppupvm2}]
     [])))
 
 (defrecord FakeSuoritusService []
