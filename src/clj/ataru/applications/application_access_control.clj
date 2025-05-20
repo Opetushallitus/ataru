@@ -126,7 +126,9 @@
   (let [application-person-oid (:person-oid application)
         end-date (get authorized-person-oids-with-dates application-person-oid)]
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
+      (log/info (str "jatkuvan haun hakemus " application))
       (if end-date
+        (log/info (str "enddate " end-date))
         (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
                      end-date)
         false)
@@ -143,7 +145,6 @@
         authorized-person-oids-and-dates (into {} (mapcat
                                                     (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
                                                     authorized-organization-oids))]
-    (log/info (str "jatkuvat haut " (doall application-oids-of-jatkuva-haku)))
     (->> applications
       (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates application-oids-of-jatkuva-haku))
       (map remove-organization-oid))))
@@ -156,7 +157,7 @@
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
-        (log/info (str "filter by lahtokoulu, apps " (doall (map :oid applications)) ", unauth: " (doall (map :oid unauthorized-applications)) ", haut " (doall (map :haku unauthorized-applications))))
+        (log/info (str "filter by lahtokoulu, unauth: " unauthorized-applications))
         (filter-applications-by-lahtokoulu tarjonta-service suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
       [])))
 
