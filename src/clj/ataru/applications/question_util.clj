@@ -21,7 +21,9 @@
 (def kaksoistutkinto-keys ["kaksoistutkinto-lukio"
                            "kaksoistutkinto-amm"
                            "4fe08958-c0b7-4847-8826-e42503caa662"
-                           "32b8440f-d6f0-4a8b-8f67-873344cc3488"])
+                           "32b8440f-d6f0-4a8b-8f67-873344cc3488"
+                           "lukio_opinnot_ammatillisen_perustutkinnon_ohella"
+                           "ammatilliset_opinnot_lukio_opintojen_ohella"])
 
 (def kiinnostunut-oppisopimuskoulutuksesta-keys #{"kiinnostunut-oppisopimuskoulutuksesta"
                                                   "74fb6885-879d-4748-a2bc-aaeb32616ba1"})
