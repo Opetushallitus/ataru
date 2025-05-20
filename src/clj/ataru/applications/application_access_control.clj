@@ -112,7 +112,7 @@
                     oppilaitos-oid
                     vuodet
                     (suoritus-filter/luokkatasot-for-suoritus-filter))
-                  (into {} (map (fn [person] [(:person-oid person) (:loppupaiva person)]))))
+                  (into {} (map (fn [person] [(:person-oid person) (:loppuPaiva person)]))))
         linked-oids (person-service/linked-oids person-service (keys persons))]
     (log/info "persons " persons)
     (mapcat (fn [linked-oid-item]
@@ -120,7 +120,7 @@
                 (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids))))
 
 (defn- hakemus-in-oid-list [oid-list application]
-  (let [application-oid (:oid application)]
+  (let [application-oid (:key application)]
     (some #(= application-oid %) oid-list)))
 
 (defn- authorized-by-person-oid-and-hakukausi?
@@ -140,7 +140,7 @@
 (defn- filter-applications-by-lahtokoulu
   [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
   (let [current-year (suoritus-filter/year-for-suoritus-filter (time/now))
-        application-oids-of-jatkuva-haku (map :oid (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))
+        application-oids-of-jatkuva-haku (map :key (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))
         lahtokoulu-vuodet (set (mapcat #(if (hakemus-in-oid-list application-oids-of-jatkuva-haku %)
                                           (haku/resolve-lahtokoulu-vuodet-jatkuva-haku %)
                                           [current-year]) applications))
