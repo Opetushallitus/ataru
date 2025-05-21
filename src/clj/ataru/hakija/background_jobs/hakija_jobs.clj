@@ -4,7 +4,7 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen])
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen])
   (:import  (java.time Duration)))
 
 (def default-retry-strategy {:proletarian/retry-strategy-fn

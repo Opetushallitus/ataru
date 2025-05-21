@@ -1,5 +1,6 @@
-(ns ataru.tutkintojen-tunnustaminen
+(ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen
   (:require [ataru.background-job.job :as job]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-send-job :as tutkintojen-tunnustaminen-send-job]
             [clojure.java.io :as io]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
@@ -305,6 +306,18 @@
                                "tutkintojen-tunnustaminen-information-request-sent-job"
                                {:information-request information-request})))))
 
+(defn- get-tutu-application [application-key]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                           (first (yesql-get-tutu-application {:key application-key} {:connection connection}))))
+
+(defn start-tutkintojen-tunnustaminen-send-job [job-runner  application-key]
+  (let [job-type (:type tutkintojen-tunnustaminen-send-job/job-definition)
+        tutu-application (get-tutu-application application-key)]
+    (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
+      (log/info "Started tutkintojen tunnustaminen send job with job id"
+              (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                (job/start-job job-runner connection job-type tutu-application))))))
+
 (defn- form-key-matches?
   [cfg-form-key test]
   (let [keys (string/split cfg-form-key #",")]
@@ -409,3 +422,4 @@
                   (:id application))
         {:transition {:id :final}})
       {:transition {:id :final}})))
+

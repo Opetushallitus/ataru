@@ -11,6 +11,7 @@
                                             :drain-failed? false
                                             :queue-url     ""}}
  :tutkintojen-tunnustaminen {:enabled?                    false
+                             :tutu-send-enabled?          false
                              :form-key                    "testi-form-key"
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
@@ -62,6 +63,7 @@
                    :organisaatio-service-base-url       "http://localhost:55443"
                    :koodisto-service-base-url           "http://localhost:55443"
                    :ohjausparametrit-service-base-url   "http://localhost:55443"
+                   :tutu-service-base-url               "http://localhost:55443"
                    :valintalaskenta-ui-service-base-url "http://localhost:55443"
                    :editor-url                          "http://localhost:8350/lomake-editori"
                    :liiteri-url                         ""
