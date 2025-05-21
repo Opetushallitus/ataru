@@ -2042,6 +2042,9 @@
    :person-info-module-onr-2nd                               {:fi "Opiskelijavalinta, perusopetuksen jälkeinen yhteishaku"
                                                               :en "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"
                                                               :sv "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"}
+   :person-info-module-onr-astu                              {:fi "ASTU, käyttää ONR:ääa"
+                                                              :en "ASTU, käyttää ONR:ää"
+                                                              :sv "ASTU, käyttää ONR:ää"}
    :metadata-not-found                                       {:fi "Hakijan liitteitä ei löytynyt"
                                                               :sv "Sökandes bilagor hittades inte"
                                                               :en "Applicant's attachements can't be found"}
