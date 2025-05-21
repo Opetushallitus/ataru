@@ -11,8 +11,9 @@
                                             :drain-failed? false
                                             :queue-url     ""}}
  :tutkintojen-tunnustaminen {:enabled?                    true
-                             :form-key                    "74825f61-e561-447e-bef4-1bb5be4ea44a"
-                             :country-question-id         "6e43a241-a3bd-4625-8035-40768a109461"
+                             :tutu-send-enabled?          true
+                             :form-key                    "testi-form-key"
+                             :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
                              :maksut                      {:enabled?                true
                                                            :poll-interval-minutes   60

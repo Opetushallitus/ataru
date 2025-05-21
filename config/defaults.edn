@@ -10,13 +10,14 @@
                                             :drain-failed? false
                                             :queue-url     ""}}
  :tutkintojen-tunnustaminen {:enabled?                    true
-                             :form-key                    "74825f61-e561-447e-bef4-1bb5be4ea44a"
-                             :country-question-id         "6e43a241-a3bd-4625-8035-40768a109461"
+                             :tutu-send-enabled?          true
+                             :form-key                    ""
+                             :country-question-id         ""
                              :attachment-total-size-limit 20
                              :maksut                      {:enabled?                true
-                                                           :poll-interval-minutes   1
+                                                           :poll-interval-minutes   5
                                                            :decision-amount         "70.00"
-                                                           :form-keys      			    "74825f61-e561-447e-bef4-1bb5be4ea44a"}
+                                                           :form-keys      			    ""}
                              :ftp                         {:host               ""
                                                            :port               22
                                                            :user               ""
