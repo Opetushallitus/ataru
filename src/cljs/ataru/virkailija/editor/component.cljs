@@ -165,7 +165,7 @@
           :data-test-id (some-> data-test-id-prefix (str "-header"))]
          [:div.editor-form__component-content-wrapper
           (when has-multiple-configurations?
-            (let [values (set ["onr" "onr-2nd" "muu"])]
+            (let [values (set ["onr" "onr-2nd" "onr-astu" "muu"])]
               [:div.editor-form__module-fields
                [:select.editor-form__select
                 {:on-change    (fn [event]
