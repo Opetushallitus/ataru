@@ -313,7 +313,7 @@
 (defn start-tutkintojen-tunnustaminen-send-job [job-runner  application-key]
   (let [job-type (:type tutkintojen-tunnustaminen-send-job/job-definition)
         tutu-application (get-tutu-application application-key)]
-    (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
+    (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
       (log/info "Started tutkintojen tunnustaminen send job with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                 (job/start-job job-runner connection job-type tutu-application))))))

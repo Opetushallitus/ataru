@@ -11,6 +11,7 @@
                                             :drain-failed? false
                                             :queue-url     ""}}
  :tutkintojen-tunnustaminen {:enabled?                    true
+                             :tutu-send-enabled?          true
                              :form-key                    "testi-form-key"
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760

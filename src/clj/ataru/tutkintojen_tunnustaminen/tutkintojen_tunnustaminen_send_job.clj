@@ -1,11 +1,8 @@
 (ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-send-job
   (:require
-    ;[ataru.cas.client :as cas]
+    [ataru.cas.client :as cas]
     [ataru.config.url-helper :refer [resolve-url]]
-    [clojure.data.json :as json]
-    [taoensso.timbre :as log]
-    [clj-http.client :as client]
-    ))
+    [taoensso.timbre :as log]))
 
 
 (defn tutkintojen-tunnustaminen-send-handler [{:keys [key country apply-reason]} {:keys [tutu-cas-client]}]
@@ -14,13 +11,7 @@
         req {:hakemusOid key
              :maakoodi   country
              :syykoodi   apply-reason}
-        ;TODO: Switch to tutu-cas-client
-        ;response (cas/cas-authenticated-post tutu-cas-client url req)
-        response (client/post url {:as           :auto
-                                   :coerce       :always
-                                   :content-type :application/json
-                                   :body         (json/write-str req)})
-        ]
+        response (cas/cas-authenticated-post tutu-cas-client url req)]
 
     (log/info "Response" response)
     (when (not= 200 (:status response))
