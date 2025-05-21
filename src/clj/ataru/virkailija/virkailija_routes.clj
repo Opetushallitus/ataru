@@ -21,7 +21,6 @@
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
-            [ataru.forms.form-payment-info :as form-payment-info]
             [ataru.haku.haku-service :as haku-service]
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
@@ -1025,9 +1024,7 @@
         (if (some? haku-oid)
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
-               :haut             {haku-oid (form-payment-info/add-admission-payment-info-for-haku
-                                             tarjonta-service
-                                             (tarjonta/get-haku tarjonta-service haku-oid))}
+               :haut             {haku-oid (tarjonta/get-haku tarjonta-service haku-oid)}
                :hakukohteet      (->> (tarjonta/hakukohde-search
                                         tarjonta-service
                                         haku-oid
@@ -1258,18 +1255,13 @@
       (api/GET "/haku" []
         :query-params [form-key :- (api/describe s/Str "Form key")]
         :return [ataru-schema/Haku]
-        (let [hakus (tarjonta/hakus-by-form-key tarjonta-service form-key)
-              hakus-with-payment-flag (map
-                                        #(form-payment-info/add-admission-payment-info-for-haku tarjonta-service %)
-                                        hakus)]
-        (-> hakus-with-payment-flag
+        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
             response/ok
-            (header "Cache-Control" "public, max-age=300"))))
+            (header "Cache-Control" "public, max-age=300")))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
-        (if-let [haku (form-payment-info/add-admission-payment-info-for-haku tarjonta-service
-                                                                             (tarjonta/get-haku tarjonta-service oid))]
+        (if-let [haku (tarjonta/get-haku tarjonta-service oid)]
           (-> (response/ok haku)
               (header "Cache-Control" "public, max-age=300"))
           (internal-server-error {:error "Internal server error"})))
@@ -1464,6 +1456,16 @@
             #(response/unauthorized {:error "Unauthorized"})
             (fn [_] (delete))
             delete))))
+
+    (api/context "/tutu" []
+      :tags ["tutu-api"]
+      (api/GET "/hakemus/:oid" {session :session}
+        :summary "Get the tutu-applications with matching oid"
+        :path-params [oid :- s/Str]
+        :return s/Any
+        (if-let [application (application-store/get-tutu-application oid)]
+          (response/ok application)
+          (response/not-found))))
 
     (api/context "/external" []
       :tags ["external-api"]
@@ -1776,6 +1778,21 @@
                      {:error      "Yksilöimättömiä hakijoita"
                       :personOids yksiloimattomat})))))
 
+      (api/POST "/valintalaskenta/application-oids" {session :session}
+        :summary "Get all application oids from applications that are non-inactive and yksilöity"
+        :body [hakukohdeOids [s/Str]]
+        :return #{s/Str}
+        (if (empty? hakukohdeOids)
+          (response/bad-request {:error "List of hakukohde oids is required"})
+          (match (application-service/get-application-oids-for-valintalaskenta
+                   application-service
+                   session
+                   (not-empty hakukohdeOids))
+                 {:unauthorized _}
+                 (response/unauthorized {:error "Unauthorized"})
+                 {:application-oids application-oids}
+                 (response/ok application-oids))))
+
       (api/GET "/valintapiste" {session :session}
         :summary "Get application answers for Valintapiste Service"
         :query-params [hakuOid :- s/Str
@@ -1860,11 +1877,13 @@
           (response/bad-request {:error "Haku oid param required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:haku-oid     haku-oid
-                                         :execution-id (str (UUID/randomUUID))}]
-              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+                                         :execution-uuid (str (UUID/randomUUID))}]
+              (log/info "Siirtotiedosto params for haku: " siirtotiedosto-params)
               (let [{applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)]
                 (log/info "Siirtotiedosto success" applications-success)
-                (response/ok {:success applications-success})))
+                (if applications-success
+                  (response/ok {:success true})
+                  (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}

@@ -1599,6 +1599,11 @@
            (partition partition-size partition-size nil)
            (mapcat fetch)))))
 
+(defn get-application-oids-for-valintalaskenta [hakukohde-oids]
+  (set (->> (exec-db :db queries/yesql-valintalaskenta-application-oids
+                     {:hakukohde_oids hakukohde-oids})
+            (map :key))))
+
 (defn get-raw-key-values [answers]
   (reduce
     (fn [acc {:keys [key value]}]
@@ -1616,11 +1621,16 @@
                             :content
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
-                            get-raw-key-values)]
+                            get-raw-key-values)
+        payment-state   (or (:application-payment-states application) {})]
     (-> application
          (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
-        (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
+        (assoc :application-payment-states payment-state)
+        (clojure.set/rename-keys {:key :hakemusOid
+                                  :person-oid :personOid
+                                  :haku :hakuOid
+                                  :application-payment-states :applicationPaymentState}))))
 
 (defn- unwrap-siirto-application [application]
   (let [attachments (->> application
@@ -1827,3 +1837,9 @@
   [person-oids haku-oids]
   (exec-db :db queries/yesql-get-latest-applications-for-kk-payment-processing {:person_oids person-oids
                                                                                 :haku_oids (vec haku-oids)}))
+
+(defn get-tutu-application
+  [application-key]
+  (let [apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})]
+    (first apps)))
+

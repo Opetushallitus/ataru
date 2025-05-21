@@ -80,7 +80,7 @@
                                (clear-all [_]))
           :organization-service (org-service/->FakeOrganizationService)
           :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service)
-          :tarjonta-service (tarjonta-service/->MockTarjontaService)
+          :tarjonta-service (tarjonta-service/->MockTarjontaKoutaService)
           :session-store (create-session-store (ataru-db/get-datasource :db))
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
@@ -180,6 +180,14 @@
 
 (defn- post-valintalaskenta-application-query [query]
   (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-valintalaskenta-application-oids-query [query]
+  (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta/application-oids"
                     (json/generate-string query))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
       (mock/content-type "application/json")
@@ -854,7 +862,7 @@
                     body (:body resp)]
                 (should= 200 status)
                 (should= 1 (count body))
-                (should= true (:admission-payment-required? (first body)) )))
+                (should= true (:maksullinen-kk-haku? (first body)) )))
 
           (it "should return admission-payment-required? false for non higher education admission"
               (let [resp (get-haku "payment-info-test-non-kk-form")
@@ -862,7 +870,7 @@
                     body (:body resp)]
                 (should= 200 status)
                 (should= 1 (count body))
-                (should= false (:admission-payment-required? (first body))))))
+                (should= false (:maksullinen-kk-haku? (first body))))))
 
 (describe "GET kk application payment info"
           (tags :unit)
@@ -939,7 +947,24 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 0 (count applications)))))
+                (should= 0 (count applications))))
+
+          (it "should return application oids"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-valintalaskenta-application-oids-query [(first (:hakukohde application))])
+                    status (:status resp)
+                    oids (:body resp)]
+                (should= 200 status)
+                (should= 1 (count oids))
+                (should= (:key application) (first oids))))
+
+          (it "should not return an application oid"
+              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+                    resp (post-valintalaskenta-application-oids-query ["hk"])
+                    status (:status resp)
+                    oids (:body resp)]
+                (should= 200 status)
+                (should= 0 (count oids)))))
 
 (describe "siirto"
           (tags :unit)

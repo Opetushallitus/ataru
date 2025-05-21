@@ -1130,6 +1130,17 @@ WHERE la.id IS NULL
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND ar.state <> 'inactivated';
 
+--name: yesql-valintalaskenta-application-oids
+SELECT
+  a.key
+FROM applications AS a
+  LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+  JOIN application_reviews ar ON application_key = a.key
+WHERE la.id IS NULL
+  AND a.person_oid IS NOT NULL
+  AND ARRAY[:hakukohde_oids]::VARCHAR[] && a.hakukohde
+  AND ar.state <> 'inactivated';
+
 --name: yesql-siirto-applications
 SELECT
   a.key,
@@ -1390,7 +1401,17 @@ SELECT
                             review_key = ae.review_key) AND
              ae.application_key = a.key AND
              ae.event_type = 'eligibility-state-automatically-changed' AND
-             ae.review_key = 'eligibility-state') AS "eligibility-set-automatically"
+             ae.review_key = 'eligibility-state') AS "eligibility-set-automatically",
+    (SELECT json_build_object('state', state,
+                                       'reason', reason,
+                                       'dueDate', due_date,
+                                       'total', total_sum,
+                                       'reminderSentAt', reminder_sent_at,
+                                       'requiredAt', required_at,
+                                       'approvedAt', approved_at,
+                                       'modifiedAt', modified_at)
+     FROM kk_application_payments kkap
+     WHERE kkap.application_key = a.key limit 1) AS "application-payment-states"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
@@ -1420,3 +1441,39 @@ VALUES (:application_key, :tutkinnot::jsonb);
 
 -- name: yesql-get-koski-tutkinnot-for-application
 SELECT tutkinnot FROM application_koski_tutkinnot WHERE application_key = :key;
+
+--name: yesql-get-tutu-application
+SELECT
+    a.key,
+    a.person_oid AS "person-oid",
+    a.haku,
+    a.hakukohde AS hakutoiveet,
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    a.lang,
+    ar.state,
+    a.submitted AS submitted,
+    a.created_time AS created,
+    a.modified_time AS modified,
+    (SELECT json_agg(json_build_object('requirement', requirement,
+                                       'state', state,
+                                       'hakukohde', hakukohde))
+     FROM application_hakukohde_reviews ahr
+     WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews",
+    (SELECT json_agg(json_build_object('attachment', attachment_key,
+                                       'state', state,
+                                       'hakukohde', hakukohde))
+     FROM application_hakukohde_attachment_reviews ahar
+     WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+    (SELECT json_agg(json_build_object('notes', notes,
+                                       'state', state_name,
+                                       'hakukohde', hakukohde,
+                                       'created', created_time,
+                                       'virkailijaOid', virkailija_oid))
+     FROM application_review_notes arn
+     WHERE arn.application_key = a.key
+       and arn.removed is null) AS "application-review-notes"
+FROM latest_applications AS a
+         JOIN application_reviews AS ar ON ar.application_key = a.key
+WHERE a.key = :oid;

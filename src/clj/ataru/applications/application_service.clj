@@ -82,10 +82,10 @@
    (application-store/get-application-attachment-reviews application-key)))
 
 (defn- populate-form-fields
-  [form koodisto-cache tarjonta-info tarjonta-service]
+  [form koodisto-cache tarjonta-info]
   (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
       (populate-hakukohde-answer-options tarjonta-info)
-      (payment-info/populate-form-with-payment-info tarjonta-service (:tarjonta tarjonta-info))
+      (payment-info/add-payment-info-if-higher-education (:tarjonta tarjonta-info))
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
 (defn fields-equal? [[new-in-left new-in-right]]
@@ -442,6 +442,7 @@
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
+  (get-application-oids-for-valintalaskenta [this session hakukohde-oids])
   (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after return-inactivated with-unapproved-payments])
   (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
@@ -513,11 +514,11 @@
             form                  (populate-form-fields (if with-newest-form?
                                                           newest-form
                                                           form-in-application)
-                                                        koodisto-cache tarjonta-info tarjonta-service)
+                                                        koodisto-cache tarjonta-info)
             forms-differ?         (and (not with-newest-form?)
                                        (forms-differ? application tarjonta-info form
                                                       (populate-form-fields newest-form
-                                                                            koodisto-cache tarjonta-info tarjonta-service)))
+                                                                            koodisto-cache tarjonta-info)))
             alternative-form      (some-> (when forms-differ?
                                             newest-form)
                                           (assoc :content [])
@@ -777,6 +778,15 @@
                                       as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
+      {:unauthorized nil}))
+
+  (get-application-oids-for-valintalaskenta
+    [_ session hakukohde-oids]
+    (if-let [application-oids (aac/get-application-oids-for-valintalaskenta
+                                organization-service
+                                session
+                                hakukohde-oids)]
+      {:application-oids application-oids}
       {:unauthorized nil}))
 
   (siirto-applications
