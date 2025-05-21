@@ -49,6 +49,7 @@
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]
                  [cljsjs/react-dom "18.2.0-1"]
+                 [lein-doo "0.1.11"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]

@@ -1,5 +1,5 @@
 (ns ataru.hakija.application-hakukohde-handlers
-  (:require [ataru.hakija.application-hakukohde-util :refer [query-hakukohteet]]
+  (:require [ataru.hakija.application-hakukohde-util :as hk-util]
             [ataru.hakija.application-handlers :refer [check-schema-interceptor
                                                        set-field-visibilities
                                                        set-validator-processing]]
@@ -33,7 +33,7 @@
           tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
           {:keys [hakukohde-query
                   hakukohde-hits
-                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? order-hakukohteet-by-opetuskieli? tarjonta-hakukohteet hakukohteet-field)]
+                  rest-results]} (hk-util/query-hakukohteet hakukohde-query lang virkailija? order-hakukohteet-by-opetuskieli? tarjonta-hakukohteet hakukohteet-field)]
       (-> db
           (assoc-in [:application :hakukohde-query] hakukohde-query)
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
@@ -201,6 +201,32 @@
                                     (map #(keyword (:id %))))]
     (apply dissoc m duplicate-question-ids )))
 
+
+(reg-event-fx
+ :application/remove-answers-per-hakukohde-and-hakukohderyhma
+ (fn [{db :db} [_ hakukohde-oid]]
+   (let [questions (get-in db [:form :content])
+         answers (get-in db [:application :answers])
+         answers-without-duplicates (remove-duplicates-with-hakukohde answers questions hakukohde-oid)
+         flat-form-content (util/flatten-form-fields questions)
+         selected-hakukohteet-oids (get-in answers [:hakukohteet :value])
+         hakukohteet (get-in db [:form :tarjonta :hakukohteet])
+         hakukohteet-form-data (hk-util/prepare-hakukohteet-data hakukohde-oid hakukohteet selected-hakukohteet-oids)
+         flat-content_hakukohteet-or-ryhmat-only (hk-util/filter-take-hakukohteet-and-ryhmat flat-form-content)
+         root-ids-related-to-removable-hakukohde (hk-util/collect-root-ids-related-to-removable-hakukohde
+                                                  hakukohde-oid flat-content_hakukohteet-or-ryhmat-only hakukohteet-form-data)
+         form-content-filtered (hk-util/filter-by-children-id questions root-ids-related-to-removable-hakukohde)
+         removable-ids (hk-util/removable-ids-from-answers
+                        hakukohde-oid
+                        form-content-filtered
+                        hakukohteet-form-data
+                        root-ids-related-to-removable-hakukohde)
+         invalidated-answers (hk-util/invalidate-answers answers-without-duplicates
+                                                 (map keyword removable-ids)
+                                                 (map keyword root-ids-related-to-removable-hakukohde))]
+     {:db (-> db (assoc-in [:application :answers] invalidated-answers))})))
+
+
 (reg-event-fx
   :application/remove-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
@@ -246,7 +272,9 @@
                                              (mapv :value new-hakukohde-values))
                                    set-field-visibilities)]
       {:db                 db
-       :dispatch-n [[:application/validate-hakukohteet] [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/remove-questions-per-hakukohde hakukohde-oid]
+                    [:application/remove-answers-per-hakukohde-and-hakukohderyhma hakukohde-oid]]})))
 
 (reg-event-fx
   :application/hakukohde-remove-by-idx
