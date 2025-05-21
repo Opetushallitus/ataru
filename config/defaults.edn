@@ -9,12 +9,12 @@
                    :henkilo-modified-queue {:enabled?      false
                                             :drain-failed? false
                                             :queue-url     ""}}
- :tutkintojen-tunnustaminen {:enabled?                    true
-                             :tutu-send-enabled?          true
+ :tutkintojen-tunnustaminen {:enabled?                    false
+                             :tutu-send-enabled?          false
                              :form-key                    ""
                              :country-question-id         ""
                              :attachment-total-size-limit 20
-                             :maksut                      {:enabled?                true
+                             :maksut                      {:enabled?                false
                                                            :poll-interval-minutes   5
                                                            :decision-amount         "70.00"
                                                            :form-keys      			    ""}

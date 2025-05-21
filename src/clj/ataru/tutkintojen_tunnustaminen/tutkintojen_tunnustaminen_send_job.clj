@@ -6,7 +6,6 @@
 
 
 (defn tutkintojen-tunnustaminen-send-handler [{:keys [key country apply-reason]} {:keys [tutu-cas-client]}]
-  (log/info tutu-cas-client)
   (let [url (resolve-url :tutu-service.hakemus)
         req {:hakemusOid key
              :maakoodi   country
