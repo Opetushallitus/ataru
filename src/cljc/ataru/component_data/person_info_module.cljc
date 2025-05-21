@@ -291,7 +291,7 @@
 (defn onr-astu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
-   (nationality-component-for-application-payment metadata true)
+   (nationality-component metadata true)
    (have-finnish-ssn-component metadata true)
    (ssn-birthdate-gender-wrapper metadata)
    (birthplace metadata)
