@@ -7,7 +7,7 @@
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
             [ataru.constants :refer [system-metadata]]))
 
-(def person-info-module-keys {:onr "onr" :onr-2nd "onr-2nd" :onr-kk-application-payment "onr-kk-application-payment" :muu "muu"})
+(def person-info-module-keys {:onr "onr" :onr-2nd "onr-2nd" :onr-kk-application-payment "onr-kk-application-payment" :onr-astu "onr-astu" :muu "muu"})
 
 ; validators defined in ataru.hakija.application-validators
 
@@ -288,6 +288,24 @@
    (city-component metadata)
    (native-language-section metadata)])
 
+(defn onr-astu-person-info-module [metadata]
+  [(first-name-section metadata)
+   (last-name-component metadata)
+   (nationality-component metadata true)
+   (have-finnish-ssn-component metadata true)
+   (ssn-birthdate-gender-wrapper metadata)
+   (birthplace metadata)
+   (passport-number metadata)
+   (national-id-number metadata)
+   (email-component metadata)
+   (phone-component metadata)
+   (country-of-residence-component metadata)
+   (street-address-component metadata)
+   (postal-office-section metadata)
+   (home-town-component metadata)
+   (city-component metadata)
+   (native-language-section metadata)])
+
 (defn onr-2nd-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
@@ -337,6 +355,9 @@
 
                              (= version :onr-kk-application-payment)
                              (onr-kk-application-payment-person-info-module system-metadata)
+
+                             (= version :onr-astu)
+                             (onr-astu-person-info-module system-metadata)
 
                              :else (onr-person-info-module system-metadata))
           :module          :person-info})))

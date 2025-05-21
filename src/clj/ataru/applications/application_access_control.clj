@@ -386,6 +386,15 @@
     (constantly nil)
     #(application-store/get-applications-for-valintalaskenta hakukohde-oid application-keys)))
 
+(defn get-application-oids-for-valintalaskenta [organization-service session hakukohde-oids]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/get-application-oids-for-valintalaskenta hakukohde-oids)))
+
 (defn siirto-applications
   [tarjonta-service organization-service session hakukohde-oid haku-oid application-keys modified-after return-inactivated]
   (session-orgs/run-org-authorized
