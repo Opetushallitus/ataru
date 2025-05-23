@@ -465,8 +465,9 @@
                              (:type attachment-finalizer-job/job-definition)
                              {:application-id application-id}))))
 
-(defn start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
-  (application-email/start-email-submit-confirmation-job koodisto-cache tarjonta-service
+(defn start-submit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
+  (application-email/start-email-submit-confirmation-job attachment-deadline-service
+                                                         koodisto-cache tarjonta-service
                                                          organization-service
                                                          ohjausparametrit-service
                                                          job-runner
@@ -491,8 +492,8 @@
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id _]
-  (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id _]
+  (application-email/start-email-edit-confirmation-job attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
   (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
@@ -609,7 +610,7 @@
             (log/info "Invoice details" invoice)
             (log/info "Generate maksut-link for email" url))
 
-          (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
+          (start-submit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
           (-> result
               (cond-> tutu-form? (assoc :payment {:url url})))))
       (do
@@ -661,7 +662,7 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
+        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
       (do
         (audit-log/log audit-logger
                        {:new       application-empty-answers-removed
@@ -845,9 +846,9 @@
      virkailija-oid]))
 
 (defn create-new-secret-and-send-link
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner old-secret]
   (let [application-id (application-store/add-new-secret-to-application-by-old-secret old-secret)]
-    (application-email/start-email-refresh-secret-confirmation-job koodisto-cache tarjonta-service
+    (application-email/start-email-refresh-secret-confirmation-job attachment-deadline-service koodisto-cache tarjonta-service
                                                                    organization-service ohjausparametrit-service
                                                                    job-runner
                                                                    application-id)))

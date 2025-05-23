@@ -385,7 +385,7 @@
       :body [request {:old-secret s/Str}]
       (do
         (hakija-application-service/create-new-secret-and-send-link
-          koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+          attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
           job-runner
           (:old-secret request))
         (response/ok {})))
