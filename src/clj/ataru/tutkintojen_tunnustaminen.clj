@@ -183,7 +183,7 @@
     application))
 
 (defn- get-form
-  [form-by-id-cache koodisto-cache application]
+  [form-by-id-cache koodisto-cache attachment-deadline-service application]
   (let [form (hakija-form-service/fetch-form-by-id
               (:form-id application)
               [:hakija]
@@ -191,7 +191,8 @@
               koodisto-cache
               nil
               false
-              {})]
+              {}
+              attachment-deadline-service)]
     (when (nil? form)
       (throw (new RuntimeException (str "Form " (:form-id application)
                                         " not found"))))
@@ -330,12 +331,12 @@
         (form-key-matches? cfg-form-key (:key form)))))
 
 (defn- application-job-step
-  [liiteri-cas-client form-by-id-cache koodisto-cache application-id edit?]
+  [liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service application-id edit?]
   (let [{:keys [country-question-id
                 attachment-total-size-limit
                 ftp]} (get-configuration)
         application   (get-application country-question-id application-id)
-        form          (get-form form-by-id-cache koodisto-cache application)]
+        form          (get-form form-by-id-cache koodisto-cache attachment-deadline-service application)]
     (if (tutu-form? form)
       (let [attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
             message     (if edit?
@@ -357,21 +358,21 @@
       {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-handler
-  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
-  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id false))
+  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service]}]
+  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service application-id false))
 
 (defn tutkintojen-tunnustaminen-edit-job-handler
-  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
-  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id true))
+  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service]}]
+  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
-  [{:keys [event-id]} {:keys [form-by-id-cache koodisto-cache]}]
+  [{:keys [event-id]} {:keys [form-by-id-cache koodisto-cache attachment-deadline-service]}]
   (let [{:keys [country-question-id
                 ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
         application           (:application application-and-state)
         application-id        (:id application)
-        form                  (get-form form-by-id-cache koodisto-cache application)]
+        form                  (get-form form-by-id-cache koodisto-cache attachment-deadline-service application)]
     (if (and (tutu-form? form)
              (nil? (:review-key application-and-state))
              (= "inactivated" (:state application-and-state)))
@@ -390,11 +391,11 @@
 (defn timestamp [] (System/currentTimeMillis))
 
 (defn tutkintojen-tunnustaminen-information-request-sent-job-step
-  [{:keys [information-request]} {:keys [form-by-id-cache koodisto-cache]}]
+  [{:keys [information-request]} {:keys [form-by-id-cache koodisto-cache attachment-deadline-service]}]
   (let [{:keys [country-question-id ftp]} (get-configuration)
         application-id (:id (get-latest-application-id (:application-key information-request)))
         application    (get-application country-question-id application-id)
-        form           (get-form form-by-id-cache koodisto-cache application)]
+        form           (get-form form-by-id-cache koodisto-cache attachment-deadline-service application)]
     (if (and (tutu-form? form)
              (= "information-request" (:message-type information-request)))
       (let [ts (timestamp)
