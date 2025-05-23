@@ -491,6 +491,7 @@
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
           (do (hakija-application-service/start-submit-jobs
+                attachment-deadline-service
                 koodisto-cache
                 tarjonta-service
                 organization-service
@@ -672,6 +673,7 @@
         :return ataru-schema/Event
         (if-let [resend-event (application-service/send-modify-application-link-email
                                 application-service
+                                attachment-deadline-service
                                 application-key
                                 nil
                                 session)]
@@ -1119,6 +1121,7 @@
           (if secret
             (if-let [resend-event (application-service/send-modify-application-link-email
                                    application-service
+                                   attachment-deadline-service
                                    application-key
                                    payment-url
                                    session)]
