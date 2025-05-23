@@ -8,17 +8,21 @@
             [ataru.fixtures.form :as form-fixtures]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :refer [check-harkinnanvaraisuus-handler recheck-harkinnanvaraisuus-handler]]
             [ataru.applications.application-store :as application-store]
+            [ataru.forms.form-store :as form-store]
             [clj-time.core :as time]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :refer [ValintalaskentakoostepalveluService]]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.cache.cache-service :as cache-service]
             [com.stuartsierra.component :as component]
             [ataru.background-job.job :as job]
             [ataru.person-service.person-service :as person-service]))
 
+(def ^:private test-form-id (atom nil))
 (def ^:private test-application-id (atom nil))
 
-(def haku-key "1.2.246.562.29.65950024189")
+(def haku-key "payment-info-test-non-kk-haku")
 
 (def audit-logger (audit-log/new-dummy-audit-logger))
 
@@ -91,8 +95,16 @@
 
 (def fps (person-service/->FakePersonService))
 
+(def os (organization-service/->FakeOrganizationService))
+
+(def fake-koodisto-cache (reify cache-service/Cache
+                                (get-from [_ _])
+                                (get-many-from [_ _])
+                                (remove-from [_ _])
+                                (clear-all [_])))
+
 (defn runner-with-deps [vlkp-service]
-  (map->FakeJobRunner {:ohjausparametrit-service (->MockOhjausparametritServiceWithFuture) :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp-service :person-service fps}))
+  (map->FakeJobRunner {:ohjausparametrit-service (->MockOhjausparametritServiceWithFuture) :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp-service :person-service fps}))
 
 (defn- clean! [id]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -101,10 +113,14 @@
                             (jdbc/delete! conn :applications
                                           ["id = ?" id])
                             (jdbc/delete! conn :harkinnanvaraisuus_process
-                                          ["application_id = ?" id])))
+                                          ["application_id = ?" id])
+                            (jdbc/delete! conn :forms
+                                          ["id = ?" id])))
 
 (defn- init [application]
-  (let [stored (application-store/add-application application [] form-fixtures/person-info-form {} audit-logger nil)]
+  (let [form (form-store/create-new-form! form-fixtures/person-info-form)
+        stored (application-store/add-application (assoc application :form (:id form)) [] form {} audit-logger nil)]
+    (reset! test-form-id (:id form))
     (reset! test-application-id (:id stored))
     (store/upsert-harkinnanvaraisuus-process (:id stored) (:key stored) haku-key)))
 
@@ -118,7 +134,8 @@
           (tags :unit :database)
 
           (after
-            (clean! @test-application-id))
+            (clean! @test-application-id)
+            (clean! @test-form-id))
 
           (describe "check-harkinnanvaraisuus-step"
                     (it "skips check if haku is not open"
@@ -142,19 +159,19 @@
                                                    :value "3"
                                                    :fieldType "singleChoice"}]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
-                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "skips check if no lukio or ammatillinen hakukohteita"
                         (init (assoc (create-application) :hakukohde ["1.2.246.562.20.00000000000000024372"]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
-                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "checks application"
                         (init (create-application))
                         (let [ops (->MockOhjausparametritServiceWithFuture)
-                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                               process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= false (:harkinnanvarainen_only process))
@@ -166,7 +183,7 @@
                                                     :value "7"
                                                     :fieldType "singleChoice"}]))
                         (let [ops (->MockOhjausparametritServiceWithFuture)
-                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service harvlkp :person-service fps})
+                              _   (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :valintalaskentakoostepalvelu-service harvlkp :person-service fps})
                               process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
@@ -215,7 +232,7 @@
                     (it "skips recheck if haku is not open"
                         (init-with-check (create-application) (runner-with-deps vlkp))
                         (let [ops (->MockOhjausparametritServiceWithPast)]
-                          (recheck-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
+                          (recheck-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "rechecks application and sets harkinnanvarainen due to result from valintalaskentakoostepalvelu-servie"
