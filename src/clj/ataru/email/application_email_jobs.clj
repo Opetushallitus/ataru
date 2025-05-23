@@ -36,9 +36,9 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
-    (for [email (application-email/create-submit-email koodisto-cache tarjonta-service
+    (for [email (application-email/create-submit-email attachment-deadline-service koodisto-cache tarjonta-service
                   organization-service
                   ohjausparametrit-service
                   application-id
@@ -47,17 +47,17 @@
         (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (dorun
-    (for [email (application-email/create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+    (for [email (application-email/create-edit-email attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                        application-id
                        true)]
            (start-email-job job-runner email))))
 
 (defn start-email-refresh-secret-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (dorun
-    (for [email (application-email/create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+    (for [email (application-email/create-refresh-secret-email attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                   application-id)]
       (start-email-job job-runner email))))
 
