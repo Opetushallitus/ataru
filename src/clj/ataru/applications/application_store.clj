@@ -1834,10 +1834,21 @@
                                                                                 :haku_oids (vec haku-oids)}))
 
 (defn get-tutu-application
-  [application-key]
-  (let [apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})]
-    (first apps)))
+  [person-service application-key]
+  (let
+    [
+      apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})
+    ]
+    (first (enrich-persons-from-onr person-service apps))
+  )
+)
 
-(defn get-tutu-applications []
-  (let [apps (exec-db :db queries/yesql-get-tutu-applications {})]
-    apps))
+(defn get-tutu-applications
+  [person-service application-keys]
+  (let
+    [
+      applications (exec-db :db queries/yesql-get-tutu-applications {:oids application-keys})
+    ]
+    (enrich-persons-from-onr person-service applications)
+  )
+)

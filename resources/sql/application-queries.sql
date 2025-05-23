@@ -1465,7 +1465,8 @@ SELECT
        and arn.removed is null) AS "application-review-notes"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
-WHERE a.key = :oid;
+WHERE a.person_oid IS NOT NULL
+AND a.key = :oid;
 
 --name: yesql-get-tutu-applications
 SELECT a.key,
@@ -1500,11 +1501,13 @@ SELECT a.key,
           and arn.removed is null)          AS "application-review-notes"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
-WHERE a.key IN (SELECT a.key
+WHERE a.person_oid IS NOT NULL
+AND a.key IN (SELECT a.key
                 FROM applications a
                          LEFT OUTER JOIN application_hakukohde_reviews ahr ON (a.key = ahr.application_key)
                 WHERE a.form_id IN
                       (SELECT id
                        FROM forms f
                        WHERE f.properties -> 'payment' ->> 'type' = 'payment-type-tutu')
-                  AND (ahr.state = 'processing-fee-paid'));
+                  AND (ahr.state = 'processing-fee-paid'))
+AND a.key in (:oids);

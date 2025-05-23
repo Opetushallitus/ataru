@@ -1457,23 +1457,6 @@
             (fn [_] (delete))
             delete))))
 
-    (api/context "/tutu" []
-      :tags ["tutu-api"]
-      (api/GET "/hakemus/:oid" {session :session}
-        :summary "Get the tutu-applications with matching oid"
-        :path-params [oid :- s/Str]
-        :return s/Any
-        (if-let [application (application-store/get-tutu-application oid)]
-          (response/ok application)
-          (response/not-found)))
-
-      (api/GET "/hakemukset" {session :session}
-        :summary "Get all tutu-applications"
-        :return s/Any
-        (if-let [applications (application-store/get-tutu-applications)]
-          (response/ok applications)
-          (response/not-found))))
-
     (api/context "/external" []
       :tags ["external-api"]
       (api/GET "/omatsivut/applications/:person-oid" {session :session}
@@ -1945,7 +1928,28 @@
                                       application-store/get-latest-application-by-key)]
           (response/ok {:applicationOid (:key application)
                         :personOid      (:person-oid application)})
-          (response/not-found))))
+          (response/not-found)))
+
+      (api/context "/tutu" []
+        :tags ["tutu-api"]
+        (api/GET "/hakemus/:oid" {session :session}
+          :summary "Get the tutu-applications with matching oid"
+          :path-params [oid :- s/Str]
+          :return s/Any
+          (if-let [application (application-service/get-tutu-application application-service oid)]
+            (response/ok application)
+            (response/not-found)))
+
+        (api/GET "/hakemukset" {session :session}
+          :summary "Get tutu-applications by a list of OID:s"
+          :query-params [{hakemusOids :- [s/Str] nil}]
+          :return s/Any
+          (if (nil? hakemusOids)
+            (response/bad-request {:error "No application oids provided."})
+            (response/ok (application-service/get-tutu-applications application-service hakemusOids))
+          ))
+      )
+    )
 
     (api/context "/valinta-tulos-service"  []
       :tags ["valinta-tulos-service-api"]
