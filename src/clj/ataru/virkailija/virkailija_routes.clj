@@ -1940,11 +1940,11 @@
             (response/ok application)
             (response/not-found)))
 
-        (api/GET "/hakemukset" {session :session}
+        (api/POST "/hakemukset" {session :session}
           :summary "Get tutu-applications by a list of OID:s"
-          :query-params [{hakemusOids :- [s/Str] nil}]
+          :body-params [hakemusOids :- [s/Str]]
           :return s/Any
-          (if (nil? hakemusOids)
+          (if (nil? (not-empty hakemusOids))
             (response/bad-request {:error "No application oids provided."})
             (response/ok (application-service/get-tutu-applications application-service hakemusOids))
           ))
