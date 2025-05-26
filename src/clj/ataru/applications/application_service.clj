@@ -3,6 +3,7 @@
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
+    [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-jobs :as email]
@@ -1062,16 +1063,16 @@
   (get-tutu-application
     [_ application-key]
     (let
-      [application (application-store/get-tutu-application person-service application-key)]
-      application
+      [application (application-store/get-tutu-application application-key)]
+      (application-util/enrich-persons-from-onr person-service [application])
     )
   )
 
   (get-tutu-applications
     [_ application-keys]
     (let
-      [applications (application-store/get-tutu-applications person-service application-keys)]
-      applications
+      [applications (application-store/get-tutu-applications application-keys)]
+      (application-util/enrich-persons-from-onr person-service applications)
     )
   )
 )

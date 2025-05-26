@@ -1944,7 +1944,7 @@
           :summary "Get tutu-applications by a list of OID:s"
           :body-params [hakemusOids :- [s/Str]]
           :return s/Any
-          (if (nil? (not-empty hakemusOids))
+          (if (empty? hakemusOids)
             (response/bad-request {:error "No application oids provided."})
             (response/ok (application-service/get-tutu-applications application-service hakemusOids))
           ))
