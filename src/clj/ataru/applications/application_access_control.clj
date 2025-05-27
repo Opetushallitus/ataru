@@ -1,7 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
     [ataru.log.audit-log :as audit-log]
-    [taoensso.timbre :as log]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.tarjonta.haku :as haku]
     [ataru.user-rights :as user-rights]
@@ -99,7 +98,6 @@
 (defn- is-for-jatkuva-haku? [tarjonta-service application]
   (let [haku-oid (:haku application)
         haku (when (and tarjonta-service haku-oid) (tarjonta-protocol/get-haku tarjonta-service haku-oid))]
-    (log/info (str "checked haku " haku))
     (if haku
       (haku/jatkuva-haku? haku)
       false)))
@@ -126,7 +124,6 @@
                             [(suoritus-filter/year-for-suoritus-filter (time/now))])
         person-oids-and-dates-for-opiskelija (person-oids-and-dates-for-opiskelija suoritus-service person-service application-person-oid authorized-organization-oids lahtokoulu-vuodet)
         end-date (get person-oids-and-dates-for-opiskelija application-person-oid)]
-    (log/info "person-oids-and-dates " person-oids-and-dates-for-opiskelija)
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
         (if end-date
           (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
@@ -139,7 +136,6 @@
 (defn- filter-applications-by-lahtokoulu
   [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
   (let [application-oids-of-jatkuva-haku (map :key (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))]
-    (log/info (str "jatkuvat " (vec application-oids-of-jatkuva-haku)))
     (->> applications
          (filter (partial authorized-by-person-oid-and-hakukausi? suoritus-service person-service application-oids-of-jatkuva-haku authorized-organization-oids))
          (map remove-organization-oid))))
