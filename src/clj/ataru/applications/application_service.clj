@@ -1064,7 +1064,10 @@
     [_ application-key]
     (let
       [application (application-store/get-tutu-application application-key)]
-      (application-util/enrich-persons-from-onr person-service [application])
+      (if (not-empty application)
+        (first (application-util/enrich-persons-from-onr person-service [application]))
+        nil
+      )
     )
   )
 
