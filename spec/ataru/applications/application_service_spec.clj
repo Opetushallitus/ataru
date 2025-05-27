@@ -29,7 +29,7 @@
 )
 
 (describe "Services for TUTU"
-  (tags :tutu)
+  (tags :tutu :unit)
 
   (describe "get-tutu-application"
 
