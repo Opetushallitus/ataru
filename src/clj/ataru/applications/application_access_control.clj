@@ -106,7 +106,7 @@
 
 (defn- person-oids-and-dates-for-opiskelija
   [suoritus-service person-service henkilo-oid authorized-organization-oids vuodet]
-  (let [person-info (suoritus-service/opiskelijan-luokkatieto suoritus-service henkilo-oid vuodet suoritus-filter/luokkatasot-for-suoritus-filter)
+  (let [person-info (suoritus-service/opiskelijan-luokkatieto suoritus-service henkilo-oid vuodet (suoritus-filter/luokkatasot-for-suoritus-filter))
         linked-oids (if (some #(= (:oppilaitos-oid person-info) %) authorized-organization-oids)
                       (person-service/linked-oids person-service [henkilo-oid])
                       {})]
