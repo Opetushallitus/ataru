@@ -76,8 +76,6 @@
         ))
       )
     )
-
-    (it "MOVE TO INTEGRATION! returns nil if the application does not have an associated user")
   )
 
   (describe "get-tutu-applications"
@@ -134,7 +132,5 @@
         ))
       )
     )
-
-    (it "MOVE TO INTEGRATION! omits applications with no associated user")
   )
 )
