@@ -1,6 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
@@ -433,7 +433,7 @@
       (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-submit-job
+          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
                 job-runner
                 application-id)
               (response/ok {}))
@@ -442,7 +442,7 @@
       (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
+          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
                 job-runner
                 application-id)
               (response/ok {}))

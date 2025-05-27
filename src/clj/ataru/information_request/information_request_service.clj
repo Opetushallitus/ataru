@@ -8,7 +8,7 @@
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.applications.application-store :as app-store]
             [ataru.config.core :refer [config]]
             [clojure.java.jdbc :as jdbc]
@@ -128,7 +128,7 @@
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})
-    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
+    (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-sent-job
       job-runner
       information-request)
     information-request))

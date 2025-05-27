@@ -9,11 +9,11 @@
             [ataru.forms.form-store :as form-store]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.log.audit-log :as audit-log]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :refer [tutkintojen-tunnustaminen-edit-job-handler
                                                                                tutkintojen-tunnustaminen-information-request-sent-job-step
                                                                                tutkintojen-tunnustaminen-review-state-changed-job-step
-                                                                               tutkintojen-tunnustaminen-submit-job-handler
-                                                                               start-tutkintojen-tunnustaminen-send-job]]
+                                                                               tutkintojen-tunnustaminen-submit-job-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :refer [start-tutkintojen-tunnustaminen-send-job]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
@@ -446,7 +446,7 @@
                                                       wrong-form-id
                                                       payment-property-form-id])))))))
   (it "should send information request sent message to ASHA SFTP server"
-      (with-redefs [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen/timestamp (fn [] 1)]
+      (with-redefs [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service/timestamp (fn [] 1)]
         (let [r (tutkintojen-tunnustaminen-information-request-sent-job-step
                   {:information-request {:application-key *application-key*
                                          :subject         "Täydennyspyyntö otsikko"

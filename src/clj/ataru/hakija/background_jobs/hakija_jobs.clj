@@ -4,7 +4,7 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen])
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :as tutkintojen-tunnustaminen-service])
   (:import  (java.time Duration)))
 
 (def default-retry-strategy {:proletarian/retry-strategy-fn
@@ -31,12 +31,12 @@
                                                         :type     "start-automatic-eligibility-if-ylioppilas-job-job"
                                                         :schedule "0 7 * * *"
                                                         :queue    default-retry-strategy}
-   "tutkintojen-tunnustaminen-submit-job"              {:handler    tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
+   "tutkintojen-tunnustaminen-submit-job"              {:handler    tutkintojen-tunnustaminen-service/tutkintojen-tunnustaminen-submit-job-handler
                                                         :type       "tutkintojen-tunnustaminen-submit-job"
                                                         ; 30s viive jotta liitteet ehtivät skannautua
                                                         :process-in (Duration/ofSeconds 30)
                                                         :queue      default-retry-strategy}
-   "tutkintojen-tunnustaminen-edit-job"                {:handler    tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler
+   "tutkintojen-tunnustaminen-edit-job"                {:handler    tutkintojen-tunnustaminen-service/tutkintojen-tunnustaminen-edit-job-handler
                                                         :type       "tutkintojen-tunnustaminen-edit-job"
                                                         ; 30s viive jotta liitteet ehtivät skannautua
                                                         :process-in (Duration/ofSeconds 30)

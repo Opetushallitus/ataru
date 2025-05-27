@@ -17,7 +17,7 @@
     [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options]]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
@@ -620,7 +620,7 @@
              [application-key]
              [:edit-applications])
         (when-let [event-id (application-store/save-application-review review session audit-logger)]
-          (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
+          (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-review-state-changed-job
            job-runner
            event-id))
         (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)

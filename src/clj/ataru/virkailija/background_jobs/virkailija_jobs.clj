@@ -5,7 +5,7 @@
             [ataru.information-request.information-request-service :as information-request-service]
             [ataru.information-request.information-request-reminder-job :as information-request-reminder-job]
             [ataru.person-service.person-integration :as person-integration]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :as tutkintojen-tunnustaminen-service]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-send-job :as tutkintojen-tunnustaminen-send-job]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
@@ -53,10 +53,10 @@
    "mass-information-request-job"                        {:handler information-request-service/mass-information-request-job-step
                                                           :type    "mass-information-request-job"
                                                           :queue   default-retry-strategy}
-   "tutkintojen-tunnustaminen-review-state-changed-job"  {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step
+   "tutkintojen-tunnustaminen-review-state-changed-job"  {:handler tutkintojen-tunnustaminen-service/tutkintojen-tunnustaminen-review-state-changed-job-step
                                                           :type    "tutkintojen-tunnustaminen-review-state-changed-job"
                                                           :queue   default-retry-strategy}
-   "tutkintojen-tunnustaminen-information-request-sent-job" {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-information-request-sent-job-step
+   "tutkintojen-tunnustaminen-information-request-sent-job" {:handler tutkintojen-tunnustaminen-service/tutkintojen-tunnustaminen-information-request-sent-job-step
                                                              :type    "tutkintojen-tunnustaminen-information-request-sent-job"
                                                              :queue   default-retry-strategy}
    "update-person-info-job" {:handler person-integration/update-person-info-job-handler

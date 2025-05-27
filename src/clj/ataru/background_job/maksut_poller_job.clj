@@ -3,7 +3,7 @@
   (:require [clojure.core.match :refer [match]]
             [ataru.applications.application-service :as application-service]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [clojure.string :refer [ends-with?]]
             [taoensso.timbre :as log]))
 
@@ -41,12 +41,12 @@
                                "tutu" (match [type app-status maksu-status]
                                              [:processing nil "paid"] (do
                                                                         (toggle "processing-fee-paid")
-                                                                        (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-send-job
+                                                                        (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-send-job
                                                                           job-runner
                                                                           reference))
                                              [:processing nil "overdue"] (toggle "processing-fee-overdue")
                                              [:processing "unprocessed" "paid"] (do (toggle "processing-fee-paid")
-                                                                                  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-send-job
+                                                                                  (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-send-job
                                                                                     job-runner
                                                                                     reference))
                                              [:processing "unprocessed" "overdue"] (toggle "processing-fee-overdue")
