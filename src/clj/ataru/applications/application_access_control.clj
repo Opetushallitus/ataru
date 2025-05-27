@@ -104,54 +104,45 @@
       (haku/jatkuva-haku? haku)
       false)))
 
-(defn- person-oids-and-dates-for-oppilaitos
-  [suoritus-service person-service vuodet oppilaitos-oid]
-  (let [persons (->>
-                  (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
-                    suoritus-service
-                    oppilaitos-oid
-                    vuodet
-                    (suoritus-filter/luokkatasot-for-suoritus-filter))
-                  (into {} (map (fn [person] [(:person-oid person) (:loppuPaiva person)]))))
-        linked-oids (person-service/linked-oids person-service (keys persons))]
-    (log/info "persons " persons)
-    (mapcat (fn [linked-oid-item]
-              (let [loppu-paiva (get persons (:master-oid linked-oid-item))]
-                (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids))))
+(defn- person-oids-and-dates-for-opiskelija
+  [suoritus-service person-service henkilo-oid authorized-organization-oids vuodet]
+  (let [person-info (suoritus-service/opiskelijan-luokkatieto suoritus-service henkilo-oid vuodet suoritus-filter/luokkatasot-for-suoritus-filter)
+        linked-oids (if (some #(= (:oppilaitos-oid person-info) %) authorized-organization-oids)
+                      (person-service/linked-oids person-service [henkilo-oid])
+                      {})]
+    (into {} (mapcat (fn [linked-oid-item]
+                       (let [loppu-paiva (:loppupaiva person-info)]
+                         (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids)))))
 
 (defn- hakemus-in-oid-list [oid-list application]
   (let [application-oid (:key application)]
     (some #(= application-oid %) oid-list)))
 
 (defn- authorized-by-person-oid-and-hakukausi?
-  [authorized-person-oids-with-dates application-oids-of-jatkuva-haku application]
+  [suoritus-service person-service application-oids-of-jatkuva-haku authorized-organization-oids application]
   (let [application-person-oid (:person-oid application)
-        end-date (get authorized-person-oids-with-dates application-person-oid)]
+        lahtokoulu-vuodet (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
+                            (haku/resolve-lahtokoulu-vuodet-jatkuva-haku application)
+                            [(suoritus-filter/year-for-suoritus-filter (time/now))])
+        person-oids-and-dates-for-opiskelija (person-oids-and-dates-for-opiskelija suoritus-service person-service application-person-oid authorized-organization-oids lahtokoulu-vuodet)
+        end-date (get person-oids-and-dates-for-opiskelija application-person-oid)]
+    (log/info "person-oids-and-dates " person-oids-and-dates-for-opiskelija)
     (if (hakemus-in-oid-list application-oids-of-jatkuva-haku application)
-      (do
-      (log/info (str "jatkuvan haun hakemus " application))
-      (if end-date
-        (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
-                     end-date)
-        false))
+        (if end-date
+          (haku/filter-by-jatkuva-haku-hakemus-hakukausi (:created-time application)
+                                                         end-date)
+          false)
       (some? end-date))))
+
 
 
 (defn- filter-applications-by-lahtokoulu
   [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
-  (let [current-year (suoritus-filter/year-for-suoritus-filter (time/now))
-        application-oids-of-jatkuva-haku (map :key (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))
-        lahtokoulu-vuodet (set (mapcat #(if (hakemus-in-oid-list application-oids-of-jatkuva-haku %)
-                                          (haku/resolve-lahtokoulu-vuodet-jatkuva-haku %)
-                                          [current-year]) applications))
-        authorized-person-oids-and-dates (into {} (mapcat
-                                                    (partial person-oids-and-dates-for-oppilaitos suoritus-service person-service lahtokoulu-vuodet)
-                                                    authorized-organization-oids))]
-    (log/info (str "auths " authorized-person-oids-and-dates))
+  (let [application-oids-of-jatkuva-haku (map :key (filter (partial is-for-jatkuva-haku? tarjonta-service) applications))]
     (log/info (str "jatkuvat " (vec application-oids-of-jatkuva-haku)))
     (->> applications
-      (filter (partial authorized-by-person-oid-and-hakukausi? authorized-person-oids-and-dates application-oids-of-jatkuva-haku))
-      (map remove-organization-oid))))
+         (filter (partial authorized-by-person-oid-and-hakukausi? suoritus-service person-service application-oids-of-jatkuva-haku authorized-organization-oids))
+         (map remove-organization-oid))))
 
 (defn- filter-authorized-by-lahtokoulu
   [organization-service tarjonta-service suoritus-service person-service session applications authorized-applications]
