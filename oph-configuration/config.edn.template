@@ -9,6 +9,7 @@
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
  :tutkintojen-tunnustaminen {:enabled?                    {{ataru_tutkintojen_tunnustaminen_enabled}}
+                             :tutu-send-enabled?          {{ataru_tutkintojen_tunnustaminen_send_enabled | default('false')}}
                              :form-key                    "{{ataru_tutkintojen_tunnustaminen_form_key}}"
                              :country-question-id         "{{ataru_tutkintojen_tunnustaminen_country_question_id}}"
                              :attachment-total-size-limit {{ataru_tutkintojen_tunnustaminen_size_limit}}
@@ -86,6 +87,7 @@
         :organisaatio-service-base-url       "{{ataru_organisaatio_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :koodisto-service-base-url           "{{ataru_koodisto_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :ohjausparametrit-service-base-url   "{{ataru_ohjausparametrit_service_base_url | default('https://' + ataru_virkailija_host) }}"
+        :tutu-service-base-url               "{{ataru_tutu_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :valintalaskenta-ui-service-base-url "{{ataru_valintalaskenta_ui_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :cas-oppija-url                      "{{ataru_cas_oppija_url | default('https://' + ataru_hakija_host + '/cas-oppija') }}"
         :ataru-hakija-login-url              "{{ataru_hakija_login_url | default('https://' + ataru_hakija_host + '/hakemus/auth/oppija') }}"}

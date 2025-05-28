@@ -23,7 +23,7 @@
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkinto.tutkinto-util :as tutkinto-util]
-    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
     [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [cheshire.core :as json]
@@ -471,7 +471,7 @@
                                                          payment-url)
   (start-person-creation-job job-runner application-id)
   (start-attachment-finalizer-job job-runner application-id)
-  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-submit-job
+  (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
    job-runner
    application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
@@ -492,7 +492,7 @@
   (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
-  (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
+  (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
    job-runner
    application-id)
   (start-attachment-finalizer-job job-runner application-id)

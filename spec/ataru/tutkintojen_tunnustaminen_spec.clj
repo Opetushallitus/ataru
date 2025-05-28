@@ -1,28 +1,74 @@
 (ns ataru.tutkintojen-tunnustaminen-spec
   (:require [ataru.applications.application-store :as application-store]
+            [ataru.applications.application-service :refer [ApplicationService]]
+            [ataru.background-job.maksut-poller-job :as maksut-poller-job]
             [ataru.cache.cache-service :as cache-service]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.log.audit-log :as audit-log]
-            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
-                                                     tutkintojen-tunnustaminen-information-request-sent-job-step
-                                                     tutkintojen-tunnustaminen-review-state-changed-job-step
-                                                     tutkintojen-tunnustaminen-submit-job-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :refer [tutkintojen-tunnustaminen-edit-job-handler
+                                                                               tutkintojen-tunnustaminen-information-request-sent-job-step
+                                                                               tutkintojen-tunnustaminen-review-state-changed-job-step
+                                                                               tutkintojen-tunnustaminen-submit-job-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :refer [start-tutkintojen-tunnustaminen-send-job]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
             [clojure.java.shell :refer [sh]]
             [clojure.string :as string]
-            [speclj.core :refer [around describe it should-be should-contain should= tags]]
-            [yesql.core :refer [defqueries]])
+            [speclj.core :refer [around describe it should-be should-contain should= stub should-have-invoked tags with-stubs]]
+            [yesql.core :refer [defqueries]]
+            [ataru.background-job.job :as job]
+            [com.stuartsierra.component :as component])
   (:import java.io.ByteArrayInputStream
            java.util.Base64))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
+
+(def ^:dynamic *application-id* nil)
+(def ^:dynamic *edited-application-id* nil)
+(def ^:dynamic *in-wrong-form-application-id* nil)
+(def ^:dynamic *in-wrong-form-application-key* nil)
+(def ^:dynamic *event-id* nil)
+(def ^:dynamic *application-key* nil)
+(def ^:dynamic *application-submitted* nil)
+(def ^:dynamic *payment-property-application-id* nil)
+(def ^:dynamic *payment-property-application-key* nil)
+
+(defn start-runner-job [_ _ _ _])
+
+(defrecord FakeJobRunner []
+  component/Lifecycle
+
+  job/JobRunner
+  (start-job [this connection job-type initial-state]
+    (start-runner-job this connection job-type initial-state)))
+
+(defrecord MockMaksutService []
+  MaksutServiceProtocol
+
+  (list-lasku-statuses [_ _]
+    [{:order_id "TTU2354669-1"
+     :reference *payment-property-application-key*
+     :status :paid
+     :origin "tutu"}]))
+
+(def mock-maksut-service (->MockMaksutService))
+
+(defrecord MockApplicationService []
+  ApplicationService
+
+  (payment-poller-processing-state-change [_ _ _] {}))
+
+(def mock-application-service (->MockApplicationService))
+
+(def job-runner
+  (map->FakeJobRunner {:maksut-service mock-maksut-service}))
 
 (defn- get-file
   [filename]
@@ -157,22 +203,13 @@
     (remove-from [_ _])
     (clear-all [_])))
 
-(def ^:dynamic *application-id* nil)
-(def ^:dynamic *edited-application-id* nil)
-(def ^:dynamic *in-wrong-form-application-id* nil)
-(def ^:dynamic *in-wrong-form-application-key* nil)
-(def ^:dynamic *event-id* nil)
-(def ^:dynamic *application-key* nil)
-(def ^:dynamic *application-submitted* nil)
-(def ^:dynamic *payment-property-application-id* nil)
-(def ^:dynamic *payment-property-application-key* nil)
 
 (def liiteri-cas-client nil)
 
 (describe
   "Tutkintojen tunnustaminen integration"
   (tags :unit)
-
+  (with-stubs)
   (around
     [it]
     (let [audit-logger (audit-log/new-dummy-audit-logger)
@@ -409,7 +446,7 @@
                                                       wrong-form-id
                                                       payment-property-form-id])))))))
   (it "should send information request sent message to ASHA SFTP server"
-      (with-redefs [ataru.tutkintojen-tunnustaminen/timestamp (fn [] 1)]
+      (with-redefs [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service/timestamp (fn [] 1)]
         (let [r (tutkintojen-tunnustaminen-information-request-sent-job-step
                   {:information-request {:application-key *application-key*
                                          :subject         "Täydennyspyyntö otsikko"
@@ -501,6 +538,11 @@
         (let [action (create-folder-by-type "ams_action" message)]
           (should= "Hakemuksen saapuminen" (property-value "ams_title" action))
           (should= "01.01" (property-value "ams_processtaskid" action)))))
+
+  (it "should start job to send application to tutu-backend"
+      (with-redefs [start-tutkintojen-tunnustaminen-send-job (stub :start-maksut-send-job)]
+          (maksut-poller-job/poll-maksut mock-application-service mock-maksut-service job-runner (list {:key *payment-property-application-key*, :state "unprocessed"}))
+          (should-have-invoked :start-maksut-send-job {:times 1})))
 
   (it "should send edit message to ASHA SFTP server"
       (let [r (tutkintojen-tunnustaminen-edit-job-handler
