@@ -1457,16 +1457,6 @@
             (fn [_] (delete))
             delete))))
 
-    (api/context "/tutu" []
-      :tags ["tutu-api"]
-      (api/GET "/hakemus/:oid" {session :session}
-        :summary "Get the tutu-applications with matching oid"
-        :path-params [oid :- s/Str]
-        :return s/Any
-        (if-let [application (application-store/get-tutu-application oid)]
-          (response/ok application)
-          (response/not-found))))
-
     (api/context "/external" []
       :tags ["external-api"]
       (api/GET "/omatsivut/applications/:person-oid" {session :session}
@@ -1953,7 +1943,28 @@
                                       application-store/get-latest-application-by-key)]
           (response/ok {:applicationOid (:key application)
                         :personOid      (:person-oid application)})
-          (response/not-found))))
+          (response/not-found)))
+
+      (api/context "/tutu" []
+        :tags ["tutu-api"]
+        (api/GET "/hakemus/:oid" {session :session}
+          :summary "Get the tutu-applications with matching oid"
+          :path-params [oid :- s/Str]
+          :return s/Any
+          (if-let [application (application-service/get-tutu-application application-service oid)]
+            (response/ok application)
+            (response/not-found)))
+
+        (api/POST "/hakemukset" {session :session}
+          :summary "Get tutu-applications by a list of OID:s"
+          :body-params [hakemusOids :- [s/Str]]
+          :return s/Any
+          (if (empty? hakemusOids)
+            (response/bad-request {:error "No application oids provided."})
+            (response/ok (application-service/get-tutu-applications application-service hakemusOids))
+          ))
+      )
+    )
 
     (api/context "/valinta-tulos-service"  []
       :tags ["valinta-tulos-service-api"]

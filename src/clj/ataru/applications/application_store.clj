@@ -13,7 +13,6 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.util :refer [answers-by-key] :as util]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
-            [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.random :as crypto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -24,6 +23,7 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
+            [ataru.applications.application-util :as application-util]
             [ataru.config.core :refer [config]]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-2nd-language-value-to-lang]]
@@ -1339,16 +1339,6 @@
     (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
     :else               {:kieliKoodi "" :kieliTyyppi ""}))
 
-(defn- enrich-persons-from-onr [person-service applications]
-  (let [persons (person-service/get-persons person-service (map #(get % :person-oid) applications))]
-    (map #(let [person        (get persons (get % :person-oid))
-                parsed-person (person-service/parse-person % person)]
-            (assoc %
-                   :sukunimi      (get parsed-person :last-name)
-                   :etunimet      (get parsed-person :first-name)
-                   :henkilotunnus (get parsed-person :ssn)))
-         applications)))
-
 (defn valinta-ui-applications
   [query person-service]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -1380,7 +1370,7 @@
                                :hakukohde
                                :hakutoiveet
                                :answers]))
-         (enrich-persons-from-onr person-service)
+         (application-util/enrich-persons-from-onr person-service)
          (map #(dissoc % :answers))
          (map #(assoc % :asiointikieli (convert-asiointikieli (get % :asiointikieli)))))))
 
@@ -1840,6 +1830,10 @@
 
 (defn get-tutu-application
   [application-key]
-  (let [apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})]
-    (first apps)))
+  (first (exec-db :db queries/yesql-get-tutu-application {:oid application-key}))
+)
 
+(defn get-tutu-applications
+  [application-keys]
+  (exec-db :db queries/yesql-get-tutu-applications {:oids application-keys})
+)

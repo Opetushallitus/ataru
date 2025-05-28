@@ -3,6 +3,7 @@
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
+    [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-jobs :as email]
@@ -455,7 +456,9 @@
   (mass-inactivate-applications [this session application-keys reason-of-inactivation])
   (mass-reactivate-applications [this session application-keys reason-of-reactivation])
   (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
-  (valinta-ui-applications [this session query]))
+  (valinta-ui-applications [this session query])
+  (get-tutu-application [this application-key])
+  (get-tutu-applications [this application-keys]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -1066,7 +1069,25 @@
         application-keys
         reason-of-reactivation
         audit-logger)))
+
+  (get-tutu-application
+    [_ application-key]
+    (let
+      [application (application-store/get-tutu-application application-key)]
+      (when (not-empty application)
+        (first (application-util/enrich-persons-from-onr person-service [application]))
+      )
+    )
   )
+
+  (get-tutu-applications
+    [_ application-keys]
+    (let
+      [applications (application-store/get-tutu-applications application-keys)]
+      (application-util/enrich-persons-from-onr person-service applications)
+    )
+  )
+)
 
 (s/defn ^:always-validate query-applications-paged
   [application-service
