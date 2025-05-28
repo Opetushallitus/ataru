@@ -74,7 +74,7 @@
        (assoc-in-excel :fetching? false)
        (assoc-in-excel :error error))))
 
-(defn- get-included-ids [db]
+(defn- get-included-ids [db kk-application-payment-required?]
   (let [selected-mode (get-in-excel db :selected-mode)]
     (case selected-mode
       "with-defaults" (as-> (get-in-excel db :included-ids) $
@@ -85,7 +85,8 @@
                       (vals)
                       (filter :checked)
                       (filter #(empty? (:child-ids %))) ;Sisällytetään vain "lehti"-id:t, koska ylemmät tasot on ryhmittelyä
-                      (map :id))
+                      (map :id)
+                      (remove #(and (not kk-application-payment-required?) (= % "kk-payment-state"))))
       :else nil)))
 
 (reg-event-fx
@@ -94,17 +95,19 @@
    (when (not (get-in-excel db :fetching?))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in-excel db :selected-mode)
-           applications-sort (get-in db [:application :sort])]
+           applications-sort (get-in db [:application :sort])
+           http-request-params (dissoc params :kk-application-payment-required?)
+           kk-application-payment-required? (:kk-application-payment-required? params)]
        {:db   (-> db
                   (assoc-in-excel :error nil)
                   (assoc-in-excel :fetching? true))
         :http {:id                  :excel-download
                :method              :post
                :path                "/lomake-editori/api/applications/excel"
-               :params              (-> params
+               :params              (-> http-request-params
                                         (assoc? :application-keys application-keys)
                                         (assoc? :CSRF (cljs-util/csrf-token))
-                                        (assoc? :included-ids (get-included-ids db))
+                                        (assoc? :included-ids (get-included-ids db kk-application-payment-required?))
                                         (assoc? :export-mode selected-mode)
                                         (assoc? :sort-by-field (:order-by applications-sort))
                                         (assoc? :sort-order (:order applications-sort)))
