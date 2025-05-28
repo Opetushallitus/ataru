@@ -1825,12 +1825,7 @@
 
 (defn get-tutu-application
   [application-key]
-  (let
-    [
-      apps (exec-db :db queries/yesql-get-tutu-application {:oid application-key})
-    ]
-    (first apps)
-  )
+  (first (exec-db :db queries/yesql-get-tutu-application {:oid application-key}))
 )
 
 (defn get-tutu-applications
