@@ -184,9 +184,8 @@
                                            stub-true
                                            form-properties)))))
 
-(deftest test-get-filter-defs-wothout-payment-obligation
-  (let [input filter-defs
-        result (get-filter-defs-without-payment-obligation input)]
+(deftest test-get-filter-defs-without-payment-obligation
+  (let [result (get-filter-defs-without-payment-obligation filter-defs)]
     (testing "Should remove 'kk-payment-state' entry"
       (is (not (contains? result "kk-payment-state")))
       (is (= ["some-other-id"]
