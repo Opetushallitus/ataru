@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.excel-download.excel-utils-test
   (:require [ataru.excel-common :refer [form-field-belongs-to-hakukohde]]
-            [ataru.virkailija.application.excel-download.excel-utils :refer [get-excel-checkbox-filter-defs]]
+            [ataru.virkailija.application.excel-download.excel-utils :refer [get-excel-checkbox-filter-defs 
+                                                                             get-filter-defs-without-payment-obligation]]
             [cljs.test :refer-macros [deftest testing is]]))
 
 (def all-hakukohteet {"hakukohde.oid.1" {:oid "hakukohde.oid.1"
@@ -43,6 +44,30 @@
                                                                        {:id "itse-syotetty-additional-text-field2"
                                                                         :fieldClass "formField"
                                                                         :fieldType "textField"}]}]}]}]}])
+(def filter-defs
+  {"kk-payment-state" {:id "kk-payment-state"
+                       :index 20
+                       :label {:fi "Hakemusmaksun tila"
+                               :sv "Ansökningsavgiftens status"
+                               :en "Application fee state"}
+                       :checked true
+                       :parent-id "kasittelymerkinnat"
+                       :child-ids ()}
+
+   "kasittelymerkinnat" {:id "kasittelymerkinnat"
+                         :index 8
+                         :label {:fi "Käsittelymerkinnät"
+                                 :sv "Behandlingsmarkeringar"
+                                 :en "Processing notes"}
+                         :checked true
+                         :child-ids ["kk-payment-state" "some-other-id"]}
+
+   "some-other-id" {:id "some-other-id"
+                    :index 99
+                    :label {:fi "Jokin muu tieto"}
+                    :checked true
+                    :parent-id "kasittelymerkinnat"
+                    :child-ids ()}})
 
 (deftest test-get-excel-checkbox-filter-defs
   (testing "Show top-level form field without children"
@@ -158,3 +183,11 @@
            (get-excel-checkbox-filter-defs tutkinto-wrapper
                                            stub-true
                                            form-properties)))))
+
+(deftest test-get-filter-defs-without-payment-obligation
+  (let [result (get-filter-defs-without-payment-obligation filter-defs)]
+    (testing "Should remove 'kk-payment-state' entry"
+      (is (not (contains? result "kk-payment-state")))
+      (is (= ["some-other-id"]
+             (get-in result ["kasittelymerkinnat" :child-ids])))
+      (is (contains? result "some-other-id")))))

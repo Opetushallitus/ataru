@@ -68,3 +68,12 @@
     (map
      (fn [sibling-id] (boolean (get-in-excel db [:filters sibling-id :checked])))
      (:child-ids filter))))
+
+(defn get-filter-defs-without-payment-obligation [filter-defs]
+  (-> filter-defs
+      (dissoc "kk-payment-state")
+      (update "kasittelymerkinnat"
+              (fn [section]
+                (update section :child-ids
+                        (fn [ids]
+                          (vec (remove (fn [id] (= id "kk-payment-state")) ids))))))))

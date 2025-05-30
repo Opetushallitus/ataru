@@ -3,6 +3,7 @@
             [ataru.util :refer [assoc? from-multi-lang]]
             [ataru.virkailija.application.excel-download.excel-handlers]
             [ataru.virkailija.application.excel-download.excel-subs]
+            [ataru.virkailija.application.excel-download.excel-utils :refer [get-filter-defs-without-payment-obligation]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -76,6 +77,7 @@
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key (subscribe [:application/selected-form-key])
         virkailija-lang (subscribe [:editor/virkailija-lang])
+        kk-application-payment-required? @(subscribe [:application/kk-application-payment-haku-selected?])
         filters-initializing? @(subscribe [:application/excel-request-filters-initializing?])
         filters-need-initialization? @(subscribe [:application/excel-request-filters-need-initialization? @form-key selected-hakukohde selected-hakukohderyhma])]
     (when filters-need-initialization?
@@ -85,7 +87,10 @@
        [:i.zmdi.zmdi-spinner.spin]]
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
-        (let [filter-defs @(subscribe [:application/excel-request-filters])]
+        (let [all-filter-defs @(subscribe [:application/excel-request-filters])
+              filter-defs (if kk-application-payment-required?
+                            all-filter-defs
+                            (get-filter-defs-without-payment-obligation all-filter-defs))]
           (->> filter-defs
                (filter #(not (:parent-id (second %))))
                (vals)
@@ -137,7 +142,8 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
         excel-export-mode (subscribe [:application/excel-download-mode])
-        set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])]
+        set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])
+        kk-application-payment-required? @(subscribe [:application/kk-application-payment-haku-selected?])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
        [:a
@@ -173,7 +179,8 @@
                          (dispatch [:application/start-excel-download
                                     (-> {:filename filename}
                                         (assoc? :selected-hakukohde selected-hakukohde)
-                                        (assoc? :selected-hakukohderyhma selected-hakukohderyhma))]))}
+                                        (assoc? :selected-hakukohderyhma selected-hakukohderyhma)
+                                        (assoc? :kk-application-payment-required? kk-application-payment-required?))]))}
             [:span
              @(subscribe [:editor/virkailija-translation :load-excel])]
             (when (or @fetching-applications? @fetching-excel?)
