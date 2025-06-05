@@ -321,7 +321,7 @@
                       :session   session
                       :operation audit-log/operation-read})
       (-> application
-          (assoc :can-edit? (can-edit-application? tarjonta-service organization-service suoritus-service person-service session application rights-by-hakukohde))
+          (assoc :can-edit? (can-edit-application? organization-service tarjonta-service suoritus-service person-service session application rights-by-hakukohde))
           (assoc :rights-by-hakukohde (util/map-kv rights-by-hakukohde vec))
           remove-organization-oid))))
 
