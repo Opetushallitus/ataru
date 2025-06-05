@@ -18,3 +18,4 @@
   [haku]
   (some-> (:hakutapa-uri haku)
           (string/starts-with? hakutapa-jatkuva-haku)))
+

@@ -1,10 +1,12 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.suoritus.suoritus-client :as client]
+  (:require [ataru.applications.suoritus-filter :as suoritus-filter]
+            [ataru.tarjonta.haku :as haku]
+            [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
+            [ataru.suoritus.suoritus-client :as client]
+            [clj-time.format :as format]
             [com.stuartsierra.component :as component]
             [ataru.cache.cache-service :as cache]
-            [clojure.string :as string]
-            [clj-time.core :as time]
-            [clj-time.coerce :as coerce]))
+            [clojure.string :as string]))
 
 (defn- parse-opiskelija
   [opiskelija]
@@ -14,13 +16,22 @@
    :alkupaiva      (:alkuPaiva opiskelija)
    :loppupaiva     (:loppuPaiva opiskelija)})
 
+(defn- filter-by-jatkuva-haku-hakemus-hakukausi
+  [hakemus-datetime opiskelija]
+  (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime (:loppupaiva opiskelija)))
+
+(defn- filter-opiskelija-by-cutoff-timestamp
+  [cutoff-timestamp opiskelija]
+  (lahtokoulu-util/filter-opiskelija-by-cutoff-timestamp cutoff-timestamp (:alkupaiva opiskelija) (:loppupaiva opiskelija)))
+
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
   (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
-  (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot cutoff-timestamp]))
+  (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot])
+  (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
@@ -30,36 +41,48 @@
   SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [_ modified-since]
     (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client nil modified-since))
+
   (ylioppilas-tai-ammatillinen? [_ person-oid]
     (some #(= :valmis (:tila %))
           (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil)))
+
   (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi luokkatasot]
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)))
+
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot]
     (mapcat #(oppilaitoksen-opiskelijat this oppilaitos-oid % luokkatasot) vuodet))
+
   (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-luokat-cache cache-key)))
-  (opiskelijan-luokkatieto [_ henkilo-oid vuodet luokkatasot cutoff-timestamp]
-              ; If there's a cutoff timestamp given, only consider luokka data still ongoing on that date.
-              (let [cutoff-fn (fn [opiskelija]
-                                (let [start-date (coerce/from-string (:alkupaiva opiskelija))
-                                      end-date (coerce/from-string (:loppupaiva opiskelija))
-                                      cutoff-date (coerce/from-long cutoff-timestamp)]
-                                  (and (some? start-date)
-                                       (some? end-date)
-                                       (time/before? start-date cutoff-date)
-                                       (time/after? end-date cutoff-date))))
-                    cutoff-filter (if cutoff-timestamp cutoff-fn some?)]
-                (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) vuodet)
-                     (map parse-opiskelija)
-                     (filter #(contains? (set luokkatasot) (:luokkataso %)))
-                     (filter cutoff-filter)
-                     (sort-by :alkupaiva)
-                     (last)))))
+
+  (opiskelijan-luokkatieto [_ henkilo-oid vuodet luokkatasot]
+    (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) vuodet)
+         (map parse-opiskelija)
+         (filter #(contains? (set luokkatasot) (:luokkataso %)))
+         (sort-by :alkupaiva)
+         (last)))
+
+  (opiskelijan-luokkatieto-for-hakemus [_ henkilo-oid luokkatasot hakemus-datetime tarjonta-info]
+    (let [hakemus-datetime-formatted (format/parse (:date-time format/formatters) hakemus-datetime)
+          [hakuvuodet cutoff-filter] (cond (haku/jatkuva-haku? (:tarjonta tarjonta-info))
+                                           [(lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku hakemus-datetime-formatted)
+                                            (partial filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime-formatted)]
+                                           :else
+                                           (let [hakuvuosi (suoritus-filter/year-for-suoritus-filter hakemus-datetime-formatted)]
+                                             [[hakuvuosi]
+                                              (partial filter-opiskelija-by-cutoff-timestamp
+                                                       (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp hakuvuosi tarjonta-info))]))]
+      (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) hakuvuodet)
+           (map parse-opiskelija)
+           (filter #(contains? (set luokkatasot) (:luokkataso %)))
+           (filter cutoff-filter)
+           (sort-by :alkupaiva)
+           (last)))))
+
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
 
