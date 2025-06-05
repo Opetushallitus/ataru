@@ -366,6 +366,7 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
+  a.created_time,
   (SELECT organization_oid
    FROM forms
    WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
