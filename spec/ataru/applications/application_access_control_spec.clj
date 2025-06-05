@@ -132,6 +132,7 @@
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
       (should= 1 (count result))
       (should-contain "application-1-oid" (map :key result))))
+
   (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku"
     (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
           applications [{:created-time (f/parse (:date-time f/formatters) "2024-02-20T00:00:00.000Z") :key "application-1-oid" :person-oid "opiskelija-3-oid-kevat" :haku "jatkuva-haku"}
@@ -139,6 +140,7 @@
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
       (should= 1 (count result))
       (should-contain "application-1-oid" (map :key result))))
+
   (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku, application made in next year january"
       (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-2])
             applications [{:created-time (f/parse (:date-time f/formatters) "2025-01-20T00:00:00.000Z") :key "application-1-oid" :person-oid "opiskelija-4-oid-syksy" :haku "jatkuva-haku"}

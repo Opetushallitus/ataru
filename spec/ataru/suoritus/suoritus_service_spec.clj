@@ -51,6 +51,7 @@
     :core {:oppilaitosOid "1.1.111.111.111.111",
            :luokkataso "TELMA",
            :henkiloOid "1.123.123.123"}}
+
    {:id "cd9edf5c-c411-4610-8dfe-7cc1a753896d",
     :oppilaitosOid "1.2.222.222.222.222",
     :luokkataso "9",
@@ -62,6 +63,7 @@
     :core {:oppilaitosOid "1.2.222.222.222.222",
            :luokkataso "9",
            :henkiloOid "1.123.123.123"}}
+
    {:id "abcddf6c-b311-4110-1234-8cc1a753896d",
     :oppilaitosOid "1.3.333.333.333.333",
     :luokkataso "FOO",
@@ -73,6 +75,7 @@
     :core {:oppilaitosOid "1.3.333.333.333.333",
            :luokkataso "FOO",
            :henkiloOid "1.123.123.123"}}
+
    {:id "cccddf6c-b311-4110-1234-8cc1a753895a",
     :oppilaitosOid "1.5.555.555.555.555",
     :luokkataso "TELMA",
@@ -140,6 +143,7 @@
               (let [data (suoritus-service/opiskelijan-luokkatieto-for-hakemus service test-henkilo-oid test-luokkatasot "2019-03-02T00:00:00.000Z" yhteishaku-tarjonta)]
                 (should= nil
                          data)))
+
           (it "returns latest ongoing student class data for jatkuva haku in spring period"
                 (let [data (suoritus-service/opiskelijan-luokkatieto-for-hakemus service test-henkilo-oid test-luokkatasot "2023-08-02T00:00:00.000Z" jatkuva-haku-tarjonta)]
                   (should= {:oppilaitos-oid "1.2.222.222.222.222"
@@ -148,6 +152,7 @@
                             :alkupaiva "2020-08-11T21:00:00.000Z"
                             :loppupaiva "2023-06-02T21:00:00.000Z"}
                            data)))
+
           (it "returns latest ongoing student class data for jatkuva haku in autumn period"
                 (let [data (suoritus-service/opiskelijan-luokkatieto-for-hakemus service test-henkilo-oid test-luokkatasot "2025-01-15T00:00:00.000Z" jatkuva-haku-tarjonta)]
                   (should= {:oppilaitos-oid "1.5.555.555.555.555"
@@ -156,10 +161,12 @@
                             :alkupaiva "2024-01-05T00:00:00.000Z"
                             :loppupaiva "2024-12-05T21:00:00.000Z"}
                            data)))
+
           (it "doesn't return student class data if nothing matches to jatkuva haku in spring period"
               (let [data (suoritus-service/opiskelijan-luokkatieto-for-hakemus service test-henkilo-oid test-luokkatasot "2025-03-02T00:00:00.000Z" jatkuva-haku-tarjonta)]
                 (should= nil
                          data)))
+
           (it "doesn't return student class data if nothing matches to jatkuva haku in autumn period"
               (let [data (suoritus-service/opiskelijan-luokkatieto-for-hakemus service test-henkilo-oid test-luokkatasot "2023-09-02T00:00:00.000Z" jatkuva-haku-tarjonta)]
                 (should= nil
