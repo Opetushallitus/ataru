@@ -1,7 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
     [ataru.log.audit-log :as audit-log]
-    [taoensso.timbre :as log]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.tarjonta.haku :as haku]
     [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
