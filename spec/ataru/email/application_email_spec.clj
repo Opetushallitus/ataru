@@ -25,7 +25,8 @@
                                          get-attachment-type
                                          false
                                          nil
-                                         test-attachment-deadline-service)
+                                         test-attachment-deadline-service
+                                         nil)
             body    (:body email)]
         (should= ["tiina@testaaja.fi"] (:recipients email))
         (should= (str (:fi email/edit-email-subjects) " (Hakemusnumero: " (:key fixtures/application) ")") (:subject email))
@@ -51,7 +52,8 @@
                                          get-attachment-type
                                          false
                                          nil
-                                         test-attachment-deadline-service)
+                                         test-attachment-deadline-service
+                                         nil)
             body    (:body email)]
         (should= (str (:fi email/edit-email-subjects) " (Hakemusnumero: " (:key fixtures/application) ")") (:subject email))
         (should= true (str/includes? body "Lähetä liite osoitteeseen: Toimisto, Elintie 5, 00100 HELSINKI"))
@@ -79,7 +81,8 @@
                                          get-attachment-type
                                          false
                                          payment-url
-                                         test-attachment-deadline-service)
+                                         test-attachment-deadline-service
+                                         nil)
             body    (:body email)]
         (should= true (str/includes? body (str "href=\"" payment-url "\"")))
       ))
@@ -101,7 +104,8 @@
                                          get-attachment-type
                                          false
                                          nil
-                                         test-attachment-deadline-service)
+                                         test-attachment-deadline-service
+                                         nil)
             body    (:body email)]
           (should= (str (:fi email/edit-email-subjects) " (Hakemusnumero: " (:key fixtures/application) ")") (:subject email))
           (should= true (str/includes? body "Upload liite"))
@@ -125,7 +129,8 @@
                                        get-attachment-type
                                        false
                                        nil
-                                       test-attachment-deadline-service)
+                                       test-attachment-deadline-service
+                                       nil)
           body    (:body email)]
       (should= (str (:fi email/edit-email-subjects) " (Hakemusnumero: " (:key fixtures/application) ")") (:subject email))
       (should= false (str/includes? body "Upload liite"))
@@ -147,7 +152,8 @@
                                          get-attachment-type
                                          false
                                          nil
-                                         test-attachment-deadline-service)
+                                         test-attachment-deadline-service
+                                         nil)
             body    (:body email)]
         (should= (str (:fi email/edit-email-subjects) " (Hakemusnumero: " (:key fixtures/application) ")") (:subject email))
         (should= true (str/includes? body "Tai käytä: <a href=\"https://kauniit_puhtaat_hampaat-liitteena.fi\" target=\"_blank\" style=\"color: #0093C4;\" rel=\"noopener noreferrer\">https://kauniit_puhtaat_hampaat-liitteena.fi</a>")))))

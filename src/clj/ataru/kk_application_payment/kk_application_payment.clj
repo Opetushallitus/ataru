@@ -282,7 +282,7 @@
         haku-oid         (:haku application)
         haku             (tarjonta/get-haku tarjonta-service haku-oid)
         field-deadlines  (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
-        haku-grace-days  (attachment-deadline/get-haku-attachment-deadline-days attachment-deadline-service ohjausparametrit-service haku)
+        haku-grace-days  (attachment-deadline/get-attachment-deadline-days attachment-deadline-service ohjausparametrit-service haku)
         passed           (remove nil?
                                  (map (partial keep-if-deadline-passed
                                                field-deadlines haku haku-grace-days now) field-reviews))]

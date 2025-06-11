@@ -201,16 +201,18 @@
 
 (defn create-emails
   [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url
-   attachment-deadline-service]
+   attachment-deadline-service ohjausparametrit-service]
    (let [now                             (t/now)
          answers-by-key                  (-> application :answers util/answers-by-key)
          hakukohteet                     (:hakukohteet tarjonta-info)
          hakuajat                        (hakuaika/index-hakuajat hakukohteet)
+         haku                            (when-let [haku-oid (:haku-oid tarjonta-info)]
+                                           {:oid haku-oid})
          field-deadlines                 (->> (:key application)
                                               (attachment-deadline/get-field-deadlines attachment-deadline-service)
                                               (map #(dissoc % :last-modified))
                                               (util/group-by-first :field-id))
-         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines attachment-deadline-service)
+         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines attachment-deadline-service ohjausparametrit-service (:submitted application) haku)
          flat-form-fields                (util/flatten-form-fields (:content form))
          lang                            (keyword (:lang application))
          attachment-keys-without-answers (->> application-attachment-reviews
@@ -280,7 +282,7 @@
         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form) form-allows-ht?))
         get-attachment-type             (get-attachment-type-fn koodisto-cache)]
     (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url
-                   attachment-deadline-service)))
+                   attachment-deadline-service ohjausparametrit-service)))
 
 (defn create-submit-email [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian? payment-url]
   (create-emails-by-gathering-data attachment-deadline-service
