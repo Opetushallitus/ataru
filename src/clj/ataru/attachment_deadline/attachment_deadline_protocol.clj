@@ -3,5 +3,6 @@
 (defprotocol AttachmentDeadlineServiceProtocol
   (get-field-deadlines [this application-key])
   (get-field-deadlines-authorized [_ organization-service tarjonta-service audit-logger session application-key])
-  (get-haku-attachment-deadline-days [this ohjausparametrit-service haku])
-  (attachment-deadline-for-hakuaika [this hakuaika]))
+  (get-attachment-deadline-days [this haku])
+  (get-attachment-deadline-time [this haku])
+  (attachment-deadline-for-hakuaika [this application-submitted haku hakuaika]))

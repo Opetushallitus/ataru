@@ -273,7 +273,7 @@
       :query-params [role :- [form-role/FormRole]]
       :return ataru-schema/FormWithContent
       (if-let [form (form-service/fetch-form-by-key key role form-by-id-cache
-                                                    koodisto-cache nil false {} attachment-deadline-service)]
+                                                    koodisto-cache nil false {} attachment-deadline-service nil nil)]
         (response/ok form)
         (response/not-found {})))
     (api/POST "/feedback" []

@@ -6,7 +6,7 @@
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
             [clojure.string :as str]))
 
-(def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService ->MockOhjausparametritService))
+(def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
 
 (describe "application email"
   (it "creates email with hakutoiveet"

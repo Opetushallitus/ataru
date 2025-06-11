@@ -220,11 +220,13 @@
          answers-by-key                  (-> application :answers util/answers-by-key)
          hakukohteet                     (:hakukohteet tarjonta-info)
          hakuajat                        (hakuaika/index-hakuajat hakukohteet)
+         haku                            (when-let [haku-oid (:haku-oid tarjonta-info)]
+                                           {:oid haku-oid})
          field-deadlines                 (->> (:key application)
                                               (attachment-deadline/get-field-deadlines attachment-deadline-service)
                                               (map #(dissoc % :last-modified))
                                               (util/group-by-first :field-id))
-         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines attachment-deadline-service)
+         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines attachment-deadline-service (:submitted application) haku)
          flat-form-fields                (util/flatten-form-fields (:content form))
          lang                            (keyword (:lang application))
          attachment-keys-without-answers (->> application-attachment-reviews
