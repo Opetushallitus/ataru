@@ -93,7 +93,8 @@
                                          :ohjausparametrit-service
                                          :organization-service
                                          :tarjonta-service
-                                         :hakukohderyhma-settings-cache])
+                                         :hakukohderyhma-settings-cache
+                                         :attachment-deadline-service])
 
     :maksut-cas-client (cas/new-client (resolve-url :maksut-service)
                                        "auth/cas"

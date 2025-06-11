@@ -99,7 +99,10 @@
                                                                  nil
                                                                  false
                                                                  {}
-                                                                 attachment-deadline-service))
+                                                                 attachment-deadline-service
+                                                                 (:submitted application)
+                                                                 (when-let [haku-oid (:haku application)]
+                                                                   {:oid haku-oid})))
         validation-result             (when form (validator/valid-application?
                                                   koodisto-cache
                                                   false ; TODO: has-applied OK?
