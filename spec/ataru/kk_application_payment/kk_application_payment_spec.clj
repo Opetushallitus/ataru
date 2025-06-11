@@ -30,7 +30,11 @@
 
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (mock-tarjonta-service/->MockTarjontaKoutaService))
-(def fake-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService ->MockOhjausparametritService))
+
+(def fake-ohjausparametrit-service
+  (->MockOhjausparametritService))
+
+(def fake-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService fake-ohjausparametrit-service))
 
 (def fake-koodisto-cache (reify cache-service/Cache
                            (get-from [_ _])
@@ -48,9 +52,6 @@
                        (get-many-from [_ _])
                        (remove-from [_ _])
                        (clear-all [_])))
-
-(def fake-ohjausparametrit-service
-  (->MockOhjausparametritService))
 
 (declare conn)
 (defn- delete-states-and-events! []
@@ -206,8 +207,7 @@
 
 (defn update-exempt-payment [application-key]
   (let [changed         (:modified-payments
-                          (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                            fake-ohjausparametrit-service fake-person-service
+                          (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                             fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                             exempt-test-oid term-fall year-ok))
         payment (first (payment/get-raw-payments [application-key]))]
@@ -234,8 +234,7 @@
                                                       application-fixtures/application-without-hakemusmaksu-exemption
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
-                              states (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                       fake-ohjausparametrit-service fake-person-service
+                              states (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                        fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                        oid term-fall year-ok)]
                           (should= 0 (count states))))
@@ -249,8 +248,7 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-paid application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
@@ -272,8 +270,7 @@
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (:modified-payments
-                                        (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                          fake-ohjausparametrit-service fake-person-service
+                                        (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                           fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                           oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -296,8 +293,7 @@
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-ok-by-proxy application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
@@ -316,8 +312,7 @@
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
@@ -334,8 +329,7 @@
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
@@ -352,8 +346,7 @@
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
@@ -371,8 +364,7 @@
                                                                                {:person-oid oid}) nil)
                                 application-key (:key (application-store/get-application application-id))
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                           fake-ohjausparametrit-service fake-person-service
+                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                            fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                            oid term-fall year-ok))
                                 payment (first (payment/get-raw-payments [application-key]))]
@@ -396,8 +388,7 @@
                                 linked-application-key (:key (application-store/get-application (second application-ids)))
                                 _ (payment/set-application-fee-overdue linked-application-key nil)
                                 changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                           fake-ohjausparametrit-service fake-person-service
+                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                            fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                            oid term-fall year-ok))
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -645,8 +636,7 @@
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               primary-changed (first (filter #(= primary-application-key (:application-key %)) changed))
@@ -676,8 +666,7 @@
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -698,8 +687,7 @@
                               application-key (:key (application-store/get-application application-id))
                               _ (payment/set-application-fee-overdue application-key nil)
                               changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service
-                                                                                         fake-ohjausparametrit-service fake-person-service
+                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
                                                                                          oid term-fall year-ok))
                               payment (first (payment/get-raw-payments [application-key]))]
