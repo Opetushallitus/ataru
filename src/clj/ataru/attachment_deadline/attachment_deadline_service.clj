@@ -3,6 +3,7 @@
    [clj-time.core :as t]
    [clj-time.coerce :as c]
    [clj-time.format :as f]
+   [clojure.string :as s]
    [clojure.math :refer [signum]]
    [ataru.config.core :refer [config]]
    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
@@ -38,22 +39,47 @@
       r)
     :unauthorized))
 
-; TODO
-; (defn uses-per-application-deadline?
-;  "Returns true if the application uses per-application deadline, false for per-admission deadline"
-;  [_]
-;  false)
+(defn- ->boolean
+  [value]
+  (if (string? value)
+    (parse-boolean value)
+    value))
+
+(defn uses-per-application-deadline?
+  "Returns true if the application uses per-application deadline, false for per-admission deadline"
+  [ohjausparametrit]
+  (-> ohjausparametrit
+      :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa
+      ->boolean
+      true?))
 
 ; TODO: this needs to get application create / modify time as input
 ;       because in case of application-specific deadline, it's calculated based on that
-(defn- get-haku-attachment-deadline-days
+(defn- get-attachment-deadline-days
   [ohjausparametrit-service haku]
-  (let [default-grace-days (-> config
-                               :public-config
-                               (get :attachment-modify-grace-period-days 14))
-        ohjausparametrit   (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku))
-        custom-grace-days  (-> ohjausparametrit :PH_LMT :value)]
-    (or custom-grace-days default-grace-days)))
+  (when haku
+    (let [default-grace-days (-> config
+                                 :public-config
+                                 (get :attachment-modify-grace-period-days 14))
+          ohjausparametrit   (when (and haku ohjausparametrit-service)
+                               (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku)))
+          custom-grace-days  (if (uses-per-application-deadline? ohjausparametrit)
+                               (-> ohjausparametrit :liitteidenMuokkauksenHakemuskohtainenTakarajaPaivaa)
+                               (-> ohjausparametrit :PH_LMT :value))]
+      (or custom-grace-days default-grace-days))))
+
+(defn- get-attachment-deadline-time
+  [ohjausparametrit-service haku]
+  (when haku
+    (let [default-time      (-> config
+                                :public-config
+                                (get :attachment-modify-grace-period-time "15:00"))
+          ohjausparametrit  (when (and haku ohjausparametrit-service)
+                              (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku)))
+          custom-grace-time (if (uses-per-application-deadline? ohjausparametrit)
+                              (-> ohjausparametrit :liitteidenMuokkauksenHakemuskohtainenTakarajaKellonaika)
+                              (-> ohjausparametrit :liitteidenMuokkauksenHakukohtainenTakarajaKellonaika))]
+      (or custom-grace-time default-time))))
 
 (defn- new-formatter [fmt-str]
   (f/formatter fmt-str (t/time-zone-for-id "Europe/Helsinki")))
@@ -83,21 +109,37 @@
       :else
       modifier)))
 
-; TODO: this needs to get application create / modify time as input
-;       because in case of application-specific deadline, it's calculated based on that
-(defn- attachment-deadline-for-hakuaika [hakuaika]
+(defn- ->local-time [value]
+  (when (string? value)
+    (->> (s/split value #":")
+         (map #(int (parse-long %)))
+         (apply (fn [h m]
+                  (t/local-time h m))))))
+
+(defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
   (let [default-modify-grace-period (-> config
                                         :public-config
                                         (get :attachment-modify-grace-period-days 14))
-        modify-grace-period (or (:attachment-modify-grace-period-days hakuaika) default-modify-grace-period)
-        hakuaika-end (some-> hakuaika
-                             :end
-                             c/from-long)
-        attachment-end (some-> hakuaika-end
-                               (t/plus (t/days modify-grace-period)))]
-    (when attachment-end
-      (t/plus attachment-end (t/hours (winter-summertime-nullification-adjustment hakuaika-end attachment-end))))))
-
+        haku-settings-based-grace-period (get-attachment-deadline-days ohjausparametrit-service haku)
+        haku-settings-based-grace-period-time (get-attachment-deadline-time ohjausparametrit-service haku)
+        ohjausparametrit   (when (and haku ohjausparametrit-service)
+                             (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku)))
+        modify-grace-period (or (:attachment-modify-grace-period-days hakuaika)
+                                haku-settings-based-grace-period
+                                default-modify-grace-period)
+        attachment-grace-period-start (if (uses-per-application-deadline? ohjausparametrit)
+                                        application-submitted
+                                        (some-> hakuaika
+                                                :end
+                                                c/from-long))
+        attachment-grace-period-end (some-> attachment-grace-period-start
+                                            (t/plus (t/days modify-grace-period)))]
+    (when attachment-grace-period-end
+      (if haku-settings-based-grace-period-time
+        (.withTime (.withZone attachment-grace-period-end (t/time-zone-for-id "Europe/Helsinki"))
+                   (->local-time haku-settings-based-grace-period-time))
+        (t/plus attachment-grace-period-end
+                (t/hours (winter-summertime-nullification-adjustment attachment-grace-period-start attachment-grace-period-end)))))))
 
 (defrecord AttachmentDeadlineService [ohjausparametrit-service]
   component/Lifecycle
@@ -109,7 +151,9 @@
     (get-field-deadlines-authorized organization-service tarjonta-service audit-logger session application-key))
   (get-field-deadlines [_ application-key]
     (get-field-deadlines application-key))
-  (get-haku-attachment-deadline-days [_ ohjausparametrit-service haku]
-    (get-haku-attachment-deadline-days ohjausparametrit-service haku))
-  (attachment-deadline-for-hakuaika [_ hakuaika]
-    (attachment-deadline-for-hakuaika hakuaika)))
+  (get-attachment-deadline-days [_ haku]
+    (get-attachment-deadline-days ohjausparametrit-service haku))
+  (get-attachment-deadline-time [_ haku]
+    (get-attachment-deadline-time ohjausparametrit-service haku))
+  (attachment-deadline-for-hakuaika [_ application-submitted haku hakuaika]
+    (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika)))

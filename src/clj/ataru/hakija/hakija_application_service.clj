@@ -293,7 +293,9 @@
                                              form-roles
                                              use-toisen-asteen-yhteishaku-restrictions?
                                              has-overdue-payment?
-                                             attachment-deadline-service)
+                                             attachment-deadline-service
+                                             (:submitted application)
+                                             haku)
                                             (some? (:form application))
                                             (hakija-form-service/fetch-form-by-id
                                              (:form application)
@@ -303,7 +305,9 @@
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)
                                              field-deadlines
-                                             attachment-deadline-service))
+                                             attachment-deadline-service
+                                             (:submitted application)
+                                             haku))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -799,7 +803,8 @@
                                                                       form-roles
                                                                       (some? virkailija-oid-with-rewrite-secret)
                                                                       has-overdue-payment?
-                                                                      attachment-deadline-service)
+                                                                      attachment-deadline-service
+                                                                      (:submitted application))
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                       (->> application
                                                                            :form
@@ -811,7 +816,9 @@
                                                                       nil
                                                                       application-in-processing?
                                                                       field-deadlines
-                                                                      attachment-deadline-service))
+                                                                      attachment-deadline-service
+                                                                      (:submitted application)
+                                                                      nil))
         requested-tutkinto-levels  (tutkinto-util/koski-tutkinto-levels-in-form form)
         koski-tutkinnot            (future (when requested-tutkinto-levels
                                              (if (tutkinto-util/save-koski-tutkinnot? form)

@@ -277,13 +277,13 @@
 
 (defn- includes-fields-with-passed-deadlines?
   "Returns true when one or more of the fields in the input reviews have their deadlines passed / overdue"
-  [attachment-deadline-service tarjonta-service ohjausparametrit-service application field-reviews]
+  [attachment-deadline-service tarjonta-service application field-reviews]
   (let [now              (time/now)
         application-key  (:key application)
         haku-oid         (:haku application)
         haku             (tarjonta/get-haku tarjonta-service haku-oid)
         field-deadlines  (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
-        haku-grace-days  (attachment-deadline/get-haku-attachment-deadline-days attachment-deadline-service ohjausparametrit-service haku)
+        haku-grace-days  (attachment-deadline/get-attachment-deadline-days attachment-deadline-service haku)
         passed           (remove nil?
                                  (map (partial keep-if-deadline-passed
                                                field-deadlines haku haku-grace-days now) field-reviews))]
@@ -309,18 +309,18 @@
 (defn- attachments-invalid-and-deadline-passed?
   "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
    the applicant is not exempt by application even if the exemption question was answered as such."
-  [attachment-deadline-service tarjonta-service ohjausparametrit-service application]
+  [attachment-deadline-service tarjonta-service application]
   (when-let [invalid-field-reviews (seq (get-invalid-attachment-reviews (:key application)))]
     (includes-fields-with-passed-deadlines?
-     attachment-deadline-service tarjonta-service ohjausparametrit-service application invalid-field-reviews)))
+     attachment-deadline-service tarjonta-service application invalid-field-reviews)))
 
 (defn- exemption-in-application?
-  [attachment-deadline-service tarjonta-service ohjausparametrit-service application]
+  [attachment-deadline-service tarjonta-service application]
   (let [answers (util/application-answers-by-key application)]
     (when-let [exemption-answer (exemption-form-field-name answers)]
       (let [exempt-due-to-field? (contains? exemption-field-ok-values (:value exemption-answer))
             attachements-invalid-and-dl-passed? (attachments-invalid-and-deadline-passed?
-                                                 attachment-deadline-service tarjonta-service ohjausparametrit-service application)
+                                                 attachment-deadline-service tarjonta-service application)
             exempt? (and exempt-due-to-field?
                          (not attachements-invalid-and-dl-passed?))]
         (when exempt?
@@ -428,7 +428,7 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [attachment-deadline-service ohjausparametrit-service person-service tarjonta-service koodisto-cache get-haut-cache person-oid term year]
+  [attachment-deadline-service person-service tarjonta-service koodisto-cache get-haut-cache person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
@@ -454,7 +454,7 @@
                                             applications)
                 payment-state-set      (->> (vals payment-by-application) (map :state) set)
                 exempt-keys            (set (map :key (filter #(exemption-in-application?
-                                                                attachment-deadline-service tarjonta-service ohjausparametrit-service %) applications)))
+                                                                attachment-deadline-service tarjonta-service %) applications)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
                 is-eu-citizen?         (is-vtj-yksiloity-eu-citizen? koodisto-cache person)
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
