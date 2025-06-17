@@ -45,18 +45,14 @@
      ohjausparametrit-service
      haku-oid)))
 
-(defn- automatic-eligibility-if-ylioppilas-in-use?
-  [haku ohjausparametrit now]
-  (and (some? haku)
-       (:ylioppilastutkinto-antaa-hakukelpoisuuden? haku)
-       (if-let [automatic-eligibility-ends
-                (some-> (get-in ohjausparametrit [:PH_AHP :date])
-                        coerce/from-long)]
-         (or (time/before? now automatic-eligibility-ends)
-             (do (log/warn "PH_AHP" automatic-eligibility-ends
-                           "passed in haku" (:oid haku))
-                 false))
-         true)))
+(defn- automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use?
+  [haku ohjausparametrit application now]
+  (if-let [automatic-eligibility-ends (some-> (get-in ohjausparametrit [:PH_AHP :date]) coerce/from-long)]
+    (or (time/before? now automatic-eligibility-ends)
+        (do
+          (log/info "Haun " (:oid haku) " automaattinen hakukelpoisuuspäivämäärä " automatic-eligibility-ends " on ohitettu. Ei päivitetä hakemuksen " application " hakukelpoisuutta automaattisesti.")
+          false))
+    true))
 
 (defn- get-hakukohteet
   [tarjonta-service application]
@@ -163,31 +159,23 @@
    hakukohderyhmapalvelu-service
    hakukohderyhma-settings-cache]
   (if (is-tarjonta-haku? haku)
-    (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
-      (->> hakukohteet
-           (filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
-           (keep (fn [hakukohde]
-                   (if ylioppilas-tai-ammatillinen?
-                     {:from        "unreviewed"
-                      :to          "eligible"
-                      :application application
-                      :hakukohde   hakukohde}
-                     {:from        "eligible"
-                      :to          "unreviewed"
-                      :application application
-                      :hakukohde   hakukohde})))))
-    (doall
-      (map (fn [hakukohde]
-             (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
-               {:from        "unreviewed"
-                :to          "eligible"
-                :application application
-                :hakukohde   hakukohde}
-               {:from        "eligible"
-                :to          "unreviewed"
-                :application application
-                :hakukohde   hakukohde}))
-           hakukohteet))))
+    (log/info "Haku " (:oid haku) " on tarjonta-haku, ei tarkisteta hakemuksen " application " hakukelpoisuutta automaattisesti.")
+    (when (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use? haku ohjausparametrit application now)
+      (doall
+        (log/info "Haku " (:oid haku) " on kouta-haku, tarkistetaan hakemuksen " application " hakukelpoisuus automaattisesti.")
+        (map (fn [hakukohde]
+               (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
+                 (do
+                   (log/info "Haun " (:oid haku) " hakukohde " (:oid hakukohde) " on yo-amm-hakukelpoisuushakukohde, päivitetään hakemuksen " application " hakukelpoisuus automaattisesti.")
+                   {:from        "unreviewed"
+                    :to          "eligible"
+                    :application application
+                    :hakukohde   hakukohde})
+                 {:from        "eligible"
+                  :to          "unreviewed"
+                  :application application
+                  :hakukohde   hakukohde}))
+             hakukohteet)))))
 
 
 (defn start-automatic-eligibility-if-ylioppilas-job
