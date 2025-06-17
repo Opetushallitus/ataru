@@ -98,7 +98,7 @@
       (redis/map->Cache
         {:name          "oppilaitoksenopiskelijat"
          :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenopiskelijat] 3) TimeUnit/DAYS]
-         :refresh-after [1 TimeUnit/HOURS]
+         :refresh-after [12 TimeUnit/HOURS]
          :lock-timeout  [60 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :oppilaitoksen-opiskelijat-cache-loader})]
@@ -111,7 +111,7 @@
       (redis/map->Cache
         {:name          "oppilaitoksenluokat"
          :ttl           [(get-in config [:cache :ttl-amounts :oppilaitoksenluokat] 3) TimeUnit/DAYS]
-         :refresh-after [1 TimeUnit/HOURS]
+         :refresh-after [12 TimeUnit/HOURS]
          :lock-timeout  [60 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :oppilaitoksen-luokat-cache-loader})]
