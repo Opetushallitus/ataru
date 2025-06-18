@@ -326,7 +326,6 @@
                                             (should= "yesql-get-tutu-application-versions-with-events" (-> query-fn .meta :name))
                                             (should= {:application_key "9d24af7d-f672-4c0e-870f-aaab"} params)
                                             fixtures/tutu-application-changes-with-events)
-                            ;queries/yesql-get-tutu-application-versions-with-events (fn [_] )
                              forms/get-form-by-application (fn [_] form-fixtures/version-test-form)]
                 (should== [{:type "updated-by-virkailija",
                             :virkailijaOid "1.2.246.562.198.17462461207",
