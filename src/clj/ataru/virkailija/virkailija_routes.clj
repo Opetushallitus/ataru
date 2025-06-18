@@ -1955,6 +1955,20 @@
             (response/ok application)
             (response/not-found)))
 
+        (api/GET "/:application-key/changes" {session :session}
+          :summary "Get changes made to a tutu-application in version x"
+          :path-params [application-key :- s/Str]
+          :return [s/Any]
+          (if-let [result (application-service/get-tutu-application-version-changes
+                            application-service
+                            koodisto-cache
+                            session
+                            application-key)]
+            (response/ok result)
+            (response/unauthorized {:error (str "Tutu-hakemuksen "
+                                                application-key
+                                                " käsittely ei ole sallittu")})))
+
         (api/POST "/hakemukset" {session :session}
           :summary "Get tutu-applications by a list of OID:s"
           :body-params [hakemusOids :- [s/Str]]

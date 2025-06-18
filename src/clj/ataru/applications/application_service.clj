@@ -458,7 +458,8 @@
   (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
   (valinta-ui-applications [this session query])
   (get-tutu-application [this application-key])
-  (get-tutu-applications [this application-keys]))
+  (get-tutu-applications [this application-keys])
+  (get-tutu-application-version-changes [this koodisto-cache session application-key]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -1075,19 +1076,25 @@
     (let
       [application (application-store/get-tutu-application application-key)]
       (when (not-empty application)
-        (first (application-util/enrich-persons-from-onr person-service [application]))
-      )
-    )
-  )
+        (first (application-util/enrich-persons-from-onr person-service [application])))))
 
   (get-tutu-applications
     [_ application-keys]
     (let
       [applications (application-store/get-tutu-applications application-keys)]
-      (application-util/enrich-persons-from-onr person-service applications)
-    )
-  )
-)
+      (application-util/enrich-persons-from-onr person-service applications)))
+
+  (get-tutu-application-version-changes
+    [_ koodisto-cache session application-key]
+    (when (aac/application-view-authorized?
+            organization-service
+            tarjonta-service
+            suoritus-service
+            person-service
+            session
+            application-key)
+      (application-store/get-tutu-application-version-changes koodisto-cache
+                                                         application-key))))
 
 (s/defn ^:always-validate query-applications-paged
   [application-service

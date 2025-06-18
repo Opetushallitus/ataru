@@ -1514,3 +1514,18 @@ FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
 WHERE a.person_oid IS NOT NULL
 AND a.key in (:oids);
+
+--name: yesql-get-tutu-application-versions-with-events
+SELECT
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    a.form_id,
+    ae.virkailija_oid,
+    ae.time AS event_time,
+    ae.event_type as event_type
+FROM applications AS a
+         LEFT JOIN application_events AS ae
+                   ON ae.time = a.created_time
+WHERE a.key = :application_key
+ORDER BY a.id ASC;

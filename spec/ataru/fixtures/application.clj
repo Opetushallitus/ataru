@@ -269,6 +269,25 @@
                 {:key "gender" :value "1" :fieldType "dropdown" :label {:fi "Sukupuoli" :sv "Kön"}}
                 {:key "birth-date" :value "1.1.2001" :fieldType "textField" :label {:fi "Syntymäaika"}}]})
 
+(def tutu-application-changes-with-events
+  [{:form_id      9999
+    :content      {:answers
+                  [{:key       "G__119"
+                    :label     {:fi "Eka kysymys"}
+                    :value     "a"
+                    :fieldType "textField"}
+                   ]}}
+  {:form_id      9999
+   :content      {:answers
+                  [{:key       "G__119"
+                    :label     {:fi "Eka kysymys"}
+                    :value     "b"
+                    :fieldType "textField"}
+                   ]}
+   :event_type "updated-by-virkailija",
+   :virkailija_oid "1.2.246.562.198.17462461207",
+   :event_time "2016-06-17T07:15:00.000Z"}])
+
 (def person-info-form-application
   (-> person-info-form-application-without-kk-application-answer
       (update :answers

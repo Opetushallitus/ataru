@@ -317,3 +317,20 @@
                                   :review_key "payment-obligation"
                                   :application_key application-key
                                   :event_type "payment-obligation-automatically-changed"})))))
+
+(describe "getting tutu-application edit history"
+          (tags :unit :versions)
+          (it "should get tutu application history"
+              (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                            (should= :db ds-key)
+                                            (should= "yesql-get-tutu-application-versions-with-events" (-> query-fn .meta :name))
+                                            (should= {:application_key "9d24af7d-f672-4c0e-870f-aaab"} params)
+                                            fixtures/tutu-application-changes-with-events)
+                             forms/get-form-by-application (fn [_] form-fixtures/version-test-form)]
+                (should== [{:type "updated-by-virkailija",
+                            :virkailijaOid "1.2.246.562.198.17462461207",
+                            :time "2016-06-17T07:15:00.000Z",
+                            :G__119 {:label "Eka kysymys"
+                                     :old   "a"
+                                     :new   "b"}}]
+                          (store/get-tutu-application-version-changes nil "9d24af7d-f672-4c0e-870f-aaab")))))
