@@ -20,6 +20,7 @@
 
 (defn extract-person-from-application [application]
   (let [email        (extract-field application "email")
+        eidas-id     (:eidas-id application)
         basic-fields {:yhteystieto    [{:yhteystietoTyyppi "YHTEYSTIETO_SAHKOPOSTI"
                                         :yhteystietoArvo   email}]
                       :etunimet       (extract-field application "first-name")
@@ -30,6 +31,9 @@
                       :asiointiKieli  {:kieliKoodi (:lang application)}
                       :kansalaisuus   (extract-nationalities (extract-field application "nationality"))
                       :henkiloTyyppi  "OPPIJA"}
+        basic-fields (if (some? eidas-id)
+                         (assoc basic-fields :eidas eidas-id)
+                         basic-fields)
         person-id    (extract-field application "ssn")]
     (if person-id
       (assoc

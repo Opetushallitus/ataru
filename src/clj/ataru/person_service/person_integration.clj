@@ -15,7 +15,8 @@
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
-   [yesql.core :refer [defqueries]])
+   [yesql.core :refer [defqueries]]
+   [ataru.constants :as constants])
   (:import [java.util.concurrent Executors TimeUnit]))
 
 (declare yesql-update-person-info-as-in-person!)
@@ -45,9 +46,14 @@
             application-id
             "to oppijanumerorekisteri")
   (try
-    (let [{:keys [status oid]} (person-service/create-or-find-person
+    (let [eidas-id (when (= (:tunnistautuminen application) constants/auth-type-eidas)
+                    (application-store/get-eidas-id (:key application)))
+          enriched-application (if (some? eidas-id)
+                                   (merge application {:eidas-id eidas-id})
+                                   application)
+          {:keys [status oid]} (person-service/create-or-find-person
                                  person-service
-                                 application)]
+                                 enriched-application)]
       (match status
              :created
              (log/info "Added person" oid "to oppijanumerorekisteri")

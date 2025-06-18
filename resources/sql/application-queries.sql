@@ -325,6 +325,11 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
 
+-- name: yesql-get-eidas-id
+SELECT a.tunnistautuminen->'session'->'data'->>'eidas-id' AS eidas_id FROM applications AS a
+    WHERE a.key = :application_key
+    ORDER BY a.id DESC LIMIT 1;
+
 -- name: yesql-get-latest-application-by-key
 SELECT
   a.id,

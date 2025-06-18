@@ -16,4 +16,5 @@
    (s/optional-key :syntymaaika)     (s/maybe s/Str)
    (s/optional-key :identifications) [{(s/required-key :idpEntityId) s/Str
                                        (s/required-key :identifier)  s/Str}]
-   :henkiloTyyppi                    s/Str})
+   :henkiloTyyppi                    s/Str
+   (s/optional-key :eidas)           (s/maybe s/Str)})
