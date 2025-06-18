@@ -1830,10 +1830,36 @@
 
 (defn get-tutu-application
   [application-key]
-  (first (exec-db :db queries/yesql-get-tutu-application {:oid application-key}))
-)
+  (first (exec-db :db queries/yesql-get-tutu-application {:oid application-key})))
 
 (defn get-tutu-applications
   [application-keys]
-  (exec-db :db queries/yesql-get-tutu-applications {:oids application-keys})
-)
+  (exec-db :db queries/yesql-get-tutu-applications {:oids application-keys}))
+
+(defn get-tutu-application-version-changes [koodisto-cache application-key]
+  (let [all-versions         (exec-db :db
+                                      queries/yesql-get-tutu-application-versions-with-events
+                                      {:application_key application-key})
+        all-versions-paired  (map vector all-versions (rest all-versions))
+        get-koodisto-options (partial koodisto/get-koodisto-options
+                                      koodisto-cache)]
+    (map (fn [[older-application newer-application]]
+           (let [older-version-answers (util/application-answers-by-key older-application)
+                 newer-version-answers (util/application-answers-by-key newer-application)
+                 answer-keys           (set (concat (keys older-version-answers) (keys newer-version-answers)))
+                 lang                  (or (-> newer-application :lang keyword) :fi)
+                 form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
+
+             (into {:type (-> newer-application :event_type)
+                    :virkailijaOid (-> newer-application :virkailija_oid)
+                    :time (-> newer-application :event_time)}
+
+                   (for [key   answer-keys
+                         :let  [old-value (-> older-version-answers key :value)
+                                new-value (-> newer-version-answers key :value)
+                                field     (key form-fields)]
+                         :when (not= old-value new-value)]
+                     {key {:label (-> field :label lang)
+                           :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
+                           :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
+         all-versions-paired)))
