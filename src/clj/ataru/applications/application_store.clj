@@ -613,7 +613,7 @@
        ->kebab-case-kw))
 
 (defn get-eidas-id [application-oid]
-  (->> (exec-db :db queries/yesql-get-eidas-id {:application_oid application-oid})
+  (->> (exec-db :db queries/yesql-get-eidas-id {:application_key application-oid})
        first
        ->kebab-case-kw))
 
