@@ -70,7 +70,10 @@
   PersonService
 
   (create-or-find-person [_ application]
-    (let [person (orpe/extract-person-from-application application)]
+    (let [person (orpe/extract-person-from-application application)
+          eidas-id (:eidas-id application)
+          eidas-identification (when (some? eidas-id)
+                                 [{:idpEntityId "eidas" :identifier eidas-id}])]
       (if (:eiSuomalaistaHetua person)
         (let [id (first (:identifications person))
               match-response (person-client/get-person-by-identification
@@ -85,15 +88,26 @@
                                oppijanumerorekisteri-cas-client
                                person)]
               (if (= :not-found (:status match-response))
-                (do
-                  (person-client/add-identification-to-person
-                    oppijanumerorekisteri-cas-client
-                    (:oid new-person) id)
-                  {:status :created-with-email-id :oid (:oid new-person)})
+                (if (nil? eidas-id)
+                  (do
+                    (person-client/add-identification-to-person
+                      oppijanumerorekisteri-cas-client
+                      (:oid new-person) id)
+                    {:status :created-with-email-id :oid (:oid new-person)})
+                  (do
+                    (person-client/add-identification-to-person
+                      oppijanumerorekisteri-cas-client
+                      (:oid new-person) eidas-identification)
+                    {:status :created-with-eidas-id :oid (:oid new-person)}))
                 {:status :dob-or-gender-conflict :oid (:oid new-person)}))))
-        (person-client/create-or-find-person
-          oppijanumerorekisteri-cas-client
-          person))))
+        (let [response (person-client/create-or-find-person
+                        oppijanumerorekisteri-cas-client
+                        person)]
+          (when (some? eidas-id)
+            (person-client/add-identification-to-person
+              oppijanumerorekisteri-cas-client
+              (:oid response) eidas-identification))
+          response))))
 
   (get-persons [_ oids] (cache/get-many-from henkilo-cache oids))
 

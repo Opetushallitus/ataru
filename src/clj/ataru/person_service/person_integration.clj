@@ -72,7 +72,10 @@
                                                          :event-type      "person-dob-or-gender-conflict"}
                                                         nil))
              :created-with-email-id
-             (log/info "Added person" oid "with email identification to oppijanumerorekisteri"))
+             (log/info "Added person" oid "with email identification to oppijanumerorekisteri")
+
+             :created-with-eidas-id
+             (log/info "Added person" oid "with eidas identification to oppijanumerorekisteri"))
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
