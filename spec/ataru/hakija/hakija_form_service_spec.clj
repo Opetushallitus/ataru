@@ -5,7 +5,7 @@
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
 
-(def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService ->MockOhjausparametritService))
+(def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
 
 (def now (time/local-date-time 2020 10 14 4 3 27 456))
 (def past-date (time/local-date-time 1986 10 14 4 3 27 456))
