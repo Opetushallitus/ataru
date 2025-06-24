@@ -2,6 +2,7 @@
   (:require [clj-time.coerce :as coerce]
             [clj-time.core :as t]
             [com.stuartsierra.component :as component]
+            [ataru.constants :refer [hakutapa-jatkuva-haku]]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]))
@@ -238,7 +239,11 @@
                                                 :hakuaikas                   [{:hakuaikaId "10291885",
                                                                                :alkuPvm    (coerce/to-long (t/date-time 2025 1 1 8 0)),
                                                                                :loppuPvm   (coerce/to-long (t/date-time 2025 2 8 0 0)),
-                                                                               :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})})
+                                                                               :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})
+   :jatkuva-haku                             (merge
+                                               base-haku
+                                               {:oid                 "jatkuva-haku"
+                                                :hakutapaUri         hakutapa-jatkuva-haku})})
 
 (def hakukohde
   {:1.2.246.562.20.49028196522             base-hakukohde
