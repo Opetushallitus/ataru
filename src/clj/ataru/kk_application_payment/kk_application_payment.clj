@@ -16,6 +16,7 @@
             [ataru.kk-application-payment.utils :as utils]
             [ataru.config.core :refer [config]]
             [clj-time.format :as time-format]
+            [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [ataru.component-data.kk-application-payment-module :as payment-module])
   (:import (org.joda.time DateTime)))
@@ -261,8 +262,19 @@
 (defn- is-finnish-citizen? [person]
   (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
+(defn- time-is-before-some-attachment-deadlines?
+  [attachment-deadline-service application-submitted haku now]
+  (let [hakuajat             (if-let [hakuajat (:hakuajat haku)]
+                               hakuajat
+                               [{:end (coerce/from-long (get-in haku [:hakuaika :end]))}])
+        attachment-deadlines (map
+                               #(attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
+                               hakuajat)]
+    (boolean
+      (some #(not (time/before? % now)) attachment-deadlines))))
+
 (defn- keep-if-deadline-passed
-  [field-deadlines haku haku-grace-days now review]
+  [attachment-deadline-service field-deadlines haku now application-submitted review]
   (let [id             (:attachment-key review)
         field-deadline (some->> field-deadlines
                                 (filter #(= id (:field-id %)))
@@ -270,7 +282,7 @@
                                 :deadline)
         passed         (if (some? field-deadline)
                          (time/after? now field-deadline)
-                         (not (utils/time-is-before-some-hakuaika-grace-period? haku haku-grace-days now)))]
+                         (not (time-is-before-some-attachment-deadlines? attachment-deadline-service application-submitted haku now)))]
     (when passed
       review)))
 
@@ -280,12 +292,12 @@
   (let [now              (time/now)
         application-key  (:key application)
         haku-oid         (:haku application)
+        application-submitted (:submitted application)
         haku             (tarjonta/get-haku tarjonta-service haku-oid)
         field-deadlines  (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
-        haku-grace-days  (attachment-deadline/get-attachment-deadline-days attachment-deadline-service haku)
         passed           (remove nil?
                                  (map (partial keep-if-deadline-passed
-                                               field-deadlines haku haku-grace-days now) field-reviews))]
+                                               attachment-deadline-service field-deadlines haku now application-submitted) field-reviews))]
     (when (seq passed)
       (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
       true)))
