@@ -61,7 +61,7 @@
              (log/info "Person" oid "already existed in oppijanumerorekisteri")
              :found-matching
              (do
-               (log/info "Found person" oid "with matching email, date of birth and gender")
+               (log/info "Found person" oid "with matching email or eidas-id, date of birth and gender")
                (application-store/add-application-event {:application-key (:key application)
                                                          :event-type      "person-found-matching"}
                                                         nil))
