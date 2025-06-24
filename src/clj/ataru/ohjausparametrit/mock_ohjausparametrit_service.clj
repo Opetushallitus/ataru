@@ -20,7 +20,9 @@
      :target         "1.2.246.562.29.75477542726",
      :PH_VTJH        {:dateStart nil, :dateEnd nil},
      :PH_IP          {:date nil},
-     :PH_LMT         (if (= haku-oid "payment-info-test-kk-haku-custom-grace") {:value 10000} {:value 10})
+     :PH_LMT         (cond
+                       (= haku-oid "payment-info-test-kk-haku-custom-grace") {:value 10000}
+                       (= haku-oid "hakukohtainen-raja-käytössä") {:value 20})
      :synteettisetHakemukset (not (= haku-oid "1.2.246.562.29.12345678910"))
      :synteettisetLomakeavain (if (= haku-oid "1.2.246.562.29.12345678910") "" "synthetic-application-test-form")
      :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa (if (= haku-oid "hakemuskohtainen-raja-käytössä") true nil)
