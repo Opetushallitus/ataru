@@ -62,4 +62,5 @@
                    :editor-url      "http://localhost:8350/lomake-editori"
                    :liiteri-url     "https://virkailija.untuvaopintopolku.fi/liiteri"
                    :cas-oppija-url  ""
+                   :tutu-service-base-url ""
                    :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/oppija"}}
