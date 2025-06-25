@@ -6,8 +6,9 @@
   )
 )
 
-(def blanc-application {
+(def blank-application {
   :key nil
+  :form_id nil
   :person-oid nil
   :sukunimi nil
   :etunimet nil
@@ -30,7 +31,7 @@
     key
     person-oid
   ]
-  (assoc blanc-application
+  (assoc blank-application
     :key key
     :person-oid person-oid
   )
@@ -46,7 +47,7 @@
       henkilotunnus :henkilotunnus
     } expected]
     (should==
-      (assoc blanc-application
+      (assoc blank-application
         :key key
         :person-oid person-oid
         :sukunimi sukunimi
