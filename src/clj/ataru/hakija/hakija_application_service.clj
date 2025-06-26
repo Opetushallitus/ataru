@@ -211,6 +211,24 @@
 (def ^:private modified-time-format
   (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
 
+(defn flatten-keys [m]
+  (if (not (map? m))
+    {[] m}
+    (into {}
+          (for [[k v] m
+                [ks v'] (flatten-keys v)]
+            [(cons k ks) v']))))
+
+(defn validate-answers-for-malicious-input
+  "Returns a sequence of answers containing malicious input, such as null characters"
+  [answers]
+  (filter (fn [answer]
+            (let [flat-answer (flatten-keys answer)]
+              (some #(when (string? %)
+                      (re-find #"\u0000" %))
+                    (vals flat-answer))))
+          answers))
+
 (defn- log-late-submitted-application [application submitted-at session audit-logger]
   (audit-log/log audit-logger
                  {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
@@ -254,6 +272,7 @@
                                          [false (valid-virkailija-update-secret application)])
                                        [false (valid-virkailija-create-secret application)])
         latest-application            (application-store/get-latest-version-of-application-for-edit rewrite? application)
+        malicious-input-in-answers   (validate-answers-for-malicious-input (:answers application))
         form-roles                    (cond-> []
                                         (some? virkailija-secret)
                                         (conj :virkailija)
@@ -364,6 +383,12 @@
     (when (not-empty hakeminen-tunnistautuneena-validation-errors)
       (log/error "Error(s) when validating fields from oppija-session" oppija-session ":" (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
+      (seq malicious-input-in-answers)
+      {:passed? false
+       :failures malicious-input-in-answers
+       :key (:key latest-application)
+       :code :internal-server-error}
+
       (not-empty hakeminen-tunnistautuneena-validation-errors)
       {:passed? false
        :failures ["Supplied application answers do not match fields from oppija-session."]
