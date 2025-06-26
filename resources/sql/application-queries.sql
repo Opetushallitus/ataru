@@ -1446,6 +1446,7 @@ SELECT tutkinnot FROM application_koski_tutkinnot WHERE application_key = :key;
 --name: yesql-get-tutu-application
 SELECT
     a.key,
+    a.form_id,
     a.person_oid AS "person-oid",
     a.haku,
     a.hakukohde AS hakutoiveet,
@@ -1482,6 +1483,7 @@ AND a.key = :oid;
 
 --name: yesql-get-tutu-applications
 SELECT a.key,
+       a.form_id,
        a.person_oid                         AS "person-oid",
        a.haku,
        a.hakukohde                          AS hakutoiveet,
