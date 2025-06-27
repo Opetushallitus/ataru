@@ -65,7 +65,7 @@
   [ohjausparametrit]
   (let [default-time      (-> config
                               :public-config
-                              (get :attachment-modify-grace-period-time "15:00"))]
+                              (get :attachment-modify-grace-period-default-time "15:00"))]
     (if (uses-per-application-deadline? ohjausparametrit)
       (or (-> ohjausparametrit :liitteidenMuokkauksenHakemuskohtainenTakarajaKellonaika)
           default-time)
