@@ -63,7 +63,7 @@
                  :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
                  :tutu-payment-form-keys "{{ataru_tutu_payment_form_key}}"
                  :attachment-modify-grace-period-days 14
-                 :attachment-modify-grace-period-time "15:00"
+                 :attachment-modify-grace-period-default-time "15:00"
                  :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}
                  :attachment-preview-pages-to-display {{liiteri_attachment_preview_pages_to_display}}
