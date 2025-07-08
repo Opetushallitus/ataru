@@ -238,6 +238,8 @@
     (log/info (str "FTP transfer output for application-id " application-id " | exit-code: " (:exit r) " | out: " (:out r) " | err: " (:err r)))
     (log/info (str "FTP transfer log for application-id " application-id " | transfer log: \r\n" transfer-log))
     (log/info (str "FTP debug log for application-id " application-id " | debug log: \r\n" debug-log))
+    (io/delete-file ftp-debug-log-file true)
+    (io/delete-file ftp-transfer-log-file true)
     (when-not (zero? (:exit r))
       (throw (new RuntimeException (str "Writing file " filename " failed: "
                                         (:err r)))))))
