@@ -21,6 +21,7 @@
             [com.stuartsierra.component :as component]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.applications.application-store :as application-store]
+            [ataru.test-utils :refer [set-fixed-time]]
             [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
 
 (def test-person-oid
@@ -154,6 +155,7 @@
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
+                (set-fixed-time "2025-01-15T14:59:59")
                 (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                               application-fixtures/application-without-hakemusmaksu-exemption
                                               nil)

@@ -5,6 +5,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment-module-job :as payment-module-job]
+            [ataru.test-utils :refer [set-fixed-time]]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.component-data.person-info-module :refer [person-info-module-keys]]
@@ -36,6 +37,7 @@
 
           (it "inserts payment module to form for applicable haku"
               (init)
+              (set-fixed-time "2025-01-15T14:59:59")
               (payment-module-job/check-and-update ts [haku-key])
               (let [form  (form-store/fetch-by-key form-key)]
                 (should= 6 (count (:content form)))
@@ -62,6 +64,7 @@
 
           (it "does not reinsert payment module to form"
               (init)
+              (set-fixed-time "2025-01-15T14:59:59")
               (payment-module-job/check-and-update ts [haku-key])
               (payment-module-job/check-and-update ts [haku-key])
               (let [form  (form-store/fetch-by-key form-key)]
