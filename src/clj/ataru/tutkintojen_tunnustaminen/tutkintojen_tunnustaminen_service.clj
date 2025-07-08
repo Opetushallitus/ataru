@@ -209,14 +209,15 @@
 (defn- transfer
   [config filename message application-id]
   (let [stdin (new PipedInputStream)
-        ftp-log-file (str "/tmp/asha-ftp-log-" application-id ".txt")
+        ftp-debug-log-file (str "/tmp/asha-ftp-debug-log-" application-id ".txt")
+        ftp-transfer-log-file (str "/tmp/asha-ftp-debug-log-" application-id ".txt")
         emit  (future
                 (with-open [w (new OutputStreamWriter (new PipedOutputStream stdin) "UTF-8")]
                   (xml/emit message w)))
         lftp  (future
-                (sh "lftp" "-v" "-c" (str "set log:file/xfer /dev/stdout"
+                (sh "lftp" "-vvv" "-c" (str (format "set log:file/xfer %s" ftp-transfer-log-file)
                                      "&& set xfer:log 1"
-                                     (format "&& debug -o %s" ftp-log-file)
+                                     (format "&& debug -t -o %s" ftp-debug-log-file)
                                      "&& set ftp:nop-interval 5"
                                      (format "&& open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
                                      (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
@@ -232,9 +233,11 @@
                   (future-cancel emit)
                   (future-cancel lftp)
                   {:exit 1 :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))
-        debug-log (slurp ftp-log-file)]
+        debug-log (slurp ftp-debug-log-file)
+        transfer-log (slurp ftp-transfer-log-file)]
     (log/info (str "FTP transfer output for application-id " application-id " | exit-code: " (:exit r) " | out: " (:out r) " | err: " (:err r)))
-    (log/info (str "FTP debug log for application-id " application-id " | debug: " debug-log))
+    (log/info (str "FTP transfer log for application-id " application-id " | transfer log: \r\n" transfer-log))
+    (log/info (str "FTP debug log for application-id " application-id " | debug log: \r\n" debug-log))
     (when-not (zero? (:exit r))
       (throw (new RuntimeException (str "Writing file " filename " failed: "
                                         (:err r)))))))
