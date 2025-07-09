@@ -1169,6 +1169,7 @@
             (do
               (maksut-store/add-payment-reminder
                 {:application-key reference
+                 :order-id (:order_id invoice)
                  :message message
                  :lang lang
                  :send-reminder-time
