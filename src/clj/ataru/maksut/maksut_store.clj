@@ -2,7 +2,9 @@
   (:require [ataru.db.db :as db]
             [camel-snake-kebab.core :refer [->kebab-case-keyword ->snake_case_keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [yesql.core :refer [defqueries]]))
+            [taoensso.timbre :as log]
+            [yesql.core :refer [defqueries]])
+  (:import (org.postgresql.util PSQLException)))
 
 (defqueries "sql/maksut-queries.sql")
 
@@ -13,6 +15,7 @@
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 (def ^:private ->snake-case-kw (partial transform-keys ->snake_case_keyword))
 
+(def unique-violation "23505")
 
 (defn- exec-db
   [ds-key query params]
@@ -34,7 +37,13 @@
     (->kebab-case-kw)))
 
 (defn add-payment-reminder [reminder]
-  (->> reminder
-    (->snake-case-kw)
-    (exec-db :db yesql-add-payment-reminder<!)
-    (->kebab-case-kw)))
+  (try
+    (->>
+      reminder
+      (->snake-case-kw)
+      (exec-db :db yesql-add-payment-reminder<!)
+      (->kebab-case-kw))
+    (catch PSQLException e
+      (if (= unique-violation (.getSQLState e))
+        (log/info "payment-reminder Unique Violation " reminder)
+        (throw e)))))
