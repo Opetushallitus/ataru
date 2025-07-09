@@ -17,12 +17,14 @@ INSERT INTO payment_reminders (
     application_key,
     message,
     lang,
-    send_reminder_time
+    send_reminder_time,
+    order_id
 ) VALUES (
     :application_key,
     :message,
     :lang,
-    :send_reminder_time
+    :send_reminder_time,
+    :order_id
 );
 
 -- name: yesql-set-reminder-handled!
