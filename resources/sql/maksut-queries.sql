@@ -6,3 +6,27 @@ WHERE a.form_id IN
                  WHERE f.key in (:form_keys)
                  OR f.properties->'payment'->>'type' IN ('payment-type-tutu', 'payment-type-astu'))
 AND (ahr.state IS NULL OR ahr.state IN ('unprocessed', 'decision-fee-outstanding'));
+
+-- name: yesql-get-payment-reminders
+SELECT * FROM payment_reminders
+    WHERE status IS NULL
+    AND send_reminder_time::date <= current_date;
+
+-- name: yesql-add-payment-reminder<!
+INSERT INTO payment_reminders (
+    application_key,
+    message,
+    lang,
+    send_reminder_time
+) VALUES (
+    :application_key,
+    :message,
+    :lang,
+    :send_reminder_time
+);
+
+-- name: yesql-set-reminder-handled!
+UPDATE IN payment_reminders
+    SET handled_at = now(),
+        status = :status
+    WHERE id = :id;

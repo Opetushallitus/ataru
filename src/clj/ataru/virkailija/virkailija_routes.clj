@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
+            [ataru.maksut.maksut-store :as maksut-store]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
@@ -1181,6 +1182,15 @@
                                             (str/join \.))
                              :order-id-prefix (:order-id-prefix metadata)})]
             (do
+              (maksut-store/add-payment-reminder
+                {:application-key reference
+                 :message message
+                 :lang lang
+                 :send-reminder-time
+                 (time/minus
+                   (apply time/date-time
+                          (map parse-long (str/split (:due_date invoice) #"-")))
+                   (time/days 7))})
               (log/warn "Review result" result)
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
