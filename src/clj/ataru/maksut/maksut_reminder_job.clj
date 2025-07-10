@@ -14,9 +14,17 @@
 
 (declare connection)
 
+(defn start-email-job [job-runner conn email]
+  (job/start-job job-runner
+                 conn
+                 (:type email-job/job-definition)
+                 email))
+
 (defn- handle-reminder [reminder {:keys [maksut-service] :as job-runner}]
   (log/info "Handling reminder for information request" (:id reminder))
-  (let [lasku (maksut-protocol/list-laskut-by-application-key maksut-service (:application-key reminder))]
+  (if-let [lasku (first
+                   (filter #(= (:order_id %) (:order-id reminder))
+                           (maksut-protocol/list-laskut-by-application-key maksut-service (:application-key reminder))))]
     (if (= :active (:status lasku))
       (let [lang (:lang reminder)
             metadata (:metadata lasku)
@@ -34,10 +42,7 @@
                      :reminder true})]
         (jdbc/with-db-transaction
           [connection {:datasource (db/get-datasource :db)}]
-          (job/start-job job-runner
-                         connection
-                         (:type email-job/job-definition)
-                         email)
+          (start-email-job job-runner connection email)
           (application-store/add-application-event-in-tx
             connection
             {:application-key (:application-key reminder)
@@ -45,14 +50,15 @@
              :review-key      (str (:order_id lasku))}
             nil)
           (maksut-store/set-reminder-handled-in-tx connection (:id reminder) :sent)))
-      (maksut-store/set-reminder-handled (:id reminder) (:status lasku)))))
+      (maksut-store/set-reminder-handled (:id reminder) (:status lasku)))
+    (log/warn "No invoice found for " reminder)))
 
 (defn handler [_ job-runner]
   (let [payment-reminders (maksut-store/get-payment-reminders)]
     (doseq [reminder payment-reminders]
       (handle-reminder reminder job-runner))))
 
-(def job-cron (get-in config [:public-config :payment-reminder-cron]))
+(def job-cron (get-in config [:jobs :payment-reminder-cron]))
 
 (def job-definition {:handler  handler
                      :type     (-> *ns* ns-name str)
