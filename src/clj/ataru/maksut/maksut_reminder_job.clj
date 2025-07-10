@@ -30,7 +30,8 @@
                      :due-date (->> (str/split (:due_date lasku) #"-")
                                     (reverse)
                                     (str/join \.))
-                     :order-id-prefix (:order-id-prefix metadata)})]
+                     :order-id-prefix (:order-id-prefix metadata)
+                     :reminder true})]
         (jdbc/with-db-transaction
           [connection {:datasource (db/get-datasource :db)}]
           (job/start-job job-runner
