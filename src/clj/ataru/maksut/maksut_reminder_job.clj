@@ -49,8 +49,8 @@
              :event-type      "payment-reminder-sent"
              :review-key      (str (:order_id lasku))}
             nil)
-          (maksut-store/set-reminder-handled-in-tx connection (:id reminder) :sent)))
-      (maksut-store/set-reminder-handled (:id reminder) (:status lasku)))
+          (maksut-store/set-reminder-handled-in-tx connection (:id reminder) "sent")))
+      (maksut-store/set-reminder-handled (:id reminder) (name (:status lasku))))
     (log/warn "No invoice found for " reminder)))
 
 (defn handler [_ job-runner]
