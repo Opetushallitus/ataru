@@ -20,36 +20,39 @@
                  (:type email-job/job-definition)
                  email))
 
+(defn- send-reminder [reminder lasku job-runner]
+  (let [lang (:lang reminder)
+        metadata (:metadata lasku)
+        email (application-email/create-decision-email
+                {:origin (:origin lasku)
+                 :message (:message reminder)
+                 :form-name (get-in metadata [:form-name (keyword lang)])
+                 :payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret lasku) lang)
+                 :amount (:amount lasku)
+                 :vat (:vat lasku)
+                 :due-date (->> (str/split (:due_date lasku) #"-")
+                                (reverse)
+                                (str/join \.))
+                 :order-id-prefix (:order-id-prefix metadata)
+                 :reminder true})]
+    (jdbc/with-db-transaction
+      [connection {:datasource (db/get-datasource :db)}]
+      (start-email-job job-runner connection email)
+      (application-store/add-application-event-in-tx
+        connection
+        {:application-key (:application-key reminder)
+         :event-type      "payment-reminder-sent"
+         :review-key      (str (:order_id lasku))}
+        nil)
+      (maksut-store/set-reminder-handled-in-tx connection (:id reminder) "sent"))))
+
 (defn- handle-reminder [reminder {:keys [maksut-service] :as job-runner}]
   (log/info "Handling reminder for information request" (:id reminder))
   (if-let [lasku (first
                    (filter #(= (:order_id %) (:order-id reminder))
                            (maksut-protocol/list-laskut-by-application-key maksut-service (:application-key reminder))))]
     (if (= :active (:status lasku))
-      (let [lang (:lang reminder)
-            metadata (:metadata lasku)
-            email (application-email/create-decision-email
-                    {:origin (:origin lasku)
-                     :message (:message reminder)
-                     :form-name (get-in metadata [:form-name (keyword lang)])
-                     :payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret lasku) lang)
-                     :amount (:amount lasku)
-                     :vat (:vat lasku)
-                     :due-date (->> (str/split (:due_date lasku) #"-")
-                                    (reverse)
-                                    (str/join \.))
-                     :order-id-prefix (:order-id-prefix metadata)
-                     :reminder true})]
-        (jdbc/with-db-transaction
-          [connection {:datasource (db/get-datasource :db)}]
-          (start-email-job job-runner connection email)
-          (application-store/add-application-event-in-tx
-            connection
-            {:application-key (:application-key reminder)
-             :event-type      "payment-reminder-sent"
-             :review-key      (str (:order_id lasku))}
-            nil)
-          (maksut-store/set-reminder-handled-in-tx connection (:id reminder) "sent")))
+      (send-reminder reminder lasku job-runner)
       (maksut-store/set-reminder-handled (:id reminder) (name (:status lasku))))
     (log/warn "No invoice found for " reminder)))
 
