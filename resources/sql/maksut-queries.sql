@@ -30,5 +30,5 @@ INSERT INTO payment_reminders (
 -- name: yesql-set-reminder-handled!
 UPDATE payment_reminders
     SET handled_at = now(),
-        status = :status
+        status = :status::payment_reminder_status
     WHERE id = :id;
