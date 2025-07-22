@@ -371,6 +371,16 @@
            :fieldType "textField"
            :label     {:fi "exxxtra" :sv ""}}))
 
+(def person-info-form-application-with-malicious-input
+  (-> person-info-form-application-without-kk-application-answer
+      (update :answers
+              (comp vec concat)
+              [{:key "kk-application-payment-option"
+                :value "6"
+                :fieldType "singleChoice"
+                :label {:fi "Hakemusmaksu vaihtoehdot"
+                        :en "I have the following document\u0000'"}}])))
+
 (def person-info-form-application-with-more-answers
   (-> person-info-form-application
       (merge {:id 555})
