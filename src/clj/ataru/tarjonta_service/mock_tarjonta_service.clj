@@ -403,7 +403,12 @@
                                 :koulutuskoodi-name   {:fi "Koulutuskoodi D"}
                                 :koulutusohjelma-name {:fi "Koulutusohjelma D"}
                                 :tutkintonimike-names [{:fi "Tutkintonimike D"}]
-                                :tarkenne             "Tarkenne D"}})
+                                :tarkenne             "Tarkenne D"}
+   :1.2.246.562.17.00000000000000006915 {:oid                  "1.2.246.562.17.00000000000000006915"
+                                         :koulutuskoodi-name   {:fi "Koulutuskoodi E"}
+                                         :koulutusohjelma-name {:fi "Koulutusohjelma E"}
+                                         :tutkintonimike-names [{:fi "Tutkintonimike E"}]
+                                         :tarkenne             "Tarkenne E"}})
 
 (defrecord MockTarjontaService []
   component/Lifecycle
