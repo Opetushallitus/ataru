@@ -231,7 +231,7 @@
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
-    :tutu-cas-client (cas/new-client "/tutu-backend" "j_spring_cas_security_check" "JSESSIONID"
+    :tutu-cas-client (cas/new-client "/tutu-backend/api/external" "j_spring_cas_security_check" "JSESSIONID"
                                      (-> config :public-config :virkailija-caller-id))
 
     :siirtotiedosto-client (new SiirtotiedostoPalvelu
