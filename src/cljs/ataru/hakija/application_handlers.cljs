@@ -1713,7 +1713,7 @@
           descendants          (->> (:children field-descriptor)
                                     autil/flatten-form-fields
                                     (filter autil/answerable?))
-          count-decremented    (-> db
+          count-decremented-db    (-> db
                                    (update-in [:application :ui id :count] dec)
                                    (update-in [:application :ui id] dissoc :mouse-over-remove-button))
           descendants-modified (reduce (fn [db child]
@@ -1722,15 +1722,33 @@
                                                (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
                                                (set-repeatable-field-value id)
-                                               (set-repeatable-application-field-top-level-valid id true))))
-                                       count-decremented
-                                       descendants)]
-      {:db         (field-visibility/set-field-visibility
-                    descendants-modified
-                    field-descriptor)
+                                               ;Set validator-processing for all children. These should be cleared by on-validated function in debounce-n-params.
+                                               (set-validator-processing id))))
+                                       count-decremented-db
+                                       descendants)
+          new-db (-> descendants-modified
+                     (field-visibility/set-field-visibility field-descriptor))
+          debounce-n-params (map (fn [child-descriptor]
+                                   (let [id     (keyword (:id child-descriptor))]
+                                     {:value                        (get-in new-db [:application :answers id :values])
+                                      :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
+                                      :answers-by-key               (get-in new-db [:application :answers])
+                                      :field-descriptor             child-descriptor
+                                      :editing?                     (get-in new-db [:application :editing?])
+                                      :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                                      :on-validated                 (fn [[valid? errors]]
+                                                                      (dispatch [:application/set-attachment-valid
+                                                                                 child-descriptor
+                                                                                 valid?
+                                                                                 errors]))}))
+                                 descendants)
+          ]
+      {:db         new-db
        :dispatch-n  (conj (mapv (fn [descendant]
-                           [:application/run-rules (:rules descendant)])
-                         descendants) [:application/handle-section-visibility-conditions])})))
+                                  [:application/run-rules (:rules descendant)])
+                                descendants)
+                      [:application/handle-section-visibility-conditions])
+       :validate-debounced-n debounce-n-params})))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
