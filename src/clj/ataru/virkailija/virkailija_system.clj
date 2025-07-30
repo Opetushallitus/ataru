@@ -310,6 +310,7 @@
                                      (boolean (get-in config [:jobs :enabled] true)))
                  [:form-by-id-cache
                   :ohjausparametrit-service
+                  :organization-service
                   :henkilo-cache
                   :koodisto-cache
                   :haku-cache

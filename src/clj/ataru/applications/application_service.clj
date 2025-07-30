@@ -660,7 +660,8 @@
         (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
           (email/start-decision-email-job
             job-runner
-            (assoc email-params :application-id application-id)))
+            (assoc email-params :application-id application-id
+                                :application-oid application-key)))
         (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
               events            (future (get-application-events organization-service application-key))]
           (util/remove-nil-values {:events            @events
