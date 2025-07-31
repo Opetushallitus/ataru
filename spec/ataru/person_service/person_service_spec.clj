@@ -6,6 +6,8 @@
 
 (def email "match@match.com")
 
+(def eidas-id "eidas123")
+
 (def email-answer
   {:key       "email",
    :value     email,
@@ -65,9 +67,12 @@
   {:lang "fi"
    :answers (concat shared-answers [ssn-answer])})
 
+(def application-with-eidas (assoc application-no-ssn :eidas-id eidas-id))
+
 (def service (person-service/map->IntegratedPersonService {}))
 
 (describe "Person service"
+
           (tags :unit :person-service)
           (with-stubs)
 
@@ -146,4 +151,35 @@
                                      {:with [:* {:idpEntityId "oppijaToken" :identifier email}]})
                 (should-have-invoked :add-identification
                                      {:with [:* "5.4.3.2.1" {:idpEntityId "oppijaToken" :identifier email}]})
+                (should-not-have-invoked :create-or-find)))
+
+          (it "finds person without ssn with eidas and uses that person"
+              (with-redefs [person-client/create-or-find-person (stub :create-or-find)
+                            person-client/add-identification-to-person (stub :add-identification)
+                            person-client/get-person-by-identification (stub :get-by-identification
+                                                                             {:return
+                                                                              {:status :found
+                                                                               :body {:oidHenkilo "1.2.3.4.6"}}})
+                            person-client/create-person (stub :create-person)]
+                (should= {:status :found-matching :oid "1.2.3.4.6"}
+                         (person-service/create-or-find-person service application-with-eidas))
+                (should-have-invoked :get-by-identification
+                                     {:with [:* {:idpEntityId "eidas" :identifier eidas-id}]})
+                (should-not-have-invoked :create-or-find)
+                (should-not-have-invoked :create-person)
+                (should-not-have-invoked :add-identification)))
+
+          (it "creates new person and adds eidas identification if no ssn and no person found with eidas"
+              (with-redefs [person-client/create-or-find-person (stub :create-or-find)
+                            person-client/add-identification-to-person (stub :add-identification)
+                            person-client/get-person-by-identification (stub :get-by-identification
+                                                                             {:return {:status :not-found :body nil}})
+                            person-client/create-person (stub :create-person
+                                                              {:return {:oid "5.4.3.2.2" :status :created}})]
+                (should= {:status :created-with-eidas-id :oid "5.4.3.2.2"}
+                         (person-service/create-or-find-person service application-with-eidas))
+                (should-have-invoked :get-by-identification
+                                     {:with [:* {:idpEntityId "eidas" :identifier eidas-id}]})
+                (should-have-invoked :add-identification
+                                     {:with [:* "5.4.3.2.2" {:idpEntityId "eidas" :identifier eidas-id}]})
                 (should-not-have-invoked :create-or-find))))
