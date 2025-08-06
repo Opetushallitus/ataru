@@ -32,7 +32,7 @@
                                 connection
                                 (:type email-job/job-definition)
                                 email))]
-    (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
+    (log/info "Started application confirmation email job (to viestinvälityspalvelu) with job id" job-id ":")
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
