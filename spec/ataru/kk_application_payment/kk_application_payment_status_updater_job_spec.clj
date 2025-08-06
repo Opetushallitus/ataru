@@ -23,7 +23,8 @@
             [com.stuartsierra.component :as component]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.applications.application-store :as application-store]
-            [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
+            [ataru.kk-application-payment.kk-application-payment-store :as payment-store])
+  (:import (org.joda.time DateTime DateTimeZone)))
 
 (def test-person-oid
   (:person-oid application-fixtures/application-without-hakemusmaksu-exemption))
@@ -161,7 +162,8 @@
               (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
 
           (it "should queue update for relevant haku"
-              (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
+              (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)
+                            time/now (fn [] (DateTime. 2025 7 1 12 0 0 0 (DateTimeZone/forID "Europe/Helsinki")))]
                 (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                               application-fixtures/application-without-hakemusmaksu-exemption
                                               nil)

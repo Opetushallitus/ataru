@@ -2,13 +2,15 @@
   (:require [ataru.forms.form-store :as form-store]
             [speclj.core :refer [it describe tags should= after]]
             [clojure.java.jdbc :as jdbc]
+            [clj-time.core :as time]
             [ataru.log.audit-log :as audit-log]
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment-module-job :as payment-module-job]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.component-data.person-info-module :refer [person-info-module-keys]]
-            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]))
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service])
+  (:import (org.joda.time DateTime DateTimeZone)))
 
 (def haku-key "payment-info-test-kk-haku-custom-form")
 (def non-kk-haku-key "payment-info-test-non-kk-haku-custom-form")
@@ -35,47 +37,50 @@
             (clean!))
 
           (it "inserts payment module to form for applicable haku"
-              (init)
-              (payment-module-job/check-and-update ts [haku-key])
-              (let [form  (form-store/fetch-by-key form-key)]
-                (should= 6 (count (:content form)))
-                (should= (:onr-kk-application-payment person-info-module-keys)
-                         (->> form
-                              :content
-                              (filter #(= (:module %) "person-info"))
-                              first
-                              :id))
-                (should= true (->> form
-                                 :content
-                                 (some #(= (:id %) kk-application-payment-wrapper-key))
-                                 boolean))))
-
-          (it "does not insert payment module to form as haku does not need it"
-              (init)
-              (payment-module-job/check-and-update ts [non-kk-haku-key])
-              (let [form  (form-store/fetch-by-key form-key)]
-                (should= 5 (count (:content form)))
-                (should= false (->> form
+              (with-redefs [time/now (fn [] (DateTime. 2025 6 1 12 0 0 0 (DateTimeZone/forID "Europe/Helsinki")))]
+                (init)
+                (payment-module-job/check-and-update ts [haku-key])
+                (let [form  (form-store/fetch-by-key form-key)]
+                  (should= 6 (count (:content form)))
+                  (should= (:onr-kk-application-payment person-info-module-keys)
+                           (->> form
+                                :content
+                                (filter #(= (:module %) "person-info"))
+                                first
+                                :id))
+                  (should= true (->> form
                                    :content
                                    (some #(= (:id %) kk-application-payment-wrapper-key))
-                                   boolean))))
+                                   boolean)))))
 
-          (it "does not reinsert payment module to form"
-              (init)
-              (payment-module-job/check-and-update ts [haku-key])
-              (payment-module-job/check-and-update ts [haku-key])
-              (let [form  (form-store/fetch-by-key form-key)]
-                (should= 6 (count (:content form)))
-                (should= (:onr-kk-application-payment person-info-module-keys)
-                         (->> form
-                              :content
-                              (filter #(= (:module %) "person-info"))
-                              first
-                              :id))
-                (should= true (->> form
-                                    :content
-                                    (some #(= (:id %) kk-application-payment-wrapper-key))
-                                    boolean)))))
+            (it "does not insert payment module to form as haku does not need it"
+                (with-redefs [time/now (fn [] (DateTime. 2025 6 1 12 0 0 0 (DateTimeZone/forID "Europe/Helsinki")))]
+                  (init)
+                  (payment-module-job/check-and-update ts [non-kk-haku-key])
+                  (let [form  (form-store/fetch-by-key form-key)]
+                    (should= 5 (count (:content form)))
+                    (should= false (->> form
+                                       :content
+                                       (some #(= (:id %) kk-application-payment-wrapper-key))
+                                       boolean)))))
+
+            (it "does not reinsert payment module to form"
+                (with-redefs [time/now (fn [] (DateTime. 2025 6 1 12 0 0 0 (DateTimeZone/forID "Europe/Helsinki")))]
+                  (init)
+                  (payment-module-job/check-and-update ts [haku-key])
+                  (payment-module-job/check-and-update ts [haku-key])
+                  (let [form  (form-store/fetch-by-key form-key)]
+                    (should= 6 (count (:content form)))
+                    (should= (:onr-kk-application-payment person-info-module-keys)
+                             (->> form
+                                  :content
+                                  (filter #(= (:module %) "person-info"))
+                                  first
+                                  :id))
+                    (should= true (->> form
+                                        :content
+                                        (some #(= (:id %) kk-application-payment-wrapper-key))
+                                        boolean))))))
 
 
 
