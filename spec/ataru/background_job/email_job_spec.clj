@@ -36,7 +36,7 @@
                                                 {:secret "bar" :mask "baz"}]
                                                {:foo ["bar" "baz"]
                                                 :x '("y")}
-                                               [{:privilege "APP_HAKEMUS_CRUD"
+                                               [{:privilege "APP_ATARU_HAKEMUS_CRUD"
                                                  :organization "1.2.246.562.10.00000000003"}
                                                 {:privilege "FOO"
                                                  :organization "1.2.246.562.10.00000000002"}]))
@@ -67,7 +67,7 @@
                          (.metadata @message))
                 (should= (Optional/of
                            (List/of
-                             (new KayttooikeusImpl (Optional/of "APP_HAKEMUS_CRUD") (Optional/of "1.2.246.562.10.00000000003"))
+                             (new KayttooikeusImpl (Optional/of "APP_ATARU_HAKEMUS_CRUD") (Optional/of "1.2.246.562.10.00000000003"))
                              (new KayttooikeusImpl (Optional/of "FOO") (Optional/of "1.2.246.562.10.00000000002"))
                              (new KayttooikeusImpl (Optional/of "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA") (Optional/of "1.2.246.562.10.00000000001"))))
                          (.kayttooikeusRajoitukset @message))))

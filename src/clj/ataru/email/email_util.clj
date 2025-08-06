@@ -27,7 +27,7 @@
 
 (defn ->hakemus-privileges [organization-oids]
   (map (fn [organization-oid]
-         {:privilege "APP_HAKEMUS_CRUD"
+         {:privilege "APP_ATARU_HAKEMUS_CRUD"
           :organization organization-oid})
        (or organization-oids [])))
 
