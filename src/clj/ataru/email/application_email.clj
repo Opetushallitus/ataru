@@ -110,7 +110,7 @@
            (flatten)
            (distinct)
            (keep identity)))
-    (when-let [organization-oid (forms/get-organization-oid-by-id (:form-id application))]
+    (when-let [organization-oid (forms/get-organization-oid-by-id (:form application))]
       (log/info "Form not connected to haku, using form's organization oid for email privileges" organization-oid)
       [organization-oid])))
 
