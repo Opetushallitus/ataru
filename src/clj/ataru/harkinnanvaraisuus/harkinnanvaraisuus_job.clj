@@ -129,19 +129,19 @@
 (defn- mark-do-not-check-processes
   [process-ids]
   (when (< 0 (count process-ids))
-    (log/debug (str "Merkataan " (count process-ids) " harkinnanvaraisuus-prosessia skippaamaan harkinnanvaraisuuden tarkistus"))
+    (log/info (str "Merkataan " (count process-ids) " harkinnanvaraisuus-prosessia skippaamaan harkinnanvaraisuuden tarkistus"))
     (store/mark-do-not-check-harkinnanvaraisuus-processes process-ids)))
 
 (defn- handle-processess-to-save
   [job-runner applications now]
   (when (< 0 (count applications))
-    (log/debug (str "Asetetaan " (count applications) " hakemusta tarkistetuksi harkinnanvaraisuuden osalta"))
+    (log/info (str "Asetetaan " (count applications) " hakemusta tarkistetuksi harkinnanvaraisuuden osalta"))
     (handle-harkinnanvaraisuus-processes-to-save job-runner applications now)))
 
 (defn- handle-yksiloimattomat-processes
   [applications checked-time]
   (when (< 0 (count applications))
-    (log/debug (str "Asetetaan " (count applications) " yksilöimatonta hakemusta käsitellyksi harkinnanvaraisuuden osalta, tarkistus tehdään kun hakemukset on yksilöity"))
+    (log/info (str "Asetetaan " (count applications) " yksilöimatonta hakemusta käsitellyksi harkinnanvaraisuuden osalta, tarkistus tehdään kun hakemukset on yksilöity"))
     (doall
       (for [app applications]
         (store/update-harkinnanvaraisuus-process (:id app) (:harkinnanvarainen-only? app) checked-time)))))
