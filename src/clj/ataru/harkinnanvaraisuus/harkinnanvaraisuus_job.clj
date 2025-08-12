@@ -191,9 +191,9 @@
         application-ids-to-check (->> applications-to-check
                                       (map #(:id %))
                                       (set))
-        _ (log/info (str "processids-where-check-can-be-skipped: " processids-where-check-can-be-skipped
-                         "processes-to-check: " processes-to-check
-                         "application-ids-to-check: " application-ids-to-check))
+        _ (log/info (str "processids-where-check-can-be-skipped: " (vec processids-where-check-can-be-skipped)
+                         ", processes-to-check: " (vec processes-to-check)
+                         ", application-ids-to-check: " (vec application-ids-to-check)))
         processes-that-can-be-skipped (->> processes
                                            (filter #(not (contains? application-ids-to-check (:application_id %))))
                                            (map #(:application_id %)))
