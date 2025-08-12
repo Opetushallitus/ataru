@@ -191,9 +191,6 @@
         application-ids-to-check (->> applications-to-check
                                       (map #(:id %))
                                       (set))
-        _ (log/info (str "processids-where-check-can-be-skipped: " (vec processids-where-check-can-be-skipped)
-                         ", processes-to-check: " (vec processes-to-check)
-                         ", application-ids-to-check: " (vec application-ids-to-check)))
         processes-that-can-be-skipped (->> processes
                                            (filter #(not (contains? application-ids-to-check (:application_id %))))
                                            (map #(:application_id %)))
@@ -211,6 +208,14 @@
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (remove #(not (contains? application-keys-to-check-set (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
+    (doseq [p processes-to-check]
+      (if-let [a (application-store/get-not-inactivated-application (:application_id p))]
+        (do
+          (log/info (str "application: " a))
+          (log/info (str "can-skip-recheck-for-yks-ma-ai: " (hutil/can-skip-recheck-for-yks-ma-ai a)))
+          (log/info (str "can-skip-checking-application-due-to-hakukohteet: "
+                         (can-skip-checking-application-due-to-hakukohteet tarjonta-service a))))
+        (log/info (str "inactive application: " (:application_id p)))))
     (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
     (handle-yksiloimattomat-processes applications-not-yksiloity now)
