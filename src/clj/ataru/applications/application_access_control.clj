@@ -116,27 +116,29 @@
 (defn- filter-non-jatkuvahaku-applications-by-lahtokoulu
   [suoritus-service person-service authorized-organization-oids applications]
   (let [vuosi (suoritus-filter/year-for-suoritus-filter (time/now))]
-    (filter
-      (fn [application]
-        (let [person-oid (:person-oid application)]
-          (some?
-            (get
-              (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids [vuosi])
-              person-oid))))
-        applications)))
+    (->> applications
+         (filter #(some? (:person-oid %)))
+         (filter
+           (fn [application]
+             (let [person-oid (:person-oid application)]
+               (some?
+                 (get
+                   (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids [vuosi])
+                    person-oid))))))))
 
 (defn- filter-jatkuvahaku-applications-by-lahtokoulu
   [suoritus-service person-service authorized-organization-oids applications]
-  (filter
-    (fn [application]
-      (let [person-oid (:person-oid application)
-            application-datetime (:created-time application)
-            vuodet (lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku application-datetime)
-            end-date (get
-                       (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids vuodet)
-                       person-oid)]
-        (and end-date (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi application-datetime end-date))))
-      applications))
+  (->> applications
+       (filter #(some? (:person-oid %)))
+       (filter
+         (fn [application]
+           (let [person-oid (:person-oid application)
+                application-datetime (:created-time application)
+                vuodet (lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku application-datetime)
+                end-date (get
+                           (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids vuodet)
+                           person-oid)]
+             (and end-date (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi application-datetime end-date)))))))
 
 (defn- filter-applications-by-lahtokoulu
   [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
