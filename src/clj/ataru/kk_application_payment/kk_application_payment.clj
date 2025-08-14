@@ -322,8 +322,18 @@
   [tarjonta-service ohjausparametrit-service application]
   (let [answers (util/application-answers-by-key application)]
     (when-let [exemption-answer (exemption-form-field-name answers)]
-      (and (contains? exemption-field-ok-values (:value exemption-answer))
-           (not (attachments-invalid-and-deadline-passed? tarjonta-service ohjausparametrit-service application))))))
+      (let [exempt-due-to-field? (contains? exemption-field-ok-values (:value exemption-answer))
+            attachements-invalid-and-dl-passed? (attachments-invalid-and-deadline-passed?
+                                                  tarjonta-service ohjausparametrit-service application)
+            exempt? (and exempt-due-to-field?
+                         (not attachements-invalid-and-dl-passed?))]
+        (when exempt?
+          (log/info "Application key" (:key application)
+                    "(person oid)" (:person-oid application)
+                    "is exempt: exempt-due-to-field?" exempt-due-to-field?
+                    "answer" exemption-answer
+                    "attachements-invalid-and-dl-passed?" attachements-invalid-and-dl-passed?))
+        exempt?))))
 
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
