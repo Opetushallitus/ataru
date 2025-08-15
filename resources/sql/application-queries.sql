@@ -1475,7 +1475,11 @@ SELECT
                                        'virkailijaOid', virkailija_oid))
      FROM application_review_notes arn
      WHERE arn.application_key = a.key
-       and arn.removed is null) AS "application-review-notes"
+       and arn.removed is null) AS "application-review-notes",
+    (SELECT MAX(ir.created_time)
+     FROM information_requests ir
+     WHERE ir.application_key = a.key
+       and ir.message_type = 'information-request') AS "information-request-timestamp"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
 WHERE a.person_oid IS NOT NULL
@@ -1512,7 +1516,11 @@ SELECT a.key,
                                           'virkailijaOid', virkailija_oid))
         FROM application_review_notes arn
         WHERE arn.application_key = a.key
-          and arn.removed is null)          AS "application-review-notes"
+          and arn.removed is null)          AS "application-review-notes",
+       (SELECT MAX(ir.created_time)
+        FROM information_requests ir
+        WHERE ir.application_key = a.key
+          and ir.message_type = 'information-request') AS "information-request-timestamp"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON ar.application_key = a.key
 WHERE a.person_oid IS NOT NULL
