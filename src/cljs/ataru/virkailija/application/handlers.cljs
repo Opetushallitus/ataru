@@ -241,7 +241,12 @@
                                           :options (keep #(when (second %) (first %)) (:options vals))
                                           :use-original-question (:use-original-question vals)
                                           :use-original-followup (:use-original-followup vals)})
-                                       question-answer-filter)]
+                                       question-answer-filter)
+         filters                  (if (and search-term (not haku) (not form) (not hakukohde) (not hakukohderyhma))
+                                    (merge (get-in db [:application :filters])
+                                           {:kk-application-payment
+                                            (initial-db/kk-application-payment-filter-all-enabled)})
+                                    (get-in db [:application :filters]))]
      (if (some identity [search-term form haku hakukohde hakukohderyhma])
        {:db            (assoc-in db [:application :fetching-applications?] true)
         :http          {:id                  :applications-list
@@ -253,7 +258,7 @@
                                                      :option-answers           option-answers
                                                      :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                                 :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                                :filters                      (get-in db [:application :filters])
+                                                                                :filters                      filters
                                                                                 :school-filter                (get-in db [:application :school-filter])
                                                                                 :classes-of-school            (get-in db [:application :classes-of-school])}}
                                                     search-term
