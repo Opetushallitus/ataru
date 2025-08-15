@@ -253,7 +253,11 @@
                                                      :option-answers           option-answers
                                                      :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                                 :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                                :filters                      (get-in db [:application :filters])
+                                                                                :filters                      (if (and search-term (not haku) (not form) (not hakukohde) (not hakukohderyhma))
+                                                                                                                (merge (get-in db [:application :filters])
+                                                                                                                       {:kk-application-payment
+                                                                                                                        initial-db/kk-application-payment-filter-all-enabled})
+                                                                                                                (get-in db [:application :filters]))
                                                                                 :school-filter                (get-in db [:application :school-filter])
                                                                                 :classes-of-school            (get-in db [:application :classes-of-school])}}
                                                     search-term
