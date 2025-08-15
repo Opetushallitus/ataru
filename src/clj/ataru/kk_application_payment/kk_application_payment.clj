@@ -295,9 +295,12 @@
         passed           (remove nil?
                                  (map (partial keep-if-deadline-passed
                                                field-deadlines haku haku-grace-days now) field-reviews))]
-    (when (seq passed)
-      (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
-      true)))
+    (if (seq passed)
+      (do
+        (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
+        true)
+      (log/info "Application" application-key "has not passed kk application deadlines: field-deadlines"
+                field-deadlines "haku-grace-days" haku-grace-days))))
 
 (defn- get-invalid-attachment-reviews
   "Returns reviews for those fields that are (still) in missing or incomplete state."
