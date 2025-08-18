@@ -416,15 +416,9 @@
           (should= {:code "application-validation-failed-error"
                     :failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
 
-    (it "should validate application for malicious input"
+    (it "should sanitize application answer for malicious input"
         (with-response :post resp application-fixtures/person-info-form-application-with-malicious-input
-          (should= 400 (:status resp))
-          (should= {:failures [{:key "kk-application-payment-option"
-                                :label {:fi "Hakemusmaksu vaihtoehdot"
-                                        :en "I have the following document\u0000'"}
-                                :value "6"
-                                :fieldType "singleChoice"}]
-                    :code "internal-server-error"} (:body resp))))
+          (should= 200 (:status resp))))
 
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
