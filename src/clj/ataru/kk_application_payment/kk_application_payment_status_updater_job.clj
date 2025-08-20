@@ -305,12 +305,12 @@
 (def updater-job-definition {:handler update-kk-payment-status-for-person-handler
                              :type    "kk-application-payment-person-status-update-job"})
 
-; This uses the same handler as the person updater job, but is only called from the daily scheduler job.
-; This way we get separate queues for the daily updates so that the person updater job is not blocked by
-; the daily updates.
+; This uses the same handler as the person updater job, but is only called from the twice a day scheduler job.
+; This way we get separate queues for the twice a day updates so that the person updater job is not blocked by
+; the twice a day updates.
 (def periodical-updater-job-definition {:handler update-kk-payment-status-for-person-handler
                                         :type    "kk-application-payment-periodical-person-status-update-job"})
 
 (def scheduler-job-definition {:handler  update-kk-payment-status-for-all-handler
                                :type     "kk-application-payment-status-update-scheduler-job"
-                               :schedule "0 6 * * *"})
+                               :schedule "0 6,18 * * *"})
