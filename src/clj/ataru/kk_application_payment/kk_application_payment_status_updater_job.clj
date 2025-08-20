@@ -313,4 +313,4 @@
 
 (def scheduler-job-definition {:handler  update-kk-payment-status-for-all-handler
                                :type     "kk-application-payment-status-update-scheduler-job"
-                               :schedule "0 6/12 * * *"})
+                               :schedule "0 6,18 * * *"})
