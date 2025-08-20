@@ -419,6 +419,10 @@
           (should= {:code "application-validation-failed-error"
                     :failures {:extra-answers ["extra-answer-key"]}} (:body resp))))
 
+    (it "should sanitize application answer for malicious input"
+        (with-response :post resp application-fixtures/person-info-form-application-with-malicious-input
+          (should= 200 (:status resp))))
+
     (add-failing-post-spec "should not validate form with blank required field" application-blank-required-field)
 
     (add-failing-post-spec "should not validate form with invalid email field" application-invalid-email-field)
