@@ -8,7 +8,6 @@
             [ataru.applications.application-store :as application-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
