@@ -448,9 +448,11 @@
                               (assoc-in [:application :fetching-applications?] true)
                               (assoc-in [:application :user-allowed-fetching?] true)
                               (assoc-in [:application :fetching-applications-errored?] false))
-                :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
-                                                                                                                     {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
-                                                                                                                    [:application/fetch-form-contents]]]}
+                :dispatch-debounced {:timeout 500
+                                     :id :reload-applications
+                                     :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
+                                                                                                                                          {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
+                                                                                                                                         [:application/fetch-form-contents]]]}}
          (some? (get-in db [:request-handles :applications-list]))
          (assoc :http-abort (get-in db [:request-handles :applications-list]))))
      {:db db
