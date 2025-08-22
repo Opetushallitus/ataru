@@ -161,8 +161,8 @@
   (if (is-tarjonta-haku? haku)
     (log/info "Haku " (:oid haku) " on tarjonta-haku, ei tarkisteta hakemuksen " application " hakukelpoisuutta automaattisesti.")
     (when (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use? haku ohjausparametrit application now)
+      (log/info "Haku " (:oid haku) " on kouta-haku, tarkistetaan hakemuksen " application " hakukelpoisuus automaattisesti.")
       (doall
-        (log/info "Haku " (:oid haku) " on kouta-haku, tarkistetaan hakemuksen " application " hakukelpoisuus automaattisesti.")
         (map (fn [hakukohde]
                (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
                  (do
