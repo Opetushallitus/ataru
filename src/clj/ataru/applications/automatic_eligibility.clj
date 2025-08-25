@@ -159,20 +159,31 @@
    hakukohderyhmapalvelu-service
    hakukohderyhma-settings-cache]
   (if (is-tarjonta-haku? haku)
-    (log/info "Haku " (:oid haku) " on tarjonta-haku, ei tarkisteta hakemuksen " application " hakukelpoisuutta automaattisesti.")
-    (when (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use? haku ohjausparametrit application now)
+    (log/info "Haku" (:oid haku) "on tarjonta-haku, ei tarkisteta"
+              "hakemuksen" application "hakukelpoisuutta automaattisesti.")
+    (when (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use?
+            haku ohjausparametrit application now)
+      (log/info "Haku" (:oid haku) "on kouta-haku, tarkistetaan"
+                "hakemuksen" application "hakukelpoisuus automaattisesti.")
       (doall
-        (log/info "Haku " (:oid haku) " on kouta-haku, tarkistetaan hakemuksen " application " hakukelpoisuus automaattisesti.")
         (map (fn [hakukohde]
-               (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
-                 (do
-                   (log/info "Haun " (:oid haku) " hakukohde " (:oid hakukohde) " on yo-amm-hakukelpoisuushakukohde, päivitetään hakemuksen " application " hakukelpoisuus automaattisesti.")
-                   {:from        "unreviewed"
-                    :to          "eligible"
-                    :application application
-                    :hakukohde   hakukohde})
-                 {:from        "eligible"
-                  :to          "unreviewed"
+               (let [yo-amm-hakukelpoisuushakukohde?
+                     (and ylioppilas-tai-ammatillinen?
+                          (automatic-eligibility-if-yo-amm-in-hakukohderyhma?
+                            hakukohde
+                            hakukohderyhmapalvelu-service
+                            hakukohderyhma-settings-cache))
+                     from-state (if yo-amm-hakukelpoisuushakukohde?
+                                  "unreviewed" "eligible")
+                     to-state (if yo-amm-hakukelpoisuushakukohde?
+                                "eligible" "unreviewed")]
+                 (when yo-amm-hakukelpoisuushakukohde?
+                   (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
+                             "on yo-amm-hakukelpoisuushakukohde,"
+                             "päivitetään hakemuksen" application
+                             "hakukelpoisuus automaattisesti."))
+                 {:from        from-state
+                  :to          to-state
                   :application application
                   :hakukohde   hakukohde}))
              hakukohteet)))))
