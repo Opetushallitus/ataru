@@ -193,6 +193,10 @@ check-ports:
 help:
 	@cat Makefile.md
 
+tags::
+	ctags -R --exclude=@.gitignore --exclude=node_modules \
+		--exclude='*.min.js' --exclude=/out .
+
 # ----------------
 # Test db management
 # ----------------
