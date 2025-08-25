@@ -46,7 +46,7 @@
                 (should= (Optional/of (new LahettajaImpl (Optional/of "Opetushallitus") (Optional/of "no@oph.fi")))
                          (.lahettaja @batch))
                 (should= (Optional/of "normaali") (.prioriteetti @batch))
-                (should= (Optional/of (int 730)) (.sailytysaika @batch))
+                (should= (Optional/of (int 1825)) (.sailytysaika @batch))
 
                 (should= (Optional/of "subj") (.otsikko @message))
                 (should= (Optional/of "body") (.sisalto @message))

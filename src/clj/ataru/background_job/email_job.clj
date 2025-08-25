@@ -61,7 +61,7 @@
                                               (.withLahettavaPalvelu "hakemuspalvelu")
                                               (.withLahettaja (Optional/of "Opetushallitus") from)
                                               (.withNormaaliPrioriteetti)
-                                              (.withSailytysaika 730)
+                                              (.withSailytysaika 1825)
                                               (.build))))
          viesti-response (-> client
                              (.luoViesti (-> (ViestinvalitysBuilder/viestiBuilder)
