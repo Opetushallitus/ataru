@@ -25,7 +25,7 @@
       (fn [builder recipient]
         (.withVastaanottaja builder (Optional/empty) recipient))
       (ViestinvalitysBuilder/vastaanottajatBuilder)
-      recipients)))
+      (distinct recipients))))
 
 (defn- maskit [masks]
   (.build
