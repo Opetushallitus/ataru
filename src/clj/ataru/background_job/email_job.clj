@@ -82,7 +82,14 @@
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-handler [{:keys [from recipients subject body masks metadata privileges]} _]
-  {:pre [(every? #(identity %) [from recipients subject body masks metadata privileges])]}
+  (when-not (every? #(identity %) [from recipients subject body masks metadata privileges])
+    (throw (Exception. (str "Required information not included in email: from " from
+                            ", recipients " recipients
+                            ", subject " subject
+                            ", body " body
+                            ", masks " masks
+                            ", metadata" metadata
+                            ", privileges" privileges))))
   (log/info "Trying to send email" subject "to" recipients "with metadata" metadata "and privileges" privileges
             "via viestinvälityspalvelu at address" (viestinvalityspalvelu-endpoint))
   (send-email from recipients subject body masks metadata privileges)
