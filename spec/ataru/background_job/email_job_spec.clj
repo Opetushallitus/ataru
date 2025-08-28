@@ -31,7 +31,7 @@
 
           (it "should return nil when sending is successful"
               (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
-                (should-be-nil (job/send-email "no@oph.fi" ["foo@bar.com" "baz@bar.com"] "subj" "body"
+                (should-be-nil (job/send-email "no@oph.fi" ["foo@bar.com" "foo@bar.com" "baz@bar.com"] "subj" "body"
                                                [{:secret "foo" :mask "****"}
                                                 {:secret "bar" :mask "baz"}]
                                                {:foo ["bar" "baz"]
