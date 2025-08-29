@@ -1,5 +1,6 @@
 (ns ataru.hakija.hakija-form-service
   (:require [ataru.cache.cache-service :as cache]
+            [ataru.util.deadline-util :as deadline]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.form-payment-info :as payment-info]
             [ataru.koodisto.koodisto :as koodisto]
@@ -67,16 +68,6 @@
               (fn [content]
                 (walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
-(defn- custom-deadline [field]
-  (get-in field [:params :deadline]))
-
-(def deadline-format (f/formatter "dd.MM.yyyy HH:mm" (time/time-zone-for-id "Europe/Helsinki")))
-
-(defn- editing-allowed-by-custom-deadline? [now field]
-  (some->> (custom-deadline field)
-           (f/parse deadline-format)
-           (time/before? now)))
-
 (defn- editing-allowed-by-hakuaika?
   [attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku]
   (let [hakuaika            (hakuaika/select-hakuaika-for-field now field hakuajat)
@@ -120,8 +111,8 @@
   (or (form-role/virkailija? roles)
       (cond (some? field-deadline)
             (time/before? now (:deadline field-deadline))
-            (custom-deadline field)
-            (editing-allowed-by-custom-deadline? now field)
+            (deadline/custom-deadline field)
+            (not (deadline/custom-deadline-passed? now field))
             :else
             (editing-allowed-by-hakuaika? attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku))))
 

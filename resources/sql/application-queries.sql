@@ -1421,6 +1421,7 @@ WHERE a.id in (:ids);
 --name: yesql-get-latest-applications-for-kk-payment-processing
 SELECT
   a.key,
+  a.form_id AS form,
   a.submitted,
   a.haku,
   a.hakukohde,
