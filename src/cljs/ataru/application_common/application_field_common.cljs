@@ -71,6 +71,43 @@
                             (aget 0)
                             .-scrollHeight)))
 
+(defn markdown-paragraph-2
+  ([md-text]
+   (markdown-paragraph-2 md-text false nil))
+  ([md-text collapse-enabled? application-identifier]
+   (let [collapsed        (reagent/atom true)
+         scroll-height    (reagent/atom nil)
+         lang             (re-frame/subscribe [:application/form-language])
+         sanitized-html (as-> md-text v
+                                    (md->html v
+                                              :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
+                                                                                transformer-vector
+                                                                                [add-link-target-prop]))
+                                    (.sanitize html-sanitizer v)
+                                    (.getTypedStringValue v))
+               collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
+      [:div.application__form-info-text
+             (if (and collapsable? @collapsed)
+               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
+                {:dangerouslySetInnerHTML {:__html sanitized-html}}]
+               [:div.application__form-info-text-inner
+                {:style                   {:height "auto"}
+                 :dangerouslySetInnerHTML {:__html sanitized-html}}])
+             (when collapsable?
+               [:button.application__form-info-text-collapse-button
+                {:on-click (fn [] (swap! collapsed not))}
+                (if @collapsed
+                  [:span (str (translations/get-hakija-translation
+                                :read-more
+                                @lang)
+                              " ")
+                   [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+                  [:span (str (translations/get-hakija-translation
+                                :read-less
+                                @lang)
+                              " ")
+                   [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])])))
+
 (defn markdown-paragraph
   ([md-text]
    (markdown-paragraph md-text false nil))
@@ -110,6 +147,9 @@
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
+           (prn "reagender-render")
+           (prn md-text)
+           (prn sanitized-html)
            [:div.application__form-info-text
             (if (and collapsable? @collapsed)
               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
