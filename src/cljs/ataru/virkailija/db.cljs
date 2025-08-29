@@ -54,6 +54,11 @@
                       :attachment-review-states          {}
                       :question-answer-filtering-options {}})
 
+(def kk-application-payment-filter-all-enabled
+  (into {} (->> (:kk-application-payment default-filters)
+                (keys)
+                (map (fn [k] {k true})))))
+
 (def default-db
   {:editor                     {:forms               nil
                                 :autosave            nil ; autosave stop function, see autosave.cljs
