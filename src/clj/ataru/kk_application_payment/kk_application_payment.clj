@@ -4,8 +4,11 @@
    NB! Semester is defined here by the start date of the actual first higher education semester,
    not the application date."
   (:require [ataru.cache.cache-service :as cache]
+            [ataru.util.deadline-util :as deadline]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.applications.application-store :as application-store]
+            [ataru.forms.form-store :as form-store]
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.person-service.person-service :as person-service]
@@ -274,30 +277,56 @@
       (some #(not (time/before? % now)) attachment-deadlines))))
 
 (defn- keep-if-deadline-passed
-  [attachment-deadline-service field-deadlines haku now application-submitted review]
+  [attachment-deadline-service field-deadlines form haku now application-submitted review]
   (let [id             (:attachment-key review)
         field-deadline (some->> field-deadlines
                                 (filter #(= id (:field-id %)))
                                 first
                                 :deadline)
-        passed         (if (some? field-deadline)
+        field          (get (util/form-fields-by-id form) (keyword id))
+        passed         (cond
+                         (some? field-deadline)
                          (time/after? now field-deadline)
+                         (deadline/custom-deadline field)
+                         (deadline/custom-deadline-passed? now field)
+                         :else
                          (not (time-is-before-some-attachment-deadlines? attachment-deadline-service application-submitted haku now)))]
     (when passed
       review)))
 
 (defn- includes-fields-with-passed-deadlines?
   "Returns true when one or more of the fields in the input reviews have their deadlines passed / overdue"
-  [attachment-deadline-service tarjonta-service application field-reviews]
-  (let [now              (time/now)
-        application-key  (:key application)
-        haku-oid         (:haku application)
+  [attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+   ohjausparametrit-service hakukohderyhma-settings-cache application field-reviews]
+  (let [now                   (time/now)
+        application-key       (:key application)
+        haku-oid              (:haku application)
         application-submitted (:submitted application)
-        haku             (tarjonta/get-haku tarjonta-service haku-oid)
-        field-deadlines  (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
-        passed           (remove nil?
-                                 (map (partial keep-if-deadline-passed
-                                               attachment-deadline-service field-deadlines haku now application-submitted) field-reviews))]
+        haku                  (tarjonta/get-haku tarjonta-service haku-oid)
+        field-deadlines       (->> (:key application)
+                                   (attachment-deadline/get-field-deadlines attachment-deadline-service)
+                                   (map #(dissoc % :last-modified))
+                                   (util/group-by-first :field-id))
+        in-processing?        (util/application-in-processing? (:application-hakukohde-reviews application))
+        form                  (cond
+                                (some? (:haku application))
+                                (hakija-form-service/fetch-form-by-haku-oid
+                                  form-by-id-cache tarjonta-service koodisto-cache organization-service
+                                  ohjausparametrit-service hakukohderyhma-settings-cache (:haku application)
+                                  in-processing? field-deadlines [:virkailija] false false attachment-deadline-service
+                                  (:submitted application))
+                                (some? (:form application))
+                                (hakija-form-service/fetch-form-by-key
+                                  (->> application
+                                       :form
+                                       form-store/fetch-by-id
+                                       :key) [:virkailija] form-by-id-cache koodisto-cache nil in-processing?
+                                  field-deadlines attachment-deadline-service (:submitted application) nil))
+        passed                (remove
+                                nil? (map (partial keep-if-deadline-passed
+                                                   attachment-deadline-service field-deadlines form haku now
+                                                   application-submitted)
+                                          field-reviews))]
     (if (seq passed)
       (do
         (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
@@ -320,18 +349,23 @@
 (defn- attachments-invalid-and-deadline-passed?
   "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
    the applicant is not exempt by application even if the exemption question was answered as such."
-  [attachment-deadline-service tarjonta-service application]
+  [attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+   ohjausparametrit-service hakukohderyhma-settings-cache application]
   (when-let [invalid-field-reviews (seq (get-invalid-attachment-reviews (:key application)))]
     (includes-fields-with-passed-deadlines?
-     attachment-deadline-service tarjonta-service application invalid-field-reviews)))
+      attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+      ohjausparametrit-service hakukohderyhma-settings-cache application invalid-field-reviews)))
 
 (defn- exemption-in-application?
-  [attachment-deadline-service tarjonta-service application]
+  [attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+   ohjausparametrit-service hakukohderyhma-settings-cache application]
   (let [answers (util/application-answers-by-key application)]
     (when-let [exemption-answer (exemption-form-field-name answers)]
       (let [exempt-due-to-field? (contains? exemption-field-ok-values (:value exemption-answer))
-            attachements-invalid-and-dl-passed? (attachments-invalid-and-deadline-passed?
-                                                 attachment-deadline-service tarjonta-service application)
+            attachements-invalid-and-dl-passed?
+            (attachments-invalid-and-deadline-passed?
+              attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+              ohjausparametrit-service hakukohderyhma-settings-cache application)
             exempt? (and exempt-due-to-field?
                          (not attachements-invalid-and-dl-passed?))]
         (when exempt?
@@ -439,7 +473,8 @@
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
    Returns a vector of changed states of all applications for possible further processing."
-  [attachment-deadline-service person-service tarjonta-service koodisto-cache get-haut-cache person-oid term year]
+  [attachment-deadline-service person-service tarjonta-service form-by-id-cache koodisto-cache organization-service
+   ohjausparametrit-service hakukohderyhma-settings-cache get-haut-cache person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
         master-oid      (:master-oid linked-oids)
@@ -465,7 +500,10 @@
                                             applications)
                 payment-state-set      (->> (vals payment-by-application) (map :state) set)
                 exempt-keys            (set (map :key (filter #(exemption-in-application?
-                                                                attachment-deadline-service tarjonta-service %) applications)))
+                                                                attachment-deadline-service tarjonta-service
+                                                                form-by-id-cache koodisto-cache organization-service
+                                                                ohjausparametrit-service hakukohderyhma-settings-cache
+                                                                %) applications)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
                 is-eu-citizen?         (is-vtj-yksiloity-eu-citizen? koodisto-cache person)
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
