@@ -30,6 +30,7 @@
             [clj-ring-db-session.session.session-client :as session-client]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.middleware.user-feedback :as user-feedback]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
             [ataru.schema.maksut-schema :as maksut-schema]
@@ -181,6 +182,10 @@
                                 :cookie-attrs {:secure (not (:dev? env))}
                                 :store        session-store})))
 
+(defn- synthetic-application-form-key
+  [ohjausparametrit-service haku-oid]
+  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetLomakeavain))
+
 (api/defroutes test-routes
   (api/undocumented
     (api/GET "/virkailija-test.html" []
@@ -292,7 +297,13 @@
       (if-let [key (:ataru-form-key (tarjonta/get-haku tarjonta-service haku-oid))]
         (ok (->> (form-store/fetch-by-key key)
                  (koodisto/populate-form-koodisto-fields koodisto-cache)))
-        (response/not-found {:error (str "Form not found on haku " haku-oid)})))
+        (if-let [synthetic-key (synthetic-application-form-key ohjausparametrit-service haku-oid)]
+          (do
+            (log/info "Haetaan synteettisen hakemuksen lomake avaimella" synthetic-key)
+              (ok (->> (form-store/fetch-by-key synthetic-key)
+                       (koodisto/populate-form-koodisto-fields koodisto-cache))))
+            (response/not-found {:error (str "Form not found on haku " haku-oid)})))
+        )
 
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
@@ -639,7 +650,7 @@
                          session
                          application-key)]
           (if allowed?
-            (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
+              (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
                                              session
                                              application-key)
                   modify-url               (str (-> config :public-config :applicant :service_url)

@@ -7,6 +7,7 @@
             [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
                                                      editing-forbidden-person-info-field-ids
                                                      editing-allowed-person-info-field-ids]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options populate-attachment-deadlines]]
@@ -284,6 +285,10 @@
   [form hakuajat now]
   (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
 
+(defn- synthetic-application-form-key
+  [ohjausparametrit-service haku-oid]
+  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetLomakeavain))
+
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   ([id :- s/Any
    roles :- [form-role/FormRole]
@@ -400,6 +405,7 @@
           (populate-can-submit-multiple-applications tarjonta-info))
       (log/warn "Form (id: " id ", haku-oid: " haku-oid ", hakukohteet: " hakukohteet ") cannot be fetched. Possible reason can be missing hakukohteet."))))
 
+;TODO tännekö muutos?
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [form-by-id-cache :- s/Any
    tarjonta-service :- s/Any
@@ -420,10 +426,11 @@
                                                      roles
                                                      is-rewrite-secret-used?
                                                      haku)
-        latest-id (some-> haku
-                          :ataru-form-key
-                          form-store/latest-id-by-key)]
+        form-key (or (:ataru-form-key haku)
+                     (synthetic-application-form-key ohjausparametrit-service haku-oid))
+        latest-id (some-> form-key form-store/latest-id-by-key)]
     (when latest-id
+      (log/info "Found latest form id" latest-id "for haku-oid" haku-oid)
       (fetch-form-by-haku-oid-and-id form-by-id-cache
                                      tarjonta-service
                                      koodisto-cache
