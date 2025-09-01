@@ -2,7 +2,6 @@
   (:require [markdown.core :refer [md->html]]
             [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
-            [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
             [clojure.string :as string]
             [goog.string :as s]
@@ -63,114 +62,50 @@
   [text state]
   [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
 
-(defn- set-markdown-height
-  [component scroll-height]
-  (reset! scroll-height (-> component
-                            reagent-dom/dom-node
-                            (.getElementsByClassName "application__form-info-text-inner")
-                            (aget 0)
-                            .-scrollHeight)))
+(defn- markdown-inner
+  [md-text collapsed application-identifier]
+  (let [sanitized-html   (as-> md-text v
+                               (md->html v
+                                         :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
+                                                                           transformer-vector
+                                                                           [add-link-target-prop]))
+                               (.sanitize html-sanitizer v)
+                               (.getTypedStringValue v))]
+    (if collapsed
+      [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
+       {:dangerouslySetInnerHTML {:__html sanitized-html}}]
+      [:div.application__form-info-text-inner
+       {:style                   {:height "auto"}
+        :dangerouslySetInnerHTML {:__html sanitized-html}}])))
 
-(defn markdown-paragraph-2
-  ([md-text]
-   (markdown-paragraph-2 md-text false nil))
-  ([md-text collapse-enabled? application-identifier]
-   (let [collapsed        (reagent/atom true)
-         scroll-height    (reagent/atom nil)
-         lang             (re-frame/subscribe [:application/form-language])
-         sanitized-html (as-> md-text v
-                                    (md->html v
-                                              :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
-                                                                                transformer-vector
-                                                                                [add-link-target-prop]))
-                                    (.sanitize html-sanitizer v)
-                                    (.getTypedStringValue v))
-               collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
-      [:div.application__form-info-text
-             (if (and collapsable? @collapsed)
-               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
-                {:dangerouslySetInnerHTML {:__html sanitized-html}}]
-               [:div.application__form-info-text-inner
-                {:style                   {:height "auto"}
-                 :dangerouslySetInnerHTML {:__html sanitized-html}}])
-             (when collapsable?
-               [:button.application__form-info-text-collapse-button
-                {:on-click (fn [] (swap! collapsed not))}
-                (if @collapsed
-                  [:span (str (translations/get-hakija-translation
-                                :read-more
-                                @lang)
-                              " ")
-                   [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                  [:span (str (translations/get-hakija-translation
-                                :read-less
-                                @lang)
-                              " ")
-                   [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])])))
+(defn- read-more-button
+  [collapsed swap-collapse]
+  (let [lang (re-frame/subscribe [:application/form-language])]
+    [:button.application__form-info-text-collapse-button
+     {:on-click swap-collapse}
+     (if collapsed
+       [:span (str (translations/get-hakija-translation
+                     :read-more
+                     @lang)
+                   " ")
+        [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
+       [:span (str (translations/get-hakija-translation
+                     :read-less
+                     @lang)
+                   " ")
+        [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])]))
 
 (defn markdown-paragraph
   ([md-text]
    (markdown-paragraph md-text false nil))
-  ([md-text collapse-enabled? application-identifier]
-   (let [collapsed        (reagent/atom true)
-         scroll-height    (reagent/atom nil)
-         listener         (reagent/atom nil)
-         timeout          (atom nil)
-         debounced-resize (fn [component]
-                            (js/clearTimeout @timeout)
-                            (reset!
-                             timeout
-                             (js/setTimeout #(set-markdown-height component scroll-height) 200)))
-         lang             (re-frame/subscribe [:application/form-language])]
-     (reagent/create-class
-      {:component-did-mount
-       (fn [component]
-         (set-markdown-height component scroll-height)
-         (reset! listener #(debounced-resize component))
-         (.addEventListener js/window "resize" @listener))
-
-       :component-will-unmount
-       (fn [_]
-         (.removeEventListener js/window "resize" @listener))
-
-       :component-did-update
-       (fn [component]
-         (set-markdown-height component scroll-height))
-
-       :reagent-render
-       (fn []
-         (let [sanitized-html (as-> md-text v
-                                (md->html v
-                                          :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
-                                                                            transformer-vector
-                                                                            [add-link-target-prop]))
-                                (.sanitize html-sanitizer v)
-                                (.getTypedStringValue v))
-               collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
-           (prn "reagender-render")
-           (prn md-text)
-           (prn sanitized-html)
-           [:div.application__form-info-text
-            (if (and collapsable? @collapsed)
-              [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
-               {:dangerouslySetInnerHTML {:__html sanitized-html}}]
-              [:div.application__form-info-text-inner
-               {:style                   {:height "auto"}
-                :dangerouslySetInnerHTML {:__html sanitized-html}}])
-            (when collapsable?
-              [:button.application__form-info-text-collapse-button
-               {:on-click (fn [] (swap! collapsed not))}
-               (if @collapsed
-                 [:span (str (translations/get-hakija-translation
-                               :read-more
-                               @lang)
-                             " ")
-                  [:i.zmdi.zmdi-hc-lg.zmdi-chevron-down]]
-                 [:span (str (translations/get-hakija-translation
-                               :read-less
-                               @lang)
-                             " ")
-                  [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])]))}))))
+  ([_ collapse-enabled? application-identifier]
+   (let [collapsed        (reagent/atom (boolean collapse-enabled?))]
+     (fn [md-text collapse-enabled?]
+       [:div.application__form-info-text
+        [markdown-inner md-text (and @collapsed collapse-enabled?) application-identifier]
+        (when collapse-enabled?
+          [read-more-button (boolean @collapsed) (fn [] (swap! collapsed not))])
+        ]))))
 
  (defn- urls-to-links
   [content]

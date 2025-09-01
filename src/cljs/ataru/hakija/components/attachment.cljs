@@ -190,15 +190,12 @@
         application-identifier @(subscribe [:application/application-identifier])
         extra-class            (when (:original-question field-descriptor)
                                  ".application__form-field--attachment-with-address")]
-    (prn "attachment field-descriptior")
-    (prn field-descriptor)
-    (prn text)
     [(keyword (str "div.application__form-field" extra-class))
      [generic-label-component/generic-label field-descriptor question-group-idx]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
      (when-not (clojure.string/blank? text)
-       [application-field/markdown-paragraph-2 text (-> field-descriptor :params :info-text-collapse) application-identifier])
+       [application-field/markdown-paragraph text (-> field-descriptor :params :info-text-collapse) application-identifier])
      (when (not-empty visible-attachments)
        [:ol.application__attachment-filename-list
         (doall (map (fn [[attachment-idx attachment]]
