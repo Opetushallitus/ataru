@@ -299,7 +299,7 @@
                  (koodisto/populate-form-koodisto-fields koodisto-cache)))
         (if-let [synthetic-key (synthetic-application-form-key ohjausparametrit-service haku-oid)]
           (do
-            (log/info "Haetaan synteettisen hakemuksen lomake avaimella" synthetic-key)
+            (log/info "Fetching synthetic application form with key" synthetic-key)
               (ok (->> (form-store/fetch-by-key synthetic-key)
                        (koodisto/populate-form-koodisto-fields koodisto-cache))))
             (response/not-found {:error (str "Form not found on haku " haku-oid)})))
