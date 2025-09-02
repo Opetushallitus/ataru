@@ -30,49 +30,47 @@
             (reset! batch nil))
 
           (it "should return nil when sending is successful"
-              (with-redefs [job/viestinvalitys-client (fn [] client-mock)]
-                (should-be-nil (job/send-email "no@oph.fi" ["foo@bar.com" "foo@bar.com" "baz@bar.com"] "subj" "body"
-                                               [{:secret "foo" :mask "****"}
-                                                {:secret "bar" :mask "baz"}]
-                                               {:foo ["bar" "baz"]
-                                                :x '("y")}
-                                               [{:privilege "APP_ATARU_HAKEMUS_CRUD"
-                                                 :organization "1.2.246.562.10.00000000003"}
-                                                {:privilege "FOO"
-                                                 :organization "1.2.246.562.10.00000000002"}]))
+              (should-be-nil (job/send-email client-mock "no@oph.fi" ["foo@bar.com" "foo@bar.com" "baz@bar.com"] "subj" "body"
+                                             [{:secret "foo" :mask "****"}
+                                              {:secret "bar" :mask "baz"}]
+                                             {:foo ["bar" "baz"]
+                                              :x '("y")}
+                                             [{:privilege "APP_ATARU_HAKEMUS_CRUD"
+                                               :organization "1.2.246.562.10.00000000003"}
+                                              {:privilege "FOO"
+                                               :organization "1.2.246.562.10.00000000002"}]))
 
-                (should= (Optional/of "subj") (.otsikko @batch))
-                (should= (Optional/of "hakemuspalvelu") (.lahettavaPalvelu @batch))
-                (should= (Optional/of (new LahettajaImpl (Optional/of "Opetushallitus") (Optional/of "no@oph.fi")))
-                         (.lahettaja @batch))
-                (should= (Optional/of "normaali") (.prioriteetti @batch))
-                (should= (Optional/of (int 1825)) (.sailytysaika @batch))
+              (should= (Optional/of "subj") (.otsikko @batch))
+              (should= (Optional/of "hakemuspalvelu") (.lahettavaPalvelu @batch))
+              (should= (Optional/of (new LahettajaImpl (Optional/of "Opetushallitus") (Optional/of "no@oph.fi")))
+                       (.lahettaja @batch))
+              (should= (Optional/of "normaali") (.prioriteetti @batch))
+              (should= (Optional/of (int 1825)) (.sailytysaika @batch))
 
-                (should= (Optional/of "subj") (.otsikko @message))
-                (should= (Optional/of "body") (.sisalto @message))
-                (should= (Optional/of
-                           (List/of
-                             (new MaskiImpl (Optional/of "foo") (Optional/of "****"))
-                             (new MaskiImpl (Optional/of "bar") (Optional/of "baz"))))
-                         (.maskit @message))
-                (should= (Optional/of
-                           (List/of
-                             (new VastaanottajaImpl (Optional/empty) (Optional/of "foo@bar.com"))
-                             (new VastaanottajaImpl (Optional/empty) (Optional/of "baz@bar.com"))))
-                         (.vastaanottajat @message))
-                (should= (Optional/of
-                           (Map/of
-                             "foo" (List/of "bar" "baz")
-                             "x" (List/of "y")))
-                         (.metadata @message))
-                (should= (Optional/of
-                           (List/of
-                             (new KayttooikeusImpl (Optional/of "APP_ATARU_HAKEMUS_CRUD") (Optional/of "1.2.246.562.10.00000000003"))
-                             (new KayttooikeusImpl (Optional/of "FOO") (Optional/of "1.2.246.562.10.00000000002"))
-                             (new KayttooikeusImpl (Optional/of "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA") (Optional/of "1.2.246.562.10.00000000001"))))
-                         (.kayttooikeusRajoitukset @message))))
+              (should= (Optional/of "subj") (.otsikko @message))
+              (should= (Optional/of "body") (.sisalto @message))
+              (should= (Optional/of
+                         (List/of
+                           (new MaskiImpl (Optional/of "foo") (Optional/of "****"))
+                           (new MaskiImpl (Optional/of "bar") (Optional/of "baz"))))
+                       (.maskit @message))
+              (should= (Optional/of
+                         (List/of
+                           (new VastaanottajaImpl (Optional/empty) (Optional/of "foo@bar.com"))
+                           (new VastaanottajaImpl (Optional/empty) (Optional/of "baz@bar.com"))))
+                       (.vastaanottajat @message))
+              (should= (Optional/of
+                         (Map/of
+                           "foo" (List/of "bar" "baz")
+                           "x" (List/of "y")))
+                       (.metadata @message))
+              (should= (Optional/of
+                         (List/of
+                           (new KayttooikeusImpl (Optional/of "APP_ATARU_HAKEMUS_CRUD") (Optional/of "1.2.246.562.10.00000000003"))
+                           (new KayttooikeusImpl (Optional/of "FOO") (Optional/of "1.2.246.562.10.00000000002"))
+                           (new KayttooikeusImpl (Optional/of "APP_VIESTINVALITYS_OPH_PAAKAYTTAJA") (Optional/of "1.2.246.562.10.00000000001"))))
+                       (.kayttooikeusRajoitukset @message)))
 
           (it "should throw client exception"
-              (with-redefs [job/viestinvalitys-client (fn [] throwing-client-mock)]
-                (should-throw ViestinvalitysClientException (job/send-email "from" ["to1" "to2"] "subj" "body"
-                                                                            [] {} [])))))
+              (should-throw ViestinvalitysClientException (job/send-email throwing-client-mock "from" ["to1" "to2"] "subj" "body"
+                                                                          [] {} []))))

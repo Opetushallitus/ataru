@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
   (:require [ataru.siirtotiedosto-service :as siirtotiedosto-service]
+            [ataru.config.url-helper :refer [resolve-url]]
             [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sns :as sns]
@@ -42,6 +43,7 @@
             [ataru.db.db :as db]
             [ataru.temp-file-storage.s3-client :as s3-client])
   (:import java.time.Duration
+           [fi.oph.viestinvalitys ClientBuilder]
            [fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu]
            [java.util.concurrent TimeUnit]))
 
@@ -56,6 +58,14 @@
     component/system-map
 
     :audit-logger audit-logger
+
+    :viestinvalityspalvelu-client (-> (ClientBuilder/viestinvalitysClientBuilder)
+                                      (.withEndpoint (resolve-url :viestinvalityspalvelu-endpoint))
+                                      (.withUsername (-> config :cas :username))
+                                      (.withPassword (-> config :cas :password))
+                                      (.withCasEndpoint (resolve-url :cas-client))
+                                      (.withCallerId (-> config :public-config :virkailija-caller-id))
+                                      (.build))
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
                                                       "auth/cas"
@@ -325,6 +335,7 @@
                   :liiteri-cas-client
                   :amazon-cloudwatch
                   :maksut-service
+                  :viestinvalityspalvelu-client
                   :tutu-cas-client])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
