@@ -330,12 +330,14 @@
         (clojure.string/replace (clojure.string/trim value) "\u0000" "")
         (sequential? value)
         (mapv trim-and-remove-null-bytes-from-value value)
+        (map? value)
+        (zipmap (keys value) (map trim-and-remove-null-bytes-from-value (vals value)))
         :else
         value))
 
 (defn- remove-null-bytes-from-answer
   [answer]
-  (update answer :value trim-and-remove-null-bytes-from-value))
+  (trim-and-remove-null-bytes-from-value answer))
 
 (defn add-application [new-application applied-hakukohteet form session audit-logger oppija-session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
