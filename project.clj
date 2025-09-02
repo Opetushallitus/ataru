@@ -110,7 +110,7 @@
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT"]
-                 [fi.oph.viestinvalitys/kirjasto "1.1.6-SNAPSHOT"]
+                 [opiskelijavalinnat-utils.viestinvalitys/kirjasto "1.2.1-SNAPSHOT"]
                  [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
