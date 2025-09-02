@@ -10,14 +10,20 @@
 (defn- viestinvalityspalvelu-endpoint []
   (resolve-url :viestinvalityspalvelu-endpoint))
 
+(defonce client-singleton (atom nil))
+
 (defn viestinvalitys-client ^ViestinvalitysClient []
-  (-> (ClientBuilder/viestinvalitysClientBuilder)
-      (.withEndpoint (viestinvalityspalvelu-endpoint))
-      (.withUsername (-> config :cas :username))
-      (.withPassword (-> config :cas :password))
-      (.withCasEndpoint (resolve-url :cas-client))
-      (.withCallerId "1.2.246.562.10.00000000001.ataru.backend")
-      (.build)))
+  (if-let [client @client-singleton]
+    client
+    (swap! client-singleton
+           (fn [_ new-client] new-client)
+           (-> (ClientBuilder/viestinvalitysClientBuilder)
+               (.withEndpoint (viestinvalityspalvelu-endpoint))
+               (.withUsername (-> config :cas :username))
+               (.withPassword (-> config :cas :password))
+               (.withCasEndpoint (resolve-url :cas-client))
+               (.withCallerId "1.2.246.562.10.00000000001.ataru.backend")
+               (.build)))))
 
 (defn- vastaanottajat [recipients]
   (.build
