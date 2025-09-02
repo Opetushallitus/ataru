@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>f6a069cc5bdf1b9921032ae2e176b24725d70c49</tag>
+    <tag>a1ccd89a685f72f2055d2fca62a21c19248ff795</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -229,9 +229,24 @@
         <version>2.0.9</version>
       </dependency>
       <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>1.11.0</version>
+      </dependency>
+      <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
         <version>1.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-fileupload</groupId>
+        <artifactId>commons-fileupload</artifactId>
+        <version>1.6.0</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler</artifactId>
+        <version>4.1.118.Final</version>
       </dependency>
       <dependency>
         <groupId>riddley</groupId>
@@ -271,7 +286,7 @@
       <dependency>
         <groupId>io.undertow</groupId>
         <artifactId>undertow-core</artifactId>
-        <version>2.3.15.Final</version>
+        <version>2.3.17.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -421,7 +436,7 @@
     <dependency>
       <groupId>markdown-clj</groupId>
       <artifactId>markdown-clj</artifactId>
-      <version>1.12.1</version>
+      <version>1.12.4</version>
     </dependency>
     <dependency>
       <groupId>com.rpl</groupId>
@@ -532,7 +547,7 @@
     <dependency>
       <groupId>ring</groupId>
       <artifactId>ring</artifactId>
-      <version>1.10.0</version>
+      <version>1.11.0</version>
     </dependency>
     <dependency>
       <groupId>oph</groupId>
@@ -731,7 +746,7 @@
     <dependency>
       <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
       <artifactId>dokumenttipalvelu</artifactId>
-      <version>6.12-SNAPSHOT</version>
+      <version>6.14-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>opiskelijavalinnat-utils.viestinvalitys</groupId>
