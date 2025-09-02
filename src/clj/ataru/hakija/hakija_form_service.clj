@@ -373,7 +373,6 @@
           (populate-can-submit-multiple-applications tarjonta-info))
       (log/warn "Form (id: " id ", haku-oid: " haku-oid ", hakukohteet: " hakukohteet ") cannot be fetched. Possible reason can be missing hakukohteet."))))
 
-;TODO tännekö muutos?
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [form-by-id-cache :- s/Any
    tarjonta-service :- s/Any
@@ -396,7 +395,6 @@
                      (synthetic-application-form-key ohjausparametrit-service haku-oid))
         latest-id (some-> form-key form-store/latest-id-by-key)]
     (when latest-id
-      (log/info "Found latest form id" latest-id "for haku-oid" haku-oid)
       (fetch-form-by-haku-oid-and-id form-by-id-cache
                                      tarjonta-service
                                      koodisto-cache
