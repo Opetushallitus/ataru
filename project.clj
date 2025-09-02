@@ -19,7 +19,13 @@
                          [com.google.code.findbugs/jsr305 "3.0.2"]
                          [potemkin "0.4.7"]
                          [org.slf4j/slf4j-api "2.0.9"]
+                         ;transitive from viestinvalityspalvelu
+                         [commons-beanutils "1.11.0"]
                          [commons-codec "1.16.0"]
+                         ; transitive from compojure
+                         [commons-fileupload "1.6.0"]
+                         ; transitive from aleph
+                         [io.netty/netty-handler "4.1.118.Final"]
                          [riddley "0.2.0"]
                          [instaparse "1.4.12"]
                          [org.mozilla/rhino "1.7.14"]
@@ -27,7 +33,8 @@
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
                          [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
-                         [io.undertow/undertow-core "2.3.15.Final"]
+                         ;transitive from clj-util
+                         [io.undertow/undertow-core "2.3.17.Final"]
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
@@ -58,7 +65,7 @@
                  [org.clojure/core.match "1.0.1"]
                  [metosin/schema-tools "0.13.1"]
                  [medley "1.4.0"]
-                 [markdown-clj "1.12.1"]
+                 [markdown-clj "1.12.4"]
 
                  ;clojure
                  [com.rpl/specter "1.1.4"]
@@ -73,7 +80,7 @@
                  [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
-                 [ring "1.10.0"]
+                 [ring "1.11.0"]
                  [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12]]
                  [ring/ring-defaults "0.4.0"]
                  [ring/ring-json "0.5.1"]
@@ -109,7 +116,7 @@
                  [com.amazonaws/aws-java-sdk-cloudwatch "1.12.763"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
-                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT"]
+                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.14-SNAPSHOT"]
                  [opiskelijavalinnat-utils.viestinvalitys/kirjasto "1.2.1-SNAPSHOT"]
                  [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
