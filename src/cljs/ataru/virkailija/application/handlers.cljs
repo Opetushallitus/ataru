@@ -253,7 +253,11 @@
                                                      :option-answers           option-answers
                                                      :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                                 :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                                :filters                      (get-in db [:application :filters])
+                                                                                :filters                      (if (and search-term (not haku) (not form) (not hakukohde) (not hakukohderyhma))
+                                                                                                                (merge (get-in db [:application :filters])
+                                                                                                                       {:kk-application-payment
+                                                                                                                        initial-db/kk-application-payment-filter-all-enabled})
+                                                                                                                (get-in db [:application :filters]))
                                                                                 :school-filter                (get-in db [:application :school-filter])
                                                                                 :classes-of-school            (get-in db [:application :classes-of-school])}}
                                                     search-term
@@ -444,9 +448,11 @@
                               (assoc-in [:application :fetching-applications?] true)
                               (assoc-in [:application :user-allowed-fetching?] true)
                               (assoc-in [:application :fetching-applications-errored?] false))
-                :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
-                                                                                                                     {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
-                                                                                                                    [:application/fetch-form-contents]]]}
+                :dispatch-debounced {:timeout 500
+                                     :id :reload-applications
+                                     :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
+                                                                                                                                          {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
+                                                                                                                                         [:application/fetch-form-contents]]]}}
          (some? (get-in db [:request-handles :applications-list]))
          (assoc :http-abort (get-in db [:request-handles :applications-list]))))
      {:db db
