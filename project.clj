@@ -19,8 +19,6 @@
                          [com.google.code.findbugs/jsr305 "3.0.2"]
                          [potemkin "0.4.7"]
                          [org.slf4j/slf4j-api "2.0.9"]
-                         ;transitive from viestinvalityspalvelu
-;                         [commons-beanutils "1.11.0"]
                          [commons-codec "1.16.0"]
                          ; transitive from compojure
                          [commons-fileupload "1.6.0"]
@@ -117,7 +115,7 @@
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.14-SNAPSHOT"]
-                 [opiskelijavalinnat-utils.viestinvalitys/kirjasto "1.2.1-SNAPSHOT"]
+                 [opiskelijavalinnat-utils.viestinvalitys/kirjasto "1.2.2-SNAPSHOT"]
                  [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
