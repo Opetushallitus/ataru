@@ -29,7 +29,6 @@
             [clj-ring-db-session.session.session-client :as session-client]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.middleware.user-feedback :as user-feedback]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
             [ataru.schema.maksut-schema :as maksut-schema]
@@ -52,6 +51,7 @@
             [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :as vls]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
+            [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]
             [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
@@ -181,10 +181,6 @@
                                 :cookie-attrs {:secure (not (:dev? env))}
                                 :store        session-store})))
 
-(defn- synthetic-application-form-key
-  [ohjausparametrit-service haku-oid]
-  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetLomakeavain))
-
 (api/defroutes test-routes
   (api/undocumented
     (api/GET "/virkailija-test.html" []
@@ -294,7 +290,7 @@
       (if-let [key (:ataru-form-key (tarjonta/get-haku tarjonta-service haku-oid))]
         (ok (->> (form-store/fetch-by-key key)
                  (koodisto/populate-form-koodisto-fields koodisto-cache)))
-        (if-let [synthetic-key (synthetic-application-form-key ohjausparametrit-service haku-oid)]
+        (if-let [synthetic-key (ohjausparametrit-utils/synthetic-application-form-key ohjausparametrit-service haku-oid)]
           (do
             (log/info "Fetching synthetic application form with key" synthetic-key)
             (ok (->> (form-store/fetch-by-key synthetic-key)
