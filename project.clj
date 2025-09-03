@@ -115,7 +115,7 @@
                  [com.amazonaws/aws-java-sdk-cloudwatch "1.12.763"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
-                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.12-SNAPSHOT"]
+                 [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.14-SNAPSHOT"]
                  [opiskelijavalinnat-utils.viestinvalitys/kirjasto "1.2.1-SNAPSHOT"]
                  [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
