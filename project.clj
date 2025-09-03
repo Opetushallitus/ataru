@@ -129,7 +129,8 @@
   :min-lein-version "2.5.3"
 
   :repositories [["github" {:url "https://maven.pkg.github.com/Opetushallitus/packages"
-                            :creds :gpg}]
+                            :username "private-token"
+                            :password :env/GITHUB_TOKEN}]
                  ["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
                               :sign-releases false
                               :snapshots     false}]
