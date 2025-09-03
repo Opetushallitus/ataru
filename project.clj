@@ -64,7 +64,7 @@
                  [org.clojure/core.match "1.0.1"]
                  [metosin/schema-tools "0.13.1"]
                  [medley "1.4.0"]
-                 [markdown-clj "1.12.1"]
+                 [markdown-clj "1.12.4"]
 
                  ;clojure
                  [com.rpl/specter "1.1.4"]
