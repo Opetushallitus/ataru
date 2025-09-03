@@ -28,6 +28,8 @@
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
             [ataru.kk-application-payment.utils :refer [has-payment-module?]]
+            [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]
+            [ataru.kk-application-payment.utils :refer [has-payment-module?]]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
@@ -426,7 +428,7 @@
                                                      is-rewrite-secret-used?
                                                      haku)
         form-key (or (:ataru-form-key haku)
-                     (synthetic-application-form-key ohjausparametrit-service haku-oid))
+                     (ohjausparametrit-utils/synthetic-application-form-key ohjausparametrit-service haku-oid))
         latest-id (some-> form-key form-store/latest-id-by-key)]
     (when latest-id
       (fetch-form-by-haku-oid-and-id form-by-id-cache
