@@ -79,7 +79,7 @@
                  [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
-                 [ring "1.10.0"]
+                 [ring "1.11.0"]
                  [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12]]
                  [ring/ring-defaults "0.4.0"]
                  [ring/ring-json "0.5.1"]
