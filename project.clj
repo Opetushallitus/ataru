@@ -23,7 +23,7 @@
 ;                         [commons-beanutils "1.11.0"]
                          [commons-codec "1.16.0"]
                          ; transitive from compojure
-;                         [commons-fileupload "1.6.0"]
+                         [commons-fileupload "1.6.0"]
                          ; transitive from aleph
                          [io.netty/netty-handler "4.1.118.Final"]
                          [riddley "0.2.0"]
