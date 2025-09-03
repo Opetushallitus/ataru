@@ -33,7 +33,8 @@
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
                          [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
-                         [io.undertow/undertow-core "2.3.15.Final"]
+                         ;transitive from clj-util
+                         [io.undertow/undertow-core "2.3.17.Final"]
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
