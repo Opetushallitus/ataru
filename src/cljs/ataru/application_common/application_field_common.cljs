@@ -74,7 +74,7 @@
 (defn markdown-paragraph
   ([md-text]
    (markdown-paragraph md-text false nil))
-  ([md-text collapse-enabled? application-identifier]
+  ([_ _ application-identifier]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          listener         (reagent/atom nil)
@@ -101,7 +101,7 @@
          (set-markdown-height component scroll-height))
 
        :reagent-render
-       (fn []
+       (fn [md-text collapse-enabled?]
          (let [sanitized-html (as-> md-text v
                                 (md->html v
                                           :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
