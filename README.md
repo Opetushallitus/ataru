@@ -348,7 +348,7 @@ More info regarding Java setup on MacOs can be found [here](https://mkyong.com/j
 
 ## Logs
 
-Application logs are in /tmp folder.
+Application logs are in logs folder.
 
 Build/compilation logs are in logs/pm2 folder.
 

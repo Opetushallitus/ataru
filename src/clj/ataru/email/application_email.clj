@@ -355,7 +355,10 @@
         subject                         (case origin
                                           "tutu" (str (:subject-prefix translations) ": " (:header translations))
                                           "astu" (:subject translations))
-        applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+        subject-full                    (if (:reminder params)
+                                          (str (:reminder-subject-prefix translations) ": " subject)
+                                          subject)
+        applicant-email-data            (email-util/make-email-data applier-recipients subject-full template-params)
         render-file-fn                  (fn [template-params]
                                           (selmer/render-file (template-name lang) template-params))]
     (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
