@@ -15,7 +15,8 @@
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
-   [yesql.core :refer [defqueries]])
+   [yesql.core :refer [defqueries]]
+   [ataru.constants :as constants])
   (:import [java.util.concurrent Executors TimeUnit]))
 
 (declare yesql-update-person-info-as-in-person!)
@@ -45,9 +46,14 @@
             application-id
             "to oppijanumerorekisteri")
   (try
-    (let [{:keys [status oid]} (person-service/create-or-find-person
+    (let [eidas-id (when (= (:tunnistautuminen application) constants/auth-type-eidas)
+                    (application-store/get-eidas-id (:key application)))
+          enriched-application (if (some? eidas-id)
+                                   (merge application {:eidas-id eidas-id})
+                                   application)
+          {:keys [status oid]} (person-service/create-or-find-person
                                  person-service
-                                 application)]
+                                 enriched-application)]
       (match status
              :created
              (log/info "Added person" oid "to oppijanumerorekisteri")
@@ -55,7 +61,7 @@
              (log/info "Person" oid "already existed in oppijanumerorekisteri")
              :found-matching
              (do
-               (log/info "Found person" oid "with matching email, date of birth and gender")
+               (log/info "Found person" oid "with matching email or eidas-id, date of birth and gender")
                (application-store/add-application-event {:application-key (:key application)
                                                          :event-type      "person-found-matching"}
                                                         nil))
@@ -66,7 +72,10 @@
                                                          :event-type      "person-dob-or-gender-conflict"}
                                                         nil))
              :created-with-email-id
-             (log/info "Added person" oid "with email identification to oppijanumerorekisteri"))
+             (log/info "Added person" oid "with email identification to oppijanumerorekisteri")
+
+             :created-with-eidas-id
+             (log/info "Added person" oid "with eidas identification to oppijanumerorekisteri"))
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
