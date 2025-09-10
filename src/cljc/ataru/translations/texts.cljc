@@ -2765,6 +2765,12 @@
    :unreviewed                   {:fi "Tarkastamatta"
                                   :sv "Inte granskad"
                                   :en "Unreviewed"}
+   :reviewed                     {:fi "Tarkastettu"
+                                  :sv "Granskad"
+                                  :en "Reviewed"}
+   :in-migri-review              {:fi "Migrin tarkastuksessa"
+                                  :sv "In Migri review"
+                                  :en "In Migri review"}
    :fulfilled                    {:fi "Täyttyy"
                                   :sv "Fylls"
                                   :en "Meets requirement"}
@@ -2855,6 +2861,9 @@
    :kk-application-payment       {:fi "Hakemusmaksu"
                                   :sv "Ansökningsavgift"
                                   :en "Application fee"}
+   :kk-application-payment-obligation {:fi "Hakemusmaksuvelvollisuus"
+                                       :sv "Skyldighet att betala ansökningsavgift"
+                                       :en "Application fee obligation"}
    :kk-payment-not-checked       {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
                                   :sv "Sökandens betalningsskyldighet är ännu okänd"
                                   :en "Applicant payment liability unknown"}
