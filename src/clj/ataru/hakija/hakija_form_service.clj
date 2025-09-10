@@ -26,7 +26,8 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
-            [ataru.kk-application-payment.utils :refer [has-payment-module?]]))
+            [ataru.kk-application-payment.utils :refer [has-payment-module?]]
+            [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -386,9 +387,9 @@
                                                      roles
                                                      is-rewrite-secret-used?
                                                      haku)
-        latest-id (some-> haku
-                          :ataru-form-key
-                          form-store/latest-id-by-key)]
+        form-key (or (:ataru-form-key haku)
+                     (ohjausparametrit-utils/synthetic-application-form-key ohjausparametrit-service haku-oid))
+        latest-id (some-> form-key form-store/latest-id-by-key)]
     (when latest-id
       (fetch-form-by-haku-oid-and-id form-by-id-cache
                                      tarjonta-service
