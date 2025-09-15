@@ -20,8 +20,14 @@
      :target         "1.2.246.562.29.75477542726",
      :PH_VTJH        {:dateStart nil, :dateEnd nil},
      :PH_IP          {:date nil},
-     :PH_LMT         (if (= haku-oid "payment-info-test-kk-haku-custom-grace") {:value 10000} nil)
-     :synteettisetHakemukset (not (= haku-oid "1.2.246.562.29.12345678910")),
-     :synteettisetLomakeavain (if (= haku-oid "1.2.246.562.29.12345678910") "" "synthetic-application-test-form"),
+     :PH_LMT         (cond
+                       (= haku-oid "payment-info-test-kk-haku-custom-grace") {:value 10000}
+                       (= haku-oid "hakukohtainen-raja-käytössä") {:value 20})
+     :synteettisetHakemukset (not (= haku-oid "1.2.246.562.29.12345678910"))
+     :synteettisetLomakeavain (if (= haku-oid "1.2.246.562.29.12345678910") "" "synthetic-application-test-form")
+     :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa (if (= haku-oid "hakemuskohtainen-raja-käytössä") true nil)
+     :liitteidenMuokkauksenHakemuskohtainenTakarajaPaivaa (if (= haku-oid "hakemuskohtainen-raja-käytössä") 15 nil)
+     :liitteidenMuokkauksenHakemuskohtainenTakarajaKellonaika (if (= haku-oid "hakemuskohtainen-raja-käytössä") "16:15" nil)
+     :liitteidenMuokkauksenHakukohtainenTakarajaKellonaika (if (= haku-oid "hakukohtainen-raja-käytössä") "15:14" nil)
      :__modifiedBy__ "1.2.246.562.24.64667668834",
      :__modified__   1508400869203}))

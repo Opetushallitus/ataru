@@ -9,6 +9,7 @@
             [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
+            [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.applications.excel-export :as excel]
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
@@ -230,7 +231,8 @@
                           suoritus-service
                           valinta-laskenta-service
                           valinta-tulos-service
-                          form-by-id-cache]
+                          form-by-id-cache
+                          attachment-deadline-service]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -249,7 +251,8 @@
                                  :person-service person-service
                                  :audit-logger audit-logger
                                  :job-runner job-runner
-                                 :session session})]
+                                 :session session
+                                 :attachment-deadline-service attachment-deadline-service})]
         (if (:success submit-results)
           (ok (:applications submit-results))
           (response/bad-request (:applications submit-results))))
@@ -495,6 +498,7 @@
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
           (do (hakija-application-service/start-submit-jobs
+                attachment-deadline-service
                 koodisto-cache
                 tarjonta-service
                 organization-service
@@ -676,6 +680,7 @@
         :return ataru-schema/Event
         (if-let [resend-event (application-service/send-modify-application-link-email
                                 application-service
+                                attachment-deadline-service
                                 application-key
                                 nil
                                 session)]
@@ -685,7 +690,8 @@
       (api/GET "/:application-key/field-deadline" {session :session}
         :path-params [application-key :- s/Str]
         :return [ataru-schema/FieldDeadline]
-        (let [response (field-deadline/get-field-deadlines
+        (let [response (attachment-deadline/get-field-deadlines-authorized
+                         attachment-deadline-service
                          organization-service
                          tarjonta-service
                          audit-logger
@@ -1122,6 +1128,7 @@
           (if secret
             (if-let [resend-event (application-service/send-modify-application-link-email
                                    application-service
+                                   attachment-deadline-service
                                    application-key
                                    payment-url
                                    session)]
