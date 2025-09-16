@@ -2862,8 +2862,8 @@
                                   :sv "Ansökningsavgift"
                                   :en "Application fee"}
    :kk-application-payment-obligation {:fi "Hakemusmaksuvelvollisuus"
-                                       :sv "Hakemusmaksuvelvollisuus"
-                                       :en "Obligated to pay application fee"}
+                                       :sv "Skyldighet att betala ansökningsavgift"
+                                       :en "Application fee obligation"}
    :kk-payment-not-checked       {:fi "Hakijan maksuvelvollisuuden tila ei ole vielä tiedossa"
                                   :sv "Sökandens betalningsskyldighet är ännu okänd"
                                   :en "Applicant payment liability unknown"}
@@ -3025,6 +3025,9 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}
+   :hakemusmaksuvelvollisuus {:fi "Hakemusmaksuvelvollisuus"
+                              :sv "Skyldighet att betala ansökningsavgift"
+                              :en "Application fee obligation"}
    :kk-payment-state         {:fi "Hakemusmaksun tila"
                               :sv "Ansökningsavgiftens status"
                               :en "Application fee state"}})
