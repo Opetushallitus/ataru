@@ -3025,6 +3025,9 @@
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
                               :en "EN: Notes"}
+   :hakemusmaksuvelvollisuus {:fi "Hakemusmaksuvelvollisuus"
+                              :sv "Skyldighet att betala ansökningsavgift"
+                              :en "Application fee obligation"}
    :kk-payment-state         {:fi "Hakemusmaksun tila"
                               :sv "Ansökningsavgiftens status"
                               :en "Application fee state"}})
