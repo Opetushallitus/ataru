@@ -279,16 +279,20 @@
       (some #(not (time/before? % now)) attachment-deadlines))))
 
 (defn- keep-if-deadline-passed
-  [attachment-deadline-service field-deadlines haku now application-submitted review]
-  (let [id             (:attachment-key review)
-        field-deadline (some->> field-deadlines
-                                (filter #(= id (:field-id %)))
-                                first
-                                :deadline)
-        passed         (if (some? field-deadline)
-                         (time/after? now field-deadline)
-                         (not (time-is-before-some-attachment-deadlines? attachment-deadline-service application-submitted haku now)))]
-    (when passed
+  [attachment-deadline-service field-deadlines haku now application review]
+  (let [id                                (:attachment-key review)
+        field-deadline                    (some->> field-deadlines
+                                                   (filter #(= id (:field-id %)))
+                                                   first
+                                                   :deadline)
+        payment-obligation-reviewed?      (attachment-deadline/kk-application-payment-obligation-reviewed?
+                                            attachment-deadline-service application)
+        passed?                           (if (some? field-deadline)
+                                            (time/after? now field-deadline)
+                                            (not
+                                              (time-is-before-some-attachment-deadlines?
+                                                attachment-deadline-service (:submitted application) haku now)))]
+    (when (or payment-obligation-reviewed? passed?)
       review)))
 
 (defn- includes-fields-with-passed-deadlines?
@@ -297,12 +301,11 @@
   (let [now              (time/now)
         application-key  (:key application)
         haku-oid         (:haku application)
-        application-submitted (:submitted application)
         haku             (tarjonta/get-haku tarjonta-service haku-oid)
         field-deadlines  (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
         passed           (remove nil?
                                  (map (partial keep-if-deadline-passed
-                                               attachment-deadline-service field-deadlines haku now application-submitted) field-reviews))]
+                                               attachment-deadline-service field-deadlines haku now application) field-reviews))]
     (if (seq passed)
       (do
         (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)
@@ -336,7 +339,7 @@
     (when-let [exemption-answer (exemption-form-field-name answers)]
       (let [exempt-due-to-field? (contains? exemption-field-ok-values (:value exemption-answer))
             attachements-invalid-and-dl-passed? (attachments-invalid-and-deadline-passed?
-                                                 attachment-deadline-service tarjonta-service application)
+                                                  attachment-deadline-service tarjonta-service application)
             exempt? (and exempt-due-to-field?
                          (not attachements-invalid-and-dl-passed?))]
         (when exempt?

@@ -24,6 +24,7 @@
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.applications.application-store :as application-store]
             [ataru.test-utils :refer [set-fixed-time]]
+            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
 
 (def test-person-oid
@@ -35,6 +36,8 @@
 (def fake-tarjonta-service (tarjonta-service/->MockTarjontaKoutaService))
 (def fake-organization-service (organization-service/->FakeOrganizationService))
 (def fake-ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
+
+(def fake-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService fake-ohjausparametrit-service))
 
 (def test-maksut-secret "1234ABCD5678EFGH")
 
@@ -89,22 +92,26 @@
     (start-runner-job this connection job-type initial-state)))
 
 (def runner
-  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
-                       :organization-service     fake-organization-service
-                       :ohjausparametrit-service fake-ohjausparametrit-service
-                       :person-service           fake-person-service
-                       :get-haut-cache           fake-get-haut-cache
-                       :koodisto-cache           fake-koodisto-cache
-                       :maksut-service           mock-maksut-service}))
+  (map->FakeJobRunner
+    {:tarjonta-service            fake-tarjonta-service
+     :organization-service        fake-organization-service
+     :ohjausparametrit-service    fake-ohjausparametrit-service
+     :person-service              fake-person-service
+     :get-haut-cache              fake-get-haut-cache
+     :koodisto-cache              fake-koodisto-cache
+     :attachment-deadline-service fake-attachment-deadline-service
+     :maksut-service              mock-maksut-service}))
 
 (def runner-with-empty-haku-cache
-  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
-                       :organization-service     fake-organization-service
-                       :ohjausparametrit-service fake-ohjausparametrit-service
-                       :person-service           fake-person-service
-                       :get-haut-cache           empty-get-haut-cache
-                       :koodisto-cache           fake-koodisto-cache
-                       :maksut-service           mock-maksut-service}))
+  (map->FakeJobRunner
+    {:tarjonta-service            fake-tarjonta-service
+     :organization-service        fake-organization-service
+     :ohjausparametrit-service    fake-ohjausparametrit-service
+     :person-service              fake-person-service
+     :get-haut-cache              empty-get-haut-cache
+     :koodisto-cache              fake-koodisto-cache
+     :attachment-deadline-service fake-attachment-deadline-service
+     :maksut-service              mock-maksut-service}))
 
 (declare conn)
 (declare spec)
