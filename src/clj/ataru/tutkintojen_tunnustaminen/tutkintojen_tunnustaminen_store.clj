@@ -78,7 +78,7 @@
 
 (defn- get-tutu-application [application-key]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                           (first (yesql-get-tutu-application {:key application-key} {:connection connection}))))
+                           (first (yesql-get-tutu-application-details {:key application-key} {:connection connection}))))
 
 (defn start-tutkintojen-tunnustaminen-send-job [job-runner  application-key]
   (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])

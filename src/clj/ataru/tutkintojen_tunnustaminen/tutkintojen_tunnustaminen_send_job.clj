@@ -5,10 +5,9 @@
     [taoensso.timbre :as log]))
 
 
-(defn tutkintojen-tunnustaminen-send-handler [{:keys [key country apply-reason]} {:keys [tutu-cas-client]}]
+(defn tutkintojen-tunnustaminen-send-handler [{:keys [key apply-reason]} {:keys [tutu-cas-client]}]
   (let [url (resolve-url :tutu-service.hakemus)
         req {:hakemusOid    key
-             :maakoodi      country
              :hakemusKoskee apply-reason}
         response (cas/cas-authenticated-post tutu-cas-client url req)]
 
