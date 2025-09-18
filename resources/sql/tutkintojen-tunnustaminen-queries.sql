@@ -62,10 +62,6 @@ SELECT a.key,
        (SELECT value
         FROM answers
         WHERE application_id = a.id AND
-            key = 'tutu-first-degree-country') AS "country",
-       (SELECT value
-        FROM answers
-        WHERE application_id = a.id AND
             key = 'tutu-apply-reason') AS "apply-reason"
 FROM applications AS a
          JOIN forms AS f ON f.id = a.form_id
