@@ -57,7 +57,7 @@ SELECT a.id
 FROM latest_applications a
 WHERE a.key = :key;
 
--- name: yesql-get-tutu-application
+-- name: yesql-get-tutu-application-details
 SELECT a.key,
        (SELECT value
         FROM answers
