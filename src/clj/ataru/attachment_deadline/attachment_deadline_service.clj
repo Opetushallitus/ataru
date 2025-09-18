@@ -121,6 +121,11 @@
             (.withZone (t/time-zone-for-id "Europe/Helsinki"))
             (set-local-time haku-settings-based-grace-period-time))))
 
+(defn- kk-application-payment-obligation-reviewed? [application]
+  (boolean (some #(and (= "kk-application-payment-obligation" (:requirement %))
+                       (= "reviewed" (:state %)))
+                 (:application-hakukohde-reviews application))))
+
 (defrecord AttachmentDeadlineService [ohjausparametrit-service]
   component/Lifecycle
   (start [this] this)
@@ -132,4 +137,6 @@
   (get-field-deadlines [_ application-key]
     (get-field-deadlines application-key))
   (attachment-deadline-for-hakuaika [_ application-submitted haku hakuaika]
-    (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika)))
+    (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika))
+  (kk-application-payment-obligation-reviewed? [_ application]
+    (kk-application-payment-obligation-reviewed? application)))
