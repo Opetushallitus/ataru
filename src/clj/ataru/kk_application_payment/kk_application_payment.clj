@@ -67,6 +67,11 @@
   {:eu-citizen      "eu-citizen"
    :exemption-field "exemption-field"})
 
+(def kk-application-payment-obligation-states
+  {:unreviewed      "unreviewed"
+   :reviewed        "reviewed"
+   :in-migri-review "in-migri-review"})
+
 (defn get-due-date-for-todays-payment []
   (let [time-now (new DateTime)
         due-date (time-format/unparse default-time-format
