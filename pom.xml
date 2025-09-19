@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>a1ccd89a685f72f2055d2fca62a21c19248ff795</tag>
+     <tag>7c6026b634351425410c0bbfa6f778d3f5490ac4</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -746,12 +746,12 @@
     <dependency>
       <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
       <artifactId>dokumenttipalvelu</artifactId>
-      <version>6.14-SNAPSHOT</version>
+      <version>6.15-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>opiskelijavalinnat-utils.viestinvalitys</groupId>
       <artifactId>kirjasto</artifactId>
-      <version>1.2.1-SNAPSHOT</version>
+      <version>1.2.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.thoughtworks.paranamer</groupId>
