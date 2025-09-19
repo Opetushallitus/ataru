@@ -50,6 +50,17 @@
     (ataru-db/exec :db yesql-set-form-id! {:old_id id :new_id (:id form-fixture)})
     form))
 
+(defn init-db-application-hakukohde-review-fixture
+  ([{hakukohde          :hakukohde
+     review-requirement :review-requirement
+     review-state       :review-state}
+    application-key
+    audit-logger]
+   (application-store/save-application-hakukohde-review
+     application-key hakukohde review-requirement review-state {} audit-logger))
+  ([fixture application-key]
+   (init-db-application-hakukohde-review-fixture fixture application-key (audit-log/new-dummy-audit-logger))))
+
 (defn init-db-application-fixture
   [form-fixture application-fixture application-hakukohde-reviews-fixture application-reviews-fixture]
   (when (or (nil? (:id form-fixture)) (not= (:id form-fixture) (:form application-fixture)))
@@ -65,10 +76,8 @@
                                nil)
                                :id)
         stored-application (application-store/get-application application-id)]
-    (doseq [{hakukohde :hakukohde review-requirement :review-requirement review-state :review-state}
-            application-hakukohde-reviews-fixture]
-      (application-store/save-application-hakukohde-review
-       (:key stored-application) hakukohde review-requirement review-state {} audit-logger))
+    (doseq [fixture application-hakukohde-reviews-fixture]
+      (init-db-application-hakukohde-review-fixture fixture (:key stored-application) audit-logger))
     (doseq [review application-reviews-fixture]
       (application-store/save-application-review
         (merge review {:application-key (:key stored-application)}) {} audit-logger))

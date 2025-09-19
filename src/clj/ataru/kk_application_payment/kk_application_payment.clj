@@ -281,23 +281,25 @@
       (some #(not (time/before? % now)) attachment-deadlines))))
 
 (defn- keep-if-deadline-passed
-  [attachment-deadline-service field-deadlines form haku now application-submitted review]
-  (let [id             (:attachment-key review)
-        field-deadline (some->> field-deadlines
-                                (filter #(= id (:field-id %)))
-                                first
-                                :deadline)
-        field          (some->> (:content form)
-                                (filter #(= id (:id %)))
-                                first)
-        passed         (cond
-                         (some? field-deadline)
-                         (time/after? now field-deadline)
-                         (deadline/custom-deadline field)
-                         (deadline/custom-deadline-passed? now field)
-                         :else
-                         (not (time-is-before-some-attachment-deadlines? attachment-deadline-service application-submitted haku now)))]
-    (when passed
+  [attachment-deadline-service field-deadlines form haku now application review]
+  (let [id                                (:attachment-key review)
+        field-deadline                    (some->> field-deadlines
+                                                   (filter #(= id (:field-id %)))
+                                                   first
+                                                   :deadline)
+        field                             (some->> (:content form)
+                                                   (filter #(= id (:id %)))
+                                                   first)
+        payment-obligation-reviewed?      (attachment-deadline/kk-application-payment-obligation-reviewed?
+                                            attachment-deadline-service application)
+        passed?                           (cond
+                                            (some? field-deadline)
+                                            (time/after? now field-deadline)
+                                            (deadline/custom-deadline field)
+                                            (deadline/custom-deadline-passed? now field)
+                                            :else
+                                            (not (time-is-before-some-attachment-deadlines? attachment-deadline-service (:submitted application) haku now)))]
+    (when (or payment-obligation-reviewed? passed?)
       review)))
 
 (defn- includes-fields-with-passed-deadlines?
@@ -314,8 +316,7 @@
         field-deadlines       (attachment-deadline/get-field-deadlines attachment-deadline-service application-key)
         passed                (remove
                                 nil? (map (partial keep-if-deadline-passed
-                                                   attachment-deadline-service field-deadlines form haku now
-                                                   application-submitted)
+                                                   attachment-deadline-service field-deadlines form haku now application)
                                           field-reviews))]
     (if (seq passed)
       (do
