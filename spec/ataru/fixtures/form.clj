@@ -357,6 +357,18 @@
          {:id  909909
           :key "payment-exemption-test-form"}))
 
+(def payment-exemption-test-form-with-deadline
+  (merge minimal-form
+         {:id      909910
+          :key     "payment-exemption-test-form"
+          :content [{:id                     "brexit-permit-attachment"
+                     :fieldClass             "formField"
+                     :fieldType              "attachment"
+                     :metadata               metadata
+                     :options                []
+                     :params                 {:deadline "10.4.2030 15:00"}
+                     :belongs-to-hakukohteet ["payment-info-test-kk-hakukohde"]}]}))
+
 (def tutkinto-test-form
   (merge minimal-form
          (-> {:content [(ktm/koski-tutkinnot-module metadata)]}
