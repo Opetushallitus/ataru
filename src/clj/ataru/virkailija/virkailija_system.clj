@@ -41,7 +41,8 @@
             [ataru.koski.koski-service :as koski-service]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ataru.db.db :as db]
-            [ataru.temp-file-storage.s3-client :as s3-client])
+            [ataru.temp-file-storage.s3-client :as s3-client]
+            [taoensso.timbre :as log])
   (:import java.time.Duration
            [fi.oph.viestinvalitys ClientBuilder]
            [fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu]
@@ -68,7 +69,7 @@
                                       (.build))
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
-                                                      "auth/cas"
+                                                      "/auth/cas"
                                                       "ring-session"
                                                       (-> config :public-config :virkailija-caller-id))
 
@@ -121,7 +122,7 @@
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
                                                       "session" (-> config :public-config :virkailija-caller-id))
 
     :valinta-tulos-service (component/using
@@ -129,7 +130,7 @@
                             {:cas-client :valinta-tulos-service-cas-client})
 
     :valinta-laskenta-service-cas-client (cas/new-client "/valintalaskenta-laskenta-service"
-                                                         "j_spring_cas_security_check"
+                                                         "/j_spring_cas_security_check"
                                                          "JSESSIONID"
                                                          (-> config :public-config :virkailija-caller-id))
 
@@ -139,7 +140,7 @@
                                  :valinta-tulos-service :valinta-tulos-service})
 
     :valintalaskentakoostepalvelu-cas-client (cas/new-client "/valintalaskentakoostepalvelu"
-                                                             "j_spring_cas_security_check"
+                                                             "/j_spring_cas_security_check"
                                                              "JSESSIONID"
                                                              (-> config :public-config :virkailija-caller-id))
 
@@ -159,7 +160,7 @@
                                              :valintalaskentakoostepalvelu-cas-client
                                              :hakukohde-cache])
 
-    :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check"
+    :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "/j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :valintatapajono-cache-loader (component/using
@@ -191,7 +192,7 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
-    :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service" "j_spring_cas_security_check"
+    :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service" "/j_spring_cas_security_check"
                                              "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
@@ -201,7 +202,7 @@
                              [:kayttooikeus-cas-client]))
 
     :maksut-cas-client (cas/new-client "/maksut"
-                        "auth/cas"
+                        "/auth/cas"
                         "ring-session"
                         (-> config :public-config :virkailija-caller-id))
 
@@ -216,7 +217,7 @@
                      :application-service
                      :maksut-service])
 
-    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "/j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :henkilo-cache-loader (component/using
@@ -236,12 +237,14 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :login-cas-client (cas/new-cas-client (-> config :public-config :virkailija-caller-id))
+    :login-cas-client (let [client (cas/new-client "/lomake-editori" "/auth/cas" "ring-session" (-> config :public-config :virkailija-caller-id))]
+                        (log/debug "Initialized login-cas-client:" client)
+                        client)
 
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
-    :tutu-cas-client (cas/new-client "/tutu-backend/api" "j_spring_cas_security_check" "JSESSIONID"
+    :tutu-cas-client (cas/new-client "/tutu-backend/api" "/j_spring_cas_security_check" "JSESSIONID"
                                      (-> config :public-config :virkailija-caller-id))
 
     :siirtotiedosto-client (new SiirtotiedostoPalvelu
@@ -249,7 +252,7 @@
                                 (-> config :siirtotiedostot :s3-bucket)
                                 (-> config :siirtotiedostot :transferFileTargetRoleArn))
 
-    :koski-client (cas/new-client "/koski" "cas/virkailija" "koskiUser"
+    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser"
                                   "1.2.246.562.10.00000000001.ataru-hakija.frontend")
     :koski-service (component/using
                      (koski-service/map->IntegratedKoskiTutkintoService {})
@@ -354,7 +357,7 @@
     :amazon-cloudwatch (component/using
                   (cloudwatch/map->AmazonCloudwatch {:namespace (str (-> config :public-config :environment-name) "-ataru")})
                   [:credentials-provider])
-    
+
     :amazon-sqs (component/using
                  (sqs/map->AmazonSQS {})
                  [:credentials-provider])

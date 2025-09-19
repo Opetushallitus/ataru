@@ -1,77 +1,134 @@
 (ns ataru.cas.client
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
-            [ataru.util.http-util :as http-util]
-            [cheshire.core :as json])
-  (:import [fi.vm.sade.utils.cas CasClient CasParams]
-           [org.http4s.client.blaze package$]))
+            [taoensso.timbre :as log])
+  (:import [fi.vm.sade.javautils.nio.cas CasConfig CasConfig$CasConfigBuilder CasClientBuilder]
+           [org.asynchttpclient RequestBuilder]))
 
-(defrecord CasClientState [client params session-cookie-name session-id])
 
+; used only in some tests
 (defn new-cas-client [caller-id]
-  (new CasClient
-       (resolve-url :cas-client)
-       (.defaultClient package$/MODULE$)
-       caller-id))
+  (let [fake-config (-> (CasConfig$CasConfigBuilder. "fake-username" "fake-password" (resolve-url :cas-client) "http://fake-service-url" caller-id caller-id "fake-security-uri-suffix")
+                        (.setJsessionName "fake-session-cookie-name")
+                        .build)]
+    (CasClientBuilder/build fake-config)))
 
 (defn new-client [service security-uri-suffix session-cookie-name caller-id]
   {:pre [(some? (:cas config))]}
   (let [username   (get-in config [:cas :username])
         password   (get-in config [:cas :password])
-        cas-params (CasParams/apply service security-uri-suffix username password)
-        cas-client (new-cas-client caller-id)]
-    (map->CasClientState {:client              cas-client
-                          :params              cas-params
-                          :session-cookie-name session-cookie-name
-                          :session-id          (atom nil)})))
-
-(defn- request-with-json-body [request body]
-  (-> request
-      (assoc-in [:headers "Content-Type"] "application/json")
-      (assoc :body (json/generate-string body))))
-
-(defn- create-params [session-cookie-name cas-session-id body]
-  (cond-> {:cookies          {session-cookie-name  {:value @cas-session-id :path "/"}}
-           :redirect-strategy :none
-           :throw-exceptions false}
-          (some? body) (request-with-json-body body)))
-
-(defn- cas-http [client method url opts-fn & [body]]
-  (let [cas-client          (:client client)
-        cas-params          (:params client)
-        session-cookie-name (:session-cookie-name client)
-        cas-session-id      (:session-id client)]
-    (when (nil? @cas-session-id)
-      (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
-    (let [resp (http-util/do-request (merge-with conj {:url url :method method}
-                                                      (opts-fn)
-                                                      (create-params session-cookie-name cas-session-id body)))]
-      (if (or (= 401 (:status resp))
-              (= 302 (:status resp)))
-        (do
-          (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
-          (http-util/do-request (merge-with conj {:url url :method method}
-                                                 (opts-fn)
-                                                 (create-params session-cookie-name cas-session-id body))))
-        resp))))
+        casUrl     (resolve-url :cas-client)
+        serviceUrl (str (resolve-url :url-virkailija) service)
+        cas-config (-> (CasConfig$CasConfigBuilder. username password casUrl serviceUrl caller-id caller-id security-uri-suffix)
+                       (.setJsessionName session-cookie-name)
+                       .build)
+        cas-client (CasClientBuilder/build cas-config)]
+    (log/info "Created CAS client for service" service "with security URI suffix" security-uri-suffix)
+    cas-client))
 
 (defn cas-authenticated-get [client url]
-  (cas-http client :get url (constantly {})))
+  (log/debug "Performing CAS authenticated GET to URL:" url)
+  (try
+    (when (nil? client)
+      (throw (IllegalArgumentException. "Client cannot be null")))
+    (when (nil? url)
+      (throw (IllegalArgumentException. "URL cannot be null")))
+    (let [request (-> (RequestBuilder.)
+                      (.setMethod "GET")
+                      (.setUrl url)
+                      .build)]
+      (.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302}))
+    (catch Exception e
+      (do
+        (log/error "Error during CAS authenticated GET: " (.getMessage e))
+        (throw e)))))
 
 (defn cas-authenticated-delete [client url & [opts-fn]]
-  (cas-http client :delete url (if (nil? opts-fn) (constantly {}) opts-fn)))
+  (let [request (-> (RequestBuilder.)
+                    (.setMethod "DELETE")
+                    (.setUrl url)
+                    (.addHeader "Content-type" "application/json")
+                    (.addHeader "Accept" "application/json")
+                    .build)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302})))
 
 (defn cas-authenticated-post [client url body & [opts-fn]]
-  (cas-http client :post url (if (nil? opts-fn) (constantly {}) opts-fn) body))
+  (log/debug "Performing CAS authenticated POST to URL:" url)
+  (let [base-request (-> (RequestBuilder.)
+                         (.setMethod "POST")
+                         (.setUrl url)
+                         (.addHeader "Content-type" "application/json")
+                         (.addHeader "Accept" "application/json")
+                         (.setBody body))
+        extra-opts   (if opts-fn (opts-fn) {})
+        request      (reduce (fn [req [k v]]
+                               (case k
+                                 :headers (reduce (fn [r [header-key header-value]]
+                                                    (.addHeader r header-key header-value))
+                                                  req v)
+                                 req))
+                             base-request
+                             extra-opts)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
-(defn cas-authenticated-multipart-post [client url opts-fn]
-  (cas-http client :post url opts-fn nil))
+(defn cas-authenticated-multipart-post [client url body & [opts-fn]]
+  (let [base-request (-> (RequestBuilder.)
+                         (.setMethod "POST")
+                         (.setUrl url)
+                         (.addHeader "Content-type" "multipart/form-data")
+                         (.addHeader "Accept" "application/json")
+                         (.setBody body))
+        extra-opts   (if opts-fn (opts-fn) {})
+        request      (reduce (fn [req [k v]]
+                               (case k
+                                 :headers (reduce (fn [r [header-key header-value]]
+                                                    (.addHeader r header-key header-value))
+                                                  req v)
+                                 req))
+                             base-request
+                             extra-opts)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
-(defn cas-authenticated-get-as-stream [client url]
-  (cas-http client :get url (constantly {:as :stream}) nil))
+(defn cas-authenticated-get-as-stream [cas-client url]
+  (let [request (-> (RequestBuilder.)
+                    (.setMethod "GET")
+                    (.setUrl url)
+                    (.addHeader "Accept" "application/octet-stream")
+                    .build)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes cas-client request #{401 302})))
 
 (defn cas-authenticated-patch [client url body & [opts-fn]]
-  (cas-http client :patch url (if (nil? opts-fn) (constantly {}) opts-fn) body))
+  (let [base-request (-> (RequestBuilder.)
+                         (.setMethod "PATCH")
+                         (.setUrl url)
+                         (.addHeader "Content-type" "application/json")
+                         (.addHeader "Accept" "application/json")
+                         (.setBody body))
+        extra-opts   (if opts-fn (opts-fn) {})
+        request      (reduce (fn [req [k v]]
+                               (case k
+                                 :headers (reduce (fn [r [header-key header-value]]
+                                                    (.addHeader r header-key header-value))
+                                                  req v)
+                                 req))
+                             base-request
+                             extra-opts)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
 (defn cas-authenticated-put [client url body & [opts-fn]]
-  (cas-http client :put url (if (nil? opts-fn) (constantly {}) opts-fn) body))
+  (let [base-request (-> (RequestBuilder.)
+                         (.setMethod "PUT")
+                         (.setUrl url)
+                         (.addHeader "Content-type" "application/json")
+                         (.addHeader "Accept" "application/json")
+                         (.setBody body))
+        extra-opts   (if opts-fn (opts-fn) {})
+        request      (reduce (fn [req [k v]]
+                               (case k
+                                 :headers (reduce (fn [r [header-key header-value]]
+                                                    (.addHeader r header-key header-value))
+                                                  req v)
+                                 req))
+                             base-request
+                             extra-opts)]
+    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))

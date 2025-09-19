@@ -24,21 +24,13 @@
           (it "Return list of hakukohderyhmas for hakukohde"
               (with-redefs [http/request (constantly fake-hakukohderyhmapalvelu-response)]
                 (let [cas-client (cas/new-cas-client "ataru-test")
-                      cas (cas/map->CasClientState {:client              cas-client
-                                                    :params              nil
-                                                    :session-cookie-name "ring-session"
-                                                    :session-id          (atom "fake-session")})
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas)
+                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-hakukohderyhma-oids-for-hakukohde hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-result result))))
 
           (it "Return settings for hakukohderyhma"
               (with-redefs [http/request (constantly fake-hakukohderyhmapalvelu-settings-response)]
                 (let [cas-client (cas/new-cas-client "ataru-test")
-                      cas (cas/map->CasClientState {:client              cas-client
-                                                    :params              nil
-                                                    :session-cookie-name "ring-session"
-                                                    :session-id          (atom "fake-session")})
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas)
+                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-settings-for-hakukohderyhma hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-settings-result result)))))
