@@ -6,7 +6,8 @@
             [clj-ring-db-session.authentication.login :as crdsa-login]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [taoensso.timbre :as log]))
 
 (defn- rewrite-url-for-environment
   "Ensure that https is used when available (due to https termination on
@@ -42,8 +43,8 @@
                               login-provider (if (-> config :dev :fake-dependencies)
                                                (fake-login-provider ticket)
                                                (cas-login login-cas-client ticket))]
+                          (log/debug "cas auth route")
                           (login login-provider
-                                 kayttooikeus-service
                                  person-service
                                  organization-service
                                  audit-logger
