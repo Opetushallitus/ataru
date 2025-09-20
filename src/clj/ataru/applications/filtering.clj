@@ -29,11 +29,11 @@
 
 (defn- parse-enabled-filters
   [filters kw]
-  (->> (get filters kw)
-       (filter second)
-       (map first)
-       (map name)
-       (set)))
+  (some->> (get filters kw)
+           (filter second)
+           (map first)
+           (map name)
+           (set)))
 
 (defn- filter-by-ssn
   [application with-ssn? without-ssn?]
@@ -66,7 +66,8 @@
                              (last)
                              (count))
         selected-count   (count states-to-include)]
-    (if (= all-states-count selected-count)
+    (if (or (= all-states-count selected-count)
+            (nil? states-to-include))
       true
       (let [relevant-states  (->> (:application-hakukohde-reviews application)
                                   (filter #(and (= requirement-name (:requirement %))
@@ -144,6 +145,7 @@
           (filter-by-hakukohde-review application selected-hakukohteet-set "degree-requirement" (parse-enabled-filters filters :degree-requirement))
           (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))
           (filter-by-hakukohde-review application selected-hakukohteet-set "payment-obligation" (parse-enabled-filters filters :payment-obligation))
+          (filter-by-hakukohde-review application selected-hakukohteet-set "kk-application-payment-obligation" (parse-enabled-filters filters :kk-application-payment-obligation))
           (filter-by-attachment-review application selected-hakukohteet-set attachment-states-to-include-set)
           (filter-by-eligibility-set-automatically application
                                                    selected-hakukohteet-set

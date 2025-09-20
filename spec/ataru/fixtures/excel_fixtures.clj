@@ -192,7 +192,8 @@
                                        :person                        {:turvakielto true
                                                                        :first-name  "Person-etunimi"}
                                        :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
-                                                                       {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}]
+                                                                       {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
+                                                                       {:requirement "kk-application-payment-obligation" :state "in-migri-review" :hakukohde "hakukohde.oid"}]
                                        :kk-payment-state              "ok-by-proxy"
                                        :answers                       [{:key   "first-name"
                                                                         :label {:fi "Etunimi"}

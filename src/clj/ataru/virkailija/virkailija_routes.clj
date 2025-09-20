@@ -151,22 +151,23 @@
 (defmethod json-schema/convert-class ZonedDateTime [_ _] {:type "string"})
 
 (defn render-virkailija-page
-  []
+  [lang]
   (let [public-config (json/generate-string (or (:public-config config) {}))]
     (-> (selmer/render-file "templates/virkailija.html"
                             {:cache-fingerprint cache-fingerprint
                              :config            public-config
                              :front-properties  (url-helper/front-json)
+                             :lang              (or lang "fi")
                              :js-bundle-name    (or (-> config :server :js-bundle-names :virkailija)
                                                     "virkailija-app.js")})
         (ok)
         (content-type "text/html"))))
 (api/defroutes app-routes
   (api/undocumented
-    (api/GET "/" [] (render-virkailija-page))
-    (api/GET client-routes [] (render-virkailija-page))
-    (api/GET client-sub-routes [] (render-virkailija-page))
-    (api/GET "/virhe" [] (render-virkailija-page))))
+    (api/GET "/" {session :session} (render-virkailija-page (-> session :identity :lang)))
+    (api/GET client-routes {session :session} (render-virkailija-page (-> session :identity :lang)))
+    (api/GET client-sub-routes {session :session} (render-virkailija-page (-> session :identity :lang)))
+    (api/GET "/virhe" {session :session} (render-virkailija-page (-> session :identity :lang)))))
 
 (defn- render-file-in-dev
   [filename js-config]

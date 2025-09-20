@@ -179,6 +179,9 @@
    "pisteet"                       {:field     [:application-review :score]}
    "application-review-notes"      {:field     [:application-review-notes]
                                     :format-fn application-review-notes-formatter}
+   "hakemusmaksuvelvollisuus"      {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "kk-application-payment-obligation")}
    "kk-payment-state"              {:field     [:application :kk-payment-state]
                                     :lang?     true
                                     :format-fn kk-payment-state-formatter}})
@@ -206,6 +209,7 @@
    "applicant-oid"
    "turvakielto"
    "application-review-notes"
+   "hakemusmaksuvelvollisuus"
    "kk-payment-state"])
 
 (def ^:private old-application-meta-fields
