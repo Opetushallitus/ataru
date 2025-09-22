@@ -52,6 +52,7 @@
             [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :as vls]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
+            [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]
             [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
@@ -293,7 +294,13 @@
       (if-let [key (:ataru-form-key (tarjonta/get-haku tarjonta-service haku-oid))]
         (ok (->> (form-store/fetch-by-key key)
                  (koodisto/populate-form-koodisto-fields koodisto-cache)))
-        (response/not-found {:error (str "Form not found on haku " haku-oid)})))
+        (if-let [synthetic-key (ohjausparametrit-utils/synthetic-application-form-key ohjausparametrit-service haku-oid)]
+          (do
+            (log/info "Fetching synthetic application form with key" synthetic-key)
+            (ok (->> (form-store/fetch-by-key synthetic-key)
+                     (koodisto/populate-form-koodisto-fields koodisto-cache))))
+          (response/not-found {:error (str "Form not found on haku " haku-oid)})))
+        )
 
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
@@ -640,7 +647,7 @@
                          session
                          application-key)]
           (if allowed?
-            (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
+              (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
                                              session
                                              application-key)
                   modify-url               (str (-> config :public-config :applicant :service_url)

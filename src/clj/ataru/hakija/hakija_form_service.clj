@@ -8,6 +8,7 @@
             [ataru.hakija.person-info-fields :refer [viewing-forbidden-person-info-field-ids
                                                      editing-forbidden-person-info-field-ids
                                                      editing-allowed-person-info-field-ids]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options populate-attachment-deadlines]]
@@ -27,6 +28,7 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
+            [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]
             [ataru.kk-application-payment.utils :refer [has-payment-module?]]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]))
 
@@ -275,6 +277,10 @@
   [form hakuajat now]
   (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
 
+(defn- synthetic-application-form-key
+  [ohjausparametrit-service haku-oid]
+  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetLomakeavain))
+
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   ([id :- s/Any
    roles :- [form-role/FormRole]
@@ -411,9 +417,9 @@
                                                      roles
                                                      is-rewrite-secret-used?
                                                      haku)
-        latest-id (some-> haku
-                          :ataru-form-key
-                          form-store/latest-id-by-key)]
+        form-key (or (:ataru-form-key haku)
+                     (ohjausparametrit-utils/synthetic-application-form-key ohjausparametrit-service haku-oid))
+        latest-id (some-> form-key form-store/latest-id-by-key)]
     (when latest-id
       (fetch-form-by-haku-oid-and-id form-by-id-cache
                                      tarjonta-service
