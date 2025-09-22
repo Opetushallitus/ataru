@@ -27,7 +27,6 @@
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
-            [ataru.kk-application-payment.utils :refer [has-payment-module?]]
             [ataru.ohjausparametrit.utils :as ohjausparametrit-utils]
             [ataru.kk-application-payment.utils :refer [has-payment-module?]]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]))
