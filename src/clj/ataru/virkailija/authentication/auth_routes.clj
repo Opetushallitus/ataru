@@ -28,7 +28,6 @@
         [username unique-ticket])))
 
 (defn auth-routes [{:keys [login-cas-client
-                           kayttooikeus-service
                            person-service
                            organization-service
                            audit-logger

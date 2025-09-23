@@ -1,7 +1,6 @@
 (ns ataru.virkailija.authentication.auth
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
-            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
