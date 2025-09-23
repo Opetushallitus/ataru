@@ -124,7 +124,7 @@
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
    [:kouta-internal-cas-client
-    (cas/new-client "/kouta-internal" "auth/login" "session" (-> config :public-config :virkailija-caller-id))]
+    (cas/new-client "/kouta-internal" "/auth/login" "session" (-> config :public-config :virkailija-caller-id))]
    [:kouta-haku-cache-loader
     (component/using
      (kouta-client/map->CacheLoader {})
