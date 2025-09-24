@@ -27,7 +27,7 @@
   (fn []
     (log/info "cas login, ticket" ticket)
     (when ticket
-      (let [userdetails-future (.validateServiceTicketWithVirkailijaUsername cas-client (resolve-url :ataru.login-success) ticket)
+      (let [userdetails-future (.validateServiceTicketWithVirkailijaUserDetails cas-client (resolve-url :ataru.login-success) ticket)
             userdetails        (.get userdetails-future) ;; Use .get to retrieve the result of CompletableFuture
             userdetails-map    (bean userdetails)]
         (log/debug "cas login, userdetails" userdetails)
