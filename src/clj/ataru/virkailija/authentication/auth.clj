@@ -30,10 +30,10 @@
       (let [userdetails-future (.validateServiceTicketWithVirkailijaUsername cas-client (resolve-url :ataru.login-success) ticket)
             userdetails        (.get userdetails-future) ;; Use .get to retrieve the result of CompletableFuture
             userdetails-map    (bean userdetails)]
-        (log/info "cas login, userdetails" userdetails)
-        (log/info (.getUser userdetails))
-        (log/info (.getRoles userdetails))
-        (log/info userdetails-map)
+        (log/debug "cas login, userdetails" userdetails)
+        (log/debug (.getUser userdetails))
+        (log/debug (.getRoles userdetails))
+        (log/debug userdetails-map)
         [userdetails-map ticket]))))
 
 (defn- user-right-organizations->organization-rights
