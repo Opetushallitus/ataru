@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>7c6026b634351425410c0bbfa6f778d3f5490ac4</tag>
+    <tag>b3c82cd559f0c8b1432d248e1bed40a1d0eb2841</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -642,9 +642,19 @@
       <version>0.9.3</version>
     </dependency>
     <dependency>
+      <groupId>opiskelijavalinnat-utils</groupId>
+      <artifactId>java-cas</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>fi.vm.sade</groupId>
       <artifactId>scala-cas_2.12</artifactId>
       <version>2.2.2.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.asynchttpclient</groupId>
+      <artifactId>async-http-client</artifactId>
+      <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
