@@ -36,7 +36,8 @@
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
-                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]]
+                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]
+                         [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]]
   :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
