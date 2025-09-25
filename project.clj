@@ -74,7 +74,8 @@
                  [compojure "1.7.0"
                   :exclusions [commons-io]]
                  [com.stuartsierra/component "1.1.0"]
-                 [metosin/compojure-api "1.1.13"]
+                 [metosin/compojure-api "1.1.13"
+                  :exclusions [commons-io]]
                  [aleph "0.9.3"
                   :exclusions [io.netty/netty-buffer
                                io.netty/netty-codec
@@ -123,7 +124,7 @@
                  [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.11.0"
                   :exclusions [commons-io]]
-                 [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12]]
+                 [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12 commons-io]]
                  [ring/ring-defaults "0.4.0"
                   :exclusions [commons-io]]
                  [ring/ring-json "0.5.1"
@@ -145,7 +146,6 @@
                  [metosin/ring-http-response "0.9.3"
                   :exclusions [commons-io]]
                  [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
-                 [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
                  [org.asynchttpclient/async-http-client "3.0.1"]
                  [ring/ring-session-timeout "0.3.0"]
                  [org.apache.poi/poi-ooxml "5.3.0"]
@@ -169,7 +169,7 @@
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
-                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava]]
+                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava commons-io]]
                  [com.google.guava/guava "31.1-jre"]
                  [msolli/proletarian "1.0.68-alpha"]
                  [jarohen/chime "0.3.3"]
