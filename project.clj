@@ -58,8 +58,7 @@
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]
                  [cljsjs/react-dom "18.2.0-1"]
-                 [lein-doo "0.1.11"
-                  :exclusions [org.clojure/data.json]]
+                 [lein-doo "0.1.11"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]
@@ -72,8 +71,7 @@
 
                  ;clojure
                  [com.rpl/specter "1.1.4"]
-                 [compojure "1.7.0"
-                  :exclusions [commons-io]]
+                 [compojure "1.7.0"]
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"]
                  [aleph "0.9.3"
