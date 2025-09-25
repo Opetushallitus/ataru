@@ -3,7 +3,6 @@
             [ataru.valinta-laskenta-service.valintalaskentaservice-service :as vls-service]
             [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :as vls]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :refer [ValintaTulosService]]
-            [clj-http.client :as http]
             [ataru.cas.client :as cas]
             [cheshire.core :as json])
   (:import [java.time ZonedDateTime ZoneId]))
@@ -70,8 +69,8 @@
 (describe "valintalaskentaservice spec"
           (tags :unit)
           (it "Return valintatulokset for application"
-              (with-redefs [http/request (constantly {:status 200 :body (json/generate-string mocked-vls-response)})]
-                (let [cas-client (cas/new-cas-client "ataru-test")
+              (with-redefs [cas/cas-authenticated-get (constantly {:status 200 :body (json/generate-string mocked-vls-response)})]
+                (let [cas-client nil
                       mocked-vts-service (->FakeValintaTulosService)
                       vls-service-instance (vls-service/->RemoteValintaLaskentaService cas-client mocked-vts-service)
                       result (first (vls/hakemuksen-tulokset vls-service-instance "1.2.3.4" "1.2.3.4.5.6"))
@@ -88,8 +87,8 @@
                   (should= "Hakutoivejärjestyspisteytys, 2 aste, pk ja yo 2016" (get-in first-piste [:nimi :fi])))))
 
           (it "Returns valintatulokset with exam result for application"
-              (with-redefs [http/request (constantly {:status 200 :body (json/generate-string response-with-exam)})]
-                (let [cas-client (cas/new-cas-client "ataru-test")
+              (with-redefs [cas/cas-authenticated-get (constantly {:status 200 :body (json/generate-string response-with-exam)})]
+                (let [cas-client nil
                       mocked-vts-service (->FakeValintaTulosService)
                       vls-service-instance (vls-service/->RemoteValintaLaskentaService cas-client mocked-vts-service)
                       result (first (vls/hakemuksen-tulokset vls-service-instance "1.2.3.4" "1.2.3.4.5.6"))
