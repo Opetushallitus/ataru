@@ -337,7 +337,7 @@
       (log/info "Application" application-key "has not passed kk application deadlines: field-deadlines"
                 field-deadlines))))
 
-(defn- get-invalid-attachment-reviews
+(defn get-invalid-attachment-reviews
   "Returns reviews for those fields that are (still) in missing or incomplete state."
   [application-key]
   (let [attachment-keys payment-module/kk-application-payment-exempt-attachment-keys
