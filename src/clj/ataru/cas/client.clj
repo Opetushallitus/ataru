@@ -29,8 +29,8 @@
                       (.setMethod "GET")
                       (.setUrl url)
                       .build)]
-      ;(.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302}))
-      (.execute client request))
+      (.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302}))
+      ;(.execute client request))
     (catch Exception e
       (do
         (log/error "Error during CAS authenticated GET: " (.getMessage e))
