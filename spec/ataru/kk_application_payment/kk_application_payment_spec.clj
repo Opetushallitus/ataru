@@ -26,10 +26,6 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/insert! conn "field_deadlines" deadline)))
 
-(defn- save-reviews-to-db! [reviews]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (application-store/store-reviews reviews {:connection conn})))
-
 (def fake-person-service (person-service/->FakePersonService))
 (def fake-tarjonta-service (mock-tarjonta-service/->MockTarjontaKoutaService))
 
@@ -410,14 +406,14 @@
                                                                             application-fixtures/application-with-hakemusmaksu-exemption
                                                                             nil)
                               application-key (:key (application-store/get-application application-id))]
-                          (save-reviews-to-db! [{:application_key application-key
-                                                 :attachment_key "brexit-permit-attachment"
-                                                 :hakukohde "payment-info-test-kk-hakukohde"
-                                                 :state "attachment-missing"}
-                                                {:application_key application-key
-                                                 :attachment_key "brexit-passport-attachment"
-                                                 :hakukohde "payment-info-test-kk-hakukohde"
-                                                 :state "not-checked"}])
+                          (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                              :attachment_key "brexit-permit-attachment"
+                                                              :hakukohde "payment-info-test-kk-hakukohde"
+                                                              :state "attachment-missing"}
+                                                             {:application_key application-key
+                                                              :attachment_key "brexit-passport-attachment"
+                                                              :hakukohde "payment-info-test-kk-hakukohde"
+                                                              :state "not-checked"}])
                           (update-and-check-changed-payments application-key person-oid 1
                                                              {:application-key application-key
                                                               :state           state-not-required
@@ -493,14 +489,14 @@
                         (let [fixed-date-str-in-finland "2030-01-15T14:59:59"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -511,14 +507,14 @@
                         (let [fixed-date-str-in-finland "2030-01-15T14:59:59"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "incomplete-attachment"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -529,14 +525,14 @@
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -547,14 +543,14 @@
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "none-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "foobar-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "none-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "foobar-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "incomplete-attachment"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -565,14 +561,14 @@
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "incomplete-attachment"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "incomplete-attachment"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -583,14 +579,14 @@
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -601,14 +597,14 @@
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
                               application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -622,14 +618,14 @@
                               _                 (store-field-deadline {:application_key application-key
                                                                        :field_id "brexit-permit-attachment"
                                                                        :deadline (time/plus (time/now) (time/days 1))})
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -642,14 +638,14 @@
                               _ (set-fixed-time fixed-date-str-in-finland)
                               ; Hakuaika ends 2030-03-25 so the deadline is going to be after daylight savings adjustment
                               application-key   (create-daylight-savings-payment-exempt-by-application)
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -662,14 +658,14 @@
                               _ (set-fixed-time fixed-date-str-in-finland)
                                                   ; Hakuaika ends 2030-03-25 so the deadline is going to be after daylight savings adjustment
                               application-key   (create-daylight-savings-payment-exempt-by-application)
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -679,14 +675,14 @@
                     (it "should use custom ohjausparametrit deadline days"
                         ; Mock ohjausparametrit returns grace days 10000 for the attached haku...
                         (let [application-key   (create-past-payment-exempt-by-application-with-custom-grace-days)
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-permit-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "attachment-missing"}
-                                                                      {:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -698,10 +694,10 @@
                               _ (set-fixed-time fixed-date-str-in-finland)
                               ; Mock form-cache returns field deadline in the future
                               application-key   (create-past-payment-exempt-by-application-with-custom-form-field-deadline)
-                              _                 (save-reviews-to-db! [{:application_key application-key
-                                                                       :attachment_key "brexit-passport-attachment"
-                                                                       :hakukohde "payment-info-test-kk-hakukohde"
-                                                                       :state "not-checked"}])
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))
