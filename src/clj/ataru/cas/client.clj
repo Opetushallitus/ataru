@@ -5,14 +5,6 @@
   (:import [fi.vm.sade.javautils.nio.cas CasConfig$CasConfigBuilder CasClientBuilder]
            [org.asynchttpclient RequestBuilder]))
 
-
-; used only in some tests
-(defn new-cas-client [caller-id]
-  (let [fake-config (-> (CasConfig$CasConfigBuilder. "fake-username" "fake-password" (resolve-url :cas-client) "http://fake-service-url" caller-id caller-id "fake-security-uri-suffix")
-                        (.setJsessionName "fake-session-cookie-name")
-                        .build)]
-    (CasClientBuilder/build fake-config)))
-
 (defn new-client [service security-uri-suffix session-cookie-name caller-id]
   {:pre [(some? (:cas config))]}
   (let [username   (get-in config [:cas :username])
