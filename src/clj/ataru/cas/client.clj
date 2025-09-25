@@ -64,7 +64,7 @@
                          (.setUrl url)
                          (.addHeader "Content-type" "application/json")
                          (.addHeader "Accept" "application/json")
-                         (.setBody body))
+                         (.setBody ^String body))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)]
     (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
