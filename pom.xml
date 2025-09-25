@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>b3c82cd559f0c8b1432d248e1bed40a1d0eb2841</tag>
+    <tag>1a3925b3a2f46d48824e5c23ec4b845b6336b21f</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -164,6 +164,21 @@
         <version>0.7.5</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.19.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.clojure</groupId>
+        <artifactId>clojure</artifactId>
+        <version>1.11.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.clojure</groupId>
+        <artifactId>data.json</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.clojure</groupId>
         <artifactId>core.memoize</artifactId>
         <version>1.0.257</version>
@@ -234,14 +249,14 @@
         <version>1.16.0</version>
       </dependency>
       <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <version>1.3.5</version>
+      </dependency>
+      <dependency>
         <groupId>commons-fileupload</groupId>
         <artifactId>commons-fileupload</artifactId>
         <version>1.6.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-handler</artifactId>
-        <version>4.1.118.Final</version>
       </dependency>
       <dependency>
         <groupId>riddley</groupId>
@@ -303,6 +318,11 @@
         <artifactId>xnio-nio</artifactId>
         <version>3.8.14.Final</version>
       </dependency>
+      <dependency>
+        <groupId>opiskelijavalinnat-utils</groupId>
+        <artifactId>java-cas</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -357,6 +377,12 @@
       <groupId>cljs-ajax</groupId>
       <artifactId>cljs-ajax</artifactId>
       <version>0.8.4</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>binaryage</groupId>
@@ -442,6 +468,12 @@
       <groupId>compojure</groupId>
       <artifactId>compojure</artifactId>
       <version>1.7.0</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.stuartsierra</groupId>
@@ -452,11 +484,185 @@
       <groupId>metosin</groupId>
       <artifactId>compojure-api</artifactId>
       <version>1.1.13</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>aleph</groupId>
       <artifactId>aleph</artifactId>
-      <version>0.6.3</version>
+      <version>0.9.3</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>netty-buffer</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-dns</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-http</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-http2</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-socks</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-common</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-handler</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-handler-proxy</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-resolver</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-resolver-dns</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-resolver-dns-native-macos</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-classes-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-classes-kqueue</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-kqueue</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-unix-common</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>tools.logging</artifactId>
+          <groupId>org.clojure</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-buffer</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-dns</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http2</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-socks</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-resolver</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-resolver-dns</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-resolver-dns-native-macos</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-classes-epoll</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-classes-kqueue</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-epoll</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-kqueue</artifactId>
+      <version>4.1.124.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-unix-common</artifactId>
+      <version>4.1.124.Final</version>
     </dependency>
     <dependency>
       <groupId>oph</groupId>
@@ -543,6 +749,12 @@
       <groupId>ring</groupId>
       <artifactId>ring</artifactId>
       <version>1.11.0</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>oph</groupId>
@@ -553,17 +765,33 @@
           <artifactId>s3mock_2.12</artifactId>
           <groupId>io.findify</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
       <artifactId>ring-defaults</artifactId>
       <version>0.4.0</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
       <artifactId>ring-json</artifactId>
       <version>0.5.1</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>ring-ratelimit</groupId>
@@ -640,16 +868,17 @@
       <groupId>metosin</groupId>
       <artifactId>ring-http-response</artifactId>
       <version>0.9.3</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>opiskelijavalinnat-utils</groupId>
       <artifactId>java-cas</artifactId>
       <version>2.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>fi.vm.sade</groupId>
-      <artifactId>scala-cas_2.12</artifactId>
-      <version>2.2.2.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.asynchttpclient</groupId>
@@ -792,6 +1021,10 @@
           <artifactId>guava</artifactId>
           <groupId>com.google.guava</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -830,6 +1063,12 @@
       <groupId>figwheel-sidecar</groupId>
       <artifactId>figwheel-sidecar</artifactId>
       <version>0.5.20</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-io</artifactId>
+          <groupId>commons-io</groupId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
