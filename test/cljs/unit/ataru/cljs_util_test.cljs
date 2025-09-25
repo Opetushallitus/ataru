@@ -1,5 +1,6 @@
 (ns ataru.cljs-util-test
   (:require [ataru.cljs-util :as util]
+            [ataru.util :as u]
             [cljs.test :refer-macros [deftest are is]]))
 
 (deftest stringifies-cljs-objects
@@ -24,6 +25,6 @@
                  :5 {:old [] :new "1"}
                  :6 {:old 1 :new nil}
                  :7 {:old [nil "1"] :new []}}
-        non-empty-changes (util/keep-non-empty-changes changes)]
+        non-empty-changes (u/keep-non-empty-changes changes)]
     (is (= non-empty-changes
            (select-keys changes [:2 :5 :6 :7])))))
