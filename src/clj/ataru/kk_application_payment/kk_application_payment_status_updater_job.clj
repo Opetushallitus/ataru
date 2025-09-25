@@ -14,6 +14,7 @@
             [ataru.config.core :refer [config]]
             [ataru.email.application-email :as application-email]
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
+            [ataru.util :as u]
             [ataru.kk-application-payment.utils :as utils])
   (:import java.util.Locale))
 
@@ -45,20 +46,24 @@
     (f/unparse formatter due-datetime-in-tz)))
 
 (defn- payment-reminder-email-params
-  [lang suffix]
+  [lang suffix _]
   {:subject-suffix suffix
    :subject-key :email-kk-payment-reminder-subject
    :template-path (str "templates/email_kk_payment_reminder_" (name lang) ".html")})
 
 (defn- payment-link-email-params
-  [lang suffix]
+  [lang suffix virkailija-edited?]
   {:subject-suffix suffix
-   :subject-key :email-kk-payment-link-subject
-   :template-path (str "templates/email_kk_payment_link_" (name lang) ".html")})
+   :subject-key (if virkailija-edited?
+                  :email-kk-payment-link-virkailija-subject
+                  :email-kk-payment-link-subject)
+   :template-path (if virkailija-edited?
+                    (str "templates/email_kk_payment_link_virkailija_" (name lang) ".html")
+                    (str "templates/email_kk_payment_link_" (name lang) ".html"))})
 
 (defn- start-payment-email-job [{:keys [tarjonta-service ohjausparametrit-service koodisto-cache organization-service]
                                  :as job-runner}
-                                application secret params-fn type-str]
+                                application secret params-fn type-str virkailija-edited?]
   (let [application-key   (:key application)
         job-type          (:type email-job/job-definition)
         lang              (utils/get-application-language application)
@@ -80,7 +85,7 @@
                                                                    :person-oid        (:person-oid application)
                                                                    :organization-oids organization-oids
                                                                    :application-key   (:key application)}
-                                               (params-fn lang due-date-str))]
+                                               (params-fn lang due-date-str virkailija-edited?))]
     (log/info "Generate kk application payment " type-str " for email" email-address
               "URL" payment-url "application-key" application-key)
     (if mail-content
@@ -90,7 +95,7 @@
       (log/warn "Creating kk application payment" type-str "mail to application" application-key "failed"))))
 
 (defn- create-payment-and-send-email
-  [{:keys [tarjonta-service] :as job-runner} maksut-service payment-data]
+  [{:keys [tarjonta-service] :as job-runner} maksut-service payment-data virkailija-edited?]
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)
         invoice-data    (payment/generate-invoicing-data tarjonta-service payment-data application)
@@ -99,12 +104,12 @@
       (log/info "Kk application payment invoice details" invoice)
       (log/info "Store kk application payment maksut secret for reference " (:reference invoice))
       (payment/set-maksut-secret application-key (:secret invoice))
-      (start-payment-email-job job-runner application (:secret invoice) payment-link-email-params "maksut-link"))))
+      (start-payment-email-job job-runner application (:secret invoice) payment-link-email-params "maksut-link" virkailija-edited?))))
 
 (defn resend-payment-email [job-runner application-key session]
   (let [application     (application-store/get-latest-application-by-key application-key)
         payment         (first (payment/get-raw-payments [application-key]))]
-    (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link")
+    (start-payment-email-job job-runner application (:maksut-secret payment) payment-link-email-params "maksut-link" false)
     (application-store/add-application-event
       {:application-key application-key
        :event-type "kk-application-payment-email-resent"}
@@ -115,7 +120,7 @@
   (let [application-key (:application-key payment-data)
         application     (application-store/get-latest-application-by-key application-key)]
     (log/info "Scheduling kk application payment reminder e-mail for application" application-key)
-    (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder")
+    (start-payment-email-job job-runner application (:maksut-secret payment-data) payment-reminder-email-params "reminder" false)
     (payment/mark-reminder-sent application-key)
     (application-store/add-application-event
       {:application-key (:application-key payment-data)
@@ -182,6 +187,40 @@
       (log/info "Invalidating ok-by-proxy kk payment applications with keys" proxy-state-application-keys)
       (maksut-protocol/invalidate-laskut maksut-service proxy-state-application-keys))))
 
+(def keys-affecting-kk-application-payment
+  #{payment/exemption-form-field-name :nationality})
+
+(defn- virkailija-edited-kk-application-fee-fields?
+  [application-key koodisto-cache]
+  (let [application-events (application-store/get-application-events application-key)]
+    (->> application-events
+         (filter #(= (:event-type %) "updated-by-virkailija"))
+         (map (fn [vikailija-edit-event]
+                (u/modify-event-changes application-events
+                                        (application-store/get-application-version-changes
+                                          koodisto-cache application-key)
+                                        (:id vikailija-edit-event))))
+         (some (fn [vikailija-changes]
+                 (some #(contains? keys-affecting-kk-application-payment %) (keys vikailija-changes)))))))
+
+(defn- send-virkailija-edited-email? [application-key koodisto-cache]
+  (or (virkailija-edited-kk-application-fee-fields? application-key koodisto-cache)
+      (some? (seq (payment/get-invalid-attachment-reviews application-key)))))
+
+(defn- handle-awaiting-or-ok-by-proxy-payment [job-runner maksut-service koodisto-cache payment]
+  (let [new-state (:state payment)
+        application-key (:application-key payment)]
+    (cond
+      (= (:awaiting payment/all-states) new-state)
+      (do
+        (create-payment-and-send-email
+          job-runner maksut-service payment (send-virkailija-edited-email? application-key koodisto-cache))
+        ; If application payment is required, tuition fee will be always required as well.
+        (mark-tuition-fee-obligated job-runner application-key))
+
+      (= (:ok-by-proxy payment/all-states) new-state)
+      (mark-tuition-fee-obligated job-runner application-key))))
+
 (defn update-kk-payment-status-for-person-handler
   "Updates payment requirement status for a single (person oid, term, year) either directly or
   via an application id/key. Creates payments and sends e-mails when necessary. Also marks tuition fee obligation
@@ -206,19 +245,10 @@
             (do
               (log/info "Update kk application payment status handler for"
                         person-oid application-term application-year
-                        "returned" (count existing-payments) "created or modified payments and"
-                        (count modified-payments) "existing payments before creating / modifying.")
+                        "returned" (count modified-payments) "created or modified payments and"
+                        (count existing-payments) "existing payments before creating / modifying.")
               (doseq [payment modified-payments]
-                (let [new-state (:state payment)]
-                  (cond
-                    (= (:awaiting payment/all-states) new-state)
-                    (do
-                      (create-payment-and-send-email job-runner maksut-service payment)
-                      ; If application payment is required, tuition fee will be always required as well.
-                      (mark-tuition-fee-obligated job-runner (:application-key payment)))
-
-                    (= (:ok-by-proxy payment/all-states) new-state)
-                    (mark-tuition-fee-obligated job-runner (:application-key payment)))))
+                (handle-awaiting-or-ok-by-proxy-payment job-runner maksut-service koodisto-cache payment))
 
               (doseq [application-payment existing-payments]
                 (let [{:keys [payment]} application-payment]

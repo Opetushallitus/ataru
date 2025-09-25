@@ -626,6 +626,9 @@
    :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
                                                  :en "Studyinfo: application fee, reminder to pay the fee by"}
+   :email-kk-payment-link-virkailija-subject    {:fi "Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"
+                                                 :sv "TODO käännös: Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"
+                                                 :en "TODO käännös: Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"}
    :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
                                                  :en "Studyinfo: Application fee, please remember to pay the fee by"}
