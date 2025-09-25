@@ -6,6 +6,9 @@
                          [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.18.3"]
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
+                         [org.apache.commons/commons-io "2.19.0"]
+                         [org.clojure/clojure "1.11.2"]
+                         [org.clojure/data.json "1.0.0"]
                          [org.clojure/core.memoize "1.0.257"]
                          [org.clojure/clojurescript "1.11.121"]
                          [org.clojure/tools.reader "1.3.6"]
@@ -20,10 +23,9 @@
                          [potemkin "0.4.7"]
                          [org.slf4j/slf4j-api "2.0.9"]
                          [commons-codec "1.16.0"]
+                         [commons-logging "1.3.5"]
                          ; transitive from compojure
                          [commons-fileupload "1.6.0"]
-                         ; transitive from aleph
-                         [io.netty/netty-handler "4.1.118.Final"]
                          [riddley "0.2.0"]
                          [instaparse "1.4.12"]
                          [org.mozilla/rhino "1.7.14"]
@@ -47,7 +49,8 @@
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
-                 [cljs-ajax "0.8.4"]
+                 [cljs-ajax "0.8.4"
+                  :exclusions [commons-logging]]
                  [binaryage/devtools "1.0.7"]
                  [day8.re-frame/tracing "0.6.2"]
                  [day8.re-frame/re-frame-10x "1.9.9"]
@@ -55,7 +58,8 @@
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]
                  [cljsjs/react-dom "18.2.0-1"]
-                 [lein-doo "0.1.11"]
+                 [lein-doo "0.1.11"
+                  :exclusions [org.clojure/data.json]]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]
@@ -68,10 +72,49 @@
 
                  ;clojure
                  [com.rpl/specter "1.1.4"]
-                 [compojure "1.7.0"]
+                 [compojure "1.7.0"
+                  :exclusions [commons-io]]
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"]
-                 [aleph "0.6.3"]
+                 [aleph "0.9.3"
+                  :exclusions [io.netty/netty-buffer
+                               io.netty/netty-codec
+                               io.netty/netty-codec-dns
+                               io.netty/netty-codec-http
+                               io.netty/netty-codec-http2
+                               io.netty/netty-codec-socks
+                               io.netty/netty-common
+                               io.netty/netty-handler
+                               io.netty/netty-handler-proxy
+                               io.netty/netty-resolver
+                               io.netty/netty-resolver-dns
+                               io.netty/netty-resolver-dns-native-macos
+                               io.netty/netty-transport
+                               io.netty/netty-transport-classes-epoll
+                               io.netty/netty-transport-classes-kqueue
+                               io.netty/netty-transport-native-epoll
+                               io.netty/netty-transport-native-kqueue
+                               io.netty/netty-transport-native-unix-common
+                               org.clojure/tools.logging]]
+                 ; pinning netty deps to same version because of conflicting transitive deps
+                 [io.netty/netty-buffer "4.1.124.Final"]
+                 [io.netty/netty-codec "4.1.124.Final"]
+                 [io.netty/netty-codec-dns "4.1.124.Final"]
+                 [io.netty/netty-codec-http "4.1.124.Final"]
+                 [io.netty/netty-codec-http2 "4.1.124.Final"]
+                 [io.netty/netty-codec-socks "4.1.124.Final"]
+                 [io.netty/netty-common "4.1.124.Final"]
+                 [io.netty/netty-handler "4.1.124.Final"]
+                 [io.netty/netty-handler-proxy "4.1.124.Final"]
+                 [io.netty/netty-resolver "4.1.124.Final"]
+                 [io.netty/netty-resolver-dns "4.1.124.Final"]
+                 [io.netty/netty-resolver-dns-native-macos "4.1.124.Final"]
+                 [io.netty/netty-transport "4.1.124.Final"]
+                 [io.netty/netty-transport-classes-epoll "4.1.124.Final"]
+                 [io.netty/netty-transport-classes-kqueue "4.1.124.Final"]
+                 [io.netty/netty-transport-native-epoll "4.1.124.Final"]
+                 [io.netty/netty-transport-native-kqueue "4.1.124.Final"]
+                 [io.netty/netty-transport-native-unix-common "4.1.124.Final"]
                  [oph/clj-access-logging "1.0.0-SNAPSHOT" :exclusions [javax.xml.bind/jaxb-api io.findify/s3mock_2.12]]
                  [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
                  [oph/clj-timbre-access-logging "1.1.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
@@ -79,10 +122,13 @@
                  [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
-                 [ring "1.11.0"]
+                 [ring "1.11.0"
+                  :exclusions [commons-io]]
                  [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12]]
-                 [ring/ring-defaults "0.4.0"]
-                 [ring/ring-json "0.5.1"]
+                 [ring/ring-defaults "0.4.0"
+                  :exclusions [commons-io]]
+                 [ring/ring-json "0.5.1"
+                  :exclusions [commons-io]]
                  [ring-ratelimit "0.2.3"]
                  [bk/ring-gzip "0.3.0"]
                  [yesql "0.5.3"]
@@ -97,7 +143,8 @@
                  [clj-time "0.15.2"]
                  [cheshire/cheshire "6.0.0"]
                  [selmer "1.12.59"]
-                 [metosin/ring-http-response "0.9.3"]
+                 [metosin/ring-http-response "0.9.3"
+                  :exclusions [commons-io]]
                  [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
                  [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
                  [org.asynchttpclient/async-http-client "3.0.1"]
@@ -303,7 +350,8 @@
 
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]
                                                [org.clojure/data.csv "1.1.0"]
-                                               [figwheel-sidecar "0.5.20"]
+                                               [figwheel-sidecar "0.5.20"
+                                                :exclusions [commons-io]]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
                                                [org.clojure/tools.namespace "1.5.0"]
