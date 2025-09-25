@@ -87,7 +87,7 @@
          :lock-timeout  [20 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :hakukohderyhma-settings-cache-loader})]
-   [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
+   [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "/j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))]
    [:oppilaitoksen-opiskelijat-cache-loader
     (component/using
