@@ -89,10 +89,11 @@
 
 (defn- cas-authenticated-with-body [^CasClient client url method body & [opts-fn]]
   (let [payload (cond
-                  (map? body)    (json/generate-string body)
-                  (string? body) body
-                  (nil? body)    nil
-                  :else          (str body))
+                  (map? body)        (json/generate-string body)
+                  (sequential? body) (json/generate-string body)
+                  (string? body)     body
+                  (nil? body)        nil
+                  :else              (str body))
         base-request (-> (RequestBuilder.)
                          (.setMethod (name method))
                          (.setUrl url)
