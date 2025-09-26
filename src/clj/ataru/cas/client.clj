@@ -1,6 +1,7 @@
 (ns ataru.cas.client
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
+            [cheshire.core :as json]
             [taoensso.timbre :as log])
   (:import [fi.vm.sade.javautils.nio.cas CasConfig$CasConfigBuilder CasClientBuilder]
            [org.asynchttpclient RequestBuilder]))
@@ -39,10 +40,23 @@
 (defn apply-extra-opts [base-request extra-opts]
   (reduce (fn [req [k v]]
             (case k
-              :headers (reduce (fn [r [header-key header-value]]
-                                 (.addHeader r header-key header-value))
-                               req v)
-              ;; future opts can be added here
+              ;; Add headers
+              :headers
+              (reduce (fn [r [header-key header-value]]
+                        (.addHeader r (name header-key) (str header-value)))
+                      req v)
+
+              ;; Add query params
+              :query-params
+              (reduce (fn [r [param-key param-value]]
+                        (.addQueryParam r (name param-key) (str param-value)))
+                      req v)
+
+              ;; Socket timeout (milliseconds)
+              :socket-timeout
+              (.setRequestTimeout req v)
+
+              ;; Default: do nothing
               req))
           base-request
           extra-opts))
@@ -57,14 +71,20 @@
         request      (apply-extra-opts base-request extra-opts)]
     (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
-(defn cas-authenticated-post [client url body & [opts-fn]]
-  (log/debug "Performing CAS authenticated POST to URL:" url)
-  (let [base-request (-> (RequestBuilder.)
+(defn cas-authenticated-post
+  [client url body & [opts-fn]]
+  (log/debug "Performing CAS authenticated POST to URL:" url "with body:" body)
+  (let [payload (cond
+                  (map? body)    (json/generate-string body) ; encode maps
+                  (string? body) body                         ; raw JSON string
+                  (nil? body)    nil
+                  :else          (str body))                  ; fallback
+        base-request (-> (RequestBuilder.)
                          (.setMethod "POST")
                          (.setUrl url)
                          (.addHeader "Content-type" "application/json")
                          (.addHeader "Accept" "application/json")
-                         (.setBody body))
+                         (cond-> payload (.setBody payload)))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)]
     (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
@@ -97,22 +117,15 @@
 ;                             extra-opts)]
 ;    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
-(defn cas-authenticated-multipart-post [client url body & [opts-fn]]
+(defn cas-authenticated-multipart-post [client url opts-fn]
+  (log/debug "Performing CAS authenticated multipart POST to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "POST")
                          (.setUrl url)
                          (.addHeader "Content-type" "multipart/form-data")
-                         (.addHeader "Accept" "application/json")
-                         (.setBody body))
+                         (.addHeader "Accept" "application/json"))
         extra-opts   (if opts-fn (opts-fn) {})
-        request      (reduce (fn [req [k v]]
-                               (case k
-                                 :headers (reduce (fn [r [header-key header-value]]
-                                                    (.addHeader r header-key header-value))
-                                                  req v)
-                                 req))
-                             base-request
-                             extra-opts)]
+        request      (apply-extra-opts base-request extra-opts)]
     (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
 (defn cas-authenticated-get-as-stream [cas-client url]
@@ -121,8 +134,8 @@
                     (.setUrl url)
                     (.addHeader "Accept" "application/octet-stream")
                     .build)]
-;    (.executeAndRetryWithCleanSessionOnStatusCodes cas-client request #{401 302})))
-    (.execute cas-client request)))
+    (.executeAndRetryWithCleanSessionOnStatusCodes cas-client request #{401 302})))
+;    (.execute cas-client request)))
 
 (defn cas-authenticated-patch [client url body & [opts-fn]]
   (let [base-request (-> (RequestBuilder.)

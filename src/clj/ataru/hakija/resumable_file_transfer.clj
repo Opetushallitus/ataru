@@ -19,7 +19,6 @@
                                       url
                                       (fn []
                                         {:socket-timeout (* 1000 60 10)
-                                         :cookie-policy  :standard
                                          :query-params {:filename (normalizer/normalize-filename file-name)
                                                         :origin-system origin-system}}))]
     (cond (= status 200)
