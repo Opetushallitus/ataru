@@ -73,7 +73,7 @@
 
 (defn cas-authenticated-post
   [client url body & [opts-fn]]
-  (log/debug "Performing CAS authenticated POST to URL:" url "with body:" body)
+  (log/info "Performing CAS authenticated POST to URL:" url "with body:" body)
   (let [payload (cond
                   (map? body)    (json/generate-string body) ; encode maps
                   (string? body) body                         ; raw JSON string
@@ -118,7 +118,7 @@
 ;    (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})))
 
 (defn cas-authenticated-multipart-post [client url opts-fn]
-  (log/debug "Performing CAS authenticated multipart POST to URL:" url)
+  (log/info "Performing CAS authenticated multipart POST to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "POST")
                          (.setUrl url)
