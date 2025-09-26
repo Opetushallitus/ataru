@@ -20,7 +20,6 @@
     (log/info "Created CAS client for service" service "with security URI suffix" security-uri-suffix)
     cas-client))
 
-;; Convert Response into map that calling functions expeect
 (defn response->map [^Response resp]
   {:status (.getStatusCode resp)
    :body   (.getResponseBody resp)})
@@ -55,7 +54,7 @@
                       (.setMethod "GET")
                       (.setUrl url)
                       .build)
-          ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302})
+          ^CompletableFuture future (.execute client request)
           ^Response resp (.get future)]
       (response->map resp))
 
@@ -70,12 +69,12 @@
                     (.setUrl url)
                     (.addHeader "Accept" "application/octet-stream")
                     .build)
-        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client request #{401 302})
+        ^CompletableFuture future (.execute client request)
         ^Response resp (.get future)]
     (response->map resp)))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]
-  (log/debug "Performing CAS DELETE to URL:" url)
+  (log/info "Performing CAS DELETE to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "DELETE")
                          (.setUrl url)
@@ -107,7 +106,7 @@
     (response->map resp)))
 
 (defn cas-authenticated-post [^CasClient client url body & [opts-fn]]
-  (log/debug (str "Performing CAS authenticated POST to URL: " url
+  (log/info (str "Performing CAS authenticated POST to URL: " url
                   " with body type " (type body)
                   " body " body))
   (cas-authenticated-with-body client url :POST body opts-fn))
@@ -119,7 +118,7 @@
   (cas-authenticated-with-body client url :PATCH body opts-fn))
 
 (defn cas-authenticated-multipart-post [^CasClient client url & [opts-fn]]
-  (log/debug "Performing CAS multipart POST to URL:" url)
+  (log/info "Performing CAS multipart POST to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "POST")
                          (.setUrl url)
