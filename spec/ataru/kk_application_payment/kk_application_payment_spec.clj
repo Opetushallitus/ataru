@@ -97,6 +97,62 @@
   [example state]
   (should= example (select-keys state [:application-key :state :reason])))
 
+(def exempt-test-oid "1.2.3.4.5.303") ; FakePersonService returns non-EU nationality for this one
+
+(defn create-payment-exempt-by-application
+  ([merge-map form]
+   (let [application-id (unit-test-db/init-db-fixture form
+                                                      (merge application-fixtures/application-with-hakemusmaksu-exemption
+                                                             {:person-oid exempt-test-oid} merge-map)
+                                                      nil)
+         application-key (:key (application-store/get-application application-id))]
+     application-key))
+  ([merge-map]
+   (create-payment-exempt-by-application merge-map form-fixtures/payment-exemption-test-form)))
+
+(defn- create-2030-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-2030"}))
+
+(defn- create-daylight-savings-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
+
+(defn- create-past-payment-exempt-by-application-with-custom-grace-days []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
+
+(defn create-past-payment-exempt-by-application-with-custom-form-field-deadline []
+  (create-payment-exempt-by-application {:person-oid exempt-test-oid
+                                         :haku "payment-info-test-kk-haku-form-field-dl"
+                                         :form 909910}
+                                        form-fixtures/payment-exemption-test-form-with-deadline))
+
+(defn- filter-by-application-keys [application-keys coll]
+  (filter #(contains? application-keys (:application-key %)) coll))
+
+(defn update-payment
+  ([application-key]
+   (update-payment application-key exempt-test-oid))
+  ([application-key person-oid]
+   (let [changed (->> (:modified-payments
+                        (payment/update-payments-for-person-term-and-year
+                          fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                          fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                          fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache fake-haku-cache
+                          person-oid term-fall year-ok))
+                      (filter-by-application-keys #{application-key}))
+         payment (first (payment/get-raw-payments [application-key]))]
+     [changed payment])))
+
+(defn update-and-check-changed-payments [application-key person-oid expected-count expected-payment]
+  (let [[changed payment] (update-payment application-key person-oid)]
+    (should= expected-count (count changed))
+    (should-be-matching-state expected-payment payment)))
+
+(defn- save-and-check-single-state
+  [application-key state-func desired-state desired-reason]
+  (let [state-data (state-func application-key nil)]
+    (should= (:state state-data) desired-state)
+    (should= (:reason state-data) desired-reason)))
+
 (describe "creating valid invoicing data"
           (tags :unit :kk-application-payment)
 
@@ -206,54 +262,6 @@
 
           (it "should throw an exception when trying to set maksut secret for nonexisting payment"
               (should-throw (payment/set-maksut-secret "1.2.3.4.5.1234" "1234ABCD5678EFGH"))))
-
-(def exempt-test-oid "1.2.3.4.5.303") ; FakePersonService returns non-EU nationality for this one
-
-(defn create-payment-exempt-by-application
-  ([merge-map form]
-    (let [application-id (unit-test-db/init-db-fixture form
-                                                       (merge application-fixtures/application-with-hakemusmaksu-exemption
-                                                              {:person-oid exempt-test-oid} merge-map)
-                                                       nil)
-          application-key (:key (application-store/get-application application-id))]
-      application-key))
-  ([merge-map]
-    (create-payment-exempt-by-application merge-map form-fixtures/payment-exemption-test-form)))
-
-(defn create-2030-payment-exempt-by-application []
-  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-2030"}))
-
-(defn create-daylight-savings-payment-exempt-by-application []
-  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
-
-(defn create-past-payment-exempt-by-application-with-custom-grace-days []
-  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
-
-(defn create-past-payment-exempt-by-application-with-custom-form-field-deadline []
-  (create-payment-exempt-by-application {:person-oid exempt-test-oid
-                                         :haku "payment-info-test-kk-haku-form-field-dl"
-                                         :form 909910}
-                                        form-fixtures/payment-exemption-test-form-with-deadline))
-
-(defn- filter-by-application-keys [application-keys coll]
-  (filter #(contains? application-keys (:application-key %)) coll))
-
-(defn update-payment
-  ([application-key]
-   (update-payment application-key exempt-test-oid))
-  ([application-key person-oid]
-   (let [changed (->> (:modified-payments
-                        (payment/update-payments-for-person-term-and-year
-                          fake-attachment-deadline-service fake-person-service fake-tarjonta-service fake-koodisto-cache
-                          fake-haku-cache person-oid term-fall year-ok))
-                      (filter-by-application-keys #{application-key}))
-         payment (first (payment/get-raw-payments [application-key]))]
-     [changed payment])))
-
-(defn update-and-check-changed-payments [application-key person-oid expected-count expected-payment]
-  (let [[changed payment] (update-payment application-key person-oid)]
-    (should= expected-count (count changed))
-    (should-be-matching-state expected-payment payment)))
 
 (describe "update-payment-status"
           (tags :unit :kk-application-payment)
@@ -776,12 +784,6 @@
                           (should= 0 (count changed))
                           (should-be-matching-state {:application-key application-key, :state state-overdue
                                                      :reason nil} payment)))))
-
-(defn save-and-check-single-state
-  [application-key state-func desired-state desired-reason]
-  (let [state-data (state-func application-key nil)]
-    (should= (:state state-data) desired-state)
-    (should= (:reason state-data) desired-reason)))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)
