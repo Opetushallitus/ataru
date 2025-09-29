@@ -132,7 +132,8 @@
 
 (defn cas-initiated-logout [logout-request session-store]
   (log/info "cas-initiated logout")
-  (let [ticket (CasLogout/parseTicketFromLogoutRequest logout-request)]
+  (let [cas-logout (CasLogout.)
+        ticket (.parseTicketFromLogoutRequest cas-logout logout-request)]
     (log/info "logging out ticket" ticket)
     (if (.isEmpty ticket)
       (log/error "Could not parse ticket from CAS request" logout-request)
