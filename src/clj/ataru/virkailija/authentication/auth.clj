@@ -13,7 +13,7 @@
             [ring.util.response :as resp]
             [taoensso.timbre :as log]
             [yesql.core :as sql])
-  (:import (fi.vm.sade.utils.cas CasLogout)))
+  (:import (fi.vm.sade.javautils.nio.cas CasLogout)))
 
 (declare yesql-upsert-virkailija<!)
 
