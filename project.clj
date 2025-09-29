@@ -145,7 +145,6 @@
                  [selmer "1.12.59"]
                  [metosin/ring-http-response "0.9.3"
                   :exclusions [commons-io]]
-                 [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
                  [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
                  [org.asynchttpclient/async-http-client "3.0.1"]
                  [ring/ring-session-timeout "0.3.0"]
