@@ -37,7 +37,10 @@
                         (.addQueryParam r (name param-key) (str param-value)))
                       req v)
               :socket-timeout
-              (.setRequestTimeout req v)
+              (.setRequestTimeout req
+                                  (if (instance? java.time.Duration v)
+                                    v
+                                    (java.time.Duration/ofMillis (long v))))
               req))
           base-request
           extra-opts))
