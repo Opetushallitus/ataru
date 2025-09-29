@@ -51,15 +51,15 @@
     form))
 
 (defn init-db-application-hakukohde-review-fixture
+  ([fixture application-key]
+   (init-db-application-hakukohde-review-fixture fixture application-key (audit-log/new-dummy-audit-logger)))
   ([{hakukohde          :hakukohde
      review-requirement :review-requirement
      review-state       :review-state}
     application-key
     audit-logger]
    (application-store/save-application-hakukohde-review
-     application-key hakukohde review-requirement review-state {} audit-logger))
-  ([fixture application-key]
-   (init-db-application-hakukohde-review-fixture fixture application-key (audit-log/new-dummy-audit-logger))))
+     application-key hakukohde review-requirement review-state {} audit-logger)))
 
 (defn init-db-application-fixture
   [form-fixture application-fixture application-hakukohde-reviews-fixture application-reviews-fixture]
