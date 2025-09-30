@@ -85,7 +85,8 @@
                          (.addHeader "Accept" "application/json"))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.execute client (.build request))
+;        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
 
@@ -104,7 +105,8 @@
                          (cond-> payload (.setBody payload)))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.execute client (.build request))
+        ;^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
 
@@ -129,6 +131,7 @@
                          (.addHeader "Accept" "application/json"))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.execute client (.build request))
+        ;^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
