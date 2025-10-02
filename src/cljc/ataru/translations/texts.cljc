@@ -2881,11 +2881,12 @@
    :subject-prefix        {:fi "Opintopolku"
                            :sv "Studieinfo"
                            :en "Studyinfo"}
-
+   :reminder-subject-prefix {:fi "Muistutus"
+                             :en "Reminder"
+                             :sv "Påminnelse"}
    :decision-header       {:fi "Päätösmaksu"
                            :sv "Beslutsavgiften"
                            :en "Decision fee"}
-
    :decision-text-1       {:fi "Lähetämme päätöksen sinulle, kun olet maksanut päätösmaksun."
                            :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
                            :en "We will send you the decision once you have paid the decision fee."}
@@ -2924,6 +2925,9 @@
    :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
                            :sv "Utbildningsstyrelsen: Din ansökan har behandlats"
                            :en "The Finnish National Agency for Education: Your application has been processed"}
+   :reminder-subject-prefix {:fi "Muistutus"
+                             :en "Reminder"
+                             :sv "Påminnelse"}
    :payment               {:fi "Maksu: "
                            :sv "Avgiften: "
                            :en "Fee: "}

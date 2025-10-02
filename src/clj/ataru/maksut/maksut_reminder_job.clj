@@ -34,7 +34,8 @@
                                 (reverse)
                                 (str/join \.))
                  :order-id-prefix (:order-id-prefix metadata)
-                 :reminder true})]
+                 :reminder true
+                 :application-id (:application-id reminder)})]
     (jdbc/with-db-transaction
       [connection {:datasource (db/get-datasource :db)}]
       (start-email-job job-runner connection email)
