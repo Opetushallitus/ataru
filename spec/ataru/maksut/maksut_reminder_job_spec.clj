@@ -55,8 +55,14 @@
                                                                                 :origin "tutu"
                                                                                 :reference "testihakemus"}]})
                             maksut-reminder-job/start-email-job (stub :start-email-job)
-                            application-store/add-application-event-in-tx (stub :add-application-event)]
+                            application-store/add-application-event-in-tx (stub :add-application-event)
+                            application-store/get-application (stub :get-application
+                                                                    {:invoke #(if (= %1 123)
+                                                                                {:lang "fi"
+                                                                                 :answers [{:key "email" :value "testi@testi.fi"}]}
+                                                                                (throw (Exception. (str %1 " :get-application stub"))))})]
                 (maksut-store/add-payment-reminder {:application-key "testihakemus"
+                                                    :application-id 123
                                                     :message ""
                                                     :lang ""
                                                     :send-reminder-time (c/today-at 10 0)
@@ -80,6 +86,7 @@
                             maksut-reminder-job/start-email-job (stub :start-email-job)
                             maksut-store/set-reminder-handled (stub :set-reminder-handled)]
                 (maksut-store/add-payment-reminder {:application-key "testihakemus"
+                                                    :application-id 123
                                                     :message ""
                                                     :lang ""
                                                     :send-reminder-time (c/today-at 10 0)
