@@ -15,12 +15,14 @@ SELECT * FROM payment_reminders
 -- name: yesql-add-payment-reminder<!
 INSERT INTO payment_reminders (
     application_key,
+    application_id,
     message,
     lang,
     send_reminder_time,
     order_id
 ) VALUES (
     :application_key,
+    :application_id,
     :message,
     :lang,
     :send_reminder_time,

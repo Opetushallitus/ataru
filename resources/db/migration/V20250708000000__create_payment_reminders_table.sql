@@ -3,6 +3,7 @@ CREATE TYPE payment_reminder_status AS ENUM ('sent', 'paid', 'overdue', 'invalid
 CREATE TABLE IF NOT EXISTS payment_reminders (
     id                 BIGSERIAL PRIMARY KEY,
     application_key    VARCHAR(256) NOT NULL,
+    application_id     BIGINT NOT NULL,
     order_id           VARCHAR(256) NOT NULL UNIQUE,
     message            TEXT DEFAULT '',
     lang               VARCHAR(2) NOT NULL,
