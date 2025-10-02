@@ -1163,6 +1163,7 @@
                             "decision-fee-outstanding"
                             {:origin origin
                              :message message
+                             :lang lang
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
                              :amount total-amount
