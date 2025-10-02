@@ -667,13 +667,13 @@
           (maksut-store/add-payment-reminder
             {:application-key application-key
              :application-id application-id
-             :order-id (:order_id email-params)
+             :order-id (:order-id email-params)
              :message (:message email-params)
              :lang (:lang email-params)
              :send-reminder-time
              (time/minus
                (apply time/date-time
-                      (map parse-long (str/split (:due_date email-params) #"-")))
+                      (map parse-long (str/split (:due-date email-params) #"-")))
                (time/days 7))}))
         (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
               events (future (get-application-events organization-service application-key))]
