@@ -61,7 +61,6 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
-            [clojure.string :as str]
             [clout.core :as clout]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
@@ -1176,9 +1175,7 @@
                              :payment-url payment-url
                              :amount total-amount
                              :vat vat
-                             :due-date (->> (str/split (:due_date invoice) #"-")
-                                            (reverse)
-                                            (str/join \.))
+                             :due-date (:due_date invoice)
                              :order-id-prefix (:order-id-prefix metadata)
                              :order-id (:order_id invoice)})]
             (do

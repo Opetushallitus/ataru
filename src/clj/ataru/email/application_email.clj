@@ -355,10 +355,14 @@
                                                    (case origin
                                                      "tutu" tutu-decision-email
                                                      "astu" astu-decision-email))
+        due-date                        (->> (string/split (:due-date params) #"-")
+                                             (reverse)
+                                             (string/join \.))
         template-params                 (merge
                                           params
                                           translations
-                                          {:decision-info-email (decision-info-email (:order-id-prefix params))})
+                                          {:decision-info-email (decision-info-email (:order-id-prefix params))
+                                           :due-date due-date})
         subject                         (case origin
                                           "tutu" (str (:subject-prefix translations) ": " (:header translations))
                                           "astu" (:subject translations))
