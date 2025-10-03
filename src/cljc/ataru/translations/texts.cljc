@@ -1769,6 +1769,9 @@
    :information-request-reminder-sent                        {:fi "Täydennyspyynnön muistutusviesti lähetetty"
                                                               :en "EN Täydennyspyynnön muistutusviesti lähetetty"
                                                               :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}
+   :decision-payment-reminder-sent                           {:fi "Päätösmaksun muistutusviesti lähetetty"
+                                                              :sv "SV Päätösmaksun muistutusviesti lähetetty"
+                                                              :en "EN Päätösmaksun muistutusviesti lähetetty"}
    :single-information-request-sent                          {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}

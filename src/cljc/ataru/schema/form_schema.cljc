@@ -810,7 +810,8 @@
                          "field-deadline-unset"
                          "person-found-matching"
                          "person-dob-or-gender-conflict"
-                         "information-request-reminder-sent"))
+                         "information-request-reminder-sent"
+                         "decision-payment-reminder-sent"))
 
 (s/defschema Event
   {:event-type                                event-types
