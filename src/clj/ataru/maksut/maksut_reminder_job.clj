@@ -35,14 +35,15 @@
                                 (str/join \.))
                  :order-id-prefix (:order-id-prefix metadata)
                  :reminder true
-                 :application-id (:application-id reminder)})]
+                 :application-id (:application-id reminder)
+                 :application-oid (:application-key reminder)})]
     (jdbc/with-db-transaction
       [connection {:datasource (db/get-datasource :db)}]
       (start-email-job job-runner connection email)
       (application-store/add-application-event-in-tx
         connection
         {:application-key (:application-key reminder)
-         :event-type      "payment-reminder-sent"
+         :event-type      "decision-payment-reminder-sent"
          :review-key      (str (:order_id lasku))}
         nil)
       (maksut-store/set-reminder-handled-in-tx connection (:id reminder) "sent"))))
