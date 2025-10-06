@@ -49,7 +49,7 @@
       (maksut-store/set-reminder-handled-in-tx connection (:id reminder) "sent"))))
 
 (defn- handle-reminder [reminder {:keys [maksut-service] :as job-runner}]
-  (log/info "Handling reminder for information request" (:id reminder))
+  (log/info "Handling reminder for payment" (:order-id reminder) ", reminder id" (:id reminder))
   (if-let [lasku (first
                    (filter #(= (:order_id %) (:order-id reminder))
                            (maksut-protocol/list-laskut-by-application-key maksut-service (:application-key reminder))))]
