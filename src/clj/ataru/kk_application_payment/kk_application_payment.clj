@@ -282,9 +282,7 @@
                                 (filter #(= id (:field-id %)))
                                 first
                                 :deadline)
-        field          (some->> (:content form)
-                                (filter #(= id (:id %)))
-                                first)
+        field          (get (util/form-fields-by-id form) id)
         passed         (cond
                          (some? field-deadline)
                          (time/after? now field-deadline)
