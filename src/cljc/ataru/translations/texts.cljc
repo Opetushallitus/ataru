@@ -530,15 +530,15 @@
    :inactivated                                 {:fi "Hakemuksesi on peruttu."
                                                  :sv "Din ansökning har annullerats."
                                                  :en "Your application is cancelled."}
-   :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
-                                                 :sv "Internt serverfel."
-                                                 :en "Internal server error."}
+   :internal-server-error                       {:fi "Hups, jotain meni pieleen. Jos ongelma toistuu, ole yhteydessä siihen oppilaitokseen, johon yrität hakea."
+                                                 :sv "Oj, något gick fel. Om problemet kvarstår, vänligen kontakta den läroanstalten du försöker ansöka till."
+                                                 :en "Oops, something went wrong. If the problem persists, contact the educational institution you are trying to apply to."}
    :oppija-session-not-found                    {:fi "Hakemuksesi tallentaminen ei onnistunut, koska istuntosi ei ole enää voimassa. Voit lähettää uuden hakemuksen kirjautumalla uudelleen tai ilman kirjautumista."
                                                  :sv "Din ansökan kunde inte sparas eftersom din session har utgått. Du kan skicka en ny ansökan genom att logga in på nytt eller utan inloggning."
                                                  :en "Your session has expired and your application has not been saved. You can send a new application by logging in again. You can also send a new application without identification."}
-   :application-validation-failed-error         {:fi "Tapahtui palvelinvirhe."
-                                                 :sv "Internt serverfel."
-                                                 :en "Internal server error."}
+   :application-validation-failed-error         {:fi "Hups, jotain meni pieleen. Yritäthän lomakkeen lähetystä uudelleen.\nJos ongelma toistuu, ole yhteydessä siihen oppilaitokseen, johon yrität hakea."
+                                                 :sv "Oj, något gick fel. Försök skicka in blanketten igen.\nOm problemet kvarstår, vänligen kontakta den läroanstalten du försöker ansöka till."
+                                                 :en "Oops, something went wrong. Please try submitting the form again.\nIf the problem persists, contact the educational institution you are trying to apply to."}
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}
