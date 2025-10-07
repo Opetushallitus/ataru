@@ -300,6 +300,9 @@
                                             :else
                                             (not (time-is-before-some-attachment-deadlines? attachment-deadline-service (:submitted application) haku now)))]
     (when (or payment-obligation-reviewed? passed?)
+      (log/info "keep-if-deadline-passed:" id "field-deadline:" field-deadline "field:" field
+                "custom-deadline:" (deadline/custom-deadline field)
+                "custom-dl-passed:" (deadline/custom-deadline-passed? now field))
       review)))
 
 (defn- includes-fields-with-passed-deadlines?
