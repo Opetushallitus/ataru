@@ -287,9 +287,7 @@
                                                    (filter #(= id (:field-id %)))
                                                    first
                                                    :deadline)
-        field                             (some->> (:content form)
-                                                   (filter #(= id (:id %)))
-                                                   first)
+        field                             (get (util/form-fields-by-id form) id)
         payment-obligation-reviewed?      (attachment-deadline/kk-application-payment-obligation-reviewed?
                                             attachment-deadline-service application)
         passed?                           (cond
