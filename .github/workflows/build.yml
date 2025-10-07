@@ -13,7 +13,27 @@ env:
   HUSKY: 0
 
 jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare-clojure-env
+
+      - name: Check dependencies
+        run: |
+          echo "Checking for confusing dependencies..."
+          matches=$(lein deps :tree | grep 'confusing dependencies' || true)
+          if [ -n "$matches" ]; then
+            echo "Found confusing dependencies:"
+            echo "$matches"
+            exit 1
+          else
+            echo "No confusing dependencies found."
+          fi
+
   test-integration:
+    needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +45,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
           aws-region: eu-west-1
-      
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -72,6 +92,7 @@ jobs:
           ./bin/cibuild.sh run-browser-tests-integration
 
   test-spec-and-mocha:
+    needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
@@ -83,7 +104,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
           aws-region: eu-west-1
-    
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -113,6 +134,7 @@ jobs:
           ./bin/cibuild.sh run-spec-and-mocha-tests
 
   build:
+    needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
@@ -142,9 +164,9 @@ jobs:
       base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
       jarfile: ataru
-    secrets: 
+    secrets:
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-  
+
   build-and-deploy-ataru-editori:
     needs: [test-integration, test-spec-and-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
@@ -153,7 +175,7 @@ jobs:
       base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
       jarfile: ataru
-    secrets: 
+    secrets:
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
 
   build-and-deploy-ovara-ataru:

@@ -6,7 +6,8 @@
             [clj-ring-db-session.authentication.login :as crdsa-login]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [taoensso.timbre :as log]))
 
 (defn- rewrite-url-for-environment
   "Ensure that https is used when available (due to https termination on
@@ -18,16 +19,59 @@
 
 (defn- fake-login-provider [ticket]
   (fn []
-      (let [username      (case ticket
-                            "USER-WITH-HAKUKOHDE-ORGANIZATION" "1.2.246.562.11.22222222222"
-                            "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
-                            "SUPERUSER" "1.2.246.562.11.44444444444"
-                            "1.2.246.562.11.11111111111")
-            unique-ticket (str (System/currentTimeMillis) "-" (rand-int Integer/MAX_VALUE))]
-        [username unique-ticket])))
+    (let [[user henkiloOid roles]
+          (case ticket
+            "USER-WITH-HAKUKOHDE-ORGANIZATION"
+            ["1.2.246.562.11.22222222222"
+             "1.2.246.562.11.11111111000"
+             #{"ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.0439846"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.0439846"
+               "ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.28.2"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.28.2"
+               "ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.10826252480"}]
+
+            "OPINTO-OHJAAJA"
+            ["1.2.246.562.11.33333333333"
+             "1.2.246.562.11.11111111013"
+             #{"ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_HAKEMUS_opinto-ohjaaja_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.28.1"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.28.1"
+               "ROLE_APP_ATARU_HAKEMUS_opinto-ohjaaja_1.2.246.562.28.1"}]
+
+            "SUPERUSER"
+            ["1.2.246.562.11.44444444444"
+             "1.2.246.562.11.11111111014"
+             #{"ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.00000000001"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.00000000001"}]
+
+            ;; default (if unknown ticket)
+            ["1.2.246.562.11.11111111111"
+             "1.2.246.562.11.11111111012"
+             #{"ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.28.1"
+               "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.28.1"}])
+          unique-ticket (str (System/currentTimeMillis) "-" (rand-int Integer/MAX_VALUE))]
+      [{:user        user
+        :henkiloOid  henkiloOid
+        :kayttajaTyyppi nil
+        :idpEntityId nil
+        :roles       roles}
+       unique-ticket])))
+
+;(defn- fake-login-provider [ticket]
+;  (fn []
+;      (let [username      (case ticket
+;                            "USER-WITH-HAKUKOHDE-ORGANIZATION" "1.2.246.562.11.22222222222"
+;                            "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
+;                            "SUPERUSER" "1.2.246.562.11.44444444444"
+;                            "1.2.246.562.11.11111111111")
+;            unique-ticket (str (System/currentTimeMillis) "-" (rand-int Integer/MAX_VALUE))]
+;        [username unique-ticket])))
 
 (defn auth-routes [{:keys [login-cas-client
-                           kayttooikeus-service
                            person-service
                            organization-service
                            audit-logger
@@ -42,8 +86,8 @@
                               login-provider (if (-> config :dev :fake-dependencies)
                                                (fake-login-provider ticket)
                                                (cas-login login-cas-client ticket))]
+                          (log/debug "cas auth route")
                           (login login-provider
-                                 kayttooikeus-service
                                  person-service
                                  organization-service
                                  audit-logger
