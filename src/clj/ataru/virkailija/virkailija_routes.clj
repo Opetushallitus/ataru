@@ -1178,7 +1178,8 @@
                              :vat vat
                              :due-date (:due_date invoice)
                              :order-id-prefix (:order-id-prefix metadata)
-                             :order-id (:order_id invoice)})]
+                             :order-id (:order_id invoice)
+                             :organization-oids (:selected-organization session)})]
             (do
               (log/warn "Review result" result)
               (response/ok result))
