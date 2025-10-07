@@ -522,7 +522,7 @@
                                                  :sv "Förhandsvisa"
                                                  :en "Preview"}
    :network-offline                             {:fi "Ei yhteyttä verkkoon."
-                                                 :sv "Network is offline."
+                                                 :sv "Ingen anslutning till nätverket."
                                                  :en "Network is offline."}
    :application-period-closed                   {:fi "Hakemusta ei voi lähettää: Hakuaika on päättynyt tai liitteen määräaika on umpeutunut"
                                                  :sv "Ansökan kan inte skickas: Ansökningstiden eller deadline för bilagor har utgått"
@@ -531,7 +531,7 @@
                                                  :sv "Din ansökning har annullerats."
                                                  :en "Your application is cancelled."}
    :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
-                                                 :sv "Internal server error."
+                                                 :sv "Internt serverfel."
                                                  :en "Internal server error."}
    :oppija-session-not-found                    {:fi "Hakemuksesi tallentaminen ei onnistunut, koska istuntosi ei ole enää voimassa. Voit lähettää uuden hakemuksen kirjautumalla uudelleen tai ilman kirjautumista."
                                                  :sv "Din ansökan kunde inte sparas eftersom din session har utgått. Du kan skicka en ny ansökan genom att logga in på nytt eller utan inloggning."
@@ -998,7 +998,7 @@
                                 :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
    :base-education             {:fi "Perusopetuksen oppimäärä"
                                 :sv "Den grundläggande utbildningens lärokurs"
-                                :en "EN: Perusopetuksen oppimäärä"}})
+                                :en "Basic education"}})
 
 (def kk-application-payment-module-texts
   {:section-title                      {:fi "Hakemusmaksu ja lukuvuosimaksu"
