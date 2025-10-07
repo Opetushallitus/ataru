@@ -362,7 +362,10 @@
                                           params
                                           translations
                                           {:decision-info-email (decision-info-email (:order-id-prefix params))
-                                           :due-date due-date})
+                                           :due-date due-date}
+                                          (when (and (= origin "tutu")
+                                                     (:reminder params))
+                                            {:decision-text-3 (:decision-text-3-reminder translations)}))
         subject                         (case origin
                                           "tutu" (str (:subject-prefix translations) ": " (:header translations))
                                           "astu" (:subject translations))
