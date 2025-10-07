@@ -130,10 +130,10 @@
                                                  :en "In this application you can apply to %s study programmes "}
    :arvosana                                    {:fi "Arvosana"
                                                  :sv "Vitsord"
-                                                 :en "Arvosana"}
+                                                 :en "Grade"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
-                                                 :en "Best Regards"}
+                                                 :en "Best regards"}
    :should-be-higher-priorization-than          {:fi ["Hakukohde " " tulee olla korkeammalla prioriteetillä kuin "]
                                                  :sv ["Ansökningsmålet " " bör ha en högre prioritet än "]
                                                  :en ["Study programme " " has to be in higher order of preference than "]}
@@ -367,46 +367,46 @@
                                                  :en "application period currently not ongoing"}
    :oppiaine                                    {:fi "Oppiaine"
                                                  :sv "Läroämne"
-                                                 :en "Oppiaine"}
+                                                 :en "Subject"}
    :valinnaisaine                               {:fi "Valinnaisaine"
                                                  :sv "Valfritt ämne"
-                                                 :en "Valinnaisaine"}
+                                                 :en "Elective subject"}
    :oppimaara                                   {:fi "Oppimäärä"
                                                  :sv "Lärokurs"
-                                                 :en "Oppimäärä"}
+                                                 :en "Syllabus"}
    :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
                                                  :sv "Finska som modersmål"
-                                                 :en "Suomi äidinkielenä"}
+                                                 :en "Finnish as a first language"}
    :suomi-toisena-kielena                       {:fi "Suomi toisena kielena"
                                                  :sv "Finska som andra språk"
-                                                 :en "Suomi toisena kielena"}
+                                                 :en "Finnish as a second language"}
    :suomi-viittomakielisille                    {:fi "Suomi viittomakielisille"
                                                  :sv "Finska för teckenspråkiga"
-                                                 :en "Suomi viittomakielisille"}
+                                                 :en "Finnish for sign language users"}
    :suomi-saamenkielisille                      {:fi "Suomi saamenkielisille"
                                                  :sv "Finska för samiskspråkiga"
-                                                 :en "Suomi saamenkielisille"}
+                                                 :en "Finnish for Sámi speakers"}
    :ruotsi-aidinkielena                         {:fi "Ruotsi äidinkielenä"
                                                  :sv "Svenska som modersmål"
-                                                 :en "Ruotsi äidinkielenä"}
+                                                 :en "Swedish as a first language"}
    :ruotsi-toisena-kielena                      {:fi "Ruotsi toisena kielenä"
                                                  :sv "Svenska som andra språk"
-                                                 :en "Ruotsi toisena kielenä"}
+                                                 :en "Swedish as a second language"}
    :ruotsi-viittomakielisille                   {:fi "Ruotsi viittomakielisille"
                                                  :sv "Svenska för teckenspråkiga"
-                                                 :en "Ruotsi viittomakielisille"}
+                                                 :en "Swedish for sign language users"}
    :saame-aidinkielena                          {:fi "Saame äidinkielenä"
                                                  :sv "Samiska som modersmål"
-                                                 :en "Saame äidinkielenä"}
+                                                 :en "Sámi as a first language"}
    :romani-aidinkielena                         {:fi "Romani äidinkielenä"
                                                  :sv "Romani som modersmål"
-                                                 :en "Romani äidinkielenä"}
+                                                 :en "Romani as a first language"}
    :viittomakieli-aidinkielena                  {:fi "Viittomakieli äidinkielenä"
                                                  :sv "Teckenspråk som modersmål"
-                                                 :en "Viittomakieli äidinkielenä"}
+                                                 :en "Sign language as a first language"}
    :muu-oppilaan-aidinkieli                     {:fi "Muu oppilaan äidinkieli"
                                                  :sv "Annat modersmål för eleven"
-                                                 :en "Muu oppilaan äidinkieli"}
+                                                 :en "Other first language"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
@@ -421,13 +421,13 @@
                                                    :en "I agree on the terms of online/electronic service"}
    :paatos-opiskelijavalinnasta-sahkopostiin    {:fi "Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"
                                                  :sv "Läroanstalten får skicka beslutet för studerandeantagningen till min e-post"
-                                                 :en "EN: Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"}
+                                                 :en "The educational institution can deliver the decision on student selection to my email"}
    :lupatiedot-toinen-aste                      {:fi "Lupatiedot"
                                                  :sv "Tillståndsuppgifter"
                                                  :en "Permissions"}
    :lupatiedot-toinen-aste-info                 {:fi "**Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. **\n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään perusopetuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja sekä väestötietojärjestelmästä saatavia henkilötietoja.  \n\nHenkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät oppilaitokseen, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n\nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/konfo/fi/sivu/opiskelijavalintarekisterin-tietosuojaseloste).\n\n\n\n"
                                                  :sv "**Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten.**\n\nDe uppgifter som du har gett i din ansökan används för att genomföra antagningen av studerande. Utöver dessa uppgifter används uppgifter som sparats i informationsresursen Koski samt personuppgifter från Befolkningsdatasystemet. \n\nBehandlingen av dina uppgifter bygger på lagen om nationella studie- och examensregister (884/2017).\n\nEfter att antagningen av studerande har gjorts, överförs dina uppgifter till den högskolan där du fick en studieplats. Dina uppgifter kan enligt lag också ges till andra myndigheter eller för forskning.\n\nUppgifterna sparas enligt lag i fem år, varefter de enligt Riksarkivets beslut bevaras permanent. Uppgifterna om mottagande av studieplats bevaras också permanent.\n\nDu har rätt att granska dina egna uppgifter och be att uppgifterna ändras eller att behandlingen av dem begränsas. Du har dessutom rätt att begära ändring hos dataombudsmannen. \n\nMer information: [Studieinfos dataskyddsbeskrivning](https://opintopolku.fi/konfo/sv/sivu/dataskyddsbeskrivning-foer-antagningsregistret).\n"
-                                                 :en "EN: **Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. **\n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään perusopetuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja sekä väestötietojärjestelmästä saatavia henkilötietoja.  \n\nHenkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät oppilaitokseen, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n\nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/konfo/fi/sivu/opiskelijavalintarekisterin-tietosuojaseloste).\n\n\n\n"}
+                                                 :en "**Review the information you have entered on the application form carefully before submitting the application form. **\n\nThe information you provide in the application will be used for student selection. In addition to this information, the student selection will utilize data recorded in the national KOSKI database for basic and vocational education as well as personal data obtained from the population information system. \n\nThe processing of your personal data is based on the Act on the National Registers of Education Records, Qualifications and Degrees (884/2017).\n\nAfter the student selection, your data will be transferred to the educational institution where you received a study place. Based on the law, your data can also be disclosed to other authorities and for research purposes.\n\nThe data will be stored according to the law for five years, after which the data will be transferred to permanent storage according to the decision of the National Archives of Finland. The information regarding the acceptance of a study place is stored permanently according to the law.\n\nYou have the right to review your information and request rectification or restriction of processing. You also have the right to lodge a complaint with the Data Protection Ombudsman.\n\nMore information: [Privacy Statement of Studyinfo](https://opintopolku.fi/konfo/en/sivu/register-description-and-cookies#register-description-for-student-admission-register).\n\n\n\n"}
    :lupatiedot-kk                               {:fi "Lupatiedot"
                                                  :sv "Tilläggsuppgifter"
                                                  :en "Permissions"}
@@ -472,7 +472,7 @@
                                                  :en "Search for study programmes"}
    :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
                                                  :sv "Sök läroanstalt eller utbildningar"
-                                                 :en "EN: Etsi oppilaitosta tai koulutusta"}
+                                                 :en "Search for educational instituion or study programme"}
    :close-application-options                   {:fi "Sulje koulutusten haku"
                                                  :sv "Dölj hämta ansökningsmål"
                                                  :en "Close study program search"}
@@ -484,13 +484,13 @@
                                                  :sv "sekunder"}
    :select-max-n-application-options            {:fi ["Voit valita enintään " " hakukohdetta."]
                                                  :sv ["Du kan välja högst " " ansökningsmål."]
-                                                 :en ["EN: Valitse enintään " " ansökningsmål"]}
+                                                 :en ["You can choose up to " " application options."]}
    :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
                                                  :sv "Du kan välja ännu ett ansökningsmål"
-                                                 :en "EN: Voit valita vielä yhden hakukohteen"}
+                                                 :en "You can choose one additional application option"}
    :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
                                                  :sv ["Du kan välja ännu " " ansökningsmål"]
-                                                 :en ["EN: Voit valita vielä " " hakukohdetta"]}
+                                                 :en ["You can still choose " " application options"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
                                                  :sv "Visa mer..."}
@@ -522,7 +522,7 @@
                                                  :sv "Förhandsvisa"
                                                  :en "Preview"}
    :network-offline                             {:fi "Ei yhteyttä verkkoon."
-                                                 :sv "Network is offline."
+                                                 :sv "Ingen anslutning till nätverket."
                                                  :en "Network is offline."}
    :application-period-closed                   {:fi "Hakemusta ei voi lähettää: Hakuaika on päättynyt tai liitteen määräaika on umpeutunut"
                                                  :sv "Ansökan kan inte skickas: Ansökningstiden eller deadline för bilagor har utgått"
@@ -530,24 +530,24 @@
    :inactivated                                 {:fi "Hakemuksesi on peruttu."
                                                  :sv "Din ansökning har annullerats."
                                                  :en "Your application is cancelled."}
-   :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
-                                                 :sv "Internal server error."
-                                                 :en "Internal server error."}
+   :internal-server-error                       {:fi "Hups, jotain meni pieleen. Jos ongelma toistuu, ole yhteydessä siihen oppilaitokseen, johon yrität hakea."
+                                                 :sv "Oj, något gick fel. Om problemet kvarstår, vänligen kontakta den läroanstalten du försöker ansöka till."
+                                                 :en "Oops, something went wrong. If the problem persists, contact the educational institution you are trying to apply to."}
    :oppija-session-not-found                    {:fi "Hakemuksesi tallentaminen ei onnistunut, koska istuntosi ei ole enää voimassa. Voit lähettää uuden hakemuksen kirjautumalla uudelleen tai ilman kirjautumista."
                                                  :sv "Din ansökan kunde inte sparas eftersom din session har utgått. Du kan skicka en ny ansökan genom att logga in på nytt eller utan inloggning."
                                                  :en "Your session has expired and your application has not been saved. You can send a new application by logging in again. You can also send a new application without identification."}
-   :application-validation-failed-error         {:fi "Tapahtui palvelinvirhe."
-                                                 :sv "Internal server error."
-                                                 :en "Internal server error."}
+   :application-validation-failed-error         {:fi "Hups, jotain meni pieleen. Yritäthän lomakkeen lähetystä uudelleen.\nJos ongelma toistuu, ole yhteydessä siihen oppilaitokseen, johon yrität hakea."
+                                                 :sv "Oj, något gick fel. Försök skicka in blanketten igen.\nOm problemet kvarstår, vänligen kontakta den läroanstalten du försöker ansöka till."
+                                                 :en "Oops, something went wrong. Please try submitting the form again.\nIf the problem persists, contact the educational institution you are trying to apply to."}
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}
    :oppiaine-valinnainen                        {:fi "%s, valinnainen"
-                                                 :sv "%s, valinnainen"
-                                                 :en "%s, valinnainen"}
+                                                 :sv "%s, valfritt"
+                                                 :en "%s, elective"}
    :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
                                                  :sv "Lägg till valfritt ämne"
-                                                 :en "Lisää valinnaisaine"}
+                                                 :en "Add elective subject"}
    :application-submitted-payment               {:fi "Hakemuksesi on tallentunut"
                                                  :sv "Din ansökan har sparats."
                                                  :en "Your application has been saved."}
@@ -562,7 +562,7 @@
                                                  :en "Go to payment"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
-                                                 :en "Poista"}
+                                                 :en "Remove"}
    :poista-osio                                 {:fi "Poista osio"
                                                  :sv "Radera avsnitt"
                                                  :en "Delete section"}
@@ -589,10 +589,10 @@
                                                  :en "Application demo form closed"}
    :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
                                                  :sv "Skicka bilagan till adressen"
-                                                 :en "EN: Lähetä liite osoitteeseen"}
+                                                 :en "Send attachment to address"}
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "Eller använd"
-                                                 :en "EN: Tai käytä"}
+                                                 :en "Or use"}
    :siirretty-ylos                              {:fi "siirretty ylös"
                                                  :sv "flyttad upp"
                                                  :en "moved up"}
@@ -610,19 +610,19 @@
                                                  :en "Selected: "}
    :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
                                                  :sv "Ändring i antagningssättet i den gemensamma ansökan"
-                                                 :en "EN: Muutos yhteishaun valintatapaan"}
+                                                 :en "Change to admission method in the joint application"}
    :email-vain-harkinnanvaraisessa              {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Pohjakoulutustietosi mukaan olet mukana vain harkintaan perustuvassa valinnassa."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. Enligt uppgifter om din grundutbildning är du endast med i antagning enligt prövning."
-                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Pohjakoulutustietosi mukaan olet mukana vain harkintaan perustuvassa valinnassa."}
+                                                 :en "You have applied in the joint application to upper secondary education and preparatory education. Based on your educational background information, you are only included in discretionary admission."}
    :email-vain-harkinnanvaraisessa-link-text    {:fi "Lue lisää harkintaan perustuvasta valinnasta Opintopolusta."
                                                  :sv "Läs mera om antagning enligt prövning i Studieinfo."
-                                                 :en "EN: Lue lisää harkintaan perustuvasta valinnasta Opintopolusta."}
+                                                 :en "Read more on discretionary admission on Studyinfo."}
    :email-vain-harkinnanvaraisessa-link         {:fi "https://opintopolku.fi/konfo/fi/sivu/hakeminen-harkinnanvaraisen-valinnan-kautta"
                                                  :sv "https://opintopolku.fi/konfo/sv/sivu/ansoekan-via-antagning-enligt-proevning"
                                                  :en "https://opintopolku.fi/konfo/en/sivu/student-admission-in-the-joint-application-to-upper-secondary-education-and"}
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
-                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
+                                                 :en "You have applied to upper secondary or preparatory education in the joint application. Based on the information you provided in your application, you received a notification that your application will be processed under discretionary admission. According to your institution, this information was incorrect, so your application will be processed in the standard scoring selection instead of discretionary admission."}
    :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
                                                  :en "Studyinfo: application fee, reminder to pay the fee by"}
@@ -750,67 +750,67 @@
 (def oppiaine-translations
   {:oppiaine-a                 {:fi "Äidinkieli ja kirjallisuus"
                                 :sv "Modersmål och litteratur"
-                                :en "Äidinkieli ja kirjallisuus"}
+                                :en "First language and literature"}
    :oppiaine-a1                {:fi "A1-kieli"
                                 :sv "A1-språk"
-                                :en "A1-kieli"}
+                                :en "A1-language"}
    :oppiaine-a2                {:fi "A2-kieli"
                                 :sv "A2-språk"
-                                :en "A2-kieli"}
+                                :en "A2-language"}
    :oppiaine-b1                {:fi "B1-kieli"
                                 :sv "B1-språk"
-                                :en "B1-kieli"}
+                                :en "B1-language"}
    :oppiaine-b2                {:fi "B2-kieli"
                                 :sv "B2-språk"
-                                :en "B2-kieli"}
+                                :en "B2-language"}
    :oppiaine-b3                {:fi "B3-kieli"
                                 :sv "B3-språk"
-                                :en "B3-kieli"}
+                                :en "B3-language"}
    :oppiaine-ma                {:fi "Matematiikka"
                                 :sv "Matematik"
-                                :en "Matematiikka"}
+                                :en "Mathematics"}
    :oppiaine-bi                {:fi "Biologia"
                                 :sv "Biologi"
-                                :en "Biologia"}
+                                :en "Biology"}
    :oppiaine-ge                {:fi "Maantieto"
                                 :sv "Geografi"
-                                :en "Maantieto"}
+                                :en "Geography"}
    :oppiaine-fy                {:fi "Fysiikka"
                                 :sv "Fysik"
-                                :en "Fysiikka"}
+                                :en "Physics"}
    :oppiaine-ke                {:fi "Kemia"
                                 :sv "Kemi"
-                                :en "Kemia"}
+                                :en "Chemistry"}
    :oppiaine-tt                {:fi "Terveystieto"
                                 :sv "Hälsokunskap"
-                                :en "Terveystieto"}
+                                :en "Health sciences"}
    :oppiaine-ty                {:fi "Uskonto tai elämänkatsomustieto"
                                 :sv "Religion eller livsåskådningskunskap"
-                                :en "Uskonto tai elämänkatsomustieto"}
+                                :en "Religion or ethics"}
    :oppiaine-hi                {:fi "Historia"
                                 :sv "Historia"
-                                :en "Historia"}
+                                :en "History"}
    :oppiaine-yh                {:fi "Yhteiskuntaoppi"
                                 :sv "Samhällslära"
-                                :en "Yhteiskuntaoppi"}
+                                :en "Social studies"}
    :oppiaine-mu                {:fi "Musiikki"
                                 :sv "Musik"
-                                :en "Musiikki"}
+                                :en "Music"}
    :oppiaine-ku                {:fi "Kuvaamataito"
                                 :sv "Bildkonst"
-                                :en "Kuvaamataito"}
+                                :en "Arts"}
    :oppiaine-ka                {:fi "Käsityö"
                                 :sv "Slöjd"
-                                :en "Käsityö"}
+                                :en "Crafts"}
    :oppiaine-li                {:fi "Liikunta"
                                 :sv "Gymnastik"
-                                :en "Liikunta"}
+                                :en "Physical education"}
    :oppiaine-ko                {:fi "Kotitalous"
                                 :sv "Huslig ekonomi"
-                                :en "Kotitalous"}
+                                :en "Home economics"}
    :oppiaine-valinnainen-kieli {:fi "Valinnainen kieli"
                                 :sv "Valfritt språk"
-                                :en "Valinnainen kieli"}})
+                                :en "Elective language subject"}})
 
 (def general-texts
   {:yes                {:en "Yes"
@@ -921,7 +921,7 @@
                                              :en "Swedish"}
    :language-saame                          {:fi "saame"
                                              :sv "samiska"
-                                             :en "EN: saame"}
+                                             :en "Sámi"}
    :language-english                        {:fi "englanti"
                                              :sv "engelska"
                                              :en "English"}
@@ -998,7 +998,7 @@
                                 :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
    :base-education             {:fi "Perusopetuksen oppimäärä"
                                 :sv "Den grundläggande utbildningens lärokurs"
-                                :en "EN: Perusopetuksen oppimäärä"}})
+                                :en "Basic education"}})
 
 (def kk-application-payment-module-texts
   {:section-title                      {:fi "Hakemusmaksu ja lukuvuosimaksu"
