@@ -2769,8 +2769,8 @@
                                   :sv "Granskad"
                                   :en "Reviewed"}
    :in-migri-review              {:fi "Migrin tarkastuksessa"
-                                  :sv "In Migri review"
-                                  :en "In Migri review"}
+                                  :sv "Under granskning av Migrationsverket"
+                                  :en "Under review by Finnish Immigration Service"}
    :fulfilled                    {:fi "Täyttyy"
                                   :sv "Fylls"
                                   :en "Meets requirement"}
