@@ -168,7 +168,8 @@
                  [com.thoughtworks.paranamer/paranamer "2.8.3"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
-                 [org.slf4j/log4j-over-slf4j "2.0.9"]
+                 [org.slf4j/log4j-over-slf4j "2.0.9"]   ;; Log4j 1.x
+                 [org.apache.logging.log4j/log4j-to-slf4j "2.25.2"]  ;; Log4j 2.x
                  [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava commons-io]]
                  [com.google.guava/guava "31.1-jre"]
                  [msolli/proletarian "1.0.68-alpha"]
