@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>34c82a79b929d5567476b02c1d470fe0034a66e8</tag>
+    <tag>2f6a721ece007582503d8b43e101a60f70c297b8</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
