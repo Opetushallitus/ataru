@@ -247,7 +247,7 @@
                         (log/debug "Initialized login-cas-client:" client)
                         client)
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
     :tutu-cas-client (cas/new-client "/tutu-backend/api" "/j_spring_cas_security_check" "JSESSIONID"
