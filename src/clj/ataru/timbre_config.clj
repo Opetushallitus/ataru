@@ -22,6 +22,8 @@
                                       (when hostname (str "_" hostname)))
                          :pattern :daily})}
      :middleware     [(timbre-ns-pattern-level/middleware {"com.zaxxer.hikari.HikariConfig" :debug
+                                                           "fi.vm.sade.javautils.nio.cas"          :debug
+                                                           "fi.vm.sade.javautils.nio.cas.impl"     :debug
                                                            :all                             :info})]
      :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
                       :timezone (TimeZone/getTimeZone "Europe/Helsinki")}
