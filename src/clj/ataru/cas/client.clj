@@ -13,7 +13,9 @@
         password    (get-in config [:cas :password])
         cas-url     (resolve-url :cas-client)
         service-url (str (resolve-url :url-virkailija) service)
-        cas-config  (-> (CasConfig$CasConfigBuilder. username password cas-url service-url caller-id caller-id security-uri-suffix)
+        csrf-token  (or (get-in config [:cas :csrf])
+                        caller-id) ;; fallback to caller-id
+        cas-config  (-> (CasConfig$CasConfigBuilder. username password cas-url service-url caller-id csrf-token security-uri-suffix)
                         (.setJsessionName session-cookie-name)
                         .build)
         cas-client  (CasClientBuilder/build cas-config)]
