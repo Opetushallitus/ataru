@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>2f6a721ece007582503d8b43e101a60f70c297b8</tag>
+    <tag>fff95c912e6d55f77280899a782a06af3ba54af0</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -1007,6 +1007,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
       <version>2.0.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <version>2.25.2</version>
     </dependency>
     <dependency>
       <groupId>oph</groupId>
