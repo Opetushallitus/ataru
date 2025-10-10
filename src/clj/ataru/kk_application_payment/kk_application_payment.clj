@@ -282,56 +282,55 @@
       (some #(not (time/before? % now)) attachment-deadlines))))
 
 (defn- keep-if-deadline-passed
-  [attachment-deadline-service field-deadlines form haku now application-submitted review]
-  (let [id             (:attachment-key review)
-        field-deadline (some->> field-deadlines
-                                (filter #(= id (:field-id %)))
-                                first
-                                :deadline)
-        field          (get (util/form-fields-by-id form) (keyword id))
-        passed         (cond
-                         (some? field-deadline)
-                         (time/after? now field-deadline)
-                         (deadline/custom-deadline field)
-                         (deadline/custom-deadline-passed? now field)
-                         :else
-                         (not (time-is-before-some-attachment-deadlines? attachment-deadline-service application-submitted haku now)))]
-    (when passed
+  [attachment-deadline-service field-deadlines form haku now application review]
+  (let [id                                (:attachment-key review)
+        field-deadline                    (some->> field-deadlines
+                                                   (filter #(= id (:field-id %)))
+                                                   first
+                                                   :deadline)
+        field                             (get (util/form-fields-by-id form) (keyword id))
+        payment-obligation-reviewed?      (attachment-deadline/kk-application-payment-obligation-reviewed?
+                                            attachment-deadline-service application)
+        passed?                           (cond
+                                            (some? field-deadline)
+                                            (time/after? now field-deadline)
+                                            (deadline/custom-deadline field)
+                                            (deadline/custom-deadline-passed? now field)
+                                            :else
+                                            (not (time-is-before-some-attachment-deadlines? attachment-deadline-service (:submitted application) haku now)))]
+    (when (or payment-obligation-reviewed? passed?)
       review)))
 
 (defn- includes-fields-with-passed-deadlines?
   "Returns true when one or more of the fields in the input reviews have their deadlines passed / overdue"
   [attachment-deadline-service tarjonta-service form-by-id-cache koodisto-cache organization-service
    ohjausparametrit-service hakukohderyhma-settings-cache application field-reviews]
-  (let [now                   (time/now)
-        application-key       (:key application)
-        haku-oid              (:haku application)
-        application-submitted (:submitted application)
-        haku                  (tarjonta/get-haku tarjonta-service haku-oid)
-        field-deadlines       (->> (:key application)
-                                   (attachment-deadline/get-field-deadlines attachment-deadline-service)
-                                   (map #(dissoc % :last-modified))
-                                   (util/group-by-first :field-id))
-        in-processing?        (util/application-in-processing? (:application-hakukohde-reviews application))
-        form                  (cond
-                                (some? (:haku application))
-                                (hakija-form-service/fetch-form-by-haku-oid
-                                  form-by-id-cache tarjonta-service koodisto-cache organization-service
-                                  ohjausparametrit-service hakukohderyhma-settings-cache (:haku application)
-                                  in-processing? field-deadlines [:virkailija] false false attachment-deadline-service
-                                  (:submitted application))
-                                (some? (:form application))
-                                (hakija-form-service/fetch-form-by-key
-                                  (->> application
-                                       :form
-                                       form-store/fetch-by-id
-                                       :key) [:virkailija] form-by-id-cache koodisto-cache nil in-processing?
-                                  field-deadlines attachment-deadline-service (:submitted application) nil))
-        passed                (remove
-                                nil? (map (partial keep-if-deadline-passed
-                                                   attachment-deadline-service field-deadlines form haku now
-                                                   application-submitted)
-                                          field-reviews))]
+  (let [now              (time/now)
+        application-key  (:key application)
+        haku-oid         (:haku application)
+        haku             (tarjonta/get-haku tarjonta-service haku-oid)
+        field-deadlines  (->> application-key
+                              (attachment-deadline/get-field-deadlines attachment-deadline-service)
+                              (map #(dissoc % :last-modified))
+                              (util/group-by-first :field-id))
+        in-processing?   (util/application-in-processing? (:application-hakukohde-reviews application))
+        form             (cond
+                           (some? (:haku application))
+                           (hakija-form-service/fetch-form-by-haku-oid
+                             form-by-id-cache tarjonta-service koodisto-cache organization-service
+                             ohjausparametrit-service hakukohderyhma-settings-cache (:haku application)
+                             in-processing? field-deadlines [:virkailija] false false attachment-deadline-service
+                             (:submitted application))
+                           (some? (:form application))
+                           (hakija-form-service/fetch-form-by-key
+                             (->> application
+                                  :form
+                                  form-store/fetch-by-id
+                                  :key) [:virkailija] form-by-id-cache koodisto-cache nil in-processing?
+                             field-deadlines attachment-deadline-service (:submitted application) nil))
+        passed           (remove nil?
+                                 (map (partial keep-if-deadline-passed
+                                               attachment-deadline-service field-deadlines form haku now application) field-reviews))]
     (if (seq passed)
       (do
         (log/info "Application" application-key "has passed kk application deadlines for invalid attachments:" passed)

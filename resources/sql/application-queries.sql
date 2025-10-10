@@ -1428,7 +1428,12 @@ SELECT
   a.person_oid AS "person-oid",
   (SELECT content
   FROM answers_as_content
-  WHERE application_id = a.id) AS content
+  WHERE application_id = a.id) AS content,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+  FROM application_hakukohde_reviews ahr
+  WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews"
 FROM applications AS a
 LEFT JOIN applications AS la
    ON la.key = a.key AND
