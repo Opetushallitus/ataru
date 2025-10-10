@@ -574,12 +574,13 @@
    :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
-  {:processingState     s/Str
-   :eligibilityState    s/Str
-   :paymentObligation   s/Str
-   :hakukohdeOid        s/Str
-   :languageRequirement s/Str
-   :degreeRequirement   s/Str})
+  {:processingState                s/Str
+   :eligibilityState               s/Str
+   :paymentObligation              s/Str
+   :kkApplicationPaymentObligation s/Str
+   :hakukohdeOid                   s/Str
+   :languageRequirement            s/Str
+   :degreeRequirement              s/Str})
 
 (s/defschema ValintaHakutoive
   (merge Hakutoive

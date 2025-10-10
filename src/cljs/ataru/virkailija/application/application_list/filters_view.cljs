@@ -313,7 +313,7 @@
         toisen-asteen-yhteishaku-selected?        (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn []
       (let [filters-to-include (if @kk-application-payment-required?
-                                 #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :kk-application-payment}
+                                 #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :kk-application-payment-obligation :kk-application-payment}
                                  #{:language-requirement :degree-requirement :eligibility-state :payment-obligation})]
         [:span.application-handling__filters
          [:a
