@@ -284,10 +284,7 @@
 (defn- keep-if-deadline-passed
   [attachment-deadline-service field-deadlines form haku now application review]
   (let [id                                (:attachment-key review)
-        field-deadline                    (some->> field-deadlines
-                                                   (filter #(= id (:field-id %)))
-                                                   first
-                                                   :deadline)
+        field-deadline                    (get field-deadlines [id :deadline])
         field                             (get (util/form-fields-by-id form) (keyword id))
         payment-obligation-reviewed?      (attachment-deadline/kk-application-payment-obligation-reviewed?
                                             attachment-deadline-service application)
