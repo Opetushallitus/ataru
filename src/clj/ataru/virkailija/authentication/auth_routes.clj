@@ -6,8 +6,7 @@
             [clj-ring-db-session.authentication.login :as crdsa-login]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [clojure.string :as string]
-            [taoensso.timbre :as log]))
+            [clojure.string :as string]))
 
 (defn- rewrite-url-for-environment
   "Ensure that https is used when available (due to https termination on
@@ -61,16 +60,6 @@
         :roles       roles}
        unique-ticket])))
 
-;(defn- fake-login-provider [ticket]
-;  (fn []
-;      (let [username      (case ticket
-;                            "USER-WITH-HAKUKOHDE-ORGANIZATION" "1.2.246.562.11.22222222222"
-;                            "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
-;                            "SUPERUSER" "1.2.246.562.11.44444444444"
-;                            "1.2.246.562.11.11111111111")
-;            unique-ticket (str (System/currentTimeMillis) "-" (rand-int Integer/MAX_VALUE))]
-;        [username unique-ticket])))
-
 (defn auth-routes [{:keys [login-cas-client
                            person-service
                            organization-service
@@ -86,7 +75,6 @@
                               login-provider (if (-> config :dev :fake-dependencies)
                                                (fake-login-provider ticket)
                                                (cas-login login-cas-client ticket))]
-                          (log/debug "cas auth route")
                           (login login-provider
                                  person-service
                                  organization-service
