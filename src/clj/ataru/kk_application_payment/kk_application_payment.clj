@@ -279,7 +279,7 @@
 (defn- keep-if-deadline-passed
   [attachment-deadline-service field-deadlines form haku now application-submitted review]
   (let [id             (:attachment-key review)
-        field-deadline (get field-deadlines [id :deadline])
+        field-deadline (get-in field-deadlines [id :deadline])
         field          (get (util/form-fields-by-id form) (keyword id))
         passed         (cond
                          (some? field-deadline)
