@@ -19,17 +19,17 @@
    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja false
    :yo-amm-autom-hakukelpoisuus true})
 
+(def cas-client nil)
+
 (describe "HakukohderyhmapalveluService"
           (it "Return list of hakukohderyhmas for hakukohde"
               (with-redefs [cas/cas-authenticated-get (constantly fake-hakukohderyhmapalvelu-response)]
-                (let [cas-client nil
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
+                (let [hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-hakukohderyhma-oids-for-hakukohde hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-result result))))
 
           (it "Return settings for hakukohderyhma"
               (with-redefs [cas/cas-authenticated-get (constantly fake-hakukohderyhmapalvelu-settings-response)]
-                (let [cas-client nil
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
+                (let [hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-settings-for-hakukohderyhma hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-settings-result result)))))

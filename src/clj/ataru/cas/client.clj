@@ -40,9 +40,7 @@
                       req v)
               :socket-timeout
               (.setRequestTimeout req
-                                  (if (instance? java.time.Duration v)
-                                    v
-                                    (java.time.Duration/ofMillis (long v))))
+                                  (java.time.Duration/ofMillis (long v)))
               req))
           base-request
           extra-opts))
