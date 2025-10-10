@@ -66,12 +66,13 @@
   (valinnan-tulos-hakemukselle [_ _ _]
     mocked-vts-response))
 
+(def cas-client nil)
+
 (describe "valintalaskentaservice spec"
           (tags :unit)
           (it "Return valintatulokset for application"
               (with-redefs [cas/cas-authenticated-get (constantly {:status 200 :body (json/generate-string mocked-vls-response)})]
-                (let [cas-client nil
-                      mocked-vts-service (->FakeValintaTulosService)
+                (let [mocked-vts-service (->FakeValintaTulosService)
                       vls-service-instance (vls-service/->RemoteValintaLaskentaService cas-client mocked-vts-service)
                       result (first (vls/hakemuksen-tulokset vls-service-instance "1.2.3.4" "1.2.3.4.5.6"))
                       first-piste (first (:pisteet result))]
@@ -88,8 +89,7 @@
 
           (it "Returns valintatulokset with exam result for application"
               (with-redefs [cas/cas-authenticated-get (constantly {:status 200 :body (json/generate-string response-with-exam)})]
-                (let [cas-client nil
-                      mocked-vts-service (->FakeValintaTulosService)
+                (let [mocked-vts-service (->FakeValintaTulosService)
                       vls-service-instance (vls-service/->RemoteValintaLaskentaService cas-client mocked-vts-service)
                       result (first (vls/hakemuksen-tulokset vls-service-instance "1.2.3.4" "1.2.3.4.5.6"))
                       first-piste (first (:pisteet result))
