@@ -18,14 +18,14 @@
 (declare yesql-upsert-virkailija<!)
 
 (defn- redirect-to-login-failed-page []
-  (log/info "login failed")
+  (log/debug "login failed")
   (resp/redirect (resolve-url :cas.failure)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
 (defn cas-login [cas-client ticket]
   (fn []
-    (log/info "cas login, ticket" ticket)
+    (log/debug "cas login, ticket" ticket)
     (when ticket
       (let [userdetails-future (.validateServiceTicketWithVirkailijaUserDetails cas-client (resolve-url :ataru.login-success) ticket)
             userdetails        (.get userdetails-future) ;; Use .get to retrieve the result of CompletableFuture
@@ -60,12 +60,8 @@
 
 (defn- login-succeeded [organization-service audit-logger session response roles henkilo username ticket]
   (log/debug "login succeeded")
-  (log/debug "roles:" (rights/convert-to-organisaatiot (rights/strip-role-app (rights/only-ataru (rights/with-oid roles)))))
-  ;TODO refaktoroi siistimmäksi, toistaiseksi välimuuttujat debuggausta varten
-  (let [roles-with-oids           (rights/with-oid roles)
-        ataru-roles               (rights/only-ataru roles-with-oids)
-        stripped-roles            (rights/strip-role-app ataru-roles)
-        converted-roles           (rights/convert-to-organisaatiot stripped-roles)
+  (let [ataru-roles-with-org      (rights/strip-role-app (rights/only-ataru (rights/with-oid roles)))
+        converted-roles           (rights/convert-to-organisaatiot ataru-roles-with-org)
         right-organization-oids   (rights/virkailija->right-organization-oids converted-roles rights/right-names)
         organization-oids         (-> (vals right-organization-oids) (flatten) (set))
         oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
@@ -77,13 +73,7 @@
                                        (map-kv (fn [right organizations]
                                                  [right (organization-service/get-all-organizations organization-service organizations)]))
                                        (user-right-organizations->organization-rights))]
-    (log/info "user" username "logged in")
-    (log/info "henkilo" henkilo)
-    (log/info "right-organization-oids" right-organization-oids)
-    (log/info "organization-oids" organization-oids)
-    (log/info "oph-organization-member?" oph-organization-member?)
-    (log/info "user-right-organizations" user-right-organizations)
-    (log/info "organizations-with-rights" organizations-with-rights)
+    (log/debug "user" username "logged in")
     (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                             :first_name (:kutsumanimi henkilo)
                                             :last_name  (:sukunimi henkilo)})
@@ -121,9 +111,6 @@
                            :henkilo              henkilo
                            :ticket               ticket
                            :success-redirect-url redirect-url})]
-          (log/debug "fetched username" username "and henkilo-oid" henkilo-oid)
-          (log/debug "fetched henkilo" henkilo)
-          (log/debug "fetched roles" roles)
         (login-succeeded organization-service audit-logger session response roles henkilo username ticket)))
       (login-failed))
     (catch Exception e

@@ -19,7 +19,7 @@
                         (.setJsessionName session-cookie-name)
                         .build)
         cas-client  (CasClientBuilder/build cas-config)]
-    (log/info "Created CAS client for service" service "with security URI suffix" security-uri-suffix)
+    (log/debug "Created CAS client for service" service "with security URI suffix" security-uri-suffix)
     cas-client))
 
 (defn response->map [^Response resp]
@@ -48,7 +48,7 @@
           extra-opts))
 
 (defn cas-authenticated-get [^CasClient client url]
-  (log/info "Performing CAS authenticated GET to URL:" url)
+  (log/debug "Performing CAS authenticated GET to URL:" url)
   (try
     (when (nil? client)
       (throw (IllegalArgumentException. "Client cannot be null")))
@@ -68,7 +68,7 @@
       (throw e))))
 
 (defn cas-authenticated-get-as-stream [^CasClient client url]
-  (log/info "Performing CAS authenticated GET as stream to URL:" url)
+  (log/debug "Performing CAS authenticated GET as stream to URL:" url)
   (let [request (-> (RequestBuilder.)
                     (.setMethod "GET")
                     (.setUrl url)
@@ -79,7 +79,7 @@
     (response->map resp)))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]
-  (log/info "Performing CAS DELETE to URL:" url)
+  (log/debug "Performing CAS DELETE to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "DELETE")
                          (.setUrl url)
@@ -87,8 +87,7 @@
                          (.addHeader "Accept" "application/json"))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.execute client (.build request))
-;        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
 
@@ -107,13 +106,12 @@
                          (cond-> payload (.setBody payload)))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.execute client (.build request))
-        ;^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
 
 (defn cas-authenticated-post [^CasClient client url body & [opts-fn]]
-  (log/info (str "Performing CAS authenticated POST to URL: " url
+  (log/debug (str "Performing CAS authenticated POST to URL: " url
                   " with body type " (type body)
                   " body " body))
   (cas-authenticated-with-body client url :POST body opts-fn))
@@ -125,7 +123,7 @@
   (cas-authenticated-with-body client url :PATCH body opts-fn))
 
 (defn cas-authenticated-multipart-post [^CasClient client url & [opts-fn]]
-  (log/info "Performing CAS multipart POST to URL:" url)
+  (log/debug "Performing CAS multipart POST to URL:" url)
   (let [base-request (-> (RequestBuilder.)
                          (.setMethod "POST")
                          (.setUrl url)
@@ -133,7 +131,6 @@
                          (.addHeader "Accept" "application/json"))
         extra-opts   (if opts-fn (opts-fn) {})
         request      (apply-extra-opts base-request extra-opts)
-        ^CompletableFuture future (.execute client (.build request))
-        ;^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
+        ^CompletableFuture future (.executeAndRetryWithCleanSessionOnStatusCodes client (.build request) #{401 302})
         ^Response resp (.get future)]
     (response->map resp)))
