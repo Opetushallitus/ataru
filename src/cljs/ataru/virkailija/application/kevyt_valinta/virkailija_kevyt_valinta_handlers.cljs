@@ -228,8 +228,7 @@
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
   (fn [{db :db} [_ response {application-keys :application-keys}]]
     (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
-      (cond-> {:db (as-> db db'
-
+      (-> {:db (as-> db db'
                          (-> db'
                              (update :valinta-tulos-service ;pre-clear results for all affected hakemukses
                                (fn valinnan-tulokset->db [valinta-tulos-service-db]
@@ -254,14 +253,13 @@
                                  (update :kevyt-valinta dissoc :multiple-requests-count)
                                  (> new-multiple-requests-count 0)
                                  (assoc-in [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))}
-              (= new-multiple-requests-count 0)
               (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
   (fn [{db :db} [_ response {application-key :application-key}]]
     (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
-      (cond-> {:db (as-> db db'
+      (-> {:db (as-> db db'
 
                          (-> db'
                              (assoc-in [:valinta-tulos-service application-key] {})
@@ -282,7 +280,6 @@
                                  (update :kevyt-valinta dissoc :multiple-requests-count)
                                  (> new-multiple-requests-count 0)
                                  (assoc-in [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))}
-              (= new-multiple-requests-count 0)
               (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-db
