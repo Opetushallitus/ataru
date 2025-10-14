@@ -358,11 +358,13 @@
         due-date                        (->> (string/split (:due-date params) #"-")
                                              (reverse)
                                              (string/join \.))
+        organization-oid                (forms/get-organization-oid-by-id (:form application))
         template-params                 (merge
                                           params
                                           translations
                                           {:decision-info-email (decision-info-email (:order-id-prefix params))
-                                           :due-date due-date}
+                                           :due-date due-date
+                                           :organization-oids [organization-oid]}
                                           (when (and (= origin "tutu")
                                                      (:reminder params))
                                             {:decision-text-3 (:decision-text-3-reminder translations)}))
