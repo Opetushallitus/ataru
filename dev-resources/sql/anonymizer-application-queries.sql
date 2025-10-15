@@ -122,6 +122,6 @@ SET value = substring('Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
                       'nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do ' ||
                       'eiusmod tempor incididunt ut labore et dolore magna aliqua.' FROM 0 FOR length(ans.value)+1)
 WHERE field_type IN ('textArea', 'textField')
-  AND ans.key NOT IN ('gender', 'first-name', 'birth-date', 'home-town', 'ssn', 'email', 'preferred-name', 'last-name', 'address', 'phone', 'postal-office', 'postal-code')
+  AND ans.key NOT IN ('gender', 'first-name', 'birth-date', 'home-town', 'ssn', 'email', 'preferred-name', 'last-name', 'address', 'phone', 'postal-office', 'postal-code', 'city')
   AND ans.value !~ '(^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)|(^[0-9]{1,2}[.][0-9]{1,2}[.][0-9]{4}$)'
   AND length(ans.value) >= 6;
