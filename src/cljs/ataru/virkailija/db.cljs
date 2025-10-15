@@ -31,6 +31,9 @@
                                                           :ok-by-proxy true
                                                           :paid true
                                                           :overdue false}
+                      :kk-application-payment-obligation {:unreviewed true
+                                                          :reviewed true
+                                                          :in-migri-review true}
                       :only-identified                   {:identified   true
                                                           :unidentified true}
                       :only-ssn                          {:with-ssn    true
