@@ -188,8 +188,9 @@
   if necessary. Marking status as paid/overdue is done separately via kk-application-payment-maksut-poller-job,
   never here."
   [{:keys [person_oid term year application_id application_key]}
-   {:keys [attachment-deadline-service person-service tarjonta-service
-           koodisto-cache get-haut-cache maksut-service] :as job-runner}]
+   {:keys [attachment-deadline-service person-service tarjonta-service form-by-id-cache koodisto-cache
+           organization-service ohjausparametrit-service hakukohderyhma-settings-cache get-haut-cache
+           maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
@@ -197,8 +198,10 @@
         (let [{:keys [modified-payments existing-payments]}
               (payment/update-payments-for-person-term-and-year attachment-deadline-service
                                                                 person-service tarjonta-service
-                                                                koodisto-cache get-haut-cache
-                                                                person-oid application-term application-year)]
+                                                                form-by-id-cache koodisto-cache organization-service
+                                                                ohjausparametrit-service hakukohderyhma-settings-cache
+                                                                get-haut-cache person-oid application-term
+                                                                application-year)]
           (if (or (some? modified-payments) (some? existing-payments))
             (do
               (log/info "Update kk application payment status handler for"

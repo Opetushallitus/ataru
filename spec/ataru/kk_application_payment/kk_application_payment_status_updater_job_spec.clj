@@ -24,6 +24,7 @@
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.applications.application-store :as application-store]
             [ataru.test-utils :refer [set-fixed-time]]
+            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline]
             [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
 
 (def test-person-oid
@@ -78,6 +79,13 @@
                            (remove-from [_ _])
                            (clear-all [_])))
 
+(def fake-attachment-deadline-service (attachment-deadline/->AttachmentDeadlineService fake-ohjausparametrit-service))
+
+(def fake-form-by-id-cache (reify cache-service/Cache
+                             (get-from [_ _])
+                             (get-many-from [_ _])
+                             (remove-from [_ _])
+                             (clear-all [_])))
 
 (defn start-runner-job [_ _ _ _])
 
@@ -89,22 +97,25 @@
     (start-runner-job this connection job-type initial-state)))
 
 (def runner
-  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
-                       :organization-service     fake-organization-service
-                       :ohjausparametrit-service fake-ohjausparametrit-service
-                       :person-service           fake-person-service
-                       :get-haut-cache           fake-get-haut-cache
-                       :koodisto-cache           fake-koodisto-cache
-                       :maksut-service           mock-maksut-service}))
+  (map->FakeJobRunner {:attachment-deadline-service fake-attachment-deadline-service
+                       :tarjonta-service            fake-tarjonta-service
+                       :form-by-id-cache            fake-form-by-id-cache
+                       :organization-service        fake-organization-service
+                       :ohjausparametrit-service    fake-ohjausparametrit-service
+                       :person-service              fake-person-service
+                       :get-haut-cache              fake-get-haut-cache
+                       :koodisto-cache              fake-koodisto-cache
+                       :maksut-service              mock-maksut-service}))
 
 (def runner-with-empty-haku-cache
-  (map->FakeJobRunner {:tarjonta-service         fake-tarjonta-service
-                       :organization-service     fake-organization-service
-                       :ohjausparametrit-service fake-ohjausparametrit-service
-                       :person-service           fake-person-service
-                       :get-haut-cache           empty-get-haut-cache
-                       :koodisto-cache           fake-koodisto-cache
-                       :maksut-service           mock-maksut-service}))
+  (map->FakeJobRunner {:attachment-deadline-service fake-attachment-deadline-service
+                       :tarjonta-service            fake-tarjonta-service
+                       :organization-service        fake-organization-service
+                       :ohjausparametrit-service    fake-ohjausparametrit-service
+                       :person-service              fake-person-service
+                       :get-haut-cache              empty-get-haut-cache
+                       :koodisto-cache              fake-koodisto-cache
+                       :maksut-service              mock-maksut-service}))
 
 (declare conn)
 (declare spec)
@@ -155,7 +166,8 @@
                   (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
                                                                 (case uri
                                                                   "valtioryhmat"
-                                                                  fixtures/koodisto-valtioryhmat-response))]
+                                                                  fixtures/koodisto-valtioryhmat-response
+                                                                  []))]
                     (spec)))
 
           (it "should not fail when nothing to update"

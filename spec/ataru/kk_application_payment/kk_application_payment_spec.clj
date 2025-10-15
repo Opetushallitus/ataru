@@ -1,17 +1,19 @@
 (ns ataru.kk-application-payment.kk-application-payment-spec
   (:require [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
+            [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
             [clj-time.core :as time]
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
-                                 before around before-all]]
+                                 before around]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
             [ataru.cache.cache-service :as cache-service]
             [ataru.kk-application-payment.fixtures :as fixtures]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
+            [ataru.organization-service.organization-service :as org-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.kk-application-payment.utils :as payment-utils]
             [ataru.test-utils :refer [set-fixed-time reset-fixed-time!]]
@@ -34,7 +36,21 @@
 (def fake-ohjausparametrit-service
   (->MockOhjausparametritService))
 
+(def fake-hakukohderyhma-settings-cache (reify cache-service/Cache
+                                          (get-from [_ _])
+                                          (get-many-from [_ _])
+                                          (remove-from [_ _])
+                                          (clear-all [_])))
+
 (def fake-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService fake-ohjausparametrit-service))
+
+(def fake-form-by-id-cache (reify cache-service/Cache
+                             (get-from [_ key]
+                               (when (not= "" key)
+                                 (form-store/fetch-by-id (Integer/valueOf key))))
+                             (get-many-from [_ _])
+                             (remove-from [_ _])
+                             (clear-all [_])))
 
 (def fake-koodisto-cache (reify cache-service/Cache
                            (get-from [_ _])
@@ -42,13 +58,16 @@
                            (remove-from [_ _])
                            (clear-all [_])))
 
+(def fake-organization-service (org-service/->FakeOrganizationService))
+
 (def fake-haku-cache (reify cache-service/Cache
                        (get-from [_ _]
                          [{:haku "payment-info-test-kk-haku"}
                           {:haku "payment-info-test-kk-haku-2030"}
                           {:haku "payment-info-test-kk-haku-daylight-savings"}
                           {:haku "payment-info-test-kk-haku-past"}
-                          {:haku "payment-info-test-kk-haku-custom-grace"}])
+                          {:haku "payment-info-test-kk-haku-custom-grace"}
+                          {:haku "payment-info-test-kk-haku-form-field-dl"}])
                        (get-many-from [_ _])
                        (remove-from [_ _])
                        (clear-all [_])))
@@ -58,6 +77,7 @@
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (jdbc/delete! conn :kk_application_payments [])
                             (jdbc/delete! conn :kk_application_payments_history [])
+                            (jdbc/delete! conn :application_hakukohde_reviews [])
                             (jdbc/delete! conn :application_hakukohde_attachment_reviews [])
                             (jdbc/delete! conn :field_deadlines [])))
 
@@ -79,6 +99,8 @@
 
 (describe "creating valid invoicing data"
           (tags :unit :kk-application-payment)
+
+          (before (delete-states-and-events!))
 
           (it "should generate valid order id from application key"
               (let [key "1.2.246.562.11.00000000000002353349"
@@ -107,6 +129,8 @@
 
 (describe "get-haut-for-update"
           (tags :unit :kk-application-payment)
+
+          (before (delete-states-and-events!))
 
           (it "should return haku ending in the future regardless of start date"
               ; FWIW first-application-payment-hakuaika-start redef will not be needed in tests after 1.1.2025.
@@ -153,8 +177,7 @@
 (describe "mark-reminder-sent"
           (tags :unit :kk-application-payment)
 
-          (before-all
-            (delete-states-and-events!))
+          (before (delete-states-and-events!))
 
           (it "should mark reminder sent for a payment"
               (let [application-key "1.2.3.4.5.6"
@@ -170,8 +193,7 @@
 (describe "set-maksut-secret"
           (tags :unit :kk-application-payment)
 
-          (before-all
-            (delete-states-and-events!))
+          (before (delete-states-and-events!))
 
           (it "should set maksut secret for a payment"
               (let [application-key "1.2.3.4.5.6"
@@ -187,14 +209,16 @@
 
 (def exempt-test-oid "1.2.3.4.5.303") ; FakePersonService returns non-EU nationality for this one
 
-(defn create-payment-exempt-by-application [merge-map]
-  (let [application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
-                                                     (merge
-                                                       application-fixtures/application-with-hakemusmaksu-exemption
-                                                       {:person-oid exempt-test-oid}
-                                                       merge-map) nil)
-        application-key (:key (application-store/get-application application-id))]
-    application-key))
+(defn create-payment-exempt-by-application
+  ([merge-map form]
+    (let [application-id (unit-test-db/init-db-fixture form
+                                                       (merge application-fixtures/application-with-hakemusmaksu-exemption
+                                                              {:person-oid exempt-test-oid} merge-map)
+                                                       nil)
+          application-key (:key (application-store/get-application application-id))]
+      application-key))
+  ([merge-map]
+    (create-payment-exempt-by-application merge-map form-fixtures/payment-exemption-test-form)))
 
 (defn create-2030-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-2030"}))
@@ -205,38 +229,50 @@
 (defn create-past-payment-exempt-by-application-with-custom-grace-days []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-custom-grace"}))
 
+(defn create-past-payment-exempt-by-application-with-custom-form-field-deadline []
+  (create-payment-exempt-by-application {:person-oid exempt-test-oid
+                                         :haku "payment-info-test-kk-haku-form-field-dl"
+                                         :form 909910}
+                                        form-fixtures/payment-exemption-test-form-with-deadline))
+
+(defn- filter-by-application-keys [application-keys coll]
+  (filter #(contains? application-keys (:application-key %)) coll))
+
 (defn update-exempt-payment [application-key]
-  (let [changed         (:modified-payments
-                          (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                            fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                            exempt-test-oid term-fall year-ok))
+  (let [changed (->> (:modified-payments
+                       (payment/update-payments-for-person-term-and-year
+                         fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                         fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                         fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache fake-haku-cache
+                         exempt-test-oid term-fall year-ok))
+                     (filter-by-application-keys #{application-key}))
         payment (first (payment/get-raw-payments [application-key]))]
     [changed payment]))
 
 (describe "update-payment-status"
           (tags :unit :kk-application-payment)
 
-          (before-all
-            (delete-states-and-events!))
+          (before (delete-states-and-events!))
 
           (around [spec]
                   (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
                                                                 (case uri
                                                                   "valtioryhmat"
-                                                                  fixtures/koodisto-valtioryhmat-response))]
+                                                                  fixtures/koodisto-valtioryhmat-response
+                                                                  []))]
                     (spec)))
 
           (describe "without exemption"
-                    (before (delete-states-and-events!))
-
                     (it "should return nil without any updates when the person has no applications"
                         (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                       application-fixtures/application-without-hakemusmaksu-exemption
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
-                              states (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                       fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                       oid term-fall year-ok)]
+                              states (payment/update-payments-for-person-term-and-year
+                                       fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                       fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                       fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache fake-haku-cache
+                                       oid term-fall year-ok)]
                           (should= 0 (count states))))
 
                     (it "should return existing paid (terminal) state"
@@ -247,10 +283,13 @@
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-paid application-key nil)
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 0 (count changed))
                           (should= initial-payment payment)
@@ -269,10 +308,13 @@
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
-                              changed (:modified-payments
-                                        (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                          fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                          oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                           (should= 1 (count changed))
@@ -292,10 +334,13 @@
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               initial-payment (payment/set-application-fee-ok-by-proxy application-key nil)
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -311,10 +356,13 @@
                                                                              application-fixtures/application-without-hakemusmaksu-exemption
                                                                              {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -328,10 +376,13 @@
                                                                             application-fixtures/application-without-hakemusmaksu-exemption
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -345,10 +396,13 @@
                                                                             application-fixtures/application-without-hakemusmaksu-exemption
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 1 (count changed))
                           (should= payment (first changed))
@@ -363,10 +417,13 @@
                                                                                application-fixtures/application-without-hakemusmaksu-exemption
                                                                                {:person-oid oid}) nil)
                                 application-key (:key (application-store/get-application application-id))
-                                changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                           fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                           oid term-fall year-ok))
+                                changed (->> (:modified-payments
+                                               (payment/update-payments-for-person-term-and-year
+                                                 fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                                 fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                                 fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                                 fake-haku-cache oid term-fall year-ok))
+                                             (filter-by-application-keys #{application-key}))
                                 payment (first (payment/get-raw-payments [application-key]))]
                             (should= 1 (count changed))
                             (should= payment (first changed))
@@ -387,10 +444,13 @@
                                 primary-application-key (:key (application-store/get-application (first application-ids)))
                                 linked-application-key (:key (application-store/get-application (second application-ids)))
                                 _ (payment/set-application-fee-overdue linked-application-key nil)
-                                changed (:modified-payments
-                                         (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                           fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                           oid term-fall year-ok))
+                                changed (->> (:modified-payments
+                                               (payment/update-payments-for-person-term-and-year
+                                                 fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                                 fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                                 fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                                 fake-haku-cache oid term-fall year-ok))
+                                             (filter-by-application-keys #{primary-application-key linked-application-key}))
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                             (should= 1 (count changed))
@@ -402,7 +462,6 @@
 
           (describe "with exemption"
                     (around [spec]
-                            (delete-states-and-events!)
                             (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)]
                               (spec))
                             (reset-fixed-time!))
@@ -620,6 +679,21 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
+                    (it "should use custom form field deadline"
+                        (let [fixed-date-str-in-finland "2030-04-10T12:00:00"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              ; Mock form-cache returns field deadline in the future
+                              application-key   (create-past-payment-exempt-by-application-with-custom-form-field-deadline)
+                              _                 (save-reviews-to-db! [{:application_key application-key
+                                                                       :attachment_key "brexit-passport-attachment"
+                                                                       :hakukohde "payment-info-test-kk-hakukohde"
+                                                                       :state "not-checked"}])
+                              [changed payment] (update-exempt-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
                     (it "should not set payment status of non eu citizens another application based on a previous exemption"
                         ; This test is to ensure that the exemption does not apply to other applications of the same person.
                         ; We create two applications, one with exemption and one without, run the payment update and check that the
@@ -635,10 +709,13 @@
                                                                               {:person-oid linked-oid})])
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-changed (first (filter #(= primary-application-key (:application-key %)) changed))
                               linked-changed (first (filter #(= linked-application-key (:application-key %)) changed))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
@@ -665,10 +742,13 @@
                               primary-application-key (:key (application-store/get-application (first application-ids)))
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               _ (payment/set-application-fee-paid linked-application-key nil)
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
                           (should= 1 (count changed))
@@ -686,10 +766,13 @@
                                                                             {:person-oid oid}) nil)
                               application-key (:key (application-store/get-application application-id))
                               _ (payment/set-application-fee-overdue application-key nil)
-                              changed (:modified-payments
-                                       (payment/update-payments-for-person-term-and-year fake-attachment-deadline-service fake-person-service
-                                                                                         fake-tarjonta-service fake-koodisto-cache fake-haku-cache
-                                                                                         oid term-fall year-ok))
+                              changed (->> (:modified-payments
+                                             (payment/update-payments-for-person-term-and-year
+                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
+                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
+                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
+                                               fake-haku-cache oid term-fall year-ok))
+                                           (filter-by-application-keys #{application-key}))
                               payment (first (payment/get-raw-payments [application-key]))]
                           (should= 0 (count changed))
                           (should-be-matching-state {:application-key application-key, :state state-overdue
@@ -704,8 +787,7 @@
 (describe "application payment states"
           (tags :unit :kk-application-payment)
 
-          (before-all
-            (delete-states-and-events!))
+          (before (delete-states-and-events!))
 
           (describe "payment state validation"
                     (it "should not allow setting fee with no application key"
