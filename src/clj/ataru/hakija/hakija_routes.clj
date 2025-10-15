@@ -363,7 +363,7 @@
                              attachment-deadline-service)
 
             (not-blank? virkailija-secret)
-            (get-application form-by-id-cache
+              (get-application form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
                              application-service

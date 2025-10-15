@@ -1,7 +1,6 @@
 (ns ataru.virkailija.authentication.auth
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
-            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
@@ -14,20 +13,28 @@
             [ring.util.response :as resp]
             [taoensso.timbre :as log]
             [yesql.core :as sql])
-  (:import (fi.vm.sade.utils.cas CasLogout)))
+  (:import (fi.vm.sade.javautils.nio.cas CasLogout)))
 
 (declare yesql-upsert-virkailija<!)
 
 (defn- redirect-to-login-failed-page []
+  (log/debug "login failed")
   (resp/redirect (resolve-url :cas.failure)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
 (defn cas-login [cas-client ticket]
   (fn []
+    (log/debug "cas login, ticket" ticket)
     (when ticket
-      [(.run (.validateServiceTicketWithVirkailijaUsername cas-client (resolve-url :ataru.login-success) ticket))
-       ticket])))
+      (let [userdetails-future (.validateServiceTicketWithVirkailijaUserDetails cas-client (resolve-url :ataru.login-success) ticket)
+            userdetails        (.get userdetails-future) ;; Use .get to retrieve the result of CompletableFuture
+            userdetails-map    (bean userdetails)]
+        (log/debug "cas login, userdetails" userdetails)
+        (log/debug (.getUser userdetails))
+        (log/debug (.getRoles userdetails))
+        (log/debug userdetails-map)
+        [userdetails-map ticket]))))
 
 (defn- user-right-organizations->organization-rights
   "Takes map keyed by right with list of organizations as values, outputs map keyed by organization oid with list of rights as values"
@@ -51,8 +58,11 @@
   ([]
    (redirect-to-login-failed-page)))
 
-(defn- login-succeeded [organization-service audit-logger session response virkailija henkilo username ticket]
-  (let [right-organization-oids   (rights/virkailija->right-organization-oids virkailija rights/right-names)
+(defn- login-succeeded [organization-service audit-logger session response roles henkilo username ticket]
+  (log/debug "login succeeded")
+  (let [ataru-roles-with-org      (rights/strip-role-app (rights/only-ataru (rights/with-oid roles)))
+        converted-roles           (rights/convert-to-organisaatiot ataru-roles-with-org)
+        right-organization-oids   (rights/virkailija->right-organization-oids converted-roles rights/right-names)
         organization-oids         (-> (vals right-organization-oids) (flatten) (set))
         oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
         user-right-organizations  (map-kv
@@ -63,7 +73,7 @@
                                        (map-kv (fn [right organizations]
                                                  [right (organization-service/get-all-organizations organization-service organizations)]))
                                        (user-right-organizations->organization-rights))]
-    (log/info "user" username "logged in")
+    (log/debug "user" username "logged in")
     (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                             :first_name (:kutsumanimi henkilo)
                                             :last_name  (:sukunimi henkilo)})
@@ -82,29 +92,35 @@
       :organizations organizations-with-rights)))
 
 (defn login [login-provider
-             kayttooikeus-service
              person-service
              organization-service
              audit-logger
              redirect-url
              session]
+  (log/debug "login attempt")
   (try
-    (if-let [[username ticket] (login-provider)]
-      (let [virkailija (kayttooikeus-service/virkailija-by-username kayttooikeus-service username)
-            henkilo    (person-service/get-person person-service (:oidHenkilo virkailija))
-            response   (crdsa-login/login
-                         {:username             username
-                          :henkilo              henkilo
-                          :ticket               ticket
-                          :success-redirect-url redirect-url})]
-        (login-succeeded organization-service audit-logger session response virkailija henkilo username ticket))
+    (if-let [[userdetails ticket] (login-provider)]
+      (do
+        (log/debug "login with username" (:user userdetails) "and ticket" ticket)
+        (let [username    (:user userdetails)
+              henkilo-oid (:henkiloOid userdetails)
+              henkilo     (person-service/get-person person-service henkilo-oid)
+              roles       (:roles userdetails)
+              response    (crdsa-login/login
+                          {:username             username
+                           :henkilo              henkilo
+                           :ticket               ticket
+                           :success-redirect-url redirect-url})]
+        (login-succeeded organization-service audit-logger session response roles henkilo username ticket)))
       (login-failed))
     (catch Exception e
+      (log/error e "Exception in login")
       (login-failed e))))
 
 (defn cas-initiated-logout [logout-request session-store]
   (log/info "cas-initiated logout")
-  (let [ticket (CasLogout/parseTicketFromLogoutRequest logout-request)]
+  (let [cas-logout (CasLogout.)
+        ticket (.parseTicketFromLogoutRequest cas-logout logout-request)]
     (log/info "logging out ticket" ticket)
     (if (.isEmpty ticket)
       (log/error "Could not parse ticket from CAS request" logout-request)
