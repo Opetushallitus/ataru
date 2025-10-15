@@ -96,7 +96,57 @@
                        {:key "postal-code" :value "00200" :fieldType "textField"}
                        {:key "birth-date" :value "09.02.1996" :fieldType "textField"}
                        {:key "postal-office" :value "Helsinki" :fieldType "textField"}
+                       {:key "country-of-residence" :value "246" :fieldType "textField"}
                        {:key "home-town" :value "091" :fieldType "textField"}
+                       {:key       "abcd"
+                        :value     "Lorem ipsum dolor sit amet, consec"
+                        :fieldType "textArea"}
+                       {:key "guardian-firstname" :value ["Testi"] :fieldType "textField"}
+                       {:key "guardian-lastname" :value ["Huoltaja"] :fieldType "textField"}
+                       {:key       "guardian-name"
+                        :value     ["Testi Huoltaja"]
+                        :fieldType "textField"}
+                       {:key "guardian-phone" :value ["0501234567"] :fieldType "textField"}
+                       {:key       "guardian-email"
+                        :value     ["testi1.huoltaja@testiopintopolku.fi"]
+                        :fieldType "textField"}
+                       {:key       "guardian-firstname-secondary"
+                        :value     ["Testi"]
+                        :fieldType "textField"}
+                       {:key       "guardian-lastname-secondary"
+                        :value     ["Huoltaja"]
+                        :fieldType "textField"}
+                       {:key       "guardian-name-secondary"
+                        :value     ["Testi Huoltaja"]
+                        :fieldType "textField"}
+                       {:key       "guardian-phone-secondary"
+                        :value     ["0501234567"]
+                        :fieldType "textField"}
+                       {:key       "guardian-email-secondary"
+                        :value     ["testi2.huoltaja@testiopintopolku.fi"]
+                        :fieldType "textField"}])
+   :person-oid       "1.2.246.562.24.25601805074"
+   :form             @test-form-id})
+
+(defn expected-anonymized-application-abroad
+  []
+  {:haku             nil
+   :lang             "fi"
+   :tunnistautuminen "strong"
+   :id               @test-application-id
+   :hakukohde        []
+   :answers          (set
+                      [{:key "gender" :value "1" :fieldType "textField"}
+                       {:key "first-name" :value "Testi Henkilö" :fieldType "textField"}
+                       {:key "preferred-name" :value "Testi" :fieldType "textField"}
+                       {:key "last-name" :value "Virtanen-Testi" :fieldType "textField"}
+                       {:key "address" :value "Metelitie 393" :fieldType "textField"}
+                       {:key "phone" :value "050 11581851" :fieldType "textField"}
+                       {:key "email" :value "hakija-47904641@oph.fi" :fieldType "textField"}
+                       {:key "postal-code" :value "00200" :fieldType "textField"}
+                       {:key "birth-date" :value "09.02.1996" :fieldType "textField"}
+                       {:key "city" :value "SUOMI" :fieldType "textField"}
+                       {:key "country-of-residence" :value "826" :fieldType "textField"}
                        {:key       "abcd"
                         :value     "Lorem ipsum dolor sit amet, consec"
                         :fieldType "textArea"}
@@ -145,6 +195,7 @@
                         :value     "Lorem ipsum dolor sit amet, consec",
                         :fieldType "textArea"}
                        {:key "guardian-lastname", :value ["Huoltaja"], :fieldType "textField"}
+                       {:key "country-of-residence" :value "246" :fieldType "textField"}
                        {:key "home-town", :value "091", :fieldType "textField"}
                        {:key       "email",
                         :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi",
@@ -172,7 +223,51 @@
    :person-oid       "1.2.246.562.24.25601805074",
    :form             @test-form-id})
 
-(describe "Anonymizer:"
+(defn expected-application-with-generated-contact-details-abroad
+  []
+  {:haku             nil,
+   :lang             "fi",
+   :tunnistautuminen "strong",
+   :id               @test-application-id,
+   :hakukohde        [],
+   :answers          #{{:key       "guardian-lastname-secondary",
+                        :value     ["Huoltaja"],
+                        :fieldType "textField"}
+                       {:key "gender", :value "1", :fieldType "textField"}
+                       {:key "guardian-phone", :value ["0501234567"], :fieldType "textField"}
+                       {:key "guardian-firstname", :value ["Testi"], :fieldType "textField"}
+                       {:key "phone", :value "+3584825601805", :fieldType "textField"}
+                       {:key       "abcd",
+                        :value     "Lorem ipsum dolor sit amet, consec",
+                        :fieldType "textArea"}
+                       {:key "guardian-lastname", :value ["Huoltaja"], :fieldType "textField"}
+                       {:key       "email",
+                        :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi",
+                        :fieldType "textField"}
+                       {:key       "guardian-name-secondary",
+                        :value     ["Testi Huoltaja"],
+                        :fieldType "textField"}
+                       {:key       "guardian-email-secondary",
+                        :value     ["testi2.huoltaja@testiopintopolku.fi"],
+                        :fieldType "textField"}
+                       {:key       "guardian-email",
+                        :value     ["testi1.huoltaja@testiopintopolku.fi"],
+                        :fieldType "textField"}
+                       {:key "address", :value "Testitie 25601805074", :fieldType "textField"}
+                       {:key "guardian-firstname-secondary", :value ["Testi"], :fieldType "textField"}
+                       {:key "city" :value "London, United Kingdom" :fieldType "textField"}
+                       {:key "country-of-residence" :value "826" :fieldType "textField"}
+                       {:key "last-name", :value "Virtanen-Testi", :fieldType "textField"}
+                       {:key "guardian-name", :value ["Testi Huoltaja"], :fieldType "textField"}
+                       {:key "guardian-phone-secondary", :value ["0501234567"], :fieldType "textField"}
+                       {:key "postal-code", :value "00100", :fieldType "textField"}
+                       {:key "preferred-name", :value "Testi", :fieldType "textField"}
+                       {:key "birth-date", :value "09.02.1996", :fieldType "textField"}
+                       {:key "first-name", :value "Testi Henkilö", :fieldType "textField"}},
+   :person-oid       "1.2.246.562.24.25601805074",
+   :form             @test-form-id})
+
+(describe "Anonymize application with residence in Finland:"
   (tags :unit :database)
   (after (reset-database!))
   (before
@@ -180,14 +275,15 @@
                                    (create-answer {:value "John" :key "first-name"})
                                    (create-answer {:value "John" :key "preferred-name"})
                                    (create-answer {:value "Smith" :key "last-name"})
-                                   (create-answer {:value "1 First Av" :key "address"})
+                                   (create-answer {:value "Mansku 1" :key "address"})
                                    (create-answer {:value "" :key "ssn"})
                                    (create-answer {:value "23456789" :key "phone"})
                                    (create-answer {:value "john@oph.fi" :key "email"})
-                                   (create-answer {:value "10001" :key "postal-code"})
+                                   (create-answer {:value "246" :key "country-of-residence"})
+                                   (create-answer {:value "003" :key "home-town"})
+                                   (create-answer {:value "00500" :key "postal-code"})
                                    (create-answer {:value "2000-01-01" :key "birth-date"})
-                                   (create-answer {:value "New York" :key "postal-office"})
-                                   (create-answer {:value "New York" :key "home-town"})
+                                   (create-answer {:value "Helsinki" :key "postal-office"})
                                    (create-answer {:value "This is what I have always wanted!" :key "abcd" :fieldType "textArea"})
                                    (create-answer {:value ["X"] :key "guardian-firstname"})
                                    (create-answer {:value ["Huoltaja"] :key "guardian-lastname"})
@@ -221,3 +317,52 @@
         (should (some? (:secret initial-application)))
         (should (some? (:secret anonymized-application)))
         (should-not= (:secret initial-application) (:secret anonymized-application))))))
+
+(describe "Anonymize application with residence abroad:"
+  (tags :unit :database)
+  (after (reset-database!))
+  (before
+    (add-application-with-answers [(create-answer {:value "2" :key "gender"})
+                                   (create-answer {:value "John" :key "first-name"})
+                                   (create-answer {:value "John" :key "preferred-name"})
+                                   (create-answer {:value "Smith" :key "last-name"})
+                                   (create-answer {:value "1 First Av" :key "address"})
+                                   (create-answer {:value "23456789" :key "phone"})
+                                   (create-answer {:value "john@oph.fi" :key "email"})
+                                   (create-answer {:value "840" :key "country-of-residence"})
+                                   (create-answer {:value "10001" :key "postal-code"})
+                                   (create-answer {:value "2000-01-01" :key "birth-date"})
+                                   (create-answer {:value "New York, New York" :key "city"})
+                                   (create-answer {:value "This is what I have always wanted!" :key "abcd" :fieldType "textArea"})
+                                   (create-answer {:value ["X"] :key "guardian-firstname"})
+                                   (create-answer {:value ["Huoltaja"] :key "guardian-lastname"})
+                                   (create-answer {:value ["X Huoltaja"] :key "guardian-name"})
+                                   (create-answer {:value ["1234"] :key "guardian-phone"})
+                                   (create-answer {:value ["huoltaja@oph.fi"] :key "guardian-email"})
+                                   (create-answer {:value ["Y"] :key "guardian-firstname-secondary"})
+                                   (create-answer {:value ["Huoltaja"] :key "guardian-lastname-secondary"})
+                                   (create-answer {:value ["Y Huoltaja"] :key "guardian-name-secondary"})
+                                   (create-answer {:value ["12345"] :key "guardian-phone-secondary"})
+                                   (create-answer {:value ["huoltajaY@oph.fi"] :key "guardian-email-secondary"})]))
+  (it "should anonymize application"
+    (let [initial-application (store/get-application @test-application-id)]
+      (core/anonymize-data "dev-resources/anonymized-persons.csv" "dev-resources/anonymized-contacts.csv" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
+      (let [anonymized-application (store/get-application @test-application-id)]
+        (should= (expected-anonymized-application-abroad)
+                 (-> anonymized-application
+                     (dissoc  :key :submitted :created-time :secret)
+                     (update :answers (fn [answers] (set (map #(select-keys % [:key :value :fieldType]) answers))))))
+        (should (some? (:secret initial-application)))
+        (should (some? (:secret anonymized-application)))
+        (should-not= (:secret initial-application) (:secret anonymized-application)))))
+    (it "should anonymize application with generated contact details"
+      (let [initial-application (store/get-application @test-application-id)]
+        (core/anonymize-data "dev-resources/anonymized-persons.csv" "dev-resources/empty-contacts.csv" "f996b389-2f36-4ba2-8139-6a7acefe0e3e" true)
+        (let [anonymized-application (store/get-application @test-application-id)]
+          (should= (expected-application-with-generated-contact-details-abroad)
+                   (-> anonymized-application
+                       (dissoc  :key :submitted :created-time :secret)
+                       (update :answers (fn [answers] (set (map #(select-keys % [:key :value :fieldType]) answers))))))
+          (should (some? (:secret initial-application)))
+          (should (some? (:secret anonymized-application)))
+          (should-not= (:secret initial-application) (:secret anonymized-application))))))
