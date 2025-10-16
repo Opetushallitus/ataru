@@ -8,6 +8,7 @@
             [ataru.util :as util]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
+            [clojure.string :as s]
             [selmer.parser :as selmer]))
 
 (def payment-config
@@ -24,6 +25,13 @@
 (def haku-update-grace-days
   "Number of days payment statuses related to haku should still be checked and updated after hakuaika has ended"
   180)
+
+(defn alkamiskausi-ja-vuosi
+  [alkamiskausi alkamisvuosi lang]
+  (let [translations (translations/get-translations lang)]
+    (case (-> alkamiskausi (s/split #"#") first)
+      "kausi_k" (str (:alkamiskausi-kevat translations) " " alkamisvuosi)
+      "kausi_s" (str (:alkamiskausi-syksy translations) " " alkamisvuosi))))
 
 (defn payment-email [lang email data {:keys [template-path subject-key subject-suffix]}]
   (let [template-path    template-path

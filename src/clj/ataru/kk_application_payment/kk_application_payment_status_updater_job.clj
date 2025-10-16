@@ -82,6 +82,10 @@
         mail-content      (utils/payment-email lang email-address {:payment-url       payment-url
                                                                    :due-date-time     due-date-str
                                                                    :haku-name         haku-name
+                                                                   :alkamiskausi-ja-vuosi
+                                                                   (utils/alkamiskausi-ja-vuosi (:alkamiskausi haku)
+                                                                                                (:alkamisvuosi haku)
+                                                                                                lang)
                                                                    :person-oid        (:person-oid application)
                                                                    :organization-oids organization-oids
                                                                    :application-key   (:key application)}

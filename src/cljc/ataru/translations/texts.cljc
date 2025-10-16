@@ -626,15 +626,24 @@
    :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
                                                  :en "Studyinfo: application fee, reminder to pay the fee by"}
-   :email-kk-payment-link-virkailija-subject    {:fi "Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"
-                                                 :sv "TODO käännös: Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"
-                                                 :en "TODO käännös: Opintopolku: Maksuvelvollisuutesi on tarkastettu, maksathan hakemusmaksun viimeistään"}
+   :email-kk-payment-link-virkailija-subject    {:fi "Opintopolku: Hakemusmaksuvelvollisuutesi on tarkastettu - maksathan viimeistään"
+                                                 :sv "Din skyldighet att betala ansökningsavgiften har kontrollerats – vänligen betala senast"
+                                                 :en "Studyinfo: Application fee, your obligation to pay has been reviewed - please pay the fee by"}
    :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
                                                  :en "Studyinfo: Application fee, please remember to pay the fee by"}
+   :alkamiskausi-kevat                          {:fi "kevät"
+                                                 :en "spring"
+                                                 :sv "vår"}
+   :alkamiskausi-syksy                          {:fi "syksy"
+                                                 :en "autumn"
+                                                 :sv "höst"}
    :kk-payment-info-url                         {:fi "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu"
                                                  :sv "https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift"
                                                  :en "https://opintopolku.fi/konfo/en/sivu/application-fee"}
+   :kk-hakijapalvelut-uri                       {:fi "https://opintopolku.fi/konfo/fi/sivu/korkeakoulujen-hakijapalvelut"
+                                                 :en "https://opintopolku.fi/konfo/en/sivu/admissions-services-of-finnish-higher-education-institutions"
+                                                 :sv "https://opintopolku.fi/konfo/sv/sivu/hogskolornas-ansokningsservice"}
    :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
                                                  :sv "Hur vill du öppna ansökningsblanketten?"
                                                  :en "How do you want to access the application form?"}

@@ -683,6 +683,38 @@
                     (should= false @virkailija-edited)
                     (should= (:awaiting payment/all-states) (:state payment))))))
 
+          (it "should send 'virkailija edited' kk application payment email after virkailija edited nationality"
+            (with-redefs [start-runner-job (stub :start-job)]
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-without-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)
+                    edited-application (edit-application-as-virkailija
+                                         application #(map (fn [answer]
+                                                             (if (= "nationality" (:key answer))
+                                                               (assoc answer :value [["004"]])
+                                                               answer)) %))
+                    check-mail-fn (fn [mail-content]
+                                    (and
+                                      (str/includes? (:subject mail-content) "Opintopolku: Hakemusmaksuvelvollisuutesi on tarkastettu - maksathan viimeistään")
+                                      (str/includes? (:subject mail-content) (str "(Hakemusnumero: " application-key ")"))
+                                      (str/includes? (:body mail-content) "Korkeakoulun virkailija on käsitellyt hakemustasi ja tarkastanut")
+                                      (str/includes? (:body mail-content) "Koulutuksen alkamiskausi on: syksy 2025")))
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid
+                         :term test-term
+                         :year test-year
+                         :application_key application-key
+                         :application_id (:id edited-application)} runner)
+                    payment (first (payment/get-raw-payments [application-key]))]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should-have-invoked :start-job
+                                     {:with [:* :*
+                                             "ataru.kk-application-payment.kk-application-payment-email-job"
+                                             check-mail-fn]}))))
+
           (it "should not set tuition fee obligation for fi/sv hakukohde"
               ; Initial state: hakukohde in the application has swedish and/or finnish in its teaching languages,
               ; so even the application / person has no exemption, the application should require only an
