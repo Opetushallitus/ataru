@@ -627,7 +627,7 @@
                                                  :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
                                                  :en "Studyinfo: application fee, reminder to pay the fee by"}
    :email-kk-payment-link-virkailija-subject    {:fi "Opintopolku: Hakemusmaksuvelvollisuutesi on tarkastettu - maksathan viimeistään"
-                                                 :sv "Din skyldighet att betala ansökningsavgiften har kontrollerats – vänligen betala senast"
+                                                 :sv "Din skyldighet att betala ansökningsavgiften har kontrollerats - vänligen betala senast"
                                                  :en "Studyinfo: Application fee, your obligation to pay has been reviewed - please pay the fee by"}
    :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
