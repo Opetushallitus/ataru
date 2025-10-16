@@ -446,3 +446,30 @@
 
 (defn find-children-from-flat-content [field-descriptor flat-form-content]
   (filter #(= (:children-of %) (:id field-descriptor)) flat-form-content))
+
+(defn keep-non-empty-changes
+  [changes]
+  (when (some? changes)
+    (let [is-non-empty-value? (fn [value] (and (some? value)
+                                               (or (number? value) (seq value))))
+          keep-if-non-empty-change (fn [[id change]]
+                                     (when (or (is-non-empty-value? (:new change))
+                                               (is-non-empty-value? (:old change)))
+                                       [id change]))]
+      (->> changes
+           (map keep-if-non-empty-change)
+           (remove nil?)
+           (into {})))))
+
+(defn modify-event? [event]
+  (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
+
+(defn modify-event-changes
+  [events change-history event-id]
+  (let [modify-events (filter modify-event? events)]
+    (keep-non-empty-changes
+     (some (fn [[event changes]]
+             (when (= event-id (:id event))
+               changes))
+           (map vector modify-events change-history)))))
+
