@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS payment_reminders (
     send_reminder_time TIMESTAMP WITH TIME ZONE NOT NULL,
     status             payment_reminder_status,
     handled_at         TIMESTAMP WITH TIME ZONE,
-    created_at         TIMESTAMP WITH TIME ZONE default now(),
+    created_at         TIMESTAMP WITH TIME ZONE default now()
 );
