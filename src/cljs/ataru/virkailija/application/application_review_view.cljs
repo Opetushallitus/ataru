@@ -614,6 +614,10 @@
                  [:span.application-handling__event-row--message-body
                   (:message ir)]]))])
 
+         {:event-type "decision-payment-reminder-sent"}
+         [[:span @(subscribe [:editor/virkailija-translation :decision-payment-reminder-sent])]
+          nil]
+
          :else
          [[:span @(subscribe [:editor/virkailija-translation :unknown])]
           nil]))

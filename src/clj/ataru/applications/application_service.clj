@@ -12,6 +12,7 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
+    [ataru.maksut.maksut-store :as maksut-store]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
     [ataru.person-service.person-service :as person-service]
@@ -22,6 +23,7 @@
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
+    [clj-time.core :as time]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [taoensso.timbre :as log]
@@ -661,15 +663,26 @@
           (email/start-decision-email-job
             job-runner
             (assoc email-params :application-id application-id
-                                :application-oid application-key)))
+                                :application-oid application-key))
+          (maksut-store/add-payment-reminder
+            {:application-key application-key
+             :application-id application-id
+             :order-id (:order-id email-params)
+             :message (:message email-params)
+             :lang (:lang email-params)
+             :send-reminder-time
+             (time/minus
+               (apply time/date-time
+                      (map parse-long (str/split (:due-date email-params) #"-")))
+               (time/days 7))}))
         (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
-              events            (future (get-application-events organization-service application-key))]
+              events (future (get-application-events organization-service application-key))]
           (util/remove-nil-values {:events            @events
                                    :hakukohde-reviews @hakukohde-reviews})))))
 
   (payment-poller-processing-state-change
     [_ application-key state]
-    (let [hakukohde   "form"
+    (let [hakukohde "form"
           requirement "processing-state"]
             (log/info "Changing form application" application-key " processing-state to" state)
             (application-store/save-application-hakukohde-review

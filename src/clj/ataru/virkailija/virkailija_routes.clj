@@ -61,7 +61,6 @@
             [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
-            [clojure.string :as str]
             [clout.core :as clout]
             [com.stuartsierra.component :as component]
             [compojure.api.exception :as ex]
@@ -1172,14 +1171,14 @@
                             "decision-fee-outstanding"
                             {:origin origin
                              :message message
+                             :lang lang
                              :form-name (get-in metadata [:form-name (keyword lang)])
                              :payment-url payment-url
                              :amount total-amount
                              :vat vat
-                             :due-date (->> (str/split (:due_date invoice) #"-")
-                                            (reverse)
-                                            (str/join \.))
-                             :order-id-prefix (:order-id-prefix metadata)})]
+                             :due-date (:due_date invoice)
+                             :order-id-prefix (:order-id-prefix metadata)
+                             :order-id (:order_id invoice)})]
             (do
               (log/warn "Review result" result)
               (response/ok result))
