@@ -13,7 +13,7 @@
             [clojure.string :as str]
             [speclj.core :refer [it describe should-throw should-not-throw stub
                                  should-have-invoked should-not-have-invoked
-                                 should-be-nil tags with-stubs should= around before]]
+                                 should-be-nil tags with-stubs should= around before after]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
@@ -23,7 +23,8 @@
             [com.stuartsierra.component :as component]
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.applications.application-store :as application-store]
-            [ataru.test-utils :refer [set-fixed-time]]
+            [ataru.test-utils :as test-utils :refer [set-fixed-time reset-fixed-time!]]
+            [ataru.log.audit-log :as audit-log]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline]
             [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
 
@@ -37,6 +38,7 @@
 (def fake-organization-service (organization-service/->FakeOrganizationService))
 (def fake-ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service))
 
+(def audit-logger (audit-log/new-dummy-audit-logger))
 (def test-maksut-secret "1234ABCD5678EFGH")
 
 (defn invalidate-laskut-fn [_ _])
@@ -155,12 +157,24 @@
     (str/includes? (:body mail-content) "Olet hakenut haussa: testing2")
     (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu")))
 
+(defn- edit-application-as-virkailija [application update-answers-fn]
+  (application-store/update-application
+    (-> application
+        (update :answers update-answers-fn)
+        (assoc :virkailija-secret (test-utils/create-fake-virkailija-rewrite-secret (:key application)))
+        (dissoc :secret))
+    nil form-fixtures/payment-exemption-test-form {:identity {:oid "1.2.246.562.24.00000001213"}} audit-logger nil))
+
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
           (with-stubs)
 
           (before
-            (clear!))
+            (clear!)
+            (set-fixed-time "2025-01-15T14:59:59"))
+
+          (after
+            (reset-fixed-time!))
 
           (around [spec]
                   (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
@@ -175,7 +189,6 @@
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
-                (set-fixed-time "2025-01-15T14:59:59")
                 (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                               application-fixtures/application-without-hakemusmaksu-exemption
                                               nil)
@@ -536,6 +549,171 @@
                     obligation (get-tuition-payment-obligation-review application-key "payment-info-test-kk-hakukohde")]
                 (should= (:not-required payment/all-states) (:state payment))
                 (should-be-nil obligation)))
+
+          (it "should be flagged to send 'virkailija edited' kk application payment email after virkailija edited nationality"
+              (let [virkailija-edited (atom nil)]
+                (with-redefs [updater-job/create-payment-and-send-email
+                              (fn [_ _ _ virkailija-edited?]
+                                (swap! virkailija-edited (constantly virkailija-edited?)))]
+                  (let [application (application-store/get-application
+                                      (unit-test-db/init-db-fixture
+                                        form-fixtures/payment-exemption-test-form
+                                        application-fixtures/application-without-hakemusmaksu-exemption
+                                        nil))
+                        application-key (:key application)
+                        edited-application (edit-application-as-virkailija
+                                             application #(map (fn [answer]
+                                                                 (if (= "nationality" (:key answer))
+                                                                   (assoc answer :value [["004"]])
+                                                                   answer)) %))
+                        _ (updater-job/update-kk-payment-status-for-person-handler
+                            {:person_oid test-person-oid
+                             :term test-term
+                             :year test-year
+                             :application_key application-key
+                             :application_id (:id edited-application)}
+                            runner)
+                        payment (first (payment/get-raw-payments [application-key]))]
+                    (should= true @virkailija-edited)
+                    (should= (:awaiting payment/all-states) (:state payment))))))
+
+          (it "should be flagged to send 'virkailija edited' kk application payment email after virkailija edited kk-application-payment-option"
+              (let [virkailija-edited (atom nil)]
+                (with-redefs [updater-job/create-payment-and-send-email
+                              (fn [_ _ _ virkailija-edited?]
+                                (swap! virkailija-edited (constantly virkailija-edited?)))]
+                  (let [application (application-store/get-application
+                                     (unit-test-db/init-db-fixture
+                                      form-fixtures/payment-exemption-test-form
+                                      application-fixtures/application-with-hakemusmaksu-exemption
+                                      nil))
+                        application-key (:key application)
+                        edited-application (edit-application-as-virkailija
+                                            application #(map (fn [answer]
+                                                                (if (= "kk-application-payment-option" (:key answer))
+                                                                  (assoc answer :value "8")
+                                                                  answer)) %))
+                        _ (updater-job/update-kk-payment-status-for-person-handler
+                           {:person_oid test-person-oid
+                            :term test-term
+                            :year test-year
+                            :application_key application-key
+                            :application_id (:id edited-application)}
+                           runner)
+                        payment (first (payment/get-raw-payments [application-key]))]
+                    (should= true @virkailija-edited)
+                    (should= (:awaiting payment/all-states) (:state payment))))))
+
+          (it "should be flagged to send 'virkailija edited' kk application payment email after virkailija marked kk application payment attachement as invalid"
+              (let [virkailija-edited (atom nil)]
+                (with-redefs [updater-job/create-payment-and-send-email
+                              (fn [_ _ _ virkailija-edited?]
+                                (swap! virkailija-edited (constantly virkailija-edited?)))]
+                  (let [application (application-store/get-application
+                                     (unit-test-db/init-db-fixture
+                                      form-fixtures/payment-exemption-test-form
+                                      application-fixtures/application-without-hakemusmaksu-exemption
+                                      nil))
+                        application-key (:key application)
+                        _ (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                              :attachment_key "brexit-permit-attachment"
+                                                              :hakukohde "payment-info-test-kk-hakukohde"
+                                                              :state "attachment-missing"}])
+                        _ (updater-job/update-kk-payment-status-for-person-handler
+                           {:person_oid test-person-oid
+                            :term test-term
+                            :year test-year
+                            :application_key application-key
+                            :application_id (:id application)}
+                           runner)
+                        payment (first (payment/get-raw-payments [application-key]))]
+                    (should= true @virkailija-edited)
+                    (should= (:awaiting payment/all-states) (:state payment))))))
+
+          (it "should be flagged to send 'normal' kk application payment email after virkailija edited fields not affecting payment"
+              (let [virkailija-edited (atom nil)]
+                (with-redefs [updater-job/create-payment-and-send-email
+                              (fn [_ _ _ virkailija-edited?]
+                                (swap! virkailija-edited (constantly virkailija-edited?)))]
+                  (let [application (application-store/get-application
+                                     (unit-test-db/init-db-fixture
+                                      form-fixtures/payment-exemption-test-form
+                                      application-fixtures/application-without-hakemusmaksu-exemption
+                                      nil))
+                        application-key (:key application)
+                        edited-application (edit-application-as-virkailija
+                                            application #(map (fn [answer]
+                                                                (if (= "home-town" (:key answer))
+                                                                  (assoc answer :value "003")
+                                                                  answer)) %))
+                        _ (updater-job/update-kk-payment-status-for-person-handler
+                           {:person_oid test-person-oid
+                            :term test-term
+                            :year test-year
+                            :application_key application-key
+                            :application_id (:id edited-application)}
+                           runner)
+                        payment (first (payment/get-raw-payments [application-key]))]
+                    (should= false @virkailija-edited)
+                    (should= (:awaiting payment/all-states) (:state payment))))))
+
+          (it "should be flagged to send 'normal' kk application payment email after virkailija marked non kk application payment related review as invalid"
+              (let [virkailija-edited (atom nil)]
+                (with-redefs [updater-job/create-payment-and-send-email
+                              (fn [_ _ _ virkailija-edited?]
+                                (swap! virkailija-edited (constantly virkailija-edited?)))]
+                  (let [application (application-store/get-application
+                                     (unit-test-db/init-db-fixture
+                                      form-fixtures/payment-exemption-test-form
+                                      application-fixtures/application-without-hakemusmaksu-exemption
+                                      nil))
+                        application-key (:key application)
+                        _ (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                              :attachment_key "none-passport-attachment"
+                                                              :hakukohde "payment-info-test-kk-hakukohde"
+                                                              :state "attachment-missing"}])
+                        _ (updater-job/update-kk-payment-status-for-person-handler
+                           {:person_oid test-person-oid
+                            :term test-term
+                            :year test-year
+                            :application_key application-key
+                            :application_id (:id application)}
+                           runner)
+                        payment (first (payment/get-raw-payments [application-key]))]
+                    (should= false @virkailija-edited)
+                    (should= (:awaiting payment/all-states) (:state payment))))))
+
+          (it "should send 'virkailija edited' kk application payment email after virkailija edited nationality"
+            (with-redefs [start-runner-job (stub :start-job)]
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-without-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)
+                    edited-application (edit-application-as-virkailija
+                                         application #(map (fn [answer]
+                                                             (if (= "nationality" (:key answer))
+                                                               (assoc answer :value [["004"]])
+                                                               answer)) %))
+                    check-mail-fn (fn [mail-content]
+                                    (and
+                                      (str/includes? (:subject mail-content) "Opintopolku: Hakemusmaksuvelvollisuutesi on tarkastettu - maksathan viimeistään")
+                                      (str/includes? (:subject mail-content) (str "(Hakemusnumero: " application-key ")"))
+                                      (str/includes? (:body mail-content) "Korkeakoulun virkailija on käsitellyt hakemustasi ja tarkastanut")
+                                      (str/includes? (:body mail-content) "Koulutuksen alkamiskausi on: syksy 2025")))
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid test-person-oid
+                         :term test-term
+                         :year test-year
+                         :application_key application-key
+                         :application_id (:id edited-application)} runner)
+                    payment (first (payment/get-raw-payments [application-key]))]
+                (should= (:awaiting payment/all-states) (:state payment))
+                (should-have-invoked :start-job
+                                     {:with [:* :*
+                                             "ataru.kk-application-payment.kk-application-payment-email-job"
+                                             check-mail-fn]}))))
 
           (it "should not set tuition fee obligation for fi/sv hakukohde"
               ; Initial state: hakukohde in the application has swedish and/or finnish in its teaching languages,

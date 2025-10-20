@@ -1,5 +1,6 @@
 (ns ataru.fixtures.db.unit-test-db
-  (:require [yesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [yesql.core :refer [defqueries]]
             [ataru.forms.form-store :as form-store]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.applications.application-store :as application-store]
@@ -112,6 +113,10 @@
    (nuke-old-fixture-data (:id form-fixture))
    (init-db-application-fixture form-fixture application-fixture
                                 application-hakukohde-reviews-fixture application-reviews-fixture)))
+
+(defn save-reviews-to-db! [reviews]
+  (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
+    (application-store/store-reviews reviews {:connection conn})))
 
 (defn init-oppija-session-to-db
   [ticket data]
