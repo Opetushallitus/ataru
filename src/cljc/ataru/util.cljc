@@ -157,8 +157,8 @@
                                        [:content :answers]])
 
 (defn get-answers-from-application [application]
-  (let [matching-path (some #(when (get-in application %) %) application-answer-path-options)]
-    (when matching-path (get-in application matching-path))))
+  (let [answer-candidates (map #(get-in application %) application-answer-path-options)]
+    (some identity answer-candidates)))
 
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))
