@@ -121,6 +121,25 @@
               (should-not (util/non-blank-answer? {:value [" "]}))
               (should-not (util/non-blank-answer? {:value [[" "]]}))))
 
+(describe "get answers from application"
+          (tags :unit)
+          (it "returns empty map when application has no answers"
+              (should= nil
+                       (util/get-answers-from-application {:id "application-id"
+                                                          :form-id "form-id"})))
+          (it "returns answers map when application has answers"
+              (should= [{:key "answer-key" :value "answer-value"}]
+                       (util/get-answers-from-application {:id "application-id"
+                                                           :form-id "form-id"
+                                                           :answers [{:key "answer-key"
+                                                                      :value "answer-value"}]})))
+          (it "returns answers map when application has answers in alternative path"
+              (should= [{:key "answer-key" :value "answer-value"}]
+                       (util/get-answers-from-application {:id "application-id"
+                                                           :form-id "form-id"
+                                                           :content {:answers [{:key "answer-key"
+                                                                                :value "answer-value"}]}}))))
+
 (def field-descriptor-id "64d4a625-370b-4814-ae4f-d5956e8881be")
 (def field-descriptor {:id         field-descriptor-id
                        :label      {:fi "Pohjakoulutuksesi?" :sv ""}

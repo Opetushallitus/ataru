@@ -153,6 +153,13 @@
                    (:children field)
                    (mapcat :followups (get-all-options field))))))
 
+(def application-answer-path-options [[:answers]
+                                       [:content :answers]])
+
+(defn get-answers-from-application [application]
+  (let [answer-candidates (map #(get-in application %) application-answer-path-options)]
+    (some identity answer-candidates)))
+
 (defn answers-by-key [answers]
   (group-by-first (comp keyword :key) answers))
 
