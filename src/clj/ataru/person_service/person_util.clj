@@ -4,7 +4,7 @@
             [clojure.string :as cs]))
 
 (defn person-info-from-application [application]
-  (let [answers (util/answers-by-key (:answers application))
+  (let [answers (util/answers-by-key (util/get-answers-from-application application))
         birth-date (-> answers :birth-date :value)]
     (merge {:first-name     (-> answers :first-name :value)
             :preferred-name (-> answers :preferred-name :value)
