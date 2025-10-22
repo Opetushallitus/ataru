@@ -355,14 +355,26 @@
                                                    (case origin
                                                      "tutu" tutu-decision-email
                                                      "astu" astu-decision-email))
+        due-date                        (->> (string/split (:due-date params) #"-")
+                                             (reverse)
+                                             (string/join \.))
+        organization-oid                (forms/get-organization-oid-by-id (:form application))
         template-params                 (merge
                                           params
                                           translations
-                                          {:decision-info-email (decision-info-email (:order-id-prefix params))})
+                                          {:decision-info-email (decision-info-email (:order-id-prefix params))
+                                           :due-date due-date
+                                           :organization-oids [organization-oid]}
+                                          (when (and (= origin "tutu")
+                                                     (:reminder params))
+                                            {:decision-text-3 (:decision-text-3-reminder translations)}))
         subject                         (case origin
                                           "tutu" (str (:subject-prefix translations) ": " (:header translations))
                                           "astu" (:subject translations))
-        applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+        subject-full                    (if (:reminder params)
+                                          (str (:reminder-subject-prefix translations) ": " subject)
+                                          subject)
+        applicant-email-data            (email-util/make-email-data applier-recipients subject-full template-params)
         render-file-fn                  (fn [template-params]
                                           (selmer/render-file (template-name lang) template-params))]
     (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
