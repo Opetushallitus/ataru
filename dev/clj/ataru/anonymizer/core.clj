@@ -1,13 +1,17 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
+            [ataru.util :as util]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             clojure.string
-            clojure.walk
             [taoensso.timbre :as log])
   (:import (java.text Normalizer Normalizer$Form)
            (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
+
+(def ^:private united-kingdom-country-code "826")
+(def ^:private tampere "837")
 
 (defn- deaccent
   "Poistaa diakriittiset merkit merkkijonosta ja palauttaa muokatun
@@ -45,51 +49,65 @@
                                                attachment-key
                                                (map (constantly attachment-key) v))))))
 
-(defn- anonymize [fake-person attachment-key application]
-  (letfn [(anonymize-answer [{:keys [key value] :as answer}]
-            (let [value (case key
-                          "gender"         (:gender fake-person)
-                          "first-name"     (:first-name fake-person)
-                          "preferred-name" (:preferred-name fake-person)
-                          "last-name"      (:last-name fake-person)
-                          "address"        (:address fake-person)
-                          "ssn"            (:fake-ssn fake-person)
-                          "phone"          (:phone fake-person)
-                          "email"          (:email fake-person)
-                          "postal-code"    (:postal-code fake-person)
-                          "birth-date"     (when (:birth-date fake-person)
-                                             (.format (LocalDate/parse
-                                                        (:birth-date fake-person)
-                                                        (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
-                                                      (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
-                          "postal-office"  (:postal-office fake-person)
-                          "home-town"      (:home-town fake-person)
-                          value)]
-              (cond-> (assoc answer :value value)
-                      (= "attachment" (:fieldType answer))
-                      (anonymize-attachment attachment-key))))]
-    (merge application {:preferred_name   (:preferred-name fake-person)
-                        :last_name        (:last-name fake-person)
-                        :ssn              (:fake-ssn fake-person)
-                        :email            (:email fake-person)
-                        :dob              (:birth-date fake-person)
-                        :tunnistautuminen (or (some->> (-> application
-                                                           :tunnistautuminen
-                                                           :session
-                                                           :data
-                                                           :auth-type)
-                                                       (update-in {} [:session :data] assoc :auth-type))
-                                              {})
-                        :content          (update (:content application) :answers #(map anonymize-answer %))})))
+(defn- not-blank?
+  [value]
+  (not (clojure.string/blank? value)))
 
-(defn get-contact-value
+(defn- anonymize [fake-person attachment-key application]
+  (let [answers-by-key (util/answers-by-key (-> application :content :answers))
+        residence-in-finland? (= (str finland-country-code)
+                                 (str (-> answers-by-key :country-of-residence :value)))]
+    (letfn [(anonymize-answer [{:keys [key value] :as answer}]
+              (let [value (case key
+                            "gender"         (:gender fake-person)
+                            "first-name"     (:first-name fake-person)
+                            "preferred-name" (:preferred-name fake-person)
+                            "last-name"      (:last-name fake-person)
+                            "address"        (:address fake-person)
+                            "ssn"            (:fake-ssn fake-person)
+                            "phone"          (:phone fake-person)
+                            "email"          (:email fake-person)
+                            "postal-code"    (:postal-code fake-person)
+                            "birth-date"     (when (:birth-date fake-person)
+                                               (.format (LocalDate/parse
+                                                          (:birth-date fake-person)
+                                                          (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
+                                                        (DateTimeFormatter/ofPattern "dd.MM.yyyy")))
+                            "postal-office"  (when (not-blank? value)
+                                               (:postal-office fake-person))
+                            "home-town"      (when (not-blank? value)
+                                               (:home-town fake-person))
+                            "country-of-residence" (if residence-in-finland?
+                                                     finland-country-code
+                                                     united-kingdom-country-code)
+                            "city"           (when (not-blank? value)
+                                               (:city fake-person))
+                            value)]
+                (cond-> (assoc answer :value value)
+                        (= "attachment" (:fieldType answer))
+                        (anonymize-attachment attachment-key))))]
+      (merge application {:preferred_name   (:preferred-name fake-person)
+                          :last_name        (:last-name fake-person)
+                          :ssn              (:fake-ssn fake-person)
+                          :email            (:email fake-person)
+                          :dob              (:birth-date fake-person)
+                          :tunnistautuminen (or (some->> (-> application
+                                                             :tunnistautuminen
+                                                             :session
+                                                             :data
+                                                             :auth-type)
+                                                         (update-in {} [:session :data] assoc :auth-type))
+                                                {})
+                          :content          (update (:content application) :answers #(map anonymize-answer %))}))))
+
+(defn- get-contact-value
   [contacts yhteystietotyyppi]
   (->> contacts
        (filter #(= (:yhteystieto_arvo_tyyppi %) yhteystietotyyppi))
        first
        :yhteystieto_arvo))
 
-(defn fake-person->ataru-person
+(defn- fake-person->ataru-person
   [contacts]
   (fn [{:keys [henkilo_oid
                hetu
@@ -120,9 +138,8 @@
                                  (generate-email-address etunimet sukunimi henkilo_oid))
        :phone                (or (get-contact-value person-contacts "YHTEYSTIETO_PUHELINNUMERO")
                                  (generate-phone-number henkilo_oid))
-       ; maata ei voida käyttää sellaisenaan, YHTEYSTIETO_MAA on tekstimuodossa mitä sattuu,
-       ; ja :country-of-residence odottaa numeerista maakoodia
-       ;:country-of-residence (get-contact-value person-contacts "YHTEYSTIETO_MAA")
+       :city                 (or (get-contact-value person-contacts "YHTEYSTIETO_MAA")
+                                 "London, United Kingdom")
        :address              (or (get-contact-value person-contacts "YHTEYSTIETO_KATUOSOITE")
                                  (generate-address henkilo_oid))
        :postal-code          (or (get-contact-value person-contacts "YHTEYSTIETO_POSTINUMERO")
@@ -130,10 +147,12 @@
        :postal-office        (or (get-contact-value person-contacts "YHTEYSTIETO_KAUPUNKI")
                                  (get-contact-value person-contacts "YHTEYSTIETO_KUNTA")
                                  "HELSINKI")
-       :home-town            kotikunta
+       :home-town            (if (clojure.string/blank? kotikunta)
+                               tampere
+                               kotikunta)
        :language             aidinkieli})))
 
-(defn file->fake-persons [person-file contact-file]
+(defn- file->fake-persons [person-file contact-file]
   (log/info "Indexing persons")
   (time
     (let [contacts (with-open [reader (io/reader contact-file)]
