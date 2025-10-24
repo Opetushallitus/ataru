@@ -1355,6 +1355,9 @@
    :valintojen-toteuttaminen                                 {:fi "Valintojen toteuttaminen"
                                                               :sv "Förverkligandet av antagningar"
                                                               :en "Valintojen toteuttaminen"}
+   :valintojen-toteuttaminen-uusi                            {:fi "Valintojen toteuttaminen (uusi)"
+                                                              :sv "Förverkligandet av antagningar (ny)"
+                                                              :en "Valintojen toteuttaminen"}
    :applications-panel                                       {:fi "Hakemukset"
                                                               :sv "Ansökningar"
                                                               :en "Applications"}
