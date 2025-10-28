@@ -149,19 +149,31 @@
                [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
                [:span.application-handling__review-area-main-heading-person-oid
                 (str @(subscribe [:editor/virkailija-translation :view-applications]) " (" applications-count ")")]])
-            (when (and hakemus-oid
-                       haku-oid)
-              [:a
-               {:href   (.url js/window
-                              "valintalaskenta-ui.valintojen-toteuttaminen.hakemus"
-                              haku-oid
-                              hakemus-oid
-                              hakemus-oid
-                              hakemus-oid)
-                :target "_blank"}
-               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
-               [:span.application-handling__review-area-main-heading-person-oid
-                (str @(subscribe [:editor/virkailija-translation :valintojen-toteuttaminen]))]])]]
+            (when
+              (and hakemus-oid
+                   haku-oid)
+              [:div
+               [:a
+                {:href   (.url js/window
+                               "valintalaskenta-ui.valintojen-toteuttaminen.hakemus"
+                               haku-oid
+                               hakemus-oid
+                               hakemus-oid
+                               hakemus-oid)
+                 :target "_blank"}
+                [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+                [:span.application-handling__review-area-main-heading-person-oid
+                 (str @(subscribe [:editor/virkailija-translation :valintojen-toteuttaminen]))]]
+               [:a.application-handling__review-area-main-heading-applications-right-link
+                {:href   (.url js/window
+                               "valintojen-toteuttaminen.hakemus"
+                               haku-oid
+                               hakemus-oid)
+                 :target "_blank"}
+                [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+                [:span.application-handling__review-area-main-heading-person-oid
+                 (str
+                   @(subscribe [:editor/virkailija-translation :valintojen-toteuttaminen-uusi]))]]])]]
           [notifications-display]])
        (when (not (contains? (:answers application) :hakukohteet))
          [:ul.application-handling__hakukohteet-list
