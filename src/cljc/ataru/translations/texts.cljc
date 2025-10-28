@@ -1769,6 +1769,9 @@
    :information-request-reminder-sent                        {:fi "Täydennyspyynnön muistutusviesti lähetetty"
                                                               :en "EN Täydennyspyynnön muistutusviesti lähetetty"
                                                               :sv "SV Täydennyspyynnön muistutusviesti lähetetty"}
+   :decision-payment-reminder-sent                           {:fi "Päätösmaksun muistutusviesti lähetetty"
+                                                              :sv "SV Päätösmaksun muistutusviesti lähetetty"
+                                                              :en "EN Päätösmaksun muistutusviesti lähetetty"}
    :single-information-request-sent                          {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
@@ -2890,11 +2893,12 @@
    :subject-prefix        {:fi "Opintopolku"
                            :sv "Studieinfo"
                            :en "Studyinfo"}
-
+   :reminder-subject-prefix {:fi "Muistutus"
+                             :en "Reminder"
+                             :sv "Påminnelse"}
    :decision-header       {:fi "Päätösmaksu"
                            :sv "Beslutsavgiften"
                            :en "Decision fee"}
-
    :decision-text-1       {:fi "Lähetämme päätöksen sinulle, kun olet maksanut päätösmaksun."
                            :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
                            :en "We will send you the decision once you have paid the decision fee."}
@@ -2904,7 +2908,9 @@
    :decision-text-3       {:fi "Jos et suorita päätösmaksua 14 vuorokauden sisällä, lähetämme sinulle päätösmaksusta erillisen laskun. Maksu on ulosottokelpoinen ilman tuomiota tai päätöstä (valtion maksuperustelaki (150/1992) 11§ 1.mom.)."
                            :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
                            :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
-
+   :decision-text-3-reminder {:fi "Jos et suorita päätösmaksua 7 vuorokauden sisällä, lähetämme sinulle päätösmaksusta erillisen laskun. Maksu on ulosottokelpoinen ilman tuomiota tai päätöstä (valtion maksuperustelaki (150/1992) 11§ 1.mom.)."
+                              :sv "Om du inte betalabeslutsavgiften inom 7 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                              :en "If you do not pay the decision fee within 7 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
    :decision-info         {:fi "Lisätietoja päätöksistä ja maksuista on nettisivuillamme:"
                            :sv "Mer information om besluten och avgifterna finns på vår webbplats:"
                            :en "More information on the decisions and fees is available on our website:"}
@@ -2933,6 +2939,9 @@
    :subject               {:fi "Opetushallitus: Hakemuksesi on käsitelty"
                            :sv "Utbildningsstyrelsen: Din ansökan har behandlats"
                            :en "The Finnish National Agency for Education: Your application has been processed"}
+   :reminder-subject-prefix {:fi "Muistutus"
+                             :en "Reminder"
+                             :sv "Påminnelse"}
    :payment               {:fi "Maksu: "
                            :sv "Avgiften: "
                            :en "Fee: "}
