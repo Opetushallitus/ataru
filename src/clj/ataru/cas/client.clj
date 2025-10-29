@@ -109,7 +109,7 @@
     (response->map resp)))
 
 (defn cas-authenticated-post [^CasClient client url body & [opts-fn]]
-  (log/debug (str "Performing CAS authenticated POST to URL: " url
+  (log/info (str "Performing CAS authenticated POST to URL: " url
                   " with body type " (type body)
                   " body " body))
   (cas-authenticated-with-body client url :POST body opts-fn))
