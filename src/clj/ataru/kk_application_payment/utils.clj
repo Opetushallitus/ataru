@@ -68,9 +68,10 @@
         end-times-with-grace-period-with-nils   (map
                                                   #(time/plus % (time/days grace-days))
                                                   hakuajat-end)
-        end-times-with-grace-period             (filter #(not (nil? %)) end-times-with-grace-period-with-nils)]
+        end-times-with-grace-period             (filter some? end-times-with-grace-period-with-nils)]
     (if (empty? end-times-with-grace-period)
-      (log/warn (str "Kk-haku (" (:oid haku) ") doesn't have any hakuaikas with end period: Hakuaikas: " (:hakuajat haku)))
+      (do (log/warn (str "Kk-haku (" (:oid haku) ") doesn't have any hakuaikas with end period: Hakuaikas: " (:hakuajat haku)))
+          false)
       (boolean
         (some #(not (time/before? % now)) end-times-with-grace-period)))))
 
