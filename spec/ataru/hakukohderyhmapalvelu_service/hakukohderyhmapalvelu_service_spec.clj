@@ -1,7 +1,6 @@
-(ns ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu_service_spec
+(ns ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service-spec
   (:require [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hk-service]
             [speclj.core :refer [describe it should=]]
-            [clj-http.client :as http]
             [ataru.cas.client :as cas]))
 
 
@@ -20,25 +19,17 @@
    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja false
    :yo-amm-autom-hakukelpoisuus true})
 
+(def cas-client nil)
+
 (describe "HakukohderyhmapalveluService"
           (it "Return list of hakukohderyhmas for hakukohde"
-              (with-redefs [http/request (constantly fake-hakukohderyhmapalvelu-response)]
-                (let [cas-client (cas/new-cas-client "ataru-test")
-                      cas (cas/map->CasClientState {:client              cas-client
-                                                    :params              nil
-                                                    :session-cookie-name "ring-session"
-                                                    :session-id          (atom "fake-session")})
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas)
+              (with-redefs [cas/cas-authenticated-get (constantly fake-hakukohderyhmapalvelu-response)]
+                (let [hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-hakukohderyhma-oids-for-hakukohde hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-result result))))
 
           (it "Return settings for hakukohderyhma"
-              (with-redefs [http/request (constantly fake-hakukohderyhmapalvelu-settings-response)]
-                (let [cas-client (cas/new-cas-client "ataru-test")
-                      cas (cas/map->CasClientState {:client              cas-client
-                                                    :params              nil
-                                                    :session-cookie-name "ring-session"
-                                                    :session-id          (atom "fake-session")})
-                      hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas)
+              (with-redefs [cas/cas-authenticated-get (constantly fake-hakukohderyhmapalvelu-settings-response)]
+                (let [hk-service-instance (hk-service/->IntegratedHakukohderyhmapalveluService cas-client)
                       result (hk-service/get-settings-for-hakukohderyhma hk-service-instance "1.2.3.4.5.6")]
                   (should= expected-settings-result result)))))
