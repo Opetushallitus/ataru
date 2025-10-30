@@ -160,7 +160,10 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.12.763"]
                  [com.amazonaws/aws-java-sdk-sns "1.12.763"]
                  [com.amazonaws/aws-java-sdk-sqs "1.12.763"]
-                 [com.amazonaws/aws-java-sdk-cloudwatch "1.12.763"]
+                 [software.amazon.awssdk/s3 "2.36.3"]
+                 [software.amazon.awssdk/sns "2.36.3"]
+                 [software.amazon.awssdk/sqs "2.36.3"]
+                 [software.amazon.awssdk/cloudwatch "2.36.3"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.15-SNAPSHOT"]
@@ -431,6 +434,3 @@
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]
             "generate-secrets"    ["with-profile" "dev" "run" "-m" "ataru.util.secrets-generator"]})
-
-
-
