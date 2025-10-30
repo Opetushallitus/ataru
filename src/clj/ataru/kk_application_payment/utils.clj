@@ -62,15 +62,15 @@
 (defn time-is-before-some-hakuaika-grace-period?
   "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
   [haku grace-days now]
-  (let [hakuajat-end                            (if-let [hakuajat (:hakuajat haku)]
+  (let [hakuajat-end-with-nils                   (if-let [hakuajat (:hakuajat haku)]
                                                   (map :end hakuajat)
                                                   [(coerce/from-long (get-in haku [:hakuaika :end]))])
-        end-times-with-grace-period-with-nils   (map
+        hakuajat-end                             (filter some? hakuajat-end-with-nils)
+        end-times-with-grace-period             (map
                                                   #(time/plus % (time/days grace-days))
-                                                  hakuajat-end)
-        end-times-with-grace-period             (filter some? end-times-with-grace-period-with-nils)]
-    (if (empty? end-times-with-grace-period)
-      (do (log/warn (str "Kk-haku (" (:oid haku) ") doesn't have any hakuaikas with end period: Hakuaikas: " (:hakuajat haku)))
+                                                  hakuajat-end)]
+    (if (not (= (count hakuajat-end) (count hakuajat-end)))
+      (do (log/warn (str "Kk-haku (" (:oid haku) ") has spme hakuaikas with end period: Hakuaikas: " (:hakuajat haku)))
           false)
       (boolean
         (some #(not (time/before? % now)) end-times-with-grace-period)))))
