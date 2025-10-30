@@ -41,7 +41,7 @@
                        :hakukohde-search {{ataru_cache_ttl_amounts_hakukohde_search | default('3')}}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :jobs {:application-payment-module-cron "{{ataru_jobs_application_payment_module_cron | default('0 4 * * *')}}"
-        :payment-reminder-cron           "{{ataru_jobs_application_payment_module_cron | default('15 9,16 * * *')}}"}
+        :payment-reminder-cron           "{{ataru_jobs_application_payment_reminder_cron | default('15 9,16 * * *')}}"}
  :aws {:region "{{aws_region}}"
        :liiteri-files {:bucket "{{liiteri_s3_bucket}}"}
        :feedback-queue {:queue-url "{{palaute_queue_url}}"}
