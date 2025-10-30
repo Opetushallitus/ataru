@@ -157,7 +157,6 @@
                  [speclj "3.4.3"]
                  [org.clojure/test.check "1.1.1"]
                  [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20220608.1" :exclusions [com.google.guava/guava]]
-                 [com.amazonaws/aws-java-sdk-s3 "1.12.763"]
                  [com.amazonaws/aws-java-sdk-sns "1.12.763"]
                  [com.amazonaws/aws-java-sdk-sqs "1.12.763"]
                  [software.amazon.awssdk/s3 "2.36.3"]
