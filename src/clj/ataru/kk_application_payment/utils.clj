@@ -62,6 +62,9 @@
 (defn time-is-before-some-hakuaika-grace-period?
   "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
   [haku grace-days now]
+  (log/info (str "time-is-before-some-hakuaika-grace-period? Haku: " haku))
+  (log/info (str "time-is-before-some-hakuaika-grace-period? grace-days: " grace-days))
+  (log/info (str "time-is-before-some-hakuaika-grace-period? now: " now))
   (let [hakuajat-end-with-nils                   (if-let [hakuajat (:hakuajat haku)]
                                                   (map :end hakuajat)
                                                   [(coerce/from-long (get-in haku [:hakuaika :end]))])

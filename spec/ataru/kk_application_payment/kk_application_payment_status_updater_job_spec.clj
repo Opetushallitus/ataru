@@ -176,12 +176,10 @@
               (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
 
           (it "should be able ton handle hakuaikas without any endtimes"
-              (set-fixed-time "2025-11-15T14:59:59")
-              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start 1759294800000 :end nil}]} 180 (tc/to-long (java.util.Date.)))))
+              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end nil}]} 180 (time/date-time 2025 10 15))))
 
           (it "should be able ton handle hakuaikas with some endtimes"
-              (set-fixed-time "2025-11-15T14:59:59")
-              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start 1759294800000 :end 1761804000000} {:start 1759294800000 :end nil}]} 180 (tc/to-long (java.util.Date.)))))
+              (should= true (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku2-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end (time/date-time 2025 10 30)} {:start (time/date-time 2025 11 1) :end nil}]} 180 (time/date-time 2025 10 15))))
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
