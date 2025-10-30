@@ -8,6 +8,7 @@
             [ataru.util :as util]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
+            [taoensso.timbre :as log]
             [selmer.parser :as selmer]))
 
 (def payment-config
@@ -61,6 +62,7 @@
 (defn time-is-before-some-hakuaika-grace-period?
   "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
   [haku grace-days now]
+  (log/info (str "time-is-before-some-hakuaika-grace-period? Haku: " haku))
   (let [hakuajat-end                (if-let [hakuajat (:hakuajat haku)]
                                       (map :end hakuajat)
                                       [(coerce/from-long (get-in haku [:hakuaika :end]))])
