@@ -72,8 +72,8 @@
         end-times-with-grace-period             (map
                                                   #(time/plus % (time/days grace-days))
                                                   hakuajat-end)]
-    (if (not (= (count hakuajat-end) (count hakuajat-end)))
-      (do (log/warn (str "Kk-haku (" (:oid haku) ") has spme hakuaikas with end period: Hakuaikas: " (:hakuajat haku)))
+    (if (empty? end-times-with-grace-period)
+      (do (log/warn (str "Kk-haku (" (:oid haku) ") has no hakuaikas with end period: Haku: " haku))
           false)
       (boolean
         (some #(not (time/before? % now)) end-times-with-grace-period)))))
