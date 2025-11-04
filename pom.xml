@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>7ce8753e03c3af8eeada91d276f32881cfbe965a</tag>
+    <tag>e4a740eec748f50b4c946c2080d2a776f14cdfaf</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -948,33 +948,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-s3</artifactId>
-      <version>1.12.763</version>
-    </dependency>
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sns</artifactId>
-      <version>1.12.763</version>
-    </dependency>
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sqs</artifactId>
-      <version>1.12.763</version>
-    </dependency>
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-cloudwatch</artifactId>
-      <version>1.12.763</version>
-    </dependency>
-    <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-      <version>2.36.3</version>
-    </dependency>
-    <dependency>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sns</artifactId>
       <version>2.36.3</version>
     </dependency>
     <dependency>
