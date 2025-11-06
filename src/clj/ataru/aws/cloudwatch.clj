@@ -25,7 +25,7 @@
                       (.endpointOverride (URI/create (str "http://localhost:" (or port "4566"))))
                       (.build))
                   (-> (CloudWatchClient/builder)
-                      (.region (:region (:aws config)))
+                      (.region (Region/of (:region (:aws config))))
                       (.credentialsProvider ^AwsCredentialsProvider credentials-provider)
                       (.build)))
                 :namespace namespace))
