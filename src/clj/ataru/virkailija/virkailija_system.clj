@@ -3,7 +3,6 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
-            [ataru.aws.sns :as sns]
             [ataru.aws.sqs :as sqs]
             [ataru.aws.cloudwatch :as cloudwatch]
             [ataru.cas.client :as cas]
@@ -370,8 +369,6 @@
                  (sqs/map->AmazonSQS {})
                  [:credentials-provider])
 
-    :sns-message-manager (sns/map->SNSMessageManager {})
-
     :update-person-info-worker (component/using
                                 (person-integration/map->UpdatePersonInfoWorker
                                  {:enabled?      (:enabled? (:henkilo-modified-queue (:aws config)))
@@ -379,8 +376,7 @@
                                   :queue-url     (:queue-url (:henkilo-modified-queue (:aws config)))
                                   :receive-wait  (Duration/ofSeconds 20)})
                                 [:amazon-sqs
-                                 :job-runner
-                                 :sns-message-manager])
+                                 :job-runner])
 
     :redis (redis/map->Redis {})
 

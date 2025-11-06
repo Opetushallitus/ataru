@@ -34,7 +34,7 @@
                          [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
                          ;transitive from clj-util
-                         [io.undertow/undertow-core "2.3.19.Final"]
+                         [io.undertow/undertow-core "2.3.20.Final"]
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
@@ -157,10 +157,9 @@
                  [speclj "3.4.3"]
                  [org.clojure/test.check "1.1.1"]
                  [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20220608.1" :exclusions [com.google.guava/guava]]
-                 [com.amazonaws/aws-java-sdk-s3 "1.12.763"]
-                 [com.amazonaws/aws-java-sdk-sns "1.12.763"]
-                 [com.amazonaws/aws-java-sdk-sqs "1.12.763"]
-                 [com.amazonaws/aws-java-sdk-cloudwatch "1.12.763"]
+                 [software.amazon.awssdk/s3 "2.36.3"]
+                 [software.amazon.awssdk/sqs "2.36.3"]
+                 [software.amazon.awssdk/cloudwatch "2.36.3"]
                  [com.github.ben-manes.caffeine/caffeine "3.1.8"]
                  [org.clojure/data.xml "0.0.8"]
                  [fi.vm.sade.dokumenttipalvelu/dokumenttipalvelu "6.15-SNAPSHOT"]
@@ -431,6 +430,3 @@
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]
             "generate-secrets"    ["with-profile" "dev" "run" "-m" "ataru.util.secrets-generator"]})
-
-
-
