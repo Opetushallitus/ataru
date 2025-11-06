@@ -26,7 +26,7 @@
                       (.build))
                   (-> (CloudWatchClient/builder)
                       (.region (Region/of (:region (:aws config))))
-                      (.credentialsProvider ^AwsCredentialsProvider credentials-provider)
+                      (.credentialsProvider ^AwsCredentialsProvider (:credentials-provider credentials-provider))
                       (.build)))
                 :namespace namespace))
   (stop [this]
