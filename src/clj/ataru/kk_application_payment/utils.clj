@@ -8,7 +8,8 @@
             [ataru.util :as util]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer]
+            [taoensso.timbre :as log]))
 
 (def payment-config
   (get config :kk-application-payments))
@@ -61,14 +62,21 @@
 (defn time-is-before-some-hakuaika-grace-period?
   "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
   [haku grace-days now]
-  (let [hakuajat-end                (if-let [hakuajat (:hakuajat haku)]
-                                      (map :end hakuajat)
-                                      [(coerce/from-long (get-in haku [:hakuaika :end]))])
-        end-times-with-grace-period (map
-                                      #(time/plus % (time/days grace-days))
-                                      hakuajat-end)]
-    (boolean
-      (some #(not (time/before? % now)) end-times-with-grace-period))))
+  (log/info (str "time-is-before-some-hakuaika-grace-period? Haku: " haku))
+  (log/info (str "time-is-before-some-hakuaika-grace-period? grace-days: " grace-days))
+  (log/info (str "time-is-before-some-hakuaika-grace-period? now: " now))
+  (let [hakuajat-end-with-nils                   (if-let [hakuajat (:hakuajat haku)]
+                                                  (map :end hakuajat)
+                                                  [(coerce/from-long (get-in haku [:hakuaika :end]))])
+        hakuajat-end                             (filter some? hakuajat-end-with-nils)
+        end-times-with-grace-period             (map
+                                                  #(time/plus % (time/days grace-days))
+                                                  hakuajat-end)]
+    (if (empty? end-times-with-grace-period)
+      (do (log/warn (str "Kk-haku (" (:oid haku) ") has no hakuaikas with end period: Haku: " haku))
+          false)
+      (boolean
+        (some #(not (time/before? % now)) end-times-with-grace-period)))))
 
 (defn haku-active-for-updating
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.

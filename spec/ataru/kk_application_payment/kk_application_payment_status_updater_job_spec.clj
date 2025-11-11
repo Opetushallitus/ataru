@@ -8,6 +8,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [clj-time.core :as time]
+            [clj-time.coerce :as tc]
             [clj-time.format :as time-format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
@@ -15,6 +16,7 @@
                                  should-have-invoked should-not-have-invoked
                                  should-be-nil tags with-stubs should= around before]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.kk-application-payment.utils :as utils]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.cache.cache-service :as cache-service]
@@ -172,6 +174,12 @@
 
           (it "should not fail when nothing to update"
               (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
+
+          (it "should be able ton handle hakuaikas without any endtimes"
+              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end nil}]} 180 (time/date-time 2025 10 15))))
+
+          (it "should be able ton handle hakuaikas with some endtimes"
+              (should= true (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku2-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end (time/date-time 2025 10 30)} {:start (time/date-time 2025 11 1) :end nil}]} 180 (time/date-time 2025 10 15))))
 
           (it "should queue update for relevant haku"
               (with-redefs [updater-job/update-statuses-for-haku (stub :update-statuses-for-haku)]
