@@ -1,41 +1,47 @@
 (ns ataru.aws.cloudwatch-spec
-  (:require [speclj.core :refer :all]
+  (:require [ataru.aws.cloudwatch :as cloudwatch]
             [clj-test-containers.core :as tc]
-            [ataru.aws.cloudwatch :as cloudwatch]
+            [speclj.core :refer :all]
             [taoensso.timbre :as log])
-  (:import [com.amazonaws.services.cloudwatch.model GetMetricDataRequest MetricDataQuery MetricStat Metric Dimension StandardUnit]
-           java.util.Date
-           java.time.Instant))
+  (:import java.time.Instant
+           java.util.Collection
+           software.amazon.awssdk.services.cloudwatch.CloudWatchClient
+           (software.amazon.awssdk.services.cloudwatch.model Dimension GetMetricDataRequest GetMetricDataResponse Metric MetricDataQuery MetricStat StandardUnit)))
 
-(defn- get-metric [cloudwatch-client metric]
-  (let [request (-> (GetMetricDataRequest.)
-                    (.withStartTime (Date/from (:start metric)))
-                    (.withEndTime (Date/from (:end metric)))
-                    (.withMetricDataQueries
-                      [(-> (MetricDataQuery.)
-                           (.withId "test-query")
-                           (.withMetricStat
-                             (-> (MetricStat.)
-                                 (.withMetric
-                                   (-> (Metric.)
-                                       (.withNamespace (:namespace metric))
-                                       (.withMetricName (:name metric))
-                                       (.withDimensions
+(defn- get-metric [^CloudWatchClient cloudwatch-client metric]
+  (let [^GetMetricDataRequest request (-> (GetMetricDataRequest/builder)
+                    (.startTime (:start metric))
+                    (.endTime (:end metric))
+                    (.metricDataQueries
+                      [(-> (MetricDataQuery/builder)
+                           (.id "test-query")
+                           (.metricStat ^MetricStat
+                             (-> (MetricStat/builder)
+                                 (.metric ^Metric
+                                   (-> (Metric/builder)
+                                       (.namespace (:namespace metric))
+                                       (.metricName (:name metric))
+                                       (.dimensions ^Collection
                                          (map (fn [dimension]
-                                                (-> (Dimension.)
-                                                    (.withName (:name dimension))
-                                                    (.withValue (:value dimension))))
-                                              (:dimensions metric)))))
-                                 (.withUnit (StandardUnit/Count))
-                                 (.withPeriod (int (:period metric)))
-                                 (.withStat (:stat metric)))))]))
-        response (.getMetricData cloudwatch-client request)]
+                                                (-> (Dimension/builder)
+                                                    (.name (:name dimension))
+                                                    (.value (:value dimension))
+                                                    (.build)))
+                                              (:dimensions metric)))
+                                       (.build)))
+                                 (.unit StandardUnit/COUNT)
+                                 (.period (int (:period metric)))
+                                 (.stat (:stat metric))
+                                 (.build)))
+                           (.build))])
+                    (.build))
+        ^GetMetricDataResponse response (.getMetricData cloudwatch-client request)]
     (-> response
-        (.getMetricDataResults)
+        (.metricDataResults)
         (nth 0)
-        (.getValues))))
+        (.values))))
 
-(defn- should-eventually [f timeout]
+(defn- should-eventually [f ^long timeout]
   (let [timed-out (promise)]
     (future (Thread/sleep timeout) (deliver timed-out true))
     (while (not (f))

@@ -2,8 +2,12 @@
   (:require [ataru.config.core :refer [config]]
             [clojure.string]
             [com.stuartsierra.component :as component])
-  (:import com.amazonaws.services.sqs.AmazonSQSClientBuilder
-           [com.amazonaws.services.sqs.model
+  (:import java.util.Collection
+           software.amazon.awssdk.services.sqs.SqsClient
+           software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+           software.amazon.awssdk.regions.Region
+           [software.amazon.awssdk.services.sqs.model
+            DeleteMessageBatchRequest
             ReceiveMessageRequest
             SendMessageRequest
             DeleteMessageBatchRequestEntry]))
@@ -14,35 +18,41 @@
     (if (nil? amazon-sqs)
       (assoc this
              :amazon-sqs
-             (-> (AmazonSQSClientBuilder/standard)
-                 (.withRegion (:region (:aws config)))
-                 (.withCredentials
-                   (:credentials-provider credentials-provider))
-                 .build))
+             (-> (SqsClient/builder)
+                 (.region (Region/of (get-in config [:aws :region] "eu-west-1")))
+                 (.credentialsProvider ^AwsCredentialsProvider (:credentials-provider credentials-provider))
+                 (.build)))
       this))
   (stop [this]
     (assoc this :amazon-sqs nil)))
 
 (defn batch-receive [{:keys [amazon-sqs]} queue-url wait-duration]
-  (->>
-   (-> (new ReceiveMessageRequest)
-       (.withQueueUrl queue-url)
-       (.withWaitTimeSeconds
-         (.intValue (.getSeconds wait-duration))))
-   (.receiveMessage amazon-sqs)
-   .getMessages
-   seq))
+  (let [^ReceiveMessageRequest request (-> (ReceiveMessageRequest/builder)
+                                           (.queueUrl queue-url)
+                                           (.waitTimeSeconds
+                                             (.intValue (.getSeconds wait-duration)))
+                                           (.build))]
+    (->>
+      (.receiveMessage ^SqsClient amazon-sqs request)
+      .messages
+      seq)))
+
+(defn- batch-delete-request ^DeleteMessageBatchRequest [queue-url messages]
+  (let [^Collection entries (map-indexed
+                              (fn [i message]
+                                (-> (DeleteMessageBatchRequestEntry/builder)
+                                    (.id (str i))
+                                    (.receiptHandle (.getReceiptHandle message))
+                                    (.build))) messages)]
+    (-> (DeleteMessageBatchRequest/builder)
+        (.queueUrl queue-url)
+        (.entries entries)
+        (.build))))
 
 (defn batch-delete [{:keys [amazon-sqs]} queue-url messages]
   (when (seq messages)
-    (when-let [failed (->> messages
-                           (map-indexed
-                            (fn [i message]
-                              (new DeleteMessageBatchRequestEntry
-                                (str i)
-                                (.getReceiptHandle message))))
-                           (.deleteMessageBatch amazon-sqs queue-url)
-                           .getFailed
+    (when-let [failed (->> (.deleteMessageBatch ^SqsClient amazon-sqs (batch-delete-request queue-url messages))
+                           .failed
                            seq)]
       (throw
         (new RuntimeException
@@ -54,6 +64,8 @@
   {:pre [(some? amazon-sqs)
          (some? queue-url)
          (some? message-body)]}
-  (.sendMessage amazon-sqs (-> (new SendMessageRequest)
-                               (.withQueueUrl queue-url)
-                               (.withMessageBody (str message-body)))))
+  (let [^SendMessageRequest request (-> (SendMessageRequest/builder)
+                                        (.queueUrl queue-url)
+                                        (.messageBody (str message-body))
+                                        (.build))]
+    (.sendMessage ^SqsClient amazon-sqs request)))
