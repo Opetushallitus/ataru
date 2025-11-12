@@ -68,6 +68,17 @@
                        (remove-from [_ _])
                        (clear-all [_])))
 
+(def fake-job-runner
+  {:attachment-deadline-service fake-attachment-deadline-service
+   :person-service fake-person-service
+   :tarjonta-service fake-tarjonta-service
+   :form-by-id-cache fake-form-by-id-cache
+   :koodisto-cache fake-koodisto-cache
+   :organization-service fake-organization-service
+   :ohjausparametrit-service fake-ohjausparametrit-service
+   :hakukohderyhma-settings-cache fake-hakukohderyhma-settings-cache
+   :get-haut-cache fake-haku-cache})
+
 (declare conn)
 (defn- delete-states-and-events! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -130,10 +141,7 @@
   ([application-key person-oid]
    (let [changed (->> (:modified-payments
                         (payment/update-payments-for-person-term-and-year
-                          fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                          fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                          fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache fake-haku-cache
-                          person-oid term-fall year-ok))
+                          fake-job-runner person-oid term-fall year-ok))
                       (filter-by-application-keys #{application-key}))
          payment (first (payment/get-raw-payments [application-key]))]
      [changed payment])))
@@ -279,10 +287,7 @@
                                                       nil)
                         (let [oid "1.2.3.4.5.1234"                       ; Should have no applications
                               states (payment/update-payments-for-person-term-and-year
-                                       fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                                       fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                                       fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache fake-haku-cache
-                                       oid term-fall year-ok)]
+                                       fake-job-runner oid term-fall year-ok)]
                           (should= 0 (count states))))
 
                     (it "should return existing paid (terminal) state"
@@ -313,10 +318,7 @@
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (->> (:modified-payments
                                              (payment/update-payments-for-person-term-and-year
-                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
-                                               fake-haku-cache oid term-fall year-ok))
+                                               fake-job-runner oid term-fall year-ok))
                                            (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
@@ -457,10 +459,7 @@
                                 _ (payment/set-application-fee-overdue linked-application-key nil)
                                 changed (->> (:modified-payments
                                                (payment/update-payments-for-person-term-and-year
-                                                 fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                                                 fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                                                 fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
-                                                 fake-haku-cache oid term-fall year-ok))
+                                                 fake-job-runner oid term-fall year-ok))
                                              (filter-by-application-keys #{primary-application-key linked-application-key}))
                                 primary-payment (first (payment/get-raw-payments [primary-application-key]))
                                 linked-payment (first (payment/get-raw-payments [linked-application-key]))]
@@ -721,10 +720,7 @@
                               linked-application-key (:key (application-store/get-application (second application-ids)))
                               changed (->> (:modified-payments
                                              (payment/update-payments-for-person-term-and-year
-                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
-                                               fake-haku-cache oid term-fall year-ok))
+                                               fake-job-runner oid term-fall year-ok))
                                            (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-changed (first (filter #(= primary-application-key (:application-key %)) changed))
                               linked-changed (first (filter #(= linked-application-key (:application-key %)) changed))
@@ -754,10 +750,7 @@
                               _ (payment/set-application-fee-paid linked-application-key nil)
                               changed (->> (:modified-payments
                                              (payment/update-payments-for-person-term-and-year
-                                               fake-attachment-deadline-service fake-person-service fake-tarjonta-service
-                                               fake-form-by-id-cache fake-koodisto-cache fake-organization-service
-                                               fake-ohjausparametrit-service fake-hakukohderyhma-settings-cache
-                                               fake-haku-cache oid term-fall year-ok))
+                                               fake-job-runner oid term-fall year-ok))
                                            (filter-by-application-keys #{primary-application-key linked-application-key}))
                               primary-payment (first (payment/get-raw-payments [primary-application-key]))
                               linked-payment (first (payment/get-raw-payments [linked-application-key]))]
