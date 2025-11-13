@@ -191,6 +191,56 @@
       (log/info "Invalidating ok-by-proxy kk payment applications with keys" proxy-state-application-keys)
       (maksut-protocol/invalidate-laskut maksut-service proxy-state-application-keys))))
 
+(defn- attachment-deadline-passed?
+  [job-runner application-key]
+  (payment/attachment-deadline-passed? job-runner
+                                       (application-store/get-latest-application-by-key application-key)
+                                       (seq (payment/get-invalid-or-not-checked-attachment-reviews application-key))))
+
+(defn- ok-by-proxy-or-not-required?
+  [payments]
+  (some #(contains? #{(:ok-by-proxy payment/all-states) (:not-required payment/all-states)} (:state %)) payments))
+
+(defn- reset-kk-application-payment-obligation-states-if-needed
+  [{:keys [audit-logger] :as job-runner} existing-payments modified-payments]
+  (when (seq modified-payments)
+    (doseq [application-key (->> (concat existing-payments modified-payments)
+                                 (map :application-key)
+                                 (remove nil?)
+                                 distinct)]
+      (let [not-checked-attm-reviews-by-hakukohde (group-by :hakukohde
+                                                            (payment/get-not-checked-attachment-reviews application-key))
+            app-payment-obligation-reviews-by-hakukohde (group-by :hakukohde
+                                                                  (payment/get-kk-application-payment-obligation-reviews
+                                                                   application-key))]
+        (doseq [hakukohde (keys not-checked-attm-reviews-by-hakukohde)]
+          (let [not-checked-attm-reviews (get not-checked-attm-reviews-by-hakukohde hakukohde)
+                app-payment-obligation-reviews (get app-payment-obligation-reviews-by-hakukohde hakukohde)
+                any-not-checked-attm-review-after-latest-app-payment-obligation-review?
+                (some #(some->> (->> app-payment-obligation-reviews
+                                    (map :modified-time)
+                                    (sort)
+                                    (last))
+                                (.isAfter %))
+                      (map :modified-time not-checked-attm-reviews))]
+            (when (and (payment/kk-application-payment-obligation-reviewed? {:application-hakukohde-reviews
+                                                                             app-payment-obligation-reviews}
+                                                                            hakukohde)
+                       any-not-checked-attm-review-after-latest-app-payment-obligation-review?
+                       (not (attachment-deadline-passed? job-runner application-key)))
+              (doseq [existing-review (filter #(and (= "kk-application-payment-obligation" (:requirement %))
+                                                    (= hakukohde (:hakukohde %))
+                                                    (= "reviewed" (:state %)))
+                                              app-payment-obligation-reviews)]
+                (log/info "Changing kk-application-payment-obligation review to 'not checked' for application"
+                          application-key ", hakukohde" hakukohde)
+                (application-store/save-application-hakukohde-review application-key
+                                                                     (:hakukohde existing-review)
+                                                                     (:requirement existing-review)
+                                                                     "not-checked"
+                                                                     {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
+                                                                     audit-logger)))))))))
+
 (def keys-affecting-kk-application-payment
   #{payment/exemption-form-field-name :nationality})
 
@@ -231,19 +281,13 @@
   if necessary. Marking status as paid/overdue is done separately via kk-application-payment-maksut-poller-job,
   never here."
   [{:keys [person_oid term year application_id application_key]}
-   {:keys [attachment-deadline-service person-service tarjonta-service form-by-id-cache koodisto-cache
-           organization-service ohjausparametrit-service hakukohderyhma-settings-cache get-haut-cache
-           maksut-service] :as job-runner}]
+   {:keys [tarjonta-service koodisto-cache maksut-service] :as job-runner}]
   (when (get-in config [:kk-application-payments :enabled?])
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
         (let [{:keys [modified-payments existing-payments]}
-              (payment/update-payments-for-person-term-and-year attachment-deadline-service
-                                                                person-service tarjonta-service
-                                                                form-by-id-cache koodisto-cache organization-service
-                                                                ohjausparametrit-service hakukohderyhma-settings-cache
-                                                                get-haut-cache person-oid application-term
+              (payment/update-payments-for-person-term-and-year job-runner person-oid application-term
                                                                 application-year)]
           (if (or (some? modified-payments) (some? existing-payments))
             (do
@@ -257,10 +301,16 @@
               (doseq [application-payment existing-payments]
                 (let [{:keys [payment]} application-payment]
                   (cond
-                    (needs-reminder-sent? payment)
+                    (and (needs-reminder-sent? payment)
+                         (not (ok-by-proxy-or-not-required? modified-payments)))
                     (send-reminder-email-and-mark-sent job-runner payment))))
 
               (invalidate-maksut-payments-if-needed maksut-service modified-payments)
+
+              (reset-kk-application-payment-obligation-states-if-needed job-runner
+                                                                        (map :payment existing-payments)
+                                                                        modified-payments)
+
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 
             ; Here we've already established there should be a person with at least one application, but for the first

@@ -562,8 +562,8 @@ VALUES (:application_key, :event_type, :new_review_state, :virkailija_oid, :haku
 INSERT INTO application_reviews (application_key, state) VALUES (:application_key, :state);
 
 -- name: yesql-save-attachment-review!
-INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
-VALUES (:application_key, :attachment_key, :hakukohde, :state)
+INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state, modified_time)
+VALUES (:application_key, :attachment_key, :hakukohde, :state, :modified_time)
 ON CONFLICT (application_key, attachment_key, hakukohde)
   DO NOTHING;
 
@@ -661,16 +661,17 @@ WHERE application_key = :application_key;
 SELECT
   attachment_key,
   state,
-  hakukohde
+  hakukohde,
+  modified_time
 FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key;
 
 -- name: yesql-upsert-application-hakukohde-review!
-INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde)
-VALUES (:application_key, :requirement, :state, :hakukohde)
+INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde, modified_time)
+VALUES (:application_key, :requirement, :state, :hakukohde, :modified_time)
 ON CONFLICT (application_key, requirement, hakukohde)
   WHERE hakukohde IS NOT NULL
-  DO UPDATE SET state = :state;
+  DO UPDATE SET state = :state, modified_time = :modified_time;
 
 -- name: yesql-get-existing-application-hakukohde-review
 SELECT id
@@ -689,10 +690,10 @@ FROM application_hakukohde_reviews
 WHERE application_key = :application_key AND requirement = :requirement AND hakukohde = :hakukohde;
 
 -- name: yesql-update-attachment-hakukohde-review!
-INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state)
-VALUES (:application_key, :attachment_key, :hakukohde, :state)
+INSERT INTO application_hakukohde_attachment_reviews (application_key, attachment_key, hakukohde, state, modified_time)
+VALUES (:application_key, :attachment_key, :hakukohde, :state, :modified_time)
 ON CONFLICT (application_key, attachment_key, hakukohde)
-DO UPDATE SET state = :state, modified_time = now();
+DO UPDATE SET state = :state, modified_time = :modified_time;
 
 -- name: yesql-get-existing-attachment-review
 SELECT *
