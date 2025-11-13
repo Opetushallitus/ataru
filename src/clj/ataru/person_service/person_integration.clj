@@ -149,11 +149,11 @@
                 (str "Could not find key oidHenkilo from message '" s "'")))))
 
 (defn- try-handle-message
-  [job-runner sns-message-manager drain-failed? message]
+  [job-runner drain-failed? message]
   (try
     (some->> message
              .getBody
-             (sns/handle-message sns-message-manager)
+             (sns/handle-message)
              .getMessage
              parse-henkilo-modified-message
              (start-jobs-for-person job-runner))
@@ -167,7 +167,6 @@
 (defn- try-handle-messages
   [amazon-sqs
    job-runner
-   sns-message-manager
    drain-failed?
    queue-url
    receive-wait]
@@ -176,7 +175,6 @@
          (take-while not-empty)
          (map (partial keep (partial try-handle-message
                                      job-runner
-                                     sns-message-manager
                                      drain-failed?)))
          (map (partial sqs/batch-delete amazon-sqs queue-url))
          dorun)
@@ -185,7 +183,6 @@
 
 (defrecord UpdatePersonInfoWorker [amazon-sqs
                                    job-runner
-                                   sns-message-manager
                                    enabled?
                                    drain-failed?
                                    queue-url
@@ -202,7 +199,6 @@
          (partial try-handle-messages
                   amazon-sqs
                   job-runner
-                  sns-message-manager
                   drain-failed?
                   queue-url
                   receive-wait)

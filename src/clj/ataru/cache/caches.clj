@@ -87,7 +87,7 @@
          :lock-timeout  [20 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :hakukohderyhma-settings-cache-loader})]
-   [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
+   [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "/j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))]
    [:oppilaitoksen-opiskelijat-cache-loader
     (component/using
@@ -124,7 +124,7 @@
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
    [:kouta-internal-cas-client
-    (cas/new-client "/kouta-internal" "auth/login" "session" (-> config :public-config :virkailija-caller-id))]
+    (cas/new-client "/kouta-internal" "/auth/login" "session" (-> config :public-config :virkailija-caller-id))]
    [:kouta-haku-cache-loader
     (component/using
      (kouta-client/map->CacheLoader {})
