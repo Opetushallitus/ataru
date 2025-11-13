@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.application-subs
   (:require [ataru.application-common.application-field-common :as common]
-            [ataru.cljs-util :as util]
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.tarjonta.haku :as haku]
             [ataru.util :as u]
@@ -711,7 +710,7 @@
       -1)))
 
 (defn- mark-last-modify-event [events]
-  (let [last-modify-event-id (-> (filter util/modify-event? events)
+  (let [last-modify-event-id (-> (filter u/modify-event? events)
                                  last
                                  :id)]
     (map #(if (= (:id %) last-modify-event-id)
@@ -859,15 +858,6 @@
   (fn [db _]
     (-> db :application :selected-application-and-form :application :key)))
 
-(defn- modify-event-changes
-  [events change-history event-id]
-  (let [modify-events (filter util/modify-event? events)]
-    (util/keep-non-empty-changes
-     (some (fn [[event changes]]
-             (when (= event-id (:id event))
-               changes))
-           (map vector modify-events change-history)))))
-
 (defn- replace-change-value-with-label
   [change field lang]
   (match field
@@ -901,7 +891,7 @@
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn current-history-items
     [[form-fields application events selected-event change-history lang] _]
-    (when-let [changes (modify-event-changes events change-history (:id selected-event))]
+    (when-let [changes (u/modify-event-changes events change-history (:id selected-event))]
       (->> changes
            (map (fn [[id change]]
                   (let [field (get form-fields id)]
@@ -919,7 +909,7 @@
     [(re-frame/subscribe [:application/events])
      (re-frame/subscribe [:application/change-history])])
   (fn [[events change-history] [_ event-id]]
-    (modify-event-changes events change-history event-id)))
+    (u/modify-event-changes events change-history event-id)))
 
 (re-frame.core/reg-sub
   :application/field-highlighted?
