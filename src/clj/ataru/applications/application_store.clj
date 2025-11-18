@@ -716,8 +716,11 @@
   (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn get-application-attachment-reviews
-  [application-key]
-  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key})))
+  ([application-key]
+   (get-application-attachment-reviews application-key true))
+  ([application-key without-modified-time?]
+   (cond->> (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key}))
+            without-modified-time? (map #(dissoc % :modified-time)))))
 
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db
