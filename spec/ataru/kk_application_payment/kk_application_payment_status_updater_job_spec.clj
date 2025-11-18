@@ -8,7 +8,6 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [clj-time.core :as time]
-            [clj-time.coerce :as tc]
             [clj-time.format :as time-format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
@@ -109,6 +108,7 @@
                        :person-service              fake-person-service
                        :get-haut-cache              fake-get-haut-cache
                        :koodisto-cache              fake-koodisto-cache
+                       :audit-logger                audit-logger
                        :maksut-service              mock-maksut-service}))
 
 (def runner-with-empty-haku-cache
@@ -119,6 +119,7 @@
                        :person-service              fake-person-service
                        :get-haut-cache              empty-get-haut-cache
                        :koodisto-cache              fake-koodisto-cache
+                       :audit-logger                audit-logger
                        :maksut-service              mock-maksut-service}))
 
 (declare conn)
@@ -173,7 +174,7 @@
 
           (before
             (clear!)
-            (set-fixed-time "2025-01-15T14:59:59"))
+            (set-fixed-time "2025-01-15T14:50:00"))
 
           (after
             (reset-fixed-time!))
@@ -791,4 +792,81 @@
                 (should= (:awaiting payment/all-states) (:state payment))
                 (should= {:application_key application-key, :requirement "payment-obligation",
                           :state "not-obligated", :hakukohde "payment-info-test-kk-hakukohde"}
-                         (select-keys obligation [:application_key :requirement :state :hakukohde])))))
+                         (select-keys obligation [:application_key :requirement :state :hakukohde]))))
+
+
+          (it "should reset kk application payment obligation state when new attachments are added after review"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "attachment-missing"
+                                                    :modified_time (time/now)}])
+                ; setting application payment obligation to reviewed -> bypasses attachment deadline
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+                (should= {:application-key application-key
+                          :state (:awaiting payment/all-states)
+                          :maksut-secret test-maksut-secret}
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state :maksut-secret]))
+
+                (set-fixed-time "2025-01-15T14:55:00")
+                ; adding new attachments (not checked) within deadline resets application payment obligation state
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "not-checked"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))
+                (should= {:application-key application-key
+                          :state (:not-required payment/all-states)}
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))))
+
+          (it "should not reset kk application payment obligation state when new attachments are added after review and payment is not required"
+              (let [application-id (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "checked"
+                                                    :modified_time (time/now)}])
+                ; setting application payment obligation to reviewed -> bypasses attachment deadline
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+                (should= {:application-key application-key
+                          :state (:not-required payment/all-states)}
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))
+
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "reviewed"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))
+                (should= {:application-key application-key
+                          :state (:not-required payment/all-states)}
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state])))))
