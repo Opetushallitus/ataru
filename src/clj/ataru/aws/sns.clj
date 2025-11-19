@@ -6,8 +6,6 @@
   (let [message (json/parse-string string true)]
     (if-let [type (:Type message)]
       (if (= "Notification" type)
-        (do
-          (log/info "ASDF Notification message:" message)
-          (:Message message))
+        (:Message message)
         (log/error "Unknown SNS message type" type "in" string))
       (log/error "Unknown SNS message" string))))
