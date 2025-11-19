@@ -826,7 +826,7 @@
                                                     :updated? true}])
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= {:requirement "kk-application-payment-obligation"
-                          :state "not-checked"
+                          :state "unreviewed"
                           :hakukohde "payment-info-test-kk-hakukohde"
                           :application-key application-key}
                          (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))
