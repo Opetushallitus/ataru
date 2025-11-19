@@ -223,6 +223,17 @@
                                     (last))
                                 (.isAfter %))
                       (map :modified-time not-checked-attm-reviews))]
+            (log/info "!!! debug: application-key" application-key
+                      "hakukohde" hakukohde
+                      "not-checked-attm-reviews" (vec not-checked-attm-reviews)
+                      "app-payment-obligation-reviews" (vec app-payment-obligation-reviews)
+                      "any-not-checked-attm-review-after-latest-app-payment-obligation-review?"
+                      any-not-checked-attm-review-after-latest-app-payment-obligation-review?
+                      "reviewed?"
+                      (payment/kk-application-payment-obligation-reviewed? {:application-hakukohde-reviews
+                                                                            app-payment-obligation-reviews}
+                                                                           hakukohde)
+                      "dl-passed?" (attachment-deadline-passed? job-runner application-key))
             (when (and (payment/kk-application-payment-obligation-reviewed? {:application-hakukohde-reviews
                                                                              app-payment-obligation-reviews}
                                                                             hakukohde)
