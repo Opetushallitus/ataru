@@ -16,7 +16,8 @@
    [ataru.person-service.person-service :as person-service]
    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
    [yesql.core :refer [defqueries]])
-  (:import [java.util.concurrent Executors TimeUnit]))
+  (:import [java.util.concurrent Executors TimeUnit]
+           (software.amazon.awssdk.services.sqs.model Message)))
 
 (declare yesql-update-person-info-as-in-person!)
 (declare yesql-update-person-info-as-in-application!)
@@ -151,8 +152,8 @@
 (defn- try-handle-message
   [job-runner drain-failed? message]
   (try
-    (some->> message
-             .getBody
+    (some->> ^Message message
+             (.body)
              (sns/handle-message)
              .getMessage
              parse-henkilo-modified-message
