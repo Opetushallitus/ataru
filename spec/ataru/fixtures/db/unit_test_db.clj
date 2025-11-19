@@ -1,5 +1,6 @@
 (ns ataru.fixtures.db.unit-test-db
   (:require [clojure.java.jdbc :as jdbc]
+            [clj-time.core :as time]
             [yesql.core :refer [defqueries]]
             [ataru.forms.form-store :as form-store]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
@@ -60,7 +61,7 @@
     application-key
     audit-logger]
    (application-store/save-application-hakukohde-review
-     application-key hakukohde review-requirement review-state {} audit-logger)))
+     application-key hakukohde review-requirement review-state (time/now) {} audit-logger)))
 
 (defn init-db-application-fixture
   [form-fixture application-fixture application-hakukohde-reviews-fixture application-reviews-fixture]

@@ -476,9 +476,10 @@
    (s/optional-key :haku)                           (s/maybe s/Str)
    (s/optional-key :hakukohde)                      (s/maybe [s/Str])
    (s/optional-key :secret)                         s/Str
-   (s/optional-key :application-hakukohde-reviews)  [{:requirement HakukohdeReviewTypeNames
-                                                      :state       (apply s/enum review-requirement-values)
-                                                      :hakukohde   s/Str}] ; "form" or oid
+   (s/optional-key :application-hakukohde-reviews)  [{:requirement                    HakukohdeReviewTypeNames
+                                                      :state                          (apply s/enum review-requirement-values)
+                                                      (s/optional-key :modified-time) org.joda.time.DateTime
+                                                      :hakukohde                      s/Str}] ; "form" or oid
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
@@ -777,9 +778,10 @@
    :originallySubmitted s/Str
    :versionCreated      s/Str
    :versionModified     s/Str
-   :hakukohdeReviews             [{:requirement   s/Str
-                                   :state         s/Str
-                                   :hakukohde     s/Str}]
+   :hakukohdeReviews             [{:requirement                    s/Str
+                                   :state                          s/Str
+                                   (s/optional-key :modified-time) org.joda.time.DateTime
+                                   :hakukohde                      s/Str}]
    :hakukohdeAttachmentReviews   [{:attachment    s/Str
                                    :state         s/Str
                                    :hakukohde     s/Str}]

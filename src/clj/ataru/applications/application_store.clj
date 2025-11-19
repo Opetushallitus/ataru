@@ -20,6 +20,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.set]
             [clojure.string]
+            [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
@@ -34,6 +35,7 @@
            [org.postgresql.util
             PGobject
             PSQLException]
+           [org.joda.time DateTime]
            java.time.format.DateTimeFormatter))
 
 (defn- exec-db
@@ -222,7 +224,8 @@
     ((if (:updated? review)
        queries/yesql-update-attachment-hakukohde-review!
        queries/yesql-save-attachment-review!)
-     (dissoc review :updated?) connection)))
+     (assoc (dissoc review :updated?)
+            :modified_time (or (:modified_time review) (DateTime/now))) connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
@@ -713,8 +716,11 @@
   (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn get-application-attachment-reviews
-  [application-key]
-  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key})))
+  ([application-key]
+   (get-application-attachment-reviews application-key true))
+  ([application-key without-modified-time?]
+   (cond->> (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key}))
+            without-modified-time? (map #(dissoc % :modified-time)))))
 
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db
@@ -839,26 +845,30 @@
           (:id (queries/yesql-add-application-event<! event connection)))))))
 
 (defn save-application-hakukohde-review
-  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session audit-logger]
-  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [connection                  {:connection conn}
-          review-to-store             {:application_key application-key
-                                       :requirement     hakukohde-review-requirement
-                                       :state           hakukohde-review-state
-                                       :hakukohde       hakukohde-oid}
-          existing-duplicate-review   (queries/yesql-get-existing-application-hakukohde-review review-to-store connection)
-          existing-requirement-review (queries/yesql-get-existing-requirement-review review-to-store connection)]
-      (when (empty? existing-duplicate-review)
-        (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
-        (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
-        (let [event {:application_key          application-key
-                     :event_type               "hakukohde-review-state-change"
-                     :new_review_state         (:state review-to-store)
-                     :review_key               hakukohde-review-requirement
-                     :hakukohde                (:hakukohde review-to-store)
-                     :virkailija_oid           (-> session :identity :oid)
-                     :virkailija_organizations (edit-application-right-organizations->json session)}]
-          (queries/yesql-add-application-event<! event connection))))))
+  ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session audit-logger]
+   (save-application-hakukohde-review application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state
+                                      (time/now) session audit-logger))
+  ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state modified-time session audit-logger]
+   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+     (let [connection                  {:connection conn}
+           review-to-store             {:application_key application-key
+                                        :requirement     hakukohde-review-requirement
+                                        :state           hakukohde-review-state
+                                        :hakukohde       hakukohde-oid
+                                        :modified_time   modified-time}
+           existing-duplicate-review   (queries/yesql-get-existing-application-hakukohde-review review-to-store connection)
+           existing-requirement-review (queries/yesql-get-existing-requirement-review review-to-store connection)]
+       (when (empty? existing-duplicate-review)
+         (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
+         (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
+         (let [event {:application_key          application-key
+                      :event_type               "hakukohde-review-state-change"
+                      :new_review_state         (:state review-to-store)
+                      :review_key               hakukohde-review-requirement
+                      :hakukohde                (:hakukohde review-to-store)
+                      :virkailija_oid           (-> session :identity :oid)
+                      :virkailija_organizations (edit-application-right-organizations->json session)}]
+           (queries/yesql-add-application-event<! event connection)))))))
 
 (defn save-payment-obligation-automatically-changed
   "Only used by automatic tuition fee obligation logic. Sets new obligation state if previous one was not set by
@@ -869,7 +879,8 @@
           review-to-store             {:application_key application-key
                                        :requirement     hakukohde-review-requirement
                                        :state           hakukohde-review-state
-                                       :hakukohde       hakukohde-oid}
+                                       :hakukohde       hakukohde-oid
+                                       :modified_time   (time/now)}
           automatically-changed?      (->> (queries/yesql-get-application-events {:application_key application-key} connection)
                                            (filter #(and (= hakukohde-oid (:hakukohde %))
                                                          (= hakukohde-review-requirement (:review_key %))))
@@ -910,6 +921,7 @@
           review-to-store {:application_key application-key
                            :attachment_key  attachment-key
                            :state           hakukohde-review-state
+                           :modified_time   (time/now)
                            :hakukohde       hakukohde-oid}]
       (if-let [existing-attachment-review (first (queries/yesql-get-existing-attachment-review review-to-store connection))]
         (when-not (= hakukohde-review-state (:state existing-attachment-review))
@@ -1401,6 +1413,7 @@
         new-reviews      (map
                           #(-> %
                                (assoc :state to-state)
+                               (assoc :modified_time (time/now))
                                (assoc :application_key application-key))
                           existing-reviews)
         new-event        {:application_key          application-key
