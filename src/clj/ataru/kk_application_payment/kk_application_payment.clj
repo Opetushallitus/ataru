@@ -305,7 +305,7 @@
 
 (defn- get-payment-related-attachment-reviews
   [application-key states]
-  (->> (application-store/get-application-attachment-reviews application-key)
+  (->> (application-store/get-application-attachment-reviews application-key false)
        (filter (fn [review]
                  (and (contains? payment-module/kk-application-payment-exempt-attachment-keys (:attachment-key review))
                       (contains? states (:state review)))))))
