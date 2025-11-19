@@ -232,12 +232,12 @@
                                                     (= hakukohde (:hakukohde %))
                                                     (= "reviewed" (:state %)))
                                               app-payment-obligation-reviews)]
-                (log/info "Changing kk-application-payment-obligation review to 'not checked' for application"
+                (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
                           application-key ", hakukohde" hakukohde)
                 (application-store/save-application-hakukohde-review application-key
                                                                      (:hakukohde existing-review)
                                                                      (:requirement existing-review)
-                                                                     "not-checked"
+                                                                     "unreviewed"
                                                                      {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
                                                                      audit-logger)))))))))
 
