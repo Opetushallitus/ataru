@@ -8,7 +8,7 @@
            software.amazon.awssdk.regions.Region
            [software.amazon.awssdk.services.sqs.model
             DeleteMessageBatchRequest
-            ReceiveMessageRequest
+            Message ReceiveMessageRequest
             SendMessageRequest
             DeleteMessageBatchRequestEntry]))
 
@@ -39,10 +39,10 @@
 
 (defn- batch-delete-request ^DeleteMessageBatchRequest [queue-url messages]
   (let [^Collection entries (map-indexed
-                              (fn [i message]
+                              (fn [i ^Message message]
                                 (-> (DeleteMessageBatchRequestEntry/builder)
                                     (.id (str i))
-                                    (.receiptHandle (.getReceiptHandle message))
+                                    (.receiptHandle (.receiptHandle message))
                                     (.build))) messages)]
     (-> (DeleteMessageBatchRequest/builder)
         (.queueUrl queue-url)
@@ -57,7 +57,7 @@
       (throw
         (new RuntimeException
           (->> failed
-               (map #(.getMessages %))
+               (map #(.getMessage %))
                (clojure.string/join "; ")))))))
 
 (defn send-message [{:keys [amazon-sqs]} queue-url message-body]
