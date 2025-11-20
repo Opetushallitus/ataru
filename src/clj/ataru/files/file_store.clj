@@ -48,14 +48,17 @@
           counter (atom 0)]
       (doseq [key keys]
         (if-let [file (get-file liiteri-cas-client key)]
-          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
+          (do
+            (log/info "Got file from liiteri with key:" key)
+            (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
                 generated-filename (if (contains? @filenames (generate-filename filename ""))
                                      (generate-filename filename (swap! counter inc))
                                      (generate-filename filename ""))]
-            (.putNextEntry zout (new ZipEntry generated-filename))
-            (with-open [fin (:body file)]
-              (io/copy fin zout))
-            (swap! filenames conj generated-filename)
-            (.closeEntry zout)
-            (.flush zout))
+              (log/info "Generated filename:" generated-filename)
+              (.putNextEntry zout (new ZipEntry generated-filename))
+              (with-open [fin (:body file)]
+                (io/copy fin zout))
+              (swap! filenames conj generated-filename)
+              (.closeEntry zout)
+              (.flush zout)))
           (log/error "Could not get file" key))))))

@@ -66,7 +66,7 @@
       (throw e))))
 
 (defn cas-authenticated-get-as-stream [^CasClient client url]
-  (log/debug "Performing CAS authenticated GET as stream to URL:" url)
+  (log/info "Performing CAS authenticated GET as stream to URL:" url)
   (let [request (-> (RequestBuilder.)
                     (.setMethod "GET")
                     (.setUrl url)
