@@ -31,6 +31,7 @@
 (defn get-file [cas-client key]
   (let [url  (resolve-url :liiteri.file key)
         resp (cas/cas-authenticated-get-as-stream cas-client url)]
+    (log/info "Get file response headers:" (:headers resp))
     (if (= (:status resp) 200)
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)}
@@ -50,10 +51,12 @@
         (if-let [file (get-file liiteri-cas-client key)]
           (do
             (log/info "Got file from liiteri with key:" key)
+            (log/info "Got file from liiteri with content-disposition:" (:content-disposition file))
             (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
-                generated-filename (if (contains? @filenames (generate-filename filename ""))
-                                     (generate-filename filename (swap! counter inc))
-                                     (generate-filename filename ""))]
+                  generated-filename (if (contains? @filenames (generate-filename filename ""))
+                                       (generate-filename filename (swap! counter inc))
+                                       (generate-filename filename ""))]
+              (log/info "Filename from header:" filename)
               (log/info "Generated filename:" generated-filename)
               (.putNextEntry zout (new ZipEntry generated-filename))
               (with-open [fin (:body file)]
