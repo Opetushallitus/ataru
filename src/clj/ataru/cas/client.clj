@@ -82,9 +82,16 @@
                     (.setUrl url)
                     (.addHeader "Accept" "application/octet-stream")
                     .build)
-        ^CompletableFuture future (.execute client request)
-        ^Response resp (.get future)]
-    (response->stream-map resp)))
+        ^CompletableFuture future (.execute client request)]
+    (try
+      (let [^Response resp (.get future)]
+        (log/info "RAW RESPONSE object:" resp)
+        (log/info "RAW HEADERS:" (seq (.getHeaders resp)))
+        (log/info "RAW STATUS:" (.getStatusCode resp))
+        (response->stream-map resp))
+      (catch Exception e
+        (log/error e "Stream GET failed")
+        (throw e)))))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]
   (log/debug "Performing CAS DELETE to URL:" url)
