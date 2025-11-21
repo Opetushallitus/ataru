@@ -1,6 +1,5 @@
 (ns ataru.person-service.person-integration
   (:require
-   [cheshire.core :as json]
    [clojure.core.match :refer [match]]
    [ataru.component-data.person-info-module :as person-info-module]
    [ataru.forms.form-store :as form-store]
@@ -143,11 +142,11 @@
                      :type  job-type})
 
 (defn- parse-henkilo-modified-message
-  [s]
-  (if-let [oid (:oidHenkilo (json/parse-string s true))]
+  [message]
+  (if-let [oid (:oidHenkilo message)]
     oid
     (throw (new RuntimeException
-                (str "Could not find key oidHenkilo from message '" s "'")))))
+                (str "Could not find key oidHenkilo from message '" message "'")))))
 
 (defn- try-handle-message
   [job-runner drain-failed? message]

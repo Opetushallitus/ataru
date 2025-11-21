@@ -2,6 +2,7 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
             [cheshire.core :as json]
+            [clojure.string :as str]
             [taoensso.timbre :as log])
   (:import [fi.vm.sade.javautils.nio.cas CasConfig$CasConfigBuilder CasClientBuilder CasClient]
            [java.util.concurrent CompletableFuture]
@@ -25,6 +26,15 @@
 (defn response->map [^Response resp]
   {:status (.getStatusCode resp)
    :body   (.getResponseBody resp)})
+
+(defn response->stream-map ^Response [resp]
+  {:status (.getStatusCode resp)
+   :headers (into {}
+                  (map (fn [h]
+                         [(-> (.getKey h) str/lower-case)
+                          (.getValue h)]))
+                  (.iterator (.getHeaders resp)))
+   :body (.getResponseBodyAsStream resp)})
 
 ;; Apply extra options to RequestBuilder
 (defn apply-extra-opts [^RequestBuilder base-request extra-opts]
@@ -74,7 +84,7 @@
                     .build)
         ^CompletableFuture future (.execute client request)
         ^Response resp (.get future)]
-    (response->map resp)))
+    (response->stream-map resp)))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]
   (log/debug "Performing CAS DELETE to URL:" url)
