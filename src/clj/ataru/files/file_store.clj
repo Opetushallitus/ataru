@@ -31,6 +31,7 @@
 (defn get-file [cas-client key]
   (let [url  (resolve-url :liiteri.file key)
         resp (cas/cas-authenticated-get-as-stream cas-client url)]
+    (log/info "Get file response headers:" (:headers resp))
     (if (= (:status resp) 200)
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)}
@@ -68,7 +69,9 @@
           counter (atom 0)]
       (doseq [key keys]
         (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
-          (let [raw-filename (extract-filename content-disposition)
+          (do
+            (log/info "Content-disposition:" content-disposition)
+            (let [raw-filename (extract-filename content-disposition)
                 ;; fallback name if header missing
                 filename     (or raw-filename (str key))
                 base         (generate-filename filename "")
@@ -76,10 +79,10 @@
                                (generate-filename filename (swap! counter inc))
                                base)]
 
-            (swap! seen-filenames conj unique-name)
-            (.putNextEntry zout (ZipEntry. unique-name))
-            (with-open [fin body]
-              (io/copy fin zout))
-            (.closeEntry zout))
+              (swap! seen-filenames conj unique-name)
+              (.putNextEntry zout (ZipEntry. unique-name))
+              (with-open [file-stream body]
+                (io/copy file-stream zout))
+              (.closeEntry zout)))
 
           (log/error "Could not get file" key))))))
