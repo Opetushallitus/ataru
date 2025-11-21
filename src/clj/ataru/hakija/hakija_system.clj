@@ -16,7 +16,6 @@
             [ataru.redis :as redis]
             [ataru.db.db :as db]
             [ataru.config.core :refer [config]]
-            [ataru.config.url-helper :refer [resolve-url]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
@@ -43,7 +42,7 @@
     :audit-logger audit-logger
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
-                                                      "auth/cas"
+                                                      "/auth/cas"
                                                       "ring-session"
                                                       (-> config :public-config :virkailija-caller-id))
 
@@ -70,10 +69,10 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
-    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "/j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
                                         "ring-session" (-> config :public-config :hakija-caller-id))
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
@@ -96,8 +95,8 @@
                                          :hakukohderyhma-settings-cache
                                          :attachment-deadline-service])
 
-    :maksut-cas-client (cas/new-client (resolve-url :maksut-service)
-                                       "auth/cas"
+    :maksut-cas-client (cas/new-client "/maksut"
+                                       "/auth/cas"
                                        "ring-session"
                                        (-> config :public-config :virkailija-caller-id))
 
@@ -109,7 +108,7 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
+    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "/j_spring_cas_security_check"
                                                   "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
     :suoritus-service (component/using
@@ -128,7 +127,7 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
                                                       "session" (-> config :public-config :hakija-caller-id))
 
     :valinta-tulos-service (component/using
@@ -152,7 +151,7 @@
                             :job-runner
                             :form-by-id-cache])
 
-    :koski-client (cas/new-client "/koski" "cas/virkailija" "koskiUser"
+    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser"
                                   "1.2.246.562.10.00000000001.ataru-hakija.frontend")
     :koski-service (component/using
                      (koski-service/map->IntegratedKoskiTutkintoService {})

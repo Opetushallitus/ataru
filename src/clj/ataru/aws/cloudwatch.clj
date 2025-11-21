@@ -3,12 +3,12 @@
             [clojure.string]
             [com.stuartsierra.component :as component]
             [environ.core :refer [env]])
-  (:import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder
-           [com.amazonaws.client.builder AwsClientBuilder$EndpointConfiguration]
-           [com.amazonaws.auth AWSStaticCredentialsProvider]
-           [com.amazonaws.auth BasicAWSCredentials]
-           java.util.Date
-           [com.amazonaws.services.cloudwatch.model Dimension MetricDatum PutMetricDataRequest StandardUnit]))
+  (:import java.net.URI
+           (java.util Collection Date)
+           (software.amazon.awssdk.auth.credentials StaticCredentialsProvider AwsBasicCredentials AwsCredentialsProvider)
+           software.amazon.awssdk.regions.Region
+           software.amazon.awssdk.services.cloudwatch.CloudWatchClient
+           (software.amazon.awssdk.services.cloudwatch.model Dimension MetricDatum PutMetricDataRequest StandardUnit)))
 
 (defprotocol MetricStore
   (store-metrics [this datums]
@@ -19,14 +19,14 @@
   (start [this]
     (assoc this :client
                 (if (:dev? env)
-                  (-> (AmazonCloudWatchClientBuilder/standard)
-                      (.withEndpointConfiguration (AwsClientBuilder$EndpointConfiguration. (str "http://localhost:" (or port "4566")) "us-east-1"))
-                      (.withCredentials (AWSStaticCredentialsProvider. (BasicAWSCredentials. "localstack" "localstack")))
+                  (-> (CloudWatchClient/builder)
+                      (.region Region/US_EAST_1)
+                      (.credentialsProvider (StaticCredentialsProvider/create (AwsBasicCredentials/create "localstack" "localstack")))
+                      (.endpointOverride (URI/create (str "http://localhost:" (or port "4566"))))
                       (.build))
-                  (-> (AmazonCloudWatchClientBuilder/standard)
-                      (.withRegion (:region (:aws config)))
-                      (.withCredentials
-                        (:credentials-provider credentials-provider))
+                  (-> (CloudWatchClient/builder)
+                      (.region (Region/of (:region (:aws config))))
+                      (.credentialsProvider ^AwsCredentialsProvider (:credentials-provider credentials-provider))
                       (.build)))
                 :namespace namespace))
   (stop [this]
@@ -37,18 +37,21 @@
     (let [client (:client this)
           date (Date.)
           datums (map (fn [datum]
-                        (-> (MetricDatum.)
-                            (.withMetricName (:name datum))
-                            (.withValue (double (:value datum)))
-                            (.withDimensions (map (fn [dimension]
-                                                    (-> (Dimension.)
-                                                        (.withName (:name dimension))
-                                                        (.withValue (:value dimension))))
-                                                  (:dimensions datum)))
-                            (.withStorageResolution (int 1))
-                            (.withTimestamp date)
-                            (.withUnit (StandardUnit/Count)))) datums)
-          request (-> (PutMetricDataRequest.)
-                      (.withNamespace (str namespace))
-                      (.withMetricData datums))]
+                        (-> (MetricDatum/builder)
+                            (.metricName (:name datum))
+                            (.value (double (:value datum)))
+                            (.dimensions ^Collection (map (fn ^Dimension [dimension]
+                                                    (-> (Dimension/builder)
+                                                        (.name (:name dimension))
+                                                        (.value (:value dimension))
+                                                        (.build)))
+                                                          (:dimensions datum)))
+                            (.storageResolution (int 1))
+                            (.timestamp (.toInstant date))
+                            (.unit StandardUnit/COUNT)
+                            (.build))) datums)
+          request (-> (PutMetricDataRequest/builder)
+                      (.namespace (str namespace))
+                      (.metricData ^Collection datums)
+                      (.build))]
     (.putMetricData client request))))
