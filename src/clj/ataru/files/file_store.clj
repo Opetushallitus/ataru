@@ -37,25 +37,49 @@
       (do (log/error "failed to get file " key " from url " url ", response " + resp)
           nil))))
 
-(defn- generate-filename [filename counter]
-  (let [name (str (str/join "." (butlast (str/split filename #"\."))))
-        extension (last (str/split filename #"\."))]
-    (str (apply str (take 240 name)) counter "." extension)))
+(def cd-filename-regex
+  #"(?i)(?:filename\*?=(?:UTF-8''|\"?))([^\";]+)")
+
+(defn extract-filename [content-disposition]
+  (when content-disposition
+    (some->> content-disposition
+             (re-find cd-filename-regex)
+             second)))
+
+(defn generate-filename [filename counter]
+  (let [[name ext] (let [parts (str/split filename #"\.")]
+                     (if (> (count parts) 1)
+                       [(str/join "." (butlast parts)) (last parts)]
+                       [filename ""]))
+
+        base (apply str (take 240 name))
+
+        counter-suffix (if (seq (str counter))
+                         (str "-" counter)
+                         "")]
+
+    (if (seq ext)
+      (str base counter-suffix "." ext)
+      (str base counter-suffix))))
 
 (defn get-file-zip [liiteri-cas-client keys out]
   (with-open [zout (ZipOutputStream. out)]
-    (let [filenames (atom #{})
+    (let [seen-filenames (atom #{})
           counter (atom 0)]
       (doseq [key keys]
-        (if-let [file (get-file liiteri-cas-client key)]
-          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
-                generated-filename (if (contains? @filenames (generate-filename filename ""))
-                                     (generate-filename filename (swap! counter inc))
-                                     (generate-filename filename ""))]
-            (.putNextEntry zout (new ZipEntry generated-filename))
-            (with-open [fin (:body file)]
+        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
+          (let [raw-filename (extract-filename content-disposition)
+                ;; fallback name if header missing
+                filename     (or raw-filename (str key))
+                base         (generate-filename filename "")
+                unique-name  (if (contains? @seen-filenames base)
+                               (generate-filename filename (swap! counter inc))
+                               base)]
+
+            (swap! seen-filenames conj unique-name)
+            (.putNextEntry zout (ZipEntry. unique-name))
+            (with-open [fin body]
               (io/copy fin zout))
-            (swap! filenames conj generated-filename)
-            (.closeEntry zout)
-            (.flush zout))
+            (.closeEntry zout))
+
           (log/error "Could not get file" key))))))
