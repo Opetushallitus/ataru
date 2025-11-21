@@ -27,14 +27,16 @@
   {:status (.getStatusCode resp)
    :body   (.getResponseBody resp)})
 
-(defn response->stream-map ^Response [resp]
-  {:status (.getStatusCode resp)
-   :headers (into {}
-                  (map (fn [h]
-                         [(-> (.getKey h) str/lower-case)
-                          (.getValue h)]))
-                  (.iterator (.getHeaders resp)))
-   :body (.getResponseBodyAsStream resp)})
+(defn response->stream-map [^org.asynchttpclient.Response resp]
+  (let [headers (.getHeaders resp)
+        header-names (.names headers)
+        header-map (into {}
+                         (for [name header-names]
+                           [(-> name str/lower-case)
+                            (.get headers name)]))]
+    {:status  (.getStatusCode resp)
+     :headers header-map
+     :body    (.getResponseBodyAsStream resp)}))
 
 ;; Apply extra options to RequestBuilder
 (defn apply-extra-opts [^RequestBuilder base-request extra-opts]
@@ -76,15 +78,24 @@
       (throw e))))
 
 (defn cas-authenticated-get-as-stream [^CasClient client url]
-  (log/debug "Performing CAS authenticated GET as stream to URL:" url)
+  (log/info "Performing CAS authenticated GET as stream to URL:" url)
   (let [request (-> (RequestBuilder.)
                     (.setMethod "GET")
                     (.setUrl url)
                     (.addHeader "Accept" "application/octet-stream")
                     .build)
-        ^CompletableFuture future (.execute client request)
-        ^Response resp (.get future)]
-    (response->stream-map resp)))
+        ^CompletableFuture future  (.execute client request)]
+    (try
+      (let [^Response resp (.get ^java.util.concurrent.CompletableFuture future)
+            status (.getStatusCode resp)
+            headers (.names (.getHeaders resp))]
+        (log/info "CAS GET status:" status)
+        (log/info "CAS GET header names:" headers)
+        (response->stream-map resp))
+
+      (catch Exception e
+        (log/error e "CAS GET stream failed:" url)
+        (throw e)))))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]
   (log/debug "Performing CAS DELETE to URL:" url)
