@@ -77,24 +77,30 @@
       (log/error e "Error during CAS authenticated GET:" url)
       (throw e))))
 
-(defn cas-authenticated-get-as-stream [^CasClient client url]
+(defn cas-authenticated-get-as-stream
+  [^CasClient client url]
   (log/info "Performing CAS authenticated GET as stream to URL:" url)
   (let [request (-> (RequestBuilder.)
                     (.setMethod "GET")
                     (.setUrl url)
                     (.addHeader "Accept" "application/octet-stream")
                     .build)
-        ^CompletableFuture future  (.execute client request)]
+        future (.execute client request)]
     (try
-      (let [^Response resp (.get ^java.util.concurrent.CompletableFuture future)
-            status (.getStatusCode resp)
-            headers (.names (.getHeaders resp))]
-        (log/info "CAS GET status:" status)
-        (log/info "CAS GET header names:" headers)
+      ;; 60 second timeout
+      (let [^Response resp (.get future 60000 java.util.concurrent.TimeUnit/MILLISECONDS)]
+        (log/debug "DEBUG status:" (.getStatusCode resp))
+        (log/debug "DEBUG headers:" (into {} (for [n (.names (.getHeaders resp))]
+                                             [(str/lower-case n) (.get (.getHeaders resp) n)])))
         (response->stream-map resp))
-
+      (catch java.util.concurrent.TimeoutException e
+        (log/error e "Timeout while performing GET to" url)
+        (throw e))
+      (catch java.util.concurrent.ExecutionException e
+        (log/error e "Execution exception while performing GET to" url)
+        (throw e))
       (catch Exception e
-        (log/error e "CAS GET stream failed:" url)
+        (log/error e "Unexpected exception while performing GET to" url)
         (throw e)))))
 
 (defn cas-authenticated-delete [^CasClient client url & [opts-fn]]

@@ -32,8 +32,8 @@
   (let [url  (resolve-url :liiteri.file key)
         resp (cas/cas-authenticated-get-as-stream cas-client url)
         status (:status resp)]
-    (log/info "GET file status:" status "key:" key)
-    (log/info "Headers for file key:" key ":" (:headers resp))
+    (log/info "DEBUG GET file status:" status "key:" key)
+    (log/info "DEBUG Headers for file key:" key ":" (:headers resp))
 
     (if (= status 200)
       {:body                (:body resp)
@@ -68,12 +68,12 @@
       (str base counter-suffix "." ext)
       (str base counter-suffix))))
 
-(defn get-file-zip [cas-client file-keys output-stream]
+(defn get-file-zip [liiteri-cas-client file-keys output-stream]
   (with-open [zip-out (ZipOutputStream. output-stream)]
     (let [seen-filenames (atom #{})
           counter (atom 0)]
       (doseq [file-key file-keys]
-        (if-let [{:keys [body content-disposition]} (get-file cas-client file-key)]
+        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client file-key)]
           (let [header-filename      (extract-filename content-disposition)
                 fallback-filename    (or header-filename (str file-key))
                 base-filename        (generate-filename fallback-filename 0)
@@ -85,7 +85,7 @@
             (swap! seen-filenames conj unique-filename)
 
             ;; Log for debugging
-            (log/info "Adding ZIP entry:" unique-filename)
+            (log/info "DEBUG Adding ZIP entry:" unique-filename)
 
             ;; Write file into ZIP
             (.putNextEntry zip-out (ZipEntry. unique-filename))
