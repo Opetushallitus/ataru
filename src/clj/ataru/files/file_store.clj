@@ -42,56 +42,39 @@
         (log/error "Failed to fetch file:" key "status:" status)
         nil))))
 
-(def content-disposition-filename-regex
-  ;; Matches both filename="foo.pdf" and filename*=UTF-8''foo.pdf (RFC 5987)
-  #"(?i)(?:filename\*?=(?:UTF-8''|\"?))([^\";]+)")
-
 (defn extract-filename [content-disposition]
+  ;; Returns nil if header missing or no match
   (when content-disposition
-    (some->> content-disposition
-             (re-find content-disposition-filename-regex)
-             second)))
+    (second
+     (re-matches
+      #"(?i)attachment;\s*filename=\"?(.*?)\"?$"
+      content-disposition))))
 
 (defn generate-filename [filename counter]
-  (let [[name ext] (let [parts (str/split filename #"\.")]
-                     (if (> (count parts) 1)
-                       [(str/join "." (butlast parts)) (last parts)]
-                       [filename ""]))
+  (let [parts     (str/split filename #"\.")
+        name      (str/join "." (butlast parts))
+        extension (last parts)
+        safe-name (apply str (take 240 name))]
+    (str safe-name counter "." extension)))
 
-        base (apply str (take 240 name))
-
-        counter-suffix (if (seq (str counter))
-                         (str "-" counter)
-                         "")]
-
-    (if (seq ext)
-      (str base counter-suffix "." ext)
-      (str base counter-suffix))))
-
-(defn get-file-zip [liiteri-cas-client file-keys output-stream]
+(defn get-file-zip [liiteri-cas-client keys output-stream]
   (with-open [zip-out (ZipOutputStream. output-stream)]
     (let [seen-filenames (atom #{})
           counter (atom 0)]
-      (doseq [file-key file-keys]
-        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client file-key)]
-          (let [header-filename      (extract-filename content-disposition)
-                fallback-filename    (or header-filename (str file-key))
-                base-filename        (generate-filename fallback-filename 0)
-                unique-filename      (if (contains? @seen-filenames base-filename)
-                                       (generate-filename fallback-filename (swap! counter inc))
-                                       base-filename)]
-
-            ;; Track used filenames to prevent duplicates
-            (swap! seen-filenames conj unique-filename)
-
-            ;; Log for debugging
-            (log/info "DEBUG Adding ZIP entry:" unique-filename)
-
-            ;; Write file into ZIP
-            (.putNextEntry zip-out (ZipEntry. unique-filename))
+      (doseq [key keys]
+        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
+          (let [header-filename   (extract-filename content-disposition)
+                fallback-filename (or header-filename (str key))
+                base-filename     (generate-filename fallback-filename "")
+                final-filename    (if (contains? @seen-filenames base-filename)
+                                    (generate-filename fallback-filename
+                                                       (swap! counter inc))
+                                    base-filename)]
+            (swap! seen-filenames conj final-filename)
+            (log/info "DEBUG Adding ZIP entry:" final-filename)
+            (.putNextEntry zip-out (ZipEntry. final-filename))
             (with-open [file-stream body]
               (io/copy file-stream zip-out))
             (.closeEntry zip-out))
 
-          ;; Error if file fetch failed
-          (log/error "Could not fetch file for key:" file-key))))))
+          (log/error "Could not fetch file" key))))))
