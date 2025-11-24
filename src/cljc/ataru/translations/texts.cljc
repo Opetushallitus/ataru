@@ -625,12 +625,12 @@
                                                  :en "You have applied to upper secondary or preparatory education in the joint application. Based on the information you provided in your application, you received a notification that your application will be processed under discretionary admission. According to your institution, this information was incorrect, so your application will be processed in the standard scoring selection instead of discretionary admission."}
    :email-kk-payment-link-subject               {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
                                                  :sv "Studieinfo: Ansökningsavgift, betala avgiften senast"
-                                                 :en "Studyinfo: application fee, reminder to pay the fee by"}
+                                                 :en "Studyinfo: Application fee, reminder to pay the fee by"}
    :email-kk-payment-link-virkailija-subject    {:fi "Opintopolku: Hakemusmaksuvelvollisuutesi on tarkastettu - maksathan viimeistään"
-                                                 :sv "Din skyldighet att betala ansökningsavgiften har kontrollerats - vänligen betala senast"
+                                                 :sv "Studieinfo: Din skyldighet att betala ansökningsavgiften har kontrollerats - vänligen betala senast"
                                                  :en "Studyinfo: Application fee, your obligation to pay has been reviewed - please pay the fee by"}
    :email-kk-payment-reminder-subject           {:fi "Opintopolku: Hakemusmaksu, maksathan maksun viimeistään"
-                                                 :sv "Ansökningsavgift, påminnelse att betala avgiften senast"
+                                                 :sv "Studieinfo: Ansökningsavgift, påminnelse att betala avgiften senast"
                                                  :en "Studyinfo: Application fee, please remember to pay the fee by"}
    :alkamiskausi-kevat                          {:fi "kevät"
                                                  :en "spring"
