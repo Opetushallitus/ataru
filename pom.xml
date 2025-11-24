@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>3932e8eac47aafdec7bb49771e5a9a3d5bce3d00</tag>
+    <tag>6ed97483accdbc314cba367fc307612795fd9b19</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -296,7 +296,7 @@
       <dependency>
         <groupId>io.undertow</groupId>
         <artifactId>undertow-core</artifactId>
-        <version>2.3.19.Final</version>
+        <version>2.3.20.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -948,24 +948,19 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-s3</artifactId>
-      <version>1.12.763</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>2.36.3</version>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sns</artifactId>
-      <version>1.12.763</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sqs</artifactId>
+      <version>2.36.3</version>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-sqs</artifactId>
-      <version>1.12.763</version>
-    </dependency>
-    <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-java-sdk-cloudwatch</artifactId>
-      <version>1.12.763</version>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>cloudwatch</artifactId>
+      <version>2.36.3</version>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
