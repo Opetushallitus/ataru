@@ -167,6 +167,7 @@ SELECT
   ae.id,
   ae.hakukohde,
   ae.review_key,
+  ae.virkailija_oid,
   v.first_name,
   v.last_name,
   ae.virkailija_organizations

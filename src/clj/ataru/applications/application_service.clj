@@ -125,8 +125,9 @@
 
 (defn get-application-events
   [organization-service application-key]
-  (map (partial enrich-virkailija-organizations organization-service)
-       (application-store/get-application-events application-key)))
+  (->> (application-store/get-application-events application-key)
+       (map (partial enrich-virkailija-organizations organization-service))
+       (map #(dissoc % :virkailija-oid))))
 
 (defn ->form-query
   [key]
