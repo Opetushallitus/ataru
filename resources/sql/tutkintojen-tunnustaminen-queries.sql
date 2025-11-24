@@ -65,4 +65,6 @@ SELECT a.key,
             key = 'tutu-apply-reason') AS "apply-reason"
 FROM applications AS a
          JOIN forms AS f ON f.id = a.form_id
-WHERE a.key = :key;
+WHERE a.key = :key
+ORDER BY a.id DESC
+LIMIT 1;

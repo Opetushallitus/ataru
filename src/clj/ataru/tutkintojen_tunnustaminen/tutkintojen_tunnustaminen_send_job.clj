@@ -8,7 +8,7 @@
 (defn tutkintojen-tunnustaminen-send-handler [{:keys [key apply-reason]} {:keys [tutu-cas-client]}]
   (let [url (resolve-url :tutu-service.hakemus)
         req {:hakemusOid    key
-             :hakemusKoskee apply-reason}
+             :hakemusKoskee (or apply-reason "5")} ;; Default to "5" (Lopullinen päätös) if apply-reason is nil
         response (cas/cas-authenticated-post tutu-cas-client url req)]
 
     (log/info "Response" response)
