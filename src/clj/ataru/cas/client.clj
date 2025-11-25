@@ -79,7 +79,7 @@
 
 (defn cas-authenticated-get-as-stream
   [^CasClient client url]
-  (log/info "Performing CAS authenticated GET as stream to URL:" url)
+  (log/debug "Performing CAS authenticated GET as stream to URL:" url)
   (let [request (-> (RequestBuilder.)
                     (.setMethod "GET")
                     (.setUrl url)
@@ -87,11 +87,8 @@
                     .build)
         future (.execute client request)]
     (try
-      ;; 60 second timeout
-      (let [^Response resp (.get future 60000 java.util.concurrent.TimeUnit/MILLISECONDS)]
-        (log/debug "DEBUG status:" (.getStatusCode resp))
-        (log/debug "DEBUG headers:" (into {} (for [n (.names (.getHeaders resp))]
-                                             [(str/lower-case n) (.get (.getHeaders resp) n)])))
+      ; 3 minute timeout
+      (let [^Response resp (.get future 180000 java.util.concurrent.TimeUnit/MILLISECONDS)]
         (response->stream-map resp))
       (catch java.util.concurrent.TimeoutException e
         (log/error e "Timeout while performing GET to" url)

@@ -35,9 +35,6 @@
         resp (cas/cas-authenticated-get-as-stream cas-client url)
         status (:status resp)
         cd     (get-in resp [:headers "content-disposition"])]
-    (log/info "DEBUG GET file status:" status "key:" key)
-    (log/info "DEBUG Headers for file key:" key ":" (:headers resp))
-    (log/info "DEBUG Extracted content-disposition for key" key ":" (pr-str cd))
     (if (= status 200)
       {:body                (:body resp)
        :content-disposition cd}
@@ -61,34 +58,27 @@
     (str safe-name counter "." extension)))
 
 (defn get-file-zip
-  "Write a ZIP to output-stream containing files by keys fetched from CAS.
-   Filenames are taken from Content-Disposition headers (exact original behavior).
-   If header missing, logs an error and skips the file."
+  "Write a ZIP to output-stream containing files fetched via liiteri-cas-client for the given keys.
+   Filenames are taken from Content-Disposition headers."
   [liiteri-cas-client keys output-stream]
   (with-open [zip-out (ZipOutputStream. output-stream)]
     (let [seen-filenames (atom #{})
           counter        (atom 0)]
       (doseq [key keys]
-        (log/info "DEBUG ZIP processing key:" key)
-        (if-let [{:keys [body content-disposition] :as file} (get-file liiteri-cas-client key)]
-          (do
-            (log/info "DEBUG RAW Content-Disposition for key" key ":" (pr-str content-disposition))
-            (let [header-filename (extract-filename content-disposition)]
-              (log/info "DEBUG extract-filename ->" (pr-str header-filename))
-              (if header-filename
-                (let [base-filename  (generate-filename header-filename "")
-                      final-filename (if (contains? @seen-filenames base-filename)
-                                       (generate-filename header-filename (swap! counter inc))
-                                       base-filename)]
-                  (swap! seen-filenames conj final-filename)
-                  (log/info "DEBUG Adding ZIP entry:" final-filename "for key:" key)
-                  (.putNextEntry zip-out (ZipEntry. final-filename))
-                  (with-open [file-stream body]
-                    (io/copy file-stream zip-out))
-                  (.closeEntry zip-out))
-                (do
-                  (log/error "Missing Content-Disposition header for file key:" key)
-                  (log/error "Full file map for key (debug):" (pr-str (select-keys file [:content-disposition])))
-                  ;; skip adding this file
-                  nil))))
+        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
+          (let [header-filename (extract-filename content-disposition)]
+            (if header-filename
+              (let [base-filename  (generate-filename header-filename "")
+                    final-filename (if (contains? @seen-filenames base-filename)
+                                     (generate-filename header-filename (swap! counter inc))
+                                     base-filename)]
+                (swap! seen-filenames conj final-filename)
+                (log/debug "DEBUG Adding ZIP entry:" final-filename "for key:" key)
+                (.putNextEntry zip-out (ZipEntry. final-filename))
+                (with-open [file-stream body]
+                  (io/copy file-stream zip-out))
+                (.closeEntry zip-out))
+              (do
+                (log/error "Missing Content-Disposition header for file key:" key)
+                nil)))
           (log/error "Could not fetch file for key:" key))))))
