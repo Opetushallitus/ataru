@@ -42,13 +42,13 @@
         (log/error "Failed to fetch file:" key "status:" status)
         nil))))
 
-(defn extract-filename [content-disposition]
-  ;; Returns nil if header missing or no match
+(defn extract-filename
+  "Extracts the filename from a Content-Disposition header.
+   Returns nil if header is missing or does not match."
+  [content-disposition]
   (when content-disposition
     (second
-     (re-matches
-      #"(?i)attachment;\s*filename=\"?(.*?)\"?$"
-      content-disposition))))
+     (re-matches #"attachment; filename=\"(.*)\"" content-disposition))))
 
 (defn generate-filename [filename counter]
   (let [parts     (str/split filename #"\.")
@@ -57,24 +57,24 @@
         safe-name (apply str (take 240 name))]
     (str safe-name counter "." extension)))
 
-(defn get-file-zip [liiteri-cas-client keys output-stream]
+(defn get-file-zip
+  [liiteri-cas-client keys output-stream]
   (with-open [zip-out (ZipOutputStream. output-stream)]
     (let [seen-filenames (atom #{})
-          counter (atom 0)]
+          counter        (atom 0)]
       (doseq [key keys]
         (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
-          (let [header-filename   (extract-filename content-disposition)
-                fallback-filename (or header-filename (str key))
-                base-filename     (generate-filename fallback-filename "")
-                final-filename    (if (contains? @seen-filenames base-filename)
-                                    (generate-filename fallback-filename
-                                                       (swap! counter inc))
-                                    base-filename)]
-            (swap! seen-filenames conj final-filename)
-            (log/info "DEBUG Adding ZIP entry:" final-filename)
-            (.putNextEntry zip-out (ZipEntry. final-filename))
-            (with-open [file-stream body]
-              (io/copy file-stream zip-out))
-            (.closeEntry zip-out))
-
-          (log/error "Could not fetch file" key))))))
+          (let [[_ header-filename] (extract-filename content-disposition)]
+            (if header-filename
+              (let [base-filename  (generate-filename header-filename "")
+                    final-filename (if (contains? @seen-filenames base-filename)
+                                     (generate-filename header-filename (swap! counter inc))
+                                     base-filename)]
+                (swap! seen-filenames conj final-filename)
+                (log/info "DEBUG Adding ZIP entry:" final-filename)
+                (.putNextEntry zip-out (ZipEntry. final-filename))
+                (with-open [file-stream body]
+                  (io/copy file-stream zip-out))
+                (.closeEntry zip-out))
+              (log/error "Missing Content-Disposition header for file key:" key)))
+          (log/error "Could not fetch file for key:" key))))))
