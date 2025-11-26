@@ -2236,7 +2236,6 @@
                                                                 app-routes
                                                   (api-routes this))
                                   (auth-routes (select-keys this [:login-cas-client
-                                                                  :kayttooikeus-service
                                                                   :person-service
                                                                   :organization-service
                                                                   :audit-logger

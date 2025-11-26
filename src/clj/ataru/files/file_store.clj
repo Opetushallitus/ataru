@@ -28,34 +28,57 @@
                          ", body " (:body resp))))))
     file-keys))
 
-(defn get-file [cas-client key]
+(defn get-file
+  "Fetch a file via cas client and return {:body <InputStream> :content-disposition <string>}"
+  [cas-client key]
   (let [url  (resolve-url :liiteri.file key)
-        resp (cas/cas-authenticated-get-as-stream cas-client url)]
-    (if (= (:status resp) 200)
+        resp (cas/cas-authenticated-get-as-stream cas-client url)
+        status (:status resp)
+        cd     (get-in resp [:headers "content-disposition"])]
+    (if (= status 200)
       {:body                (:body resp)
-       :content-disposition (-> resp :headers :content-disposition)}
-      (do (log/error "failed to get file " key " from url " url ", response " + resp)
-          nil))))
+       :content-disposition cd}
+      (do
+        (log/error "Failed to fetch file:" key "status:" status)
+        nil))))
 
-(defn- generate-filename [filename counter]
-  (let [name (str (str/join "." (butlast (str/split filename #"\."))))
-        extension (last (str/split filename #"\."))]
-    (str (apply str (take 240 name)) counter "." extension)))
+(defn extract-filename
+  "Extracts filename from a Content-Disposition header of the form:
+   attachment; filename=\"foo.jpg\"
+   Returns nil if not present."
+  [content-disposition]
+  (when content-disposition
+    (second (re-matches #"attachment; filename=\"(.*)\"" content-disposition))))
 
-(defn get-file-zip [liiteri-cas-client keys out]
-  (with-open [zout (ZipOutputStream. out)]
-    (let [filenames (atom #{})
-          counter (atom 0)]
+(defn generate-filename [filename counter]
+  (let [parts     (str/split filename #"\.")
+        name      (str/join "." (butlast parts))
+        extension (last parts)
+        safe-name (apply str (take 240 name))]
+    (str safe-name counter "." extension)))
+
+(defn get-file-zip
+  "Write a ZIP to output-stream containing files fetched via liiteri-cas-client for the given keys.
+   Filenames are taken from Content-Disposition headers."
+  [liiteri-cas-client keys output-stream]
+  (with-open [zip-out (ZipOutputStream. output-stream)]
+    (let [seen-filenames (atom #{})
+          counter        (atom 0)]
       (doseq [key keys]
-        (if-let [file (get-file liiteri-cas-client key)]
-          (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
-                generated-filename (if (contains? @filenames (generate-filename filename ""))
-                                     (generate-filename filename (swap! counter inc))
-                                     (generate-filename filename ""))]
-            (.putNextEntry zout (new ZipEntry generated-filename))
-            (with-open [fin (:body file)]
-              (io/copy fin zout))
-            (swap! filenames conj generated-filename)
-            (.closeEntry zout)
-            (.flush zout))
-          (log/error "Could not get file" key))))))
+        (if-let [{:keys [body content-disposition]} (get-file liiteri-cas-client key)]
+          (let [header-filename (extract-filename content-disposition)]
+            (if header-filename
+              (let [base-filename  (generate-filename header-filename "")
+                    final-filename (if (contains? @seen-filenames base-filename)
+                                     (generate-filename header-filename (swap! counter inc))
+                                     base-filename)]
+                (swap! seen-filenames conj final-filename)
+                (log/debug "DEBUG Adding ZIP entry:" final-filename "for key:" key)
+                (.putNextEntry zip-out (ZipEntry. final-filename))
+                (with-open [file-stream body]
+                  (io/copy file-stream zip-out))
+                (.closeEntry zip-out))
+              (do
+                (log/error "Missing Content-Disposition header for file key:" key)
+                nil)))
+          (log/error "Could not fetch file for key:" key))))))

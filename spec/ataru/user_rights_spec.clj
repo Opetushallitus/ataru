@@ -46,7 +46,7 @@
           (tags :unit)
           (it "gets correct organization OID for the user right we require"
               (let [right-org-oids (virkailija->right-organization-oids
-                                     test-user1
+                                    (:organisaatiot test-user1)
                                      [:form-edit
                                       :view-applications
                                       :edit-applications])]
