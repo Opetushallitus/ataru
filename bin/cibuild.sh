@@ -19,25 +19,25 @@ compile-less() {
     time ./bin/compile-less.sh
 }
 
-npm-dependencies() {
-    echo "Installing npm dependencies"
-    time npm ci
+pnpm-dependencies() {
+    echo "Installing pnpm dependencies"
+    time pnpm install --frozen-lockfile
     export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 
 type_check() {
   echo "Running TypeScript type check"
-  time npm run tsc:type-check
+  time pnpm run tsc:type-check
 }
 
 eslint() {
     echo "Running ESLint"
-    npm run lint:js
+    pnpm run lint:js
 }
 
 clj_kondo() {
     echo "Running clj-kondo"
-    npm run lint:clj
+    pnpm run lint:clj
 }
 
 lint() {
@@ -121,7 +121,7 @@ reset-test-database-with-fixture() {
 ui-compile() {
     clean
     build-clojurescript
-    npm-dependencies
+    pnpm-dependencies
     compile-less
 }
 
@@ -133,7 +133,7 @@ prepare-ui-tests() {
 create-both-uberjars() {
     clean
     build-clojurescript
-    npm-dependencies
+    pnpm-dependencies
     compile-less
     process-resources
     echo "Creating uberjar"
@@ -143,7 +143,7 @@ create-both-uberjars() {
 run-tests() {
     echo "Starting test run"
     clean
-    npm-dependencies
+    pnpm-dependencies
     lint
     test-clojurescript
     nuke-test-db
@@ -157,7 +157,7 @@ run-tests() {
 run-clojure-tests() {
     echo "Starting clojure test run"
     clean
-    npm-dependencies
+    pnpm-dependencies
     lint
     test-clojurescript
     nuke-test-db
@@ -174,7 +174,7 @@ run-tests-and-create-uberjar() {
 run-browser-tests() {
     echo "Starting browser test run"
     clean
-    npm-dependencies
+    pnpm-dependencies
     nuke-test-db
     run-migrations
     compile-less
@@ -185,7 +185,7 @@ run-browser-tests() {
 run-spec-and-mocha-tests() {
     echo "Starting spec and mocha test run"
     clean
-    npm-dependencies
+    pnpm-dependencies
     lint
     test-clojurescript
     nuke-test-db
@@ -210,8 +210,8 @@ case "$command" in
     "compile-less" )
         compile-less
         ;;
-    "npm-dependencies" )
-        npm-dependencies
+    "pnpm-dependencies" )
+        pnpm-dependencies
         ;;
     "eslint" )
         eslint
@@ -283,7 +283,7 @@ case "$command" in
         echo "Unknown command $command. Available commands:
 * clean
 * compile-less
-* npm-dependencies
+* pnpm-dependencies
 * eslint
 * lint
 * process-resources

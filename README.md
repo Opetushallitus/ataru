@@ -59,7 +59,7 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 When Playwright is updated or installed for the first time, it needs some dependencies installed. Since we only use Chromium in tests, needed dependencies can be installed with:
 
-    npx playwright install --with-deps chromium
+    pnpm exec playwright install --with-deps chromium
 
 Start the service locally with make start command
 
@@ -67,7 +67,7 @@ Start the service locally with make start command
 
 Then run all Playwright tests 
 
-   npx playwright test
+   pnpm exec playwright test
 
 See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
 
@@ -83,11 +83,11 @@ Start the service locally with make start command
 
 Then either open Cypress with command
 
-    npm run cypress:open
+    pnpm run cypress:open
 
 or run it headless using command
 
-    npm run cypress:run
+    pnpm run cypress:run
 
 ### Cypress & Playwright tests in Github Actions
 
