@@ -16,9 +16,12 @@ time lein cljsbuild once virkailija-cypress-ci hakija-cypress-ci
 echo "Running less compilation for integration tests"
 time ./bin/compile-less.sh
 
+echo "Ensuring Cypress binary is available"
+pnpm exec cypress install || exit 1
+
 echo "Starting services for integration tests"
 
-npx pm2 start pm2.ci.config.js
+pnpm exec pm2 start pm2.ci.config.js
 
 echo "Waiting for local services to become available"
 ./bin/wait-for.sh localhost:8352 -t 500 || exit 1
@@ -26,11 +29,11 @@ echo "Waiting for local services to become available"
 ./bin/wait-for.sh localhost:8354 -t 500 || exit 1
 
 echo "Running integration tests"
-time npx playwright test && npm run cypress:run:ci
+time pnpm exec playwright test && pnpm run cypress:run:ci
 RESULT=$?
 
 echo "Stopping processes used by integration tests"
-npx pm2 kill
+pnpm exec pm2 kill
 docker compose kill ataru-cypress-test-db ataru-cypress-http-proxy
 docker compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
 
