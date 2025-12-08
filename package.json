@@ -5,6 +5,7 @@
     "url": "https://github.com/Opetushallitus/lomake-editori.git"
   },
   "license": "EUPL-1.1",
+  "packageManager": "pnpm@9.15.5",
   "scripts": {
     "prepare": "husky",
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
@@ -19,10 +20,10 @@
   },
   "lint-staged": {
     "**/*.{js,ts}": [
-      "npm run lint:js:lint-staged"
+      "pnpm run lint:js:lint-staged"
     ],
     "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
-      "npm run lint:clj:lint-staged"
+      "pnpm run lint:clj:lint-staged"
     ]
   },
   "devDependencies": {
@@ -54,6 +55,7 @@
     "less": "^4.2.0",
     "lint-staged": "15.2.7",
     "mocha": "^8.4.0",
+    "only-allow": "1.1.1",
     "pm2": "5.4.2",
     "prettier": "3.3.3",
     "puppeteer": "^3.3.0",

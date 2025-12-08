@@ -1,0 +1,7 @@
+packages:
+  - .
+
+onlyBuiltDependencies:
+  - fsevents
+
+minimumReleaseAge: 4320

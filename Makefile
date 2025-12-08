@@ -1,7 +1,7 @@
 # Project-specific configuration
-EXECUTABLES = lein docker npm lftp
+EXECUTABLES = lein docker pnpm lftp
 PORTS=15432 16379 15433 1221 16380 16381 8350 8351 8352 8353
-TOOL_VERSIONS := node:8.11 npm:6 lein:2.9
+TOOL_VERSIONS := node:20 pnpm:9 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
@@ -23,7 +23,7 @@ DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ft
 DOCKER_CONTAINERS_CYPRESS = ataru-cypress-test-db ataru-test-ftpd ataru-test-redis ataru-cypress-test-redis ataru-cypress-http-proxy
 
 # General options
-PM2=npx pm2 --no-autorestart
+PM2=pnpm exec pm2 --no-autorestart
 START_ONLY=start pm2.config.js --only
 STOP_ONLY=stop pm2.config.js --only
 
@@ -58,10 +58,10 @@ generate-nginx-config:
 	@./bin/generate-nginx-conf.sh
 
 # ----------------
-# Npm installation
+# pnpm installation
 # ----------------
-$(NODE_MODULES): package.json package-lock.json
-	npm ci
+$(NODE_MODULES): package.json pnpm-lock.yaml
+	pnpm install --frozen-lockfile
 	touch $(NODE_MODULES)
 
 # ----------------
@@ -185,7 +185,7 @@ log: $(NODE_MODULES)
 logs: log
 
 lint: $(NODE_MODULES)
-	npx eslint .
+	pnpm exec eslint .
 
 check-ports:
 	@for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done || exit 0
@@ -221,4 +221,3 @@ test: start-docker test-clojurescript test-clojure test-browser
 # ----------------
 kill: stop-pm2 stop-docker
 	$(PM2) kill
-
