@@ -26,8 +26,20 @@
       "pnpm run lint:clj:lint-staged"
     ]
   },
+  "pnpm": {
+    "overrides": {
+      "body-parser": "1.20.3",
+      "cross-spawn": "7.0.6",
+      "form-data": "4.0.4",
+      "minimatch": "3.0.5",
+      "systeminformation": "5.27.12",
+      "tar-fs": "2.1.4",
+      "ua-parser-js": "0.7.35",
+      "unzip-stream": "0.3.4"
+    }
+  },
   "devDependencies": {
-    "@playwright/test": "^1.45.3",
+    "@playwright/test": "^1.55.1",
     "@types/node": "^20.14.12",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
