@@ -5,6 +5,7 @@
     "url": "https://github.com/Opetushallitus/lomake-editori.git"
   },
   "license": "EUPL-1.1",
+  "packageManager": "pnpm@9.15.5",
   "scripts": {
     "prepare": "husky",
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
@@ -19,14 +20,26 @@
   },
   "lint-staged": {
     "**/*.{js,ts}": [
-      "npm run lint:js:lint-staged"
+      "pnpm run lint:js:lint-staged"
     ],
     "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
-      "npm run lint:clj:lint-staged"
+      "pnpm run lint:clj:lint-staged"
     ]
   },
+  "pnpm": {
+    "overrides": {
+      "body-parser": "1.20.3",
+      "cross-spawn": "7.0.6",
+      "form-data": "4.0.4",
+      "minimatch": "3.0.5",
+      "systeminformation": "5.27.12",
+      "tar-fs": "2.1.4",
+      "ua-parser-js": "0.7.35",
+      "unzip-stream": "0.3.4"
+    }
+  },
   "devDependencies": {
-    "@playwright/test": "^1.45.3",
+    "@playwright/test": "^1.55.1",
     "@types/node": "^20.14.12",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
@@ -54,6 +67,7 @@
     "less": "^4.2.0",
     "lint-staged": "15.2.7",
     "mocha": "^8.4.0",
+    "only-allow": "1.1.1",
     "pm2": "5.4.2",
     "prettier": "3.3.3",
     "puppeteer": "^3.3.0",

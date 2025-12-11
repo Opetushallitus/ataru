@@ -1,8 +1,11 @@
-if grep lockfileVersion package-lock.json | grep -qx '  "lockfileVersion": 2,'; then
-    # package-lock kunnossa
-    npx lint-staged
-else
-    echo 'package-lock.json file format version is not 2!'
-    exit 1
+if [ ! -f pnpm-lock.yaml ]; then
+  echo 'pnpm-lock.yaml is missing!'
+  exit 1
 fi
 
+if grep -q "lockfileVersion: '9." pnpm-lock.yaml; then
+  pnpm exec lint-staged
+else
+  echo 'pnpm-lock.yaml lockfileVersion is not 9.x!'
+  exit 1
+fi
