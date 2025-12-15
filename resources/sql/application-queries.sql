@@ -1520,7 +1520,7 @@ SELECT a.key,
         WHERE ahr.application_key = a.key)  AS "application-hakukohde-reviews",
        (SELECT json_agg(json_build_object('attachment', review_key,
                                           'state', new_review_state,
-                                          'time', time,
+                                          'updateTime', time,
                                           'hakukohde', hakukohde))
         FROM (SELECT DISTINCT ON (review_key)
             review_key,
