@@ -351,4 +351,3 @@
                   (:id application))
         {:transition {:id :final}})
       {:transition {:id :final}})))
-

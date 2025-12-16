@@ -2,13 +2,14 @@
   (:require
     [ataru.cas.client :as cas]
     [ataru.config.url-helper :refer [resolve-url]]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-utils :refer [apply-reason-lopullinen-paatos]]
     [taoensso.timbre :as log]))
 
 
 (defn tutkintojen-tunnustaminen-send-handler [{:keys [key apply-reason]} {:keys [tutu-cas-client]}]
   (let [url (resolve-url :tutu-service.hakemus)
         req {:hakemusOid    key
-             :hakemusKoskee apply-reason}
+             :hakemusKoskee (or apply-reason apply-reason-lopullinen-paatos)} ;; Default to Lopullinen päätös if apply-reason is nil
         response (cas/cas-authenticated-post tutu-cas-client url req)]
 
     (log/info "Response" response)
