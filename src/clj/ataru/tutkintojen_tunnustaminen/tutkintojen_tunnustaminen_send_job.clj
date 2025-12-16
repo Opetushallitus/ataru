@@ -2,7 +2,7 @@
   (:require
     [ataru.cas.client :as cas]
     [ataru.config.url-helper :refer [resolve-url]]
-    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :refer [apply-reason-lopullinen-paatos]]
+    [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-utils :refer [apply-reason-lopullinen-paatos]]
     [taoensso.timbre :as log]))
 
 
