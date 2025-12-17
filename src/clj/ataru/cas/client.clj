@@ -23,20 +23,22 @@
     (log/debug "Created CAS client for service" service "with security URI suffix" security-uri-suffix)
     cas-client))
 
+(defn- headers->map [headers]
+  (let [header-names (.names headers)]
+    (into {}
+          (for [name header-names]
+            [(-> name str/lower-case)
+             (.get headers name)]))))
+
 (defn response->map [^Response resp]
   {:status (.getStatusCode resp)
+   :headers (headers->map (.getHeaders resp))
    :body   (.getResponseBody resp)})
 
 (defn response->stream-map [^org.asynchttpclient.Response resp]
-  (let [headers (.getHeaders resp)
-        header-names (.names headers)
-        header-map (into {}
-                         (for [name header-names]
-                           [(-> name str/lower-case)
-                            (.get headers name)]))]
-    {:status  (.getStatusCode resp)
-     :headers header-map
-     :body    (.getResponseBodyAsStream resp)}))
+  {:status  (.getStatusCode resp)
+   :headers (headers->map (.getHeaders resp))
+   :body    (.getResponseBodyAsStream resp)})
 
 ;; Apply extra options to RequestBuilder
 (defn apply-extra-opts [^RequestBuilder base-request extra-opts]
