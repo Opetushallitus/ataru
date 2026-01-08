@@ -1471,11 +1471,17 @@ SELECT
                                        'hakukohde', hakukohde))
      FROM application_hakukohde_reviews ahr
      WHERE ahr.application_key = a.key) AS "application-hakukohde-reviews",
-    (SELECT json_agg(json_build_object('attachment', attachment_key,
-                                       'state', state,
+    (SELECT json_agg(json_build_object('attachment', review_key,
+                                       'state', new_review_state,
+                                       'updateTime', time,
                                        'hakukohde', hakukohde))
-     FROM application_hakukohde_attachment_reviews ahar
-     WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+     FROM (SELECT DISTINCT ON (review_key)
+         review_key,
+         new_review_state,
+         time,
+         hakukohde
+           FROM application_events WHERE application_key = a.key AND event_type = 'attachment-review-state-change'
+           ORDER BY review_key, time DESC) AS grouped_result) AS "latest-attachment-reviews",
     (SELECT json_agg(json_build_object('notes', notes,
                                        'state', state_name,
                                        'hakukohde', hakukohde,
@@ -1512,11 +1518,17 @@ SELECT a.key,
                                           'hakukohde', hakukohde))
         FROM application_hakukohde_reviews ahr
         WHERE ahr.application_key = a.key)  AS "application-hakukohde-reviews",
-       (SELECT json_agg(json_build_object('attachment', attachment_key,
-                                          'state', state,
+       (SELECT json_agg(json_build_object('attachment', review_key,
+                                          'state', new_review_state,
+                                          'updateTime', time,
                                           'hakukohde', hakukohde))
-        FROM application_hakukohde_attachment_reviews ahar
-        WHERE ahar.application_key = a.key) AS "application-hakukohde-attachment-reviews",
+        FROM (SELECT DISTINCT ON (review_key)
+            review_key,
+            new_review_state,
+            time,
+            hakukohde
+              FROM application_events WHERE application_key = a.key AND event_type = 'attachment-review-state-change'
+              ORDER BY review_key, time DESC) AS grouped_result) AS "latest-attachment-reviews",
        (SELECT json_agg(json_build_object('notes', notes,
                                           'state', state_name,
                                           'hakukohde', hakukohde,
