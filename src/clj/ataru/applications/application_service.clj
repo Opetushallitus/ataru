@@ -638,6 +638,9 @@
              (keys (:hakukohde-reviews review))
              [:edit-applications])
           (do (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
+              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
+                job-runner
+                application-key)
             {:events (get-application-events organization-service application-key)})
           :forbidden))))
 

@@ -1,10 +1,9 @@
 (ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service
   (:require [clojure.java.io :as io]
-            [ataru.config.core :refer [config]]
             [ataru.files.file-store :as file-store]
-            [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.util :as util]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-utils :refer [get-configuration get-form tutu-form?]]
             [clojure.string :as string]
             [clj-time.core :as t]
             [clj-time.format :as f]
@@ -166,24 +165,6 @@
                (->case application)
                (->action "Hakemuksen peruutus" "03.01")))
 
-(defn- get-form
-  [form-by-id-cache koodisto-cache attachment-deadline-service application]
-  (let [form (hakija-form-service/fetch-form-by-id
-              (:form-id application)
-              [:hakija]
-              form-by-id-cache
-              koodisto-cache
-              nil
-              false
-              {}
-              attachment-deadline-service
-              nil
-              nil)]
-    (when (nil? form)
-      (throw (new RuntimeException (str "Form " (:form-id application)
-                                        " not found"))))
-    form))
-
 (defn- attachment-as-bytes
   [liiteri-cas-client key]
   (if-let [response (file-store/get-file liiteri-cas-client key)]
@@ -246,30 +227,6 @@
     (when-not (zero? (:exit r))
       (throw (new RuntimeException (str "Writing file " filename " failed: "
                                         (:err r)))))))
-
-(defn- form-key-matches?
-  [cfg-form-key test]
-  (let [keys (string/split cfg-form-key #",")]
-    (some #(= test %) keys)))
-
-(defn- get-configuration
-  []
-  (let [cfg (:tutkintojen-tunnustaminen config)]
-    (when (string/blank? (:form-key cfg))
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen form key not set")))
-    (when (string/blank? (:country-question-id cfg))
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen country question id not set")))
-    (when (not (integer? (:attachment-total-size-limit cfg)))
-      (throw (new RuntimeException
-                  "Tutkintojen tunnustaminen attachment size limit not set")))
-    cfg))
-
-(defn- tutu-form? [form]
-  (let [cfg-form-key (:form-key (get-configuration))]
-    (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
-        (form-key-matches? cfg-form-key (:key form)))))
 
 (defn- application-job-step
   [liiteri-cas-client form-by-id-cache koodisto-cache attachment-deadline-service application-id edit?]
@@ -346,7 +303,7 @@
         (transfer ftp
                   (str (:key application) "_" (:id application) "_taydennyspyynto_" ts ".xml")
                   message
-                  application-id)
+                  (:id application))
         (log/info "Sent application information request sent message to ASHA for application"
                   (:id application))
         {:transition {:id :final}})
