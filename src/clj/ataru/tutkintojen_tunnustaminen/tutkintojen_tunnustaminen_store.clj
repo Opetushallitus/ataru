@@ -26,6 +26,7 @@
   (let [id-and-state (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                                               (first (yesql-get-application-id-and-state-by-event-id {:id event-id}
                                                                                                      {:connection connection})))]
+    (log/info "!!!!!!!!!!!!!!!!!!!!!!!!! Searching application with event-id '" event-id "', returned '" id-and-state "'")
     (when (nil? id-and-state)
       (throw (new RuntimeException (str "Application id by event id " event-id
                                         " not found"))))
@@ -70,6 +71,7 @@
 (defn start-tutkintojen-tunnustaminen-review-state-changed-job
   [job-runner event-id]
   (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
+    (log/info "!!!!!!!!!!!!!!!!!! Launching state change job to ASHA")
     (log/info "Started tutkintojen tunnustaminen review state changed job with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
@@ -80,6 +82,7 @@
 (defn start-tutkintojen-tunnustaminen-state-change-notification-job
   [job-runner application-key]
   (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
+    (log/info "!!!!!!!!!!!!!!!!!! Launching state change job to TUTU")
     (log/info "Started tutkintojen tunnustaminen state change notification (to tutu-application) job with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
@@ -93,6 +96,7 @@
         tutkintojen-tunnustaminen-enabled? (get cfg :enabled)
         tutu-send-enabled?                 (get cfg :tutu-send-enabled?)]
         (when tutkintojen-tunnustaminen-enabled?
+          (log/info "!!!!!!!!!!!!!!!!!! Launching info request job to ASHA")
           (log/info "Started tutkintojen tunnustaminen information request sent (to ASHA) job with job id"
                     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                               (job/start-job job-runner
@@ -100,11 +104,12 @@
                                                              "tutkintojen-tunnustaminen-information-request-sent-job"
                                                              {:information-request information-request}))))
         (when tutu-send-enabled?
-            (log/info "Started tutkintojen tunnustaminen information request notify (to tutu-application) job with job id"
-                      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                                                (job/start-job job-runner connection
-                                                               "tutkintojen-tunnustaminen-information-request-notify-job"
-                                                               {:information-request information-request}))))))
+          (log/info "!!!!!!!!!!!!!!!!!! Launching info request job to TUTU")
+          (log/info "Started tutkintojen tunnustaminen information request notify (to tutu-application) job with job id"
+                    (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                              (job/start-job job-runner connection
+                                                             "tutkintojen-tunnustaminen-information-request-notify-job"
+                                                             {:information-request information-request}))))))
 
 (defn- get-tutu-application [application-key]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
