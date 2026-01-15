@@ -87,7 +87,7 @@
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
                                                        connection
-                                                       "tutkintojen-tunnustaminen-review-state-changed-job"
+                                                       "tutkintojen-tunnustaminen-state-change-notify-job"
                                                        {:application-key application-key})))))
 
 (defn start-tutkintojen-tunnustaminen-information-request-jobs
