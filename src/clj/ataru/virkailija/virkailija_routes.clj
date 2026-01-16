@@ -1051,6 +1051,24 @@
               (response/header "Cache-Control" "public, max-age=300"))
           (response/bad-request))))
 
+    (api/context "/suorituspalvelu" []
+      :tags ["suorituspalvelu-api"]
+      (api/GET "/hakemus/:application-key/avainarvot" {session :session}
+        :path-params [application-key :- s/Str]
+        :summary "Palauttaa hakemuksen valintojen käyttämät avainarvot"
+        :return ataru-schema/PohjakoulutusResponse
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service session [application-key] [:view-applications :edit-applications])
+          (letfn [(get-koodi-label [koodi-uri version koodi-value]
+                    (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
+                         (filter #(= koodi-value (:value %)))
+                         first
+                         :label))]
+            (let [avainarvot (suoritus-service/hakemuksen-avainarvot suoritus-service application-key)]
+              (response/ok
+                (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label avainarvot))))
+          (response/unauthorized))))
+
     (api/context "/valintalaskentakoostepalvelu" []
       :tags ["valintalaskentakoostepalvelu-api"]
       (api/GET "/valintaperusteet/hakukohde/:hakukohde-oid/kayttaa-valintalaskentaa" {session :session}
@@ -1062,23 +1080,6 @@
                                                                                                        hakukohde-oid))]
           (response/ok {:hakukohde-oid   hakukohde-oid
                         :valintalaskenta valintalaskenta-enabled?})))
-
-      (api/GET "/suoritukset/haku/:haku-oid/hakemus/:application-key" {session :session}
-        :path-params [haku-oid :- String
-                      application-key :- s/Str]
-        :summary "Returns pohjakoulutus for application's applicant"
-        :return ataru-schema/PohjakoulutusResponse
-        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service session [application-key] [:view-applications :edit-applications])
-          (letfn [(get-koodi-label [koodi-uri version koodi-value]
-                    (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
-                         (filter #(= koodi-value (:value %)))
-                         first
-                         :label))]
-            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
-              (response/ok
-                (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
-          (response/unauthorized)))
 
       (api/GET "/harkinnanvaraisuus/hakemus/:application-key" {session :session}
         :path-params [application-key :- s/Str]
