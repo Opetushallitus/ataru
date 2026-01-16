@@ -8,9 +8,9 @@
 
 (re-frame/reg-event-fx
   :application/fetch-applicant-pohjakoulutus
-  (fn [_ [_ haku-oid application-key]]
+  (fn [_ [_ application-key]]
     {:http {:method              :get
-            :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/haku/" haku-oid "/hakemus/" application-key)
+            :path                (str "/lomake-editori/api/suorituspalvelu/hakemus/" application-key "/avainarvot")
             :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response
             :handler-args        application-key
             :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-applicant-pohjakoulutus-error application-key])}
@@ -101,6 +101,6 @@
 (defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
   [application]
   (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
-    [[:application/fetch-applicant-pohjakoulutus (:haku application) (:key application)]
+    [[:application/fetch-applicant-pohjakoulutus (:key application)]
      [:application/fetch-applicant-harkinnanvaraisuus (:key application)]
      [:application/fetch-application-valinnat (:haku application) (:key application)]]))
