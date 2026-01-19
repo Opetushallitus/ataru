@@ -67,8 +67,11 @@
     (let [lahtokoulut {"opiskelija-1-oid" [{:oppilaitosOid organization-oid-1 :alkuPaivamaara "2024-01-01" :loppuPaivamaara "2024-06-30"}
                                            {:oppilaitosOid organization-oid-2 :alkuPaivamaara "2028-07-01" :loppuPaivamaara "2028-12-31"}]}
           henkilo-lahtokoulut (get lahtokoulut henkilo-oid)
-          lahtokoulut (suoritus-service/filter-lahtokoulut-active-on-ajanhetki henkilo-lahtokoulut ajanhetki)]
-      lahtokoulut)))
+          lahtokoulut (set (map :oppilaitosOid (suoritus-service/filter-lahtokoulut-active-on-ajanhetki henkilo-lahtokoulut ajanhetki)))]
+      lahtokoulut))
+
+  (hakemuksen-lahtokoulut [_ _]
+    #{}))
 
 (def organization-service (organization-service/->FakeOrganizationService))
 (def tarjonta-service (tarjonta-service/->MockTarjontaService))

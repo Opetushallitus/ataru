@@ -1,12 +1,10 @@
 (ns ataru.virkailija.virkailija-application-service
   (:require [ataru.applications.application-store :as application-store]
-            [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.applications.synthetic-application-util :as synthetic-application-util]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.hakija.validator :as validator]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.organization-service :as organization-service]
-            [ataru.person-service.person-service :as person-service]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.util :as util]
@@ -16,25 +14,14 @@
 
 
 (defn get-opiskelijan-luokkatieto
-  [henkilo-oid haku-oid hakemus-datetime koodisto-cache tarjonta-service
-   organization-service ohjausparametrit-service person-service suoritus-service]
-  (let [luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
-        tarjonta-info (when haku-oid
-                        (tarjonta-parser/parse-tarjonta-info-by-haku
-                          koodisto-cache
-                          tarjonta-service
-                          organization-service
-                          ohjausparametrit-service
-                          haku-oid))
-        linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
-        aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-        opiskelijat (map #(suoritus-service/opiskelijan-luokkatieto-for-hakemus suoritus-service % luokkatasot hakemus-datetime tarjonta-info)
-                         aliases)]
-    (when-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
+  [hakemus-oid organization-service suoritus-service]
+  (let [hakemus (first (application-store/applications-authorization-data [hakemus-oid]))
+        lahtokoulut (suoritus-service/hakemuksen-lahtokoulut suoritus-service hakemus)]
+    (when-let [lahtokoulu (last (sort-by :alkuPaivamaara lahtokoulut))]
       (let [[organization] (organization-service/get-organizations-for-oids
-                             organization-service [(:oppilaitos-oid opiskelija)])]
+                             organization-service [(:oppilaitosOid lahtokoulu)])]
         {:oppilaitos-name (:name organization)
-         :luokka          (:luokka opiskelija)}))))
+         :luokka          (:luokka lahtokoulu)}))))
 
 (defn- uses-synthetic-applications?
   [ohjausparametrit-service haku-oid]
