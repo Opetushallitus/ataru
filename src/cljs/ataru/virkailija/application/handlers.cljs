@@ -655,10 +655,9 @@
 
 (reg-event-fx
  :application/fetch-applicant-school
- (fn [_ [_ haku-oid applicant-henkilo-oid hakemus-datetime]]
+ (fn [_ [_ hakemus-oid]]
    {:http {:method              :get
-           :path                (str "/lomake-editori/api/applications/opiskelija/" applicant-henkilo-oid
-                                     "?haku-oid=" haku-oid "&hakemus-datetime=" hakemus-datetime)
+           :path                (str "/lomake-editori/api/applications/" hakemus-oid "/luokka")
            :handler-or-dispatch :application/handle-fetch-applicant-school-response}}))
 
 (reg-event-db
@@ -676,9 +675,7 @@
          (haku/toisen-asteen-yhteishaku? (:tarjonta application))
          (haku/jatkuva-haku? (:tarjonta application)))
     [:application/fetch-applicant-school
-     (:haku application)
-     (-> application :person :oid)
-     (:created-time application)]))
+     (:key application)]))
 
 (defn- form-has-payments? [form]
   (or (tutu-form? form)

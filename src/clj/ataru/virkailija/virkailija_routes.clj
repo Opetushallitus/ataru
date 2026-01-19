@@ -581,19 +581,17 @@
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
           (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year luokkatasot))))
 
-      (api/GET "/opiskelija/:henkilo-oid" {session :session}
-        :path-params [henkilo-oid :- String]
-        :query-params [haku-oid :- String
-                       hakemus-datetime :- String]
-        :summary "Returns opiskelijan luokkatieto information from suoritusrekisteri"
+      (api/GET "/:hakemus-oid/luokka" {session :session}
+        :path-params [hakemus-oid :- String]
+        :summary "Returns opiskelijan luokkatieto information from suorituspalvelu"
         :return ataru-schema/OpiskelijaLuokkatietoResponse
-        (let [luokkatieto (virkailija-application-service/get-opiskelijan-luokkatieto
-                            henkilo-oid haku-oid hakemus-datetime
-                            koodisto-cache tarjonta-service organization-service
-                            ohjausparametrit-service person-service suoritus-service)]
-          (if luokkatieto
-            (response/ok luokkatieto)
-            (response/not-found {:error (str "Opiskelijan luokkatieto information not found for henkilo-oid " henkilo-oid)}))))
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service session [hakemus-oid] [:view-applications :edit-applications])
+          (let [luokka (virkailija-application-service/get-opiskelijan-luokkatieto hakemus-oid organization-service suoritus-service)]
+            (if luokka
+              (response/ok luokka)
+              (response/not-found {:error (str "Opiskelijan luokkatieto information not found for hakemus-oid " hakemus-oid)})))
+          (response/unauthorized)))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings

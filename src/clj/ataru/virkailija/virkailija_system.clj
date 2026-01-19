@@ -322,7 +322,8 @@
                         :oppilaitoksen-opiskelijat-cache
                         :oppilaitoksen-luokat-cache
                         :lahtokoulut-cache
-                        :ohjausparametrit-service])
+                        :ohjausparametrit-service
+                        :tarjonta-service])
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
