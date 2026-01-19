@@ -266,18 +266,11 @@
                               #(and (contains? hakukohde-oids-in-edit (:hakukohde %))
                                     (= (:requirement %) "kk-application-payment-obligation")))
                             (reviews-empty-or-value-has-changed? new-state-value))
-        application (application-store/get-latest-application-by-key application-key)
-        all-hakukohteet-in-application (:hakukohde application)
-        other-existing-reviews-by-hakukohde (->> existing-hakukohde-reviews
-                                                 (filter
-                                                   #(not (contains? hakukohde-oids-in-edit (:hakukohde %))))
-                                                 (group-by :hakukohde))
         ; varmistetaan, että kaikki hakukohteet ovat mukana tässä mapissa, vaikka niille ei vielä olisi yhtään reviewta
-        other-reviews-by-hakukohde (merge (into {}
-                                                (map
-                                                  (fn [v] [v []])
-                                                  all-hakukohteet-in-application))
-                                          other-existing-reviews-by-hakukohde)]
+        other-reviews-by-hakukohde (->> existing-hakukohde-reviews
+                                        (filter
+                                          #(not (contains? hakukohde-oids-in-edit (:hakukohde %))))
+                                        (group-by :hakukohde))]
     {:kk-application-payment-obligation-value-changed? value-changed?
      :application-key application-key
      :new-state-value new-state-value
