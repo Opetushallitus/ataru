@@ -572,6 +572,7 @@
    :email s/Str
    :hakukohteet [s/Str]
    :submitted org.joda.time.DateTime
+   :processing s/Bool
    :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive

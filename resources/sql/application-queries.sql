@@ -138,7 +138,12 @@ SELECT
   a.email     AS email,
   a.hakukohde AS hakukohteet,
   a.submitted AS submitted,
-  f.name      AS form_name
+  f.name      AS form_name,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews AS ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM applications AS a
 JOIN application_reviews AS ar
   ON ar.application_key = a.key
@@ -1269,11 +1274,6 @@ FROM latest_applications la
 JOIN application_reviews AS ar ON ar.application_key = la.key
 WHERE la.haku = :haku
   AND ar.state <> 'inactivated';
-
---name: yesql-get-application-content-form-list-by-ids
-SELECT a.id, a.form_id AS "form", a.content
-FROM applications a
-WHERE a.id IN (:ids);
 
 --name: yesql-get-application-events-processed-count-by-application-key
 SELECT count(*)
