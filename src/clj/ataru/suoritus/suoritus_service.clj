@@ -1,10 +1,8 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+  (:require [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.tarjonta.haku :as haku]
-            [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
             [ataru.suoritus.suoritus-client :as client]
             [clj-time.core :as time]
             [clj-time.format :as format]
@@ -22,14 +20,6 @@
    :alkupaiva      (:alkuPaiva opiskelija)
    :loppupaiva     (:loppuPaiva opiskelija)})
 
-(defn- filter-by-jatkuva-haku-hakemus-hakukausi
-  [hakemus-datetime opiskelija]
-  (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime (:loppupaiva opiskelija)))
-
-(defn- filter-opiskelija-by-cutoff-timestamp
-  [cutoff-timestamp opiskelija]
-  (lahtokoulu-util/filter-opiskelija-by-cutoff-timestamp cutoff-timestamp (:alkupaiva opiskelija) (:loppupaiva opiskelija)))
-
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
@@ -37,7 +27,6 @@
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
   (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot])
-  (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info])
 
   (hakemuksen-lahtokoulut [this hakemus])
   (hakemuksen-avainarvot [this hakemus-oid]))
@@ -91,23 +80,6 @@
          (filter #(contains? (set luokkatasot) (:luokkataso %)))
          (sort-by :alkupaiva)
          (last)))
-
-  (opiskelijan-luokkatieto-for-hakemus [_ henkilo-oid luokkatasot hakemus-datetime tarjonta-info]
-    (let [hakemus-datetime-formatted (format/parse (:date-time format/formatters) hakemus-datetime)
-          [hakuvuodet cutoff-filter] (cond (haku/jatkuva-haku? (:tarjonta tarjonta-info))
-                                           [(lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku hakemus-datetime-formatted)
-                                            (partial filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime-formatted)]
-                                           :else
-                                           (let [hakuvuosi (suoritus-filter/year-for-suoritus-filter hakemus-datetime-formatted)]
-                                             [[hakuvuosi]
-                                              (partial filter-opiskelija-by-cutoff-timestamp
-                                                       (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp hakuvuosi tarjonta-info))]))]
-      (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) hakuvuodet)
-           (map parse-opiskelija)
-           (filter #(contains? (set luokkatasot) (:luokkataso %)))
-           (filter cutoff-filter)
-           (sort-by :alkupaiva)
-           (last))))
 
   (hakemuksen-lahtokoulut [_ hakemus]
     (let [haku (tarjonta-service/get-haku tarjonta-service (:haku hakemus))
