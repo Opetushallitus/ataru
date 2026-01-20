@@ -1,6 +1,5 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.applications.application-store :as application-store]
-            [ataru.applications.suoritus-filter :as suoritus-filter]
+  (:require [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
@@ -41,10 +40,6 @@
   (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info])
 
   (hakemuksen-lahtokoulut [this hakemus])
-
-  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid])
-  (opiskelijan-lahtokoulut [this henkilo-oid paivamaara])
-
   (hakemuksen-avainarvot [this hakemus-oid]))
 
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
@@ -116,24 +111,16 @@
 
   (hakemuksen-lahtokoulut [_ hakemus]
     (let [haku (tarjonta-service/get-haku tarjonta-service (:haku hakemus))
-          is-jatkuva-haku? (haku/jatkuva-haku? haku)
-          ajanhetki (if is-jatkuva-haku? (:created-time hakemus) (get-leikkuripvm ohjausparametrit-service (:haku hakemus)))
-          lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus))
-          aktiiviset (filter-lahtokoulut-active-on-ajanhetki (:lahtokoulut lahtokoulut) ajanhetki)]
-      (log/info "Haettiin lähtökoulut haun" (:haku hakemus) "hakemukselle" (:key hakemus) "ajanhetkellä" ajanhetki)
+          lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus)))
+          ajanhetki (cond
+                      (haku/jatkuva-haku? haku) (:created-time hakemus)
+                      (:yhteishaku haku) (get-leikkuripvm ohjausparametrit-service (:haku hakemus))
+                      :else nil)
+          aktiiviset (if (some? ajanhetki)
+                       (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki)
+                       #{})]
+      (log/info "Haettiin lähtökoulut henkilölle" (:person-oid hakemus) "haussa" (:haku hakemus) "ajanhetkellä" (str ajanhetki))
       aktiiviset))
-
-  (opiskelijan-lahtokoulut [_ henkilo-oid ajanhetki]
-    (let [lahtokoulut (cache/get-from lahtokoulut-cache henkilo-oid)
-          oppilaitos-oids (map :oppilaitosOid (filter-lahtokoulut-active-on-ajanhetki (:lahtokoulut lahtokoulut) ajanhetki))]
-      (log/info "haettiin henkilön" henkilo-oid "ajanhetken" (str ajanhetki) "lähtökoulut" oppilaitos-oids)
-      oppilaitos-oids))
-
-  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid]
-    (let [leikkuripaivamaara (get-leikkuripvm ohjausparametrit-service haku-oid)
-          oppilaitos-oids (opiskelijan-lahtokoulut this henkilo-oid leikkuripaivamaara)]
-      (log/info "haettiin henkilön" henkilo-oid "haun" haku-oid "lähtökoulut" oppilaitos-oids)
-      oppilaitos-oids))
 
   (hakemuksen-avainarvot [_ hakemus-oid]
     (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]
