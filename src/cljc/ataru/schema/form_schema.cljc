@@ -572,6 +572,7 @@
    :email s/Str
    :hakukohteet [s/Str]
    :submitted java.time.ZonedDateTime
+   :processing s/Bool
    :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
