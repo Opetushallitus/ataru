@@ -4,7 +4,7 @@
             [goog.crypt :as crypt]
             [goog.crypt.Md5]
             [cljs-time.core :as c]
-            [string-normalizer.filename-normalizer :as normalizer]
+            [ataru.filename-normalizer :as normalizer]
             [ataru.cljs-util :as util]
             [clojure.string]))
 
