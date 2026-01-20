@@ -765,12 +765,16 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
-  ; TODO this doesn't currently filter out unpaid kk applications, should it? Probably not...
   (omatsivut-applications
     [_ session person-oid]
-    (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
-         :linked-oids
-         (mapcat #(aac/omatsivut-applications organization-service session %))))
+    (let [mark-whether-application-is-in-processing (fn[app]
+                                                      (-> app
+                                                          (assoc :processing (util/application-in-processing? (:application-hakukohde-reviews app)))
+                                                          (dissoc :application-hakukohde-reviews)))]
+      (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
+           :linked-oids
+           (mapcat #(aac/omatsivut-applications organization-service session %))
+           (map mark-whether-application-is-in-processing))))
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
