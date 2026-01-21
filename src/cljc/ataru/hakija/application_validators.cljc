@@ -16,11 +16,19 @@
                :cljs [cljs-time.format :as f])))
 
 (defn ^:private required?
-  [{:keys [value]}]
-  (if (string? value)
-    (not (clojure.string/blank? value))
-    (not (or (empty? value)
-             (every? clojure.string/blank? value)))))
+  [{:keys [value field-descriptor]}]
+  ;Tämä on jossain määrin POC-henkinen ratkaisu, en ole varma onko tähän hyvä sekoittaa kysymysryhmälogiikkaa.
+  ;Saattaa vaikuttaa kälin lisäksi myös backendiin.
+  ;Olisikohan parempi tehdä pakollisille liitteille uusi erillinen validaattori ja sille oma logiikka?
+  (if (and (some? (get-in field-descriptor [:params :question-group-id]))
+           (= "attachment" (:fieldType field-descriptor)))
+    (and (not (nil? value))
+         (not (empty? value))
+         (every? not-empty value))
+    (if (string? value)
+      (not (clojure.string/blank? value))
+      (not (or (empty? value)
+               (every? clojure.string/blank? value))))))
 
 (defn- required-valinnainen-oppimaara
   [params]
