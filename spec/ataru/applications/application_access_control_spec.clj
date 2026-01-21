@@ -55,7 +55,7 @@
 
 
   (oppilaitoksen-luokat
-    [_ _ _ _]
+    [_ _ _]
     [])
 
   (hakemuksen-lahtokoulut [_ hakemus]

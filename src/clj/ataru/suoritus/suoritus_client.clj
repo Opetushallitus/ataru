@@ -87,25 +87,6 @@
            ammattitutkinto-komo
            erikoisammattitutkinto-komo]))
 
-(defn oppilaitoksen-luokat
-  [cas-client oppilaitos-oid vuosi luokkatasot]
-  (let [url (url/resolve-url
-              "suoritusrekisteri.oppilaitoksenluokat"
-              oppilaitos-oid
-              (cond-> {}
-                (some? vuosi)
-                (assoc "vuosi" vuosi)
-                (some? luokkatasot)
-                (assoc "luokkaTasot" luokkatasot)))]
-    (match [(cas-client/cas-authenticated-get
-              cas-client
-              url)]
-      [{:status 200 :body body}]
-      (json/parse-string body true)
-      [r]
-      (throw (new RuntimeException
-               (str "Fetching oppilaitoksen luokat failed: " r))))))
-
 (defn opiskelijat [cas-client henkilo-oid vuosi]
   (let [url (url/resolve-url
               "suoritusrekisteri.opiskelijat"
