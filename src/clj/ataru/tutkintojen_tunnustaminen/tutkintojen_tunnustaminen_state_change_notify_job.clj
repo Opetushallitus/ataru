@@ -15,6 +15,6 @@
                 new-state)
       (let [url (resolve-url :tutu-service.state-change-notification application-key new-state)
             response (cas/cas-authenticated-get tutu-cas-client url)]
-        (when (not= 200 (:status response))
+        (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending notification of state change to " new-state " for application " application-key " to Tutu failed"))))
         (log/info (str "Sending notification of state change to " new-state "for application " application-key " successfully sent to Tutu"))))))

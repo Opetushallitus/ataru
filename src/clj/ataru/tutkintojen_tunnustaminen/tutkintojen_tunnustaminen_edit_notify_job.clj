@@ -13,6 +13,6 @@
     (when (tutu-form? form)
       (let [url (resolve-url :tutu-service.hakemus-update-notification application-key)
             response (cas/cas-authenticated-get tutu-cas-client url)]
-        (when (not= 200 (:status response))
+        (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending edit notification for application " application-key " to Tutu failed"))))
         (log/info (str "Sending edit notification for application " application-key " successfully sent to Tutu"))))))
