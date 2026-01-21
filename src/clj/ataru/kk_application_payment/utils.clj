@@ -116,15 +116,15 @@
     (assoc form :content updated-content)))
 
 (defn update-payment-module-in-form
-  [form]
+  [form update-payment update-person-info]
   (let [sections (:content form)
         payment-section (kk-application-payment-module)
         update-fn (fn[section]
                     (cond
-                      (= (:id section) kk-application-payment-wrapper-key)
+                      (and update-payment (= (:id section) kk-application-payment-wrapper-key))
                       payment-section
 
-                      (= :person-info (keyword (:module section)))
+                      (and update-person-info (= :person-info (keyword (:module section))))
                       (person-info-module :onr-kk-application-payment)
 
                       :else
