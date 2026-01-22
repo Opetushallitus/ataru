@@ -1227,6 +1227,7 @@
                 (should= 200 status)
                 (should= 0 (count applications)))))
 
+<<<<<<< HEAD
 (defn- init-application
   ([]
    (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
