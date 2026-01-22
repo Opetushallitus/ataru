@@ -7,6 +7,19 @@
 
 (def cas-client (cas-client/new-client "/suorituspalvelu" "/api/login/j_spring_cas_security_check" "JSESSIONID" (-> config :public-config :hakija-caller-id)))
 
+(defn oppilaitoksen-opiskelijat [oppilaitos-oid vuosi]
+  (let [url (url/resolve-url
+              "suorituspalvelu.oppilaitoksen-opiskelijat"
+              oppilaitos-oid
+              vuosi)]
+    (match [(cas-client/cas-authenticated-get
+              cas-client
+              url)]
+           [{:status 200 :body body}]
+           (json/parse-string body true)
+           [r]
+           (throw (new RuntimeException
+                       (str "Fetching opiskelijat failed: " r))))))
 (defn oppilaitoksen-luokat [oppilaitos-oid vuosi]
   (let [url (url/resolve-url
               "suorituspalvelu.oppilaitoksen-luokat"

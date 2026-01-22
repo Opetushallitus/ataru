@@ -955,8 +955,7 @@
                                                valitut-luokat (set (:classes-of-school states-and-filters))
                                                oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle suoritus-service
                                                                                                                                                    oppilaitos-oid
-                                                                                                                                                   hakuvuodet
-                                                                                                                                                   (suoritus-filter/luokkatasot-for-suoritus-filter))]
+                                                                                                                                                   hakuvuodet)]
                                            (->> oppilaitoksen-opiskelijat-ja-luokat
                                                 (filter #(or
                                                            (empty? valitut-luokat)
