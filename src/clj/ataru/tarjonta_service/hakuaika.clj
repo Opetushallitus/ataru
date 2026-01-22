@@ -191,3 +191,14 @@
       :joustava-haku?                      (joustava-haku? haku)
       :jatkuva-or-joustava-haku?           (jatkuva-or-joustava-haku? haku)
       :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
+
+(defn haun-hakuaika-end-and-on
+  [haku]
+  (let [now (t/now)]
+    (->> (:hakuajat haku)
+         (map (fn [hakuaika]
+                (let [start (.getMillis (:start hakuaika))
+                      end   (some-> (:end hakuaika) (.getMillis))]
+                  {:end   end
+                   :on    (hakuaika-on now start end)})))
+         (select-hakuaika now))))
