@@ -573,7 +573,9 @@
    :hakukohteet [s/Str]
    :submitted java.time.ZonedDateTime
    :processing s/Bool
-   :form-name (s/maybe localized-schema/LocalizedStringOptional)})
+   :form-name (s/maybe localized-schema/LocalizedStringOptional)
+   (s/optional-key :hakuaikaIsOn) (s/maybe s/Bool)
+   (s/optional-key :hakuaikaEnds) (s/maybe s/Num)})
 
 (s/defschema Hakutoive
   {:processingState                s/Str
