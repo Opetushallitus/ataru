@@ -29,8 +29,7 @@
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component])
   (:import java.io.ByteArrayInputStream
-           java.util.Base64
-           (fi.vm.sade.javautils.nio.cas CasClient)))
+           java.util.Base64))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
@@ -210,10 +209,6 @@
     (remove-from [_ _])
     (clear-all [_])))
 
-
-(def tutu-case-client
-  (reify CasClient
-    ))
 
 (describe
   "Tutkintojen tunnustaminen integration"

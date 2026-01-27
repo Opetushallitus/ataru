@@ -10,7 +10,7 @@
   (let [tutu-application (application-store/get-tutu-application application-key)
         form (get-form form-by-id-cache koodisto-cache attachment-deadline-service
                        (assoc tutu-application :form-id (:form_id tutu-application)))
-        new-state (:state (first (:application-hakukohde-reviews tutu-application)))]
+        new-state (:state (first (filter #(= "processing-state" (:requirement %)) (:application-hakukohde-reviews tutu-application))))]
     (when (and (tutu-form? form)
                 new-state)
       (let [url (resolve-url :tutu-service.state-change-notification application-key new-state)
