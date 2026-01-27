@@ -139,7 +139,7 @@
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})
-    (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-sent-job
+    (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
       job-runner
       information-request)
     information-request))

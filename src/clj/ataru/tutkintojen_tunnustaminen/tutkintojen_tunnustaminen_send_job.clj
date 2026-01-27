@@ -13,7 +13,7 @@
         response (cas/cas-authenticated-post tutu-cas-client url req)]
 
     (log/info "Response" response)
-    (when (not= 200 (:status response))
+    (when (not (<= 200 (:status response) 299))
       (throw (Exception. (str "Sending application " (:application-key key) " to Tutu failed"))))
     (log/info (str "Application " (:application-key key) " successfully sent to Tutu")))
   )

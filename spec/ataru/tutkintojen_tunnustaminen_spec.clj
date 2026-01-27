@@ -3,6 +3,7 @@
             [ataru.applications.application-service :refer [ApplicationService]]
             [ataru.background-job.maksut-poller-job :as maksut-poller-job]
             [ataru.cache.cache-service :as cache-service]
+            [ataru.cas.client :as cas]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
@@ -10,10 +11,13 @@
             [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.log.audit-log :as audit-log]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :refer [tutkintojen-tunnustaminen-edit-job-handler
-                                                                               tutkintojen-tunnustaminen-information-request-sent-job-step
-                                                                               tutkintojen-tunnustaminen-review-state-changed-job-step
-                                                                               tutkintojen-tunnustaminen-submit-job-handler]]
+                                                                                       tutkintojen-tunnustaminen-information-request-sent-job-step
+                                                                                       tutkintojen-tunnustaminen-review-state-changed-job-step
+                                                                                       tutkintojen-tunnustaminen-submit-job-handler]]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :refer [start-tutkintojen-tunnustaminen-send-job]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-information-request-notify-job :refer [tutkintojen-tunnustaminen-information-request-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-notify-job :refer [tutkintojen-tunnustaminen-state-change-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-notify-job :refer [tutkintojen-tunnustaminen-edit-handler]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
@@ -29,6 +33,8 @@
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
+(defqueries "sql/virkailija-queries.sql")
+(defqueries "sql/information-request-queries.sql")
 
 (def ^:dynamic *application-id* nil)
 (def ^:dynamic *edited-application-id* nil)
@@ -204,8 +210,6 @@
     (clear-all [_])))
 
 
-(def liiteri-cas-client nil)
-
 (describe
   "Tutkintojen tunnustaminen integration"
   (tags :unit)
@@ -325,7 +329,8 @@
                                              :value     "test@example.com"}]
                                 :lang      "fi"
                                 :hakukohde []
-                                :haku      nil}
+                                :haku      nil
+                                :person-oid " 1.2.246.562.24.00000000000000000001"}
                                []
                                form
                                {}
@@ -407,7 +412,30 @@
                                                 payment-property-form
                                                 {}
                                                 audit-logger
-                                                nil)))]
+                                                nil)))
+
+          _ (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                      (:id (yesql-upsert-virkailija<! {:oid "oid"
+                                                                       :first_name "first"
+                                                                       :last_name "last"}
+                                                                      {:connection connection})))
+          _ (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                    (:id (yesql-add-information-request<! {:application_key  (:key application)
+                                                                           :subject          "subject"
+                                                                           :message          "message"
+                                                                           :virkailija_oid   "oid"
+                                                                           :message_type     "information-request"
+                                                                           :recipient_target "hakija"
+                                                                           :send_reminder_time nil}
+                                                                          {:connection connection})))
+          _ (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                      (:id (yesql-upsert-application-hakukohde-review! {:application_key (:key application)
+                                                                                        :requirement "processing-state"
+                                                                                        :state       "processing"
+                                                                                        :hakukohde   "form"
+                                                                                        :modified_time nil}
+                                                                                       {:connection connection})))]
+      ;;application_key, requirement, state, hakukohde, modified_time
       (binding [*application-id* (:id application)
                 *event-id* event-id
                 *edited-application-id* edited
@@ -491,6 +519,15 @@
                                                          first
                                                          (.decode decoder)
                                                          (String.))))))))
+
+  (it "should send information request notification message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-get (stub :send-information-request-notification {:return {:status 200}})]
+        (tutkintojen-tunnustaminen-information-request-handler
+          {:information-request {:application-key *application-key*
+                                 :message-type    "information-request"}}
+           {:form-by-id-cache form-by-id-cache-mock
+            :koodisto-cache   koodisto-cache-mock})
+        (should-have-invoked :send-information-request-notification {:times 1})))
 
   (it "should send submit message to ASHA SFTP server"
       (let [r (tutkintojen-tunnustaminen-submit-job-handler
@@ -576,6 +613,14 @@
               (should-contain filename (set (map (comp :filename second) attachment-metadata)))
               (should= "fi" lang))))))
 
+  (it "should send tutu application edit notification message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-get (stub :send-edit-notification {:return {:status 200}})]
+        (tutkintojen-tunnustaminen-edit-handler
+          {:application-id *application-id*}
+          {:form-by-id-cache form-by-id-cache-mock
+           :koodisto-cache   koodisto-cache-mock})
+        (should-have-invoked :send-edit-notification {:times 1})))
+
   (it "should send inactivated message to ASHA SFTP server"
       (let [r (tutkintojen-tunnustaminen-review-state-changed-job-step
                 {:event-id *event-id*}
@@ -595,6 +640,14 @@
           (should= "03.01" (property-value "ams_processtaskid" action)))
         (let [attachments (by-tag :createDocument (:content message))]
           (should-be empty? attachments))))
+
+  (it "should send state change notification message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-get (stub :send-state-change-notification {:return {:status 200}})]
+        (tutkintojen-tunnustaminen-state-change-handler
+          {:application-key *application-key*}
+          {:form-by-id-cache form-by-id-cache-mock
+           :koodisto-cache   koodisto-cache-mock})
+        (should-have-invoked :send-state-change-notification {:times 1})))
 
   (it "should not do anything if hakemus in wrong form"
       (should= {:transition {:id :final}}

@@ -4,7 +4,8 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :as tutkintojen-tunnustaminen-service])
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :as tutkintojen-tunnustaminen-service]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-notify-job :as tutu-edit-notification-job])
   (:import  (java.time Duration)))
 
 (def default-retry-strategy {:proletarian/retry-strategy-fn
@@ -40,4 +41,7 @@
                                                         :type       "tutkintojen-tunnustaminen-edit-job"
                                                         ; 30s viive jotta liitteet ehtivät skannautua
                                                         :process-in (Duration/ofSeconds 30)
-                                                        :queue      default-retry-strategy}})
+                                                        :queue      default-retry-strategy}
+   "tutu-application-edit-notification-job"            {:handler    tutu-edit-notification-job/tutkintojen-tunnustaminen-edit-handler
+                                                        :type       "tutu-application-edit-notification-job"
+                                                        :queue      default-retry-strategy} })

@@ -503,6 +503,9 @@
   (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
    job-runner
    application-id)
+  (tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
+    job-runner
+    application-id)
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
