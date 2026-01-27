@@ -326,8 +326,20 @@
      {:redis  :redis
       :loader :form-by-haku-oid-str-cache-loader})]
 
+   [:lahtokoulut-redis-cache
+    (component/using
+     (redis/map->Cache
+      {:name          "lahtokoulut"
+       :ttl           [(get-in config [:cache :ttl-amounts :lahtokoulut] 24) TimeUnit/HOURS]
+       :refresh-after [30 TimeUnit/MINUTES]
+       :lock-timeout  [60 TimeUnit/SECONDS]
+       :loader        (cache/->FunctionCacheLoader #(suorituspalvelu-client/lahtokoulut %))})
+      [:redis])]
+
    [:lahtokoulut-cache
-    (in-memory/map->InMemoryCache
-      {:name          "in-memory-lahtokoulut"
-       :loader        (cache/->FunctionCacheLoader #(suorituspalvelu-client/lahtokoulut %))
-       :expires-after [(get-in config [:cache :ttl-amounts :in-memory-localizations] 5) TimeUnit/MINUTES]})]])
+    (component/using
+     (two-layer/map->Cache
+      {:name                "in-memory-lahtokoulut"
+       :expire-after-access [24 TimeUnit/HOURS]
+       :refresh-after       [15 TimeUnit/MINUTES]})
+     {:redis-cache :lahtokoulut-redis-cache})]])
