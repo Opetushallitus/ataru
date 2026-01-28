@@ -13,7 +13,8 @@
         new-state (:state (first (filter #(= "processing-state" (:requirement %)) (:application-hakukohde-reviews tutu-application))))]
     (when (and (tutu-form? form)
                 new-state)
-      (let [url (resolve-url :tutu-service.state-change-notification application-key new-state)
+      (let [url (resolve-url :tutu-service.state-change-notification application-key new-state
+                             {"application-modified" (str (:modified tutu-application))})
             response (cas/cas-authenticated-get tutu-cas-client url)]
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending notification of state change to " new-state " for application " application-key " to Tutu failed"))))

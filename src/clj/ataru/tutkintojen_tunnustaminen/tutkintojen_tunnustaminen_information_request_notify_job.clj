@@ -16,7 +16,8 @@
                (= "information-request" (:message-type information-request))
                timestamp)
       (let [url (resolve-url :tutu-service.state-change-notification application-key "information-request"
-                             {"timestamp" (str timestamp)})
+                             {"request-timestamp" (str timestamp)
+                              "application-modified" (str (:modified tutu-application))})
             response (cas/cas-authenticated-get tutu-cas-client url)]
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending information-request notification for application " application-key " to Tutu failed"))))
