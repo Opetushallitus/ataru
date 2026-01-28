@@ -97,7 +97,8 @@
         applications-count  (:applications-count application)
         hakemus-oid         (:key application)
         haku-oid            (:haku application)
-        lang                (subscribe [:editor/virkailija-lang])]
+        lang                (subscribe [:editor/virkailija-lang])
+        superuser?          @(subscribe [:editor/superuser?])]
     [:<>
      [close-application]
      [:div.application__handling-heading
@@ -134,12 +135,20 @@
                [:span.application-handling__review-area-main-heading-person-oid
                 (str @(subscribe [:editor/virkailija-translation :person-oid]) " " person-oid)]])
             (when person-oid
-              [:a
-               {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
-                :target "_blank"}
-               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
-               [:span.application-handling__review-area-main-heading-person-oid
-                @(subscribe [:editor/virkailija-translation :person-completed-education])]])
+              [:div
+               [:a
+                {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)
+                 :target "_blank"}
+                [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+                [:span.application-handling__review-area-main-heading-person-oid
+                 @(subscribe [:editor/virkailija-translation :person-completed-education])]]
+               (when superuser?
+                 [:a.application-handling__review-area-main-heading-applications-right-link
+                  {:href   (str "/suorituspalvelu/redirect/" person-oid)
+                   :target "_blank"}
+                  [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+                  [:span.application-handling__review-area-main-heading-person-oid
+                   @(subscribe [:editor/virkailija-translation :person-completed-education-suorituspalvelu])]])])
             (when (> applications-count 1)
               [:a.application-handling__review-area-main-heading-applications-link
                {:on-click (fn [_]
