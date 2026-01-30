@@ -117,7 +117,9 @@
                         :oppilaitoksen-opiskelijat-cache
                         :oppilaitoksen-luokat-cache
                         :lahtokoulut-cache
-                        :ohjausparametrit-service])
+                        :hakemuksen-harkinnanvaraisuus-cache
+                        :ohjausparametrit-service
+                        :tarjonta-service])
 
     :s3-client (component/using
                 (s3-client/new-client)

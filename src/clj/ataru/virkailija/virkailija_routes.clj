@@ -1085,11 +1085,9 @@
         :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service tarjonta-service suoritus-service session [application-key] [:view-applications :edit-applications])
-          (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
-                                                     valintalaskentakoostepalvelu-service
-                                                     [application-key])
-                hakukohteet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-key :hakutoiveet])]
-            (response/ok hakukohteet-harkinnanvaraisuudella))
+          (let [hakemukset-harkinnanvaraisuudella (suoritus-service/hakemusten-harkinnanvaraisuus-suorituspalvelusta suoritus-service [application-key])
+                hakutoiveet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-key :hakutoiveet])]
+            (response/ok hakutoiveet-harkinnanvaraisuudella))
           (response/unauthorized))))
 
     (api/context "/maksut" []
