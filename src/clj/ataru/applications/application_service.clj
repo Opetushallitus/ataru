@@ -434,7 +434,7 @@
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews)
                                        populate-applications-with-kk-payment-status)
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications
                                       (populate-applications-with-person-data person-service authorized-applications)
@@ -582,7 +582,6 @@
                              organization-service
                              tarjonta-service
                              suoritus-service
-                             person-service
                              audit-logger
                              session
                              application-key)]
@@ -646,7 +645,7 @@
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session]
-    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service person-service session application-keys [:view-applications :edit-applications])
+    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service session application-keys [:view-applications :edit-applications])
       (let [applications                     (application-store/get-applications-by-keys application-keys)
             application-reviews              (->> applications
                                                   (map :key)
@@ -794,7 +793,6 @@
                                     organization-service
                                     tarjonta-service
                                     suoritus-service
-                                    person-service
                                     audit-logger
                                     session
                                     application-key))]
@@ -834,7 +832,6 @@
             organization-service
             tarjonta-service
             suoritus-service
-            person-service
             session
             application-key)
       (application-store/get-application-version-changes koodisto-cache
@@ -1033,8 +1030,7 @@
                                                valitut-luokat (set (:classes-of-school states-and-filters))
                                                oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle suoritus-service
                                                                                                                                                    oppilaitos-oid
-                                                                                                                                                   hakuvuodet
-                                                                                                                                                   (suoritus-filter/luokkatasot-for-suoritus-filter))]
+                                                                                                                                                   hakuvuodet)]
                                            (->> oppilaitoksen-opiskelijat-ja-luokat
                                                 (filter #(or
                                                            (empty? valitut-luokat)
@@ -1183,7 +1179,6 @@
             organization-service
             tarjonta-service
             suoritus-service
-            person-service
             session
             application-key)
       (application-store/get-tutu-application-version-changes koodisto-cache
