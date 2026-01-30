@@ -229,8 +229,7 @@
                                       (mapcat #(suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
                                                  suoritus-service
                                                  %
-                                                 hakuaika-end-years
-                                                 (suoritus-filter/luokkatasot-for-suoritus-filter)))
+                                                 hakuaika-end-years))
                                       (map :person-oid)
                                       set)
           applications-persons-and-hakukohteet (mapcat

@@ -2024,6 +2024,9 @@
    :person-completed-education                               {:fi "Henkilön suoritukset"
                                                               :sv "Personens prestationer"
                                                               :en "Applicant's exams in Finland"}
+   :person-completed-education-suorituspalvelu               {:fi "Henkilön suoritukset (SUPA)"
+                                                              :sv "Personens prestationer (SUPA)"
+                                                              :en "Applicant's exams in Finland (SUPA)"}
    :grades                                                   {:fi "Arvosanat"
                                                               :sv "Vitsord"
                                                               :en "Grades"}

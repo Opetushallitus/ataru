@@ -320,7 +320,10 @@
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client
                         :oppilaitoksen-opiskelijat-cache
-                        :oppilaitoksen-luokat-cache])
+                        :oppilaitoksen-luokat-cache
+                        :lahtokoulut-cache
+                        :ohjausparametrit-service
+                        :tarjonta-service])
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions

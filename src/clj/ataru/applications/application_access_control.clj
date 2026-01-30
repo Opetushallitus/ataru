@@ -2,8 +2,6 @@
   (:require
     [ataru.log.audit-log :as audit-log]
     [ataru.organization-service.session-organizations :as session-orgs]
-    [ataru.tarjonta.haku :as haku]
-    [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-store :as application-store]
     [ataru.person-service.person-service :as person-service]
@@ -14,8 +12,6 @@
     [ataru.util :as util]
     [clojure.set :as set]
     [ataru.suoritus.suoritus-service :as suoritus-service]
-    [ataru.applications.suoritus-filter :as suoritus-filter]
-    [clj-time.core :as time]
     [medley.core :refer [distinct-by]]))
 
 (defn authorized-by-form?
@@ -96,73 +92,27 @@
   (let [onr-data (person-service/linked-oids person-service oids)]
     (mapcat vec (map :linked-oids (vals onr-data)))))
 
-(defn- is-for-jatkuva-haku? [tarjonta-service application]
-  (let [haku-oid (:haku application)
-        haku (when (and tarjonta-service haku-oid) (tarjonta-protocol/get-haku tarjonta-service haku-oid))]
-    (if haku
-      (haku/jatkuva-haku? haku)
-      false)))
-
-(defn- person-oids-and-dates-for-opiskelija
-  [suoritus-service person-service henkilo-oid authorized-organization-oids vuodet]
-  (let [person-info (suoritus-service/opiskelijan-luokkatieto suoritus-service henkilo-oid vuodet (suoritus-filter/luokkatasot-for-suoritus-filter))
-        linked-oids (if (some #(= (:oppilaitos-oid person-info) %) authorized-organization-oids)
-                      (person-service/linked-oids person-service [henkilo-oid])
-                      {})]
-    (into {} (mapcat (fn [linked-oid-item]
-                       (let [loppu-paiva (:loppupaiva person-info)]
-                         (map (fn [linked-oid] [linked-oid loppu-paiva]) (:linked-oids linked-oid-item)))) (vals linked-oids)))))
-
-(defn- filter-non-jatkuvahaku-applications-by-lahtokoulu
-  [suoritus-service person-service authorized-organization-oids applications]
-  (let [vuosi (suoritus-filter/year-for-suoritus-filter (time/now))]
-    (->> applications
-         (filter #(some? (:person-oid %)))
-         (filter
-           (fn [application]
-             (let [person-oid (:person-oid application)]
-               (some?
-                 (get
-                   (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids [vuosi])
-                    person-oid))))))))
-
-(defn- filter-jatkuvahaku-applications-by-lahtokoulu
-  [suoritus-service person-service authorized-organization-oids applications]
-  (->> applications
-       (filter #(some? (:person-oid %)))
-       (filter
-         (fn [application]
-           (let [person-oid (:person-oid application)
-                application-datetime (:created-time application)
-                vuodet (lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku application-datetime)
-                end-date (get
-                           (person-oids-and-dates-for-opiskelija suoritus-service person-service person-oid authorized-organization-oids vuodet)
-                           person-oid)]
-             (and end-date (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi application-datetime end-date)))))))
-
 (defn- filter-applications-by-lahtokoulu
-  [tarjonta-service suoritus-service person-service authorized-organization-oids applications]
-  (let [applications-of-jatkuva-haku (filter (partial is-for-jatkuva-haku? tarjonta-service) applications)
-        application-of-jatkuva-haku-key? (set (map :key applications-of-jatkuva-haku))
-        non-jatkuva-haku-applications (remove (comp application-of-jatkuva-haku-key? :key) applications)
-        accepted-jatkuva-haku-apps (filter-jatkuvahaku-applications-by-lahtokoulu suoritus-service person-service authorized-organization-oids applications-of-jatkuva-haku)
-        accepted-non-jatkuva-haku-apps (filter-non-jatkuvahaku-applications-by-lahtokoulu suoritus-service person-service authorized-organization-oids non-jatkuva-haku-applications)]
-    (map remove-organization-oid (concat accepted-jatkuva-haku-apps accepted-non-jatkuva-haku-apps))))
+  [suoritus-service authorized-organization-oids applications]
+  (let [authorized-applications (filter (fn [application]
+                                          (let [lahtokoulu-oids (set (map :oppilaitosOid (suoritus-service/hakemuksen-lahtokoulut suoritus-service application)))]
+                                            (not (empty? (set/intersection authorized-organization-oids lahtokoulu-oids))))) applications)]
+    (map remove-organization-oid authorized-applications)))
 
 (defn- filter-authorized-by-lahtokoulu
-  [organization-service tarjonta-service suoritus-service person-service session applications authorized-applications]
+  [organization-service suoritus-service session applications authorized-applications]
   (let [opinto-ohjaaja-authorized-organization-oids (organization-oids-for-opinto-ohjaaja organization-service session)]
     (if (and
           (some? opinto-ohjaaja-authorized-organization-oids)
           (not= (count applications) (count authorized-applications)))
       (let [authorized-application-oid? (set (map :oid authorized-applications))
             unauthorized-applications   (remove (comp authorized-application-oid? :oid) applications)]
-        (filter-applications-by-lahtokoulu tarjonta-service suoritus-service person-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
+        (filter-applications-by-lahtokoulu suoritus-service opinto-ohjaaja-authorized-organization-oids unauthorized-applications))
       [])))
 
 (defn- application-authorized-by-lahtokoulu?
-  [organization-service tarjonta-service suoritus-service person-service session application]
-  (-> (filter-authorized-by-lahtokoulu organization-service tarjonta-service suoritus-service person-service session [application] [])
+  [organization-service suoritus-service session application]
+  (-> (filter-authorized-by-lahtokoulu organization-service suoritus-service session [application] [])
     seq
     boolean))
 
@@ -177,10 +127,10 @@
     (fn [] (constantly true))))
 
 (defn filter-authorized-by-session
-  [organization-service tarjonta-service suoritus-service person-service session applications]
+  [organization-service tarjonta-service suoritus-service session applications]
   (let [organization-oid-authorized?     (organization-oid-authorized-by-session-pred organization-service session)
         normally-authorized-applications (filter-authorized-by-form-or-hakukohde tarjonta-service organization-oid-authorized? applications)
-        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service tarjonta-service suoritus-service person-service session applications normally-authorized-applications)]
+        opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service session applications normally-authorized-applications)]
     (if (= 0 (count opo-authorized-applications))
       normally-authorized-applications
       (->> (concat normally-authorized-applications opo-authorized-applications)
@@ -214,57 +164,49 @@
     (constantly true))))
 
 (defn- authorize-by-opinto-ohjaaja-fn
-  [organization-service tarjonta-service suoritus-service person-service session]
+  [organization-service suoritus-service session]
   (fn [application-authorization-data]
     (application-authorized-by-lahtokoulu? organization-service
-                                           tarjonta-service
                                            suoritus-service
-                                           person-service
                                            session
                                            application-authorization-data)))
 
 (defn- opinto-ohjaaja-access-authorized?
-  [organization-service tarjonta-service suoritus-service person-service session application-key]
+  [organization-service suoritus-service session application-key]
   (let [[application-authorization-data] (application-store/applications-authorization-data [application-key])]
-    (application-authorized-by-lahtokoulu? organization-service tarjonta-service suoritus-service person-service session application-authorization-data)))
+    (application-authorized-by-lahtokoulu? organization-service suoritus-service session application-authorization-data)))
 
 (defn- applications-opinto-ohjaaja-access-authorized?
-  [organization-service tarjonta-service suoritus-service person-service session application-keys]
+  [organization-service suoritus-service session application-keys]
   (let [applications-authorization-data (application-store/applications-authorization-data application-keys)
-        authorized-applications (filter-authorized-by-lahtokoulu organization-service tarjonta-service suoritus-service person-service session applications-authorization-data [])]
+        authorized-applications (filter-authorized-by-lahtokoulu organization-service suoritus-service session applications-authorization-data [])]
     (= (count authorized-applications) (count application-keys))))
 
 (defn application-edit-authorized?
-  [organization-service tarjonta-service suoritus-service person-service session application-key]
+  [organization-service tarjonta-service suoritus-service session application-key]
   (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
-                                                          tarjonta-service
                                                           suoritus-service
-                                                          person-service
                                                           session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service tarjonta-service suoritus-service person-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn application-view-authorized?
-  [organization-service tarjonta-service suoritus-service person-service session application-key]
+  [organization-service tarjonta-service suoritus-service session application-key]
   (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
-                                                          tarjonta-service
                                                           suoritus-service
-                                                          person-service
                                                           session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service tarjonta-service suoritus-service person-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn applications-access-authorized-including-opinto-ohjaaja?
-  [organization-service tarjonta-service suoritus-service person-service session application-keys rights]
+  [organization-service tarjonta-service suoritus-service session application-keys rights]
   (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
-                                                          tarjonta-service
                                                           suoritus-service
-                                                          person-service
                                                           session)]
     (or (applications-access-authorized? organization-service tarjonta-service session application-keys rights opinto-ohjaaja-fn)
-        (applications-opinto-ohjaaja-access-authorized? organization-service tarjonta-service suoritus-service person-service session application-keys)))) ;necessary as opinto-ohjaaja might not have any regular orgs
+        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-keys)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn rights-by-hakukohde
   [organization-service session application]
@@ -290,15 +232,15 @@
                 [{:oid "form"}]))))
 
 (defn- can-edit-application?
-  [organization-service tarjonta-service suoritus-service person-service session application rights-by-hakukohde]
+  [organization-service suoritus-service session application rights-by-hakukohde]
   (or
     (->> rights-by-hakukohde
       (some #(contains? (val %) :edit-applications))
       (true?))
-    (application-authorized-by-lahtokoulu? organization-service tarjonta-service suoritus-service person-service session application)))
+    (application-authorized-by-lahtokoulu? organization-service suoritus-service session application)))
 
 (defn get-latest-application-by-key
-  [organization-service tarjonta-service suoritus-service person-service audit-logger session application-key]
+  [organization-service tarjonta-service suoritus-service audit-logger session application-key]
   (let [application         (application-store/get-latest-application-by-key application-key)
         rights-by-hakukohde (some->> application
                                      vector
@@ -312,9 +254,7 @@
                 rights-by-hakukohde)
               (seq
                 (filter-applications-by-lahtokoulu
-                  tarjonta-service
                   suoritus-service
-                  person-service
                   (organization-oids-for-opinto-ohjaaja organization-service session)
                   [application])))
       (audit-log/log audit-logger
@@ -323,7 +263,7 @@
                       :session   session
                       :operation audit-log/operation-read})
       (-> application
-          (assoc :can-edit? (can-edit-application? organization-service tarjonta-service suoritus-service person-service session application rights-by-hakukohde))
+          (assoc :can-edit? (can-edit-application? organization-service suoritus-service session application rights-by-hakukohde))
           (assoc :rights-by-hakukohde (util/map-kv rights-by-hakukohde vec))
           remove-organization-oid))))
 
