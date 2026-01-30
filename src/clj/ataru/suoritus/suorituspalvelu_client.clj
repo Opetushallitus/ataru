@@ -59,3 +59,17 @@
            [r]
            (throw (new RuntimeException
                        (str "Fetching avainarvot failed: " r))))))
+
+(defn hakemusten-harkinnanvaraisuustiedot [hakemus-oids]
+  (let [params {:hakemusOids hakemus-oids}
+        url (url/resolve-url
+              "suorituspalvelu.hakemusten-harkinnanvaraisuustiedot")]
+    (match [(cas-client/cas-authenticated-post
+              cas-client
+              url
+              params)]
+           [{:status 200 :body body}]
+           (json/parse-string body true)
+           [r]
+           (throw (new RuntimeException
+                       (str "Fetching harkinnanvaraisuustiedot failed: " r))))))

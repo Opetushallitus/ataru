@@ -151,7 +151,7 @@
     :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader (component/using
                                                                               (koostepalvelu-service/map->HakukohdeHarkinnanvaraisuusCacheLoader {})
                                                                               [:valintalaskentakoostepalvelu-cas-client
-                                                                               :hakukohde-cache])
+                                                                              :hakukohde-cache])
 
     :valintalaskentakoostepalvelu-service (component/using
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
@@ -322,6 +322,7 @@
                         :oppilaitoksen-opiskelijat-cache
                         :oppilaitoksen-luokat-cache
                         :lahtokoulut-cache
+                        :hakemuksen-harkinnanvaraisuus-cache
                         :ohjausparametrit-service
                         :tarjonta-service])
 
