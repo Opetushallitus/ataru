@@ -31,7 +31,11 @@
 
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi])
   (hakemuksen-lahtokoulut [this hakemus])
-  (hakemuksen-avainarvot [this hakemus-oid]))
+  (hakemuksen-avainarvot [this hakemus-oid])
+
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta [this hakemus-oids])
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta-no-cache [this hakemus-oids]))
+
 
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
   (let [paivamaara (coerce/to-local-date ajanhetki)
@@ -50,7 +54,19 @@
                                (time/today))]              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
     leikkuripaivamaara))
 
-(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache lahtokoulut-cache ohjausparametrit-service tarjonta-service]
+(defn- get-hakemusten-harkinnanvaraisuudet-map [hakemus-oids]
+                                         (let [harkinnanvaraisuudet (suorituspalvelu-client/hakemusten-harkinnanvaraisuustiedot hakemus-oids)]
+                                           (log/info "Saatiin harkinnanvaraisuudet" harkinnanvaraisuudet)
+                                           (reduce (fn [acc hakemuksen-harkinnanvaraisuus]
+                                                     (assoc acc (:hakemusOid hakemuksen-harkinnanvaraisuus) hakemuksen-harkinnanvaraisuus)) {} harkinnanvaraisuudet)))
+
+(defrecord HttpSuoritusService [suoritusrekisteri-cas-client
+                                oppilaitoksen-opiskelijat-cache
+                                oppilaitoksen-luokat-cache
+                                lahtokoulut-cache
+                                hakemuksen-harkinnanvaraisuus-cache
+                                ohjausparametrit-service
+                                tarjonta-service]
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -103,9 +119,20 @@
   (hakemuksen-avainarvot [_ hakemus-oid]
     (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]
       (log/info "haettiin hakemuksen" hakemus-oid "avainarvot")
-      (:avainarvot avainarvot))))
+      (:avainarvot avainarvot)))
 
-(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil nil))
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta [_ hakemus-oids]
+    (log/info "Haetaan cachen kautta harkinnanvaraisuustiedot")
+    (let [result (cache/get-many-from hakemuksen-harkinnanvaraisuus-cache hakemus-oids)]
+      (log/info "Saatiin cachen kautta harkinnanvaraisuustiedot" result)
+      result))
+
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta-no-cache [_ hakemus-oids]
+    (let [result (get-hakemusten-harkinnanvaraisuudet-map hakemus-oids)]
+      (log/info "Saatiin harkinnanvaraisuudet" result)
+      result)))
+
+(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil nil nil))
 
 (defrecord OppilaitoksenOpiskelijatCacheLoader [cas-client]
   cache/CacheLoader
@@ -136,6 +163,21 @@
 
   (load-many-size [_]
     1)
+
+  (check-schema [_ _]
+    nil))
+
+(defrecord HakemuksenHarkinnanvaraisuusCacheLoader [cas-client]
+  cache/CacheLoader
+
+  (load [_ oid]
+    (get-hakemusten-harkinnanvaraisuudet-map [oid]))
+
+  (load-many [_ oids]
+    (get-hakemusten-harkinnanvaraisuudet-map oids))
+
+  (load-many-size [_]
+    5000)
 
   (check-schema [_ _]
     nil))

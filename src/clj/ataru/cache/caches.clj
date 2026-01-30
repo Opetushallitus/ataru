@@ -117,6 +117,20 @@
       {:redis   :redis
        :loader  :oppilaitoksen-luokat-cache-loader})]
 
+   [:hakemuksen-harkinnanvaraisuus-cache-loader
+    (component/using
+      (suoritus-service/map->HakemuksenHarkinnanvaraisuusCacheLoader {})
+      {:cas-client    :suoritusrekisteri-cas-client})]
+   [:hakemuksen-harkinnanvaraisuus-cache
+    (component/using
+      (redis/map->Cache
+        {:name          "hakemuksenharkinnanvaraisuus"
+         :ttl           [(get-in config [:cache :ttl-amounts :hakemuksen-harkinnanvaraisuus] 3) TimeUnit/HOURS]
+         :refresh-after [1 TimeUnit/HOURS]
+         :lock-timeout  [60 TimeUnit/SECONDS]})
+      {:redis   :redis
+       :loader  :hakemuksen-harkinnanvaraisuus-cache-loader})]
+
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache
