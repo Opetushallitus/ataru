@@ -33,13 +33,13 @@
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
                          [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
+                         [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
                          ;transitive from clj-util
                          [io.undertow/undertow-core "2.3.20.Final"]
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
-                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]
-                         [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]]
+                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]]
   :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
