@@ -98,7 +98,7 @@
         hakemus-oid         (:key application)
         haku-oid            (:haku application)
         lang                (subscribe [:editor/virkailija-lang])
-        superuser?          (subscribe [:editor/superuser?])]
+        superuser?          @(subscribe [:editor/superuser?])]
     [:<>
      [close-application]
      [:div.application__handling-heading
