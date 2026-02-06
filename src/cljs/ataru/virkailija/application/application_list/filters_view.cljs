@@ -320,9 +320,7 @@
           {:id       "open-application-filters"
            :on-click #(do
                         (when (and @opinto-ohjaaja-or-admin? @toisen-asteen-yhteishaku-selected?)
-                          (if @opo-and-hak-pal-paakayttaja?
-                            (dispatch [:application/do-organization-query-for-schools-of-departure-without-lahtokoulu ""])
-                            (dispatch [:application/do-organization-query-for-schools-of-departure ""])))
+                          (dispatch [:application/do-organization-query-for-schools-of-departure (not @opo-and-hak-pal-paakayttaja?)]))
                         (dispatch [:application/undo-filters])
                         (swap! filters-visible not))}
           [:span
