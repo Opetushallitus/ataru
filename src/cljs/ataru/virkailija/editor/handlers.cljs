@@ -1458,21 +1458,12 @@
 
 (reg-event-fx
   :application/do-organization-query-for-schools-of-departure
-  (fn [{db :db} [_]]
+  (fn [{db :db} [_ lahtokoulu-only?]]
     (when (empty? (get-in db [:editor :organizations :select]))
       {:http {:method              :get
-              :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&lahtokoulu-only=true&results-page=10000"
+              :path                (str "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&lahtokoulu-only=" lahtokoulu-only? "&results-page=10000")
               :skip-parse-times?   true
               :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
-
-(reg-event-fx
- :application/do-organization-query-for-schools-of-departure-without-lahtokoulu
- (fn [{db :db} [_]]
-   (when (empty? (get-in db [:editor :organizations :select]))
-     {:http {:method              :get
-             :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&lahtokoulu-only=false&results-page=10000"
-             :skip-parse-times?   true
-             :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
 
 (reg-event-fx
   :editor/update-organization-query-results
