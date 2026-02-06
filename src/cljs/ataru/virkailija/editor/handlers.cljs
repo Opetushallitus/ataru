@@ -1490,7 +1490,8 @@
     (if (= (count results) 1)
       {:db (-> db
                (assoc-in [:editor :organizations :schools-of-departure] results)
-               (assoc-in [:editor :organizations :schools-of-departure-filtered] results))
+               (assoc-in [:editor :organizations :schools-of-departure-filtered] results)
+               (assoc-in [:application :school-filter] (:oid (first results))))
        :dispatch [:application/set-school-filter (:oid (first results))]}
       {:db (assoc-in db [:editor :organizations :schools-of-departure] results)})))
 
