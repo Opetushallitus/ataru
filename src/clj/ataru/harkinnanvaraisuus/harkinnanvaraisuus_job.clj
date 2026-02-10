@@ -106,10 +106,16 @@
         apps-without-email-job (filter #(= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %)) applications-with-harkinnanvaraisuus)
         email-job-apps (filter #(not (= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %))) applications-with-harkinnanvaraisuus)]
     (when (< 0 (count apps-without-email-job))
+      (log/info (str "Tallennetaan harkinnanvaraisuudet hakemuksille "
+                     (vec (map #(select-keys % [:key :harkinnanvarainen-only? :sure-harkinnanvarainen-only?])
+                               apps-without-email-job))))
       (doall
         (for [app apps-without-email-job]
           (store/update-harkinnanvaraisuus-process (:id app) (:harkinnanvarainen-only? app) checked-time))))
     (when (< 0 (count email-job-apps))
+      (log/info (str "Informoidaan harkinnanvaraisuudesta hakemuksia "
+                     (vec (map #(select-keys % [:key :harkinnanvarainen-only? :sure-harkinnanvarainen-only?])
+                               email-job-apps))))
       (doall
         (for [app email-job-apps]
           (inform-about-harkinnanvarainen job-runner connection app checked-time))))))
