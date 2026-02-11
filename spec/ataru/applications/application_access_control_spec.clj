@@ -58,16 +58,16 @@
     [_ _ _ _]
     [])
 
-  (opiskelijan-leikkuripvm-lahtokoulut [_ henkilo-oid _]
-    (let [user-to-org {"opiskelija-1-oid" organization-oid-1
-                       "opiskelija-2-oid" organization-oid-2}]
-      #{(get user-to-org henkilo-oid)}))
-
-  (opiskelijan-lahtokoulut [_ henkilo-oid ajanhetki]
-    (let [lahtokoulut {"opiskelija-1-oid" [{:oppilaitosOid organization-oid-1 :alkuPaivamaara "2024-01-01" :loppuPaivamaara "2024-06-30"}
+  (hakemuksen-lahtokoulut [_ hakemus]
+    (let [henkilo-oid (:person-oid hakemus)
+          ajanhetki (:created-time hakemus)
+          jatkuva-lahtokoulut {"opiskelija-1-oid" [{:oppilaitosOid organization-oid-1 :alkuPaivamaara "2024-01-01" :loppuPaivamaara "2024-06-30"}
                                            {:oppilaitosOid organization-oid-2 :alkuPaivamaara "2028-07-01" :loppuPaivamaara "2028-12-31"}]}
-          henkilo-lahtokoulut (get lahtokoulut henkilo-oid)
-          lahtokoulut (suoritus-service/filter-lahtokoulut-active-on-ajanhetki henkilo-lahtokoulut ajanhetki)]
+          ei-jatkuva-lahtokoulut {"opiskelija-1-oid" [{:oppilaitosOid organization-oid-1}]
+                                  "opiskelija-2-oid" [{:oppilaitosOid organization-oid-2}]}
+          lahtokoulut (if (some? ajanhetki)
+                        (suoritus-service/filter-lahtokoulut-active-on-ajanhetki (get jatkuva-lahtokoulut henkilo-oid) ajanhetki)
+                        (get ei-jatkuva-lahtokoulut henkilo-oid))]
       lahtokoulut)))
 
 (def organization-service (organization-service/->FakeOrganizationService))

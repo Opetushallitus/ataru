@@ -1,9 +1,8 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+  (:require [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.tarjonta.haku :as haku]
-            [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
             [ataru.suoritus.suoritus-client :as client]
             [clj-time.core :as time]
             [clj-time.format :as format]
@@ -21,14 +20,6 @@
    :alkupaiva      (:alkuPaiva opiskelija)
    :loppupaiva     (:loppuPaiva opiskelija)})
 
-(defn- filter-by-jatkuva-haku-hakemus-hakukausi
-  [hakemus-datetime opiskelija]
-  (lahtokoulu-util/filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime (:loppupaiva opiskelija)))
-
-(defn- filter-opiskelija-by-cutoff-timestamp
-  [cutoff-timestamp opiskelija]
-  (lahtokoulu-util/filter-opiskelija-by-cutoff-timestamp cutoff-timestamp (:alkupaiva opiskelija) (:loppupaiva opiskelija)))
-
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
@@ -36,11 +27,8 @@
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
   (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot])
-  (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info])
 
-  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid])
-  (opiskelijan-lahtokoulut [this henkilo-oid paivamaara])
-
+  (hakemuksen-lahtokoulut [this hakemus])
   (hakemuksen-avainarvot [this hakemus-oid]))
 
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
@@ -49,11 +37,18 @@
                                    loppupvm (format/parse-local-date (:loppuPaivamaara %))
                                    alkanut? (not (time/before? paivamaara alkupvm))
                                    loppunut? (and (some? loppupvm) (not (time/before? paivamaara loppupvm)))]
-                              (and alkanut? (not loppunut?))) lahtokoulut)
-        oppilaitos-oids (map :oppilaitosOid lahtokoulut)]
-    (set oppilaitos-oids)))
+                              (and alkanut? (not loppunut?))) lahtokoulut)]
+    (set lahtokoulut)))
 
-(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache lahtokoulut-cache ohjausparametrit-service]
+(defn- get-leikkuripvm [ohjausparametrit-service haku-oid]
+  (let [ohjausparametrit (ohjausparametrit-service/get-parametri ohjausparametrit-service haku-oid)
+        leikkuripaivamaara (or (coerce/to-local-date
+                                 (coerce/from-long
+                                   (:date (:suoritustenVahvistuspaiva ohjausparametrit))))
+                               (time/today))]              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
+    leikkuripaivamaara))
+
+(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache lahtokoulut-cache ohjausparametrit-service tarjonta-service]
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -86,45 +81,25 @@
          (sort-by :alkupaiva)
          (last)))
 
-  (opiskelijan-luokkatieto-for-hakemus [_ henkilo-oid luokkatasot hakemus-datetime tarjonta-info]
-    (let [hakemus-datetime-formatted (format/parse (:date-time format/formatters) hakemus-datetime)
-          [hakuvuodet cutoff-filter] (cond (haku/jatkuva-haku? (:tarjonta tarjonta-info))
-                                           [(lahtokoulu-util/resolve-lahtokoulu-vuodet-jatkuva-haku hakemus-datetime-formatted)
-                                            (partial filter-by-jatkuva-haku-hakemus-hakukausi hakemus-datetime-formatted)]
-                                           :else
-                                           (let [hakuvuosi (suoritus-filter/year-for-suoritus-filter hakemus-datetime-formatted)]
-                                             [[hakuvuosi]
-                                              (partial filter-opiskelija-by-cutoff-timestamp
-                                                       (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp hakuvuosi tarjonta-info))]))]
-      (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) hakuvuodet)
-           (map parse-opiskelija)
-           (filter #(contains? (set luokkatasot) (:luokkataso %)))
-           (filter cutoff-filter)
-           (sort-by :alkupaiva)
-           (last))))
-
-  (opiskelijan-lahtokoulut [_ henkilo-oid ajanhetki]
-    (let [lahtokoulut (cache/get-from lahtokoulut-cache henkilo-oid)
-          oppilaitos-oids (filter-lahtokoulut-active-on-ajanhetki (:lahtokoulut lahtokoulut) ajanhetki)]
-      (log/info "haettiin henkilön" henkilo-oid "ajanhetken" (str ajanhetki) "lähtökoulut" oppilaitos-oids)
-      oppilaitos-oids))
-
-  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid]
-    (let [ohjausparametrit (ohjausparametrit-service/get-parametri ohjausparametrit-service haku-oid)
-          leikkuripaivamaara (or (coerce/to-local-date
-                                   (coerce/from-long
-                                     (:date (:suoritustenVahvistuspaiva ohjausparametrit))))
-                                 (time/today))              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
-          oppilaitos-oids (opiskelijan-lahtokoulut this henkilo-oid leikkuripaivamaara)]
-      (log/info "haettiin henkilön" henkilo-oid "haun" haku-oid "lähtökoulut" oppilaitos-oids)
-      oppilaitos-oids))
+  (hakemuksen-lahtokoulut [_ hakemus]
+    (let [haku (tarjonta-service/get-haku tarjonta-service (:haku hakemus))
+          lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus)))
+          ajanhetki (cond
+                      (haku/jatkuva-haku? haku) (:created-time hakemus)
+                      (:yhteishaku haku) (get-leikkuripvm ohjausparametrit-service (:haku hakemus))
+                      :else nil)
+          aktiiviset (if (some? ajanhetki)
+                       (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki)
+                       #{})]
+      (log/info "Haettiin lähtökoulut henkilölle" (:person-oid hakemus) "haussa" (:haku hakemus) "ajanhetkellä" (str ajanhetki))
+      aktiiviset))
 
   (hakemuksen-avainarvot [_ hakemus-oid]
     (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]
       (log/info "haettiin hakemuksen" hakemus-oid "avainarvot")
       (:avainarvot avainarvot))))
 
-(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil))
+(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil nil))
 
 (defrecord OppilaitoksenOpiskelijatCacheLoader [cas-client]
   cache/CacheLoader
