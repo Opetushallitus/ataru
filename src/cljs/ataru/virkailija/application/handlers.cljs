@@ -475,11 +475,11 @@
 
 (reg-event-fx
  :application/handle-review-updated
- (fn [{:keys [db]} [_ response]]
+ (fn [{:keys [db]} [_ response {:keys [application-key]}]]
    (let [dispatches (vec (concat [[:application/review-updated response]]
                                  (when (:needs-refresh response)
                                    [[:application/stop-autosave]
-                                    [:application/fetch-application (-> db :application :selected-application-and-form :application :key) true]])))]
+                                    [:application/fetch-application application-key true]])))]
      {:db db
       :dispatch-n dispatches})))
 
@@ -588,6 +588,7 @@
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           :application/handle-review-updated
+                                          :handler-args {:application-key (:application-key current)}
                                           :override-args {:params (merge (select-keys current [:id
                                                                                                :application-id
                                                                                                :application-key
@@ -615,10 +616,11 @@
                                      answer)]))
                        (into {})))))))
 
-(reg-event-db
+(reg-event-fx
  :application/handle-metadata-not-found
- (fn [db _]
-   (assoc-in db [:application :metadata-not-found] true)))
+ (fn [{:keys [db]} _]
+   {:db       (assoc-in db [:application :metadata-not-found] true)
+    :dispatch [:application/start-autosave]}))
 
 (reg-event-fx
  :application/fetch-application-attachment-metadata
