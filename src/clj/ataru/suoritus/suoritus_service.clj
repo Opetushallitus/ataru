@@ -1,12 +1,16 @@
 (ns ataru.suoritus.suoritus-service
   (:require [ataru.applications.suoritus-filter :as suoritus-filter]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.tarjonta.haku :as haku]
             [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
             [ataru.suoritus.suoritus-client :as client]
+            [clj-time.core :as time]
             [clj-time.format :as format]
+            [clj-time.coerce :as coerce]
             [com.stuartsierra.component :as component]
             [ataru.cache.cache-service :as cache]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [taoensso.timbre :as log]))
 
 (defn- parse-opiskelija
   [opiskelija]
@@ -31,9 +35,23 @@
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
   (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot])
-  (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info]))
+  (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info])
 
-(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
+  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid])
+
+  (opiskelijan-lahtokoulut [this henkilo-oid paivamaara]))
+
+(defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
+  (let [paivamaara (coerce/to-local-date ajanhetki)
+        lahtokoulut (filter #(let [alkupvm (format/parse-local-date (:alkuPaivamaara %))
+                                   loppupvm (format/parse-local-date (:loppuPaivamaara %))
+                                   alkanut? (not (time/before? paivamaara alkupvm))
+                                   loppunut? (and (some? loppupvm) (not (time/before? paivamaara loppupvm)))]
+                              (and alkanut? (not loppunut?))) lahtokoulut)
+        oppilaitos-oids (map :oppilaitosOid lahtokoulut)]
+    (set oppilaitos-oids)))
+
+(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache lahtokoulut-cache ohjausparametrit-service]
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -81,10 +99,25 @@
            (filter #(contains? (set luokkatasot) (:luokkataso %)))
            (filter cutoff-filter)
            (sort-by :alkupaiva)
-           (last)))))
+           (last))))
 
+  (opiskelijan-lahtokoulut [_ henkilo-oid ajanhetki]
+    (let [lahtokoulut (cache/get-from lahtokoulut-cache henkilo-oid)
+          oppilaitos-oids (filter-lahtokoulut-active-on-ajanhetki (:lahtokoulut lahtokoulut) ajanhetki)]
+      (log/info "haettiin henkilön" henkilo-oid "ajanhetken" (str ajanhetki) "lähtökoulut" oppilaitos-oids)
+      oppilaitos-oids))
 
-(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
+  (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid]
+    (let [ohjausparametrit (ohjausparametrit-service/get-parametri ohjausparametrit-service haku-oid)
+          leikkuripaivamaara (or (coerce/to-local-date
+                                   (coerce/from-long
+                                     (:date (:suoritustenVahvistuspaiva ohjausparametrit))))
+                                 (time/today))              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
+          oppilaitos-oids (opiskelijan-lahtokoulut this henkilo-oid leikkuripaivamaara)]
+      (log/info "haettiin henkilön" henkilo-oid "haun" haku-oid "lähtökoulut" oppilaitos-oids)
+      oppilaitos-oids)))
+
+(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil))
 
 (defrecord OppilaitoksenOpiskelijatCacheLoader [cas-client]
   cache/CacheLoader

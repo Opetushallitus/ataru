@@ -642,7 +642,6 @@
                          organization-service
                          tarjonta-service
                          suoritus-service
-                         person-service
                          session
                          application-key)]
           (if allowed?
@@ -863,7 +862,6 @@
               organization-service
               tarjonta-service
               suoritus-service
-              person-service
               session
               (:application-keys body)
               [:edit-applications])
@@ -1071,7 +1069,7 @@
         :summary "Returns pohjakoulutus for application's applicant"
         :return ataru-schema/PohjakoulutusResponse
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications :edit-applications])
+              organization-service tarjonta-service suoritus-service session [application-key] [:view-applications :edit-applications])
           (letfn [(get-koodi-label [koodi-uri version koodi-value]
                     (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
                          (filter #(= koodi-value (:value %)))
@@ -1087,7 +1085,7 @@
         :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
         :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications :edit-applications])
+              organization-service tarjonta-service suoritus-service session [application-key] [:view-applications :edit-applications])
           (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                      valintalaskentakoostepalvelu-service
                                                      [application-key])
@@ -1194,7 +1192,7 @@
         :return s/Any
         :summary "Hakee hakemuksen tulokset valinnoista"
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service person-service session [hakemus-oid] [:valinnat-valilehti])
+              organization-service tarjonta-service suoritus-service session [hakemus-oid] [:valinnat-valilehti])
           (let [haku (tarjonta/get-haku tarjonta-service haku-oid)
                 superuser? (user-rights/is-super-user? session)]
             (if (vls/valinnan-tuloksien-hakeminen-sallittu? valinta-laskenta-service superuser? haku)
@@ -2003,18 +2001,20 @@
           (cond (empty? hakemusOids)
                 (response/bad-request {:error "No hakemusOids given"})
                 (not (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-                          organization-service tarjonta-service suoritus-service person-service session hakemusOids [:view-applications :edit-applications]))
+                          organization-service tarjonta-service suoritus-service session hakemusOids [:view-applications :edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids)))
+                (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids)
+                ))
 
         (api/GET "/hakemus" {session :session}
           :summary "Valinnantulos for hakemus"
           :query-params [{hakemusOid :- s/Str nil}]
           (cond (nil? hakemusOid)
                 (response/bad-request {:error "No query parameter given"})
+                ; tämän toiminta pitää päivittää
                 (not (access-controlled-application/application-view-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session hakemusOid))
+                       organization-service tarjonta-service suoritus-service session hakemusOid))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid)))
@@ -2030,7 +2030,6 @@
                        organization-service
                        tarjonta-service
                        suoritus-service
-                       person-service
                        session
                        (map #(get-in % [:hakemusOid :s]) body)
                        [:edit-applications]))
@@ -2047,7 +2046,7 @@
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-view-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/hyvaksynnan-ehto-hakukohteessa-hakemus
@@ -2062,7 +2061,7 @@
           (cond (or (nil? hakukohde-oid) (nil? application-key) (or (nil? ehto) (empty? ehto)))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-edit-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
@@ -2076,7 +2075,7 @@
           (cond (or (nil? hakukohde-oid) (nil? application-key) (nil? if-unmodified-since))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-edit-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
@@ -2089,7 +2088,7 @@
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-view-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/hyvaksynnan-ehto-valintatapajonoissa-hakemus
@@ -2102,7 +2101,7 @@
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-view-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/hyvaksynnan-ehto-hakukohteessa-muutoshistoria
@@ -2114,7 +2113,7 @@
           (cond (nil? application-key)
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-view-authorized?
-                       organization-service tarjonta-service suoritus-service person-service session application-key))
+                       organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (vts/hyvaksynnan-ehto-hakemukselle valinta-tulos-service application-key)))))

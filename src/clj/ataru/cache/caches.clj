@@ -7,6 +7,7 @@
             [ataru.cache.union-cache :as union-cache]
             [ataru.forms.form-store :as form-store]
             [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
+            [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
             [ataru.organization-service.organization-client :as organization-client]
@@ -323,4 +324,10 @@
        :refresh-after [5 TimeUnit/SECONDS]
        :lock-timeout  [1 TimeUnit/MINUTES]})
      {:redis  :redis
-      :loader :form-by-haku-oid-str-cache-loader})]])
+      :loader :form-by-haku-oid-str-cache-loader})]
+
+   [:lahtokoulut-cache
+    (in-memory/map->InMemoryCache
+      {:name          "in-memory-lahtokoulut"
+       :loader        (cache/->FunctionCacheLoader #(suorituspalvelu-client/lahtokoulut %))
+       :expires-after [(get-in config [:cache :ttl-amounts :in-memory-localizations] 5) TimeUnit/MINUTES]})]])

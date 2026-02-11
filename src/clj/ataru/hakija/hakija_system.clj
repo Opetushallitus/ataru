@@ -115,7 +115,9 @@
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client
                         :oppilaitoksen-opiskelijat-cache
-                        :oppilaitoksen-luokat-cache])
+                        :oppilaitoksen-luokat-cache
+                        :lahtokoulut-cache
+                        :ohjausparametrit-service])
 
     :s3-client (component/using
                 (s3-client/new-client)
