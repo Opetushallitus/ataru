@@ -1,15 +1,16 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+  (:require [ataru.cache.cache-service :as cache]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+            [ataru.suoritus.suoritus-client :as client]
             [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.tarjonta.haku :as haku]
-            [ataru.suoritus.suoritus-client :as client]
+            [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clj-time.format :as format]
-            [clj-time.coerce :as coerce]
-            [com.stuartsierra.component :as component]
-            [ataru.cache.cache-service :as cache]
+            [clojure.set :as set]
             [clojure.string :as string]
+            [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]))
 
 (defn- parse-opiskelija
@@ -23,11 +24,12 @@
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
-  (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
-  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
-  (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
+  (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi])
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet])
+
   (opiskelijan-luokkatieto [this henkilo-oid vuodet luokkatasot])
 
+  (oppilaitoksen-luokat [this oppilaitos-oid vuosi])
   (hakemuksen-lahtokoulut [this hakemus])
   (hakemuksen-avainarvot [this hakemus-oid]))
 
@@ -61,18 +63,22 @@
     (some #(= :valmis (:tila %))
           (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil)))
 
-  (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi luokkatasot]
-    (let [luokkatasot-str (string/join "," luokkatasot)
-          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
-      (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)))
+  (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi]
+    (let [cache-key (str oppilaitos-oid "#" vuosi)
+          opiskelijat (->> (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)
+                           :henkilot
+                           (map #(set/rename-keys % {:henkiloOid :person-oid})))]
+      (log/info "haettiin oppilaitoksen" oppilaitos-oid "opiskelijat" opiskelijat)
+      opiskelijat))
 
-  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot]
-    (mapcat #(oppilaitoksen-opiskelijat this oppilaitos-oid % luokkatasot) vuodet))
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet]
+    (mapcat #(oppilaitoksen-opiskelijat this oppilaitos-oid %) vuodet))
 
-  (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
-    (let [luokkatasot-str (string/join "," luokkatasot)
-          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
-      (cache/get-from oppilaitoksen-luokat-cache cache-key)))
+  (oppilaitoksen-luokat [_ oppilaitos-oid vuosi]
+    (let [cache-key (str oppilaitos-oid "#" vuosi)
+          luokat (:luokat (cache/get-from oppilaitoksen-luokat-cache cache-key))]
+      (log/info "haettiin oppilaitoksen" oppilaitos-oid "luokat vuonna" vuosi)
+      luokat))
 
   (opiskelijan-luokkatieto [_ henkilo-oid vuodet luokkatasot]
     (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) vuodet)
@@ -105,11 +111,11 @@
   cache/CacheLoader
 
   (load [_ key]
-    (let [[oid vuosi luokkatasot] (string/split key #"#")]
-      (client/oppilaitoksen-opiskelijat cas-client oid vuosi luokkatasot)))
+    (let [[oid vuosi] (string/split key #"#")]
+      (suorituspalvelu-client/oppilaitoksen-opiskelijat oid vuosi)))
 
-  (load-many [this oppilaitos-oids]
-    (cache/default-load-many this oppilaitos-oids))
+  (load-many [this keys]
+    (cache/default-load-many this keys))
 
   (load-many-size [_]
     1)
@@ -122,11 +128,11 @@
   cache/CacheLoader
 
   (load [_ key]
-    (let [[oid vuosi luokkatasot] (string/split key #"#")]
-      (client/oppilaitoksen-luokat cas-client oid vuosi luokkatasot)))
+    (let [[oid vuosi] (string/split key #"#")]
+      (suorituspalvelu-client/oppilaitoksen-luokat oid vuosi)))
 
-  (load-many [this oppilaitos-oids]
-    (cache/default-load-many this oppilaitos-oids))
+  (load-many [this keys]
+    (cache/default-load-many this keys))
 
   (load-many-size [_]
     1)

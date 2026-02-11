@@ -577,9 +577,8 @@
         :path-params [oppilaitos-oid :- String]
         :summary "Returns classes of given school"
         :return [String]
-        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
-              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
-          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year luokkatasot))))
+        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))]
+          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year))))
 
       (api/GET "/:hakemus-oid/luokka" {session :session}
         :path-params [hakemus-oid :- String]
