@@ -19,3 +19,16 @@
            [r]
            (throw (new RuntimeException
                        (str "Fetching lahtokoulut failed: " r))))))
+
+(defn hakemuksen-avainarvot [hakemus-oid]
+  (let [url (url/resolve-url
+              "suorituspalvelu.hakemuksen-avainarvot"
+              hakemus-oid)]
+    (match [(cas-client/cas-authenticated-get
+              cas-client
+              url)]
+           [{:status 200 :body body}]
+           (json/parse-string body true)
+           [r]
+           (throw (new RuntimeException
+                       (str "Fetching avainarvot failed: " r))))))

@@ -1,6 +1,7 @@
 (ns ataru.suoritus.suoritus-service
   (:require [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+            [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta.haku :as haku]
             [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
             [ataru.suoritus.suoritus-client :as client]
@@ -38,8 +39,9 @@
   (opiskelijan-luokkatieto-for-hakemus [this henkilo-oid luokkatasot hakemus-datetime tarjonta-info])
 
   (opiskelijan-leikkuripvm-lahtokoulut [this henkilo-oid haku-oid])
+  (opiskelijan-lahtokoulut [this henkilo-oid paivamaara])
 
-  (opiskelijan-lahtokoulut [this henkilo-oid paivamaara]))
+  (hakemuksen-avainarvot [this hakemus-oid]))
 
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
   (let [paivamaara (coerce/to-local-date ajanhetki)
@@ -115,7 +117,12 @@
                                  (time/today))              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
           oppilaitos-oids (opiskelijan-lahtokoulut this henkilo-oid leikkuripaivamaara)]
       (log/info "haettiin henkilön" henkilo-oid "haun" haku-oid "lähtökoulut" oppilaitos-oids)
-      oppilaitos-oids)))
+      oppilaitos-oids))
+
+  (hakemuksen-avainarvot [_ hakemus-oid]
+    (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]
+      (log/info "haettiin hakemuksen" hakemus-oid "avainarvot")
+      (:avainarvot avainarvot))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil nil nil nil nil))
 
