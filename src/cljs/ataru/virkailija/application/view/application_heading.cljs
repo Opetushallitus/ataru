@@ -98,7 +98,7 @@
         hakemus-oid         (:key application)
         haku-oid            (:haku application)
         lang                (subscribe [:editor/virkailija-lang])
-        superuser?          @(subscribe [:editor/superuser?])]
+        opinto-ohjaaja-or-admin? @(subscribe [:editor/opinto-ohjaaja-or-admin?])]
     [:<>
      [close-application]
      [:div.application__handling-heading
@@ -142,7 +142,7 @@
                 [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
                 [:span.application-handling__review-area-main-heading-person-oid
                  @(subscribe [:editor/virkailija-translation :person-completed-education])]]
-               (when superuser?
+               (when opinto-ohjaaja-or-admin?
                  [:a.application-handling__review-area-main-heading-applications-right-link
                   {:href   (str "/suorituspalvelu/redirect/" person-oid)
                    :target "_blank"}
