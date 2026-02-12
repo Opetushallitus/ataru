@@ -1488,10 +1488,14 @@
   :editor/update-organization-query-results-for-schools-of-departure
   (fn [{db :db} [_ results]]
     (if (= (count results) 1)
-      {:db (-> db
-               (assoc-in [:editor :organizations :schools-of-departure] results)
-               (assoc-in [:editor :organizations :schools-of-departure-filtered] results))
-       :dispatch [:application/set-school-filter (:oid (first results))]}
+      (let [oid (:oid (first results))]
+        {:db         (-> db
+                         (assoc-in [:editor :organizations :schools-of-departure] results)
+                         (assoc-in [:editor :organizations :schools-of-departure-filtered] results)
+                         (assoc-in [:application :school-filter] oid)
+                         (assoc-in [:application :school-filter-pending-value] oid))
+         :dispatch-n [[:application/fetch-classes-of-school oid]
+                      [:application/reload-applications]]})
       {:db (assoc-in db [:editor :organizations :schools-of-departure] results)})))
 
 (defn- filter-organizations
