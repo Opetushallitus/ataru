@@ -19,7 +19,8 @@
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.db :as initial-db]
-            [ataru.virkailija.editor.editor-selectors :refer [get-all-organizations-have-only-opinto-ohjaaja-rights?]]
+            [ataru.virkailija.editor.editor-selectors :refer [get-all-organizations-have-only-opinto-ohjaaja-rights?
+                                                              get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights?]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [camel-snake-kebab.core :as c]
@@ -782,46 +783,80 @@
    {:db       (clear-selection db)
     :dispatch [:application/search-by-term search-term]}))
 
+(defn- opinto-ohjaaja-or-admin? [db]
+  (let [user-info (get-in db [:editor :user-info])]
+    (or (:superuser? user-info)
+        (some (fn [org] (some #(= "opinto-ohjaaja" %) (:rights org))) (:organizations user-info)))))
+
+(defn- resolve-selected-haku-oid [db]
+  (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
+        selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])]
+    (cond (some? selected-hakukohde-oid)
+          (get-in db [:hakukohteet selected-hakukohde-oid :haku-oid])
+          (some? selected-hakukohderyhma)
+          (first selected-hakukohderyhma)
+          :else
+          (get-in db [:application :selected-haku]))))
+
+(defn- toisen-asteen-yhteishaku-selected? [db]
+  (let [haku-oid (resolve-selected-haku-oid db)]
+    (and (some? haku-oid)
+         (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid])))))
+
+(reg-event-fx
+ :application/maybe-fetch-schools-of-departure
+ (fn [{db :db} _]
+   (when (and (opinto-ohjaaja-or-admin? db)
+              (toisen-asteen-yhteishaku-selected? db)
+              (empty? (get-in db [:editor :organizations :schools-of-departure])))
+     {:dispatch (if (get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights? db)
+                  [:application/do-organization-query-for-schools-of-departure-without-lahtokoulu ""]
+                  [:application/do-organization-query-for-schools-of-departure ""])})))
+
 (reg-event-fx
  :application/select-form
  (fn [{db :db} [_ form-key]]
-   {:db       (-> db
-                  clear-selection
-                  (assoc-in [:application :selected-form-key] form-key)
-                  (assoc-in [:application :user-allowed-fetching?] false))
-    :dispatch [:application/reload-applications]}))
+   {:db         (-> db
+                    clear-selection
+                    (assoc-in [:application :selected-form-key] form-key)
+                    (assoc-in [:application :user-allowed-fetching?] false))
+    :dispatch-n [[:application/reload-applications]
+                 [:application/maybe-fetch-schools-of-departure]]}))
 
 (reg-event-fx
  :application/select-hakukohde
  (fn [{db :db} [_ hakukohde-oid]]
-   {:db       (-> db
-                  clear-selection
-                  (assoc-in [:application :selected-hakukohde] hakukohde-oid))
-    :dispatch [:application/reload-applications]}))
+   {:db         (-> db
+                    clear-selection
+                    (assoc-in [:application :selected-hakukohde] hakukohde-oid))
+    :dispatch-n [[:application/reload-applications]
+                 [:application/maybe-fetch-schools-of-departure]]}))
 
 (reg-event-fx
  :application/select-hakukohderyhma
  (fn [{db :db} [_ [haku-oid hakukohderyhma-oid]]]
-   {:db       (-> db
-                  clear-selection
-                  (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid])) ; ovde selektuje grupu
-    :dispatch [:application/reload-applications]}))
+   {:db         (-> db
+                    clear-selection
+                    (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid])) ; ovde selektuje grupu
+    :dispatch-n [[:application/reload-applications]
+                 [:application/maybe-fetch-schools-of-departure]]}))
 
 (reg-event-fx
  :application/select-haku
  (fn [{db :db} [_ haku-oid]]
-   {:db       (-> db
-                  clear-selection
-                  (assoc-in [:application :selected-haku] haku-oid)
-                  (assoc-in [:application :user-allowed-fetching?] false))
-    :dispatch [:application/reload-applications]}))
+   {:db         (-> db
+                    clear-selection
+                    (assoc-in [:application :selected-haku] haku-oid)
+                    (assoc-in [:application :user-allowed-fetching?] false))
+    :dispatch-n [[:application/reload-applications]
+                 [:application/maybe-fetch-schools-of-departure]]}))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
 
 (reg-event-fx
  :application/handle-refresh-haut-and-hakukohteet
  (fn [{db :db} [_ {:keys [tarjonta-haut direct-form-haut haut hakukohteet hakukohderyhmat]} {:keys [dispatch-n-after]}]]
-   {:db         (-> db
+   (let [new-db (-> db
                     (update-in [:application :haut :tarjonta-haut] merge (keys-to-names tarjonta-haut))
                     (update-in [:application :haut :direct-form-haut] merge (keys-to-names direct-form-haut))
                     (update-in [:application :forms] merge (keys-to-names direct-form-haut))
@@ -829,8 +864,9 @@
                     (update :hakukohteet merge (keys-to-names hakukohteet))
                     (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
                     (update :fetching-haut dec)
-                    (update :fetching-hakukohteet dec))
-    :dispatch-n dispatch-n-after}))
+                    (update :fetching-hakukohteet dec))]
+     {:db         new-db
+      :dispatch-n dispatch-n-after})))
 
 (reg-event-fx
  :application/refresh-haut-and-hakukohteet
