@@ -44,6 +44,7 @@
     [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
     [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
     [ataru.koski.koski-service :as koski]
+    [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
     [ataru.tutkinto.tutkinto-util :as tutkinto-util])
   (:import
@@ -521,7 +522,7 @@
   (add-review-note [this session note])
   (add-review-notes [this session review-notes])
   (get-application-version-changes [this koodisto-cache session application-key])
-  (omatsivut-applications [this session person-oid])
+  (omatsivut-applications [this session person-oid with-haku-aika])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (get-application-oids-for-valintalaskenta [this session hakukohde-oids])
   (siirto-applications [this session hakukohde-oid haku-oid application-keys modified-after return-inactivated with-unapproved-payments])
@@ -840,12 +841,28 @@
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
-  ; TODO this doesn't currently filter out unpaid kk applications, should it? Probably not...
   (omatsivut-applications
-    [_ session person-oid]
-    (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
-         :linked-oids
-         (mapcat #(aac/omatsivut-applications organization-service session %))))
+    [_ session person-oid with-haku-aika]
+    (let [get-hakuaika-for-opiskelijavalinta        (fn[app]
+                                                      (let [haku (tarjonta-service/get-haku tarjonta-service (:haku app))
+                                                            haun-hakuaika (hakuaika/haun-hakuaika-end-and-on haku)]
+                                                        (when haun-hakuaika
+                                                          {:hakuaikaEnds (:end haun-hakuaika) :hakuaikaIsOn (:on haun-hakuaika)})))
+          mark-whether-application-is-in-processing (fn[app]
+                                                      (-> app
+                                                          (assoc :processing (util/application-in-processing? (:application-hakukohde-reviews app)))
+                                                          (dissoc :application-hakukohde-reviews)))
+          apply-hakuaika-if-necessary               (fn[app]
+                                                      (cond
+                                                        (and with-haku-aika (some? (:haku app)))
+                                                        (merge app (get-hakuaika-for-opiskelijavalinta app))
+                                                        :else
+                                                        app))]
+      (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
+           :linked-oids
+           (mapcat #(aac/omatsivut-applications organization-service session %))
+           (map mark-whether-application-is-in-processing)
+           (map apply-hakuaika-if-necessary))))
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
