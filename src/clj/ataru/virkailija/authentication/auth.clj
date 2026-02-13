@@ -72,7 +72,8 @@
         organizations-with-rights (->> user-right-organizations
                                        (map-kv (fn [right organizations]
                                                  [right (organization-service/get-all-organizations organization-service organizations)]))
-                                       (user-right-organizations->organization-rights))]
+                                       (user-right-organizations->organization-rights))
+        suorituspalvelu-user?     (rights/has-suorituspalvelu-base-role roles)]
     (log/debug "user" username "logged in")
     (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                             :first_name (:kutsumanimi henkilo)
@@ -89,6 +90,7 @@
       assoc
       :user-right-organizations user-right-organizations
       :superuser oph-organization-member?
+      :suorituspalvelu-user suorituspalvelu-user?
       :organizations organizations-with-rights)))
 
 (defn login [login-provider

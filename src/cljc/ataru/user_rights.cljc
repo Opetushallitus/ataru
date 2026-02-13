@@ -28,6 +28,9 @@
 (defn strip-role-app [roles]
   (map #(str/replace % #"^ROLE_APP_" "") roles))
 
+(defn has-suorituspalvelu-base-role [roles]
+  (boolean (not-empty (filter #(= % "ROLE_APP_SUORITUSPALVELU") roles))))
+
 (defn convert-to-organisaatiot [roles]
   (let [entries (map (fn [role]
                        (let [parts (str/split role #"_")
