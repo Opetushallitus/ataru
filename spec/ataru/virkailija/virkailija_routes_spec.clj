@@ -140,6 +140,13 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- get-omatsivut-applications-query [person query]
+  (-> (mock/request :get (str "/lomake-editori/api/external/omatsivut/applications/" person) query)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- get-tilastokeskus-application-query [query]
   (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
@@ -959,7 +966,7 @@
                 (should= (:key application) (first oids))))
 
           (it "should not return an application oid"
-              (let [[_ _ _ application _] (init-and-get-kk-fixtures)
+              (let [[_ _ _ _ _] (init-and-get-kk-fixtures)
                     resp (post-valintalaskenta-application-oids-query ["hk"])
                     status (:status resp)
                     oids (:body resp)]
@@ -1211,5 +1218,33 @@
                     applications (:body resp)]
                 (should= 200 status)
                 (should= 0 (count applications)))))
+
+(describe "omatsivut"
+          (tags :unit :omatsivut)
+
+          (after-all
+            (db/nuke-kk-payment-data))
+
+          (it "should return an application"
+              (let [[person _ _ _ _] (init-and-get-kk-fixtures)
+                    resp (get-omatsivut-applications-query person nil)
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (should= false (:processing (first applications)))
+                (should-be-nil (:hakuaikaIsOn (first applications)))
+                (should-be-nil (:hakuaikaEnds (first applications)))))
+
+          (it "should return application with hakuaika"
+              (let [[person _ _ _ _] (init-and-get-kk-fixtures)
+                    resp (get-omatsivut-applications-query person {:with-haku-aika true})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (should= false (:processing (first applications)))
+                (should= false (:hakuaikaIsOn (first applications)))
+                (should= true (some? (:hakuaikaEnds (first applications)))))))
 
 (run-specs)
