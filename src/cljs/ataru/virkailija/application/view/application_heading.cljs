@@ -98,7 +98,7 @@
         hakemus-oid         (:key application)
         haku-oid            (:haku application)
         lang                (subscribe [:editor/virkailija-lang])
-        suorituspalvelu-user? (subscribe [:editor/suorituspalvelu-user?])]
+        suorituspalvelu-user? @(subscribe [:editor/suorituspalvelu-user?])]
     [:<>
      [close-application]
      [:div.application__handling-heading
