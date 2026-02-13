@@ -264,7 +264,8 @@
            :name                  (format "%s %s" (-> session :identity :first-name) (-> session :identity :last-name))
            :lang                  (-> session :identity :lang)
            :selected-organization (:selected-organization session)
-           :superuser?            (-> session :identity :superuser)}))
+           :superuser?            (-> session :identity :superuser)
+           :suorituspalvelu-user? (-> session :identity :suorituspalvelu-user)}))
 
     (api/GET "/forms" {session :session}
       :summary "Return forms for editor view. Also used by external services.
