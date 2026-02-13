@@ -39,7 +39,8 @@
                          [org.apache.commons/commons-lang3 "3.14.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
-                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]]
+                         [org.jboss.xnio/xnio-nio "3.8.14.Final"]
+                         [org.testcontainers/testcontainers "2.0.2"]]
   :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
@@ -357,6 +358,7 @@
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
                                                [com.gfredericks/debug-repl "0.0.12"]
+                                               [org.testcontainers/testcontainers "2.0.2"]
                                                [clj-test-containers "0.7.4"]]
                               :plugins        [[lein-cljfmt "0.6.7"]
                                                [lein-kibit "0.1.8"]]
@@ -375,6 +377,7 @@
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
                                                [com.gfredericks/debug-repl "0.0.12"]
+                                               [org.testcontainers/testcontainers "2.0.2"]
                                                [clj-test-containers "0.7.4"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]

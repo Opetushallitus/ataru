@@ -207,6 +207,11 @@
     (get-in db [:editor :user-info :superuser?])))
 
 (re-frame/reg-sub
+  :editor/suorituspalvelu-user?
+  (fn [db _]
+    (get-in db [:editor :user-info :suorituspalvelu-user?])))
+
+(re-frame/reg-sub
   :editor/used-by-haut-haut
   (fn [db _]
     (get-in db [:editor :used-by-haut :haut])))
