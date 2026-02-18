@@ -211,9 +211,13 @@
                                                   (suoritus-service/hakemusten-harkinnanvaraisuus-suorituspalvelusta-no-cache
                                                     suoritus-service
                                                     application-keys-to-check))
+        results-not-received-from-suorituspalvelu (set (map :key (remove #(contains? harkinnanvaraisuudet-from-suorituspalvelu (:key %)) applications-with-harkinnanvaraisuus)))
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (remove #(not (contains? application-keys-to-check-set (:key %))))
+                                  (remove #(contains? results-not-received-from-suorituspalvelu (:key %)))
                                   (map #(assoc-suorituspalvelu-harkinnanvarainen-only % harkinnanvaraisuudet-from-suorituspalvelu)))]
+    (when (not-empty results-not-received-from-suorituspalvelu)
+      (log/error "Ei saatu harkinnanvaraisuustietoja Supasta seuraaville hakemuksille: " results-not-received-from-suorituspalvelu))
     (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
     (handle-yksiloimattomat-processes applications-not-yksiloity now)
