@@ -101,6 +101,26 @@
   (hakemusten-harkinnanvaraisuus-suorituspalvelusta-no-cache [_ hakemus-oids]
     (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "SURE_YKS_MAT_AI")))
 
+;Jos Supa ei palauta pyydetyn hakemuksen harkinnanvaraisuustietoja, tämä tarkoittaa virhetilannetta Supan päässä.
+(defrecord MockFailingHarkinnanvarainenSuoritusService []
+  SuoritusService
+
+  (ylioppilas-ja-ammatilliset-suoritukset-modified-since [_ _] ())
+  (ylioppilas-tai-ammatillinen? [_ _] true)
+  (oppilaitoksen-opiskelijat [_ _ _] [])
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [_ _ _] [])
+
+  (opiskelijan-luokkatieto [_ _ _ _] {})
+
+  (oppilaitoksen-luokat [_ _ _] [])
+  (hakemuksen-lahtokoulut [_ _] [])
+  (hakemuksen-avainarvot [_ _] {})
+
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta [_ hakemus-oids]
+    {})
+  (hakemusten-harkinnanvaraisuus-suorituspalvelusta-no-cache [_ hakemus-oids]
+    {}))
+
 (defrecord MockHarkinnanvarainenValintalaskentakoostepalveluService []
   ValintalaskentakoostepalveluService
 
@@ -114,6 +134,7 @@
 
 (def mock-suoritus-service (->MockSuoritusService))
 (def mock-harkinnanvarainen-suoritus-service (->MockHarkinnanvarainenSuoritusService))
+(def mock-failing-harkinnanvarainen-suoritus-service (->MockFailingHarkinnanvarainenSuoritusService))
 
 (defn- create-application
   ([] (create-application [{:key "base-education-2nd"
@@ -275,7 +296,7 @@
                           (recheck-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :suoritus-service mock-suoritus-service :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
-                    (it "rechecks application and sets harkinnanvarainen due to result from valintalaskentakoostepalvelu-servie"
+                    (it "rechecks application and sets harkinnanvarainen due to result from suoritus-service"
                         (init-with-check (create-application) (runner-with-deps mock-harkinnanvarainen-suoritus-service))
                         (recheck-harkinnanvaraisuus-handler {} (runner-with-deps mock-harkinnanvarainen-suoritus-service))
                         (let [process (get-stored-process)]
@@ -283,7 +304,7 @@
                           (should= true (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
-                    (it "rechecks yksiloimaton application and does not use valintalaskentakoostepalvelu-servie"
+                    (it "rechecks yksiloimaton application and does not use suoritus-service"
                         (init-with-check (assoc (create-application) :person-oid "1.2.3.4.5.6") (runner-with-deps mock-harkinnanvarainen-suoritus-service))
                         (recheck-harkinnanvaraisuus-handler {} (runner-with-deps mock-harkinnanvarainen-suoritus-service))
                         (let [process (get-stored-process)]
@@ -291,7 +312,7 @@
                           (should= false (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
-                    (it "rechecks harkinnanvarainen application and sets harkinnanvarainen false due to result from valintalaskentakoostepalvelu-servie"
+                    (it "rechecks harkinnanvarainen application and sets harkinnanvarainen false due to result from suoritus-service"
                         (init-with-check (create-application [{:key "base-education-2nd"
                                                     :label {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
                                                     :value "7"
@@ -302,7 +323,7 @@
                           (should= false (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
-                    (it "rechecks yksiloimaton harkinnanvarainen application and does not use valintalaskentakoostepalvelu-servie"
+                    (it "rechecks yksiloimaton harkinnanvarainen application and does not use suoritus-service"
                         (init-with-check
                           (assoc (create-application [{:key       "base-education-2nd"
                                                        :label     {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
@@ -311,6 +332,21 @@
                                   :person-oid
                                   "1.2.3.4.5.6")
                           (runner-with-deps mock-harkinnanvarainen-suoritus-service))
+                        (recheck-harkinnanvaraisuus-handler {} (runner-with-deps mock-suoritus-service))
+                        (let [process (get-stored-process)]
+                          (should= false (:skip_check process))
+                          (should= true (:harkinnanvarainen_only process))
+                          (should= false (nil? (:last_checked process)))))
+
+                    (it "does not fail when Suorituspalvelu does not return results"
+                        (init-with-check
+                          (assoc (create-application [{:key       "base-education-2nd"
+                                                       :label     {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
+                                                       :value     "7"
+                                                       :fieldType "singleChoice"}])
+                            :person-oid
+                            "1.2.3.4.5.6")
+                          (runner-with-deps mock-failing-harkinnanvarainen-suoritus-service))
                         (recheck-harkinnanvaraisuus-handler {} (runner-with-deps mock-suoritus-service))
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
