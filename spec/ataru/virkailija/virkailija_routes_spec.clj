@@ -261,6 +261,14 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- update-review [review]
+  (-> (mock/request :put (str "/lomake-editori/api/applications/review")
+                    (json/generate-string review))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- post-mass-inactivate-applications [application-keys reason-of-inactivation]
   (-> (mock/request :post "/lomake-editori/api/applications/mass-inactivate"
                     (json/generate-string {:application-keys application-keys
@@ -1246,5 +1254,127 @@
                 (should= false (:processing (first applications)))
                 (should= false (:hakuaikaIsOn (first applications)))
                 (should= true (some? (:hakuaikaEnds (first applications)))))))
+
+(defn- init-application
+  ([]
+   (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
+                       :review-requirement "selection-state"
+                       :review-state "incomplete"}
+                      {:hakukohde "payment-info-test-kk-hakukohde-2"
+                       :review-requirement "selection-state"
+                       :review-state "incomplete"}]))
+  ([hakukohde-reviews]
+   (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                            (assoc application-fixtures/application-without-hakemusmaksu-exemption
+                                                   :hakukohde
+                                                   ["payment-info-test-kk-hakukohde"
+                                                    "payment-info-test-kk-hakukohde-2"])
+                                            hakukohde-reviews)
+         application (application-store/get-application application-id)]
+     {:application-id application-id
+      :application-key (:key application)})))
+
+(describe "update-review"
+          (tags :unit :api-applications)
+
+          (it "should sync value when there are no reviews of type kk-application-payment-obligation"
+              (let [{:keys [application-id application-key]} (init-application)
+                     review-update-response (update-review {:id             application-id
+                                                           :application-key application-key
+                                                           :state           "active"
+                                                           :hakukohde-reviews
+                                                           {:payment-info-test-kk-hakukohde
+                                                            {:kk-application-payment-obligation "reviewed"
+                                                             :selection-state "incomplete"}}})
+                    reviews-after-update (application-store/get-application-hakukohde-reviews application-key)]
+                (should= 200 (:status review-update-response))
+                (should= true (:needs-refresh (:body review-update-response)))
+                (should= #{{:requirement "selection-state"
+                            :state "incomplete"
+                            :hakukohde "payment-info-test-kk-hakukohde"}
+                           {:requirement "selection-state"
+                            :state "incomplete"
+                            :hakukohde "payment-info-test-kk-hakukohde-2"}
+                           {:requirement "kk-application-payment-obligation"
+                            :state "reviewed"
+                            :hakukohde "payment-info-test-kk-hakukohde"}
+                           {:requirement "kk-application-payment-obligation"
+                            :state "reviewed"
+                            :hakukohde "payment-info-test-kk-hakukohde-2"}}
+                         (set (map #(select-keys % [:requirement :state :hakukohde]) reviews-after-update)))))
+
+            (it "should sync values on when there are existing reviews of type kk-application-payment-obligation"
+                (let [{:keys [application-id application-key]} (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                   :review-requirement "selection-state"
+                                                                                   :review-state "incomplete"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                   :review-requirement "selection-state"
+                                                                                   :review-state "incomplete"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde-2"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "reviewed"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde-2"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "reviewed"}])
+                      review-update-response (update-review {:id              application-id
+                                                             :application-key application-key
+                                                             :state           "active"
+                                                             :hakukohde-reviews
+                                                             {:payment-info-test-kk-hakukohde-2
+                                                              {:kk-application-payment-obligation "in-migri-review"
+                                                               :selection-state "incomplete"}}})
+                      reviews-after-update (application-store/get-application-hakukohde-reviews application-key)]
+                  (should= 200 (:status review-update-response))
+                  (should= true (:needs-refresh (:body review-update-response)))
+                  (should= #{{:requirement "selection-state"
+                              :state "incomplete"
+                              :hakukohde "payment-info-test-kk-hakukohde"}
+                             {:requirement "selection-state"
+                              :state "incomplete"
+                              :hakukohde "payment-info-test-kk-hakukohde-2"}
+                             {:requirement "kk-application-payment-obligation"
+                              :state "in-migri-review"
+                              :hakukohde "payment-info-test-kk-hakukohde"}
+                             {:requirement "kk-application-payment-obligation"
+                              :state "in-migri-review"
+                              :hakukohde "payment-info-test-kk-hakukohde-2"}}
+                           (set (map #(select-keys % [:requirement :state :hakukohde]) reviews-after-update)))))
+
+            (it "should not sync values when another type of review is updated"
+                (let [{:keys [application-id application-key]} (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                   :review-requirement "selection-state"
+                                                                                   :review-state "incomplete"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde-2"
+                                                                                   :review-requirement "selection-state"
+                                                                                   :review-state "incomplete"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "in-migri-review"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde-2"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "in-migri-review"}])
+                      review-update-response (update-review {:id              application-id
+                                                             :application-key application-key
+                                                             :state           "active"
+                                                             :hakukohde-reviews
+                                                             {:payment-info-test-kk-hakukohde
+                                                              {:kk-application-payment-obligation "in-migri-review"
+                                                               :selection-state "selected"}}})
+                      reviews-after-update (application-store/get-application-hakukohde-reviews application-key)]
+                  (should= 200 (:status review-update-response))
+                  (should= false (:needs-refresh (:body review-update-response)))
+                  (should= #{{:requirement "selection-state"
+                              :state "selected"
+                              :hakukohde "payment-info-test-kk-hakukohde"}
+                             {:requirement "selection-state"
+                              :state "incomplete"
+                              :hakukohde "payment-info-test-kk-hakukohde-2"}
+                             {:requirement "kk-application-payment-obligation"
+                              :state "in-migri-review"
+                              :hakukohde "payment-info-test-kk-hakukohde"}
+                             {:requirement "kk-application-payment-obligation"
+                              :state "in-migri-review"
+                              :hakukohde "payment-info-test-kk-hakukohde-2"}}
+                           (set (map #(select-keys % [:requirement :state :hakukohde]) reviews-after-update))))))
 
 (run-specs)

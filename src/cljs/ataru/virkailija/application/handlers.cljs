@@ -475,6 +475,16 @@
  (fn [db [_ response]]
    (assoc-in db [:application :events] (:events response))))
 
+(reg-event-fx
+ :application/handle-review-updated
+ (fn [{:keys [db]} [_ response {:keys [application-key]}]]
+   (let [dispatches (vec (concat [[:application/review-updated response]]
+                                 (when (:needs-refresh response)
+                                   [[:application/stop-autosave]
+                                    [:application/fetch-application application-key true]])))]
+     {:db db
+      :dispatch-n dispatches})))
+
 (defn answers-indexed
   "Convert the rest api version of application to a version which application
   readonly-rendering can use (answers are indexed with key in a map)"
@@ -579,7 +589,8 @@
                                          (ajax/http
                                           :put
                                           "/lomake-editori/api/applications/review"
-                                          :application/review-updated
+                                          :application/handle-review-updated
+                                          :handler-args {:application-key (:application-key current)}
                                           :override-args {:params (merge (select-keys current [:id
                                                                                                :application-id
                                                                                                :application-key
