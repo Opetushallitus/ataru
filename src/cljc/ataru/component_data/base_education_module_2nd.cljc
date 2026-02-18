@@ -31,23 +31,51 @@
 (def tutkintokieli-toiminta-alueittain "tutkintokieli-toiminta-alueittain")
 (def suoritusvuosi-toiminta-alueittain-key "suoritusvuosi-toiminta-alueittain")
 
+(def tutkintokieli-osittain-rajattu "tutkintokieli-osittain-rajattu")
+(def suoritusvuosi-osittain-rajattu "suoritusvuosi-osittain-rajattu")
+
+(def tutkintokieli-kokonaan-rajattu "tutkintokieli-kokonaan-rajattu")
+(def suoritusvuosi-kokonaan-rajattu "suoritusvuosi-kokonaan-rajattu")
+
 (def tutkintokieli-keys [tutkintokieli-perusopetus-key
-                          tutkintokieli-osittain-yks-key
-                          tutkintokieli-yks-key
-                          tutkintokieli-toiminta-alueittain
+                         tutkintokieli-osittain-yks-key
+                         tutkintokieli-yks-key
+                         tutkintokieli-toiminta-alueittain
+                         tutkintokieli-osittain-rajattu
+                         tutkintokieli-kokonaan-rajattu
+
                          "56e05f17-f289-495b-9f83-5dff310cb35b"
                          "daf29a8e-19b2-4922-b8cb-ac80ea10593b"
                          "c1d72123-173f-492e-9edc-f0141714c609"
-                         "b4f96c06-7872-4c9b-b871-315dc1cc0395"])
+                         "b4f96c06-7872-4c9b-b871-315dc1cc0395"
+                         
+                         ;; 2026 lomake
+                         "ced8dc18-668c-4024-afe9-2b857a3c80ee"
+                         "66974add-8ed7-465a-a1fc-029af1f8dc26"
+                         "e6488859-aba3-4199-9598-6378fd5becbe"
+                         "4b71d515-d6e3-4782-8716-4735bfcf1363"
+                         "9ed1bd1e-2db8-4529-9354-8767300d7ad8"
+                         "33b07a21-fd38-4236-a264-3fd26b9958b4"])
 
 (def suoritusvuosi-keys [suoritusvuosi-perusopetus-key
                          suoritusvuosi-osittain-yks-key
                          suoritusvuosi-yks-key
                          suoritusvuosi-toiminta-alueittain-key
+                         suoritusvuosi-osittain-rajattu
+                         suoritusvuosi-kokonaan-rajattu
+
                          "b5a683d9-21aa-419f-a6d9-a65c42ff1b29"
                          "ebb7fd12-e762-40e3-ad40-a1f9136728d5"
                          "bc159ab3-2f23-41ca-8b05-4b8573d408e7"
-                         "42725ecd-95c4-4ec8-bdd0-a7ad881ee5f1"])
+                         "42725ecd-95c4-4ec8-bdd0-a7ad881ee5f1"
+
+                         ;; 2026 lomake
+                         "ca6623c9-6eec-4dc7-b7cd-08ae260bab8a"
+                         "3156cb2e-7d83-4dd9-a96b-944193e13a75"
+                         "7cf6e34f-5bce-4b3c-81a2-49f0e1b80806"
+                         "429056c7-ffa6-4d73-a027-8b930556adc1"
+                         "d6acad27-a2fa-4371-a551-904d5b601139"
+                         "34f4c066-1551-4b0b-99c6-82751c4188e2"])
 
 (defn base-education-2nd-language-value-to-lang
   [value]
