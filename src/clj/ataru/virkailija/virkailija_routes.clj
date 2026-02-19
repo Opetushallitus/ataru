@@ -1471,11 +1471,13 @@
       (api/GET "/omatsivut/applications/:person-oid" {session :session}
         :summary "Get latest versions of every application belonging to a user with given person OID"
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
+        :query-params [{with-haku-aika :- s/Bool false}]
         :return [ataru-schema/OmatsivutApplication]
         (if-let [applications (application-service/omatsivut-applications
                                 application-service
                                 session
-                                person-oid)]
+                                person-oid
+                                with-haku-aika)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
 
