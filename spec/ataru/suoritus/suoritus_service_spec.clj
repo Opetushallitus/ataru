@@ -25,7 +25,7 @@
                     (spec)))
 
           (it "palauttaa jatkuvalle haulle hakemuksen luomishetken lähtökoulun"
-                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z"})]
+                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1"})]
                           (should= #{lahtokoulu1}
                                    data))))
 
@@ -43,6 +43,24 @@
                     (spec)))
 
           (it "palauttaa yhteishaulle leikkupäivän lähtökoulun"
-                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z"})]
+                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1"})]
                           (should= #{lahtokoulu2}
                                    data))))
+
+(describe "suoritus-service-hauton-hakemus"
+          (tags :unit :suoritus)
+          (with-stubs)
+
+          (around [spec]
+                  (with-redefs [tarjonta/get-haku #(throw (AssertionError. "Should not be called"))
+                                cache/get-from #(throw (AssertionError. "Should not be called"))]
+                    (spec)))
+
+          (it "palauttaa tyhjän setin kun hakua ei ole"
+              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z"})]
+                (should= #{}
+                         data)))
+          (it "palauttaa tyhjän setin kun haku on nil"
+              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku nil})]
+                (should= #{}
+                         data))))
