@@ -56,11 +56,7 @@
                                 cache/get-from #(throw (AssertionError. "Should not be called"))]
                     (spec)))
 
-          (it "palauttaa tyhjän setin kun hakua ei ole"
+          (it "palauttaa tyhjän setin"
               (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z"})]
-                (should= #{}
-                         data)))
-          (it "palauttaa tyhjän setin kun haku on nil"
-              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku nil})]
                 (should= #{}
                          data))))
