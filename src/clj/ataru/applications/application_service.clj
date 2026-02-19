@@ -251,17 +251,94 @@
                  (dissoc :ssn :dob :person-oid :preferred-name :last-name))))
          applications)))
 
+(defn- reviews-empty-or-value-has-changed?
+  [value reviews]
+  (boolean (or (empty? reviews)
+               (some #(not= (:state %) value) reviews))))
+
+(defn- determine-kk-application-payment-obligation-changes
+  [application-key changed-hakukohde-reviews changed-state-values changed-kk-appl-payment-obl-reviews]
+  (let [new-state-value (first changed-state-values)
+        existing-hakukohde-reviews (application-store/get-application-hakukohde-reviews application-key)
+        hakukohde-oids-in-edit (->> (keys changed-kk-appl-payment-obl-reviews) (map name) set)
+        value-changed? (->> existing-hakukohde-reviews
+                            (filter
+                              #(and (contains? hakukohde-oids-in-edit (:hakukohde %))
+                                    (= (:requirement %) "kk-application-payment-obligation")))
+                            (reviews-empty-or-value-has-changed? new-state-value))
+        other-reviews-by-hakukohde (->> existing-hakukohde-reviews
+                                        (filter
+                                          #(not (contains? hakukohde-oids-in-edit (:hakukohde %))))
+                                        (group-by :hakukohde))]
+    {:kk-application-payment-obligation-value-changed? value-changed?
+     :application-key application-key
+     :new-state-value new-state-value
+     :other-reviews-by-hakukohde other-reviews-by-hakukohde
+     :changed-hakukohde-reviews changed-hakukohde-reviews}))
+
+(defn- get-kk-application-payment-obligation-related-changes
+  [application-key changed-hakukohde-reviews]
+  (let [changed-kk-appl-payment-obl-reviews (->> changed-hakukohde-reviews
+                                                 (filter
+                                                   (fn [[_ review]]
+                                                     (contains? (set (keys review))
+                                                                :kk-application-payment-obligation)))
+                                                 (map
+                                                   (fn [[hakukohde review]]
+                                                     [hakukohde (select-keys review
+                                                                             [:kk-application-payment-obligation])]))
+                                                 (into {}))
+        changed-state-values                (->> changed-kk-appl-payment-obl-reviews
+                                                 (map
+                                                   (fn [[_ review]]
+                                                     (:kk-application-payment-obligation review)))
+                                                 (remove nil?)
+                                                 distinct)]
+    ; sync kk-application-payment-obligation value only if it has been changed to expilicitly single new value
+    (if (not= 1 (count changed-state-values))
+      {:kk-application-payment-obligation-value-changed? false}
+      (determine-kk-application-payment-obligation-changes
+        application-key changed-hakukohde-reviews changed-state-values changed-kk-appl-payment-obl-reviews))))
+
+(defn- sync-kk-application-payment-obligation-reviews
+  ; Synchronizes kk-application-payment-obligation values to other hakukohde in the application
+  [{:keys [other-reviews-by-hakukohde new-state-value changed-hakukohde-reviews application-key]}]
+  (let [synced-reviews (->> other-reviews-by-hakukohde
+                            (map
+                              (fn [[hakukohde reviews]]
+                                (let [ensured-reviews (if (contains? (set (map :requirement reviews))
+                                                                     "kk-application-payment-obligation")
+                                                        reviews
+                                                        (conj reviews
+                                                              {:requirement "kk-application-payment-obligation"}))]
+                                  [hakukohde (->> ensured-reviews
+                                                  (map
+                                                    #(if (= (:requirement %) "kk-application-payment-obligation")
+                                                      ["kk-application-payment-obligation" new-state-value]
+                                                      [(:requirement %) (:state %)]))
+                                                  (into {} ))])))
+                            (into changed-hakukohde-reviews))]
+    (log/info "Synchronizing kk-application-payment-obligation state" new-state-value
+              "to hakukohde oids" (map first other-reviews-by-hakukohde)
+              "in application" application-key)
+    synced-reviews))
+
 (defn- save-application-hakukohde-reviews
   [application-key hakukohde-reviews session audit-logger]
-  (doseq [[hakukohde review] hakukohde-reviews]
-    (doseq [[review-requirement review-state] review]
-      (application-store/save-application-hakukohde-review
-        application-key
-        (name hakukohde)
-        (name review-requirement)
-        (name review-state)
-        session
-        audit-logger))))
+  (let [{:keys [kk-application-payment-obligation-value-changed?] :as changes}
+        (get-kk-application-payment-obligation-related-changes application-key hakukohde-reviews)]
+    (doseq [[hakukohde review] (if kk-application-payment-obligation-value-changed?
+                                 (sync-kk-application-payment-obligation-reviews changes)
+                                 hakukohde-reviews)]
+      (doseq [[review-requirement review-state] review]
+        (application-store/save-application-hakukohde-review
+          application-key
+          (name hakukohde)
+          (name review-requirement)
+          (name review-state)
+          session
+          audit-logger)))
+    kk-application-payment-obligation-value-changed?))
 
 (defn- save-attachment-hakukohde-reviews
   [application-key attachment-reviews session audit-logger]
@@ -637,11 +714,12 @@
              session
              (keys (:hakukohde-reviews review))
              [:edit-applications])
-          (do (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
-              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
-                job-runner
-                application-key)
-            {:events (get-application-events organization-service application-key)})
+          (let [needs-refresh? (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)]
+            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
+             job-runner
+             application-key)
+            {:events (get-application-events organization-service application-key)
+             :needs-refresh needs-refresh?})
           :forbidden))))
 
   (payment-triggered-processing-state-change
