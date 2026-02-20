@@ -220,7 +220,8 @@
                                 {:oid                         "payment-info-test-kk-haku"
                                  :kohdejoukkoUri              "haunkohdejoukko_12#1"
                                  :kohdejoukonTarkenne         "haunkohdejoukontarkenne_1#1"
-                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"
+                                                               "payment-info-test-kk-hakukohde-2"]
                                  :hakukausiVuosi              2025,
                                  :koulutuksenAlkamisVuosi     2025,
                                  :hakuaikas                   [{:hakuaikaId "10291885",
@@ -367,6 +368,11 @@
                                          base-hakukohde
                                          {:oid          "payment-info-test-kk-hakukohde"
                                           :tutkintoonJohtava true})
+
+   :payment-info-test-kk-hakukohde-2   (merge
+                                        base-hakukohde
+                                        {:oid          "payment-info-test-kk-hakukohde-2"
+                                         :tutkintoonJohtava true})
 
    :payment-info-test-non-kk-hakukohde     (merge
                                              base-hakukohde
@@ -564,6 +570,11 @@
                                                              {:oid          "payment-info-test-kk-hakukohde"
                                                               :johtaaTutkintoon true
                                                               :opetuskieliKoodiUrit ["oppilaitoksenopetuskieli_4#2"]})
+                       :payment-info-test-kk-hakukohde-2   (merge
+                                                            base-kouta-hakukohde
+                                                            {:oid          "payment-info-test-kk-hakukohde-2"
+                                                             :johtaaTutkintoon true
+                                                             :opetuskieliKoodiUrit ["oppilaitoksenopetuskieli_1#2"]})
                        :payment-info-test-kk-fisv-hakukohde (merge
                                                              base-kouta-hakukohde
                                                              {:oid          "payment-info-test-kk-fisv-hakukohde"
@@ -599,7 +610,8 @@
                                 {:oid                         "payment-info-test-kk-haku"
                                  :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                  :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
-                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                 :hakukohdeOids               ["payment-info-test-kk-hakukohde"
+                                                               "payment-info-test-kk-hakukohde-2"]
                                  :hakuajat                    [{:alkaa "2025-01-01T08:00:00",
                                                                 :paattyy "2025-01-01T15:00:00"}]
                                  :maksullinenKkHaku           true})

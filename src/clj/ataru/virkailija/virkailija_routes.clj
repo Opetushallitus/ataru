@@ -811,7 +811,8 @@
       (api/PUT "/review" {session :session}
         :summary "Update existing application review"
         :body [review ataru-schema/Review]
-        :return {:events [ataru-schema/Event]}
+        :return {:events [ataru-schema/Event]
+                 :needs-refresh s/Bool}
         (let [result (application-service/save-application-review
                           application-service
                           session
