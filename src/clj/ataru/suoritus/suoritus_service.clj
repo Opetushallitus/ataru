@@ -104,17 +104,21 @@
          (last)))
 
   (hakemuksen-lahtokoulut [_ hakemus]
-    (let [haku (tarjonta-service/get-haku tarjonta-service (:haku hakemus))
-          lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus)))
-          ajanhetki (cond
-                      (haku/jatkuva-haku? haku) (:created-time hakemus)
-                      (:yhteishaku haku) (get-leikkuripvm ohjausparametrit-service (:haku hakemus))
-                      :else nil)
-          aktiiviset (if (some? ajanhetki)
-                       (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki)
-                       #{})]
-      (log/info "Haettiin lähtökoulut henkilölle" (:person-oid hakemus) "haussa" (:haku hakemus) "ajanhetkellä" (str ajanhetki))
-      aktiiviset))
+    (if-let [haku-oid (:haku hakemus)]
+      (let [haku (tarjonta-service/get-haku tarjonta-service haku-oid)
+            lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus)))
+            ajanhetki (cond
+                        (haku/jatkuva-haku? haku) (:created-time hakemus)
+                        (:yhteishaku haku) (get-leikkuripvm ohjausparametrit-service (:haku hakemus))
+                        :else nil)
+            aktiiviset (if (some? ajanhetki)
+                         (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki)
+                         #{})]
+        (log/info "Haettiin lähtökoulut henkilölle" (:person-oid hakemus) "haussa" (:haku hakemus) "ajanhetkellä" (str ajanhetki))
+        aktiiviset)
+      (do
+        (log/info "Henkilön" (:person-oid hakemus) "Hakemuksella ei hakua, lähtökouluja ei haeta.")
+        #{})))
 
   (hakemuksen-avainarvot [_ hakemus-oid]
     (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]
