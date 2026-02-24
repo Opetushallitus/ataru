@@ -20,7 +20,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.set]
             [clojure.string]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
@@ -30,12 +30,10 @@
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-2nd-language-value-to-lang]]
             [clojure.edn :as edn])
   (:import [java.time
-            LocalDateTime
-            ZoneId]
+            LocalDateTime]
            [org.postgresql.util
             PGobject
             PSQLException]
-           [org.joda.time DateTime]
            java.time.format.DateTimeFormatter))
 
 (defn- exec-db
@@ -225,7 +223,7 @@
        queries/yesql-update-attachment-hakukohde-review!
        queries/yesql-save-attachment-review!)
      (assoc (dissoc review :updated?)
-            :modified_time (or (:modified_time review) (DateTime/now))) connection)))
+            :modified_time (or (:modified_time review) (time/now))) connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
@@ -1017,11 +1015,13 @@
         :else
         nil))
 
-(def JodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss")
-                              (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
+(def ^:private date-time-formatter
+  (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss")
+      (.withZone (time/time-zone-for-id "Europe/Helsinki"))))
 
-(def ZonedJodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
-                              (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
+(def ^:private zoned-date-time-formatter
+  (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+      (.withZone (time/time-zone-for-id "Europe/Helsinki"))))
 
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time submitted person_oid lang email content
@@ -1030,8 +1030,8 @@
         foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
     {:oid                         key
      :personOid                   person_oid
-     :createdTime                 (.print JodaFormatter created_time) ; viimeisimmän hakemusversion luontihetki
-     :hakemusFirstSubmittedTime  (.print JodaFormatter submitted) ; ensimmäisen hakemusversion luontihetki
+     :createdTime                 (.format date-time-formatter created_time) ; viimeisimmän hakemusversion luontihetki
+     :hakemusFirstSubmittedTime  (.format date-time-formatter submitted) ; ensimmäisen hakemusversion luontihetki
      :applicationSystemId         haku
      :kieli                       lang
      :hakukohteet                 hakukohde
@@ -1164,8 +1164,8 @@
              urheilijan-lisakysymykset-ammatillinen (get-urheilijan-lisakysymykset answers (:urheilijan-amm-lisakysymys-keys questions))]
          {:oid                                  key
           :personOid                            person_oid
-          :createdTime                          (.print JodaFormatter created_time) ;viimeisimmän hakemusversion luontihetki
-          :hakemusFirstSubmittedTime            (.print JodaFormatter submitted) ;ensimmäisen hakemusversion luontihetki
+          :createdTime                          (.format date-time-formatter created_time) ;viimeisimmän hakemusversion luontihetki
+          :hakemusFirstSubmittedTime            (.format date-time-formatter submitted) ;ensimmäisen hakemusversion luontihetki
           :kieli                                lang
           :hakukohteet                          hakukohteet
           :email                                email
@@ -1204,7 +1204,7 @@
                                              (.createArrayOf (:connection connection) "text"))
                     :modified_after (some-> modified-after
                                             (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
-                                            (.atZone (ZoneId/of "Europe/Helsinki"))
+                                            (.atZone (time/time-zone-for-id "Europe/Helsinki"))
                                             .toOffsetDateTime)
                     :offset         offset}
                    {:connection connection}))
@@ -1241,7 +1241,7 @@
                                                                       (.createArrayOf (:connection connection) "text"))
                                              :modified_after (some-> modified-after
                                                                      (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
-                                                                     (.atZone (ZoneId/of "Europe/Helsinki"))
+                                                                     (.atZone (time/time-zone-for-id "Europe/Helsinki"))
                                                                      .toOffsetDateTime)
                                              :offset         offset}
                                             {:connection connection}))
@@ -1652,9 +1652,9 @@
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
         application-review-notes (or (:application-review-notes application) [])
         application-payment-states (map (fn [state] (update state :total #(edn/read-string %))) (or (:application-payment-states application) []))
-        submitted-formatted (.print ZonedJodaFormatter (:submitted application))
-        created-formatted (.print ZonedJodaFormatter (:created application))
-        modified-formatted (.print ZonedJodaFormatter (:modified application))]
+        submitted-formatted (.format zoned-date-time-formatter (:submitted application))
+        created-formatted (.format zoned-date-time-formatter (:created application))
+        modified-formatted (.format zoned-date-time-formatter (:modified application))]
   (-> application
       (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states :submitted :created :modified)
       (assoc :attachments attachments)

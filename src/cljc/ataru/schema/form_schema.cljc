@@ -21,7 +21,7 @@
             [schema-tools.core :as st]
             [ataru.schema.form-properties-schema :refer [FormProperties]]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]])
-  #?(:clj (:import [org.joda.time DateTime])))
+  #?(:clj (:import [java.time ZonedDateTime])))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -320,8 +320,8 @@
    :can-submit-multiple-applications           s/Bool
    :sijoittelu                                 s/Bool
    :hakuajat                                   [{:hakuaika-id          s/Str
-                                                 :start                org.joda.time.DateTime
-                                                 (s/optional-key :end) org.joda.time.DateTime}]
+                                                 :start                java.time.ZonedDateTime
+                                                 (s/optional-key :end) java.time.ZonedDateTime}]
    :haun-tiedot-url                            s/Str
    (s/optional-key :kohdejoukon-tarkenne-uri)  (s/maybe s/Str)
    (s/optional-key :alkamiskausi)              (s/maybe s/Str)
@@ -351,8 +351,8 @@
    :tarjoaja-oids                                                                [s/Str]
    :ryhmaliitokset                                                               [s/Str]
    (s/optional-key :hakuaika-id)                                                 s/Str
-   (s/optional-key :hakuajat)                                                    [{:start                org.joda.time.DateTime
-                                                                                   (s/optional-key :end) org.joda.time.DateTime}]
+   (s/optional-key :hakuajat)                                                    [{:start                java.time.ZonedDateTime
+                                                                                   (s/optional-key :end) java.time.ZonedDateTime}]
    (s/optional-key :koulutustyyppikoodi)                                         (s/maybe s/Str)
    :hakukelpoisuusvaatimus-uris                                                  [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
@@ -387,9 +387,9 @@
   {:key          s/Str
    :content-type s/Str
    :size         s/Int
-   :uploaded     #?(:clj  org.joda.time.DateTime
+   :uploaded     #?(:clj  java.time.ZonedDateTime
                     :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
-   :deleted      (s/maybe #?(:clj  org.joda.time.DateTime
+   :deleted      (s/maybe #?(:clj  java.time.ZonedDateTime
                              :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))})
 
 (s/defschema File
@@ -400,9 +400,9 @@
    (s/optional-key :page-count)     (s/maybe s/Int)
    :virus-scan-status               s/Str
    :final                           s/Bool
-   :uploaded                        #?(:clj  org.joda.time.DateTime
+   :uploaded                        #?(:clj  java.time.ZonedDateTime
                                        :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
-   (s/optional-key :deleted)        (s/maybe #?(:clj  org.joda.time.DateTime
+   (s/optional-key :deleted)        (s/maybe #?(:clj  java.time.ZonedDateTime
                                                 :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))
    (s/optional-key :preview-status) (s/enum "not_supported" "not_generated" "finished" "error" "started")
    (s/optional-key :previews)       [Preview]
@@ -469,16 +469,16 @@
                                                      :yksiloity            s/Bool
                                                      (s/optional-key :ssn) s/Str
                                                      :dob                  s/Str}
-   :submitted                                       org.joda.time.DateTime
+   :submitted                                       java.time.ZonedDateTime
    :base-education                                  [s/Str]
    (s/optional-key :form)                           s/Int
-   (s/optional-key :created-time)                   org.joda.time.DateTime
+   (s/optional-key :created-time)                   java.time.ZonedDateTime
    (s/optional-key :haku)                           (s/maybe s/Str)
    (s/optional-key :hakukohde)                      (s/maybe [s/Str])
    (s/optional-key :secret)                         s/Str
    (s/optional-key :application-hakukohde-reviews)  [{:requirement                    HakukohdeReviewTypeNames
                                                       :state                          (apply s/enum review-requirement-values)
-                                                      (s/optional-key :modified-time) org.joda.time.DateTime
+                                                      (s/optional-key :modified-time) java.time.ZonedDateTime
                                                       :hakukohde                      s/Str}] ; "form" or oid
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
@@ -497,7 +497,7 @@
    (s/optional-key :hakukohde)          (s/maybe [s/Str])
    (s/optional-key :haku)               (s/maybe s/Str)
    (s/optional-key :id)                 s/Int
-   (s/optional-key :created-time)       org.joda.time.DateTime
+   (s/optional-key :created-time)       java.time.ZonedDateTime
    (s/optional-key :secret)             s/Str
    (s/optional-key :virkailija-secret)  s/Str
    (s/optional-key :selection-id)       s/Str
@@ -527,18 +527,18 @@
   {:application-key  s/Str
    :state            s/Str
    :reason           (s/maybe s/Str)
-   :due-date         #?(:clj  (s/maybe DateTime)
+   :due-date         #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))
    :total-sum        (s/maybe s/Str)
-   :created-at       #?(:clj  (s/maybe DateTime)
+   :created-at       #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))
-   :modified-at      #?(:clj  (s/maybe DateTime)
+   :modified-at      #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))
-   :required-at      #?(:clj  (s/maybe DateTime)
+   :required-at      #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))
-   :reminder-sent-at #?(:clj  (s/maybe DateTime)
+   :reminder-sent-at #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))
-   :approved-at      #?(:clj  (s/maybe DateTime)
+   :approved-at      #?(:clj  (s/maybe ZonedDateTime)
                         :cljs (s/maybe s/Str))})
 
 (s/defschema KkPaymentState
@@ -571,7 +571,7 @@
    :haku (s/maybe s/Str)
    :email s/Str
    :hakukohteet [s/Str]
-   :submitted org.joda.time.DateTime
+   :submitted java.time.ZonedDateTime
    :form-name (s/maybe localized-schema/LocalizedStringOptional)})
 
 (s/defschema Hakutoive
@@ -725,7 +725,7 @@
    :hakukohde_oids                    [s/Str]
    :kotikunta                         (s/maybe s/Str)
    :asuinmaa                          (s/maybe s/Str)
-   :submitted                         org.joda.time.DateTime
+   :submitted                         java.time.ZonedDateTime
    :pohjakoulutus_kk                  [{:pohjakoulutuskklomake          s/Str
                                         (s/optional-key :suoritusvuosi) s/Int}]
    :pohjakoulutus_kk_ulk_country      (s/maybe s/Str)
@@ -780,7 +780,7 @@
    :versionModified     s/Str
    :hakukohdeReviews             [{:requirement                    s/Str
                                    :state                          s/Str
-                                   (s/optional-key :modified-time) org.joda.time.DateTime
+                                   (s/optional-key :modified-time) java.time.ZonedDateTime
                                    :hakukohde                      s/Str}]
    :hakukohdeAttachmentReviews   [{:attachment    s/Str
                                    :state         s/Str
@@ -789,13 +789,13 @@
                              :state (s/maybe s/Str)
                              :hakukohde (s/maybe s/Str)
                              :virkailijaOid (s/maybe s/Str)
-                             :created org.joda.time.DateTime}]
+                             :created java.time.ZonedDateTime}]
    :applicationPaymentStates [{:state (s/maybe s/Str)
                                :reason (s/maybe s/Str)
                                :dueDate (s/maybe s/Str)
                                :total (s/maybe s/Num)
-                               :modified org.joda.time.DateTime
-                               :reminderSentAt (s/maybe org.joda.time.DateTime)}]})
+                               :modified java.time.ZonedDateTime
+                               :reminderSentAt (s/maybe java.time.ZonedDateTime)}]})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
@@ -818,7 +818,7 @@
 
 (s/defschema Event
   {:event-type                                event-types
-   :time                                      org.joda.time.DateTime
+   :time                                      java.time.ZonedDateTime
    :id                                        s/Int
    :application-key                           s/Str
    (s/optional-key :new-review-state)         (s/maybe s/Str)
@@ -846,7 +846,7 @@
 
 (s/defschema FieldDeadline
   {:field-id s/Str
-   :deadline org.joda.time.DateTime})
+   :deadline java.time.ZonedDateTime})
 
 (s/defschema ReviewNote
   {:id                                        s/Int
@@ -861,12 +861,12 @@
                                                 (s/optional-key :active?)         s/Bool}]
    (s/optional-key :hakukohde)                (s/maybe s/Str)
    (s/optional-key :state-name)               HakukohdeReviewTypeNames
-   (s/optional-key :created-time)             org.joda.time.DateTime})
+   (s/optional-key :created-time)             java.time.ZonedDateTime})
 
 (s/defschema Review
   {:id                                  s/Int
    :application-key                     s/Str
-   (s/optional-key :modified-time)      org.joda.time.DateTime
+   (s/optional-key :modified-time)      java.time.ZonedDateTime
    :state                               s/Str
    (s/optional-key :score)              (s/maybe s/Num)
    (s/optional-key :hakukohde-reviews)  HakukohdeReviews
@@ -940,11 +940,11 @@
                                  :message         s/Str
                                  :application-key s/Str
                                  :message-type    s/Str
-                                 :created-time    #?(:clj  org.joda.time.DateTime
+                                 :created-time    #?(:clj  java.time.ZonedDateTime
                                                      :cljs s/Str)
                                  :first-name      s/Str
                                  :last-name       s/Str
-                                 :send-reminder-time #?(:clj  (s/maybe org.joda.time.DateTime)
+                                 :send-reminder-time #?(:clj  (s/maybe java.time.ZonedDateTime)
                                                         :cljs (s/maybe s/Str))})
 
 (s/defschema ReviewSetting {:setting-kwd s/Str
@@ -975,12 +975,12 @@
                  {:order-by                (s/eq "created-time")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key          s/Str
-                                            :created-time org.joda.time.DateTime}}
+                                            :created-time java.time.ZonedDateTime}}
                  #(= "submitted" (:order-by %))
                  {:order-by                (s/eq "submitted")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key       s/Str
-                                            :submitted org.joda.time.DateTime}}))
+                                            :submitted java.time.ZonedDateTime}}))
 
 (s/defschema QueryAttachmentReviewStates
   {s/Keyword

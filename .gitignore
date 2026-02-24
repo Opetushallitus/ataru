@@ -42,3 +42,4 @@ npm-debug.log*
 /playwright/.cache/
 .testcontainers.properties
 .vscode
+.clj-kondo

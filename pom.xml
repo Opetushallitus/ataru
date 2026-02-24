@@ -284,11 +284,6 @@
         <version>2.2.0</version>
       </dependency>
       <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>2.12.7</version>
-      </dependency>
-      <dependency>
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna</artifactId>
         <version>5.8.0</version>
@@ -848,11 +843,6 @@
           <groupId>org.checkerframework</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>clj-time</groupId>
-      <artifactId>clj-time</artifactId>
-      <version>0.15.2</version>
     </dependency>
     <dependency>
       <groupId>cheshire</groupId>

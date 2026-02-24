@@ -1,7 +1,7 @@
 (ns ataru.date
-  (:require #?(:clj  [clj-time.core :as c]
+  (:require #?(:clj  [ataru.time :as c]
                :cljs [cljs-time.core :as c])
-            #?(:clj  [clj-time.format :as f]
+            #?(:clj  [ataru.time.format :as f]
                :cljs [cljs-time.format :as f])))
 
 (def birthday-pattern #"^\d{2}.\d{2}.\d{4}$")

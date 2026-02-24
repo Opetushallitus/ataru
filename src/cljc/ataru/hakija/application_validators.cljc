@@ -8,12 +8,13 @@
             [ataru.number :refer [gte lte numeric-matcher]]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.hakija.validation-error :as validation-error]
-            #?(:clj  [clojure.core.async :as async]
+            #?(:clj  [clojure.core.async :as async :refer [go]]
                :cljs [cljs.core.async :as async])
-            #?(:clj  [clj-time.core :as c]
+            #?(:clj  [ataru.time :as c]
                :cljs [cljs-time.core :as c])
-            #?(:clj  [clj-time.format :as f]
-               :cljs [cljs-time.format :as f])))
+            #?(:clj  [ataru.time.format :as f]
+               :cljs [cljs-time.format :as f]))
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]])))
 
 (defn ^:private required?
   [{:keys [value]}]
@@ -69,7 +70,7 @@
         preferred-name (:preferred-name answers-by-key)
         original-value (get-in answers-by-key [(keyword (:id field-descriptor)) :original-value])
         modifying?     (some? original-value)]
-    (async/go
+    (go
       (cond (not (ssn/ssn? value))
             [false [{:ssn [(validation-error/person-info-validation-error :ssn)]}]]
             (and (not multiple?)
@@ -92,7 +93,7 @@
           modifying?     (some? original-value)
           value          (:value this-answer)
           verify-value   (:verify this-answer)]
-      (async/go
+      (go
         (cond (not (email/email? value))
               [false [{:email-main-error [(validation-error/person-info-validation-error :email)]}]]
               (and verify-value
@@ -119,17 +120,17 @@
         (clojure.string/blank? value)
         (clojure.string/blank? verify)
         have-ssn?)
-      (async/go [true []])
+      (go [true []])
 
       (and
         (clojure.string/blank? value)
         (clojure.string/blank? verify)
         (not have-ssn?))
-      (async/go [false []])
+      (go [false []])
 
       (and verify
            (not= verify value))
-      (async/go [false []])
+      (go [false []])
 
       :else
       (email? has-applied answers-by-key field-descriptor))))
@@ -143,7 +144,7 @@
 (defn- selection-limit?
   [{:keys [try-selection value field-descriptor]}]
   (let [id (:id field-descriptor)]
-    (async/go
+    (go
       (async/<! (try-selection id value)))))
 
 (def ^:private postal-code-pattern #"^\d{5}$")
@@ -168,7 +169,7 @@
 
 #?(:clj
    (def parse-date
-     (let [formatter (f/formatter "dd.MM.YYYY" (c/time-zone-for-id "Europe/Helsinki"))]
+     (let [formatter (f/formatter "dd.MM.yyyy" (c/time-zone-for-id "Europe/Helsinki"))]
        (fn [d]
          (try
            (when (re-matches finnish-date-pattern d)
@@ -176,7 +177,7 @@
            (catch Exception _ nil)))))
    :cljs
    (def parse-date
-     (let [formatter (f/formatter "d.M.YYYY")]
+     (let [formatter (f/formatter "d.M.yyyy")]
        (fn [d]
          ;; Unfortunately cljs-time.format allows
          ;; garbage data (e.g. XXXXX11Y11Z1997BLAH),
@@ -337,8 +338,8 @@
   (let [validator-key (keyword validator)]
     (if-let [pure-validator (validator-key pure-validators)]
       (let [valid? (pure-validator params)]
-        (if valid? (async/go [valid? []])
-                   (async/go [valid? [{validator-key [(validation-error/validation-error validator-key params)]}]])))
+        (if valid? (go [valid? []])
+                   (go [valid? [{validator-key [(validation-error/validation-error validator-key params)]}]])))
       (if-let [async-validator (validator-key async-validators)]
         (async-validator params)
-        (async/go [false []])))))
+        (go [false []])))))

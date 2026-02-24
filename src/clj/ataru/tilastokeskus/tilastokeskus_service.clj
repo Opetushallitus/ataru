@@ -1,6 +1,6 @@
 (ns ataru.tilastokeskus.tilastokeskus-service
   (:require [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
-            [clj-time.core :as t]
+            [ataru.time :as t]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.answer-util :as answer-util]
             [ataru.applications.suoritus-filter :as suoritus-filter]

@@ -85,7 +85,7 @@
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
@@ -93,9 +93,8 @@
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job])
   (:import java.util.Locale
+           java.time.ZoneId
            java.time.ZonedDateTime
-           org.joda.time.DateTime
-           org.joda.time.format.DateTimeFormat
            java.time.format.DateTimeFormatter
            (java.text SimpleDateFormat)
            (java.util Date)
@@ -125,28 +124,26 @@
                  json-generator
                  (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
 
+(def ^:private http-date-formatter
+  (-> DateTimeFormatter/RFC_1123_DATE_TIME
+      (.withLocale Locale/US)
+      (.withZone (ZoneId/of "GMT"))))
+
 (defn- parse-if-unmodified-since
   [s]
   (try
-    (.parseDateTime (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-                        DateTimeFormat/forPattern
-                        .withZoneUTC
-                        (.withLocale Locale/US))
-                    s)
+    (ZonedDateTime/parse s http-date-formatter)
     (catch Exception _
       (throw (new IllegalArgumentException
-                  (str "Ei voitu jäsentää otsaketta If-Unmodified-Since: " s))))))
+              (str "Ei voitu jäsentää otsaketta If-Unmodified-Since: " s))))))
 
 (defn- format-last-modified
   [d]
-  (.print (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-              DateTimeFormat/forPattern
-              .withZoneUTC
-              (.withLocale Locale/US))
-          (-> d
-              .millisOfSecond
-              .roundFloorCopy
-              (.plusSeconds 1))))
+  (-> d
+      (time/to-time-zone (ZoneId/of "GMT"))
+      (.withNano 0)
+      (.plusSeconds 1)
+      (.format http-date-formatter)))
 
 (defmethod json-schema/convert-class ZonedDateTime [_ _] {:type "string"})
 
@@ -343,7 +340,7 @@
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
-      :return {:locked (s/maybe DateTime)
+      :return {:locked (s/maybe ZonedDateTime)
                :id     Long}
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service audit-logger)))
@@ -706,7 +703,7 @@
                       "Last-Modified"
                       (->> response
                            (map :last-modified)
-                           (apply max-key #(.getMillis %))
+                           (apply max-key #(-> % time/to-instant .toEpochMilli))
                            format-last-modified))))))
 
       (api/GET "/:application-key/field-deadline/:field-id" {session :session}
@@ -731,7 +728,7 @@
       (api/PUT "/:application-key/field-deadline/:field-id" {session :session}
         :path-params [application-key :- s/Str
                       field-id :- s/Str]
-        :body [body {:deadline DateTime}]
+        :body [body {:deadline ZonedDateTime}]
         :header-params [{if-unmodified-since :- s/Str nil}
                         {if-none-match :- s/Str nil}]
         :return ataru-schema/FieldDeadline

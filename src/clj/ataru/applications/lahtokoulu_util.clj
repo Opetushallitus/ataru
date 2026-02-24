@@ -1,7 +1,7 @@
 (ns ataru.applications.lahtokoulu-util
   (:require [ataru.tarjonta.haku :refer [toisen-asteen-yhteishaku?]]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [ataru.time :as t]
+            [ataru.time.coerce :as c]))
 
 ; In case of peruskoulun jälkeisen koulutuksen yhteishaku, it's specified
 ; that lähtökoulu information should be based on whatever school the student

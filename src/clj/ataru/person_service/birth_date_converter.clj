@@ -1,5 +1,5 @@
 (ns ataru.person-service.birth-date-converter
-  (:require [clj-time.format :as f]))
+  (:require [ataru.time.format :as f]))
 
 (def finnish-format (f/formatter "dd.MM.yyyy"))
 (def default-format (f/formatters :year-month-day))

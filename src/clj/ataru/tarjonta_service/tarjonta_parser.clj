@@ -5,7 +5,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [ataru.util :refer [koodi-uri-base]]
-            [clj-time.core :as t]
+            [ataru.time :as t]
             [clojure.set :refer [intersection]]
             [clojure.string :as string]))
 

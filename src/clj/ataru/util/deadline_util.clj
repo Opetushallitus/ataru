@@ -1,6 +1,6 @@
 (ns ataru.util.deadline-util
-  (:require [clj-time.core :as time]
-            [clj-time.format :as f]
+  (:require [ataru.time :as time]
+            [ataru.time.format :as f]
             ))
 
 (defn custom-deadline [field]

@@ -1,6 +1,6 @@
 (ns ataru.koski.koski-json-parser
   (:require [schema.core :as s]
-            [clj-time.format :as f]
+            [ataru.time.format :as f]
             [ataru.schema.koski-tutkinnot-schema :as koski-schema]))
 
 

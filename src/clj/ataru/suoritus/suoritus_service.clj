@@ -3,7 +3,7 @@
             [ataru.tarjonta.haku :as haku]
             [ataru.applications.lahtokoulu-util :as lahtokoulu-util]
             [ataru.suoritus.suoritus-client :as client]
-            [clj-time.format :as format]
+            [ataru.time.format :as format]
             [com.stuartsierra.component :as component]
             [ataru.cache.cache-service :as cache]
             [clojure.string :as string]))

@@ -5,8 +5,8 @@
             [ataru.util :as util]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-utils :refer [get-configuration get-form tutu-form?]]
             [clojure.string :as string]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
+            [ataru.time :as t]
+            [ataru.time.format :as f]
             [clojure.data.xml :as xml]
             [clojure.java.shell :refer [sh]]
             [taoensso.timbre :as log])
