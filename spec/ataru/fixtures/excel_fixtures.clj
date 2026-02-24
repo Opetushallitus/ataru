@@ -1,6 +1,6 @@
 (ns ataru.fixtures.excel-fixtures
   (:require [ataru.component-data.component :as component]
-            [clj-time.core :as c]))
+            [ataru.time :as c]))
 
 (def form {:id           123
            :key          "form_123_key"

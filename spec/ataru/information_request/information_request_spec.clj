@@ -1,6 +1,6 @@
 (ns ataru.information-request.information-request-spec
   (:require [ataru.db.db :as db]
-            [clj-time.core :as c]
+            [ataru.time :as c]
             [clojure.java.jdbc :as jdbc]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.fixtures.form :refer [minimal-form]]
@@ -18,8 +18,7 @@
             [ataru.information-request.information-request-reminder-job :refer [handler]]
             [ataru.log.audit-log :as audit-log]
             [speclj.core :refer [describe tags it should should= before-all after around with-stubs stub should-have-invoked should-not-have-invoked]]
-            [yesql.core :as sql])
-  (:import (org.joda.time DateTime)))
+            [yesql.core :as sql]))
 
 (declare conn)
 (declare spec)
@@ -98,10 +97,9 @@
                                                      runner))]
                           (should (c/equal?
                                     (c/plus
-                                      (-> (new DateTime)
-                                          (.withTime
-                                            (get-in config [:public-config :information-request-reminder-job-hour])
-                                            0 0 0))
+                                      (c/today-at
+                                        (get-in config [:public-config :information-request-reminder-job-hour])
+                                        0 0)
                                       (c/days 12))
                                     send-reminder-time)))))
 

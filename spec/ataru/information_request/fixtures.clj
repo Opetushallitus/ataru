@@ -1,5 +1,5 @@
 (ns ataru.information-request.fixtures
-  (:require [clj-time.core :as c]))
+  (:require [ataru.time :as c]))
 
 (defn information-requests-to-remind [application-key]
   [{:subject         "muistutus1"

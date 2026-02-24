@@ -21,7 +21,7 @@
             [ataru.applications.application-service :as common-application-service]
             [ataru.config.core :refer [config]]
             [ataru.util.random :as crypto]
-            [clj-time.core :as t]
+            [ataru.time :as t]
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
@@ -30,8 +30,7 @@
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.component-data.kk-application-payment-module :as payment-module]
-            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service])
-  (:import org.joda.time.DateTime))
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]))
 
 (declare resp)
 (declare yesql-get-application-by-id)
@@ -506,8 +505,8 @@
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
-                                                           :deadline      (.plusDays (DateTime/now) 1)
-                                                           :last-modified (DateTime/now)}])]
+                                                           :deadline      (t/plus (t/now) (t/days 1))
+                                                           :last-modified (t/now)}])]
         (with-get-response "12345" resp
           (should= 200 (:status resp))
           (should-not (-> (get-in resp [:body :form])
@@ -519,8 +518,8 @@
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "b0839467-a6e8-4294-b5cc-830756bbda8a"
-                                                           :deadline      (.minusDays (DateTime/now) 1)
-                                                           :last-modified (DateTime/now)}])]
+                                                           :deadline      (t/minus (t/now) (t/days 1))
+                                                           :last-modified (t/now)}])]
         (with-get-response "12345" resp
           (should= 200 (:status resp))
           (should (-> (get-in resp [:body :form])
@@ -680,8 +679,8 @@
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
-                                                           :deadline      (.minusDays (DateTime/now) 1)
-                                                           :last-modified (DateTime/now)}])
+                                                           :deadline      (t/minus (t/now) (t/days 1))
+                                                           :last-modified (t/now)}])
                     crypto/url-part                    (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
           (should= 400 (:status resp)))))
@@ -690,8 +689,8 @@
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     attachment-deadline-service/get-field-deadlines (fn [_]
                                                          [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
-                                                           :deadline      (.plusDays (DateTime/now) 1)
-                                                           :last-modified (DateTime/now)}])
+                                                           :deadline      (t/plus (t/now) (t/days 1))
+                                                           :last-modified (t/now)}])
                     crypto/url-part                    (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
           (should= 200 (:status resp))

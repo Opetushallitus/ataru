@@ -1,5 +1,6 @@
 (ns ataru.time
   (:import [java.time
+            Clock
             Duration
             Instant
             LocalDate
@@ -11,6 +12,7 @@
            [java.time.temporal TemporalAmount]))
 
 (def ^:private default-zone-id (ZoneId/systemDefault))
+(def ^:private clock (atom (Clock/system default-zone-id)))
 
 
 (defn default-zone
@@ -21,21 +23,52 @@
   [zone-id]
   (ZoneId/of zone-id))
 
+(declare ->instant)
+
+(defn set-fixed-now!
+  [t]
+  (let [instant (if (instance? Instant t)
+                  ^Instant t
+                  (->instant t))]
+    (reset! clock (Clock/fixed instant default-zone-id))))
+
+(defn reset-now!
+  []
+  (reset! clock (Clock/system default-zone-id)))
+
 (defn now
-  ([] (ZonedDateTime/now default-zone-id))
-  ([zone] (ZonedDateTime/now zone)))
+  ([] (ZonedDateTime/ofInstant (.instant ^Clock @clock) default-zone-id))
+  ([zone] (ZonedDateTime/ofInstant (.instant ^Clock @clock) zone)))
 
 (defn today
-  ([] (LocalDate/now default-zone-id))
-  ([zone] (LocalDate/now zone)))
+  ([] (LocalDate/ofInstant (.instant ^Clock @clock) default-zone-id))
+  ([zone] (LocalDate/ofInstant (.instant ^Clock @clock) zone)))
 
 (defn today-at-midnight
   ([] (.atStartOfDay (today) default-zone-id))
   ([zone] (.atStartOfDay (today zone) zone)))
 
+(defn today-at
+  ([hour minute]
+   (today-at hour minute 0))
+  ([hour minute second]
+   (today-at hour minute second 0))
+  ([hour minute second millis]
+   (ZonedDateTime/of (today)
+                     (LocalTime/of hour minute second (* millis 1000000))
+                     default-zone-id)))
+
 (defn local-date
   [year month day]
   (LocalDate/of year month day))
+
+(defn local-date-time
+  ([year month day hour minute]
+   (LocalDateTime/of year month day hour minute))
+  ([year month day hour minute second]
+   (LocalDateTime/of year month day hour minute second))
+  ([year month day hour minute second millis]
+   (LocalDateTime/of year month day hour minute second (* millis 1000000))))
 
 (defn local-time
   [hour minute]
@@ -44,6 +77,8 @@
 (defn date-time
   ([year month day]
    (ZonedDateTime/of year month day 0 0 0 0 default-zone-id))
+  ([year month day hour]
+   (ZonedDateTime/of year month day hour 0 0 0 default-zone-id))
   ([year month day hour minute]
    (ZonedDateTime/of year month day hour minute 0 0 default-zone-id))
   ([year month day hour minute second]
@@ -110,6 +145,14 @@
             (.minus acc ^TemporalAmount amount))
           t
           amounts))
+
+(defn from-now
+  [amount]
+  (plus (now) amount))
+
+(defn ago
+  [amount]
+  (minus (now) amount))
 
 (defn days
   [n]

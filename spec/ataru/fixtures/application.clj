@@ -1,5 +1,5 @@
 (ns ataru.fixtures.application
-  (:require [clj-time.core :as c]
+  (:require [ataru.time :as c]
             [ataru.application.review-states :as review-states]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"

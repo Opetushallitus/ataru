@@ -3,7 +3,7 @@
             [speclj.core :refer [describe tags it should-not-be-nil should= before should]]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
-            [clj-time.core :as time]))
+            [ataru.time :as time]))
 
 (def test-application-key "1.2.3.4.5.6")
 (def test-application-key-2 "1.2.3.4.5.7")
