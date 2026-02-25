@@ -10,7 +10,8 @@
 (defn get-lahtokoulu-cutoff-timestamp
   [hakuvuosi tarjonta-info]
   (let [haku-end (get-in tarjonta-info [:tarjonta :hakuaika :end])
-        lahtokoulu-yhteishaku-cutoff-date (t/date-time hakuvuosi 5 30)]
+        lahtokoulu-yhteishaku-cutoff-date (.atStartOfDay (t/local-date hakuvuosi 5 30)
+                                                         (t/time-zone-for-id "UTC"))]
     (if (toisen-asteen-yhteishaku? (:tarjonta tarjonta-info))
       (c/to-timestamp lahtokoulu-yhteishaku-cutoff-date)
       haku-end)))

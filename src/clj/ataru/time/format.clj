@@ -75,4 +75,5 @@
 
 (defn unparse
   [formatter-value temporal]
-  (.format ^DateTimeFormatter formatter-value temporal))
+  (when temporal
+    (.format ^DateTimeFormatter formatter-value temporal)))

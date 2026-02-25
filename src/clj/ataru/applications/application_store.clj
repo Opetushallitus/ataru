@@ -21,6 +21,7 @@
             [clojure.set]
             [clojure.string]
             [ataru.time :as time]
+            [ataru.time.coerce :as c]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
@@ -1637,6 +1638,21 @@
                                   :haku :hakuOid
                                   :application-payment-states :applicationPaymentState}))))
 
+(defn- parse-siirto-time
+  [value]
+  (cond
+    (nil? value) nil
+    (instance? java.time.ZonedDateTime value) value
+    (string? value) (c/from-string value)
+    :else (c/from-long value)))
+
+(defn- parse-siirto-total
+  [value]
+  (cond
+    (nil? value) nil
+    (number? value) value
+    :else (edn/read-string value)))
+
 (defn- unwrap-siirto-application [application]
   (let [attachments (->> application
                          :content
@@ -1648,10 +1664,17 @@
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
                             flatten-application-answers)
-        application-hakukohde-reviews (or (:application-hakukohde-reviews application) [])
+        application-hakukohde-reviews (map #(update % :modified-time parse-siirto-time)
+                                           (or (:application-hakukohde-reviews application) []))
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
-        application-review-notes (or (:application-review-notes application) [])
-        application-payment-states (map (fn [state] (update state :total #(edn/read-string %))) (or (:application-payment-states application) []))
+        application-review-notes (map #(update % :created parse-siirto-time)
+                                      (or (:application-review-notes application) []))
+        application-payment-states (map (fn [state]
+                                          (-> state
+                                              (update :total parse-siirto-total)
+                                              (update :modified parse-siirto-time)
+                                              (update :reminderSentAt parse-siirto-time)))
+                                        (or (:application-payment-states application) []))
         submitted-formatted (.format zoned-date-time-formatter (:submitted application))
         created-formatted (.format zoned-date-time-formatter (:created application))
         modified-formatted (.format zoned-date-time-formatter (:modified application))]
