@@ -13,7 +13,8 @@
             [clojure.java.jdbc :as jdbc]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log])
-  (:import (java.time Instant Duration ZonedDateTime)))
+  (:import (java.time Instant Duration ZonedDateTime)
+           (java.time.temporal ChronoUnit)))
 
 (defn- should-eventually [f timeout]
   (let [timed-out (promise)]
@@ -144,7 +145,7 @@
                                    ds
                                    true))]
                 (try
-                  (let [payload {:time (ZonedDateTime/now)}]
+                  (let [payload {:time (.truncatedTo (ZonedDateTime/now) ChronoUnit/MILLIS)}]
                     (jdbc/with-db-transaction
                       [connection {:datasource ds}]
                       (job/start-job job-runner connection "queued" payload))
@@ -162,7 +163,7 @@
                                    ds
                                    true))]
                 (try
-                  (let [payload {:time (Instant/now)}]
+                  (let [payload {:time (.truncatedTo (Instant/now) ChronoUnit/MILLIS)}]
                     (jdbc/with-db-transaction
                       [connection {:datasource ds}]
                       (job/start-job job-runner connection "queued" payload))

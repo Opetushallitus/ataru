@@ -1,6 +1,6 @@
 (ns ataru.form-store-spec
-  (:require [speclj.core :refer :all]
-            [clj-time.core :as t]
+  (:require [speclj.core :refer [describe it should should= should-not= should-throw tags]]
+            [ataru.time :as t]
             [ataru.fixtures.person-info-form :refer [form]]
             [ataru.log.audit-log :as audit-log]
             [ataru.forms.form-store :as store])
@@ -18,7 +18,7 @@
   (tags :unit :form-versioning)
 
   (it "should be saved as new form"
-      (let [{:keys [id key] :as new-form} (store/create-new-form! id-less)]
+      (let [{:keys [id key]} (store/create-new-form! id-less)]
         (should id)
         (should key)))
 
@@ -36,7 +36,7 @@
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-two))))))
 
   (it "should throw when later version already exists"
-      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session audit-logger)
-            version-two                                   (store/create-form-or-increment-version! (assoc  version-one :organization-oid org-id) spec-session audit-logger)]
+      (let [version-one (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session audit-logger)
+            _           (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session audit-logger)]
         (should-throw ExceptionInfo "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
                       (keys (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session audit-logger))))))

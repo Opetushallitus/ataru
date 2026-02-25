@@ -2,11 +2,17 @@
   (:require [ataru.component-data.component :as component]
             [ataru.time :as c]))
 
+(def ^:private utc-zone (c/time-zone-for-id "UTC"))
+
+(defn- utc-date-time
+  [year month day hour minute second]
+  (c/from-time-zone (c/local-date-time year month day hour minute second) utc-zone))
+
 (def form {:id           123
            :key          "form_123_key"
            :name         {:fi "Form name"}
            :created-by   "SEPPO PAPUNEN"
-           :created-time (c/date-time 2016 6 14 12 34 56)
+           :created-time (utc-date-time 2016 6 14 12 34 56)
            :content      [{:id       "form_field_0"
                            :label    {:fi "Lomakeosio"}
                            :fieldType "fieldset"
@@ -24,7 +30,7 @@
                          :key          "form_321_key"
                          :name         {:fi "Form name"}
                          :created-by   "IRMELI KUIKELOINEN"
-                         :created-time (c/date-time 2016 6 14 12 34 56)
+                         :created-time (utc-date-time 2016 6 14 12 34 56)
                          :content      [{:id       "form_field_1"
                                          :label    {:fi "Lomakeosio"}
                                          :fieldType "fieldset"
@@ -43,7 +49,7 @@
                                   :key          "form_321_key"
                                   :name         {:fi "Form name"}
                                   :created-by   "IRMELI KUIKELOINEN"
-                                  :created-time (c/date-time 2016 6 14 12 34 56)
+                                  :created-time (utc-date-time 2016 6 14 12 34 56)
                                   :content      [{:id       "form_field_1"
                                                   :label    {:fi "Lomakeosio"}
                                                   :fieldType "fieldset"
@@ -101,7 +107,7 @@
                                   :key          "form_321_key"
                                   :name         {:fi "Form name"}
                                   :created-by   "IRMELI KUIKELOINEN"
-                                  :created-time (c/date-time 2016 6 14 12 34 56)
+                                  :created-time (utc-date-time 2016 6 14 12 34 56)
                                   :content      [{:id         "form_field_1"
                                                   :label      {:fi "Lomakeosio"}
                                                   :fieldType  "fieldset"
@@ -119,8 +125,8 @@
 
 (def application-for-form {:id                            9432
                            :key                           "application_9432_key"
-                           :created-time                  (c/date-time 2016 6 15 12 34 56)
-                           :submitted                     (c/date-time 2016 6 15 12 30 00)
+                           :created-time                  (utc-date-time 2016 6 15 12 34 56)
+                           :submitted                     (utc-date-time 2016 6 15 12 30 00)
                            :state                         "active"
                            :form                          123
                            :name                          {:fi "Standalone form"}
@@ -147,8 +153,8 @@
 
 (def application-for-hakukohde {:id                            3424
                                 :key                           "application_3424_key"
-                                :created-time                  (c/date-time 2016 6 15 12 34 56)
-                                :submitted                     (c/date-time 2016 6 15 12 30 00)
+                                :created-time                  (utc-date-time 2016 6 15 12 34 56)
+                                :submitted                     (utc-date-time 2016 6 15 12 30 00)
                                 :state                         "active"
                                 :form                          321
                                 :name                          {:fi "Form with hakukohde and haku"}
@@ -180,8 +186,8 @@
 
 (def application-with-special-answers {:id                            3424
                                        :key                           "application_3424_key"
-                                       :created-time                  (c/date-time 2016 6 15 12 34 56)
-                                       :submitted                     (c/date-time 2016 6 15 12 30 00)
+                                       :created-time                  (utc-date-time 2016 6 15 12 34 56)
+                                       :submitted                     (utc-date-time 2016 6 15 12 30 00)
                                        :state                         "active"
                                        :form                          321
                                        :name                          {:fi "Form with hakukohde and haku"}
@@ -226,7 +232,7 @@
 (def application-review-notes
   {"application_3424_key" [{:id              1
                             :application-key "application_3424_key"
-                            :created-time    (c/date-time 2018 7 29 14 11 12)
+                            :created-time    (utc-date-time 2018 7 29 14 11 12)
                             :notes           "Asia kunnossa"
                             :hakukohde       nil
                             :state-name      nil
@@ -234,7 +240,7 @@
                             :last-name       "Ailija"}
                            {:id              2
                             :application-key "application_3424_key"
-                            :created-time    (c/date-time 2018 7 30 15 12 13)
+                            :created-time    (utc-date-time 2018 7 30 15 12 13)
                             :notes           "Muikkari"
                             :hakukohde       nil
                             :state-name      nil
@@ -242,7 +248,7 @@
                             :last-name       "Kriv"}
                            {:id              3
                             :application-key "application_3424_key"
-                            :created-time    (c/date-time 2018 7 30 15 12 14)
+                            :created-time    (utc-date-time 2018 7 30 15 12 14)
                             :notes           "Ei käy"
                             :hakukohde       nil
                             :state-name      "eligibility-state"

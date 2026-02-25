@@ -169,7 +169,7 @@
 
 #?(:clj
    (def parse-date
-     (let [formatter (f/formatter "dd.MM.yyyy" (c/time-zone-for-id "Europe/Helsinki"))]
+     (let [formatter (f/formatter "d.M.yyyy" (c/time-zone-for-id "Europe/Helsinki"))]
        (fn [d]
          (try
            (when (re-matches finnish-date-pattern d)

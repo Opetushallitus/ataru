@@ -4,8 +4,8 @@
             #?(:clj  [ataru.time.format :as f]
                :cljs [cljs-time.format :as f])))
 
-(def birthday-pattern #"^\d{2}.\d{2}.\d{4}$")
-(def birthday-formatter (f/formatter "dd.MM.yyyy"))
+(def birthday-pattern #"^\d{1,2}\.\d{1,2}\.\d{4}$")
+(def birthday-formatter (f/formatter "d.M.yyyy"))
 
 (defn years-between? [date date' years]
   (let [[day month year] [(c/day date) (c/month date) (c/year date)]

@@ -43,3 +43,4 @@ npm-debug.log*
 .testcontainers.properties
 .vscode
 .clj-kondo
+OY-*
