@@ -90,7 +90,7 @@
 (defn start-tutkintojen-tunnustaminen-information-request-jobs
   [job-runner information-request]
   (let [cfg                                (get-configuration)
-        tutkintojen-tunnustaminen-enabled? (get cfg :enabled)
+        tutkintojen-tunnustaminen-enabled? (get cfg :enabled?)
         tutu-send-enabled?                 (get cfg :tutu-send-enabled?)]
         (when tutkintojen-tunnustaminen-enabled?
           (log/info "Started tutkintojen tunnustaminen information request sent (to ASHA) job with job id"
