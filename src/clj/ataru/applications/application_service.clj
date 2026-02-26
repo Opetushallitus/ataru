@@ -41,7 +41,6 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
-    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
     [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
     [ataru.koski.koski-service :as koski]
     [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
@@ -1104,7 +1103,7 @@
                                                                 filters-with-hakukohteet)
                                                               {:fetched-applications [] :filtered-applications []})
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
-                                                              (partial valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service)
+                                                              (partial suoritus-service/hakemusten-harkinnanvaraisuus-suorituspalvelusta suoritus-service)
                                                               (:filtered-applications fetched-and-filtered-applications)
                                                               filters-with-hakukohteet)]
             {:applications filtered-applications-by-harkinnanvaraisuus
