@@ -22,13 +22,12 @@
             [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
-            [cljs.core.match :refer-macros [match]]
             [clojure.string :as string]
             [clojure.walk :as walk]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx
                                    subscribe]])
   (:require-macros [ataru.async-macros :as asyncm]
-                   [cljs.core.async.macros :refer [go-loop]]))
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn get-user-info [db _]
   (http
@@ -546,7 +545,7 @@
     {:user-organization? (boolean (is-user-organization-fn (:oid hakukohderyhma)))}))
 
 (defn- on-haku-data-fetched [hakukohteet-promise hakukohderyhmat-promise]
-  (async/go
+  (go
     (try
       (let [haut                    (asyncm/<? hakukohteet-promise)
             hakukohteet             (->> (vals haut)
@@ -614,8 +613,8 @@
            keys  (->> forms
                       (sort (fn [[k1 v1] [k2 v2]]
                               (let [now (c/now)
-                                    c1  (get v1 :created-time now)
-                                    c2  (get v2 :created-time now)]
+                                    c1  (or (:created-time v1) now)
+                                    c2  (or (:created-time v2) now)]
                                 (cond (= k1 k2)        0
                                       (c/equal? c1 c2) (compare (:id v1)
                                                                 (:id v2))
@@ -645,12 +644,8 @@
         db))))
 
 (defn- editor-autosave-predicate [current prev]
-  (match [current (merge {:content []} prev)]
-    [_ {:content []}]
-    (if (= (:name current) (:name prev))
-      false true)
-
-    :else
+  (if (= (:content (merge {:content []} prev)) [])
+    (not= (:name current) (:name prev))
     (not=
       ; :id changes when new version is created,
       ; :key remains the same across versions
@@ -1538,10 +1533,10 @@
 (reg-event-fx
   :editor/update-selected-organization
   (fn [{db :db} [_ selected-organization]]
+    (.reload js/location)
     {:db (assoc-in db
                    [:editor :user-info :selected-organization]
-                   (not-empty selected-organization))}
-    (.reload js/location)))
+                   (not-empty selected-organization))}))
 
 (reg-event-fx
   :editor/remove-selected-organization
