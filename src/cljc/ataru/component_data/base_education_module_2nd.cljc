@@ -77,6 +77,11 @@
                          "d6acad27-a2fa-4371-a551-904d5b601139"
                          "34f4c066-1551-4b0b-99c6-82751c4188e2"])
 
+(def matematiikka-ja-aidinkieli-yksilollistetty-keys ["matematiikka-ja-aidinkieli-yksilollistetty_1"
+                                                      "matematiikka-ja-aidinkieli-yksilollistetty_2"
+                                                      "ed68f9be-81e7-4d36-b995-4edb220bd52a"
+                                                      "22cf9706-21d8-4a6f-ba66-3481591fa43f"])
+
 (defn base-education-2nd-language-value-to-lang
   [value]
   (match [value]
