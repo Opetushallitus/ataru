@@ -5,7 +5,8 @@
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key
                                                                     base-education-wrapper-key
                                                                     suoritusvuosi-keys
-                                                                    tutkintokieli-keys]]))
+                                                                    tutkintokieli-keys
+                                                                    matematiikka-ja-aidinkieli-yksilollistetty-keys]]))
 
 (def form-2nd-aste {"content" [{"id" "oppikeywrapper"
                                 "children" [{"id" "kiinnostunut-oppisopimuskoulutuksesta"}]}
@@ -58,6 +59,10 @@
                     (it "returns tutkintokieli keys"
                         (should= (map keyword tutkintokieli-keys)
                                  (:tutkintokieli-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
+
+                    (it "returns matematiikka-ja-aidinkieli-yksilollistetty keys"
+                        (should= (map keyword matematiikka-ja-aidinkieli-yksilollistetty-keys)
+                                 (:matematiikka-ja-aidinkieli-yksilollistetty-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
 
                     (it "returns urheilijan-amm-lisakysymys-key and groups"
                         (let [result (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste)]
