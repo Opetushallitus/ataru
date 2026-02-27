@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ataru</groupId>
   <artifactId>ataru</artifactId>
@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>16518012266beaf66a139768b04e56095838ac60</tag>
+    <tag>1780209c666219326917ed244e0c60569ca03d4c</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -294,6 +294,11 @@
         <version>5.8.0</version>
       </dependency>
       <dependency>
+        <groupId>opiskelijavalinnat-utils</groupId>
+        <artifactId>java-cas</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
         <groupId>io.undertow</groupId>
         <artifactId>undertow-core</artifactId>
         <version>2.3.20.Final</version>
@@ -319,9 +324,9 @@
         <version>3.8.14.Final</version>
       </dependency>
       <dependency>
-        <groupId>opiskelijavalinnat-utils</groupId>
-        <artifactId>java-cas</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>2.0.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -980,7 +985,7 @@
     <dependency>
       <groupId>opiskelijavalinnat-utils.viestinvalitys</groupId>
       <artifactId>kirjasto</artifactId>
-      <version>1.2.2-SNAPSHOT</version>
+      <version>1.2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.thoughtworks.paranamer</groupId>
@@ -1098,6 +1103,12 @@
       <groupId>com.gfredericks</groupId>
       <artifactId>debug-repl</artifactId>
       <version>0.0.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>2.0.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
