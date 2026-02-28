@@ -108,11 +108,14 @@ test.describe('Editori', () => {
   })
 
   test('lomakkeen luonti luo lomakkeen oletus kentillä', async () => {
-    const lomakkeet = formListItems(page)
-    const ensimmainenLomake = lomakkeet.nth(0)
-    await expect(
-      ensimmainenLomake.locator('.editor-form__list-form-name')
-    ).toHaveText('Tyhjä lomake')
+    await expect(page.getByTestId('form-name-input')).toHaveValue(
+      'Tyhjä lomake'
+    )
+
+    const lomakeNimiListassa = formListItems(page)
+      .locator('.editor-form__list-form-name', { hasText: 'Tyhjä lomake' })
+      .first()
+    await expect(lomakeNimiListassa).toBeVisible()
 
     const lomakeKomponentit = formComponents(page)
 
