@@ -6,8 +6,8 @@
             [ataru.email.email-util :as email-util]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as util]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
+            [ataru.time.coerce :as coerce]
+            [ataru.time :as time]
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [clojure.string :as s]))

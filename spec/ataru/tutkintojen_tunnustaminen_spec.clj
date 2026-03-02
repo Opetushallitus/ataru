@@ -18,8 +18,8 @@
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-information-request-notify-job :refer [tutkintojen-tunnustaminen-information-request-handler]]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-notify-job :refer [tutkintojen-tunnustaminen-state-change-handler]]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-notify-job :refer [tutkintojen-tunnustaminen-edit-handler]]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
+            [ataru.time :as t]
+            [ataru.time.format :as f]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
             [clojure.java.shell :refer [sh]]
@@ -58,18 +58,54 @@
 (defrecord MockMaksutService []
   MaksutServiceProtocol
 
+  (create-kk-application-payment-lasku [_ _] nil)
+  (create-kasittely-lasku [_ _] nil)
+  (create-paatos-lasku [_ _] nil)
   (list-lasku-statuses [_ _]
     [{:order_id "TTU2354669-1"
      :reference *payment-property-application-key*
      :status :paid
-     :origin "tutu"}]))
+     :origin "tutu"}])
+  (list-laskut-by-application-key [_ _] [])
+  (download-receipt [_ _] nil)
+  (invalidate-laskut [_ _] nil))
 
 (def mock-maksut-service (->MockMaksutService))
 
 (defrecord MockApplicationService []
   ApplicationService
 
-  (payment-poller-processing-state-change [_ _ _] {}))
+  (get-person [_ _] nil)
+  (get-person-for-securelink [_ _] nil)
+  (get-application-with-human-readable-koodis [_ _ _ _] nil)
+  (get-excel-report-of-applications-by-key [_ _ _ _ _ _ _ _ _] nil)
+  (save-application-review [_ _ _] nil)
+  (mass-update-application-states [_ _ _ _ _ _] nil)
+  (payment-triggered-processing-state-change [_ _ _ _ _] nil)
+  (payment-poller-processing-state-change [_ _ _] {})
+  (send-modify-application-link-email [_ _ _ _ _] nil)
+  (add-review-note [_ _ _] nil)
+  (add-review-notes [_ _ _] nil)
+  (get-application-version-changes [_ _ _ _] nil)
+  (omatsivut-applications [_ _ _] [])
+  (get-applications-for-valintalaskenta [_ _ _ _ _ _] [])
+  (get-application-oids-for-valintalaskenta [_ _ _] [])
+  (siirto-applications [_ _ _ _ _ _ _ _] [])
+  (kouta-application-count-for-hakukohde [_ _ _] 0)
+  (suoritusrekisteri-applications [_ _ _ _ _ _] [])
+  (suoritusrekisteri-person-info [_ _ _ _] [])
+  (suoritusrekisteri-toinenaste-applications [_ _ _ _ _ _ _] [])
+  (get-applications-paged [_ _ _] {})
+  (get-applications-persons-and-hakukohteet-by-haku [_ _] [])
+  (get-ensisijainen-application-counts-for-haku [_ _] {})
+  (mass-delete-application-data [_ _ _ _ _] nil)
+  (mass-inactivate-applications [_ _ _ _] nil)
+  (mass-reactivate-applications [_ _ _ _] nil)
+  (valinta-tulos-service-applications [_ _ _ _ _] [])
+  (valinta-ui-applications [_ _ _] [])
+  (get-tutu-application [_ _] nil)
+  (get-tutu-applications [_ _] [])
+  (get-tutu-application-version-changes [_ _ _ _] nil))
 
 (def mock-application-service (->MockApplicationService))
 
