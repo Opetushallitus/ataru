@@ -76,8 +76,10 @@
     (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client nil modified-since))
 
   (ylioppilas-tai-ammatillinen? [_ person-oid]
-    (some #(= :valmis (:tila %))
-          (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil)))
+    (let [supa-result (suorituspalvelu-client/automaattinen-hakukelpoisuus person-oid)
+          automaattisesti-hakukelpoinen (= true (:automaattisestiHakukelpoinen supa-result))]
+      (log/info "Automaattinen hakukelpoisuus oppijalle " person-oid ":" automaattisesti-hakukelpoinen "(" supa-result ")")
+      automaattisesti-hakukelpoinen))
 
   (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi]
     (let [cache-key (str oppilaitos-oid "#" vuosi)

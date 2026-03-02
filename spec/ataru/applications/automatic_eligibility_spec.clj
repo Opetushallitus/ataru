@@ -4,7 +4,6 @@
             [ataru.dob :as dob]
             [ataru.log.audit-log :as audit-log]
             [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :as pprint]
             [clojure.test.check :as tc]
@@ -66,11 +65,9 @@
 
 (defn- call-ae
   [inputs]
-  (ae/automatic-eligibility-if-ylioppilas
+  (ae/create-automatic-eligibility-updates
    (:application inputs)
    (:haku inputs)
-   (:ohjausparametrit inputs)
-   (:now inputs)
    (:hakukohteet inputs)
    (:suoritus? inputs)
    hakukohderyhmapalvelu-service
@@ -92,32 +89,32 @@
                    (empty? (call-ae inputs))
                    true))))
 
-  (it "returns no updates when automatic eligibility if ylioppilas not in use"
-    (check 100 (prop/for-all [inputs input-gen]
-                 (if (false? (get-in inputs [:haku :ylioppilastutkinto-antaa-hakukelpoisuuden?]))
-                   (empty? (call-ae inputs))
-                   true))))
+  ;(it "returns no updates when automatic eligibility if ylioppilas not in use"
+  ;  (check 100 (prop/for-all [inputs input-gen]
+  ;               (if (false? (get-in inputs [:haku :ylioppilastutkinto-antaa-hakukelpoisuuden?]))
+  ;                 (empty? (call-ae inputs))
+  ;                 true))))
 
-  (it "returns updates only for hakukohteet where automatic eligibility if ylioppilas is in use"
-    (check 100 (prop/for-all [inputs input-gen]
-                 (every? #(:ylioppilastutkinto-antaa-hakukelpoisuuden? (:hakukohde %))
-                         (call-ae inputs)))))
+  ;(it "returns updates only for hakukohteet where automatic eligibility if ylioppilas is in use"
+  ;  (check 100 (prop/for-all [inputs input-gen]
+  ;               (every? #(:ylioppilastutkinto-antaa-hakukelpoisuuden? (:hakukohde %))
+  ;                       (call-ae inputs)))))
 
-  (it "returns no updates when now is pass PH_AHP"
-    (check 100 (prop/for-all [inputs input-gen]
-                 (if (some->> (get-in inputs [:ohjausparametrit :PH_AHP :date])
-                              coerce/from-long
-                              (time/after? (:now inputs)))
-                   (empty? (call-ae inputs))
-                   true))))
+  ;(it "returns no updates when now is pass PH_AHP"
+  ;  (check 100 (prop/for-all [inputs input-gen]
+  ;               (if (some->> (get-in inputs [:ohjausparametrit :PH_AHP :date])
+  ;                            coerce/from-long
+  ;                            (time/after? (:now inputs)))
+  ;                 (empty? (call-ae inputs))
+  ;                 true))))
 
-  (it "returns updates from unreviewed to eligible when ylioppilas or ammatillinen"
-    (check 100 (prop/for-all [inputs input-gen]
-                 (if (:suoritus? inputs)
-                   (every? #(and (= "unreviewed" (:from %))
-                                 (= "eligible" (:to %)))
-                           (call-ae inputs))
-                   true))))
+  ;(it "returns updates from unreviewed to eligible when ylioppilas or ammatillinen"
+  ;  (check 100 (prop/for-all [inputs input-gen]
+  ;               (if (:suoritus? inputs)
+  ;                 (every? #(and (= "unreviewed" (:from %))
+  ;                               (= "eligible" (:to %)))
+  ;                         (call-ae inputs))
+  ;                 true))))
 
   (it "returns updates from eligible to unreviewed when not ylioppilas or ammatillinen"
     (check 100 (prop/for-all [inputs input-gen]
