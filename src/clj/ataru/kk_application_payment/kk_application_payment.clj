@@ -18,11 +18,10 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]
             [ataru.config.core :refer [config]]
-            [clj-time.format :as time-format]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
-            [ataru.component-data.kk-application-payment-module :as payment-module])
-  (:import (org.joda.time DateTime)))
+            [ataru.time.format :as time-format]
+            [ataru.time.coerce :as coerce]
+            [ataru.time :as time]
+            [ataru.component-data.kk-application-payment-module :as payment-module]))
 
 (def default-time-format (time-format/with-zone (time-format/formatter "yyyy-MM-dd") (time/time-zone-for-id "Europe/Helsinki")))
 
@@ -74,7 +73,7 @@
    :in-migri-review "in-migri-review"})
 
 (defn get-due-date-for-todays-payment []
-  (let [time-now (new DateTime)
+  (let [time-now (time/now)
         due-date (time-format/unparse default-time-format
                                       (time/plus time-now
                                                  (time/days kk-application-payment-due-days))) ]
