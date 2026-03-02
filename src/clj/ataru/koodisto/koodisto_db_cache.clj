@@ -7,8 +7,9 @@
             [cheshire.core :as cheshire]
             [clojure.string :as str]
             [schema.core :as s]
-            [ataru.util :as util])
-  (:import [java.time LocalDate LocalTime ZonedDateTime ZoneId]
+            [ataru.util :as util]
+            [ataru.time :as time])
+  (:import [java.time LocalDate LocalTime ZonedDateTime]
            java.time.format.DateTimeFormatter))
 
 (def koodisto-checker (s/checker [schema/Koodi]))
@@ -44,11 +45,11 @@
                    (when-let [start (:voimassaAlkuPvm koodi-value)]
                      {:start (ZonedDateTime/of (LocalDate/parse start (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
                                                LocalTime/MIDNIGHT
-                                               (ZoneId/of "Europe/Helsinki"))})
+                                               (time/time-zone-for-id "Europe/Helsinki"))})
                    (when-let [end (:voimassaLoppuPvm koodi-value)]
                      {:end (ZonedDateTime/of (LocalDate/parse end (DateTimeFormatter/ofPattern "yyyy-MM-dd"))
                                              LocalTime/MIDNIGHT
-                                             (ZoneId/of "Europe/Helsinki"))}))})
+                                             (time/time-zone-for-id "Europe/Helsinki"))}))})
 
 (defn- get-koodisto
   [koodisto version]

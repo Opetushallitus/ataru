@@ -23,7 +23,7 @@
     [ataru.util :as util]
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
-    [clj-time.core :as time]
+    [ataru.time :as time]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [taoensso.timbre :as log]

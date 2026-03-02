@@ -1,5 +1,5 @@
 (ns ataru.dob
-  (:require #?(:clj [clj-time.core :as t]
+  (:require #?(:clj [ataru.time :as t]
                :cljs [cljs-time.core :as t])))
 
 (defonce date-pattern #"^(\d{1,2})\.(\d{1,2})\.(\d{4})$")
