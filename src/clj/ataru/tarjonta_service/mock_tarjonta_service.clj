@@ -1,6 +1,6 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
-  (:require [clj-time.coerce :as coerce]
-            [clj-time.core :as t]
+  (:require [ataru.time.coerce :as coerce]
+            [ataru.time :as t]
             [com.stuartsierra.component :as component]
             [ataru.constants :refer [hakutapa-jatkuva-haku]]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]

@@ -4,7 +4,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.person-service.person-service :as person-service]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
                                  before around]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
@@ -19,8 +19,7 @@
             [ataru.test-utils :refer [set-fixed-time reset-fixed-time!]]
             [ataru.applications.application-store :as application-store]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
-            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service])
-  (:import (org.joda.time DateTime DateTimeZone)))
+            [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]))
 
 (defn- store-field-deadline [deadline]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -816,7 +815,9 @@
                           (set-fixed-time fixed-date-str-in-finland)
                           (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
                                 due-date-stored (payment/parse-due-date (:due-date data))
-                                comparison-date (time/plus (new DateTime fixed-date-str-in-finland)
+                                comparison-date (time/plus (-> fixed-date-str-in-finland
+                                                                java.time.LocalDateTime/parse
+                                                                (.atZone (time/default-zone)))
                                                            (time/days payment/kk-application-payment-due-days))]
                             (should= (time/year due-date-stored) (time/year comparison-date))
                             (should= (time/month due-date-stored) (time/month comparison-date))
@@ -826,7 +827,9 @@
                           (set-fixed-time fixed-date-str-in-finland)
                           (let [data            (payment/set-application-fee-required "1.2.3.4.5.12" nil)
                                 due-date-stored (payment/parse-due-date (:due-date data))
-                                comparison-date (time/plus (new DateTime fixed-date-str-in-finland (DateTimeZone/forID "Europe/Helsinki"))
+                                comparison-date (time/plus (-> fixed-date-str-in-finland
+                                                                java.time.LocalDateTime/parse
+                                                                (.atZone (time/time-zone-for-id "Europe/Helsinki")))
                                                            (time/days payment/kk-application-payment-due-days))]
                             (should= (time/year due-date-stored) (time/year comparison-date))
                             (should= (time/month due-date-stored) (time/month comparison-date))

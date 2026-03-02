@@ -17,8 +17,7 @@
             [clojure.string :as string]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]
-            [clj-time.core :as time])
-  (:import (org.joda.time DateTime)))
+            [ataru.time :as time]))
 
 (defn- information-request-email-template-filename
   [lang]
@@ -117,13 +116,11 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
-    (let [add-update-link (:add-update-link information-request)
+    (let [add-update-link   (:add-update-link information-request)
+          reminder-hour     (get-in config [:public-config :information-request-reminder-job-hour])
           send-reminder-time (when (:send-reminder? information-request)
                                (time/plus
-                                 (-> (new DateTime)
-                                     (.withTime
-                                       (get-in config [:public-config :information-request-reminder-job-hour])
-                                       0 0 0))
+                                 (time/with-time (time/now) (time/local-time reminder-hour 0))
                                  (time/days (:reminder-days information-request))))
           information-request (information-request-store/add-information-request
                                 (assoc
