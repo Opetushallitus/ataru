@@ -1,7 +1,7 @@
 (ns ataru.attachment-deadline.attachment-deadline-service
   (:require
-   [clj-time.core :as t]
-   [clj-time.coerce :as c]
+   [ataru.time :as t]
+   [ataru.time.coerce :as c]
    [clojure.string :as s]
    [ataru.config.core :refer [config]]
    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
@@ -75,8 +75,8 @@
 (defn- winter-summertime-nullification-adjustment
   "Adjusts the end time of the deadline to take account of possible daylight saving time changes"
   [end start]
-  (let [end-fin (.withZone end (t/time-zone-for-id "Europe/Helsinki"))
-        start-fin (.withZone start (t/time-zone-for-id "Europe/Helsinki"))]
+  (let [end-fin (t/to-time-zone end (t/time-zone-for-id "Europe/Helsinki"))
+        start-fin (t/to-time-zone start (t/time-zone-for-id "Europe/Helsinki"))]
     (t/plus end
             (t/hours (cond
                        (= (t/hour start-fin) (t/hour end-fin)) 0
@@ -96,7 +96,7 @@
 (defn- set-local-time
   [datetime haku-settings-based-grace-period-time]
   (if haku-settings-based-grace-period-time
-    (.withTime datetime (parse-local-time haku-settings-based-grace-period-time))
+    (t/with-time datetime (parse-local-time haku-settings-based-grace-period-time))
     datetime))
 
 (defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
@@ -113,12 +113,12 @@
                                                 (some-> hakuaika
                                                         :end
                                                         c/from-long))
-                                              (.withZone (t/time-zone-for-id "UTC")))
+                                              (t/to-time-zone (t/time-zone-for-id "UTC")))
         attachment-grace-period-end (some-> attachment-grace-period-start
                                             (t/plus (t/days modify-grace-period)))]
     (some-> attachment-grace-period-end
             (winter-summertime-nullification-adjustment attachment-grace-period-start)
-            (.withZone (t/time-zone-for-id "Europe/Helsinki"))
+            (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
             (set-local-time haku-settings-based-grace-period-time))))
 
 (defrecord AttachmentDeadlineService [ohjausparametrit-service]
