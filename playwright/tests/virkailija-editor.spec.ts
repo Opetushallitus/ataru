@@ -112,6 +112,11 @@ test.describe('Editori', () => {
       'Tyhjä lomake'
     )
 
+    const lomakeNimiListassa = formListItems(page)
+      .locator('.editor-form__list-form-name', { hasText: 'Tyhjä lomake' })
+      .first()
+    await expect(lomakeNimiListassa).toBeVisible()
+
     const lomakeKomponentit = formComponents(page)
 
     const yleisetasetukset = lomakeKomponentit.nth(0)
