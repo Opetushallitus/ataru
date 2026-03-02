@@ -1,7 +1,7 @@
 (ns ataru.applications.excel-export.text-field-spec
   (:require [ataru.forms.form-store :as form-store]
             [ataru.test-utils :refer [export-test-excel with-excel-workbook]]
-            [clj-time.core :as clj-time]
+            [ataru.time :as time]
             [speclj.core :as speclj :refer :all])
   (:import [java.util UUID]))
 
@@ -29,13 +29,13 @@
    :key          "form_123_key"
    :name         {:fi "Form name"}
    :created-by   "SEPPO PAPUNEN"
-   :created-time (clj-time/date-time 2016 6 14 12 34 56)
+   :created-time (time/date-time 2016 6 14 12 34 56)
    :content      []})
 
 (defn build-application-for-form [form]
   {:id                            9432
    :key                           "application_9432_key"
-   :created-time                  (clj-time/date-time 2016 6 15 12 34 56)
+   :created-time                  (time/date-time 2016 6 15 12 34 56)
    :state                         "active"
    :form                          (:id form)
    :name                          {:fi "textField lomake"}

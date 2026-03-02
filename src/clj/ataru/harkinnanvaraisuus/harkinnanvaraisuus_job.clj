@@ -1,8 +1,8 @@
 (ns ataru.harkinnanvaraisuus.harkinnanvaraisuus-job
   (:require [ataru.suoritus.suoritus-service :as suoritus-service]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as store]
-            [clj-time.coerce :as coerce]
+            [ataru.time.coerce :as coerce]
             [ataru.haku.haku-service :as haku-service]
             [ataru.applications.application-store :as application-store]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]

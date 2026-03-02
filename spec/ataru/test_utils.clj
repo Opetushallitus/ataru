@@ -11,9 +11,9 @@
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
-            [clj-time.format :as format]
+            [ataru.time.coerce :as coerce]
+            [ataru.time :as time]
+            [ataru.time.format :as format]
             [clojure.string :as clj-string]
             [ring.mock.request :as mock]
             [speclj.core :refer [should-contain should-not-be-nil
@@ -21,9 +21,9 @@
             [yesql.core :as sql])
 
   (:import [java.io File FileOutputStream]
+           [java.time Instant]
            [java.util UUID]
-           [org.apache.poi.ss.usermodel WorkbookFactory]
-           (org.joda.time DateTimeUtils)))
+           [org.apache.poi.ss.usermodel WorkbookFactory]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 (declare yesql-upsert-virkailija<!)
@@ -202,7 +202,7 @@
 (defn set-fixed-time [timestamp]
   (let [millis (local-timestamp-to-utc-millis timestamp)]
     (println (str "Setting fixed millis " timestamp ", formatted with Helsinki timezone " (format/parse formatter timestamp) ", result millis " millis))
-    (DateTimeUtils/setCurrentMillisFixed millis)))
+    (time/set-fixed-now! (Instant/ofEpochMilli millis))))
 
 (defn reset-fixed-time! []
-  (DateTimeUtils/setCurrentMillisSystem))
+  (time/reset-now!))

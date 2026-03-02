@@ -15,8 +15,8 @@
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
             [ataru.koski.koski-service :as koski]
             [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
+            [ataru.time :as t]
+            [ataru.time.format :as f]
             [clojure.core.match :refer [match]]
             [clojure.string :as string :refer [trim]]
             [taoensso.timbre :as log])

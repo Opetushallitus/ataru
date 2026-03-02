@@ -9,7 +9,7 @@
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :refer [check-harkinnanvaraisuus-handler recheck-harkinnanvaraisuus-handler]]
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :refer [ValintalaskentakoostepalveluService]]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]

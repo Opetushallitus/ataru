@@ -1,12 +1,11 @@
 (ns ataru.applications.lahtokoulu-util-spec
-  (:require [clj-time.coerce :as coerce]
-            [clj-time.format :as f]
-            [clj-time.format :as format]
-            [speclj.core :refer :all]
+  (:require [ataru.time.coerce :as c]
+            [ataru.time.format :as f]
+            [speclj.core :refer [describe it should should= tags]]
             [ataru.applications.lahtokoulu-util :as lahtokoulu-util]))
 
-(defn str->timestamp [str] (coerce/to-timestamp (coerce/from-string str)))
-(defn str->datetime [str] (format/parse (:date-time format/formatters) str))
+(defn str->timestamp [str] (c/to-timestamp (c/from-string str)))
+(defn str->datetime [str] (f/parse (:date-time f/formatters) str))
 
 (def yhteishaku-tarjonta
   {:tarjonta
@@ -40,8 +39,8 @@
                 (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp 2016 yhteishaku-tarjonta)))
 
           (it "should return nil, eg. no cutoff, when tarjonta data is completely missing"
-              (should-be-nil
-                (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp 2016 {}))))
+              (should
+                (nil? (lahtokoulu-util/get-lahtokoulu-cutoff-timestamp 2016 {})))))
 
 (describe "filter-by-jatkuva-haku-hakemus-hakukausi"
           (tags :unit)
