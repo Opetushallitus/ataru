@@ -38,7 +38,7 @@
  :application-delete-key    {:secret-key "vT6+TMbTwsJx5J&T"}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
- :redis           {:uri "redis://localhost:6380"}
+ :redis           {:uri "redis://localhost:16381"}
  :cas             {}
  :public-config   {:virkailija-caller-id                "1.2.246.562.10.00000000001.ataru-editori.frontend"
                    :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
