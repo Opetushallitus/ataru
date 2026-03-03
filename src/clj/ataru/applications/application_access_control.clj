@@ -12,8 +12,6 @@
     [ataru.util :as util]
     [clojure.set :as set]
     [ataru.suoritus.suoritus-service :as suoritus-service]
-    [ataru.applications.suoritus-filter :as suoritus-filter]
-    [ataru.time :as time]
     [medley.core :refer [distinct-by]]))
 
 (defn authorized-by-form?
