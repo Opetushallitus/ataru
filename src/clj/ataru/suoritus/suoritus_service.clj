@@ -17,8 +17,13 @@
 
 (defn- ->local-date
   [t]
-  (when t
-    (time/local-date (time/year t) (time/month t) (time/day t))))
+  (let [parsed (cond
+                 (nil? t) nil
+                 (string? t) (or (coerce/from-string t)
+                                 t)
+                 :else t)]
+    (when parsed
+      (time/local-date (time/year parsed) (time/month parsed) (time/day parsed)))))
 
 (defn- parse-opiskelija
   [opiskelija]
@@ -47,7 +52,8 @@
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
   (let [paivamaara (->local-date ajanhetki)
         lahtokoulut (filter #(let [alkupvm (format/parse-local-date suorituspaivamaara-formatter (:alkuPaivamaara %))
-                                   loppupvm (some-> (:loppuPaivamaara %) not-empty (format/parse-local-date suorituspaivamaara-formatter))
+                                   loppupvm (when-let [loppu (some-> (:loppuPaivamaara %) not-empty)]
+                                              (format/parse-local-date suorituspaivamaara-formatter loppu))
                                    alkanut? (not (time/before? paivamaara alkupvm))
                                    loppunut? (and (some? loppupvm) (not (time/before? paivamaara loppupvm)))]
                               (and alkanut? (not loppunut?))) lahtokoulut)]
