@@ -3,7 +3,8 @@
             [clojure.walk :refer [keywordize-keys]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-2nd-language-value-to-lang
                                                                     tutkintokieli-keys
-                                                                    suoritusvuosi-keys]]))
+                                                                    suoritusvuosi-keys
+                                                                    matematiikka-ja-aidinkieli-yksilollistetty-keys]]))
 
 (def sora-terveys-keys #{"sora-terveys"
                         "6a5e1a0f-f47e-479e-884a-765b85bd438c"})
@@ -149,9 +150,16 @@
                                                                                  name)
                                                      pohjakoulutus-kieli-answer (when pohjakoulutus-kieli-key
                                                                                   (get answers (name pohjakoulutus-kieli-key)))
-                                                     pohjakoulutus-kieli (base-education-2nd-language-value-to-lang pohjakoulutus-kieli-answer)]
+                                                     pohjakoulutus-kieli (base-education-2nd-language-value-to-lang pohjakoulutus-kieli-answer)
+                                                     matematiikka-ja-aidinkieli-yksilollistetty-key (some->> (:matematiikka-ja-aidinkieli-yksilollistetty-keys questions)
+                                                                                                             (filter #(not (nil? (get answers (name %)))))
+                                                                                                             first
+                                                                                                             name)
+                                                     matematiikka-ja-aidinkieli-yksilollistetty (when matematiikka-ja-aidinkieli-yksilollistetty-key
+                                                                                                  (get answers matematiikka-ja-aidinkieli-yksilollistetty-key))]
                                                  (update application :keyValues (fn [kv] (merge kv {"pohjakoulutus_vuosi" pohjakoulutus-vuosi
-                                                                                                    "pohjakoulutus_kieli" pohjakoulutus-kieli})))))
+                                                                                                    "pohjakoulutus_kieli" pohjakoulutus-kieli
+                                                                                                    "matematiikka-ja-aidinkieli-yksilollistetty" matematiikka-ja-aidinkieli-yksilollistetty})))))
 
 
 (defn get-hakurekisteri-toinenaste-specific-questions
@@ -183,6 +191,7 @@
          urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)]
      {:tutkintovuosi-keys                          (map keyword suoritusvuosi-keys)
       :tutkintokieli-keys                          (map keyword tutkintokieli-keys)
+      :matematiikka-ja-aidinkieli-yksilollistetty-keys (map keyword matematiikka-ja-aidinkieli-yksilollistetty-keys)
       :sora-terveys-key                            sora-terveys-question
       :sora-aiempi-key                             sora-aiempi-question
       :kaksoistutkinto-keys                        kaksoistutkinto-keys
