@@ -149,45 +149,40 @@
   [haku]
   (< (count (:oid haku)) 28))
 
-(defn automatic-eligibility-if-ylioppilas
+(defn create-automatic-eligibility-updates
   [application
    haku
-   ohjausparametrit
-   now
    hakukohteet
    ylioppilas-tai-ammatillinen?
    hakukohderyhmapalvelu-service
    hakukohderyhma-settings-cache]
-  (if (is-tarjonta-haku? haku)
-    (log/info "Haku" (:oid haku) "on tarjonta-haku, ei tarkisteta"
-              "hakemuksen" application "hakukelpoisuutta automaattisesti.")
-    (when (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use?
-            haku ohjausparametrit application now)
-      (log/info "Haku" (:oid haku) "on kouta-haku, tarkistetaan"
-                "hakemuksen" application "hakukelpoisuus automaattisesti.")
-      (doall
-        (map (fn [hakukohde]
-               (let [yo-amm-hakukelpoisuushakukohde?
-                     (and ylioppilas-tai-ammatillinen?
-                          (automatic-eligibility-if-yo-amm-in-hakukohderyhma?
-                            hakukohde
-                            hakukohderyhmapalvelu-service
-                            hakukohderyhma-settings-cache))
-                     from-state (if yo-amm-hakukelpoisuushakukohde?
-                                  "unreviewed" "eligible")
-                     to-state (if yo-amm-hakukelpoisuushakukohde?
-                                "eligible" "unreviewed")]
-                 (when yo-amm-hakukelpoisuushakukohde?
-                   (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
-                             "on yo-amm-hakukelpoisuushakukohde,"
-                             "päivitetään hakemuksen" application
-                             "hakukelpoisuus automaattisesti."))
-                 {:from        from-state
-                  :to          to-state
-                  :application application
-                  :hakukohde   hakukohde}))
-             hakukohteet)))))
-
+  (log/info "Luodaan automaattisen hakukelpoisuuden muutokset hakemukselle" (:key application)
+            "haussa" (:oid haku) ", supan mukaan " ylioppilas-tai-ammatillinen?)
+  (doall
+    (map (fn [hakukohde]
+           (let [yo-amm-hakukelpoisuushakukohde?
+                 (and ylioppilas-tai-ammatillinen?
+                      (automatic-eligibility-if-yo-amm-in-hakukohderyhma?
+                        hakukohde
+                        hakukohderyhmapalvelu-service
+                        hakukohderyhma-settings-cache))
+                 from-state (if yo-amm-hakukelpoisuushakukohde?
+                              "unreviewed" "eligible")
+                 to-state (if yo-amm-hakukelpoisuushakukohde?
+                            "eligible" "unreviewed")]
+             (if yo-amm-hakukelpoisuushakukohde?
+               (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
+                         "on yo-amm-hakukelpoisuushakukohde,"
+                         "päivitetään hakemuksen" application
+                         "hakukelpoisuus automaattisesti tilaan" to-state)
+               (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
+                         "ei ole yo-amm-hakukelpoisuushakukohde. Asetetaan hakemuksen"
+                         application "hakukelpoisuus tilaan" to-state))
+             {:from        from-state
+              :to          to-state
+              :application application
+              :hakukohde   hakukohde}))
+         hakukohteet)))
 
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
@@ -210,21 +205,28 @@
           (let [haku                         (get-haku tarjonta-service application)
                 ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
                                                                    application)
-                hakukohteet                  (get-hakukohteet tarjonta-service application)
-                ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)
-                now                          (time/now)]
-            (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
-                                       {:isolation :serializable}]
-                                      (doseq [update (automatic-eligibility-if-ylioppilas
-                                                       application
-                                                       haku
-                                                       ohjausparametrit
-                                                       now
-                                                       hakukohteet
-                                                       ylioppilas-tai-ammatillinen?
-                                                       hakukohderyhmapalvelu-service
-                                                       hakukohderyhma-settings-cache)]
-                                        (update-application-hakukohde-review connection audit-logger update))))
+                now                          (time/now)
+                should-fetch-hakukelpoisuus? (automatic-eligibility-if-ylioppilas-or-ammatillinen-in-use?
+                                               haku ohjausparametrit application now)]
+            (if (is-tarjonta-haku? haku)
+              (log/info "Haku" (:oid haku) "on tarjonta-haku, ei tarkisteta"
+                        "hakemuksen" application "hakukelpoisuutta automaattisesti.")
+              (when should-fetch-hakukelpoisuus?
+                (log/info "Haku" (:oid haku) "on kouta-haku, tarkistetaan"
+                          "hakemuksen" application "hakukelpoisuus automaattisesti.")
+                (let [hakukohteet                  (get-hakukohteet tarjonta-service application)
+                      ylioppilas-tai-ammatillinen? (get-ylioppilas-tai-ammatillinen? suoritus-service application)]
+                  (log/info "Päivitetään automaattinen hakukelpoisuus hakemukselle" (:key application))
+                  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
+                                             {:isolation :serializable}]
+                                            (doseq [update (create-automatic-eligibility-updates
+                                                             application
+                                                             haku
+                                                             hakukohteet
+                                                             ylioppilas-tai-ammatillinen?
+                                                             hakukohderyhmapalvelu-service
+                                                             hakukohderyhma-settings-cache)]
+                                              (update-application-hakukohde-review connection audit-logger update)))))))
           (person-info-module/muu-person-info-module?
            (form-store/fetch-by-id (:form-id application)))
           nil
