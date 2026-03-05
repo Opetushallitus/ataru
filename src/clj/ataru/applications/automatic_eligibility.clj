@@ -170,11 +170,14 @@
                               "unreviewed" "eligible")
                  to-state (if yo-amm-hakukelpoisuushakukohde?
                             "eligible" "unreviewed")]
-             (when yo-amm-hakukelpoisuushakukohde?
-               (log/info (str "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
+             (if yo-amm-hakukelpoisuushakukohde?
+               (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
                          "on yo-amm-hakukelpoisuushakukohde,"
                          "päivitetään hakemuksen" application
-                         "hakukelpoisuus automaattisesti.")))
+                         "hakukelpoisuus automaattisesti tilaan" to-state)
+               (log/info "Haun" (:oid haku) "hakukohde" (:oid hakukohde)
+                         "ei ole yo-amm-hakukelpoisuushakukohde. Asetetaan hakemuksen"
+                         application "hakukelpoisuus tilaan" to-state))
              {:from        from-state
               :to          to-state
               :application application
