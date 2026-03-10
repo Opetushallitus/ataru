@@ -7,8 +7,8 @@
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [clj-time.core :as time]
-            [clj-time.format :as time-format]
+            [ataru.time :as time]
+            [ataru.time.format :as time-format]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [speclj.core :refer [it describe should-throw should-not-throw stub
@@ -60,6 +60,7 @@
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ _] {})
   (list-laskut-by-application-key [_ _] [])
+  (download-receipt [_ _] nil)
   (invalidate-laskut [this keys] (invalidate-laskut-fn this keys)))
 
 (def mock-maksut-service (->MockMaksutService))

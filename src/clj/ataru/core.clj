@@ -1,6 +1,5 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
-            [clj-time.jdbc] ; for java.sql.Timestamp / org.joda.time.DateTime coercion
             [ataru.timbre-config :as timbre-config]
             [ataru.log.audit-log :as audit-log]
             [ataru.virkailija.virkailija-system :as virkailija-system]
