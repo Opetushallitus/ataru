@@ -164,8 +164,8 @@
       (post-form updated-form session tarjonta-service organization-service audit-logger))))
 
 (defn- update-payment-module-to-form
-  [form session audit-logger]
-  (let [updated-form (payment-utils/update-payment-module-in-form form)]
+  [form update-payment update-person-info session audit-logger]
+  (let [updated-form (payment-utils/update-payment-module-in-form form update-payment update-person-info)]
     (log/info "updating kk-application-payment-module to form " (:key form) " with id " (:id form))
     (form-store/create-form-or-increment-version! updated-form session audit-logger)
     "Lomakkeen maksumoduuli päivitetty"))
@@ -177,13 +177,13 @@
     (form-store/create-form-or-increment-version! updated-form session audit-logger)
     "Lisätty maksumoduuli lomakkeelle"))
 
-(defn upsert-kk-application-payment-module [form-key session audit-logger]
+(defn upsert-kk-application-payment-module [form-key update-payment update-person-info session audit-logger]
   (log/info (str "Upserting kk-application-payment-module to form " form-key))
   (when (not (-> session :identity :superuser)) (throw (user-feedback-exception "Ei oikeuksia muokata lomaketta")))
   (let [form (form-store/fetch-by-key-for-kk-payment-module-job form-key)]
     (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
     (if (payment-utils/has-payment-module? form)
-      (update-payment-module-to-form form session audit-logger)
+      (update-payment-module-to-form form update-payment update-person-info session audit-logger)
       (add-payment-module-to-form form session audit-logger))))
 
 (defn edit-form-with-operations
