@@ -13,6 +13,7 @@
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
+(def ^:private basic-date-time-no-ms-formatter (f/formatter (:date-time-no-ms f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
 
 (defn get-formatter [fmt-str locale]
   (-> (DateTimeFormatter/ofPattern fmt-str)
@@ -52,7 +53,10 @@
 
 (defn basic-date-time-str->date-time
   [str]
-  (f/parse basic-date-time-formatter str))
+  (try
+    (f/parse basic-date-time-formatter str)
+    (catch Exception _
+      (f/parse basic-date-time-no-ms-formatter str))))
 
 (defn- jatkuva-haku? [haku]
   (string/starts-with? (:hakutapa-uri haku) hakutapa-jatkuva-haku))
