@@ -1362,6 +1362,7 @@
                     applications (:body resp)]
                 (should= 200 status)
                 (should= 1 (count applications))
+                (should= "fi" (:asiointikieli (first applications)))
                 (should= false (:processing (first applications)))
                 (should-be-nil (:hakuaikaIsOn (first applications)))
                 (should-be-nil (:hakuaikaEnds (first applications)))))
