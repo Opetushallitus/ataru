@@ -1751,7 +1751,8 @@
       (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
         :query-params [{hakukohdeOid :- s/Str nil}
-                       {harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}]
+                       {harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}
+                       {salliYksiloimattomat :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
         (if (and (nil? hakukohdeOid)
@@ -1771,8 +1772,8 @@
                  (response/ok applications)
                  {:yksiloimattomat yksiloimattomat
                   :applications    applications}
-                 (if (get-in config [:yksiloimattomat :allow] false)
-                   (do (log/warn "Yksilöimättömiä hakijoita")
+                 (if (or salliYksiloimattomat (get-in config [:yksiloimattomat :allow] false))
+                     (do (log/warn "Yksilöimättömiä hakijoita! Konffiarvo" (get-in config [:yksiloimattomat :allow] false) ", salliYksiloimattomat" salliYksiloimattomat)
                        (response/ok applications))
                    (response/conflict
                      {:error      "Yksilöimättömiä hakijoita"
