@@ -4,7 +4,7 @@
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.maksut.maksut-reminder-job :as maksut-reminder-job]
             [ataru.maksut.maksut-store :as maksut-store]
-            [clj-time.core :as c]
+            [ataru.time :as c]
             [clojure.java.jdbc :as jdbc]
             [ataru.background-job.job :as job]
             [com.stuartsierra.component :as component]
