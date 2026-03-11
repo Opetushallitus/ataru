@@ -146,7 +146,9 @@ To build and run all the tests in the system:
 make test
 ```
 
-### Backend unit tests
+### Backend tests
+
+Includes integration and unit tests
 
 ```
 make start-docker test-clojure
