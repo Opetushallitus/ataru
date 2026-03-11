@@ -139,6 +139,15 @@ SELECT
   a.hakukohde AS hakukohteet,
   a.submitted AS submitted,
   f.name      AS form_name,
+  coalesce((SELECT CASE value
+                       WHEN '1' THEN 'fi'
+                       WHEN '2' THEN 'sv'
+                       WHEN '3' THEN 'en'
+                   END
+            FROM answers
+            WHERE key = 'asiointikieli' AND
+                  application_id = a.id),
+            a.lang) AS asiointikieli,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
