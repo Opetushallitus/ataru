@@ -125,10 +125,10 @@
                           :options)
         laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
         muu-laji-key (->> laji-options
-                          (filter #(= urheilija-muu-laji-label (:label %)))
+                          (filter #(= urheilija-muu-laji-label (select-keys (:label %) [:fi :sv])))
                           first
                           :followups
-                          (filter #(= urheilija-paalaji-folloup-label (:label %)))
+                          (filter #(= urheilija-paalaji-folloup-label (select-keys (:label %) [:fi :sv])))
                           first
                           :id)]
     {:laji-dropdown-key (keyword (:paalaji-dropdown sport-keys))
