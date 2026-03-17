@@ -459,11 +459,12 @@
       (api/POST "/start-tutkintojen-tunnustaminen-information-request-jobs/:information-request-id" {session :session}
         :path-params [information-request-id :- s/Int]
         (if (get-in session [:identity :superuser])
-          (let [information-request (information-request/get-information-request-by-id  information-request-id)]
+          (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
             (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
                   job-runner
                   information-request)
-                (response/ok {})))
+                (response/ok {}))
+            (response/not-found {:error (str "Information request not found with id " information-request-id)}))
           (response/unauthorized {})))
 
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
