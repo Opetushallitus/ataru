@@ -34,6 +34,22 @@ FROM information_requests ir
 LEFT JOIN virkailija v ON ir.virkailija_oid = v.oid
 WHERE application_key = :application_key;
 
+-- name: yesql-get-information-request-by-id
+-- Get information request by ID
+SELECT
+    id,
+    application_key,
+    subject,
+    message,
+    created_time,
+    virkailija_oid,
+    message_type,
+    recipient_target,
+    send_reminder_time,
+    reminder_processed_time
+FROM information_requests
+WHERE id = :id;
+
 -- name: yesql-get-information-requests-to-remind
 -- Get all information requests with unsent reminders
 SELECT
