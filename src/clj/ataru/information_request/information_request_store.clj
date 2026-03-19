@@ -6,6 +6,7 @@
 
 (declare yesql-add-information-request<!)
 (declare yesql-get-information-requests)
+(declare yesql-get-information-request-by-id)
 (declare yesql-get-information-requests-to-remind)
 (declare yesql-set-information-request-reminder-processed-time-by-id!)
 (sql/defqueries "sql/information-request-queries.sql")
@@ -27,6 +28,11 @@
 (defn get-information-requests [application-key]
   (->> (exec-db :db yesql-get-information-requests {:application_key application-key})
        (map ->kebab-case-kw)))
+
+(defn get-information-request-by-id [id]
+  (->> (exec-db :db yesql-get-information-request-by-id {:id id})
+       (map ->kebab-case-kw)
+       (first)))
 
 (defn get-information-requests-to-remind []
   (->> (exec-db :db yesql-get-information-requests-to-remind {})
