@@ -9,6 +9,7 @@
             [cheshire.core :as json]
             [ataru.time :as t]
             [ataru.time.format :as f]
+            [ataru.time.coerce :as c]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]
@@ -229,6 +230,22 @@
           (url-helper/resolve-url)
           (get-result cas-client)
           ((fn [result] (mapv :oid result)))))
+
+(s/defn ^:always-validate get-active-kk-yhteishaku-oids :- (s/maybe [s/Str])
+  [cas-client]
+  (let [now (t/now)]
+    (when-let [hakus (some-> :kouta-internal.haku-search
+                             (url-helper/resolve-url {"vuosi" (str (t/year now))})
+                             (get-result cas-client))]
+      (->> hakus
+           (filter #(= "haunkohdejoukko_12#1" (:kohdejoukkoKoodiUri %)))
+           (filter #(= "hakutapa_01" (:hakutapaKoodiUri %)))
+           (keep (fn [haku]
+                   (let [ohjausparametrit (ohjausparametrit-client/get-ohjausparametrit (:oid haku))
+                         hkp-date         (get-in ohjausparametrit [:PH_HKP :date])]
+                     (when (and hkp-date (t/after? (c/from-long hkp-date) now))
+                       (:oid haku)))))
+           vec))))
 
 (defrecord CacheLoader [cas-client]
   cache-service/CacheLoader

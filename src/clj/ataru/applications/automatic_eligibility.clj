@@ -7,6 +7,7 @@
             [ataru.cache.cache-service :as cache-service]
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
+            [ataru.applications.application-store :as application-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.time.coerce :as coerce]
@@ -233,28 +234,14 @@
           :else
           (throw (Exception. "automatic-eligibility-if-ylioppilas-job failed")))))
 
-(defn- get-application-ids
-  [suoritukset]
-  (when-let [person-oids (seq (distinct (keep :person-oid suoritukset)))]
-    (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-      (map :id (yesql-get-application-ids {:person_oids person-oids}
-                                          {:connection connection})))))
-
-(defonce suoritus-chunk-size 10000)
 (defn start-automatic-eligibility-if-ylioppilas-job-job-handler
   [_ job-runner]
-  (let [now                   (time/now)
-        last-run-long         (coerce/to-long (time/minus (time/minus now (time/days 1)) (time/minutes 15)))
-        suoritukset           (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
-                                (:suoritus-service job-runner)
-                                (coerce/from-long last-run-long))
-        suoritus-chunks       (partition-all suoritus-chunk-size suoritukset)
-        suoritus-chunks-count (count suoritus-chunks)]
-    (log/info (str "Starting automatic eligibility job. Chunks (" suoritus-chunk-size  " suoritus per chunk): "
-                   suoritus-chunks-count ". Count of suoritukset: " (count suoritukset) ". Modified-since: "
-                   (coerce/from-long last-run-long)))
-    (doseq [[n suoritus-chunk] (map-indexed #(vector (+ %1 1) %2) suoritus-chunks)]
-      (let [application-ids (get-application-ids suoritus-chunk)]
-        (log/info (str "Check automatic eligibility for chunk " n "/" suoritus-chunks-count ". Count: " (count application-ids)))
+  (let [tarjonta-service (:tarjonta-service job-runner)
+        haku-oids        (tarjonta-service/get-active-kk-yhteishaku-oids tarjonta-service)]
+    (log/info "Starting automatic eligibility job for" (count haku-oids) "active kk-yhteishaku(s):" haku-oids)
+    (doseq [haku-oid haku-oids]
+      (log/info "Päivitettään automaattiset hakukelpoisuudet aktiiviselle kk-haulle" haku-oid)
+      (let [application-ids (application-store/get-application-ids-for-haku haku-oid)]
+        (log/info "Aktiivisella kk-haulla" haku-oid "on" (count application-ids) "hakemusta")
         (doseq [application-id application-ids]
           (start-automatic-eligibility-if-ylioppilas-job job-runner application-id))))))
