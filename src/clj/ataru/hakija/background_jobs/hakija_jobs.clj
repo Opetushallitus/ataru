@@ -25,9 +25,11 @@
                                                         :queue   default-retry-strategy}
    (:type attachment-finalizer-job/job-definition)     (merge attachment-finalizer-job/job-definition
                                                               {:queue default-retry-strategy})
-   "automatic-eligibility-if-ylioppilas-job"           {:handler automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
-                                                        :type    "automatic-eligibility-if-ylioppilas-job"
-                                                        :queue   default-retry-strategy}
+   "automatic-eligibility-if-ylioppilas-job"           {:handler    automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
+                                                        :type       "automatic-eligibility-if-ylioppilas-job"
+                                                        :queue      default-retry-strategy
+                                                        ; 20min viive, jotta Supa ehtii hakea tiedot Koskesta
+                                                        :process-in (Duration/ofMinutes 20)}
    "start-automatic-eligibility-if-ylioppilas-job-job" {:handler  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
                                                         :type     "start-automatic-eligibility-if-ylioppilas-job-job"
                                                         :schedule "0 7 * * *"
