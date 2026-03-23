@@ -365,7 +365,7 @@
                                        (get latest-application :key "NEW_APPLICATION_KEY"))
         harkinnanvaraisuus-process-fn (when (and haku (h/toisen-asteen-yhteishaku? haku))
                                         (fn [application-id application-key]
-                                          (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
+                                          (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application) (time/plus (time/now) (time/minutes 20)))))]
     (when (not-empty cannot-edit-fields)
       (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
     (when (not-empty hakeminen-tunnistautuneena-validation-errors)
