@@ -241,6 +241,7 @@
     (log/info "Starting automatic eligibility job for" (count haku-oids) "active kk-yhteishaku(s):" haku-oids)
     (doseq [haku-oid haku-oids]
       (log/info "Päivitettään automaattiset hakukelpoisuudet aktiiviselle kk-haulle" haku-oid)
+
       (let [application-ids (application-store/get-application-ids-for-haku haku-oid)]
         (log/info "Aktiivisella kk-haulla" haku-oid "on" (count application-ids) "hakemusta")
         (doseq [application-id application-ids]
