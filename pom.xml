@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>33aeb7a57f0a9bf0fc2e96a4354cc56f693b6ecc</tag>
+    <tag>8e60ea7a0b56244007b6cb323360d5dc149f4865</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -1012,25 +1012,6 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-to-slf4j</artifactId>
       <version>2.25.2</version>
-    </dependency>
-    <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-string-normalizer</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jboss-logging</artifactId>
-          <groupId>org.jboss.logging</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google.guava</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-io</artifactId>
-          <groupId>commons-io</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

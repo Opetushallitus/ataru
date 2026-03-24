@@ -37,7 +37,7 @@
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
-            [string-normalizer.filename-normalizer-middleware :as normalizer]
+            [ataru.middleware.filename-normalizer-middleware :as normalizer]
             [ataru.util.http-util :as http]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
