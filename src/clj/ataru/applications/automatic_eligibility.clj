@@ -238,9 +238,9 @@
   [_ job-runner]
   (let [tarjonta-service (:tarjonta-service job-runner)
         haku-oids        (tarjonta-service/get-active-kk-yhteishaku-oids tarjonta-service)]
-    (log/info "Starting automatic eligibility job for" (count haku-oids) "active kk-yhteishaku(s):" haku-oids)
+    (log/info "Käynnistetään automaattinen hakukelpoisuus-jobi" (count haku-oids) "aktiivisille kk-yhteishauille:" haku-oids)
     (doseq [haku-oid haku-oids]
-      (log/info "Päivitettään automaattiset hakukelpoisuudet aktiiviselle kk-haulle" haku-oid)
+      (log/info "Päivitetään automaattiset hakukelpoisuudet aktiiviselle kk-haulle" haku-oid)
       (let [application-ids (application-store/get-application-ids-for-haku haku-oid)]
         (log/info "Aktiivisella kk-haulla" haku-oid "on" (count application-ids) "hakemusta")
         (doseq [application-id application-ids]
