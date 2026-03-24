@@ -88,7 +88,10 @@
         (cache/remove-from hakukohde-cache hakukohde-oid))))
 
   (get-haku-oids [_]
-    (kouta-client/get-haku-oids kouta-internal-cas-client)))
+    (kouta-client/get-haku-oids kouta-internal-cas-client))
+
+  (get-active-kk-yhteishaku-oids [_]
+      (kouta-client/get-active-kk-yhteishaku-oids kouta-internal-cas-client)))
 
 (defn new-tarjonta-service
   []
