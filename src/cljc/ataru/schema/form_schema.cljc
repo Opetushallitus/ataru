@@ -743,7 +743,8 @@
    :asiointikieli       (s/enum "fi" "sv" "en")
    :hakutoiveet         [ValintaHakutoive]
    :maksuvelvollisuus   {s/Str s/Str}
-   :keyValues           {s/Str Value}})
+   :keyValues           {s/Str Value}
+   :korkeakoulututkintoVuosi (s/maybe s/Int)})
 
 (s/defschema ValintapisteApplication
   {:hakemus_oid         s/Str

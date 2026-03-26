@@ -1582,13 +1582,15 @@
                                                                      :content
                                                                      :answers
                                                                      (filter #(not= "hakukohteet" (:key %)))))
-        eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)]
+        eligibilities-by-hakutoive (get-application-eligibilities-by-hakutoive application)
+        kk-tutkintovuosi (korkeakoulututkinto-vuosi (answers-by-key (get-in application [:content :answers])))]
     (-> application
         (dissoc :content :application_hakukohde_reviews)
         (assoc :maksuvelvollisuus (reduce-kv #(assoc %1 (name %2) %3) {} (:maksuvelvollisuus application)))
         (assoc :keyValues (merge keyword-values eligibilities-by-hakutoive))
         (assoc :hakutoiveet (unwrap-external-application-hakutoiveet application))
         (dissoc :hakukohde)
+        (assoc :korkeakoulututkintoVuosi kk-tutkintovuosi)
         (clojure.set/rename-keys {:key :hakemusOid :person_oid :personOid :haku :hakuOid}))))
 
 (defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
