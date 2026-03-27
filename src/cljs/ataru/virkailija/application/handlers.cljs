@@ -820,9 +820,8 @@
    (when (and (opinto-ohjaaja-or-admin? db)
               (toisen-asteen-yhteishaku-selected? db)
               (empty? (get-in db [:editor :organizations :schools-of-departure])))
-     {:dispatch (if (get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights? db)
-                  [:application/do-organization-query-for-schools-of-departure-without-lahtokoulu ""]
-                  [:application/do-organization-query-for-schools-of-departure ""])})))
+     {:dispatch [:application/do-organization-query-for-schools-of-departure
+                 (not (get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights? db))]})))
 
 (reg-event-fx
  :application/select-form
