@@ -232,6 +232,7 @@
                            application
                            is-modify?
                            session
+                           tunnistautunut?
                            oppija-session]
   (let [strict-warnings-on-unchanged-edits? (if (nil? (:strict-warnings-on-unchanged-edits? application))
                                               true
@@ -371,6 +372,12 @@
     (when (not-empty hakeminen-tunnistautuneena-validation-errors)
       (log/error "Error(s) when validating fields from oppija-session" oppija-session ":" (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
+      (and tunnistautunut? (not (:logged-in oppija-session)))
+      {:passed? false
+       :failures ["No active oppija-session found"]
+       :key nil
+       :code :oppija-session-not-found}
+
       (not-empty hakeminen-tunnistautuneena-validation-errors)
       {:passed? false
        :failures ["Supplied application answers do not match fields from oppija-session."]
@@ -574,6 +581,7 @@
    session
    liiteri-cas-client
    maksut-service
+   tunnistautunut?
    oppija-session
    koski-service
    attachment-deadline-service]
@@ -594,6 +602,7 @@
                             application-empty-answers-removed
                             false
                             session
+                            tunnistautunut?
                             oppija-session)
         {:keys [tutu-form? req-fn lang app-key]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
         virkailija-secret (:virkailija-secret application-empty-answers-removed)]
@@ -661,6 +670,7 @@
                             application-empty-answers-removed
                             true
                             session
+                            false
                             {});fixme, miten oppija-sessio toimii muokkauksessa? Ei tällä hetkellä mitenkään?
         virkailija-secret (:virkailija-secret application)]
     (if passed?

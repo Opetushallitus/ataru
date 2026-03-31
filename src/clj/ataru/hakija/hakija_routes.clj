@@ -294,32 +294,31 @@
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
         (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
-        (if (and tunnistautunut? (not (:logged-in oppija-session-from-db)))
-          (response/bad-request {:passed? false :failures ["No active oppija-session found"] :code :oppija-session-not-found})
-          (match (hakija-application-service/handle-application-submit
-                   form-by-id-cache
-                   koodisto-cache
-                   tarjonta-service
-                   job-runner
-                   organization-service
-                   ohjausparametrit-service
-                   hakukohderyhma-settings-cache
-                   audit-logger
-                   application
-                   session
-                   liiteri-cas-client
-                   maksut-service
-                   oppija-session-from-db
-                   koski-service
-                   attachment-deadline-service)
-                 {:passed? false :failures failures :code code}
-                 (response/bad-request {:failures failures :code code})
+        (match (hakija-application-service/handle-application-submit
+                 form-by-id-cache
+                 koodisto-cache
+                 tarjonta-service
+                 job-runner
+                 organization-service
+                 ohjausparametrit-service
+                 hakukohderyhma-settings-cache
+                 audit-logger
+                 application
+                 session
+                 liiteri-cas-client
+                 maksut-service
+                 tunnistautunut?
+                 oppija-session-from-db
+                 koski-service
+                 attachment-deadline-service)
+               {:passed? false :failures failures :code code}
+               (response/bad-request {:failures failures :code code})
 
-                 {:passed? true :id application-id :payment payment}
-                 (response/ok {:id application-id :payment payment})
+               {:passed? true :id application-id :payment payment}
+               (response/ok {:id application-id :payment payment})
 
-                 {:passed? true :id application-id}
-                 (response/ok {:id application-id})))))
+               {:passed? true :id application-id}
+               (response/ok {:id application-id}))))
     (api/PUT "/application" {session :session}
       :summary "Edit application"
       :body [application ataru-schema/Application]
