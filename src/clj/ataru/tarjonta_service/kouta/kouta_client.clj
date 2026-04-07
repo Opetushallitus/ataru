@@ -7,6 +7,7 @@
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
             [ataru.schema.form-schema :as form-schema]
             [cheshire.core :as json]
+            [clj-time.coerce :as c]
             [ataru.time :as t]
             [ataru.time.format :as f]
             [schema.core :as s]
