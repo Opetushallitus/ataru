@@ -1,5 +1,6 @@
 (ns ataru.files.file-store
   (:require [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.time.coerce :as coerce]
             [cheshire.core :as json]
             [ataru.cas.client :as cas]
             [clojure.java.io :as io]
@@ -13,6 +14,17 @@
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
 
+(defn- coerce-file-timestamps [file]
+  (-> file
+      (update :uploaded coerce/from-string)
+      (update :deleted coerce/from-string)
+      (update :previews (fn [previews]
+                          (mapv (fn [p]
+                                  (-> p
+                                      (update :uploaded coerce/from-string)
+                                      (update :deleted coerce/from-string)))
+                                (or previews []))))))
+
 (defn get-metadata [cas-client file-keys]
   (if (seq file-keys)
     (let [resp (cas/cas-authenticated-post
@@ -20,7 +32,7 @@
                  (resolve-url :liiteri.metadata)
                  {:keys file-keys})]
       (if (= (:status resp) 200)
-        (vec (json/parse-string (:body resp) true))
+        (mapv coerce-file-timestamps (json/parse-string (:body resp) true))
         (throw (new RuntimeException
                     (str "Could not get metadata for keys "
                          (clojure.string/join ", " file-keys)
