@@ -4,7 +4,7 @@
             [ataru.cas.client :as cas]
             [ataru.config.url-helper :refer [resolve-url]]
             [taoensso.timbre :as log]
-            [string-normalizer.filename-normalizer :as normalizer]))
+            [ataru.filename-normalizer :as normalizer]))
 
 (def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
 (def origin-system "ataru")

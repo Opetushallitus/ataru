@@ -456,6 +456,17 @@
               (response/ok {}))
           (response/unauthorized {})))
 
+      (api/POST "/start-tutkintojen-tunnustaminen-information-request-jobs/:information-request-id" {session :session}
+        :path-params [information-request-id :- s/Int]
+        (if (get-in session [:identity :superuser])
+          (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
+            (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
+                  job-runner
+                  information-request)
+                (response/ok {}))
+            (response/not-found {:error (str "Information request not found with id " information-request-id)}))
+          (response/unauthorized {})))
+
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
@@ -1748,7 +1759,8 @@
       (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
         :query-params [{hakukohdeOid :- s/Str nil}
-                       {harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}]
+                       {harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}
+                       {salliYksiloimattomat :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
         (if (and (nil? hakukohdeOid)
@@ -1768,8 +1780,8 @@
                  (response/ok applications)
                  {:yksiloimattomat yksiloimattomat
                   :applications    applications}
-                 (if (get-in config [:yksiloimattomat :allow] false)
-                   (do (log/warn "Yksilöimättömiä hakijoita")
+                 (if (or salliYksiloimattomat (get-in config [:yksiloimattomat :allow] false))
+                     (do (log/warn "Yksilöimättömiä hakijoita! Konffiarvo" (get-in config [:yksiloimattomat :allow] false) ", salliYksiloimattomat" salliYksiloimattomat)
                        (response/ok applications))
                    (response/conflict
                      {:error      "Yksilöimättömiä hakijoita"

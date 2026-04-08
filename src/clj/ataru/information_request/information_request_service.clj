@@ -149,6 +149,9 @@
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (store-in-tx session information-request job-runner connection)))
 
+(defn get-information-request-by-id [id]
+  (information-request-store/get-information-request-by-id id))
+
 (defn mass-information-request-job-step
   [state job-runner]
   (let [keys (:application-keys state)]
