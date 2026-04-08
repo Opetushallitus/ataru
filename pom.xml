@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ataru</groupId>
   <artifactId>ataru</artifactId>
@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>33aeb7a57f0a9bf0fc2e96a4354cc56f693b6ecc</tag>
+    <tag>221028dedd0e4ab189e777f65fb940797e832859</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -1012,25 +1012,6 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-to-slf4j</artifactId>
       <version>2.25.2</version>
-    </dependency>
-    <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-string-normalizer</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jboss-logging</artifactId>
-          <groupId>org.jboss.logging</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google.guava</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-io</artifactId>
-          <groupId>commons-io</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
