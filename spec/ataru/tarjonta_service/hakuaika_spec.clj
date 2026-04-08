@@ -95,7 +95,7 @@
   (it "should pick last ended hakuaika if one is present and none is open"
     (check 100 (prop/for-all [input (input-gen 1000)]
                  (let [hakuajat   (relevant-hakuajat input)
-                       paattyneet (filter hakuaika/ended? hakuajat)]
+                       paattyneet (filter #(hakuaika/ended? (t/now) %) hakuajat)]
                    (if (and (every? #(not (:on %)) hakuajat)
                             (not-empty paattyneet))
                      (= (hakuaika/select-hakuaika-for-field
@@ -103,7 +103,30 @@
                          (:field-descriptor input)
                          (hakuaika/index-hakuajat (:hakukohteet input)))
                         (max-key :end paattyneet))
-                     true))))))
+                     true)))))
+
+  (it "hakuaika should be on with haku"
+      (should= true (:on (let [now (t/now)
+                     haku {:hakuajat [{:start (t/minus now (t/days 2)) :end (t/plus now (t/days 2))}]}]
+                 (hakuaika/haun-hakuaika-end-and-on haku)))))
+
+  (it "hakuaika should not be on with haku"
+      (should= false (:on (let [now (t/now)
+                               haku {:hakuajat [{:start (t/minus now (t/days 4)) :end (t/minus now (t/days 2))}]}]
+                           (hakuaika/haun-hakuaika-end-and-on haku)))))
+
+  (it "should find active hakuaika from haku"
+      (should= true (:on (let [now (t/now)
+                                haku {:hakuajat [{:start (t/minus now (t/days 4)) :end (t/minus now (t/days 2))}
+                                                 {:start (t/minus now (t/hours 2)) :end (t/plus now (t/hours 2))}
+                                                 {:start (t/minus now (t/hours 4)) :end (t/minus now (t/hours 2))}]}]
+                            (hakuaika/haun-hakuaika-end-and-on haku)))))
+
+  (it "should not find active hakuaika from haku"
+      (should= false (:on (let [now (t/now)
+                               haku {:hakuajat [{:start (t/minus now (t/days 4)) :end (t/minus now (t/days 2))}
+                                                {:start (t/minus now (t/hours 4)) :end (t/minus now (t/hours 2))}]}]
+                           (hakuaika/haun-hakuaika-end-and-on haku))))))
 
 (describe "Localized datetime"
           (tags :unit)
