@@ -1,7 +1,7 @@
 (ns ataru.hakija.hakija-form-service-spec
   (:require [ataru.hakija.hakija-form-service :as hfs]
             [speclj.core :refer [describe it should-be]]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
 

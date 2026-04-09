@@ -2,7 +2,6 @@
   (:require [ataru.tarjonta-service.hakuaika :as hakuaika]
             [clj-time.coerce :as coerce]
             [clj-time.core :as t]
-            [clojure.pprint :refer [pprint]]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -56,7 +55,9 @@
   (let [result (tc/quick-check times prop)]
     (when-not (:result result)
       (let [input (-> result :shrunk :smallest first)]
-        (-fail (with-out-str (pprint input)))))))
+        (throw (ex-info "Property check failed"
+                        {:input  input
+                         :result result})))))) 
 
 (defn- relevant-hakuajat [input]
   (let [oids (set (concat (:belongs-to-hakukohteet (:field-descriptor input))
@@ -95,14 +96,15 @@
   (it "should pick last ended hakuaika if one is present and none is open"
     (check 100 (prop/for-all [input (input-gen 1000)]
                  (let [hakuajat   (relevant-hakuajat input)
-                       paattyneet (filter hakuaika/ended? hakuajat)]
+                       paattyneet (filter #(hakuaika/ended? (coerce/from-long 1000) (:end %)) hakuajat)
+                       selected   (hakuaika/select-hakuaika-for-field
+                                   (coerce/from-long 1000)
+                                   (:field-descriptor input)
+                                   (hakuaika/index-hakuajat (:hakukohteet input)))]
                    (if (and (every? #(not (:on %)) hakuajat)
                             (not-empty paattyneet))
-                     (= (hakuaika/select-hakuaika-for-field
-                         (coerce/from-long 1000)
-                         (:field-descriptor input)
-                         (hakuaika/index-hakuajat (:hakukohteet input)))
-                        (max-key :end paattyneet))
+                     (= (:end selected)
+                        (apply max (map :end paattyneet)))
                      true))))))
 
 (describe "Localized datetime"
@@ -158,3 +160,14 @@
           (it "Returns datetime in expected format for en during Summer time"
               (let [datetime (t/date-time 2024 6 30 9)]
                 (should= "at 12:00 PM UTC+3" (hakuaika/date-timez->localized-time datetime :en)))))
+
+(describe "Basic date-time parsing"
+  (tags :unit)
+
+  (it "parses basic date-time with space separator"
+    (let [parsed (hakuaika/basic-date-time-str->date-time "2026-01-15 15:00:00")]
+      (should= "15.1.2026 klo 15:00" (hakuaika/date-timez->localized-date-time parsed :fi))))
+
+  (it "parses basic date-time with T separator"
+    (let [parsed (hakuaika/basic-date-time-str->date-time "2026-01-15T15:00:00")]
+      (should= "15.1.2026 klo 15:00" (hakuaika/date-timez->localized-date-time parsed :fi)))))

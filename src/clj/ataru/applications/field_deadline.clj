@@ -3,7 +3,7 @@
             [ataru.db.db :as db]
             [ataru.log.audit-log :as audit-log]
             [cheshire.core :as json]
-            [clj-time.format :as f]
+            [ataru.time.format :as f]
             [clojure.java.jdbc :as jdbc]
             [yesql.core :as yesql])
   (:import org.postgresql.util.PSQLException))
@@ -15,7 +15,7 @@
 
 (def unique-violation "23505")
 
-(def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
+(def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"))
 
 (defn get-field-deadline
   [organization-service tarjonta-service audit-logger session application-key field-id]

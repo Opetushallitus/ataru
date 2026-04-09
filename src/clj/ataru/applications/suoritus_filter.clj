@@ -1,5 +1,5 @@
 (ns ataru.applications.suoritus-filter
-  (:require [clj-time.core :as time]))
+  (:require [ataru.time :as time]))
 
 (defn year-for-suoritus-filter
   [now]

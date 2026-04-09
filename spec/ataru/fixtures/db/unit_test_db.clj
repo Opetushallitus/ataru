@@ -1,6 +1,6 @@
 (ns ataru.fixtures.db.unit-test-db
   (:require [clojure.java.jdbc :as jdbc]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [yesql.core :refer [defqueries]]
             [ataru.forms.form-store :as form-store]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
