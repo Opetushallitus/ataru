@@ -557,16 +557,17 @@
                      :from-state       (apply s/enum (map first review-states/application-hakukohde-processing-states))
                      :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
-        (if (application-service/mass-update-application-states
-              application-service
-              session
-              (:application-keys body)
-              (if-let [hakukohde-oid (:hakukohde-oid body)]
-                  [hakukohde-oid]
-                  (:hakukohde-oids-for-hakukohderyhma body))
-              (:from-state body)
-              (:to-state body))
-          (response/ok {:updated-count (count (:application-keys body))})
+        (if-some [updated-count
+                  (application-service/mass-update-application-states
+                    application-service
+                    session
+                    (:application-keys body)
+                    (if-let [hakukohde-oid (:hakukohde-oid body)]
+                      [hakukohde-oid]
+                      (:hakukohde-oids-for-hakukohderyhma body))
+                    (:from-state body)
+                    (:to-state body))]
+          (response/ok {:updated-count updated-count})
           (response/unauthorized {:error (str "Hakemusten "
                                               (clojure.string/join ", " (:application-keys body))
                                               " käsittely ei ole sallittu")})))
