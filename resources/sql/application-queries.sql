@@ -673,6 +673,14 @@ ON CONFLICT (application_key, requirement, hakukohde)
   WHERE hakukohde IS NOT NULL
   DO UPDATE SET state = :state, modified_time = :modified_time;
 
+-- name: yesql-get-bulk-processing-state-reviews
+SELECT application_key, hakukohde
+FROM application_hakukohde_reviews
+WHERE application_key IN (:application_keys)
+  AND requirement = 'processing-state'
+  AND state = :from_state
+  AND hakukohde IN (:hakukohde_oids);
+
 -- name: yesql-get-existing-application-hakukohde-review
 SELECT id
 FROM application_hakukohde_reviews

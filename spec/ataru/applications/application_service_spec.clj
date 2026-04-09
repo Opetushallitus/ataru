@@ -1,5 +1,6 @@
 (ns ataru.applications.application-service-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.applications.application-access-control :as aac]
             [ataru.person-service.person-service :as person-service]
             [ataru.applications.application-store :as application-store]
             [speclj.core :refer [describe tags it should== should=]]
@@ -141,3 +142,31 @@
     )
   )
 )
+
+(describe "Mass update application states"
+  (tags :unit)
+
+  (it "returns the actual number of updated application states"
+    (let [session {:identity {:oid "1.2.3"}}
+          service (application-service/map->CommonApplicationService
+                   {:organization-service nil
+                    :tarjonta-service     nil
+                    :audit-logger         nil})]
+      (with-redefs [aac/applications-access-authorized? (constantly true)
+                    application-store/mass-update-application-states (fn [passed-session application-keys hakukohde-oids from-state to-state audit-logger]
+                                                                       (should= session passed-session)
+                                                                       (should= ["application-1" "application-2"] application-keys)
+                                                                       (should= ["hakukohde-1"] hakukohde-oids)
+                                                                       (should= "unprocessed" from-state)
+                                                                       (should= "processing" to-state)
+                                                                       (should= nil audit-logger)
+                                                                       0)]
+        (should=
+          0
+          (application-service/mass-update-application-states
+           service
+           session
+           ["application-1" "application-2"]
+           ["hakukohde-1"]
+           "unprocessed"
+           "processing"))))))
