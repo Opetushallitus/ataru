@@ -144,6 +144,7 @@
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         loading?                   (subscribe [:application/fetching-applications?])
+        form-status                (subscribe [:application/mass-update-form-status])
         form-key                   @(subscribe [:application/selected-form-key])
         tutu-form?                 @(subscribe [:payment/tutu-form? form-key])
         astu-form?                 @(subscribe [:payment/astu-form? form-key])
@@ -192,7 +193,18 @@
               (reset! submit-button-state :submit))
             (selected-or-default-mass-review-state-label selected-to-review-state processing-states-with-counts @review-state-counts)))]
 
-       (case @submit-button-state
+       (case @form-status
+         :submitting
+         [:div.application-handling__mass-review-notes-status
+          [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__mass-review-notes-status-icon]
+          @(subscribe [:editor/virkailija-translation :mass-edit-updating])]
+
+         :submitted
+         [:div.application-handling__mass-review-notes-status
+          [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__mass-review-notes-status-icon.application-handling__mass-review-notes-status-icon--sent]
+          @(subscribe [:editor/virkailija-translation :mass-edit-updated])]
+
+         (case @submit-button-state
          :submit
          (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state processing-states-with-counts)
                                        (selected-or-default-mass-review-state selected-to-review-state processing-states-with-counts))
@@ -214,12 +226,9 @@
                          (dispatch [:application/mass-update-application-reviews
                                     from-state-name
                                     to-state-name])
-                         (dispatch [:application/set-mass-update-popup-visibility false])
-                         (reset! selected-from-review-state nil)
-                         (reset! selected-to-review-state nil)
                          (reset! from-list-open? false)
                          (reset! to-list-open? false)))}
-          @(subscribe [:editor/virkailija-translation :confirm-change])])])))
+          @(subscribe [:editor/virkailija-translation :confirm-change])]))])))
 
 (defn mass-update-applications-link
   []
