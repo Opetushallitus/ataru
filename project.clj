@@ -140,6 +140,7 @@
                  [environ "1.2.0"]
                  [org.clojure/core.async "1.6.681"]
                  [org.clojure/java.jdbc "0.7.12"]
+                 [software.amazon.jdbc/aws-advanced-jdbc-wrapper "3.3.0"]
                  [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
                  [clj-time "0.15.2"]
                  [cheshire/cheshire "6.0.0"]
