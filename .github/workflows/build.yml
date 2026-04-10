@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
 
       - name: Check dependencies
@@ -37,36 +37,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.5.0
-        with:
-          key: docker-${{ runner.os }}-${{ hashFiles('**/workflows/build.yml', '**/Dockerfile', '**/docker-compose.yml') }}
-
+      - uses: ./.github/actions/setup-node-env
+      
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -82,7 +56,7 @@ jobs:
           )
           echo "PLAYWRIGHT_VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Cache playwright binaries
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -91,39 +65,17 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Run integration tests (Cypress & Playwright)
-        run: |
-          ./bin/cibuild.sh run-browser-tests-integration
+        run: ./bin/cibuild.sh run-browser-tests-integration
 
   test-spec-and-mocha:
     needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
+      - uses: ./.github/actions/setup-node-env
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.5
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Prepare tests
         run: |
           sudo apt-get update
@@ -138,25 +90,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: ./.github/actions/setup-node-env
 
       - name: Build
         run: ./bin/cibuild.sh create-both-uberjars
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: restore-build
         with:
           path: target
