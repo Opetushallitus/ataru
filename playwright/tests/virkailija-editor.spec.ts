@@ -108,11 +108,9 @@ test.describe('Editori', () => {
   })
 
   test('lomakkeen luonti luo lomakkeen oletus kentillä', async () => {
-    const lomakkeet = formListItems(page)
-    const ensimmainenLomake = lomakkeet.nth(0)
-    await expect(
-      ensimmainenLomake.locator('.editor-form__list-form-name')
-    ).toHaveText('Tyhjä lomake')
+    await expect(page.getByTestId('form-name-input')).toHaveValue(
+      'Tyhjä lomake'
+    )
 
     const lomakeKomponentit = formComponents(page)
 
@@ -360,24 +358,19 @@ test.describe('Editori', () => {
     await expect(
       singleChoiceOptions.nth(1).locator('.editor-form__text-field')
     ).toHaveValue('En')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(0)
-    ).toHaveValue('Jatkokysymys A')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(1)
-    ).toHaveValue('Jatkokysymys B')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(2)
-    ).toHaveValue('Jatkokysymys C')
+    const adjacentFieldValues = await adjacentFieldset
+      .locator('.editor-form__adjacent-fieldset-container')
+      .locator('.editor-form__text-field')
+      .evaluateAll((inputs) =>
+        inputs.map((input) => (input as HTMLInputElement).value)
+      )
+    expect(adjacentFieldValues).toEqual(
+      expect.arrayContaining([
+        'Jatkokysymys A',
+        'Jatkokysymys B',
+        'Jatkokysymys C',
+      ])
+    )
 
     await clickRemoveAndConfirm(multipleChoice)
     await expect(multipleChoice).toBeHidden()

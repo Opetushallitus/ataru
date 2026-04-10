@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
 
       - name: Check dependencies
@@ -37,36 +37,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.5.0
-        with:
-          key: docker-${{ runner.os }}-${{ hashFiles('**/workflows/build.yml', '**/Dockerfile', '**/docker-compose.yml') }}
-
+      - uses: ./.github/actions/setup-node-env
+      
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -82,7 +56,7 @@ jobs:
           )
           echo "PLAYWRIGHT_VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Cache playwright binaries
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -90,101 +64,60 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-      - name: Prepare tests
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          GA_BUILD_NUMBER: ${{ github.run_number }}
-        run: |
-          git clone https://github.com/Opetushallitus/ci-tools.git
-          source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $(docker build -f ./test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -q .)
-          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
-          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
-
       - name: Run integration tests (Cypress & Playwright)
-        run: |
-          ./bin/cibuild.sh run-browser-tests-integration
+        run: ./bin/cibuild.sh run-browser-tests-integration
 
-  test-spec-and-mocha:
+  test-spec: 
     needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-          aws-region: eu-west-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.5
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-
+      - uses: ./.github/actions/setup-node-env
       - name: Prepare tests
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          GA_BUILD_NUMBER: ${{ github.run_number }}
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
-          git clone https://github.com/Opetushallitus/ci-tools.git
-          source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $(docker build -f ./test-postgres/Dockerfile --build-arg POSTGRESQL_VERSION=15 -q .)
-          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/ecr-public/docker/library/redis:7
-          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
           echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+      - name: Run Spec tests
+        run: make test-ci-non-ui
+  test-mocha:
+    needs: [check-dependencies]
+    runs-on: ubuntu-latest
 
-      - name: Run Spec and Mocha tests
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-clojure-env
+      - uses: ./.github/actions/setup-node-env
+      - name: Prepare tests
         run: |
-          ./bin/cibuild.sh run-spec-and-mocha-tests
+          sudo apt-get update
+          sudo apt-get install -y lftp
+          echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+      - name: Run Spec and Mocha tests
+        run: make test-ci-mocha
 
   build:
     needs: [check-dependencies]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          standalone: true
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+      - uses: ./.github/actions/setup-node-env
 
       - name: Build
         run: ./bin/cibuild.sh create-both-uberjars
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: restore-build
         with:
           path: target
           key: ${{ github.sha }}
 
   build-and-deploy-ataru-hakija:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-hakija
@@ -195,7 +128,7 @@ jobs:
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
 
   build-and-deploy-ataru-editori:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-editori
@@ -206,7 +139,7 @@ jobs:
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
 
   build-and-deploy-ovara-ataru:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ovara-ataru

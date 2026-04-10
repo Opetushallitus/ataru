@@ -3,7 +3,6 @@
             [ataru.applications.excel-export :as excel-export]
             [ataru.cache.cache-service :as cache-service]
             [ataru.db.db :as db]
-            [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
@@ -95,7 +94,7 @@
                      (filter #(= (-> % :name :fi) form-name))
                      (first))]
     form
-    (insert-test-form form-name)))
+    (println (str "No test form (" form-name ") found. Run virkailija test first!"))))
 
 (defn get-latest-application-id-for-form [form-name]
   (->> (application-store/get-application-heading-list
@@ -131,7 +130,6 @@
     (println (str "using application " (:key application)))
     (cond->
      {:test-form-key                (:key test-form)
-      :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
       :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
       :test-selection-limit-form-key (:key (get-latest-form "Selection Limit"))
       :test-form-application-secret (:secret application)

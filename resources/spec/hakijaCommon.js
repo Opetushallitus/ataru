@@ -6,7 +6,6 @@ const newForm = (formName) => {
   const testFormKey = '{{test-form-key}}'
   const testQuestionGroupFormKey = '{{test-question-group-form-key}}'
   const testSelectionLimitFormKey = '{{test-selection-limit-form-key}}'
-  const ssnFormKey = '{{ssn-form-key}}'
   let formKey
 
   switch (formName) {
@@ -18,9 +17,6 @@ const newForm = (formName) => {
       break
     case 'testSelectionLimitForm':
       formKey = testSelectionLimitFormKey
-      break
-    case 'ssnTestForm':
-      formKey = ssnFormKey
       break
     default:
       console.log('No valid test form key found! Test will fail.. :(')
@@ -139,57 +135,6 @@ const selectedHakukohdeTexts = () =>
 
 const searchHakukohdeTexts = () =>
   testFrame().find('.application__search-hit-hakukohde-row--content').text()
-
-const assertOnlyFinnishSsn = () => {
-  expect(hasFormField('ssn')).to.equal(true)
-  expect(hasFormField('have-finnish-ssn')).to.equal(false)
-  expect(hasFormField('gender')).to.equal(false)
-  expect(hasFormField('birth-date')).to.equal(false)
-  expect(hasFormField('birthplace')).to.equal(false)
-  expect(hasFormField('passport-number')).to.equal(false)
-  expect(hasFormField('national-id-number')).to.equal(false)
-  expect(hasFormField('birthplace')).to.equal(false)
-}
-
-const assertHaveFinnishSsn = () => {
-  expect(hasFormField('ssn')).to.equal(true)
-  expect(hasFormField('have-finnish-ssn')).to.equal(true)
-  // should not display non-ssn fields!
-  expect(hasFormField('gender')).to.equal(false)
-  expect(hasFormField('birth-date')).to.equal(false)
-  expect(hasFormField('birthplace')).to.equal(false)
-  expect(hasFormField('passport-number')).to.equal(false)
-  expect(hasFormField('national-id-number')).to.equal(false)
-  expect(hasFormField('birthplace')).to.equal(false)
-}
-
-const assertNonFinnishSsnFields = () => {
-  expect(hasFormField('ssn')).to.equal(false)
-  expect(hasFormField('gender')).to.equal(true)
-  expect(hasFormField('birth-date')).to.equal(true)
-  expect(hasFormField('birthplace')).to.equal(true)
-  expect(hasFormField('passport-number')).to.equal(true)
-  expect(hasFormField('national-id-number')).to.equal(true)
-  expect(hasFormField('birthplace')).to.equal(true)
-}
-
-const assertInvalidFieldCount = (count) => {
-  if (count === 0) {
-    return () => {
-      expect(invalidFieldsStatus().length).to.equal(0)
-    }
-  } else {
-    return () => {
-      expect(invalidFieldsStatus().text()).to.equal(
-        'Tarkista ' + count + ' tietoa'
-      )
-    }
-  }
-}
-
-const focusInput = (index) => () => {
-  formFields().eq(index).find('input').focus()
-}
 
 const readonlyAnswer = (index) =>
   testFrame()
