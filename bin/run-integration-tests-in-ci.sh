@@ -8,6 +8,7 @@ echo "Generating nginx configuration"
 
 echo "Starting Docker containers for integration tests"
 docker compose up -d ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
+echo "Waiting for Cypress HTTP proxy on localhost:8354"
 ./bin/wait-for.sh localhost:8354 -t 20 || exit 1
 
 echo "Running ClojureScript build for integration tests"
@@ -24,9 +25,10 @@ echo "Starting services for integration tests"
 pnpm exec pm2 start pm2.ci.config.js
 
 echo "Waiting for local services to become available"
+echo "Waiting for virkailija backend on localhost:8352"
 ./bin/wait-for.sh localhost:8352 -t 500 || exit 1
+echo "Waiting for hakija backend on localhost:8353"
 ./bin/wait-for.sh localhost:8353 -t 500 || exit 1
-./bin/wait-for.sh localhost:8354 -t 500 || exit 1
 
 echo "Running integration tests"
 time pnpm exec playwright test && pnpm run cypress:run:ci
@@ -34,8 +36,8 @@ RESULT=$?
 
 echo "Stopping processes used by integration tests"
 pnpm exec pm2 kill
-docker compose kill ataru-cypress-test-db ataru-cypress-http-proxy
-docker compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
+docker compose kill ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
+docker compose rm -f ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
 
 if [ $RESULT != 0 ]; then
   echo "Integration tests failed! Please see logs for more info"

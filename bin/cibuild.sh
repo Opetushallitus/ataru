@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-CONFIG=${CONFIG:-config/dev.edn}
 
 echo "java version:"
 java -version
@@ -71,13 +70,6 @@ test-clojurescript() {
     time ./bin/lein doo chrome test once
 }
 
-test-browser() {
-  start_fake_deps_server
-  time ./bin/lein spec -t ui
-  time ./bin/run-integration-tests-in-ci.sh
-  stop_fake_deps_server
-}
-
 test-browser-mocha() {
   start_fake_deps_server
   time ./bin/lein spec -t ui
@@ -106,6 +98,7 @@ create-both-uberjars() {
 }
 
 run-spec-and-mocha-tests() {
+    CONFIG=${CONFIG:-config/dev.edn}
     echo "Starting spec and mocha test run"
     clean
     pnpm-dependencies
@@ -120,10 +113,9 @@ run-spec-and-mocha-tests() {
 }
 
 run-browser-tests-integration() {
+    CONFIG=${CONFIG:-config/cypress.ci.edn}
     echo "Starting browser integration test run"
     clean
-    nuke-test-db
-    run-migrations
     start_fake_deps_server
     time ./bin/run-integration-tests-in-ci.sh
     stop_fake_deps_server
