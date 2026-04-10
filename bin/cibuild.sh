@@ -73,19 +73,20 @@ test-clojurescript() {
 test-browser-mocha() {
   start_fake_deps_server
   time ./bin/lein spec -t ui
+
   stop_fake_deps_server
 }
 
 run-migrations() {
     echo "Running migrations"
     start_fake_deps_server
-    time ./bin/lein with-profile dev run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
+    time ./bin/lein with-profile test run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
     stop_fake_deps_server
 }
 
 nuke-test-db() {
     echo "Nuking test database"
-    time ./bin/lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
+    time ./bin/lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
 }
 
 create-both-uberjars() {
@@ -98,11 +99,13 @@ create-both-uberjars() {
 }
 
 run-spec-and-mocha-tests() {
-    CONFIG=${CONFIG:-config/dev.edn}
-    echo "Starting spec and mocha test run"
+    export CONFIG=${CONFIG:-config/test.edn}
     clean
     pnpm-dependencies
     lint
+    echo "Starting Docker containers for Mocha tests"
+    docker compose up -d ataru-test-db ataru-test-redis ataru-test-ftpd
+    echo "Starting spec and mocha test run"
     test-clojurescript
     nuke-test-db
     run-migrations
@@ -110,10 +113,13 @@ run-spec-and-mocha-tests() {
     compile-less
     build-clojurescript
     test-browser-mocha
+    echo "Stopping Docker containers used by Mocha tests"
+    docker compose kill ataru-test-db ataru-test-redis ataru-test-ftpd
+    docker compose rm -f ataru-test-db ataru-test-redis ataru-test-ftpd
 }
 
 run-browser-tests-integration() {
-    CONFIG=${CONFIG:-config/cypress.ci.edn}
+    export CONFIG=${CONFIG:-config/cypress.ci.edn}
     echo "Starting browser integration test run"
     clean
     start_fake_deps_server
