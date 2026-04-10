@@ -93,7 +93,8 @@
                                   :audit-logger
                                   :koodisto-cache
                                   :person-service
-                                  :ohjausparametrit-service])
+                                  :ohjausparametrit-service
+                                  :job-runner])
           :virkailija-routes (component/using
                                (v/new-handler)
                                [:organization-service
