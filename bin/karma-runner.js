@@ -76,8 +76,6 @@ const getUrl = () => {
              *  is to add the credentials directly in to the db
              * */
             return 'http://localhost:8351/hakemus/virkailija-hakemus-edit-test.html';
-        case 'virkailija-question-group-application-handling':
-            return 'http://localhost:8350/lomake-editori/virkailija-question-group-application-handling-test.html';
         default:
             console.log('invalid app: ' + app);
             process.exit(1);
