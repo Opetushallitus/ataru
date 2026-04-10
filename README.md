@@ -111,7 +111,7 @@ Tests assume some fixtures in the db. To clear the test db, run migrations and
 insert the required fixtures by running:
 
 ```
-./bin/cibuild.sh reset-test-database-with-fixture
+make reset-test-database-with-fixture
 ```
 
 For Github Actions CI the ataru-test-db and ataru-test-ftpd images have to be
@@ -134,13 +134,7 @@ docker tag ataru-test-ftpd 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/
 docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
 ```
 
-To build and run all the tests in the system:
-
-```
-./bin/cibuild.sh run-tests
-```
-
-### All tests
+### All tests (except Cypress & Playwright)
 
 ```
 make test
