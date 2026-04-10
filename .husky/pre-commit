@@ -4,7 +4,14 @@ if [ ! -f pnpm-lock.yaml ]; then
 fi
 
 if grep -q "lockfileVersion: '9." pnpm-lock.yaml; then
-  pnpm exec lint-staged
+  if [ -x ./node_modules/.bin/lint-staged ]; then
+    ./node_modules/.bin/lint-staged
+  elif command -v pnpm >/dev/null 2>&1; then
+    pnpm exec lint-staged
+  else
+    echo 'lint-staged is not installed and pnpm is not in PATH!'
+    exit 1
+  fi
 else
   echo 'pnpm-lock.yaml lockfileVersion is not 9.x!'
   exit 1
