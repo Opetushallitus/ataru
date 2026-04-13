@@ -74,11 +74,11 @@ start-docker-all: build-docker-images
 start-docker: build-docker-images
 	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_DEV)
 
-start-docker-cypress: build-docker-images
-	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_CYPRESS)
+start-docker-cypress: generate-nginx-config
+	$(DOCKER_COMPOSE) up -d --build $(DOCKER_CONTAINERS_CYPRESS)
 
-start-docker-test: build-docker-images
-	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_TEST)
+start-docker-test: check-tools
+	$(DOCKER_COMPOSE) up -d --build $(DOCKER_CONTAINERS_TEST)
 
 start-pm2-all: $(NODE_MODULES) start-docker-all run-fake-deps-server
 	$(PM2) start pm2.config.js
@@ -90,6 +90,9 @@ start-pm2: $(NODE_MODULES) start-docker
 start-pm2-cypress: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
 	$(foreach service, $(CYPRESS_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
+
+start-pm2-cypress-ci: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+	$(PM2) start pm2.ci.config.js
 
 start-watch: $(NODE_MODULES)
 	$(PM2) $(START_ONLY) $(FIGWHEEL)
@@ -106,6 +109,9 @@ start-virkailija: start-watch start-docker
 # ----------------
 stop-pm2: $(NODE_MODULES)
 	$(PM2) stop pm2.config.js
+
+stop-pm2-cypress-ci:
+	$(PM2) stop pm2.ci.config.js
 
 stop-watch:
 	$(PM2) $(STOP_ONLY) $(FIGWHEEL)
@@ -203,12 +209,28 @@ tags::
 	ctags -R --exclude=@.gitignore --exclude=node_modules \
 		--exclude='*.min.js' --exclude=/out .
 
+compile-less: 
+	./bin/compile-less.sh
+
+build-cypress-ci: compile-less
+	lein cljsbuild once virkailija-cypress-ci hakija-cypress-ci
+
+build-prod-clojurescript:
+	lein cljsbuild once virkailija-min hakija-min
+
+wait-for-cypress-ci:
+	echo "Waiting for local services to become available"
+	./bin/wait-for.sh localhost:8352 -t 500 || exit 1
+	./bin/wait-for.sh localhost:8353 -t 500 || exit 1
+
+install-cypress:
+	pnpm exec cypress install || exit 1
+
 # ----------------
 # Test db management
 # ----------------
 
-compile-test-code:
-	./bin/compile-less.sh
+compile-test-code: $(NODE_MODULES) compile-less 
 	lein with-profile test cljsbuild once virkailija-min hakija-min
 
 test-clojurescript: $(NODE_MODULES)
@@ -222,11 +244,26 @@ test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 
 test: start-docker-test test-clojurescript test-clojure test-browser
 
-test-ci-mocha: start-docker-test test-browser
-
-test-ci-non-ui: start-docker-test lint test-clojurescript test-clojure
+test-playwright-and-cypress: $(NODE_MODULES)
+	pnpm exec playwright test && pnpm run cypress:run:ci
 
 reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
+
+# ----------------
+# CI operations
+# ----------------
+log-ci-config:
+	@echo "CONFIG=$(CONFIG)"
+
+ci-test-mocha: log-ci-config start-docker-test test-browser
+
+ci-test-non-ui: log-ci-config start-docker-test lint test-clojurescript test-clojure
+
+ci-test-playwright-and-cypress: export CONFIG := $(if $(strip $(CONFIG)),$(strip $(CONFIG)),config/cypress.ci.edn)
+ci-test-playwright-and-cypress: log-ci-config clean-lein $(NODE_MODULES) build-cypress-ci start-pm2-cypress-ci install-cypress wait-for-cypress-ci test-playwright-and-cypress stop-pm2-cypress-ci stop-docker
+
+ci-create-uberjars: log-ci-config $(NODE_MODULES) clean-lein build-prod-clojurescript compile-less
+	lein with-profile ataru-main:ovara uberjar
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
