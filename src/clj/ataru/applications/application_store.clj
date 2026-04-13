@@ -1404,38 +1404,21 @@
   ([haku-oid]
   (get-person-and-application-oids haku-oid nil)))
 
-(defn- update-hakukohde-process-state!
-  [connection session hakukohde-oids from-state to-state application-key]
-  (let [application      (get-latest-application-by-key-in-tx connection
-                                                              application-key)
-        existing-reviews (filter
-                          #(= (:state %) from-state)
-                          (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oids))
-        new-reviews      (map
-                          #(-> %
-                               (assoc :state to-state)
-                               (assoc :modified_time (time/now))
-                               (assoc :application_key application-key))
-                          existing-reviews)
-        new-event        {:application_key          application-key
-                          :event_type               "hakukohde-review-state-change"
-                          :new_review_state         to-state
-                          :virkailija_oid           (-> session :identity :oid)
-                          :virkailija_organizations (edit-application-right-organizations->json session)
-                          :first_name               (:first-name session)
-                          :last_name                (:last-name session)
-                          :review_key               "processing-state"}]
-    (doseq [new-review new-reviews]
-      (queries/yesql-upsert-application-hakukohde-review! new-review {:connection connection})
-      (queries/yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
-                                             {:connection connection}))
-    (when new-reviews
-      {:new       new-event
-       :id        {:applicationOid application-key
-                   :hakukohdeOids (clojure.string/join ", " (set (map :hakukohde existing-reviews)))
-                   :requirement    "processing-state"}
-       :operation audit-log/operation-modify
-       :session   session})))
+(defn- create-processing-state-change-audit-log-entry
+  [session application-key hakukohde-oids to-state]
+  {:new       {:application_key          application-key
+               :event_type               "hakukohde-review-state-change"
+               :new_review_state         to-state
+               :virkailija_oid           (-> session :identity :oid)
+               :virkailija_organizations (edit-application-right-organizations->json session)
+               :first_name               (:first-name session)
+               :last_name                (:last-name session)
+               :review_key               "processing-state"}
+   :id        {:applicationOid application-key
+               :hakukohdeOids (clojure.string/join ", " (set hakukohde-oids))
+               :requirement    "processing-state"}
+   :operation audit-log/operation-modify
+   :session   session})
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
@@ -1450,13 +1433,42 @@
 (defn mass-update-application-states
   [session application-keys hakukohde-oids from-state to-state audit-logger]
   (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohtees" hakukohde-oids)
-  (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                            (mapv
-                             (partial update-hakukohde-process-state! connection session hakukohde-oids from-state to-state)
-                             application-keys))]
-    (doseq [audit-log-entry (filter some? audit-log-entries)]
+  (let [{:keys [audit-log-entries updated-count]}
+        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+          (let [modified-time  (time/now)
+                reviews-to-update (queries/yesql-get-bulk-processing-state-reviews
+                                  {:application_keys application-keys
+                                   :hakukohde_oids   hakukohde-oids
+                                   :from_state       from-state}
+                                  {:connection connection})
+                grouped-updates (group-by :application_key reviews-to-update)
+                application-event-base {:event_type               "hakukohde-review-state-change"
+                                        :new_review_state         to-state
+                                        :virkailija_oid           (-> session :identity :oid)
+                                        :virkailija_organizations (edit-application-right-organizations->json session)
+                                        :review_key               "processing-state"}]
+            (doseq [{:keys [application_key hakukohde]} reviews-to-update]
+              (queries/yesql-upsert-application-hakukohde-review! {:application_key application_key
+                                                                   :requirement    "processing-state"
+                                                                   :state          to-state
+                                                                   :hakukohde      hakukohde
+                                                                   :modified_time  modified-time}
+                                                                  {:connection connection})
+              (queries/yesql-add-application-event<! (assoc application-event-base
+                                                            :application_key application_key
+                                                            :hakukohde hakukohde)
+                                                     {:connection connection}))
+            {:audit-log-entries (mapv (fn [[application-key reviews]]
+                                        (create-processing-state-change-audit-log-entry
+                                          session
+                                          application-key
+                                          (map :hakukohde reviews)
+                                          to-state))
+                                      grouped-updates)
+             :updated-count     (count reviews-to-update)}))]
+    (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-logger audit-log-entry))
-    true))
+    updated-count))
 
 (defn add-application-event-in-tx [conn event session]
   (-> {:event_type               nil
