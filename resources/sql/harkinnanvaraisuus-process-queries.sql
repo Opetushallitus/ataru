@@ -1,8 +1,15 @@
 -- name: yesql-upsert-harkinnanvaraisuus-process!
-INSERT INTO harkinnanvaraisuus_process (application_id, application_key, haku_oid)
-VALUES (:application_id, :application_key, :haku_oid)
+INSERT INTO harkinnanvaraisuus_process (application_id, application_key, haku_oid, check_after)
+VALUES (:application_id, :application_key, :haku_oid, :check_after)
 ON CONFLICT (application_key)
-    DO UPDATE SET harkinnanvarainen_only = NULL, last_checked = NULL, skip_check = false, application_id = :application_id;
+    DO UPDATE SET harkinnanvarainen_only = NULL,
+                  last_checked           = NULL,
+                  skip_check             = false,
+                  application_id         = :application_id,
+                  check_after            =
+                      CASE
+                          WHEN harkinnanvaraisuus_process.check_after <= now() THEN EXCLUDED.check_after
+                          ELSE harkinnanvaraisuus_process.check_after END;
 
 -- name: yesql-fetch-harkinnanvaraisuus-unprocessed
 SELECT
@@ -10,7 +17,7 @@ SELECT
     application_key,
     haku_oid
 FROM harkinnanvaraisuus_process
-WHERE last_checked is NULL AND skip_check = false
+WHERE last_checked is NULL AND skip_check = false AND check_after < now()
 ORDER BY application_id ASC LIMIT 250;
 
 -- name: yesql-skip-checking-harkinnanvaraisuus-processes!

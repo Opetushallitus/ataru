@@ -14,10 +14,11 @@
 (defn- execute [yesql-query-fn params]
   (exec :db yesql-query-fn params))
 
-(defn upsert-harkinnanvaraisuus-process [application-id application-key haku-oid]
+(defn upsert-harkinnanvaraisuus-process [application-id application-key haku-oid check-after]
   (execute yesql-upsert-harkinnanvaraisuus-process! {:application_id application-id
-                                                    :application_key application-key
-                                                    :haku_oid haku-oid}))
+                                                     :application_key application-key
+                                                     :haku_oid haku-oid
+                                                     :check_after check-after}))
 
 (defn fetch-unprocessed-harkinnanvaraisuus-processes []
   (execute yesql-fetch-harkinnanvaraisuus-unprocessed nil))

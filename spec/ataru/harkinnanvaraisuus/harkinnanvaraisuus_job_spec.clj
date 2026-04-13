@@ -157,12 +157,15 @@
                             (jdbc/delete! conn :forms
                                           ["id = ?" id])))
 
-(defn- init [application]
-  (let [form (form-store/create-new-form! form-fixtures/person-info-form)
-        stored (application-store/add-application (assoc application :form (:id form)) [] form {} audit-logger nil)]
-    (reset! test-form-id (:id form))
-    (reset! test-application-id (:id stored))
-    (store/upsert-harkinnanvaraisuus-process (:id stored) (:key stored) haku-key)))
+(defn- init
+  ([application]
+   (init application (time/now)))
+  ([application check-after]
+   (let [form (form-store/create-new-form! form-fixtures/person-info-form)
+         stored (application-store/add-application (assoc application :form (:id form)) [] form {} audit-logger nil)]
+     (reset! test-form-id (:id form))
+     (reset! test-application-id (:id stored))
+     (store/upsert-harkinnanvaraisuus-process (:id stored) (:key stored) haku-key check-after))))
 
 (defn- init-with-check [application runner]
   (init application)
@@ -207,6 +210,12 @@
                         (let [ops (->MockOhjausparametritServiceWithFuture)]
                           (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :organization-service os :koodisto-cache fake-koodisto-cache :tarjonta-service ts :suoritus-service mock-suoritus-service :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
+
+                    (it "doesn't check application if check_after is in the future"
+                        (init (create-application) (time/plus (time/now) (time/minutes 1)))
+                        (let [ops (->MockOhjausparametritServiceWithFuture)]
+                          (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :suoritus-service mock-suoritus-service :person-service fps})
+                          (should= nil (:last_checked (get-stored-process)))))
 
                     (it "checks application"
                         (init (create-application))
