@@ -13,9 +13,14 @@
                                             :drain-failed? false
                                             :queue-url     ""}}
  :tutkintojen-tunnustaminen {:enabled?                    false
+                             :tutu-send-enabled?          false
                              :form-key                    "testi-form-key"
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
+                             :maksut                      {:enabled?                false
+                                                           :poll-interval-minutes   60
+                                                           :decision-amount         "70.00"
+                                                           :form-keys      			    ""}
                              :ftp                         {:host               "localhost"
                                                            :port               1221
                                                            :user               "oph"
@@ -23,6 +28,13 @@
                                                            :verify-certificate false
                                                            :path               "/"
                                                            :timeout-seconds    10}}
+ :kk-application-payments   {:enabled? false
+                             :status-updater-enabled? false
+                             :maksut-poller-enabled? false
+                             :processing-fee "100.00"
+                             :start-year 2025
+                             :start-month 1
+                             :start-day 1}
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :application-delete-key    {:secret-key "vT6+TMbTwsJx5J&T"}
  :yksiloimattomat {:allow false}
@@ -37,10 +49,13 @@
                    :environment-name                    "test"
                    :local-dev-logout                    true
                    :secret-link-valid-days              14
+                   :tutu-payment-form-keys              ""
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
-                   :features {:schema-validation true
-                              :arvosanat true}
+                   :job-failure-alert-recipients        "testi@example.org"
+                   :send-job-failure-alert-emails       true
+                   :features {:schema-validation false
+                              :hakeminen-tunnistautuneena true}
                    :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}

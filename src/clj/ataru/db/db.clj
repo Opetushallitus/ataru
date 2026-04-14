@@ -5,22 +5,38 @@
             [ataru.db.extensions]
             [taoensso.timbre :as log]))
 
+(defn- jdbc-url [db-config schema]
+  (str "jdbc:aws-wrapper:postgresql://"
+       (:server-name db-config)
+       ":"
+       (:port-number db-config)
+       "/"
+       (:database-name db-config)
+       (when schema
+         (str "?currentSchema=" schema))))
+
 (defn- datasource-spec
   "Merge configuration defaults and db config. Latter overrides the defaults"
   [ds-key]
-  (merge {:auto-commit        false
-          :read-only          false
-          :connection-timeout 30000
-          :validation-timeout 5000
-          :idle-timeout       600000
-          :max-lifetime       1800000
-          :minimum-idle       10
-          :maximum-pool-size  10
-          :pool-name          "db-pool"
-          :adapter            "postgresql"
-          :currentSchema      (-> config ds-key :schema)}
-         (-> (ds-key config)
-             (dissoc :schema))))
+  (let [db-config (ds-key config)
+        schema    (:schema db-config)]
+    (merge {:auto-commit            false
+            :read-only              false
+            :connection-timeout     30000
+            :validation-timeout     5000
+            :idle-timeout           600000
+            :max-lifetime           1800000
+            :minimum-idle           10
+            :maximum-pool-size      10
+            :pool-name              "db-pool"
+            :jdbc-url               (jdbc-url db-config schema)
+            :driver-class-name      "software.amazon.jdbc.Driver"}
+           (-> db-config
+               (dissoc :schema
+                       :adapter
+                       :database-name
+                       :server-name
+                       :port-number)))))
 
 (defonce datasource (atom {}))
 
