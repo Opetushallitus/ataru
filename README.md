@@ -141,6 +141,12 @@ applications with `lein hakija-dev` and `lein virkailija-dev`.
 
 Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
+## Static checks (Linting and type checking)
+
+```
+make lint
+```
+
 ## API documentation
 
 Swagger specs for the APIs can be found at
