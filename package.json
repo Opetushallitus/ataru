@@ -12,6 +12,7 @@
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
     "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser chrome --headless",
     "lint:clj": "clj-kondo --lint src --fail-level error",
+    "clj-kondo:dep-configs": "clj-kondo --lint \"$(lein classpath)\" --dependencies --copy-configs",
     "lint:js": "eslint '**/*.{ts,js}'",
     "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
     "tsc:type-check": "tsc"

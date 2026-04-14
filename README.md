@@ -143,8 +143,15 @@ Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/loma
 
 ## Static checks (Linting and type checking)
 
+To run all static checks for code in repo:
 ```
 make lint
+```
+
+To update clj-kondo configurations from dependencies to `.clj-kondo`-directory:
+
+```
+make clj-kondo-update-configs
 ```
 
 ## API documentation
