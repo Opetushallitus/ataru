@@ -550,10 +550,6 @@
                       (assoc :offset-snip (sort->offset-snip sort)))]
     (queries/get-application-list-sqlvec query)))
 
-(defn get-application-content-form-list
-  [application-ids]
-  (exec-db :db queries/yesql-get-application-content-form-list-by-ids {:ids application-ids}))
-
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
