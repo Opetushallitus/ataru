@@ -60,6 +60,19 @@
         :roles       roles}
        unique-ticket])))
 
+(defn- fake-ticket? [ticket]
+  (contains? #{"DEVELOPER"
+               "SUPERUSER"
+               "OPINTO-OHJAAJA"
+               "USER-WITH-HAKUKOHDE-ORGANIZATION"}
+             ticket))
+
+(defn- use-fake-login-provider?
+  [ticket]
+  (and (:dev? env)
+       (or (-> config :dev :fake-dependencies)
+           (fake-ticket? ticket))))
+
 (defn auth-routes [{:keys [login-cas-client
                            person-service
                            organization-service
@@ -72,7 +85,7 @@
                         (let [redirect-url   (if-let [url-from-session (get-in request [:session :original-url])]
                                                (rewrite-url-for-environment url-from-session)
                                                (get-in config [:public-config :virkailija :service_url]))
-                              login-provider (if (-> config :dev :fake-dependencies)
+                              login-provider (if (use-fake-login-provider? ticket)
                                                (fake-login-provider ticket)
                                                (cas-login login-cas-client ticket))]
                           (login login-provider

@@ -113,6 +113,9 @@
      (selmer/render-file filename opts)
      (response/not-found "Not found"))))
 
+(declare generate-new-random-key)
+(declare fake-strong-oppija-session-data)
+
 (api/defroutes test-routes
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z\\-]+}-test.html"] [testname]
@@ -171,6 +174,23 @@
   (not (clojure.string/blank? x)))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
+
+(defn- fake-strong-oppija-session-data []
+  {:person-oid "1.2.246.562.24.73833272757"
+   :eidas-id nil
+   :auth-type :strong
+   :display-name "Vahvasti Tunnistautunut"
+   :fields {:address {:value nil :locked false}
+            :have-finnish-ssn {:value true :locked true}
+            :email {:value nil :locked false}
+            :preferred-name {:value "Vahvasti" :locked true}
+            :last-name {:value "Tunnistautunut" :locked true}
+            :country-of-residence {:value "246" :locked false}
+            :ssn {:value "210281-9988" :locked true}
+            :first-name {:value "Vahvasti" :locked true}
+            :birth-date {:value nil :locked false}
+            :postal-code {:value nil :locked false}
+            :home-town {:value "853" :locked true}}})
 
 (defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []

@@ -705,7 +705,9 @@
   (let [{:keys [application person form koski-tutkinnot]} (:body response)
         [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
                                             [:secret secret]
-                                            [:virkailija-secret virkailija-secret])]
+                                            [:virkailija-secret virkailija-secret])
+        authenticated-applicant-edit?    (and (= secret-kwd :secret)
+                                              (some? person))]
     (util/set-query-param "application-key" (:key application))
     {:db       (-> (if koski-tutkinnot
                      (assoc-in db [:application :koski-tutkinnot] (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
@@ -713,12 +715,19 @@
                    (assoc-in [:application :application-identifier] (:application-identifier application))
                    (assoc-in [:application :editing?] true)
                    (assoc-in [:application secret-kwd] secret-val)
+                   (assoc-in [:application :tunnistautuminen] (:tunnistautuminen application))
                    (assoc-in [:application :state] (:state application))
                    (assoc-in [:application :hakukohde] (:hakukohde application))
                    (assoc-in [:application :person] person)
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
-                   (handle-form (:answers application) (get-in response [:headers "date"]) form))
+                   (handle-form (:answers application) (get-in response [:headers "date"]) form)
+                   (cond-> authenticated-applicant-edit?
+                     (update-in [:application :answers :home-town]
+                                (fn [answer]
+                                  (if (string/blank? (:value answer))
+                                    answer
+                                    (assoc answer :locked true))))))
      :dispatch-n [[:application/set-itse-syotetyt-visibility (not (seq koski-tutkinnot))]
                   [:application/post-handle-form-dispatches]]}))
 
