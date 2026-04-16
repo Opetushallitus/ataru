@@ -62,12 +62,12 @@
           (when show-henkilo-info-incomplete?  ; henkilo is missing some essential information, such as language
             [notification {:text      :henkilo-info-incomplete
                            :link-text :review-in-henkilopalvelu
-                           :href      (str "/henkilo-ui/oppija/"
+                           :href      (str "/henkilo-ui/oppija2/"
                                            person-oid)}])
           (when show-not-yksiloity?
             [notification {:text      :person-not-individualized
                            :link-text :individualize-in-henkilopalvelu
-                           :href      (str "/henkilo-ui/oppija/"
+                           :href      (str "/henkilo-ui/oppija2/"
                                            person-oid
                                            "/duplikaatit?permissionCheckService=ATARU")}])
           (when show-metadata-not-found?
@@ -118,7 +118,7 @@
            [:div.application-handling__applicant-links
             (when master-oid
               [:a
-               {:href   (str "/henkilo-ui/oppija/"
+               {:href   (str "/henkilo-ui/oppija2/"
                              master-oid
                              "?permissionCheckService=ATARU")
                 :target "_blank"}
@@ -127,7 +127,7 @@
                 (str @(subscribe [:editor/virkailija-translation :student-number]) " " master-oid)]])
             (when person-oid
               [:a
-               {:href   (str "/henkilo-ui/oppija/"
+               {:href   (str "/henkilo-ui/oppija2/"
                              person-oid
                              "?permissionCheckService=ATARU")
                 :target "_blank"}
