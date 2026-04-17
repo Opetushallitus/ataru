@@ -80,6 +80,7 @@
 (defn expected-anonymized-application
   []
   {:haku             nil
+   :ssn              "090296-999D"
    :lang             "fi"
    :tunnistautuminen "strong"
    :id               @test-application-id
@@ -131,6 +132,7 @@
 (defn expected-anonymized-application-abroad
   []
   {:haku             nil
+   :ssn              "090296-999D"
    :lang             "fi"
    :tunnistautuminen "strong"
    :id               @test-application-id
@@ -180,6 +182,7 @@
 (defn expected-application-with-generated-contact-details
   []
   {:haku             nil,
+   :ssn              "090296-999D",
    :lang             "fi",
    :tunnistautuminen "strong",
    :id               @test-application-id,
@@ -226,6 +229,7 @@
 (defn expected-application-with-generated-contact-details-abroad
   []
   {:haku             nil,
+   :ssn              "090296-999D",
    :lang             "fi",
    :tunnistautuminen "strong",
    :id               @test-application-id,

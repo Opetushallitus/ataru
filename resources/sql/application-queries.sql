@@ -262,7 +262,9 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
+  a.ssn,
   las.secret,
+  (a.tunnistautuminen->'session'->'data'->'eidas-id') as eidas_id,
   (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications a
 JOIN LATERAL (SELECT secret

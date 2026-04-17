@@ -93,10 +93,19 @@
 ;Tuo viritys olisi hyvä purkaa, mutta pitää olla todella varovainen että kaikkien lomakkeiden sähköpostit säilyvät järkevinä.
 (defn get-application-url-and-text [form application lang]
   (let [form-allows-ht? (boolean (get-in form [:properties :allow-hakeminen-tunnistautuneena]))
-        strong-auth? (= (:tunnistautuminen application) constants/auth-type-strong)]
+        strong-auth? (= (:tunnistautuminen application) constants/auth-type-strong)
+        eidas-auth? (and (= (:tunnistautuminen application) constants/auth-type-eidas)
+                         (clojure.string/blank? (:ssn application)))]
     (log/info "get application url and text " (:properties form) ", " form-allows-ht? " - " strong-auth?)
-    (if strong-auth?
+    (cond
+      strong-auth?
       {:oma-opintopolku-link (oma-opintopolku-link)}
+
+      eidas-auth?
+      (merge {:application-url (modify-link (:secret application))}
+             {:oma-opintopolku-link (oma-opintopolku-link)})
+
+      :else
       (merge {:application-url (modify-link (:secret application))}
              (when form-allows-ht? {:application-url-text (get-in email-link-section-texts [(if (or (tutu-form? form) (astu-form? form))
                                                                                               :no-hakuaika-mentions

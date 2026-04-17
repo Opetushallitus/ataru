@@ -3,6 +3,7 @@
 
 (s/defschema HenkiloPerustieto
   {(s/optional-key :hetu)            (s/maybe s/Str)
+   (s/optional-key :eidasTunniste)   (s/maybe s/Str)
    :etunimet                         s/Str
    :kutsumanimi                      s/Str
    :sukunimi                         s/Str

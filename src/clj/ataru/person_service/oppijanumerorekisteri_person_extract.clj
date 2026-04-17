@@ -30,14 +30,20 @@
                       :asiointiKieli  {:kieliKoodi (:lang application)}
                       :kansalaisuus   (extract-nationalities (extract-field application "nationality"))
                       :henkiloTyyppi  "OPPIJA"}
-        person-id    (extract-field application "ssn")]
-    (if person-id
-      (assoc
-       basic-fields
-       :hetu (clojure.string/upper-case person-id)
-       :eiSuomalaistaHetua false)
-      (assoc
-       basic-fields
-       :syntymaaika (extract-birth-date application)
-       :identifications [{:idpEntityId "oppijaToken" :identifier email}]
-       :eiSuomalaistaHetua true))))
+        person-id    (extract-field application "ssn")
+        eidas-id     (:eidas-id application)]
+    (cond
+      person-id (assoc
+                  basic-fields
+                  :hetu (clojure.string/upper-case person-id)
+                  :eiSuomalaistaHetua false)
+      eidas-id  (assoc
+                  basic-fields
+                  :eidasTunniste eidas-id
+                  :syntymaaika (extract-birth-date application)
+                  :eiSuomalaistaHetua true)
+      :else     (assoc
+                  basic-fields
+                  :syntymaaika (extract-birth-date application)
+                  :identifications [{:idpEntityId "oppijaToken" :identifier email}]
+                  :eiSuomalaistaHetua true))))
