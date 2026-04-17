@@ -1436,27 +1436,44 @@
         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
           (let [modified-time  (time/now)
                 reviews-to-update (queries/yesql-get-bulk-processing-state-reviews
-                                  {:application_keys application-keys
-                                   :hakukohde_oids   hakukohde-oids
-                                   :from_state       from-state}
-                                  {:connection connection})
-                grouped-updates (group-by :application_key reviews-to-update)
+                                    {:application_keys application-keys
+                                     :hakukohde_oids   hakukohde-oids
+                                     :from_state       from-state}
+                                    {:connection connection})
+                missing-unprocessed-reviews (if (= "unprocessed" from-state)
+                                             (queries/yesql-get-missing-processing-state-reviews-for-latest-applications
+                                               {:application_keys application-keys
+                                                :hakukohde_oids   hakukohde-oids}
+                                               {:connection connection})
+                                             [])
+                changed-reviews (into (vec reviews-to-update) missing-unprocessed-reviews)
+                grouped-updates (group-by :application_key changed-reviews)
                 application-event-base {:event_type               "hakukohde-review-state-change"
                                         :new_review_state         to-state
                                         :virkailija_oid           (-> session :identity :oid)
                                         :virkailija_organizations (edit-application-right-organizations->json session)
                                         :review_key               "processing-state"}]
-            (doseq [{:keys [application_key hakukohde]} reviews-to-update]
-              (queries/yesql-upsert-application-hakukohde-review! {:application_key application_key
-                                                                   :requirement    "processing-state"
-                                                                   :state          to-state
-                                                                   :hakukohde      hakukohde
-                                                                   :modified_time  modified-time}
-                                                                  {:connection connection})
-              (queries/yesql-add-application-event<! (assoc application-event-base
-                                                            :application_key application_key
-                                                            :hakukohde hakukohde)
-                                                     {:connection connection}))
+            (when (seq reviews-to-update)
+              (queries/yesql-bulk-update-processing-state-reviews!
+                {:application_keys application-keys
+                 :hakukohde_oids   hakukohde-oids
+                 :from_state       from-state
+                 :to_state         to-state
+                 :modified_time    modified-time}
+                {:connection connection})
+              )
+            (when (seq missing-unprocessed-reviews)
+              (queries/yesql-create-missing-processing-state-reviews!
+                {:application_keys application-keys
+                 :hakukohde_oids   hakukohde-oids
+                 :to_state         to-state
+                 :modified_time    modified-time}
+                {:connection connection}))
+            (doseq [{:keys [application_key hakukohde]} changed-reviews]
+                (queries/yesql-add-application-event<! (assoc application-event-base
+                                                              :application_key application_key
+                                                              :hakukohde hakukohde)
+                                                       {:connection connection}))
             {:audit-log-entries (mapv (fn [[application-key reviews]]
                                         (create-processing-state-change-audit-log-entry
                                           session
@@ -1464,7 +1481,7 @@
                                           (map :hakukohde reviews)
                                           to-state))
                                       grouped-updates)
-             :updated-count     (count reviews-to-update)}))]
+             :updated-count     (count changed-reviews)}))]
     (doseq [audit-log-entry audit-log-entries]
       (audit-log/log audit-logger audit-log-entry))
     updated-count))

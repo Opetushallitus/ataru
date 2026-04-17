@@ -474,7 +474,57 @@
           :requirement     "processing-state"
           :state           "processing"}]
         (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
-              (store/get-application-hakukohde-reviews application-key-3))))))
+              (store/get-application-hakukohde-reviews application-key-3)))))
+
+  (it "treats missing processing-state reviews as unprocessed in mass update"
+    (let [application-ids (unit-test-db/init-db-fixture
+                            form-fixtures/minimal-form
+                            [{:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.201"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}
+                             {:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.202"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}])
+          [application-key-1 application-key-2] (mapv find-application-key-by-id application-ids)
+          audit-logger      (audit-log/new-dummy-audit-logger)
+          session           {:identity {:oid                      "1.2.246.562.11.11111111111"
+                                        :user-right-organizations {:edit-applications [{:oid "1.2.246.562.10.00000000001"}]}}}]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.11.11111111111"
+                                              :first_name "Testi"
+                                              :last_name  "Virkailija"})
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "1.2.246.562.29.11111111110"
+         :review-requirement "processing-state"
+         :review-state       "unprocessed"}
+        application-key-1
+        audit-logger)
+      (should=
+        2
+        (store/mass-update-application-states
+          session
+          [application-key-1 application-key-2]
+          ["1.2.246.562.29.11111111110"]
+          "unprocessed"
+          "processing"
+          audit-logger))
+      (should==
+        [{:application-key application-key-1
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-1)))
+      (should==
+        [{:application-key application-key-2
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-2))))))
 
 
 (def ^:dynamic *tutu-application-key-1* (atom nil))
