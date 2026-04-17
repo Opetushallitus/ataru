@@ -9,7 +9,11 @@
             [ataru.fixtures.form :as form-fixtures]
             [ataru.util :as util]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [after around around-all context describe it should-be-nil should= should== tags]]))
+            [speclj.core :refer [after around around-all context describe it should-be-nil should= should== tags]]
+            [yesql.core :as sql]))
+
+(declare yesql-upsert-virkailija<!)
+(sql/defqueries "sql/virkailija-queries.sql")
 
 (def ^:private form (atom nil))
 
@@ -395,6 +399,132 @@
                                     (should== 1 (store/delete-orphan-attachment-reviews (:key application)
                                                                                         [(first new-reviews)]
                                                                                         connection)))))))
+
+(describe "mass update application states"
+  (tags :unit :database)
+
+  (it "updates only matching processing-state reviews and returns the updated count"
+    (let [application-ids (unit-test-db/init-db-fixture
+                            form-fixtures/minimal-form
+                            [{:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.101"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}
+                             {:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.102"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}
+                             {:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.103"
+                              :hakukohde  ["1.2.246.562.29.11111111119"]
+                              :answers    []}])
+          [application-key-1 application-key-2 application-key-3] (mapv find-application-key-by-id application-ids)
+          session {:identity {:oid                      "1.2.246.562.11.11111111111"
+                              :user-right-organizations {:edit-applications [{:oid "1.2.246.562.10.00000000001"}]}}}]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.11.11111111111"
+                                              :first_name "Testi"
+                                              :last_name  "Virkailija"})
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "1.2.246.562.29.11111111110"
+         :review-requirement "processing-state"
+         :review-state       "processing"}
+        application-key-1
+        audit-logger)
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "1.2.246.562.29.11111111110"
+         :review-requirement "processing-state"
+         :review-state       "unprocessed"}
+        application-key-2
+        audit-logger)
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "1.2.246.562.29.11111111119"
+         :review-requirement "processing-state"
+         :review-state       "processing"}
+        application-key-3
+        audit-logger)
+      (should=
+        1
+        (store/mass-update-application-states
+          session
+          [application-key-1 application-key-2 application-key-3]
+          ["1.2.246.562.29.11111111110"]
+          "processing"
+          "unprocessed"
+          audit-logger))
+      (should==
+        [{:application-key application-key-1
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "unprocessed"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-1)))
+      (should==
+        [{:application-key application-key-2
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "unprocessed"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-2)))
+      (should==
+        [{:application-key application-key-3
+          :hakukohde       "1.2.246.562.29.11111111119"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-3)))))
+
+  (it "treats missing processing-state reviews as unprocessed in mass update"
+    (let [application-ids (unit-test-db/init-db-fixture
+                            form-fixtures/minimal-form
+                            [{:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.201"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}
+                             {:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.202"
+                              :hakukohde  ["1.2.246.562.29.11111111110"]
+                              :answers    []}])
+          [application-key-1 application-key-2] (mapv find-application-key-by-id application-ids)
+          audit-logger      (audit-log/new-dummy-audit-logger)
+          session           {:identity {:oid                      "1.2.246.562.11.11111111111"
+                                        :user-right-organizations {:edit-applications [{:oid "1.2.246.562.10.00000000001"}]}}}]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.11.11111111111"
+                                              :first_name "Testi"
+                                              :last_name  "Virkailija"})
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "1.2.246.562.29.11111111110"
+         :review-requirement "processing-state"
+         :review-state       "unprocessed"}
+        application-key-1
+        audit-logger)
+      (should=
+        2
+        (store/mass-update-application-states
+          session
+          [application-key-1 application-key-2]
+          ["1.2.246.562.29.11111111110"]
+          "unprocessed"
+          "processing"
+          audit-logger))
+      (should==
+        [{:application-key application-key-1
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-1)))
+      (should==
+        [{:application-key application-key-2
+          :hakukohde       "1.2.246.562.29.11111111110"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-2))))))
 
 
 (def ^:dynamic *tutu-application-key-1* (atom nil))

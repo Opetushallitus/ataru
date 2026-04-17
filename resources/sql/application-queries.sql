@@ -673,6 +673,65 @@ ON CONFLICT (application_key, requirement, hakukohde)
   WHERE hakukohde IS NOT NULL
   DO UPDATE SET state = :state, modified_time = :modified_time;
 
+-- name: yesql-get-bulk-processing-state-reviews
+SELECT application_key, hakukohde
+FROM application_hakukohde_reviews
+WHERE application_key IN (:application_keys)
+  AND requirement = 'processing-state'
+  AND state = :from_state
+  AND hakukohde IN (:hakukohde_oids);
+
+-- name: yesql-bulk-update-processing-state-reviews!
+UPDATE application_hakukohde_reviews
+SET state = :to_state,
+    modified_time = :modified_time
+WHERE application_key IN (:application_keys)
+  AND requirement = 'processing-state'
+  AND state = :from_state
+  AND hakukohde IN (:hakukohde_oids);
+
+-- name: yesql-get-missing-processing-state-reviews-for-latest-applications
+WITH latest_applications AS (
+  SELECT a.key, unnest(a.hakukohde) AS hakukohde
+  FROM applications AS a
+  LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+  WHERE la.id IS NULL
+    AND a.key IN (:application_keys)
+)
+SELECT la.key AS application_key, la.hakukohde
+FROM latest_applications AS la
+LEFT JOIN application_hakukohde_reviews AS ahr
+  ON ahr.application_key = la.key
+ AND ahr.requirement = 'processing-state'
+ AND ahr.hakukohde = la.hakukohde
+WHERE la.hakukohde IN (:hakukohde_oids)
+  AND ahr.application_key IS NULL;
+
+-- name: yesql-create-missing-processing-state-reviews!
+INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde, modified_time)
+SELECT missing.application_key,
+       'processing-state',
+       :to_state,
+       missing.hakukohde,
+       :modified_time
+FROM (
+  WITH latest_applications AS (
+    SELECT a.key, unnest(a.hakukohde) AS hakukohde
+    FROM applications AS a
+    LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+    WHERE la.id IS NULL
+      AND a.key IN (:application_keys)
+  )
+  SELECT la.key AS application_key, la.hakukohde
+  FROM latest_applications AS la
+  LEFT JOIN application_hakukohde_reviews AS ahr
+    ON ahr.application_key = la.key
+   AND ahr.requirement = 'processing-state'
+   AND ahr.hakukohde = la.hakukohde
+  WHERE la.hakukohde IN (:hakukohde_oids)
+    AND ahr.application_key IS NULL
+) AS missing;
+
 -- name: yesql-get-existing-application-hakukohde-review
 SELECT id
 FROM application_hakukohde_reviews
