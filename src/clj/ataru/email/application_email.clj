@@ -10,7 +10,7 @@
             [ataru.translations.texts :refer [email-default-texts email-link-section-texts tutu-decision-email astu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
-            [clj-time.core :as t]
+            [ataru.time :as t]
             [clojure.set]
             [markdown.core :as md]
             [medley.core :refer [find-first]]

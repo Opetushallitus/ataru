@@ -1,22 +1,23 @@
 (ns ataru.tarjonta-service.hakuaika
   (:require
-    [clj-time.core :as t]
-    [clj-time.coerce :as c]
-    [clj-time.format :as f]
+    [ataru.time :as t]
+    [ataru.time.coerce :as c]
+    [ataru.time.format :as f]
     [clojure.core.match :refer [match]]
     [clojure.string :as string]
     [clojure.set :as set]
     [ataru.constants :refer [hakutapa-jatkuva-haku hakutapa-joustava-haku]])
   (:import (java.util Locale)
-           (java.time Instant ZoneId)
+           (java.time Instant)
            (java.time.format DateTimeFormatter)))
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
+(def ^:private basic-date-time-no-ms-formatter (f/formatter (:date-time-no-ms f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
 
 (defn get-formatter [fmt-str locale]
   (-> (DateTimeFormatter/ofPattern fmt-str)
-      (.withZone (ZoneId/of "Europe/Helsinki"))
+      (.withZone (t/time-zone-for-id "Europe/Helsinki"))
       (.withLocale locale)))
 
 (defn get-formatted-date [formatter clj-datetime]
@@ -52,7 +53,10 @@
 
 (defn basic-date-time-str->date-time
   [str]
-  (f/parse basic-date-time-formatter str))
+  (try
+    (f/parse basic-date-time-formatter str)
+    (catch Exception _
+      (f/parse basic-date-time-no-ms-formatter str))))
 
 (defn- jatkuva-haku? [haku]
   (string/starts-with? (:hakutapa-uri haku) hakutapa-jatkuva-haku))
@@ -156,8 +160,8 @@
                         (hakukohteen-hakuajat haku hakuaika-id)
                         (:hakuajat hakukohde))
                       (map (fn [hakuaika]
-                             (let [start (.getMillis (:start hakuaika))
-                                   end   (some-> (:end hakuaika) (.getMillis))]
+                             (let [start (c/to-long (:start hakuaika))
+                                   end   (some-> (:end hakuaika) c/to-long)]
                                {:start start
                                 :end   end
                                 :on    (hakuaika-on now start end)})))
@@ -175,9 +179,9 @@
   [now haku ohjausparametrit]
   (when-let [hakuaika (->> (:hakuajat haku)
                            (map (fn [hakuaika]
-                                  (let [start (.getMillis (:start hakuaika))
+                                  (let [start (c/to-long (:start hakuaika))
                                         end   (some-> (:end hakuaika)
-                                                      (.getMillis))]
+                                                      c/to-long)]
                                     {:start start
                                      :end   end
                                      :on    (hakuaika-on now start end)})))

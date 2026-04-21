@@ -1,12 +1,20 @@
 (ns ataru.background-job.job-spec
-  (:require [speclj.core :refer :all]
+  (:require [speclj.core :refer [after
+                                 after-all
+                                 before
+                                 before-all
+                                 describe
+                                 it
+                                 run-specs
+                                 should
+                                 tags]]
             [clj-test-containers.core :as tc]
             [hikari-cp.core :refer [make-datasource]]
             [clojure.java.jdbc :as jdbc]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log])
-  (:import (java.time Instant Duration)
-           (org.joda.time DateTime)))
+  (:import (java.time Instant Duration ZonedDateTime)
+           (java.time.temporal ChronoUnit)))
 
 (defn- should-eventually [f timeout]
   (let [timed-out (promise)]
@@ -127,7 +135,7 @@
                   (should (= "test payload" (deref ready 300 false))) ; payload equals supplied
                   (finally (.stop job-runner)))))
 
-          (it "payload can contain joda DateTime"
+          (it "payload can contain java.time.ZonedDateTime"
               (let [ready (promise)
                     job-runner (.start
                                  (job/->PersistentJobRunner
@@ -137,7 +145,7 @@
                                    ds
                                    true))]
                 (try
-                  (let [payload {:time (DateTime.)}]
+                  (let [payload {:time (.truncatedTo (ZonedDateTime/now) ChronoUnit/MILLIS)}]
                     (jdbc/with-db-transaction
                       [connection {:datasource ds}]
                       (job/start-job job-runner connection "queued" payload))
@@ -155,7 +163,7 @@
                                    ds
                                    true))]
                 (try
-                  (let [payload {:time (Instant/ofEpochMilli (.getMillis (DateTime.)))}]
+                  (let [payload {:time (.truncatedTo (Instant/now) ChronoUnit/MILLIS)}]
                     (jdbc/with-db-transaction
                       [connection {:datasource ds}]
                       (job/start-job job-runner connection "queued" payload))
