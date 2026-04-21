@@ -1853,6 +1853,12 @@
    :mass-edit                                                {:fi "Massamuutos"
                                                               :sv "Massändring"
                                                               :en "Mass editing"}
+   :mass-edit-updating                                       {:fi "Massamuutos käynnissä"
+                                                              :sv "Massändring pågår"
+                                                              :en "Mass update in progress"}
+   :mass-edit-updated                                        {:fi "Massamuutos valmis"
+                                                              :sv "Massändring klar"
+                                                              :en "Mass update completed"}
    :mass-edit-header                                         {:fi "Muuta käsittelyvaihetta"
                                                               :sv "Ändra behandlingsstatus"
                                                               :en "Change processing status"}

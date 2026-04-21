@@ -342,6 +342,14 @@
      (get-in db [:application :mass-review-notes :form-status]))))
 
 (re-frame/reg-sub
+ :application/mass-update-form-status
+ (fn [db]
+   (cond (get-in db [:application :fetching-applications?])
+         :loading-applications
+         :else
+         (get-in db [:application :mass-update :form-status]))))
+
+(re-frame/reg-sub
   :application/mass-information-request-only-guardian-enabled?
   (fn [_ _]
     [(re-frame/subscribe [:application/selected-haku-oid])
@@ -1123,5 +1131,4 @@
   :application/forms
   (fn forms [db _]
     (get-in db [:forms])))
-
 

@@ -986,9 +986,14 @@
 
 (reg-event-fx
  :application/handle-mass-update-application-reviews
- (fn [_ _]
-   {:delayed-dispatch {:dispatch-vec [:application/reload-applications]
-                       :delay        500}}))
+ (fn [{:keys [db]} _]
+   {:db             (assoc-in db [:application :mass-update :form-status] :submitted)
+    :dispatch-later [{:ms 500
+                      :dispatch [:application/reload-applications]}
+                     {:ms 1500
+                      :dispatch [:application/set-mass-update-popup-visibility false]}
+                     {:ms 1500
+                      :dispatch [:application/set-mass-update-form-state :enabled]}]}))
 
 (reg-event-fx
  :application/resend-modify-application-link
@@ -1290,4 +1295,3 @@
  :application/select-application-tab
  (fn select-application-tab [db [_ tab]]
    (assoc-in db [:application :tab] tab)))
-

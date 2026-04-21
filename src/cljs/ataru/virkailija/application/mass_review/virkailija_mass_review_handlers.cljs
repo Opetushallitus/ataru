@@ -8,6 +8,11 @@
     (assoc-in db [:application :mass-update :visible?] visible?)))
 
 (reg-event-db
+ :application/set-mass-update-form-state
+ (fn [db [_ state]]
+   (assoc-in db [:application :mass-update :form-status] state)))
+
+(reg-event-db
  :application/set-mass-update-popup-tab
  (fn [db [_ tab-name]]
    (assoc-in db [:application :mass-update :open-tab] tab-name)))
@@ -20,7 +25,8 @@
 (reg-event-fx
   :application/mass-update-application-reviews
   (fn [{:keys [db]} [_ from-state to-state]]
-    {:http {:method              :post
+    {:dispatch [:application/set-mass-update-form-state :submitting]
+     :http {:method              :post
             :params              {:application-keys (map :key (get-in db [:application :applications]))
                                   :from-state       from-state
                                   :to-state         to-state
@@ -28,7 +34,8 @@
                                                         (-> db :application :selected-hakukohde))
                                   :hakukohde-oids-for-hakukohderyhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)}
             :path                "/lomake-editori/api/applications/mass-update"
-            :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
+            :handler-or-dispatch :application/handle-mass-update-application-reviews
+            :override-args       {:error-handler #(dispatch [:application/handle-mass-update-application-reviews-error])}}}))
 
 (reg-event-fx
  :application/mass-inactivate-applications
@@ -104,6 +111,11 @@
  (fn [_ _]
    {:dispatch-n [[:application/set-mass-inactivation-message ""]
                  [:application/reload-applications]]}))
+
+(reg-event-fx
+ :application/handle-mass-update-application-reviews-error
+ (fn [_ _]
+   {:dispatch [:application/set-mass-update-form-state :enabled]}))
 
 
 (reg-event-db
