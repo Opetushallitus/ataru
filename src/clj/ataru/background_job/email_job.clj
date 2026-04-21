@@ -1,6 +1,7 @@
 (ns ataru.background-job.email-job
   "You can send any email with this, it's not tied to any particular email-type"
   (:require [ataru.config.url-helper :refer [resolve-url]]
+            [clojure.string :as s]
             [taoensso.timbre :as log])
   (:import (java.util Optional)
            (fi.oph.viestinvalitys.vastaanotto.model ViestinvalitysBuilder LuoViestiSuccessResponse)))
@@ -11,7 +12,7 @@
       (fn [builder recipient]
         (.withVastaanottaja builder (Optional/empty) recipient))
       (ViestinvalitysBuilder/vastaanottajatBuilder)
-      (distinct recipients))))
+      (distinct (remove s/blank? recipients)))))
 
 (defn- maskit [masks]
   (.build
@@ -76,10 +77,14 @@
                             ", masks " masks
                             ", metadata" metadata
                             ", privileges" privileges))))
-  (log/info "Trying to send email" subject "to" recipients "with metadata" metadata "and privileges" privileges
-            "via viestinvälityspalvelu at address" (resolve-url :viestinvalityspalvelu-endpoint))
-  (send-email viestinvalityspalvelu-client from recipients subject body masks metadata privileges)
-  (log/info "Successfully sent email to" recipients))
+  (let [valid-recipients (remove clojure.string/blank? recipients)]
+    (if (empty? valid-recipients)
+      (log/warn "No valid recipients for email with subject" subject "- skipping send")
+      (do
+        (log/info "Trying to send email" subject "to" valid-recipients "with metadata" metadata "and privileges" privileges
+                  "via viestinvälityspalvelu at address" (resolve-url :viestinvalityspalvelu-endpoint))
+        (send-email viestinvalityspalvelu-client from valid-recipients subject body masks metadata privileges)
+        (log/info "Successfully sent email to" valid-recipients)))))
 
 (def job-definition {:handler send-email-handler
                      :type    (str (ns-name *ns*))
