@@ -77,7 +77,7 @@
                             ", masks " masks
                             ", metadata" metadata
                             ", privileges" privileges))))
-  (let [valid-recipients (remove clojure.string/blank? recipients)]
+  (let [valid-recipients (remove s/blank? recipients)]
     (if (empty? valid-recipients)
       (log/warn "No valid recipients for email with subject" subject "- skipping send")
       (do
