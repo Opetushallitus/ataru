@@ -349,6 +349,7 @@
         lang                            (keyword (:lang application))
         applier-recipients              (->> (:answers application)
                                              (filter #(= "email" (:key %)))
+                                             (filter #(not (string/blank? (:value %))))
                                              (map :value))
         translations                    (reduce-kv #(assoc %1 %2 (get %3 lang))
                                                    {}

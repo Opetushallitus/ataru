@@ -1,6 +1,7 @@
 (ns ataru.background-job.email-job-spec
-  (:require [speclj.core :refer [before describe it should-be-nil should-throw should=]]
-            [ataru.background-job.email-job :as job])
+  (:require [speclj.core :refer [before describe it should-be-nil should-not-be-nil should-throw should=]]
+            [ataru.background-job.email-job :as job]
+            [ataru.config.url-helper])
   (:import (java.util UUID Optional List Map)
            (fi.oph.viestinvalitys.vastaanotto.model VastaanottajaImpl MaskiImpl KayttooikeusImpl LahettajaImpl)
            (fi.oph.viestinvalitys ViestinvalitysClientImpl ViestinvalitysClientException)
@@ -74,3 +75,46 @@
           (it "should throw client exception"
               (should-throw ViestinvalitysClientException (job/send-email throwing-client-mock "from" ["to1" "to2"] "subj" "body"
                                                                           [] {} []))))
+
+(def handler-components {:viestinvalityspalvelu-client client-mock})
+
+(def valid-job-params {:from       "no@oph.fi"
+                       :recipients ["foo@bar.com"]
+                       :subject    "Test subject"
+                       :body       "<p>Test body</p>"
+                       :masks      []
+                       :metadata   {:foo ["bar"]}
+                       :privileges [{:privilege    "APP_ATARU_HAKEMUS_CRUD"
+                                     :organization "1.2.246.562.10.00000000003"}]})
+
+(describe "send-email-handler"
+          (before
+            (reset! message nil)
+            (reset! batch nil))
+
+          (it "sends email to valid recipients"
+              (with-redefs [ataru.config.url-helper/resolve-url (constantly "http://test")]
+                (job/send-email-handler valid-job-params handler-components))
+              (should-not-be-nil @message)
+              (should= (Optional/of
+                         (List/of
+                           (new VastaanottajaImpl (Optional/empty) (Optional/of "foo@bar.com"))))
+                       (.vastaanottajat @message)))
+
+          (it "skips send when all recipients are blank"
+              (with-redefs [ataru.config.url-helper/resolve-url (constantly "http://test")]
+                (job/send-email-handler (assoc valid-job-params :recipients ["" "  " nil]) handler-components))
+              (should-be-nil @message))
+
+          (it "sends only to valid recipients when list contains blank entries"
+              (with-redefs [ataru.config.url-helper/resolve-url (constantly "http://test")]
+                (job/send-email-handler (assoc valid-job-params :recipients ["valid@bar.com" "" "also-valid@bar.com"]) handler-components))
+              (should-not-be-nil @message)
+              (should= (Optional/of
+                         (List/of
+                           (new VastaanottajaImpl (Optional/empty) (Optional/of "valid@bar.com"))
+                           (new VastaanottajaImpl (Optional/empty) (Optional/of "also-valid@bar.com"))))
+                       (.vastaanottajat @message)))
+
+          (it "throws when required fields are missing"
+              (should-throw Exception (job/send-email-handler (dissoc valid-job-params :subject) handler-components))))
