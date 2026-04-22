@@ -201,8 +201,8 @@
   (let [now (t/now)]
     (->> (:hakuajat haku)
          (map (fn [hakuaika]
-                (let [start (.getMillis (:start hakuaika))
-                      end   (some-> (:end hakuaika) (.getMillis))]
+                (let [start (-> (:start hakuaika) (.toInstant) (.toEpochMilli))
+                      end   (some-> (:end hakuaika) (.toInstant) (.toEpochMilli))]
                   {:end   end
                    :on    (hakuaika-on now start end)})))
          (select-hakuaika now))))
