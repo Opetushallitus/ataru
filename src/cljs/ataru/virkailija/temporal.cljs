@@ -19,7 +19,8 @@
 (defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
 (defn- native-iso-string->googdate [timestamp-value]
-  (when (string? timestamp-value)
+  ; cljs-time doesn't support 6-digit microseconds, so using JS-native parsing, but making sure the
+  (when (re-matches #"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d{6}[-+]\d\d:\d\d" timestamp-value)
     (let [millis (js/Date.parse timestamp-value)]
       (when-not (js/isNaN millis)
         (coerce/from-long millis)))))
