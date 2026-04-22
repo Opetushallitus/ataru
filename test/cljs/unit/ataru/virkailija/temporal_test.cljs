@@ -3,11 +3,19 @@
             [cljs.test :refer-macros [deftest is testing]]))
 
 (deftest parses-java-time-iso-offset-timestamp
-  (testing "java.time ISO offset timestamp is accepted in virkailija UI"
-    (let [parsed (temporal/str->googdate "2026-04-09T14:52:30+03:00")]
+  (testing "java.time ISO offset timestamp with microsecond precision is accepted in virkailija UI"
+    (let [parsed (temporal/str->googdate "2022-01-04T16:40:36.688473+02:00")]
       (is (some? parsed))
-      (is (= "09.04.2026 14:52"
-             (temporal/time->short-str parsed))))))
+      (is (= "04.01.2022 16:40"
+             (temporal/time->short-str parsed)))))
+  (testing "timestamp with millisecond precision is also accepted"
+    (let [parsed (temporal/str->googdate "2022-01-04T16:40:36.688+02:00")]
+      (is (some? parsed))
+      (is (= "04.01.2022 16:40"
+             (temporal/time->short-str parsed)))))
+  (testing "parsing an integer fails"
+    (let [parsed (temporal/str->googdate "100")]
+      (is (nil? (temporal/time->short-str parsed))))))
 
 (deftest formatting-nil-time-returns-nil
   (testing "failed timestamp parsing does not render current time"
