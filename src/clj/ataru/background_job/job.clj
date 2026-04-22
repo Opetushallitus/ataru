@@ -12,7 +12,8 @@
     [yesql.core :refer [defqueries]]
     [cronstar.core :as cron]
     [clojure.string :refer [includes? join]]
-    [ataru.background-job.serializer :refer [create-serializer]])
+    [ataru.background-job.serializer :refer [create-serializer]]
+    [ataru.time :as time])
   (:import java.sql.BatchUpdateException
            java.time.Instant
            java.time.Duration))
@@ -63,7 +64,7 @@
 (defn- cron-schedule
   "Returns a lazy seq of Instants based on a cron schedule"
   [exp]
-  (map (fn [t] (Instant/ofEpochMilli (.getMillis t))) (cron/times exp)))
+  (map (fn [t] (time/to-instant t)) (cron/times exp)))
 
 (defn- create-worker
   "Creates and starts a new Proletarian worker based on job definition where:

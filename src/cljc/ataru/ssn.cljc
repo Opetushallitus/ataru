@@ -1,5 +1,5 @@
 (ns ataru.ssn
-  (:require #?(:clj  [clj-time.core :as c]
+  (:require #?(:clj  [ataru.time :as c]
                :cljs [cljs-time.core :as c])
             [clojure.string :as string]
             [ataru.feature-config :refer [feature-enabled?]]))

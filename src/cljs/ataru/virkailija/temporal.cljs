@@ -18,28 +18,38 @@
 
 (defonce formatters (mapv f/formatters [:date-time :date-time-no-ms]))
 
+(defn- native-iso-string->googdate [timestamp-value]
+  (when (string? timestamp-value)
+    (let [millis (js/Date.parse timestamp-value)]
+      (when-not (js/isNaN millis)
+        (coerce/from-long millis)))))
+
 (defn str->googdate [timestamp-value]
-  (->> (for [formatter formatters]
-           (try (f/parse formatter timestamp-value)
-                (catch :default _
-                  nil)))
-       (filter some?)
-       first))
+  (or (->> (for [formatter formatters]
+             (try (f/parse formatter timestamp-value)
+                  (catch :default _
+                    nil)))
+           (filter some?)
+           first)
+      (native-iso-string->googdate timestamp-value)))
 
 (defn time->short-str [google-date]
-  (->> google-date
-       c/to-default-time-zone
-       (f/unparse time-formatter-leading-zeros)))
+  (when google-date
+    (->> google-date
+         c/to-default-time-zone
+         (f/unparse time-formatter-leading-zeros))))
 
 (defn time->date [google-date]
-  (->> google-date
-       c/to-default-time-zone
-       (f/unparse date-formatter)))
+  (when google-date
+    (->> google-date
+         c/to-default-time-zone
+         (f/unparse date-formatter))))
 
 (defn time->str [google-date]
-  (str (with-dow google-date)
-       " "
-       (time->short-str google-date)))
+  (when google-date
+    (str (with-dow google-date)
+         " "
+         (time->short-str google-date))))
 
 (defn time->long [google-date]
   (coerce/to-long google-date))
