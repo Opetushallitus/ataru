@@ -96,6 +96,7 @@
            java.time.ZoneId
            java.time.ZonedDateTime
            java.time.format.DateTimeFormatter
+           java.time.temporal.ChronoField
            (java.text SimpleDateFormat)
            (java.util Date)
            (java.util UUID)))
@@ -119,10 +120,10 @@
   (clout/route-compile "/:page/*" {:page client-page-patterns}))
 
 (add-encoder ZonedDateTime
-             (fn [d json-generator]
+             (fn [^ZonedDateTime d json-generator]
                (.writeString
                  json-generator
-                 (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
+                 (.format (.with d ChronoField/MICRO_OF_SECOND 0) DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
 
 (def ^:private http-date-formatter
   (-> DateTimeFormatter/RFC_1123_DATE_TIME
