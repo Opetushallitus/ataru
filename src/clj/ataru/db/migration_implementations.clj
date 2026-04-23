@@ -26,8 +26,9 @@
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
             [medley.core :refer [find-first]]
-            [ataru.constants :refer [system-metadata]])
-  (:import (java.time ZonedDateTime ZoneId)))
+            [ataru.constants :refer [system-metadata]]
+            [ataru.time :as time])
+  (:import (java.time ZonedDateTime)))
 
 (defonce migration-session {:user-agent "migration"})
 
@@ -358,10 +359,10 @@
   [virkailija]
   {:created-by  {:name (format "%s %s" (:kutsumanimi virkailija) (:sukunimi virkailija))
                  :oid  (:oidHenkilo virkailija)
-                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}
+                 :date (ZonedDateTime/now (time/time-zone-for-id "Europe/Helsinki"))}
    :modified-by {:name (format "%s %s" (:kutsumanimi virkailija) (:sukunimi virkailija))
                  :oid  (:oidHenkilo virkailija)
-                 :date (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))}})
+                 :date (ZonedDateTime/now (time/time-zone-for-id "Europe/Helsinki"))}})
 
 (defn migrate-element-metadata-to-forms
   [connection]

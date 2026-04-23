@@ -1,8 +1,9 @@
 (ns ataru.valinta-laskenta-service.valintalaskentaservice-service
   (:require [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :refer [ValintaLaskentaService]]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
-            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client])
-  (:import [java.time ZonedDateTime Instant ZoneId]))
+            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]
+            [ataru.time :as time])
+  (:import [java.time ZonedDateTime Instant]))
 
 (defn- localize-state
   [state]
@@ -115,14 +116,14 @@
 (defn- is-fetching-valinnat-allowed?
   [time-window]
   (let [start  (when (:dateStart time-window)
-                (-> (:dateStart time-window)
-                    (Instant/ofEpochMilli)
-                    (ZonedDateTime/ofInstant (ZoneId/of "Europe/Helsinki"))))
+                 (-> (:dateStart time-window)
+                     (Instant/ofEpochMilli)
+                     (ZonedDateTime/ofInstant (time/time-zone-for-id "Europe/Helsinki"))))
         end    (when (:dateEnd time-window)
                  (-> (:dateEnd time-window)
                      (Instant/ofEpochMilli)
-                     (ZonedDateTime/ofInstant (ZoneId/of "Europe/Helsinki"))))
-        present (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))]
+                     (ZonedDateTime/ofInstant (time/time-zone-for-id "Europe/Helsinki"))))
+        present (ZonedDateTime/now (time/time-zone-for-id "Europe/Helsinki"))]
   (cond
     (and (nil? start) (nil? end))
     true
