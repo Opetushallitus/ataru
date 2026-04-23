@@ -166,11 +166,17 @@
         demo-modal-open?          (subscribe [:application/demo-modal-open?])
         has-applied-to-haku?      (subscribe [:state-query [:application :has-applied]])
         ht-lander-active?         (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
-        loading-complete?         (subscribe [:application/loading-complete?])]
+        loading-complete?         (subscribe [:application/loading-complete?])
+        preview-enabled?          (subscribe [:state-query [:application :preview-enabled]])
+        submit-status             (subscribe [:state-query [:application :submit-status]])]
     (fn []
-      (let [root-element (if @demo?
-                           :div.application__form-content-area.application__form-content-area--demo
-                           :div.application__form-content-area)]
+      (let [show-editing-banner? (and @editing? (not= :submitted @submit-status))
+            show-preview-banner? (and @preview-enabled? (not @editing?) (not= :submitted @submit-status))
+            root-element (cond
+                           @demo?                :div.application__form-content-area.application__form-content-area--demo
+                           show-editing-banner?  :div.application__form-content-area.application__form-content-area--editing
+                           show-preview-banner?  :div.application__form-content-area.application__form-content-area--preview
+                           :else                 :div.application__form-content-area)]
         [root-element
          (when @demo-modal-open?
            {:visibility "hidden"

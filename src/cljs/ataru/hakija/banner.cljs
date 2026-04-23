@@ -248,6 +248,30 @@
     (when demo?
       [notification-banner (translations/get-hakija-translation :demo lang)])))
 
+(defn- editing-notification-banner
+  []
+  (let [editing?      @(subscribe [:state-query [:application :editing?]])
+        submit-status @(subscribe [:state-query [:application :submit-status]])
+        lang          @(subscribe [:application/form-language])]
+    (when (and editing? (not= :submitted submit-status))
+      [notification-banner
+       [:span.application__editing-notification-content
+        [:i.zmdi.zmdi-alert-circle.application__editing-notification-icon]
+        (translations/get-hakija-translation :editing-notification-prefix lang)
+        [:b (translations/get-hakija-translation :editing-notification-bold lang)]]])))
+
+(defn- preview-notification-banner
+  []
+  (let [editing?         @(subscribe [:state-query [:application :editing?]])
+        preview-enabled? @(subscribe [:state-query [:application :preview-enabled]])
+        submit-status    @(subscribe [:state-query [:application :submit-status]])
+        lang             @(subscribe [:application/form-language])]
+    (when (and preview-enabled? (not editing?) (not= :submitted submit-status))
+      [notification-banner
+       [:span.application__editing-notification-content
+        [:i.zmdi.zmdi-alert-circle.application__editing-notification-icon]
+        (translations/get-hakija-translation :preview-notification-text lang)]])))
+
 (defn banner []
   (let [form?             @(subscribe [:application/form])
         ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
@@ -266,4 +290,6 @@
        (when control-active?
          [status-controls])
        [logged-in-indicator-or-placeholder]]]
-     [demo-notification-banner]]))
+     [demo-notification-banner]
+     [editing-notification-banner]
+     [preview-notification-banner]]))
