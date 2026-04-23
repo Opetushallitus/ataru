@@ -19,6 +19,12 @@ export const getLomakkeenHaunOsoite = (lomakkeenAvain: string) =>
 
 export const getHakemuksenLahettamisenOsoite = () => '/hakemus/api/application'
 
+export const getHakemuksenMuokkausOsoite = (secret: string) =>
+  `/hakemus?modify=${secret}`
+
+export const getLatestApplicationSecretOsoite = () =>
+  '/hakemus/latest-application-secret'
+
 const getLomakkeenEsikatseluOsoite = (lomakkeenAvain: string) =>
   `/lomake-editori/api/preview/form/${lomakkeenAvain}?lang=fi`
 
