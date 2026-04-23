@@ -249,10 +249,6 @@ const siivoaLomakeJaSuljeSivu = async (
 test.describe('Peruskoulun arvosanat -osio', () => {
   test('Hakijan polku', async ({ browser, request }) => {
     test.setTimeout(180_000)
-    test.fail(
-      true,
-      'Arvosanaosio ei persistoidu hakijan payloadiin nykyisessä toteutuksessa'
-    )
 
     const page = await browser.newPage()
     let lomakkeenAvain: string | undefined
