@@ -67,7 +67,7 @@ Start the service locally with make start command
 
 Then run all Playwright tests 
 
-   pnpm exec playwright test
+    pnpm exec playwright test
 
 See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
 
