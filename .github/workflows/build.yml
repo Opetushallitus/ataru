@@ -45,9 +45,6 @@ jobs:
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
       
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Run integration tests (Cypress & Playwright)
         run: make ci-test-playwright-and-cypress
 
