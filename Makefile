@@ -245,7 +245,7 @@ test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 test: start-docker-test test-clojurescript test-clojure test-browser
 
 test-playwright-and-cypress: $(NODE_MODULES)
-	pnpm exec playwright test && pnpm run cypress:run:ci
+	./bin/run-playwright-tests-in-docker.sh && pnpm run cypress:run:ci
 
 reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 
