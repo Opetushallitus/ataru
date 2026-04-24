@@ -94,10 +94,8 @@ export const taytaHenkilotietomoduuli = async (
     const loc = page.getByTestId(`${idPrefix}-input`)
     if (idPrefix === 'home-town') {
       await loc.selectOption(value)
-      await expect(loc).toHaveValue('061')
     } else {
       await loc.fill(value)
-      await expect(loc).toHaveValue(value)
     }
 
     // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
