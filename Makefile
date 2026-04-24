@@ -216,6 +216,8 @@ test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 
 test: start-docker test-clojurescript test-clojure test-browser
 
+reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
+
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
