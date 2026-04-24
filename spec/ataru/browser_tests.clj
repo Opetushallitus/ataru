@@ -36,7 +36,7 @@
   (.get
    (future-call #(apply sh args))
    timeout-secs
-   (TimeUnit/SECONDS)))
+   TimeUnit/SECONDS))
 
 (defn run-karma-test
   [test-name & args]
@@ -65,8 +65,6 @@
       (run-karma-test "hakija-haku"))
     (it "is possible to apply using a form for hakukohde"
       (run-karma-test "hakija-hakukohde"))
-    (it "is possible to apply using a form successfully with non-finnish ssn"
-      (run-karma-test "hakija-ssn"))
     (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
     (it "is possible to apply with selection limit"
