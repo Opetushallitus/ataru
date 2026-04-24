@@ -457,8 +457,16 @@
       :else
       (do
         (remove-orphan-attachments liiteri-cas-client final-application latest-application)
-        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
-          :key (:key latest-application))))))
+        (try
+          (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
+            :key (:key latest-application))
+          (catch clojure.lang.ExceptionInfo e
+            (if (= :limit-reached (-> e ex-data :cause))
+              {:passed?  false
+               :failures ["Selection limit reached"]
+               :key      (:key latest-application)
+               :code     :selection-limit-reached}
+              (throw e))))))))
 
 (defn- start-person-creation-job [job-runner application-id]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
