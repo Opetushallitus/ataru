@@ -39,9 +39,10 @@
                                                     :pool-name     "test"
                                                     :username      "postgres"
                                                     :password      "postgres"
-                                                    :server-name   "localhost"
-                                                    :port-number   (get (:mapped-ports container) 5432)
-                                                    :adapter       "postgresql"}) 3 2000)))
+                                                    :jdbc-url      (str "jdbc:aws-wrapper:postgresql://localhost:"
+                                                                        (get (:mapped-ports container) 5432)
+                                                                        "/test")
+                                                    :driver-class-name "software.amazon.jdbc.Driver"}) 3 2000)))
 
           (before
             (jdbc/with-db-transaction

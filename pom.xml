@@ -844,6 +844,11 @@
       <version>0.7.12</version>
     </dependency>
     <dependency>
+      <groupId>software.amazon.jdbc</groupId>
+      <artifactId>aws-advanced-jdbc-wrapper</artifactId>
+      <version>3.3.0</version>
+    </dependency>
+    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.2</version>
