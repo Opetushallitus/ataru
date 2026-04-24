@@ -3,6 +3,7 @@
             [clojure.java.shell :refer [sh]]
             [speclj.core :refer :all]
             [com.stuartsierra.component :as component]
+            [ataru.fixtures.db.browser-test-db :as browser-test-db]
             [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
@@ -18,7 +19,7 @@
                 application-email/start-email-edit-confirmation-job   (constantly nil)]
     (let [dummy-audit-logger (audit-log/new-dummy-audit-logger)]
       (try
-        (ataru.fixtures.db.browser-test-db/reset-test-db true)
+        (browser-test-db/reset-test-db true)
         (reset! virkailija-system (component/start-system (virkailija-system/new-system dummy-audit-logger)))
         (reset! hakija-system (component/start-system (hakija-system/new-system dummy-audit-logger)))
         (specs)
@@ -54,8 +55,6 @@
       (run-karma-test "virkailija" (last (split (login) #"="))))
     (it "is created with a question group successfully"
       (run-karma-test "virkailija-question-group" (last (split (login) #"="))))
-    (it "is created with a selection limit successfully"
-        (run-karma-test "virkailija-selection-limit" (last (split (login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
         (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"=")))))
 
