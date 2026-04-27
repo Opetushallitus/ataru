@@ -50,8 +50,9 @@
                    :secret-link-valid-days              14
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
-                   :features {:arvosanat true
-                              :hakeminen-tunnistautuneena false}
+                   :features {:schema-validation false
+                              :arvosanat true
+                              :hakeminen-tunnistautuneena true}
                    :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}

@@ -132,3 +132,18 @@ export const expectUusiLomakeValid = async (
     getLomakkeenEsikatseluOsoite(lomakkeenAvain)
   )
 }
+
+export const getApplicationSecretById = async (
+  page: Page,
+  applicationId: number
+): Promise<string> => {
+  const response = await page.request.get(
+    `/hakemus/application-secret-by-id/${applicationId}`
+  )
+  if (!response.ok()) {
+    throw new Error(
+      `Failed to fetch application secret for id ${applicationId}`
+    )
+  }
+  return await response.text()
+}
