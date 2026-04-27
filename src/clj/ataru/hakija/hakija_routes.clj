@@ -119,9 +119,29 @@
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
+    ; Älä käytä latest-application-secret-rajapintaa testeissä, koska se on hauras, jos ajetaan
+    ; monta testiä samanaikaisesti. Käytä application-secret-by-id-rajapintaa, joka hakee salaisuuden hakemuksen id:llä.
+    ; TODO: Poista latest-application-secret, kunhan kaikki testit on siirretty käyttämään application-secret-by-id:a.
     (api/GET "/latest-application-secret" []
       (if (is-dev-env?)
         (get-latest-application-secret)
+        (response/not-found "Not found")))
+    (api/GET "/application-secret-by-id/:id" [id]
+      (if (is-dev-env?)
+        (if-let [secret (:secret (application-store/get-application (Long/parseLong id)))]
+          secret
+          (response/not-found "Not found"))
+        (response/not-found "Not found")))
+    (api/POST "/fake-strong-auth-session" []
+      (if (is-dev-env?)
+        (let [new-session-key (generate-new-random-key)]
+          (oss/persist-session! new-session-key "fake-strong-auth" (fake-strong-oppija-session-data))
+          (-> (response/ok {:session-key new-session-key})
+              (update :cookies (fn [cookies]
+                                 (assoc cookies :oppija-session {:value     new-session-key
+                                                                 :path      "/hakemus"
+                                                                 :http-only true
+                                                                 :secure    true})))))
         (response/not-found "Not found")))
     (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
       (if (is-dev-env?)
