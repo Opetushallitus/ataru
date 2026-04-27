@@ -151,8 +151,11 @@ const injectEditFieldFormData = async (page: Page, formId: number) => {
     throw new Error('Failed to build self-contained form content')
   }
 
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
+
   const updatedForm = {
-    ...form,
+    ...formWithoutTimestamp,
     content: [
       hakukohteet,
       personInfoModule,
