@@ -219,8 +219,10 @@ const injectQuestionGroupFormData = async (page: Page, formId: number) => {
     throw new Error('Failed to build question group fixture content')
   }
 
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
   const updatedForm = {
-    ...form,
+    ...formWithoutTimestamp,
     name: { fi: formName },
     content: [hakukohteet, personInfoModule, mainLevelDropdownFixture],
   }

@@ -114,8 +114,10 @@ const injectSsnFormData = async (page: Page, formId: number) => {
 
   // Keep the generated form id/key to isolate from other test runs
   // Only override content, name, and fixture metadata
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
   const updatedForm = {
-    ...form,
+    ...formWithoutTimestamp,
     name: ssnTestFormFixture.name,
     'created-by': ssnTestFormFixture['created-by'],
     'organization-oid': ssnTestFormFixture['organization-oid'],
