@@ -23,6 +23,11 @@
   [db]
   (case (application-list-selected-by db)
     :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
+    :selected-haku           (if-let [h (get-in db [:application :rajaus-hakukohteella])]
+                               #{h}
+                               (-> db
+                                   (get-in [:haut (get-in db [:application :selected-haku]) :hakukohteet])
+                                   set))
     :selected-hakukohderyhma (if-let [h (get-in db [:application :rajaus-hakukohteella])]
                                #{h}
                                (set (map :oid (selected-hakukohderyhma-hakukohteet db))))
