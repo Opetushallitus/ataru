@@ -708,7 +708,9 @@
 
 (defn get-application-hakukohde-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
+  (->> (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})
+       (mapv ->kebab-case-kw)
+       (mapv util/remove-nil-values)))
 
 (defn get-application-attachment-reviews
   ([application-key]
@@ -1671,6 +1673,15 @@
     (string? value) (c/from-string value)
     :else (c/from-long value)))
 
+(defn- assoc-parsed-optional-time
+  [m key]
+  (let [raw-value   (get m key ::missing)
+        parsed-time (parse-siirto-time raw-value)]
+    (cond
+      (= ::missing raw-value) m
+      (some? parsed-time) (assoc m key parsed-time)
+      :else (dissoc m key))))
+
 (defn- parse-siirto-total
   [value]
   (cond
@@ -1689,7 +1700,7 @@
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
                             flatten-application-answers)
-        application-hakukohde-reviews (map #(update % :modified-time parse-siirto-time)
+        application-hakukohde-reviews (map #(assoc-parsed-optional-time % :modified-time)
                                            (or (:application-hakukohde-reviews application) []))
         application-hakukohde-attachment-reviews (or (:application-hakukohde-attachment-reviews application) [])
         application-review-notes (map #(update % :created parse-siirto-time)

@@ -24,6 +24,7 @@
     [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
     [ataru.time :as time]
+    [ataru.time.coerce :as time-coerce]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [taoensso.timbre :as log]
@@ -67,6 +68,31 @@
 ; Let's add duplicate key-value items with correct codes to the response for now.
 (defn- add-correct-valintalaskenta-arvosana-codes [application]
   (update application :keyValues #(apply merge (map add-possible-corrected-code %))))
+
+(defn- coerce-sort-offset-time
+  [sort time-key]
+  (if (contains? sort :offset)
+    (update-in sort [:offset time-key]
+               (fn [value]
+                 (if (string? value)
+                   (or (time-coerce/from-string value) value)
+                   value)))
+    sort))
+
+(defn normalize-application-query
+  [params]
+  (update params :sort
+          (fn [sort]
+            (case (:order-by sort)
+              "created-time" (coerce-sort-offset-time sort :created-time)
+              "submitted"    (coerce-sort-offset-time sort :submitted)
+              sort))))
+
+(defn coerce-and-validate-application-query
+  [params]
+  (let [normalized (normalize-application-query params)]
+    {:query  normalized
+     :errors (s/check ataru-schema/ApplicationQuery normalized)}))
 
 (defn- parse-application-hakukohde-reviews
   [application-key]

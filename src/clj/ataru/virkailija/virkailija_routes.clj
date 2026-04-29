@@ -570,15 +570,18 @@
                                               " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
-        :body [body ataru-schema/ApplicationQuery]
+        :body [body ataru-schema/RequestApplicationQuery]
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse
-        (if-let [result (application-service/query-applications-paged
-                          application-service
-                          session
-                          body)]
-          (response/ok result)
-          (response/bad-request)))
+        (let [{:keys [query errors]} (application-service/coerce-and-validate-application-query body)]
+          (if errors
+            (response/bad-request {:errors errors})
+            (if-let [result (application-service/query-applications-paged
+                              application-service
+                              session
+                              query)]
+              (response/ok result)
+              (response/bad-request)))))
 
       (api/GET "/oppilaitos/:oppilaitos-oid/luokat" {session :session}
         :path-params [oppilaitos-oid :- String]

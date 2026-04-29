@@ -962,13 +962,18 @@
 
 (def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
 
+(def RequestZonedDateTime
+  #?(:clj (s/cond-pre s/Str java.time.ZonedDateTime)
+     :cljs s/Str))
+
 (s/defschema EmailTemplate {:lang           (s/enum "fi" "sv" "en")
                             :content        s/Str
                             :content-ending s/Str
                             :signature      s/Str
                             :subject        (s/constrained s/Str (comp not string/blank?))})
 
-(s/defschema Sort
+(defn- sort-schema
+  [created-time-schema submitted-time-schema]
   (s/conditional #(= "applicant-name" (:order-by %))
                  {:order-by                (s/eq "applicant-name")
                   :order                   (s/enum "asc" "desc")
@@ -979,12 +984,18 @@
                  {:order-by                (s/eq "created-time")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key          s/Str
-                                            :created-time java.time.ZonedDateTime}}
+                                            :created-time created-time-schema}}
                  #(= "submitted" (:order-by %))
                  {:order-by                (s/eq "submitted")
                   :order                   (s/enum "asc" "desc")
                   (s/optional-key :offset) {:key       s/Str
-                                            :submitted java.time.ZonedDateTime}}))
+                                            :submitted submitted-time-schema}}))
+
+(s/defschema Sort
+  (sort-schema java.time.ZonedDateTime java.time.ZonedDateTime))
+
+(s/defschema RequestSort
+  (sort-schema RequestZonedDateTime RequestZonedDateTime))
 
 (s/defschema QueryAttachmentReviewStates
   {s/Keyword
@@ -1002,7 +1013,8 @@
    (s/optional-key :use-original-question)  (s/maybe s/Bool)
    (s/optional-key :use-original-followup)  (s/maybe s/Bool)})
 
-(s/defschema ApplicationQuery
+(defn- application-query-schema
+  [sort-schema]
   {(s/optional-key :form-key)             s/Str
    (s/optional-key :hakukohde-oid)        s/Str
    (s/optional-key :hakukohderyhma-oid)   s/Str
@@ -1017,12 +1029,18 @@
    (s/optional-key :application-oid)      s/Str
    :attachment-review-states              QueryAttachmentReviewStates
    (s/optional-key :option-answers)       [OptionAnswers]
-   :sort                                  Sort
+   :sort                                  sort-schema
    (s/optional-key :states-and-filters)   {:filters                             {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
                                            :attachment-states-to-include        [s/Str]
                                            :processing-states-to-include        [s/Str]
                                            (s/optional-key :school-filter)      (s/maybe s/Str)
                                            (s/optional-key :classes-of-school)  (s/maybe [s/Str])}})
+
+(s/defschema ApplicationQuery
+  (application-query-schema Sort))
+
+(s/defschema RequestApplicationQuery
+  (application-query-schema RequestSort))
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
