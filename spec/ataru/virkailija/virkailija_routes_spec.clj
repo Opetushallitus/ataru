@@ -563,6 +563,33 @@
         (should= (:not-required payment/all-states)
                  (get-in (first applications) [:kk-payment-state]))))
 
+  (it "Should accept created-time sort offset as ISO string"
+      (let [application-id (db/init-db-fixture
+                             fixtures/minimal-form
+                             (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                             [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "processing"}
+                              {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "information-request"}])
+            application    (application-store/get-application application-id)
+            query          (-> application-fixtures/applications-list-query-matching-everything
+                               (assoc :sort {:order-by "created-time"
+                                             :order    "asc"
+                                             :offset   {:key          (:key application)
+                                                        :created-time (str (:created-time application))}}))
+            resp           (post-applications-list query)]
+        (should= 200 (:status resp))))
+
+  (it "Should accept created-time sort without offset"
+      (db/init-db-fixture
+        fixtures/minimal-form
+        (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+        [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "processing"}
+         {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "information-request"}])
+      (let [query (assoc application-fixtures/applications-list-query-matching-everything
+                         :sort {:order-by "created-time"
+                                :order    "asc"})
+            resp  (post-applications-list query)]
+        (should= 200 (:status resp))))
+
   (it "Should include application with matching payment state"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
                       (assoc-in [:states-and-filters :filters :kk-application-payment :awaiting] true))
