@@ -3,7 +3,8 @@
             [clojure.java.jdbc :as jdbc]
             [hikari-cp.core :refer [make-datasource]]
             [ataru.db.extensions]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (com.zaxxer.hikari HikariConfig)))
 
 (defn- jdbc-url [db-config schema]
   (str "jdbc:aws-wrapper:postgresql://"
@@ -20,23 +21,27 @@
   [ds-key]
   (let [db-config (ds-key config)
         schema    (:schema db-config)]
-    (merge {:auto-commit            false
-            :read-only              false
-            :connection-timeout     30000
-            :validation-timeout     5000
-            :idle-timeout           600000
-            :max-lifetime           1800000
-            :minimum-idle           10
-            :maximum-pool-size      10
-            :pool-name              "db-pool"
-            :jdbc-url               (jdbc-url db-config schema)
-            :driver-class-name      "software.amazon.jdbc.Driver"}
-           (-> db-config
-               (dissoc :schema
-                       :adapter
-                       :database-name
-                       :server-name
-                       :port-number)))))
+    (assoc (merge {:auto-commit        false
+                   :read-only          false
+                   :connection-timeout 120000
+                   :validation-timeout 5000
+                   :idle-timeout       600000
+                   :max-lifetime       1800000
+                   :minimum-idle       10
+                   :maximum-pool-size  10
+                   :pool-name          "db-pool"
+                   :jdbc-url           (jdbc-url db-config schema)
+                   :driver-class-name  "software.amazon.jdbc.Driver"}
+                  (-> db-config
+                      (dissoc :schema
+                              :adapter
+                              :database-name
+                              :server-name
+                              :port-number)))
+           :configure (fn [^HikariConfig config]
+                        (.setExceptionOverrideClassName
+                         config
+                         "software.amazon.jdbc.util.HikariCPSQLException")))))
 
 (defonce datasource (atom {}))
 
@@ -57,8 +62,8 @@
   (let [ds-key (keyword ds-key)]
     (if (:allow-db-clear? (:server config))
       (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
-             [(str "drop schema if exists " schema-name " cascade")
-              (str "create schema " schema-name)])
+                                [(str "drop schema if exists " schema-name " cascade")
+                                 (str "create schema " schema-name)])
            (catch Exception e (log/error (get-next-exception-or-original e))))
       (throw (RuntimeException. (str "Clearing database is not allowed! "
                                      "check that you run with correct mode. "
@@ -70,8 +75,4 @@
 
 (defmacro exec-conn [ds-key query params]
   `(jdbc/with-db-connection [connection# {:datasource (get-datasource ~ds-key)}]
-                            (~query ~params {:connection connection#})))
-(defmacro exec-all [ds-key query-list]
-  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-     (last (for [[query# params#] (partition 2 ~query-list)]
-             (query# params# {:connection connection#})))))
+     (~query ~params {:connection connection#})))
