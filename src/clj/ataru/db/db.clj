@@ -24,7 +24,7 @@
         schema    (:schema db-config)]
     (merge {:auto-commit            false
             :read-only              false
-            :connection-timeout     30000
+            :connection-timeout     120000
             :validation-timeout     5000
             :idle-timeout           600000
             :max-lifetime           1800000
