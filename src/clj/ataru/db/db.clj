@@ -3,7 +3,9 @@
             [clojure.java.jdbc :as jdbc]
             [hikari-cp.core :refer [make-datasource]]
             [ataru.db.extensions]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (software.amazon.jdbc.util SqlState)
+           (com.zaxxer.hikari HikariConfig)))
 
 (defn- jdbc-url [db-config schema]
   (str "jdbc:aws-wrapper:postgresql://"
@@ -30,7 +32,11 @@
             :maximum-pool-size      10
             :pool-name              "db-pool"
             :jdbc-url               (jdbc-url db-config schema)
-            :driver-class-name      "software.amazon.jdbc.Driver"}
+            :driver-class-name      "software.amazon.jdbc.Driver"
+            :configure              (fn [^HikariConfig config]
+                                      (.setExceptionOverrideClassName
+                                       config
+                                       "software.amazon.jdbc.util.HikariCPSQLException"))}
            (-> db-config
                (dissoc :schema
                        :adapter
@@ -57,21 +63,43 @@
   (let [ds-key (keyword ds-key)]
     (if (:allow-db-clear? (:server config))
       (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
-             [(str "drop schema if exists " schema-name " cascade")
-              (str "create schema " schema-name)])
+                                [(str "drop schema if exists " schema-name " cascade")
+                                 (str "create schema " schema-name)])
            (catch Exception e (log/error (get-next-exception-or-original e))))
       (throw (RuntimeException. (str "Clearing database is not allowed! "
                                      "check that you run with correct mode. "
                                      "Current config name is " (config-name)))))))
 
-(defmacro exec [ds-key query params]
-  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-     (~query ~params {:connection connection#})))
+(def ^:private max-failover-retries 3)
 
-(defmacro exec-conn [ds-key query params]
-  `(jdbc/with-db-connection [connection# {:datasource (get-datasource ~ds-key)}]
-                            (~query ~params {:connection connection#})))
-(defmacro exec-all [ds-key query-list]
-  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-     (last (for [[query# params#] (partition 2 ~query-list)]
-             (query# params# {:connection connection#})))))
+(defn- failover-exception? [^java.sql.SQLException e]
+  (contains? #{(.getState SqlState/COMMUNICATION_LINK_CHANGED)
+               (.getState SqlState/CONNECTION_FAILURE_DURING_TRANSACTION)} (.getSQLState e)))
+
+(defn- with-failover-retry [datasource transactionally? f]
+  (jdbc/with-db-connection [conn {:datasource datasource}]
+    (loop [attempt 0]
+      (when (>= attempt max-failover-retries)
+        (throw (ex-info "Max database failover retries exceeded" {:attempts attempt})))
+      (let [[retry? result]
+            (try
+              [false (if transactionally?
+                       (jdbc/with-db-transaction [tx conn] (f tx))
+                       (f conn))]
+              (catch java.sql.SQLException e
+                (if (failover-exception? e)
+                  (do (log/warn "Database failover detected, SQLState:" (.getSQLState e)
+                                "- retrying (attempt" (inc attempt) "of" max-failover-retries ")")
+                      [true nil])
+                  (throw e))))]
+        (if retry?
+          (recur (inc attempt))
+          result)))))
+
+(defn exec [ds-key query params]
+  (with-failover-retry (get-datasource ds-key) true
+    (fn [connection] (query params {:connection connection}))))
+
+(defn exec-conn [ds-key query params]
+  (with-failover-retry (get-datasource ds-key) false
+    (fn [connection] (query params {:connection connection}))))
