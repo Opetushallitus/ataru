@@ -4,8 +4,7 @@
             [hikari-cp.core :refer [make-datasource]]
             [ataru.db.extensions]
             [taoensso.timbre :as log])
-  (:import (software.amazon.jdbc.util SqlState)
-           (com.zaxxer.hikari HikariConfig)))
+  (:import (com.zaxxer.hikari HikariConfig)))
 
 (defn- jdbc-url [db-config schema]
   (str "jdbc:aws-wrapper:postgresql://"
@@ -22,27 +21,27 @@
   [ds-key]
   (let [db-config (ds-key config)
         schema    (:schema db-config)]
-    (merge {:auto-commit            false
-            :read-only              false
-            :connection-timeout     120000
-            :validation-timeout     5000
-            :idle-timeout           600000
-            :max-lifetime           1800000
-            :minimum-idle           10
-            :maximum-pool-size      10
-            :pool-name              "db-pool"
-            :jdbc-url               (jdbc-url db-config schema)
-            :driver-class-name      "software.amazon.jdbc.Driver"
-            :configure              (fn [^HikariConfig config]
-                                      (.setExceptionOverrideClassName
-                                       config
-                                       "software.amazon.jdbc.util.HikariCPSQLException"))}
-           (-> db-config
-               (dissoc :schema
-                       :adapter
-                       :database-name
-                       :server-name
-                       :port-number)))))
+    (assoc (merge {:auto-commit        false
+                   :read-only          false
+                   :connection-timeout 120000
+                   :validation-timeout 5000
+                   :idle-timeout       600000
+                   :max-lifetime       1800000
+                   :minimum-idle       10
+                   :maximum-pool-size  10
+                   :pool-name          "db-pool"
+                   :jdbc-url           (jdbc-url db-config schema)
+                   :driver-class-name  "software.amazon.jdbc.Driver"}
+                  (-> db-config
+                      (dissoc :schema
+                              :adapter
+                              :database-name
+                              :server-name
+                              :port-number)))
+           :configure (fn [^HikariConfig config]
+                        (.setExceptionOverrideClassName
+                         config
+                         "software.amazon.jdbc.util.HikariCPSQLException")))))
 
 (defonce datasource (atom {}))
 
@@ -70,36 +69,10 @@
                                      "check that you run with correct mode. "
                                      "Current config name is " (config-name)))))))
 
-(def ^:private max-failover-retries 3)
+(defmacro exec [ds-key query params]
+  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
+     (~query ~params {:connection connection#})))
 
-(defn- failover-exception? [^java.sql.SQLException e]
-  (contains? #{(.getState SqlState/COMMUNICATION_LINK_CHANGED)
-               (.getState SqlState/CONNECTION_FAILURE_DURING_TRANSACTION)} (.getSQLState e)))
-
-(defn- with-failover-retry [datasource transactionally? f]
-  (jdbc/with-db-connection [conn {:datasource datasource}]
-    (loop [attempt 0]
-      (when (>= attempt max-failover-retries)
-        (throw (ex-info "Max database failover retries exceeded" {:attempts attempt})))
-      (let [[retry? result]
-            (try
-              [false (if transactionally?
-                       (jdbc/with-db-transaction [tx conn] (f tx))
-                       (f conn))]
-              (catch java.sql.SQLException e
-                (if (failover-exception? e)
-                  (do (log/warn "Database failover detected, SQLState:" (.getSQLState e)
-                                "- retrying (attempt" (inc attempt) "of" max-failover-retries ")")
-                      [true nil])
-                  (throw e))))]
-        (if retry?
-          (recur (inc attempt))
-          result)))))
-
-(defn exec [ds-key query params]
-  (with-failover-retry (get-datasource ds-key) true
-    (fn [connection] (query params {:connection connection}))))
-
-(defn exec-conn [ds-key query params]
-  (with-failover-retry (get-datasource ds-key) false
-    (fn [connection] (query params {:connection connection}))))
+(defmacro exec-conn [ds-key query params]
+  `(jdbc/with-db-connection [connection# {:datasource (get-datasource ~ds-key)}]
+     (~query ~params {:connection connection#})))
