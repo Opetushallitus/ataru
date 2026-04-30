@@ -92,6 +92,11 @@ test('Muokkaustilan ilmoituspalkki näkyy hakemusta muokattaessa', async () => {
 
   await page.goto(getHakemuksenMuokkausOsoite(secret))
 
+  await expect(page.getByTestId('editing-notification-banner')).toBeHidden()
+  await expect(page.getByTestId('preview-notification-banner')).toBeHidden()
+
+  await page.getByTestId('phone-input').fill('0501234567')
+
   await expect(page.getByTestId('editing-notification-banner')).toBeVisible()
   await expect(page.getByTestId('editing-notification-banner')).toContainText(
     'Olet muokkaamassa hakemusta'
@@ -105,6 +110,7 @@ test('Muokkaustilan ilmoituspalkki näkyy hakemusta muokattaessa', async () => {
 test('Muokkaustilan ilmoituspalkki häviää muutosten lähettämisen jälkeen', async () => {
   await page.getByTestId('phone-input').fill('0987654321')
   await expect(page.getByTestId('send-application-button')).toBeEnabled()
+  await expect(page.getByTestId('editing-notification-banner')).toBeVisible()
 
   await Promise.all([
     waitForResponse(page, 'PUT', (url) =>

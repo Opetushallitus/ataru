@@ -168,9 +168,10 @@
         ht-lander-active?         (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
         loading-complete?         (subscribe [:application/loading-complete?])
         preview-enabled?          (subscribe [:state-query [:application :preview-enabled]])
-        submit-status             (subscribe [:state-query [:application :submit-status]])]
+        submit-status             (subscribe [:state-query [:application :submit-status]])
+        edits?                    (subscribe [:application/edits?])]
     (fn []
-      (let [show-editing-banner? (and @editing? (not= :submitted @submit-status))
+      (let [show-editing-banner? (and @editing? @edits? (not= :submitted @submit-status))
             show-preview-banner? (and @preview-enabled? (not @editing?) (not= :submitted @submit-status))
             root-element (cond
                            @demo?                :div.application__form-content-area.application__form-content-area--demo

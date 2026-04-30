@@ -254,8 +254,9 @@
   []
   (let [editing?      @(subscribe [:state-query [:application :editing?]])
         submit-status @(subscribe [:state-query [:application :submit-status]])
+        edits?        @(subscribe [:application/edits?])
         lang          @(subscribe [:application/form-language])]
-    (when (and editing? (not= :submitted submit-status))
+    (when (and editing? edits? (not= :submitted submit-status))
       [notification-banner
        {:data-test-id "editing-notification-banner"}
        [:span.application__editing-notification-content
