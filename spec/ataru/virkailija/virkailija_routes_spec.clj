@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.applications.field-deadline :as field-deadline]
             [ataru.background-job.job :as job]
             [ataru.cache.cache-service :as cache-service]
             [ataru.config.core :refer [config]]
@@ -254,6 +255,16 @@
       (mock/content-type "application/json")
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- put-field-deadline [application-key field-id deadline]
+  (-> (mock/request :put (str "/lomake-editori/api/applications/" application-key
+                              "/field-deadline/" field-id)
+                    (json/generate-string {:deadline deadline}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (update-in [:headers] assoc "if-none-match" "*")
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
 
 (defn- post-review-notes [query]
   (-> (mock/request :post "/lomake-editori/api/applications/mass-notes"
@@ -625,6 +636,23 @@
             applications (:applications body)]
         (should= 200 status)
         (should= 0 (count applications)))))
+
+(describe "Field deadline"
+          (tags :unit :api-applications)
+
+  (it "Should accept field deadline as ISO string"
+      (with-redefs [ataru.applications.field-deadline/put-field-deadline
+                    (fn [_ _ _ _ _ field-id deadline _]
+                      {:field-id      field-id
+                       :deadline      deadline
+                       :last-modified (java.time.ZonedDateTime/parse "2026-05-06T09:00:00Z")})]
+        (let [resp (put-field-deadline
+                     "1.2.246.562.11.00000000000003492391"
+                     "d9017916-b9f4-440b-a083-0773fa960eea"
+                     "2026-05-07T09:00:00.000Z")]
+          (should= 200 (:status resp))
+          (should= "d9017916-b9f4-440b-a083-0773fa960eea" (get-in resp [:body :field-id]))
+          (should= "2026-05-07T09:00:00Z" (get-in resp [:body :deadline]))))))
 
 (describe "Submitting mass review notes"
           (tags :unit :mass-notes)
