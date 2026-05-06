@@ -853,6 +853,9 @@
   {:field-id s/Str
    :deadline java.time.ZonedDateTime})
 
+(s/defschema FieldDeadlineBody
+  {:deadline java.time.ZonedDateTime})
+
 (s/defschema ReviewNote
   {:id                                        s/Int
    :application-key                           s/Str
@@ -966,6 +969,9 @@
 (def RequestZonedDateTime
   #?(:clj (s/cond-pre s/Str java.time.ZonedDateTime)
      :cljs s/Str))
+
+(s/defschema RequestFieldDeadlineBody
+  {:deadline RequestZonedDateTime})
 
 (s/defschema EmailTemplate {:lang           (s/enum "fi" "sv" "en")
                             :content        s/Str

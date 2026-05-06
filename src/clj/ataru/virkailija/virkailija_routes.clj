@@ -737,30 +737,34 @@
       (api/PUT "/:application-key/field-deadline/:field-id" {session :session}
         :path-params [application-key :- s/Str
                       field-id :- s/Str]
-        :body [body {:deadline ZonedDateTime}]
+        :body [body ataru-schema/RequestFieldDeadlineBody]
         :header-params [{if-unmodified-since :- s/Str nil}
                         {if-none-match :- s/Str nil}]
         :return ataru-schema/FieldDeadline
-        (let [if-unmodified-since (when (not= "*" if-none-match)
-                                    (parse-if-unmodified-since if-unmodified-since))
-              response            (field-deadline/put-field-deadline
-                                    organization-service
-                                    tarjonta-service
-                                    audit-logger
-                                    session
-                                    application-key
-                                    field-id
-                                    (:deadline body)
-                                    if-unmodified-since)]
-          (case response
-            :unauthorized (response/unauthorized {:error "Unauthorized"})
-            nil (response/conflict {:error (if (some? if-unmodified-since)
-                                             (str "Field deadline modified since " if-unmodified-since)
-                                             "Field deadline exists")})
-            (-> (response/ok (dissoc response :last-modified))
-                (response/header
-                  "Last-Modified"
-                  (format-last-modified (:last-modified response)))))))
+        (let [{normalized-body :body errors :errors}
+              (application-service/coerce-and-validate-field-deadline-body body)]
+          (if errors
+            (response/bad-request {:errors errors})
+            (let [if-unmodified-since (when (not= "*" if-none-match)
+                                        (parse-if-unmodified-since if-unmodified-since))
+                  response            (field-deadline/put-field-deadline
+                                        organization-service
+                                        tarjonta-service
+                                        audit-logger
+                                        session
+                                        application-key
+                                        field-id
+                                        (:deadline normalized-body)
+                                        if-unmodified-since)]
+              (case response
+                :unauthorized (response/unauthorized {:error "Unauthorized"})
+                nil (response/conflict {:error (if (some? if-unmodified-since)
+                                                 (str "Field deadline modified since " if-unmodified-since)
+                                                 "Field deadline exists")})
+                (-> (response/ok (dissoc response :last-modified))
+                    (response/header
+                      "Last-Modified"
+                      (format-last-modified (:last-modified response)))))))))
 
       (api/DELETE "/:application-key/field-deadline/:field-id" {session :session}
         :path-params [application-key :- s/Str

@@ -69,14 +69,17 @@
 (defn- add-correct-valintalaskenta-arvosana-codes [application]
   (update application :keyValues #(apply merge (map add-possible-corrected-code %))))
 
+(defn coerce-request-zoned-datetime
+  [value]
+  (if (string? value)
+    (or (time-coerce/from-string value) value)
+    value))
+
 (defn- coerce-sort-offset-time
   [sort time-key]
   (if (contains? sort :offset)
     (update-in sort [:offset time-key]
-               (fn [value]
-                 (if (string? value)
-                   (or (time-coerce/from-string value) value)
-                   value)))
+               coerce-request-zoned-datetime)
     sort))
 
 (defn normalize-application-query
@@ -93,6 +96,12 @@
   (let [normalized (normalize-application-query params)]
     {:query  normalized
      :errors (s/check ataru-schema/ApplicationQuery normalized)}))
+
+(defn coerce-and-validate-field-deadline-body
+  [body]
+  (let [normalized (update body :deadline coerce-request-zoned-datetime)]
+    {:body   normalized
+     :errors (s/check ataru-schema/FieldDeadlineBody normalized)}))
 
 (defn- parse-application-hakukohde-reviews
   [application-key]
