@@ -1903,11 +1903,12 @@
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
-        :query-params [{hakukohdeOid           :- s/Str nil}
-                       {hakuOid                :- s/Str nil}
-                       {modifiedAfter          :- s/Str nil}
-                       {returnInactivated      :- s/Bool false}
-                       {withUnapprovedPayments :- s/Bool false}]
+        :query-params [{hakukohdeOid             :- s/Str nil}
+                       {hakuOid                  :- s/Str nil}
+                       {modifiedAfter            :- s/Str nil}
+                       {returnInactivated        :- s/Bool false}
+                       {withUnapprovedPayments   :- s/Bool false}
+                       {includeYksiloimattomat   :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
         (if (and (nil? hakukohdeOid)
@@ -1930,8 +1931,9 @@
                  (response/ok applications)
                  {:yksiloimattomat yksiloimattomat
                   :applications    applications}
-                 (if (get-in config [:yksiloimattomat :allow] false)
-                   (do (log/warn "Yksilöimättömiä hakijoita")
+                 (if (or includeYksiloimattomat
+                         (get-in config [:yksiloimattomat :allow] false))
+                   (do (log/warn "Yksilöimättömiä hakijoita:" yksiloimattomat)
                        (response/ok applications))
                    (response/conflict
                      {:error      "Yksilöimättömiä hakijoita"
