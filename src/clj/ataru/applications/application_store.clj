@@ -1675,12 +1675,13 @@
 
 (defn- assoc-parsed-optional-time
   [m key]
-  (let [raw-value   (get m key ::missing)
-        parsed-time (parse-siirto-time raw-value)]
-    (cond
-      (= ::missing raw-value) m
-      (some? parsed-time) (assoc m key parsed-time)
-      :else (dissoc m key))))
+  (let [raw-value (get m key ::missing)]
+    (if (= ::missing raw-value)
+      m
+      (let [parsed-time (parse-siirto-time raw-value)]
+        (if (some? parsed-time)
+          (assoc m key parsed-time)
+          (dissoc m key))))))
 
 (defn- parse-siirto-total
   [value]
