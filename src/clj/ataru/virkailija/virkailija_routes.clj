@@ -85,7 +85,7 @@
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
@@ -93,10 +93,10 @@
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job])
   (:import java.util.Locale
+           java.time.ZoneId
            java.time.ZonedDateTime
-           org.joda.time.DateTime
-           org.joda.time.format.DateTimeFormat
            java.time.format.DateTimeFormatter
+           java.time.temporal.ChronoField
            (java.text SimpleDateFormat)
            (java.util Date)
            (java.util UUID)))
@@ -120,33 +120,31 @@
   (clout/route-compile "/:page/*" {:page client-page-patterns}))
 
 (add-encoder ZonedDateTime
-             (fn [d json-generator]
+             (fn [^ZonedDateTime d json-generator]
                (.writeString
                  json-generator
-                 (.format d DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
+                 (.format (.with d ChronoField/MICRO_OF_SECOND 0) DateTimeFormatter/ISO_OFFSET_DATE_TIME))))
+
+(def ^:private http-date-formatter
+  (-> DateTimeFormatter/RFC_1123_DATE_TIME
+      (.withLocale Locale/US)
+      (.withZone (ZoneId/of "GMT"))))
 
 (defn- parse-if-unmodified-since
   [s]
   (try
-    (.parseDateTime (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-                        DateTimeFormat/forPattern
-                        .withZoneUTC
-                        (.withLocale Locale/US))
-                    s)
+    (ZonedDateTime/parse s http-date-formatter)
     (catch Exception _
       (throw (new IllegalArgumentException
-                  (str "Ei voitu jäsentää otsaketta If-Unmodified-Since: " s))))))
+              (str "Ei voitu jäsentää otsaketta If-Unmodified-Since: " s))))))
 
 (defn- format-last-modified
   [d]
-  (.print (-> "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-              DateTimeFormat/forPattern
-              .withZoneUTC
-              (.withLocale Locale/US))
-          (-> d
-              .millisOfSecond
-              .roundFloorCopy
-              (.plusSeconds 1))))
+  (-> d
+      (time/to-time-zone (ZoneId/of "GMT"))
+      (.withNano 0)
+      (.plusSeconds 1)
+      (.format http-date-formatter)))
 
 (defmethod json-schema/convert-class ZonedDateTime [_ _] {:type "string"})
 
@@ -344,7 +342,7 @@
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
-      :return {:locked (s/maybe DateTime)
+      :return {:locked (s/maybe ZonedDateTime)
                :id     Long}
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service audit-logger)))
@@ -576,15 +574,18 @@
                                               " käsittely ei ole sallittu")})))
 
       (api/POST "/list" {session :session}
-        :body [body ataru-schema/ApplicationQuery]
+        :body [body ataru-schema/RequestApplicationQuery]
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse
-        (if-let [result (application-service/query-applications-paged
-                          application-service
-                          session
-                          body)]
-          (response/ok result)
-          (response/bad-request)))
+        (let [{:keys [query errors]} (application-service/coerce-and-validate-application-query body)]
+          (if errors
+            (response/bad-request {:errors errors})
+            (if-let [result (application-service/query-applications-paged
+                              application-service
+                              session
+                              query)]
+              (response/ok result)
+              (response/bad-request)))))
 
       (api/GET "/oppilaitos/:oppilaitos-oid/luokat" {session :session}
         :path-params [oppilaitos-oid :- String]
@@ -715,7 +716,7 @@
                       "Last-Modified"
                       (->> response
                            (map :last-modified)
-                           (apply max-key #(.getMillis %))
+                           (apply max-key #(-> % time/to-instant .toEpochMilli))
                            format-last-modified))))))
 
       (api/GET "/:application-key/field-deadline/:field-id" {session :session}
@@ -740,30 +741,34 @@
       (api/PUT "/:application-key/field-deadline/:field-id" {session :session}
         :path-params [application-key :- s/Str
                       field-id :- s/Str]
-        :body [body {:deadline DateTime}]
+        :body [body ataru-schema/RequestFieldDeadlineBody]
         :header-params [{if-unmodified-since :- s/Str nil}
                         {if-none-match :- s/Str nil}]
         :return ataru-schema/FieldDeadline
-        (let [if-unmodified-since (when (not= "*" if-none-match)
-                                    (parse-if-unmodified-since if-unmodified-since))
-              response            (field-deadline/put-field-deadline
-                                    organization-service
-                                    tarjonta-service
-                                    audit-logger
-                                    session
-                                    application-key
-                                    field-id
-                                    (:deadline body)
-                                    if-unmodified-since)]
-          (case response
-            :unauthorized (response/unauthorized {:error "Unauthorized"})
-            nil (response/conflict {:error (if (some? if-unmodified-since)
-                                             (str "Field deadline modified since " if-unmodified-since)
-                                             "Field deadline exists")})
-            (-> (response/ok (dissoc response :last-modified))
-                (response/header
-                  "Last-Modified"
-                  (format-last-modified (:last-modified response)))))))
+        (let [{normalized-body :body errors :errors}
+              (application-service/coerce-and-validate-field-deadline-body body)]
+          (if errors
+            (response/bad-request {:errors errors})
+            (let [if-unmodified-since (when (not= "*" if-none-match)
+                                        (parse-if-unmodified-since if-unmodified-since))
+                  response            (field-deadline/put-field-deadline
+                                        organization-service
+                                        tarjonta-service
+                                        audit-logger
+                                        session
+                                        application-key
+                                        field-id
+                                        (:deadline normalized-body)
+                                        if-unmodified-since)]
+              (case response
+                :unauthorized (response/unauthorized {:error "Unauthorized"})
+                nil (response/conflict {:error (if (some? if-unmodified-since)
+                                                 (str "Field deadline modified since " if-unmodified-since)
+                                                 "Field deadline exists")})
+                (-> (response/ok (dissoc response :last-modified))
+                    (response/header
+                      "Last-Modified"
+                      (format-last-modified (:last-modified response)))))))))
 
       (api/DELETE "/:application-key/field-deadline/:field-id" {session :session}
         :path-params [application-key :- s/Str

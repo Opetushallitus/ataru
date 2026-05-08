@@ -2,7 +2,7 @@
   (:require [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
-            [clj-time.format :as format]
+            [ataru.time.format :as format]
             [clojure.core.match :refer [match]]
             [clojure.string :as string]))
 

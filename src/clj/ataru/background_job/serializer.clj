@@ -2,8 +2,7 @@
   (:require [cognitect.transit :as transit]
             [proletarian.protocols :as p])
   (:import (java.io ByteArrayInputStream ByteArrayOutputStream)
-           (java.time Instant)
-           (org.joda.time DateTime)))
+           (java.time Instant ZoneId ZonedDateTime)))
 
 (set! *warn-on-reflection* true)
 
@@ -18,24 +17,66 @@
     (fn [o]
       (Instant/ofEpochMilli o))))
 
-(def ^:private jodatime-writer
-  (transit/write-handler
-    (constantly "DateTime")
-    (fn [v] (-> ^DateTime v .getMillis))
-    (fn [v] (str (-> ^DateTime v .getMillis)))))
+(defn- zoned-date-time-representation
+  [^ZonedDateTime v]
+  {:epoch-millis (-> v .toInstant .toEpochMilli)
+   :zone-id      (.getId (.getZone v))})
 
-(def ^:private jodatime-reader
+(defn- parse-zoned-date-time-representation
+  [o]
+  (cond
+    (number? o)
+    {:epoch-millis (long o)}
+
+    (vector? o)
+    {:epoch-millis (long (nth o 0))
+     :zone-id      (nth o 1 nil)}
+
+    (map? o)
+    {:epoch-millis (or (:epoch-millis o)
+                       (:epochMillis o)
+                       (get o "epoch-millis")
+                       (get o "epochMillis"))
+     :zone-id      (or (:zone-id o)
+                       (:zoneId o)
+                       (get o "zone-id")
+                       (get o "zoneId"))}
+
+    :else
+    (throw (ex-info "Unsupported ZonedDateTime representation" {:value o}))))
+
+(defn- ->zoned-date-time
+  [{:keys [epoch-millis zone-id] :as rep}]
+  (when-not (some? epoch-millis)
+    (throw (ex-info "Missing epoch-millis in ZonedDateTime representation" {:value rep})))
+  (let [resolved-zone (if (some? zone-id)
+                        (ZoneId/of zone-id)
+                        (ZoneId/systemDefault))]
+    (ZonedDateTime/ofInstant (Instant/ofEpochMilli (long epoch-millis)) resolved-zone)))
+
+(def ^:private zoned-date-time-writer
+  (transit/write-handler
+    (constantly "ZonedDateTime")
+    (fn [v] (zoned-date-time-representation v))
+    (fn [v]
+      (let [{:keys [epoch-millis zone-id]} (zoned-date-time-representation v)]
+        (str epoch-millis "@" zone-id)))))
+
+(def ^:private zoned-date-time-reader
   (transit/read-handler
     (fn [o]
-      (DateTime. o))))
+      (-> o
+          parse-zoned-date-time-representation
+          ->zoned-date-time))))
 
 (def ^:private default-write-handlers
-  {Instant   instant-writer
-   DateTime  jodatime-writer})
+  {Instant       instant-writer
+   ZonedDateTime zoned-date-time-writer})
 
 (def ^:private default-read-handlers
-  {"Instant"  instant-reader
-   "DateTime" jodatime-reader})
+  {"Instant"       instant-reader
+   "ZonedDateTime" zoned-date-time-reader
+   "DateTime"      zoned-date-time-reader})
 
 (defn ^:private encode
   ([data]
