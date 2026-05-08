@@ -652,3 +652,16 @@
         :answers
         (comp vec concat)
         [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))
+
+(def application-yksiloimaton
+  (-> person-info-form-application-without-kk-application-answer
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543212
+              :person-oid "1.2.3.4.5.6"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))

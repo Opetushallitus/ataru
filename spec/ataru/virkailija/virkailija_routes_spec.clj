@@ -185,6 +185,15 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- post-siirto-application-query-with-params [query query-params]
+  (-> (mock/request :post "/lomake-editori/api/external/siirto"
+                    (json/generate-string query))
+      (mock/query-string query-params)
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
 (defn- post-valintalaskenta-application-query [query]
   (-> (mock/request :post "/lomake-editori/api/external/valintalaskenta"
                     (json/generate-string query))
@@ -1020,7 +1029,30 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 0 (count applications)))))
+                (should= 0 (count applications))))
+
+          (it "should return 409 conflict when there are yksiloimattomat and includeYksiloimattomat is not set"
+              (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                                       application-fixtures/application-yksiloimaton
+                                                       nil)
+                    application (get-application-by-id application-id)
+                    resp (post-siirto-application-query [(:key application)])
+                    status (:status resp)
+                    body (:body resp)]
+                (should= 409 status)
+                (should= "Yksilöimättömiä hakijoita" (:error body))
+                (should= ["1.2.3.4.5.6"] (:personOids body))))
+
+          (it "should return applications with includeYksiloimattomat=true even when there are yksiloimattomat"
+              (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
+                                                       application-fixtures/application-yksiloimaton
+                                                       nil)
+                    application (get-application-by-id application-id)
+                    resp (post-siirto-application-query-with-params [(:key application)] {"includeYksiloimattomat" true})
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications)))))
 
 (describe "suoritusrekisteri"
           (tags :unit)
