@@ -1908,7 +1908,7 @@
                        {modifiedAfter            :- s/Str nil}
                        {returnInactivated        :- s/Bool false}
                        {withUnapprovedPayments   :- s/Bool false}
-                       {includeYksiloimattomat   :- s/Bool false}]
+                       {salliYksiloimattomat   :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
         (if (and (nil? hakukohdeOid)
@@ -1931,7 +1931,7 @@
                  (response/ok applications)
                  {:yksiloimattomat yksiloimattomat
                   :applications    applications}
-                 (if (or includeYksiloimattomat
+                 (if (or salliYksiloimattomat
                          (get-in config [:yksiloimattomat :allow] false))
                    (do (log/warn "Yksilöimättömiä hakijoita:" yksiloimattomat)
                        (response/ok applications))
