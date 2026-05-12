@@ -231,7 +231,7 @@
           (get-result cas-client)
           ((fn [result] (mapv :oid result)))))
 
-(s/defn ^:always-validate get-active-kk-yhteishaku-oids :- (s/maybe [s/Str])
+(s/defn ^:always-validate get-active-kk-haku-oids :- (s/maybe [s/Str])
   [cas-client]
   (let [now (t/now)]
     (when-let [hakus (some-> :kouta-internal.haku-search
@@ -239,7 +239,6 @@
                              (get-result cas-client))]
       (->> hakus
            (filter #(= "haunkohdejoukko_12#1" (:kohdejoukkoKoodiUri %)))
-           (filter #(= "hakutapa_01" (:hakutapaKoodiUri %)))
            (keep (fn [haku]
                    (let [ohjausparametrit (ohjausparametrit-client/get-ohjausparametrit (:oid haku))
                          hkp-date         (get-in ohjausparametrit [:PH_HKP :date])]

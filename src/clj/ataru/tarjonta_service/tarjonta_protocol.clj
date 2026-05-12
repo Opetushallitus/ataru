@@ -12,4 +12,4 @@
   (get-koulutukset [this koulutus-oids])
   (clear-haku-caches [this haku-oid])
   (get-haku-oids [this])
-  (get-active-kk-yhteishaku-oids [this]))
+  (get-active-kk-haku-oids [this]))
