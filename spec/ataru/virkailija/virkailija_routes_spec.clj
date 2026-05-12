@@ -1086,7 +1086,7 @@
                 (should= 200 status)
                 (should= 0 (count applications))))
 
-          (it "should return 409 conflict when there are yksiloimattomat and includeYksiloimattomat is not set"
+          (it "should return 409 conflict when there are yksiloimattomat and salliYksiloimattomat is not set"
               (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
                                                        application-fixtures/application-yksiloimaton
                                                        nil)
@@ -1098,12 +1098,12 @@
                 (should= "Yksilöimättömiä hakijoita" (:error body))
                 (should= ["1.2.3.4.5.6"] (:personOids body))))
 
-          (it "should return applications with includeYksiloimattomat=true even when there are yksiloimattomat"
+          (it "should return applications with salliYksiloimattomat=true even when there are yksiloimattomat"
               (let [application-id (db/init-db-fixture fixtures/payment-exemption-test-form
                                                        application-fixtures/application-yksiloimaton
                                                        nil)
                     application (get-application-by-id application-id)
-                    resp (post-siirto-application-query-with-params [(:key application)] {"includeYksiloimattomat" true})
+                    resp (post-siirto-application-query-with-params [(:key application)] {"salliYksiloimattomat" true})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
