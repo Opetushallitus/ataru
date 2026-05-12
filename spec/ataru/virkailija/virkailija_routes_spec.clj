@@ -1074,9 +1074,46 @@
               (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
                     resp (post-vts-application-query {:hakuOid haku-oid})
                     status (:status resp)
-                    applications (get-in resp [:body :applications])]
+                    applications (get-in resp [:body :applications])
+                    application (first applications)]
                 (should= 200 status)
-                (should= 1 (count applications))))
+                (should= 1 (count applications))
+                (should= true (contains? application :jattoAjanhetki))
+                (should= false (contains? application :lahiosoite))
+                (should= false (contains? application :postinumero))
+                (should= false (contains? application :postitoimipaikka))
+                (should= false (contains? application :puhelinnumero))))
+
+          (it "should return yhteystiedot when includeYhteystiedot is true"
+              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
+                    resp (post-vts-application-query {:hakuOid haku-oid :includeYhteystiedot true})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])
+                    application (first applications)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (should= "Paratiisitie 13" (:lahiosoite application))
+                (should= "00013" (:postinumero application))
+                (should= "Paikka" (:postitoimipaikka application))
+                (should= "050123" (:puhelinnumero application))))
+
+          (it "should return nil yhteystiedot fields when answers are missing"
+              (let [stripped (update application-fixtures/application-without-hakemusmaksu-exemption
+                                     :answers
+                                     (fn [answers]
+                                       (filterv #(not (#{"phone" "postal-office"} (:key %))) answers)))
+                    _ (db/init-db-fixture fixtures/payment-exemption-test-form stripped nil)
+                    haku-oid (:haku stripped)
+                    resp (post-vts-application-query {:hakuOid haku-oid :includeYhteystiedot true})
+                    status (:status resp)
+                    applications (get-in resp [:body :applications])
+                    application (first applications)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (should-be-nil (:puhelinnumero application))
+                (should-be-nil (:postitoimipaikka application))
+                (should= "Paratiisitie 13" (:lahiosoite application))
+                (should= "00013" (:postinumero application))))
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)

@@ -828,6 +828,23 @@ SELECT a.key AS "oid",
                        application_id = a.id),
                 a.lang) AS "asiointikieli",
        a.email AS "email",
+       a.submitted AS "submitted",
+       CASE WHEN :include_yhteystiedot
+            THEN (SELECT value FROM answers
+                  WHERE key = 'address' AND application_id = a.id)
+       END AS "lahiosoite",
+       CASE WHEN :include_yhteystiedot
+            THEN (SELECT value FROM answers
+                  WHERE key = 'postal-code' AND application_id = a.id)
+       END AS "postinumero",
+       CASE WHEN :include_yhteystiedot
+            THEN (SELECT value FROM answers
+                  WHERE key = 'postal-office' AND application_id = a.id)
+       END AS "postitoimipaikka",
+       CASE WHEN :include_yhteystiedot
+            THEN (SELECT value FROM answers
+                  WHERE key = 'phone' AND application_id = a.id)
+       END AS "puhelinnumero",
        coalesce(ahr.payment_obligations, '{}') AS "payment-obligations"
 FROM applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
