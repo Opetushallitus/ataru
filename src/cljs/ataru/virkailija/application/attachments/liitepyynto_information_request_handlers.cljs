@@ -207,11 +207,17 @@
         :last-modified   last-modified}})))
 
 (re-frame/reg-event-fx
-  :liitepyynto-information-request/save-deadline-after-get-failed
-  (fn [_ [_ application-key liitepyynto-key _deadline]]
-    {:dispatch [:liitepyynto-information-request/show-deadline-error
-                application-key
-                liitepyynto-key]}))
+  :liitepyynto-information-request/handle-deadline-fetch-before-save
+  (fn [_ [_ application-key liitepyynto-key deadline response]]
+    (if (= 404 (:status response))
+      {:liitepyynto-information-request/put-deadline
+       {:application-key application-key
+        :liitepyynto-key liitepyynto-key
+        :deadline        deadline
+        :last-modified   nil}}
+      {:dispatch [:liitepyynto-information-request/show-deadline-error
+                  application-key
+                  liitepyynto-key]})))
 
 (re-frame/reg-event-fx
   :liitepyynto-information-request/delete-deadline
@@ -258,7 +264,7 @@
                            application-key
                            liitepyynto-key
                            deadline]
-           :error-handler [:liitepyynto-information-request/save-deadline-after-get-failed
+           :error-handler [:liitepyynto-information-request/handle-deadline-fetch-before-save
                            application-key
                            liitepyynto-key
                            deadline]})))
