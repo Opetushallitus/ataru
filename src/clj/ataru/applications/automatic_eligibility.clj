@@ -237,7 +237,7 @@
 (defn start-automatic-eligibility-if-ylioppilas-job-job-handler
   [_ job-runner]
   (let [tarjonta-service (:tarjonta-service job-runner)
-        haku-oids        (tarjonta-service/get-active-kk-yhteishaku-oids tarjonta-service)]
+        haku-oids        (tarjonta-service/get-active-kk-haku-oids tarjonta-service)]
     (log/info "Starting automatic eligibility job for" (count haku-oids) "active kk-yhteishaku(s):" haku-oids)
     (doseq [haku-oid haku-oids]
       (log/info "Päivitettään automaattiset hakukelpoisuudet aktiiviselle kk-haulle" haku-oid)
