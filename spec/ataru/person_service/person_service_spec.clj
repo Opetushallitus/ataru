@@ -65,6 +65,13 @@
   {:lang "fi"
    :answers (concat shared-answers [ssn-answer])})
 
+(def eidas-id "DE/FI/366193B0E55D436B494769486A9284D04E0A1DCFDBF8B9EDA63E5BF4C3CFE6F5")
+
+(def application-eidas
+  {:lang     "fi"
+   :eidas-id eidas-id
+   :answers  shared-answers})
+
 (def service (person-service/map->IntegratedPersonService {}))
 
 (describe "Person service"
@@ -146,4 +153,24 @@
                                      {:with [:* {:idpEntityId "oppijaToken" :identifier email}]})
                 (should-have-invoked :add-identification
                                      {:with [:* "5.4.3.2.1" {:idpEntityId "oppijaToken" :identifier email}]})
-                (should-not-have-invoked :create-or-find))))
+                (should-not-have-invoked :create-or-find)))
+
+          (it "finds or creates eIDAS-person via findOrCreate with eidasTunniste"
+              (with-redefs [person-client/create-or-find-person (stub :create-or-find
+                                                                      {:return {:status :created :oid "1.2.3.4.5"}})
+                            person-client/get-person-by-identification (stub :get-by-identification)
+                            person-client/create-person (stub :create-person)]
+                (should= {:status :created :oid "1.2.3.4.5"}
+                         (person-service/create-or-find-person service application-eidas))
+                (should-not-have-invoked :get-by-identification)
+                (should-not-have-invoked :create-person)))
+
+          (it "passes eidasTunniste to findOrCreate for eIDAS-person"
+              (with-redefs [person-client/create-or-find-person (stub :create-or-find
+                                                                      {:return {:status :exists :oid "1.2.3.4.5"}})
+                            person-client/get-person-by-identification (stub :get-by-identification)
+                            person-client/create-person (stub :create-person)]
+                (person-service/create-or-find-person service application-eidas)
+                (should-have-invoked :create-or-find
+                                     {:with [:* (partial (fn [id person] (= id (:eidasTunniste person)))
+                                                         eidas-id)]}))))

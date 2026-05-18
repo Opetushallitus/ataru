@@ -1,6 +1,8 @@
 (ns ataru.email.email-util-spec
   (:require [ataru.email.email-util :as util]
-            [speclj.core :refer [describe it should= with-stubs stub should-have-invoked]]))
+            [ataru.constants :as constants]
+            [ataru.config.core]
+            [speclj.core :refer [describe it should= should-not-be-nil should-be-nil with-stubs stub should-have-invoked]]))
 
 (describe "email util"
   (describe "make email data"
@@ -69,4 +71,43 @@
               application-key "1.2.246.562.11.00000000000000012345"
               lang :fi
               subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
-          (should= " (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)))))
+          (should= " (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject))))
+
+  (describe "get-application-url-and-text"
+    (let [test-config {:public-config              {:applicant {:service_url "https://opintopolku.fi"}}
+                       :tutkintojen-tunnustaminen  {:maksut {:form-keys ""}}}
+          basic-form  {}
+          secret      "abc123"]
+      (it "vahvasti tunnistautunut saa vain oma-opintopolku-linkin"
+        (with-redefs [ataru.config.core/config test-config]
+          (let [application {:tunnistautuminen constants/auth-type-strong :secret secret}
+                result      (util/get-application-url-and-text basic-form application :fi)]
+            (should-not-be-nil (:oma-opintopolku-link result))
+            (should-be-nil (:application-url result)))))
+
+      (it "hetuton eIDAS-tunnistautunut saa sekä muokkauslinkin että oma-opintopolku-linkin"
+        (with-redefs [ataru.config.core/config test-config]
+          (let [application {:tunnistautuminen constants/auth-type-eidas
+                             :eidas-id         "DE/FI/366193B0E55D436B494769486A9284D04E0A1DCFDBF8B9EDA63E5BF4C3CFE6F5"
+                             :ssn              nil
+                             :secret           secret}
+                result      (util/get-application-url-and-text basic-form application :fi)]
+            (should-not-be-nil (:oma-opintopolku-link result))
+            (should-not-be-nil (:application-url result)))))
+
+      (it "hetullinen eIDAS-tunnistautunut saa vain muokkauslinkin"
+        (with-redefs [ataru.config.core/config test-config]
+          (let [application {:tunnistautuminen constants/auth-type-eidas
+                             :eidas-id         "DE/FI/366193B0E55D436B494769486A9284D04E0A1DCFDBF8B9EDA63E5BF4C3CFE6F5"
+                             :ssn              "120496-924J"
+                             :secret           secret}
+                result      (util/get-application-url-and-text basic-form application :fi)]
+            (should-be-nil (:oma-opintopolku-link result))
+            (should-not-be-nil (:application-url result)))))
+
+      (it "tunnistautumaton hakija saa vain muokkauslinkin"
+        (with-redefs [ataru.config.core/config test-config]
+          (let [application {:tunnistautuminen nil :secret secret}
+                result      (util/get-application-url-and-text basic-form application :fi)]
+            (should-be-nil (:oma-opintopolku-link result))
+            (should-not-be-nil (:application-url result))))))))
