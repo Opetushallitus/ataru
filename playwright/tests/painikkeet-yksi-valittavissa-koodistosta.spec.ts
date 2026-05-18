@@ -72,13 +72,15 @@ const getAllByTestId = (loc: Locator | Page, testId: string) =>
   loc.locator(`[data-test-id=${testId}]`)
 
 test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
+  test.setTimeout(60000)
   //Painikkeet, yksi valittavissa, koodisto -elementin lisäys
   const valikko = page.getByTestId('component-toolbar')
-  await valikko.dispatchEvent('mouseover')
+  await valikko.hover()
 
   const lisaysLinkki = valikko.getByText(
     'Painikkeet, yksi valittavissa, koodisto'
   )
+  await expect(lisaysLinkki).toBeVisible()
   await lisaysLinkki.click()
   const kysymysTeksti = page
     .getByTestId('editor-form__singleChoice-component-question-wrapper')

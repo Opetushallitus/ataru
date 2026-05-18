@@ -151,8 +151,11 @@ const injectEditFieldFormData = async (page: Page, formId: number) => {
     throw new Error('Failed to build self-contained form content')
   }
 
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
+
   const updatedForm = {
-    ...form,
+    ...formWithoutTimestamp,
     content: [
       hakukohteet,
       personInfoModule,
@@ -343,6 +346,11 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     const secret = requireModifySecret(modifySecret)
     await page.goto(`/hakemus?modify=${secret}`)
     await expect(page.locator('.application__wrapper-element')).toHaveCount(1)
+    // Odotetaan, että postinumeron perusteella automaattisesti täyttyvä
+    // postitoimipaikka on latautunut – merkki siitä, että lomake on valmis.
+    await expect(page.getByTestId('postal-office-input')).toHaveValue(
+      'JYVÄSKYLÄ'
+    )
     await expect(getFormFields(page)).toHaveCount(32)
     await expect(page.locator('.application__header')).toHaveText('Testilomake')
     await expect(getSubmitButton(page)).toBeDisabled()
