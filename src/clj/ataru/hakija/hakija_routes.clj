@@ -113,15 +113,38 @@
      (selmer/render-file filename opts)
      (response/not-found "Not found"))))
 
+(declare generate-new-random-key)
+(declare fake-strong-oppija-session-data)
+
 (api/defroutes test-routes
   (api/undocumented
     (api/GET ["/hakija-:testname{[A-Za-z\\-]+}-test.html"] [testname]
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
+    ; Älä käytä latest-application-secret-rajapintaa testeissä, koska se on hauras, jos ajetaan
+    ; monta testiä samanaikaisesti. Käytä application-secret-by-id-rajapintaa, joka hakee salaisuuden hakemuksen id:llä.
+    ; TODO: Poista latest-application-secret, kunhan kaikki testit on siirretty käyttämään application-secret-by-id:a.
     (api/GET "/latest-application-secret" []
       (if (is-dev-env?)
         (get-latest-application-secret)
+        (response/not-found "Not found")))
+    (api/GET "/application-secret-by-id/:id" [id]
+      (if (is-dev-env?)
+        (if-let [secret (:secret (application-store/get-application (Long/parseLong id)))]
+          secret
+          (response/not-found "Not found"))
+        (response/not-found "Not found")))
+    (api/POST "/fake-strong-auth-session" []
+      (if (is-dev-env?)
+        (let [new-session-key (generate-new-random-key)]
+          (oss/persist-session! new-session-key "fake-strong-auth" (fake-strong-oppija-session-data))
+          (-> (response/ok {:session-key new-session-key})
+              (update :cookies (fn [cookies]
+                                 (assoc cookies :oppija-session {:value     new-session-key
+                                                                 :path      "/hakemus"
+                                                                 :http-only true
+                                                                 :secure    true})))))
         (response/not-found "Not found")))
     (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
       (if (is-dev-env?)
@@ -151,6 +174,23 @@
   (not (clojure.string/blank? x)))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
+
+(defn- fake-strong-oppija-session-data []
+  {:person-oid "1.2.246.562.24.73833272757"
+   :eidas-id nil
+   :auth-type :strong
+   :display-name "Vahvasti Tunnistautunut"
+   :fields {:address {:value nil :locked false}
+            :have-finnish-ssn {:value true :locked true}
+            :email {:value nil :locked false}
+            :preferred-name {:value "Vahvasti" :locked true}
+            :last-name {:value "Tunnistautunut" :locked true}
+            :country-of-residence {:value "246" :locked false}
+            :ssn {:value "210281-9988" :locked true}
+            :first-name {:value "Vahvasti" :locked true}
+            :birth-date {:value nil :locked false}
+            :postal-code {:value nil :locked false}
+            :home-town {:value "853" :locked true}}})
 
 (defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []
