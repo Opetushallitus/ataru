@@ -2,11 +2,16 @@
   (:require
    [ataru.config.url-helper :refer [resolve-url]]
    [ataru.schema.form-schema :as schema]
+   [ataru.time :as time]
    [ataru.util.http-util :as http-util]
    [cheshire.core :as json]
    [clojure.string :as string]
    [schema.core :as s])
-  (:import [org.joda.time DateTime DateTimeZone]))
+  (:import [java.time Instant ZonedDateTime]))
+
+(defn- millis->helsinki
+  [millis]
+  (ZonedDateTime/ofInstant (Instant/ofEpochMilli (long millis)) (time/time-zone-for-id "Europe/Helsinki")))
 
 (def koulutus-checker (s/checker schema/Koulutus))
 (def hakukohde-checker (s/checker schema/Hakukohde))
@@ -91,25 +96,17 @@
           :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))
           :opetuskieli-koodi-urit                                      (:opetuskieliKoodiUrit hakukohde)}
          (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
-           {:hakuajat [(merge {:start (new DateTime
-                                           (:hakuaikaAlkuPvm hakukohde)
-                                           (DateTimeZone/forID "Europe/Helsinki"))}
+           {:hakuajat [(merge {:start (millis->helsinki (:hakuaikaAlkuPvm hakukohde))}
                               (when (some? (:hakuaikaLoppuPvm hakukohde))
-                                {:end (new DateTime
-                                           (:hakuaikaLoppuPvm hakukohde)
-                                           (DateTimeZone/forID "Europe/Helsinki"))}))]}
+                                {:end (millis->helsinki (:hakuaikaLoppuPvm hakukohde))}))]}
            {:hakuaika-id (:hakuaikaId hakukohde)})))
 
 (defn- parse-hakuaika
   [hakuaika]
   (cond-> {:hakuaika-id (:hakuaikaId hakuaika)
-           :start       (new DateTime
-                             (:alkuPvm hakuaika)
-                             (DateTimeZone/forID "Europe/Helsinki"))}
+           :start       (millis->helsinki (:alkuPvm hakuaika))}
           (contains? hakuaika :loppuPvm)
-          (assoc :end (new DateTime
-                           (:loppuPvm hakuaika)
-                           (DateTimeZone/forID "Europe/Helsinki")))))
+          (assoc :end (millis->helsinki (:loppuPvm hakuaika)))))
 
 (defn parse-haku
   [haku]

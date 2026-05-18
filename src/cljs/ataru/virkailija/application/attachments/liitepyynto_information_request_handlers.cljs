@@ -188,11 +188,36 @@
                                  (f/parse-local datetime-formatter)
                                  c/to-utc-time-zone)
                             (catch js/Error _ nil))]
-        {:liitepyynto-information-request/save-deadline
+        {(if (some? last-modified)
+           :liitepyynto-information-request/put-deadline
+           :liitepyynto-information-request/prepare-deadline-save)
          {:application-key application-key
           :liitepyynto-key liitepyynto-key
           :deadline        datetime
           :last-modified   last-modified}}))))
+
+(re-frame/reg-event-fx
+  :liitepyynto-information-request/save-deadline-after-get
+  (fn [_ [_ application-key liitepyynto-key deadline response]]
+    (when-let [last-modified (get-in response [:headers "last-modified"])]
+      {:liitepyynto-information-request/put-deadline
+       {:application-key application-key
+        :liitepyynto-key liitepyynto-key
+        :deadline        deadline
+        :last-modified   last-modified}})))
+
+(re-frame/reg-event-fx
+  :liitepyynto-information-request/handle-deadline-fetch-before-save
+  (fn [_ [_ application-key liitepyynto-key deadline response]]
+    (if (= 404 (:status response))
+      {:liitepyynto-information-request/put-deadline
+       {:application-key application-key
+        :liitepyynto-key liitepyynto-key
+        :deadline        deadline
+        :last-modified   nil}}
+      {:dispatch [:liitepyynto-information-request/show-deadline-error
+                  application-key
+                  liitepyynto-key]})))
 
 (re-frame/reg-event-fx
   :liitepyynto-information-request/delete-deadline
@@ -229,7 +254,23 @@
                            liitepyynto-key]})))
 
 (re-frame/reg-fx
-  :liitepyynto-information-request/save-deadline
+  :liitepyynto-information-request/prepare-deadline-save
+  (fn [{:keys [application-key liitepyynto-key deadline]}]
+    (http (aget js/config "virkailija-caller-id")
+          {:method        :get
+           :url           (str "/lomake-editori/api/applications/" application-key
+                               "/field-deadline/" (name liitepyynto-key))
+           :handler       [:liitepyynto-information-request/save-deadline-after-get
+                           application-key
+                           liitepyynto-key
+                           deadline]
+           :error-handler [:liitepyynto-information-request/handle-deadline-fetch-before-save
+                           application-key
+                           liitepyynto-key
+                           deadline]})))
+
+(re-frame/reg-fx
+  :liitepyynto-information-request/put-deadline
   (fn [{:keys [application-key liitepyynto-key deadline last-modified]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :put
