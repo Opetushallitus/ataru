@@ -151,8 +151,11 @@ const injectEditFieldFormData = async (page: Page, formId: number) => {
     throw new Error('Failed to build self-contained form content')
   }
 
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
+
   const updatedForm = {
-    ...form,
+    ...formWithoutTimestamp,
     content: [
       hakukohteet,
       personInfoModule,
@@ -183,6 +186,64 @@ const requireModifySecret = (secret: string | null): string => {
     )
   }
   return secret
+}
+
+const requireValue = <T>(value: T | null | undefined, message: string): T => {
+  if (value == null) {
+    throw new Error(message)
+  }
+  return value
+}
+
+const loginWithStrongAuth = async (
+  page: Page,
+  target: string
+): Promise<void> => {
+  const bootstrapResponse = await page.request.post(
+    '/hakemus/fake-strong-auth-session'
+  )
+  expect(bootstrapResponse.ok()).toBeTruthy()
+
+  await page.goto(target)
+
+  const sessionResponse = await page.request.get('/hakemus/auth/session')
+  expect(sessionResponse.ok()).toBeTruthy()
+
+  const session = (await sessionResponse.json()) as {
+    'logged-in': boolean
+    'auth-type': string
+  }
+
+  expect(session['logged-in']).toBe(true)
+  expect(session['auth-type']).toBe('strong')
+}
+
+const allowHakeminenTunnistautuneena = async (
+  page: Page,
+  formId: number
+): Promise<void> => {
+  const getResponse = await page.request.get(
+    `/lomake-editori/api/forms/${formId}`
+  )
+
+  const form = (await getResponse.json()) as {
+    properties?: Record<string, unknown>
+    [key: string]: unknown
+  }
+
+  const formWithoutTimestamp = { ...form }
+  delete formWithoutTimestamp['created-time']
+  const postResponse = await page.request.post('/lomake-editori/api/forms', {
+    data: {
+      ...formWithoutTimestamp,
+      properties: {
+        ...form.properties,
+        'allow-hakeminen-tunnistautuneena': true,
+      },
+    },
+  })
+
+  expect(postResponse.ok()).toBeTruthy()
 }
 
 test.describe('Hakijan hakemuksen muokkaus', () => {
@@ -424,5 +485,90 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     expect(displayedValues).toContain('Pudotusvalikon 1. kysymys')
     expect(displayedValues).toContain('1,323')
     expect(displayedValues).toContain('Entinen Neuvostoliitto')
+  })
+})
+
+test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
+  let page: Page
+  let lomakkeenAvain: string | null = null
+  let lomakkeenId: number | null = null
+
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage()
+    await kirjauduVirkailijanNakymaan(page)
+    const lomake = await lisaaLomake(page)
+    lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
+    lomakkeenId = unsafeFoldOption(lomake.lomakkeenId)
+
+    await teeJaOdotaLomakkeenTallennusta(page, lomakkeenId, async () => {
+      await page
+        .getByTestId('form-name-input')
+        .fill('Vahvasti tunnistautuneen testilomake')
+    })
+  })
+
+  test.afterAll(async ({ request }) => {
+    if (lomakkeenAvain) {
+      await poistaLomake(request, lomakkeenAvain)
+    }
+    await page.close()
+  })
+
+  test('lukitsee kotikunnan hakijan muokkausnäkymässä kun haetaan vahvasti tunnistautuneena', async () => {
+    const formKey = requireValue(lomakkeenAvain, 'Missing form key')
+    const formId = requireValue(lomakkeenId, 'Missing form id')
+
+    await allowHakeminenTunnistautuneena(page, formId)
+    await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
+
+    await fillField(
+      page,
+      page.getByTestId('email-input'),
+      'auth-test@example.com'
+    )
+    await fillField(
+      page,
+      page.getByTestId('verify-email-input'),
+      'auth-test@example.com'
+    )
+    await fillField(page, page.getByTestId('phone-input'), '0401234567')
+    await fillField(page, page.getByTestId('address-input'), 'Testikatu 1 A 2')
+    await fillField(page, page.getByTestId('postal-code-input'), '40100')
+    await page.getByTestId('postal-code-input').press('Tab')
+    await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
+    await page
+      .getByRole('combobox', { name: /Kansalaisuus/i })
+      .selectOption({ label: 'Suomi' })
+    await page.getByTestId('language-input').selectOption({ label: 'suomi' })
+
+    await expect(getSubmitButton(page)).toBeEnabled()
+
+    const [submitResponse] = await Promise.all([
+      waitForResponse(page, 'POST', (url) =>
+        url.includes(getHakemuksenLahettamisenOsoite())
+      ),
+      getSubmitButton(page).click(),
+    ])
+    await expect(
+      page.locator('.application__sent-placeholder-text')
+    ).toBeVisible()
+
+    const submitPayload = (await submitResponse.json()) as { id?: number }
+    const applicationId = requireValue(
+      submitPayload.id,
+      'Missing application id in authenticated hakija submit response'
+    )
+
+    const hakijaSecret = await getApplicationSecretById(page, applicationId)
+
+    // Clear the strong-auth session to verify that locking is based on
+    // the application's :tunnistautuminen key, not the current session.
+    await page.context().clearCookies()
+
+    await page.goto(`/hakemus?modify=${hakijaSecret}`)
+
+    const homeTownInput = page.getByTestId('home-town-input')
+    await expect(homeTownInput).toBeDisabled()
+    await expect(homeTownInput).toHaveValue('853')
   })
 })
