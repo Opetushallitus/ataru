@@ -522,9 +522,10 @@
         form-lang  (subscribe [:application/form-language])]
     (fn [] (when-let [error-code @error-code]
              [:div.application__message-display
-              {:class (if (some #(= error-code %) [:inactivated :network-offline])
-                        "application__message-display--warning"
-                        "application__message-display--error")}
+              {:class       (if (some #(= error-code %) [:inactivated :network-offline])
+                              "application__message-display--warning"
+                              "application__message-display--error")
+               :data-test-id "error-display"}
               [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
               (let [lang (or @error-lang @form-lang)]
                 [:div.application__message-display--details (translations/get-hakija-translation error-code lang)])]))))
