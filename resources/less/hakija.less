@@ -57,13 +57,36 @@ body {
 }
 
 .application__notification-banner-container {
-  height: @notification-banner-height;
-  background-color: @primary-green-100;
+  min-height: @notification-banner-height;
+  background-color: @primary-green-50;
+  border-bottom: 1px solid @primary-green-100;
   display: flex;
   align-items: center;
   justify-content: center;
   color: @neutral-grey-900;
   font-size: 24px;
+  padding: 8px 0;
+
+  .application__notification-banner {
+    max-width: @desktop-content-width;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+  }
+}
+
+.application__editing-notification-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.application__editing-notification-icon {
+  color: @primary-green-700;
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .application__virkailija-fill-ribbon {
@@ -569,6 +592,14 @@ body {
   width: @desktop-content-width;
 
   &.application__form-content-area--demo {
+    margin-top: @total-banner-height + @notification-banner-height;
+  }
+
+  &.application__form-content-area--editing {
+    margin-top: @total-banner-height + @notification-banner-height;
+  }
+
+  &.application__form-content-area--preview {
     margin-top: @total-banner-height + @notification-banner-height;
   }
 }
@@ -1385,7 +1416,7 @@ th.application__readonly-adjacent--header {
     margin-right: 10px;
   }
   .application__notification-banner-container {
-    height: @notification-banner-height-mobile;
+    min-height: @notification-banner-height-mobile;
     font-size: 16px;
   }
   .application__form-content-area {
@@ -1393,6 +1424,14 @@ th.application__readonly-adjacent--header {
     width: auto;
 
     &.application__form-content-area--demo {
+      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
+    }
+
+    &.application__form-content-area--editing {
+      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
+    }
+
+    &.application__form-content-area--preview {
       margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
     }
   }

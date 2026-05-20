@@ -506,6 +506,15 @@
    :edit-answers                                {:fi "Muokkaus"
                                                  :sv "Bearbeta"
                                                  :en "Edit"}
+   :editing-notification-prefix                {:fi "Olet muokkaamassa hakemusta. "
+                                                 :sv "Du redigerar ansökan. "
+                                                 :en "You are editing the application. "}
+   :editing-notification-bold                  {:fi "Muista lähettää muutokset!"
+                                                 :sv "Kom ihåg att skicka ändringarna!"
+                                                 :en "Remember to submit the changes!"}
+   :preview-notification-text                  {:fi "Olet esikatselussa ja hakemusta ei ole vielä lähetetty. Muista lähettää hakemus."
+                                                 :sv "Du befinner dig i förhandsvisning och ansökan har inte skickats ännu. Kom ihåg att skicka ansökan."
+                                                 :en "You are in preview mode and the application has not been submitted yet. Remember to submit the application."}
    :hyvaksytty                                  {:fi "Hyväksytty"
                                                  :sv "Godkänd"
                                                  :en "Selected"}
