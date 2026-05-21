@@ -181,7 +181,7 @@
    :auth-type :strong
    :display-name "Vahvasti Tunnistautunut"
    :fields {:address {:value nil :locked false}
-            :have-finnish-ssn {:value true :locked true}
+            :have-finnish-ssn {:value "true" :locked true}
             :email {:value nil :locked false}
             :preferred-name {:value "Vahvasti" :locked true}
             :last-name {:value "Tunnistautunut" :locked true}
