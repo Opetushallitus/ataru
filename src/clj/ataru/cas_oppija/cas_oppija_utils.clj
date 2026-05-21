@@ -19,6 +19,7 @@
                        (last)
                        :content)
         parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))]
+    (log/info (str "DEBUG eIDAS: " parsed-raw-map))
     ;Fields-kentän sisällön avaimet vastaavat henkilötietomoduulin esitäytettävien vastausten tunnisteita.
     (when success?
       (let [first-names (set (clojure.string/split (or (:firstName parsed-raw-map) "") #" "))
