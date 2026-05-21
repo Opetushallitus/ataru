@@ -102,8 +102,9 @@
       {:oma-opintopolku-link (oma-opintopolku-link)}
 
       eidas-auth?
-      (merge {:application-url (modify-link (:secret application))}
-             {:oma-opintopolku-link (oma-opintopolku-link)})
+      (merge {:application-url      (modify-link (:secret application))}
+             {:oma-opintopolku-link (oma-opintopolku-link)}
+             {:application-url-text (get-in email-link-section-texts [:eidas lang])})
 
       :else
       (merge {:application-url (modify-link (:secret application))}
