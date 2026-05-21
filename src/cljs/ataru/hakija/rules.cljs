@@ -97,7 +97,9 @@
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
   [db]
-  (let [values (get-in db [:application :answers :nationality :values])]
+  (if (get-in db [:application :answers :have-finnish-ssn :cannot-edit])
+    db
+    (let [values (get-in db [:application :answers :nationality :values])]
     (if (empty? (filter (fn [[v & _]] (or (nil? (:value v)) (= "" (:value v)) (= (:value v) finland-country-code))) values))
       (-> db
           (update-in [:application :answers :have-finnish-ssn]
@@ -110,7 +112,7 @@
                                                     :value "true"}))
                          a)))
           (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
-      (hide-field db :have-finnish-ssn "true"))))
+      (hide-field db :have-finnish-ssn "true")))))
 
 (defn- ssn
   ^{:dependencies [:have-finnish-ssn]}
