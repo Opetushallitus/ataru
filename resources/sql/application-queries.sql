@@ -432,7 +432,8 @@ SELECT
    WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
-  f.key     AS form_key
+  f.key     AS form_key,
+  (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications AS a
 JOIN forms AS f ON a.form_id = f.id
 JOIN application_secrets AS las ON las.application_key = a.key

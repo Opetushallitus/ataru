@@ -706,8 +706,9 @@
         [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
                                             [:secret secret]
                                             [:virkailija-secret virkailija-secret])
-        authenticated-applicant-edit?    (and (= secret-kwd :secret)
-                                              (some? person))]
+        strongly-authenticated-edit?      (and (= secret-kwd :secret)
+                                               (some? person) 
+                                               (= (:tunnistautuminen application) constants/auth-type-strong))]
     (util/set-query-param "application-key" (:key application))
     {:db       (-> (if koski-tutkinnot
                      (assoc-in db [:application :koski-tutkinnot] (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
@@ -722,7 +723,7 @@
                    (assoc-in [:application :cannot-edit-because-in-processing] (:cannot-edit-because-in-processing application))
                    (assoc-in [:form :selected-language] (or (keyword (:lang application)) :fi))
                    (handle-form (:answers application) (get-in response [:headers "date"]) form)
-                   (cond-> authenticated-applicant-edit?
+                   (cond-> strongly-authenticated-edit?
                      (update-in [:application :answers :home-town]
                                 (fn [answer]
                                   (if (string/blank? (:value answer))

@@ -237,7 +237,7 @@ const allowHakeminenTunnistautuneena = async (
     data: {
       ...formWithoutTimestamp,
       properties: {
-        ...(form.properties ?? {}),
+        ...form.properties,
         'allow-hakeminen-tunnistautuneena': true,
       },
     },
@@ -565,6 +565,10 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     )
 
     const hakijaSecret = await getApplicationSecretById(page, applicationId)
+
+    // Clear the strong-auth session to verify that locking is based on
+    // the application's :tunnistautuminen key, not the current session.
+    await page.context().clearCookies()
 
     await page.goto(`/hakemus?modify=${hakijaSecret}`)
 
