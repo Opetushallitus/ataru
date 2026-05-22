@@ -47,12 +47,12 @@ WHERE application_key = :application_key
 -- name: yesql-new-initial-selection!
 -- Create new selection
 INSERT INTO initial_selections (selection_id, selection_group_id, question_id, answer_id, valid)
-VALUES (:selection_id, :selection_group_id, :question_id, :answer_id, tstzrange(now(), now() + INTERVAL '4 hour', '[)'))
+VALUES (:selection_id, :selection_group_id, :question_id, :answer_id, tstzrange(now(), now() + INTERVAL '10 minutes', '[)'))
 ON CONFLICT (selection_group_id, selection_id, question_id)
 DO
  UPDATE
    SET answer_id = EXCLUDED.answer_id,
-       valid = tstzrange(now(), now() + INTERVAL '4 hour', '[)')
+       valid = tstzrange(now(), now() + INTERVAL '10 minutes', '[)')
    WHERE EXCLUDED.selection_id = :selection_id
    AND EXCLUDED.selection_group_id = :selection_group_id
    AND EXCLUDED.question_id = :question_id;
