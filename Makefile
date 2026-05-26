@@ -199,6 +199,9 @@ lint: $(NODE_MODULES)
 	pnpm run lint:js
 	pnpm run tsc:type-check
 
+clj-kondo-update-configs: $(NODE_MODULES)
+	pnpm run clj-kondo:dep-configs
+
 check-ports:
 	@for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done || exit 0
 
