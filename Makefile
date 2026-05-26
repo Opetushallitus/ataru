@@ -19,6 +19,7 @@ VIRKAILIJA_CYPRESS_BACKEND=ataru-virkailija-cypress-backend-8352
 DEV_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_BACKEND) $(VIRKAILIJA_BACKEND)
 CYPRESS_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
 
+DOCKER_CONTAINERS_TEST = ataru-test-db ataru-test-ftpd ataru-test-redis
 DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ftpd ataru-test-redis
 DOCKER_CONTAINERS_CYPRESS = ataru-cypress-test-db ataru-test-ftpd ataru-test-redis ataru-cypress-test-redis ataru-cypress-http-proxy
 
@@ -75,6 +76,9 @@ start-docker: build-docker-images
 
 start-docker-cypress: build-docker-images
 	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_CYPRESS)
+
+start-docker-test: build-docker-images
+	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_TEST)
 
 start-pm2-all: $(NODE_MODULES) start-docker-all run-fake-deps-server
 	$(PM2) start pm2.config.js
@@ -185,7 +189,9 @@ log: $(NODE_MODULES)
 logs: log
 
 lint: $(NODE_MODULES)
-	pnpm exec eslint .
+	pnpm run lint:clj
+	pnpm run lint:js
+	pnpm run tsc:type-check
 
 check-ports:
 	@for PORT in $(PORTS); do sudo lsof -i :$$PORT -sTCP:LISTEN; done || exit 0
@@ -214,7 +220,11 @@ test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
 test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 	lein with-profile test spec -t ~ui
 
-test: start-docker test-clojurescript test-clojure test-browser
+test: start-docker-test test-clojurescript test-clojure test-browser
+
+test-ci-mocha: start-docker-test test-browser
+
+test-ci-non-ui: start-docker-test lint test-clojurescript test-clojure
 
 reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 

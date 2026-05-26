@@ -67,7 +67,7 @@ jobs:
       - name: Run integration tests (Cypress & Playwright)
         run: ./bin/cibuild.sh run-browser-tests-integration
 
-  test-spec-and-mocha:
+  test-spec: 
     needs: [check-dependencies]
     runs-on: ubuntu-latest
 
@@ -75,15 +75,28 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
+      - name: Prepare tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+          echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
+      - name: Run Spec tests
+        run: make test-ci-non-ui
+  test-mocha:
+    needs: [check-dependencies]
+    runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/prepare-clojure-env
+      - uses: ./.github/actions/setup-node-env
       - name: Prepare tests
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
           echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - name: Run Spec and Mocha tests
-        run: |
-          ./bin/cibuild.sh run-spec-and-mocha-tests
+        run: make test-ci-mocha
 
   build:
     needs: [check-dependencies]
@@ -104,7 +117,7 @@ jobs:
           key: ${{ github.sha }}
 
   build-and-deploy-ataru-hakija:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-hakija
@@ -115,7 +128,7 @@ jobs:
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
 
   build-and-deploy-ataru-editori:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-editori
@@ -126,7 +139,7 @@ jobs:
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
 
   build-and-deploy-ovara-ataru:
-    needs: [test-integration, test-spec-and-mocha, build]
+    needs: [test-integration, test-spec, test-mocha, build]
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ovara-ataru
