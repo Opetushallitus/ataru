@@ -91,7 +91,7 @@ start-pm2-cypress: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
 	$(foreach service, $(CYPRESS_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-cypress-ci: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+start-pm2-ci: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
 	$(PM2) start pm2.ci.config.js
 
 start-watch: $(NODE_MODULES)
@@ -110,7 +110,7 @@ start-virkailija: start-watch start-docker
 stop-pm2: $(NODE_MODULES)
 	$(PM2) stop pm2.config.js
 
-stop-pm2-cypress-ci:
+stop-pm2-ci:
 	$(PM2) stop pm2.ci.config.js
 
 stop-watch:
@@ -174,9 +174,11 @@ start: start-pm2-all
 
 start-dev: start-pm2
 
+start-cypress-ci: start-pm2-ci
+
 start-cypress: start-pm2-cypress
 
-stop: stop-pm2 stop-docker stop-fake-deps-server
+stop: stop-pm2 stop-pm2-ci stop-docker stop-fake-deps-server
 
 restart: stop-pm2 start-pm2
 
@@ -222,9 +224,10 @@ build-prod-clojurescript:
 	lein cljsbuild once virkailija-min hakija-min
 
 wait-for-cypress-ci:
-	echo "Waiting for local services to become available"
-	./bin/wait-for.sh localhost:8352 -t 500 || exit 1
-	./bin/wait-for.sh localhost:8353 -t 500 || exit 1
+	@echo "Waiting for local services to become available"
+	./bin/wait-for.sh localhost:8354 -t 120 || exit 1
+	./bin/wait-for.sh localhost:8353 -t 120 || exit 1
+	./bin/wait-for.sh localhost:8352 -t 120 || exit 1
 
 install-cypress:
 	pnpm exec cypress install || exit 1
@@ -247,29 +250,32 @@ test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 
 test: start-docker-test test-clojurescript test-clojure test-browser
 
-test-playwright-and-cypress: $(NODE_MODULES)
-	./bin/run-playwright-tests-in-docker.sh && pnpm run cypress:run:ci
+test-playwright-docker:
+	./bin/run-playwright-tests-in-docker.sh
+
+test-playwright: $(NODE_MODULES)
+	pnpm exec playwright test
+
+test-cypress-ci: $(NODE_MODULES) 
+	pnpm run cypress:run:ci
 
 reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 
 # ----------------
 # CI operations
 # ----------------
-log-ci-config:
-	@echo "CONFIG=$(CONFIG)"
+ci-test-mocha:start-docker-test test-browser
 
-ci-test-mocha: log-ci-config start-docker-test test-browser
+ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
 
-ci-test-non-ui: log-ci-config start-docker-test lint test-clojurescript test-clojure
+ci-test-playwright-and-cypress: export CI := true
+ci-test-playwright-and-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress wait-for-cypress-ci test-playwright-docker test-cypress-ci stop-pm2-ci stop-docker
 
-ci-test-playwright-and-cypress: export CONFIG := $(if $(strip $(CONFIG)),$(strip $(CONFIG)),config/cypress.ci.edn)
-ci-test-playwright-and-cypress: log-ci-config clean-lein $(NODE_MODULES) build-cypress-ci start-pm2-cypress-ci install-cypress wait-for-cypress-ci test-playwright-and-cypress stop-pm2-cypress-ci stop-docker
-
-ci-create-uberjars: log-ci-config $(NODE_MODULES) clean-lein build-prod-clojurescript compile-less
+ci-create-uberjars: $(NODE_MODULES) clean-lein build-prod-clojurescript compile-less
 	lein with-profile ataru-main:ovara uberjar
 
 # ----------------
 # Kill PM2 and all apps managed by it (= everything)
 # ----------------
-kill: stop-pm2 stop-docker
+kill: stop-pm2 stop-pm2-ci stop-docker
 	$(PM2) kill
