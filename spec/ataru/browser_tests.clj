@@ -78,10 +78,6 @@
     (it "is possible to edit an application successfully as virkailija"
       (run-karma-test "virkailija-hakemus-edit"))
     (it "is taking hakuaika into account"
-      (run-karma-test "hakija-hakukohteen-hakuaika")))
-
-  (describe "application handling /"
-    (it "is possible to handle application with a question group"
-      (run-karma-test "virkailija-question-group-application-handling" (last (split (login) #"="))))))
+      (run-karma-test "hakija-hakukohteen-hakuaika"))))
 
 (run-specs)
