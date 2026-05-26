@@ -10,6 +10,7 @@
             [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.config.core :refer [config]]
             [ataru.db.flyway-migration :as migration]
+            [clojure.string]
             [ataru.log.audit-log :as audit-log]))
 
 (defqueries "sql/form-queries.sql")
@@ -118,17 +119,6 @@
                        :params                 {}
                        :options                []
                        :fieldType              "attachment"}]})
-
-(def ssn-testform {:id               7
-                   :key              "41101b4f-1762-49af-9db0-e3603adae656"
-                   :name             {:fi "SSN_testilomake"}
-                   :created-by       "1.2.246.562.11.11111111111"
-                   :organization-oid "1.2.246.562.10.0439845"
-                   :languages        ["fi"]
-                   :content          [(component/hakukohteet)
-                                      (person-info-module/person-info-module)]
-                   :locked           nil
-                   :locked-by        nil})
 
 (def belongs-to-hakukohteet-test-form {:id               8
                                        :key              "belongs-to-hakukohteet-test-form"
@@ -414,7 +404,3 @@
   (migration/migrate (audit-log/new-dummy-audit-logger))
   (when insert-initial-fixtures? (init-db-fixture)))
 
-(defn insert-test-form [form-name]
-  (if (= form-name "SSN_testilomake")
-    (form-store/create-new-form! ssn-testform (:key ssn-testform))
-    (println (str "No test form (" form-name ") found. Run virkailija test first!"))))

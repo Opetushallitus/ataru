@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { Page, Response, Route } from '@playwright/test'
+import { Locator, Page, Response, Route } from '@playwright/test'
 import * as Record from 'fp-ts/lib/Record'
 import * as Option from 'fp-ts/lib/Option'
 import { AssertionError } from 'assert'
@@ -41,3 +41,26 @@ export const getFixturePath = (fileName: string) =>
 
 export const fixtureFromFile = (fileName: string) => (route: Route) =>
   route.fulfill({ path: getFixturePath(fileName) })
+
+export const fillField = async (
+  page: Page,
+  locator: Locator,
+  value: string
+) => {
+  await locator.click()
+  await locator.fill(value)
+  // Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä.
+  // eslint-disable-next-line playwright/no-wait-for-timeout
+  await page.waitForTimeout(50)
+}
+
+export const selectOption = async (
+  page: Page,
+  locator: Locator,
+  value: string
+) => {
+  await locator.selectOption(value)
+  // Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä.
+  // eslint-disable-next-line playwright/no-wait-for-timeout
+  await page.waitForTimeout(50)
+}

@@ -68,8 +68,6 @@ const getUrl = () => {
             return 'http://localhost:8351/hakemus/hakija-hakukohde-test.html';
         case 'hakija-hakukohteen-hakuaika':
             return 'http://localhost:8351/hakemus/hakija-hakukohteen-hakuaika-test.html';
-        case 'hakija-ssn':
-            return 'http://localhost:8351/hakemus/hakija-ssn-test.html';
         case 'hakija-edit':
             return 'http://localhost:8351/hakemus/hakija-edit-test.html';
         case 'virkailija-hakemus-edit':
