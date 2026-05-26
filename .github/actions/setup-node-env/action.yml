@@ -3,15 +3,14 @@ description: 'Setup Node.js environment'
 runs:
   using: 'composite'
   steps:
-    - name: Install Node.js
-      uses: actions/setup-node@v6
+    - name: Install PNPM
+      uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
       with:
-        node-version-file: '.nvmrc'
-    - name: Enable corepack
-      shell: bash
-      run: corepack enable pnpm
-    - name: Configure pnpm dependencies cache
-      uses: actions/setup-node@v6
+        package_json_file: package.json
+        run_install: false
+    - name: Setup Node.js
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
+        node-version-file: .nvmrc
         cache: 'pnpm'
         cache-dependency-path: pnpm-lock.yaml
