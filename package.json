@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
-    "@types/node": "^20.14.12",
+    "@types/node": "^24.12.2",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "chai": "^4.4.1",
