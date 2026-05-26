@@ -17,4 +17,4 @@ docker run \
   --ipc=host \
   --net=host \
   mcr.microsoft.com/playwright:v"$PLAYWRIGHT_VERSION" \
-  sh -c "cp -r /app-source /app && cd /app && corepack pnpm install --ignore-scripts && corepack pnpm exec playwright test ${ARGS[@]}"
+  sh -c "cp -r /app-source /app && rm -rf /app/node_modules && cd /app && corepack pnpm install --ignore-scripts && corepack pnpm exec playwright test ${ARGS[@]}"
