@@ -43,6 +43,8 @@
         init-system    (get-init-system app-id)
         audit-logger   (audit-log/new-audit-logger app-id)
         on-termination (promise)]
+    ; Shorten JVM DNS cache so Aurora cluster endpoint resolves to new writer after failover
+    (java.security.Security/setProperty "networkaddress.cache.ttl" "5")
     (.addShutdownHook (Runtime/getRuntime) (new Thread (fn [] (deliver on-termination nil))))
     (timbre-config/configure-logging! app-id (:hostname env))
     (log/info "Starting application" app-id (if (:dev? env) "dev" ""))
