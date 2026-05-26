@@ -55,44 +55,62 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 ## Running tests
 
-### Running Playwright test
+### Running Playwright and Cypress tests
 
-When Playwright is updated or installed for the first time, it needs some dependencies installed. Since we only use Chromium in tests, needed dependencies can be installed with:
+**If you write new tests, please use Playwright. Also consider migrating some legacy Cypress & Mocha tests to Playwright.**
 
-    pnpm exec playwright install --with-deps chromium
+#### Running as in CI
 
-Start the service locally with make start command
+Github Actions builds ClojureScript with `:advanced` optimizations, runs both Playwright and Cypress tests together. To reproduce this locally:
+
+```
+make ci-test-playwright-and-cypress
+```
+
+This command:
+1. Builds ClojureScript with `:advanced` optimizations (same as CI)
+2. Starts all required services and Docker containers
+3. Runs Playwright tests inside a Docker container (using the official `mcr.microsoft.com/playwright` image matching the project's Playwright version)
+4. Runs Cypress tests in headless CI mode
+5. Stops all services and containers when done
+
+**Prerequisites:** Docker must be running. The command handles everything else (dependency installation, service startup, and teardown) automatically.
+
+#### Running Playwright/Cypress tests locally with manual startup
+
+You can also start the app separately with cypress-configuration and then run the tests.
+
+First make sure all services are stopped:
+
+    make stop
+
+Then start the services with the cypress config:
 
     make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
 
-Then run all Playwright tests 
+Note that this command doesn't compile the code with advanced optimizations and also includes devtools, so the tests run much slower than using the CI-specific command.
 
-   pnpm exec playwright test
+Alternatively you can start the CI-app:
+
+    make start-cypress-ci
+
+The app startup takes a moment. If all your tests fail with timeouts, then it might be that it's not started yet.
+
+When app is started, run all Playwright tests:
+
+    pnpm exec playwright test
 
 See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
 
-You can also use Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
+You can also use the Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
 
-**If you want to write new tests, please use Playwright. Hopefully at some point all integration tests will use Playwright.**
-
-### Running Cypress tests
-
-Start the service locally with make start command
-
-    make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
-
-Then either open Cypress with command
+Cypress tests can either be run interactively
 
     pnpm run cypress:open
 
-or run it headless using command
+or headless:
 
     pnpm run cypress:run
-
-### Cypress & Playwright tests in Github Actions
-
-Github Actions runs Cypress & Playwright tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs are automatically uploaded to S3.
-Both Playwright and Cypress tests are run together in the same CI-job and use shared config and browser in CI. 
 
 ### All tests (except Cypress & Playwright)
 
