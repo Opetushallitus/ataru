@@ -11,19 +11,18 @@
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
     "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser chrome --headless",
-    "lint:clj": "clj-kondo --lint src",
-    "lint:clj:lint-staged": "clj-kondo --lint",
+    "lint:clj": "clj-kondo --lint src --fail-level error",
+    "clj-kondo:dep-configs": "clj-kondo --lint \"$(lein classpath)\" --dependencies --copy-configs",
     "lint:js": "eslint '**/*.{ts,js}'",
-    "lint:js:lint-staged": "eslint",
     "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
     "tsc:type-check": "tsc"
   },
   "lint-staged": {
     "**/*.{js,ts}": [
-      "pnpm run lint:js:lint-staged"
+      "eslint"
     ],
     "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
-      "pnpm run lint:clj:lint-staged"
+      "clj-kondo --lint"
     ]
   },
   "pnpm": {
@@ -40,7 +39,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
-    "@types/node": "^20.14.12",
+    "@types/node": "^24.12.2",
     "@typescript-eslint/eslint-plugin": "^7.17.0",
     "@typescript-eslint/parser": "^7.17.0",
     "chai": "^4.4.1",
@@ -68,7 +67,7 @@
     "lint-staged": "15.2.7",
     "mocha": "^8.4.0",
     "only-allow": "1.1.1",
-    "pm2": "5.4.2",
+    "pm2": "6.0.14",
     "prettier": "3.3.3",
     "puppeteer": "^3.3.0",
     "typescript": "^5.5.4"

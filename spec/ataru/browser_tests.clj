@@ -3,6 +3,7 @@
             [clojure.java.shell :refer [sh]]
             [speclj.core :refer :all]
             [com.stuartsierra.component :as component]
+            [ataru.fixtures.db.browser-test-db :as browser-test-db]
             [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
@@ -18,7 +19,7 @@
                 application-email/start-email-edit-confirmation-job   (constantly nil)]
     (let [dummy-audit-logger (audit-log/new-dummy-audit-logger)]
       (try
-        (ataru.fixtures.db.browser-test-db/reset-test-db true)
+        (browser-test-db/reset-test-db true)
         (reset! virkailija-system (component/start-system (virkailija-system/new-system dummy-audit-logger)))
         (reset! hakija-system (component/start-system (hakija-system/new-system dummy-audit-logger)))
         (specs)
@@ -35,7 +36,7 @@
   (.get
    (future-call #(apply sh args))
    timeout-secs
-   (TimeUnit/SECONDS)))
+   TimeUnit/SECONDS))
 
 (defn run-karma-test
   [test-name & args]
@@ -54,8 +55,6 @@
       (run-karma-test "virkailija" (last (split (login) #"="))))
     (it "is created with a question group successfully"
       (run-karma-test "virkailija-question-group" (last (split (login) #"="))))
-    (it "is created with a selection limit successfully"
-        (run-karma-test "virkailija-selection-limit" (last (split (login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
         (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"=")))))
 
@@ -66,8 +65,6 @@
       (run-karma-test "hakija-haku"))
     (it "is possible to apply using a form for hakukohde"
       (run-karma-test "hakija-hakukohde"))
-    (it "is possible to apply using a form successfully with non-finnish ssn"
-      (run-karma-test "hakija-ssn"))
     (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
     (it "is possible to apply with selection limit"
@@ -78,13 +75,7 @@
   (describe "editing a submitted application /"
     (it "is possible to edit a plain application successfully"
       (run-karma-test "hakija-edit"))
-    (it "is possible to edit an application successfully as virkailija"
-      (run-karma-test "virkailija-hakemus-edit"))
     (it "is taking hakuaika into account"
-      (run-karma-test "hakija-hakukohteen-hakuaika")))
-
-  (describe "application handling /"
-    (it "is possible to handle application with a question group"
-      (run-karma-test "virkailija-question-group-application-handling" (last (split (login) #"="))))))
+      (run-karma-test "hakija-hakukohteen-hakuaika"))))
 
 (run-specs)

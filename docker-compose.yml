@@ -42,13 +42,12 @@ services:
       context: ./test-postgres
       args:
       - POSTGRESQL_VERSION=${POSTGRESQL_VERSION}
-    command: -p 5435
     environment:
       - POSTGRES_DB=ataru-test
       - POSTGRES_PASSWORD=oph
       - POSTGRES_USER=oph
     ports:
-      - "5435:5435"
+      - "5435:5432"
     networks:
       - ataru-test-network
   ataru-cypress-http-proxy:

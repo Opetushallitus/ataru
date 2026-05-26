@@ -55,92 +55,64 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 ## Running tests
 
-### Running Playwright test
+### Running Playwright and Cypress tests
 
-When Playwright is updated or installed for the first time, it needs some dependencies installed. Since we only use Chromium in tests, needed dependencies can be installed with:
+**If you write new tests, please use Playwright. Also consider migrating some legacy Cypress & Mocha tests to Playwright.**
 
-    pnpm exec playwright install --with-deps chromium
+#### Running as in CI
 
-Start the service locally with make start command
+Github Actions builds ClojureScript with `:advanced` optimizations, runs both Playwright and Cypress tests together. To reproduce this locally:
+
+```
+make ci-test-playwright-and-cypress
+```
+
+This command:
+1. Builds ClojureScript with `:advanced` optimizations (same as CI)
+2. Starts all required services and Docker containers
+3. Runs Playwright tests inside a Docker container (using the official `mcr.microsoft.com/playwright` image matching the project's Playwright version)
+4. Runs Cypress tests in headless CI mode
+5. Stops all services and containers when done
+
+**Prerequisites:** Docker must be running. The command handles everything else (dependency installation, service startup, and teardown) automatically.
+
+#### Running Playwright/Cypress tests locally with manual startup
+
+You can also start the app separately with cypress-configuration and then run the tests.
+
+First make sure all services are stopped:
+
+    make stop
+
+Then start the services with the cypress config:
 
     make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
 
-Then run all Playwright tests 
+Note that this command doesn't compile the code with advanced optimizations and also includes devtools, so the tests run much slower than using the CI-specific command.
 
-   pnpm exec playwright test
+Alternatively you can start the CI-app:
+
+    make start-cypress-ci
+
+The app startup takes a moment. If all your tests fail with timeouts, then it might be that it's not started yet.
+
+When app is started, run all Playwright tests:
+
+    pnpm exec playwright test
 
 See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
 
-You can also use Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
+You can also use the Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
 
-**If you want to write new tests, please use Playwright. Hopefully at some point all integration tests will use Playwright.**
-
-### Running Cypress tests
-
-Start the service locally with make start command
-
-    make start-cypress VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
-
-Then either open Cypress with command
+Cypress tests can either be run interactively
 
     pnpm run cypress:open
 
-or run it headless using command
+or headless:
 
     pnpm run cypress:run
 
-### Cypress & Playwright tests in Github Actions
-
-Github Actions runs Cypress & Playwright tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs are automatically uploaded to S3.
-Both Playwright and Cypress tests are run together in the same CI-job and use shared config and browser in CI. 
-
-### Running legacy browser tests
-
-Tests require a database, a Redis and a FTPS server. Here is an example of
-running those with Docker:
-
-```
-docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph ataru-test-db
-docker run --name ataru-test-redis -p 6380:6379 -d redis
-docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 ataru-test-ftpd
-```
-
-The tests also require the `lftp` command to be available.
-
-Tests assume some fixtures in the db. To clear the test db, run migrations and
-insert the required fixtures by running:
-
-```
-./bin/cibuild.sh reset-test-database-with-fixture
-```
-
-For Github Actions CI the ataru-test-db and ataru-test-ftpd images have to be
-available as
-`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`
-and
-`190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd`.
-To make that happen, first login by executing the output of:
-
-```
-aws ecr get-login --region eu-west-1 --profile oph-utility --no-include-email
-```
-
-You should then be able to push images to the repository:
-
-```
-docker tag ataru-test-db 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-docker tag ataru-test-ftpd 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
-docker push 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
-```
-
-To build and run all the tests in the system:
-
-```
-./bin/cibuild.sh run-tests
-```
-
-### All tests
+### All tests (except Cypress & Playwright)
 
 ```
 make test
@@ -176,7 +148,7 @@ temporarily naming them with `focus-it` instead of `it`, see:
 make test-clojurescript
 ```
 
-### Browser tests
+### Legacy browser tests (Mocha)
 
 To run only browser tests (headless, using puppeteer):
 
@@ -189,36 +161,17 @@ applications with `lein hakija-dev` and `lein virkailija-dev`.
 
 Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
-### Running browser tests locally
+## Static checks (Linting and type checking)
 
-This process is highly fragile and the test running should be rewritten.
-
-First, stop all running systems:
-
+To run all static checks for code in repo:
 ```
-make stop
+make lint
 ```
 
-Start the servers using following configuration overrides:
+To update clj-kondo configurations from dependencies to `.clj-kondo`-directory:
 
 ```
-make start VIRKAILIJA_CONFIG=$PWD/config/test.edn HAKIJA_CONFIG=$PWD/config/test.edn
-```
-
-Then, load the test data fixture to database:
-
-```
-make load-test-fixture
-```
-
-After the service starts and fixture data is loaded, navigate to local URL to run the tests (in incognito mode): http://localhost:8350/lomake-editori/virkailija-test.html
-
-Test suites can be found in karma-runner.js
-
-**NOTE**: after each run you need to manually compile test code and load the fixture data to test database using following command, otherwise the test will fail.
-
-```
-make compile-test-code load-test-fixture
+make clj-kondo-update-configs
 ```
 
 ## API documentation
