@@ -211,7 +211,7 @@ test-clojurescript: $(NODE_MODULES)
 test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
 	lein with-profile test spec -t ui
 
-test-clojure: nuke-test-db init-test-db
+test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
 	lein with-profile test spec -t ~ui
 
 test: start-docker test-clojurescript test-clojure test-browser
