@@ -524,9 +524,9 @@
    :network-offline                             {:fi "Ei yhteyttä verkkoon."
                                                  :sv "Ingen anslutning till nätverket."
                                                  :en "Network is offline."}
-   :selection-limit-reached                     {:fi "Valitsemasi valintakoepaikka on täyttynyt. Valitse uusi valintakoepaikka. Valitsemasi valintakoepaikka oli varattuna sinulle neljän tunnin ajan."
-                                                 :sv "Den valda provplatsen är fullbokad. Välj en ny provplats. Den valda provplatsen var reserverad för dig i fyra timmar."
-                                                 :en "Your selected entrance examination event is full. Please select a new entrance examination event. Your selected entrance examination event spot was reserved for you for four hours."}
+   :selection-limit-reached                     {:fi "Valitsemasi valintakoepaikka on täyttynyt. Valitse uusi valintakoepaikka."
+                                                 :sv "Den valda provplatsen är fullbokad. Välj en ny provplats."
+                                                 :en "Your selected entrance examination event is full. Please select a new entrance examination event."}
    :application-period-closed                   {:fi "Hakemusta ei voi lähettää: Hakuaika on päättynyt tai liitteen määräaika on umpeutunut"
                                                  :sv "Ansökan kan inte skickas: Ansökningstiden eller deadline för bilagor har utgått"
                                                  :en "Application cannot be submitted: Application period has ended or deadline for submitting attachments has passed"}
