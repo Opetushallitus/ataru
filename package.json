@@ -67,7 +67,7 @@
     "lint-staged": "15.2.7",
     "mocha": "^8.4.0",
     "only-allow": "1.1.1",
-    "pm2": "5.4.2",
+    "pm2": "6.0.14",
     "prettier": "3.3.3",
     "puppeteer": "^3.3.0",
     "typescript": "^5.5.4"
