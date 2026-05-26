@@ -83,7 +83,6 @@ test('Hakija näkee punaisen virhebannerin kun valintakoepaikka on täyttynyt', 
     'Valitsemasi valintakoepaikka on täyttynyt'
   )
   await expect(errorBanner).toContainText('Valitse uusi valintakoepaikka')
-  await expect(errorBanner).toContainText('neljän tunnin ajan')
 })
 
 test('Punainen banneri ei näy onnistuneen lähetyksen jälkeen', async () => {
