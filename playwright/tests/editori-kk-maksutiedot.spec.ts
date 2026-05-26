@@ -13,7 +13,7 @@ let lomakkeenAvain: string
 let lomakkeenId: number
 let page: Page
 
-test.beforeAll(async ({ browser, request }) => {
+test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page, 'SUPERUSER')
