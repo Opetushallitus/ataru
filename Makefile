@@ -261,6 +261,9 @@ test-cypress-ci: $(NODE_MODULES)
 
 reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 
+process-resources:
+	lein resource
+
 # ----------------
 # CI operations
 # ----------------
@@ -275,7 +278,7 @@ ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
 ci-test-playwright-and-cypress: export CI := true
 ci-test-playwright-and-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress pull-playwright-image wait-for-cypress-ci test-playwright-docker test-cypress-ci stop-pm2-ci stop-docker
 
-ci-create-uberjars: $(NODE_MODULES) clean-lein build-prod-clojurescript compile-less
+ci-create-uberjars: $(NODE_MODULES) clean-lein build-prod-clojurescript compile-less process-resources
 	lein with-profile ataru-main:ovara uberjar
 
 # ----------------
