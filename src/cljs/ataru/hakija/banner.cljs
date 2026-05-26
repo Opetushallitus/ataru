@@ -174,12 +174,14 @@
     (when (not (or demo-modal-open? submit-status))
       [:div.application__preview-toggle-container
        [:button.application__preview-link
-        {:disabled (not enabled?)
-         :on-click toggle-fn}
+        {:disabled       (not enabled?)
+         :on-click       toggle-fn
+         :data-test-id   "edit-answers-button"}
         (translations/get-hakija-translation :edit-answers lang)]
        [:button.application__preview-link
-        {:disabled enabled?
-         :on-click toggle-fn}
+        {:disabled       enabled?
+         :on-click       toggle-fn
+         :data-test-id   "preview-answers-button"}
         (translations/get-hakija-translation :preview-answers lang)]])))
 
 (defn- new-time-left [hakuaika-end time-diff]
@@ -236,10 +238,10 @@
      "Testihakemus / Virkailijatäyttö"]))
 
 (defn- notification-banner
-  [text]
-  [:div.application__notification-banner-container
-   [:div.application__notification-banner
-    text]])
+  ([text] (notification-banner {} text))
+  ([attrs text]
+   [:div.application__notification-banner-container attrs
+    [:div.application__notification-banner text]]))
 
 (defn- demo-notification-banner
   []
@@ -247,6 +249,33 @@
         demo? @(subscribe [:application/demo?])]
     (when demo?
       [notification-banner (translations/get-hakija-translation :demo lang)])))
+
+(defn- editing-notification-banner
+  []
+  (let [editing?      @(subscribe [:state-query [:application :editing?]])
+        submit-status @(subscribe [:state-query [:application :submit-status]])
+        edits?        @(subscribe [:application/edits?])
+        lang          @(subscribe [:application/form-language])]
+    (when (and editing? edits? (not= :submitted submit-status))
+      [notification-banner
+       {:data-test-id "editing-notification-banner"}
+       [:span.application__editing-notification-content
+        [:i.zmdi.zmdi-alert-circle.application__editing-notification-icon]
+        (translations/get-hakija-translation :editing-notification-prefix lang)
+        [:b (translations/get-hakija-translation :editing-notification-bold lang)]]])))
+
+(defn- preview-notification-banner
+  []
+  (let [editing?         @(subscribe [:state-query [:application :editing?]])
+        preview-enabled? @(subscribe [:state-query [:application :preview-enabled]])
+        submit-status    @(subscribe [:state-query [:application :submit-status]])
+        lang             @(subscribe [:application/form-language])]
+    (when (and preview-enabled? (not editing?) (not= :submitted submit-status))
+      [notification-banner
+       {:data-test-id "preview-notification-banner"}
+       [:span.application__editing-notification-content
+        [:i.zmdi.zmdi-alert-circle.application__editing-notification-icon]
+        (translations/get-hakija-translation :preview-notification-text lang)]])))
 
 (defn banner []
   (let [form?             @(subscribe [:application/form])
@@ -266,4 +295,6 @@
        (when control-active?
          [status-controls])
        [logged-in-indicator-or-placeholder]]]
-     [demo-notification-banner]]))
+     [demo-notification-banner]
+     [editing-notification-banner]
+     [preview-notification-banner]]))
