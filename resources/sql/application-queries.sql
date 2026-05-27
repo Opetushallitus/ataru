@@ -709,7 +709,12 @@ WHERE application_key IN (:application_keys)
 
 -- name: yesql-get-missing-processing-state-reviews-for-latest-applications
 WITH latest_applications AS (
-  SELECT a.key, unnest(a.hakukohde) AS hakukohde
+  SELECT a.key,
+         unnest(CASE
+                  WHEN coalesce(array_length(a.hakukohde, 1), 0) = 0
+                    THEN ARRAY['form']::character varying(127)[]
+                  ELSE a.hakukohde
+                END) AS hakukohde
   FROM applications AS a
   LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
   WHERE la.id IS NULL
@@ -733,7 +738,12 @@ SELECT missing.application_key,
        :modified_time
 FROM (
   WITH latest_applications AS (
-    SELECT a.key, unnest(a.hakukohde) AS hakukohde
+    SELECT a.key,
+           unnest(CASE
+                    WHEN coalesce(array_length(a.hakukohde, 1), 0) = 0
+                      THEN ARRAY['form']::character varying(127)[]
+                    ELSE a.hakukohde
+                  END) AS hakukohde
     FROM applications AS a
     LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
     WHERE la.id IS NULL
