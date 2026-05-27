@@ -353,6 +353,9 @@
    :no-hakukohde-search-hits                    {:fi "Ei hakutuloksia"
                                                  :en "No search results found"
                                                  :sv "Inga sökresultat"}
+   :hakukohde-search-results                    {:fi "Hakutulokset"
+                                                 :sv "Sökresultat"
+                                                 :en "Search results"}
    :not-applicable-for-hakukohteet              {:fi "Huomaathan, että pohjakoulutuksesi perusteella et ole hakukelpoinen seuraaviin hakukohteisiin. Tarkista hakukelpoisuusvaatimukset hakukohteen valintaperusteista."
                                                  :sv "Märk, att du på basis av din grundutbildning inte är behörig att söka till detta ansökningsmål. Kontrollera behörighetskraven för ansökan i ansökningsmålets antagningsgrunder."
                                                  :en "Please note that the education you have given does not provide eligibility for these study programmes. Please check the required eligibility from the study programme’s admission criteria."}
