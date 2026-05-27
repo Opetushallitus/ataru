@@ -1,13 +1,16 @@
 (ns ataru.hakija.application-hakukohde-component
   (:require
     [clojure.string]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.util :as util]
     [ataru.translations.translation-util :as translations]
     [reagent.core :as r]
     [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
     [ataru.application-common.accessibility-util :as a11y]))
+
+(def ^:private nav-sel
+  ".application__search-hit-hakukohde-row--select-button, .application__search-hit-hakukohde-row[aria-selected='true']")
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
@@ -24,20 +27,18 @@
 (defn- hakukohde-remove-event-handler [e]
   (dispatch [:application/hakukohde-remove-selection (.getAttribute (.-target e) "data-hakukohde-oid")]))
 
-(defn- hakukohde-select-event-handler [e]
-  (dispatch [:application/hakukohde-add-selection
-             (.getAttribute (.-target e) "data-hakukohde-oid")]))
-
 (defn- hakukohde-search-toggle-event-handler [_]
   (dispatch [:application/hakukohde-search-toggle]))
 
 (defn- selected-hakukohde-row-remove
   [hakukohde-oid disabled?]
-  (let [lang @(subscribe [:application/form-language])]
+  (let [lang           @(subscribe [:application/form-language])
+        hakukohde-name @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:button.application__selected-hakukohde-row--remove
      {:data-hakukohde-oid hakukohde-oid
       :disabled           disabled?
       :tab-index          (when (not disabled?) 0)
+      :aria-label         (str (translations/get-hakija-translation :remove lang) " " hakukohde-name)
       :on-click           (when (not disabled?)
                             hakukohde-remove-event-handler)}
      (translations/get-hakija-translation :remove lang)]))
@@ -124,12 +125,14 @@
          (translations/get-hakija-translation :not-editable-application-period-ended lang)])
       (when (not-empty rajaavat-hakukohteet)
         [:div.application__search-hit-hakukohde-row--limit-reached
+         {:aria-live "polite"}
          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
           (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
-         (doall (for [hakukohde rajaavat-hakukohteet]
-                  ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
-                  [:div.application__search-hit-hakukohde-row--limitting-hakukohde
-                   @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])
+         [:ul
+          (doall (for [hakukohde rajaavat-hakukohteet]
+                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                   [:li.application__search-hit-hakukohde-row--limitting-hakukohde
+                    @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])
       (if (seq should-be-higher)
         (offending-priorization (first should-be-higher) hakukohde-oid)
         (when (seq should-be-lower)
@@ -149,11 +152,17 @@
         search-term          @(subscribe [:application/hakukohde-query])
         aria-header-id       (str "hakukohde-search-hit-header-" hakukohde-oid)
         aria-description-id  (str "hakukohde-search-hit-description-" hakukohde-oid)
+        aria-limit-id        (str "hakukohde-search-hit-limit-" hakukohde-oid)
         hakukohde-editable?  @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         hakukohteet-full?    @(subscribe [:application/hakukohteet-full? hakukohde-oid])
         rajaavat-hakukohteet @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
-        lang                 @(subscribe [:application/form-language])]
+        lang                 @(subscribe [:application/form-language])
+        limit-reached?       (not-empty rajaavat-hakukohteet)
+        disabled?            (boolean (or hakukohteet-full? (not hakukohde-editable?) limit-reached?))]
     [:div.application__search-hit-hakukohde-row
+     {:role          "option"
+      :aria-selected (if hakukohde-selected? "true" "false")
+      :tab-index (when hakukohde-selected? 0)}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
@@ -165,41 +174,103 @@
         [:div.application__hakukohde-application-period-ended
          [:i.zmdi.zmdi-lock]
          (translations/get-hakija-translation :not-selectable-application-period-ended lang)])
-      (when (and (not hakukohde-selected?)
-                 (not-empty rajaavat-hakukohteet))
+      (when (and (not hakukohde-selected?) limit-reached?)
         [:div.application__search-hit-hakukohde-row--limit-reached
+         {:id        aria-limit-id
+          :aria-live "polite"}
          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
           (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
-         (doall (for [hakukohde rajaavat-hakukohteet]
-                  ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
-                  [:div.application__search-hit-hakukohde-row--limitting-hakukohde
-                   @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])]
+         [:ul
+          (doall (for [hakukohde rajaavat-hakukohteet]
+                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                   [:li.application__search-hit-hakukohde-row--limitting-hakukohde
+                    @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])]
      [:div.application__search-hit-hakukohde-row--buttons
       (if hakukohde-selected?
-        [:i.zmdi.zmdi-check.zmdi-hc-2x.application__search-hit-hakukohde-row--selected-check]
+        [:i.zmdi.zmdi-check.zmdi-hc-2x.application__search-hit-hakukohde-row--selected-check
+         {:aria-hidden "true"}]
         [:button.application__search-hit-hakukohde-row--select-button
          {:data-hakukohde-oid hakukohde-oid
-          :on-click           hakukohde-select-event-handler
-          :disabled           (or hakukohteet-full?
-                                  (not hakukohde-editable?)
-                                  (not-empty rajaavat-hakukohteet))
-          :aria-label         (str 
-                               (translations/get-hakija-translation :add-application-option lang)
-                               ": "
-                               hakukohde-label
-                               )
-          
-          :aria-describedby   aria-description-id}
+          :on-click           (when-not disabled?
+                                (fn [e]
+                                  (let [btn     (.-currentTarget e)
+                                        results (.closest btn ".application__hakukohde-selection-search-results")
+                                        buttons (when results
+                                                  (array-seq (.querySelectorAll results nav-sel)))
+                                        idx     (when buttons
+                                                  (count (take-while #(not= % btn) buttons)))]
+                                    (dispatch-sync [:application/hakukohde-add-selection hakukohde-oid])
+                                    (when (and results buttons (pos? (count buttons)))
+                                      (r/after-render
+                                        (fn []
+                                          (let [new-buttons (array-seq (.querySelectorAll results nav-sel))
+                                                n           (count new-buttons)]
+                                            (when (pos? n)
+                                              (.focus (nth new-buttons (min idx (dec n))))))))))))
+          :disabled           disabled?
+          :aria-label         (str
+                                (translations/get-hakija-translation :add-application-option lang)
+                                ": "
+                                hakukohde-label)
+          :aria-describedby   (if limit-reached?
+                                (str aria-description-id " " aria-limit-id)
+                                aria-description-id)}
          (translations/get-hakija-translation :add lang)])]]))
+
+(defn- find-button-idx [container]
+  (let [buttons (array-seq (.querySelectorAll container nav-sel))
+        active  (.-activeElement js/document)]
+    [buttons (count (take-while #(not= % active) buttons))]))
 
 (defn- hakukohde-selection-search
   []
   (let [hakukohde-hits         (subscribe [:application/hakukohde-hits])
         prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
         search-input           (r/atom @(subscribe [:application/hakukohde-query]))
-        lang                   (subscribe [:application/form-language])]
+        lang                   (subscribe [:application/form-language])
+        container-ref          (atom nil)
+        focus-input            (fn []
+                                 (when-let [c @container-ref]
+                                   (when-let [inp (.querySelector c ".application__form-text-input-in-box")]
+                                     (.focus inp))))
+        on-escape              (fn []
+                                 (let [parent (some-> @container-ref .-parentElement)]
+                                   (dispatch [:application/hakukohde-search-toggle])
+                                   (r/after-render
+                                     (fn []
+                                       (when parent
+                                         (when-let [btn (.querySelector parent ".application__hakukohde-selection-open-search")]
+                                           (.focus btn)))))))
+        on-input-keydown       (fn [e]
+                                 (case (.-key e)
+                                   "ArrowDown" (do (.preventDefault e)
+                                                   (when-let [c @container-ref]
+                                                     (when-let [btn (.querySelector c nav-sel)]
+                                                       (.focus btn))))
+                                   "Escape"    (on-escape)
+                                   nil))
+        on-results-keydown     (fn [e]
+                                 (let [key (.-key e)]
+                                   (cond
+                                     (#{"ArrowDown" "ArrowUp"} key)
+                                     (do (.preventDefault e)
+                                         (when-let [c @container-ref]
+                                           (let [[buttons idx] (find-button-idx c)
+                                                 n             (count buttons)]
+                                             (cond
+                                               (= key "ArrowDown")
+                                               (if (< idx (dec n))
+                                                 (.focus (nth buttons (inc idx)))
+                                                 (focus-input))
+                                               (= key "ArrowUp")
+                                               (if (pos? idx)
+                                                 (.focus (nth buttons (dec idx)))
+                                                 (focus-input))))))
+                                     (= key "Escape")
+                                     (on-escape))))]
     (fn []
       [:div.application__hakukohde-selection
+       {:ref #(reset! container-ref %)}
        [:div.application__hakukohde-selection-search-arrow-up
         {:class (when @prioritize-hakukohteet
                   "application__hakukohde-selection-search-arrow-up--prioritized")}]
@@ -213,22 +284,37 @@
           [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
         [:div.application__hakukohde-selection-search-input.application__form-text-input-box
          [:input.application__form-text-input-in-box
-          {:on-change   #(do (reset! search-input (.-value (.-target %)))
-                             (dispatch [:application/hakukohde-query-change search-input]))
-           :title       (translations/get-hakija-translation :search-application-options @lang)
-           :placeholder (translations/get-hakija-translation :search-application-options @lang)
-           :value       @search-input}]
+          {:on-change        #(do (reset! search-input (.-value (.-target %)))
+                                  (dispatch [:application/hakukohde-query-change search-input]))
+           :on-key-down      on-input-keydown
+           :title            (translations/get-hakija-translation :search-application-options @lang)
+           :placeholder      (translations/get-hakija-translation :search-application-options @lang)
+           :value            @search-input
+           :role             "combobox"
+           :aria-haspopup    "listbox"
+           ; hakutulokset ovat aina auki, kun hakuvalikkokin on auki
+           :aria-expanded    "true"
+           :aria-controls    "hakukohde-search-listbox"
+           :aria-autocomplete "list"}]
          (when (not (empty? @search-input))
            [:div.application__form-clear-text-input-in-box
             [:a
              {:on-click #(do (reset! search-input "")
                              (dispatch [:application/hakukohde-query-change search-input]))}
              [:i.zmdi.zmdi-close]]])]
+        [:p#hakukohde-search-results-label.visually-hidden
+         (translations/get-hakija-translation :hakukohde-search-results @lang)]
         [:div.application__hakukohde-selection-search-results
+         {:on-key-down     on-results-keydown
+          :role            "listbox"
+          :id              "hakukohde-search-listbox"
+          :aria-labelledby "hakukohde-search-results-label"}
          (if (and
                (empty? @hakukohde-hits)
                (not (clojure.string/blank? @search-input)))
-           [:div.application__hakukohde-selection-search-no-hits (translations/get-hakija-translation :no-hakukohde-search-hits @lang)]
+           [:div.application__hakukohde-selection-search-no-hits
+            {:role "status"}
+            (translations/get-hakija-translation :no-hakukohde-search-hits @lang)]
            (for [hakukohde-oid @hakukohde-hits]
              ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
              [search-hit-hakukohde-row hakukohde-oid]))]
@@ -268,6 +354,20 @@
    [:div.application__wrapper-contents.application__hakukohde-contents-wrapper
     [:div.application__form-field
      [:div.application__hakukohde-selected-list
+      {:on-key-down (fn [e]
+                      (let [key (.-key e)]
+                        (when (#{"ArrowDown" "ArrowUp"} key)
+                          (.preventDefault e)
+                          (let [container (.-currentTarget e)
+                                buttons   (array-seq (.querySelectorAll container ".application__selected-hakukohde-row--remove:not([disabled])"))
+                                active    (.-activeElement js/document)
+                                idx       (count (take-while #(not= % active) buttons))
+                                n         (count buttons)]
+                            (cond
+                              (= key "ArrowDown") (when (< idx (dec n))
+                                                    (.focus (nth buttons (inc idx))))
+                              (= key "ArrowUp")   (when (pos? idx)
+                                                    (.focus (nth buttons (dec idx)))))))))}
       (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
         ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
         [selected-hakukohde-row hakukohde-oid])]
