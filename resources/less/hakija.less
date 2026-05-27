@@ -2031,6 +2031,18 @@ th.application__readonly-adjacent--header {
     border-bottom: 0px;
     margin-bottom: 0px;
   }
+
+  &[aria-selected="true"]:focus {
+    outline: none;
+    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    border-radius: 3px;
+
+    // box-shadow is invisible in Windows High Contrast mode; outline is used instead
+    @media (forced-colors: active) {
+      outline: 3px solid ButtonText;
+      box-shadow: none;
+    }
+  }
 }
 
 .application__search-hit-hakukohde-row--content {
@@ -2047,10 +2059,6 @@ th.application__readonly-adjacent--header {
   border-radius: 5px;
   animation: 0.8s fadeIn;
   animation-fill-mode: forwards;
-}
-
-.application__search-hit-hakukohde-row--limitting-hakukohde {
-  font-style: italic;
 }
 
 .application__search-hit-hakukohde-row--limit-reached-heading {
@@ -2090,6 +2098,10 @@ th.application__readonly-adjacent--header {
   cursor: pointer;
   &::-moz-focus-inner {
     border: 0;
+  }
+  &[aria-disabled="true"] {
+    background-color: @neutral-grey-500;
+    cursor: default;
   }
 }
 
