@@ -55,6 +55,7 @@
                    :job-failure-alert-recipients        "testi@example.org"
                    :send-job-failure-alert-emails       true
                    :features {:schema-validation false
+                              :arvosanat true
                               :hakeminen-tunnistautuneena true}
                    :information-request-reminder-job-hour 9}
  :temp-files      {:filesystem {:base-path "/tmp"}}
