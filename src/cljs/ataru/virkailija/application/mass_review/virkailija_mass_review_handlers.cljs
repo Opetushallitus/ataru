@@ -1,5 +1,5 @@
 (ns ataru.virkailija.application.mass-review.virkailija-mass-review-handlers
-  (:require [ataru.virkailija.application.application-selectors :refer [hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma]]
+  (:require [ataru.virkailija.application.application-selectors :refer [selected-hakukohde-oid-set]]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
 
 (reg-event-db
@@ -32,7 +32,7 @@
                                   :to-state         to-state
                                   :hakukohde-oid    (or (-> db :application :rajaus-hakukohteella)
                                                         (-> db :application :selected-hakukohde))
-                                  :hakukohde-oids-for-hakukohderyhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)}
+                                  :hakukohde-oids-for-hakukohderyhma (selected-hakukohde-oid-set db)}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews
             :override-args       {:error-handler #(dispatch [:application/handle-mass-update-application-reviews-error])}}}))

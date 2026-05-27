@@ -260,6 +260,7 @@
                   *per-hakukohde-application-id*             per-hakukohde-application-id
                   *per-hakukohde-followup-application-id*    per-hakukohde-followup-application-id]
           (try
+            #_{:clj-kondo/ignore [:invalid-arity]}
             (it)
             (finally
               (delete-application! painike-application-id)
@@ -526,6 +527,56 @@
         (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
               (store/get-application-hakukohde-reviews application-key-2))))))
 
+  (it "treats missing form processing-state reviews as unprocessed in mass update"
+    (let [application-ids (unit-test-db/init-db-fixture
+                            form-fixtures/minimal-form
+                            [{:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.301"
+                              :hakukohde  []
+                              :answers    []}
+                             {:form       (:id form-fixtures/minimal-form)
+                              :lang       "fi"
+                              :person-oid "1.2.3.4.5.302"
+                              :hakukohde  []
+                              :answers    []}])
+          [application-key-1 application-key-2] (mapv find-application-key-by-id application-ids)
+          audit-logger      (audit-log/new-dummy-audit-logger)
+          session           {:identity {:oid                      "1.2.246.562.11.11111111111"
+                                        :user-right-organizations {:edit-applications [{:oid "1.2.246.562.10.00000000001"}]}}}]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.11.11111111111"
+                                              :first_name "Testi"
+                                              :last_name  "Virkailija"})
+      (unit-test-db/init-db-application-hakukohde-review-fixture
+        {:hakukohde          "form"
+         :review-requirement "processing-state"
+         :review-state       "unprocessed"}
+        application-key-1
+        audit-logger)
+      (should=
+        2
+        (store/mass-update-application-states
+          session
+          [application-key-1 application-key-2]
+          ["form"]
+          "unprocessed"
+          "processing"
+          audit-logger))
+      (should==
+        [{:application-key application-key-1
+          :hakukohde       "form"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-1)))
+      (should==
+        [{:application-key application-key-2
+          :hakukohde       "form"
+          :requirement     "processing-state"
+          :state           "processing"}]
+        (mapv #(select-keys % [:application-key :hakukohde :requirement :state])
+              (store/get-application-hakukohde-reviews application-key-2)))))
+
 
 (def ^:dynamic *tutu-application-key-1* (atom nil))
 (def ^:dynamic *tutu-application-key-2* (atom nil))
@@ -603,6 +654,7 @@
         *tutu-application-key-2*  app-key-2
         *tutu-application-key-3*  app-key-3
       ] (try
+          #_{:clj-kondo/ignore [:invalid-arity]}
           (context)
           (finally
             (delete-application! app-id-1)
