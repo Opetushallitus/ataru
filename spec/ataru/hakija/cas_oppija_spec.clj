@@ -119,7 +119,7 @@
                           (should= {:value "Leon Elias" :locked true} (get-in parsed-attributes [:fields :first-name]))
                           (should= {:value "Germany" :locked true} (get-in parsed-attributes [:fields :last-name]))
                           (should= {:value "06.02.1981" :locked true} (get-in parsed-attributes [:fields :birth-date]))
-                          (should= {:value "false" :locked false} (get-in parsed-attributes [:fields :have-finnish-ssn]))))
+                          (should= {:value nil :locked false} (get-in parsed-attributes [:fields :have-finnish-ssn]))))
                     (it "should not lock preferred-name field if attributes do not contain preferred name (givenName)"
                         (let [parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful successful-response-strong-no-kutsumanimi)]
                           (should= {:person-oid "1.2.246.562.24.73833272757",
