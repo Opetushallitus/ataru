@@ -14,6 +14,34 @@
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-no-ms-formatter (f/formatter (:date-time-no-ms f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
+(def ^:private helsinki-zone (t/time-zone-for-id "Europe/Helsinki"))
+
+(defn- coerce-hakuaika-time
+  [value]
+  (try
+    (cond
+      (nil? value) nil
+      (string? value) (or (some-> value
+                                  c/from-string
+                                  (t/to-time-zone helsinki-zone))
+                          value)
+      :else (some-> value
+                    c/from-long
+                    (t/to-time-zone helsinki-zone)))
+    (catch Exception _
+      value)))
+
+(defn- coerce-hakuaika-times
+  [hakuaika]
+  (cond-> hakuaika
+    (contains? hakuaika :start) (update :start coerce-hakuaika-time)
+    (contains? hakuaika :end)   (update :end coerce-hakuaika-time)))
+
+(defn coerce-hakuajat-times
+  [tarjonta]
+  (cond-> tarjonta
+    (and (contains? tarjonta :hakuajat)
+         (some? (:hakuajat tarjonta))) (update :hakuajat #(mapv coerce-hakuaika-times %))))
 
 (defn get-formatter [fmt-str locale]
   (-> (DateTimeFormatter/ofPattern fmt-str)

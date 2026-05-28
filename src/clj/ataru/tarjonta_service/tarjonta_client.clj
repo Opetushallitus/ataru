@@ -3,6 +3,7 @@
    [ataru.config.url-helper :refer [resolve-url]]
    [ataru.schema.form-schema :as schema]
    [ataru.time :as time]
+   [ataru.tarjonta-service.hakuaika :as hakuaika]
    [ataru.util.http-util :as http-util]
    [cheshire.core :as json]
    [clojure.string :as string]
@@ -14,8 +15,8 @@
   (ZonedDateTime/ofInstant (Instant/ofEpochMilli (long millis)) (time/time-zone-for-id "Europe/Helsinki")))
 
 (def koulutus-checker (s/checker schema/Koulutus))
-(def hakukohde-checker (s/checker schema/Hakukohde))
-(def haku-checker (s/checker schema/Haku))
+(def hakukohde-checker (comp (s/checker schema/Hakukohde) hakuaika/coerce-hakuajat-times))
+(def haku-checker (comp (s/checker schema/Haku) hakuaika/coerce-hakuajat-times))
 (def hakukohde-search-checker (s/checker [s/Str]))
 
 (defn- localized-names

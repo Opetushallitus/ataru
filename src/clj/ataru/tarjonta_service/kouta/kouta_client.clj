@@ -15,8 +15,8 @@
             [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]))
 
-(def haku-checker (s/checker form-schema/Haku))
-(def hakukohde-checker (s/checker form-schema/Hakukohde))
+(def haku-checker (comp (s/checker form-schema/Haku) hakuaika/coerce-hakuajat-times))
+(def hakukohde-checker (comp (s/checker form-schema/Hakukohde) hakuaika/coerce-hakuajat-times))
 (def toteutus-checker (s/checker form-schema/Koulutus))
 (def hakus-by-checker (s/checker [s/Str]))
 (def hakukohde-search-checker (s/checker [s/Str]))
