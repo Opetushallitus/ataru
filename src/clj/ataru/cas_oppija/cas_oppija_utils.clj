@@ -51,7 +51,7 @@
                                              :locked have-finnish-ssn?}
                       :birth-date           {:value parsed-birth-date
                                              :locked (not (clojure.string/blank? parsed-birth-date))}
-                      :have-finnish-ssn     {:value (if have-finnish-ssn? "true" "false")
+                      :have-finnish-ssn     {:value (when have-finnish-ssn? "true")
                                              :locked have-finnish-ssn?}
                       :email                {:value  (:mail parsed-raw-map)
                                              :locked false}
