@@ -69,7 +69,7 @@
                                :attachments))))))
 
 (describe "siirtotiedosto timestamp parsing"
-          (tags :unit)
+          (tags :unit :siirtotiedosto-timestamp)
 
           (it "should omit optional modified-time when source value is nil"
               (let [application (assoc (first fixtures/siirto-applications)
@@ -77,6 +77,21 @@
                                                                         :state "unprocessed"
                                                                         :hakukohde "1.2.246.562.29.123454321"
                                                                         :modified-time nil}])
+                    result (#'ataru.applications.application-store/unwrap-siirto-application
+                             application)
+                    reviews (:hakukohdeReviews result)
+                    review-schema [{:requirement                    s/Str
+                                    :state                          s/Str
+                                    (s/optional-key :modified-time) java.time.ZonedDateTime
+                                    :hakukohde                      s/Str}]]
+                (should-not-contain :modified-time (first reviews))
+                (should= nil (s/check review-schema reviews))))
+
+          (it "should not try to parse optional modified-time when source key is missing"
+              (let [application (assoc (first fixtures/siirto-applications)
+                                       :application-hakukohde-reviews [{:requirement "processing-state"
+                                                                        :state "unprocessed"
+                                                                        :hakukohde "1.2.246.562.29.123454321"}])
                     result (#'ataru.applications.application-store/unwrap-siirto-application
                              application)
                     reviews (:hakukohdeReviews result)
