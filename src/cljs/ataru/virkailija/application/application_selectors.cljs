@@ -22,6 +22,7 @@
 (defn hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   [db]
   (case (application-list-selected-by db)
+    :selected-form-key      #{"form"}
     :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
     :selected-haku           (if-let [h (get-in db [:application :rajaus-hakukohteella])]
                                #{h}
