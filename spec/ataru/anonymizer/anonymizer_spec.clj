@@ -80,6 +80,8 @@
 (defn expected-anonymized-application
   []
   {:haku             nil
+   :ssn              "090296-999D"
+   :eidas-id         nil
    :lang             "fi"
    :tunnistautuminen "strong"
    :id               @test-application-id
@@ -131,6 +133,8 @@
 (defn expected-anonymized-application-abroad
   []
   {:haku             nil
+   :ssn              "090296-999D"
+   :eidas-id         nil
    :lang             "fi"
    :tunnistautuminen "strong"
    :id               @test-application-id
@@ -179,92 +183,96 @@
 
 (defn expected-application-with-generated-contact-details
   []
-  {:haku             nil,
-   :lang             "fi",
-   :tunnistautuminen "strong",
-   :id               @test-application-id,
-   :hakukohde        [],
-   :answers          #{{:key       "guardian-lastname-secondary",
-                        :value     ["Huoltaja"],
+  {:haku             nil
+   :ssn              "090296-999D"
+   :eidas-id         nil
+   :lang             "fi"
+   :tunnistautuminen "strong"
+   :id               @test-application-id
+   :hakukohde        []
+   :answers          #{{:key       "guardian-lastname-secondary"
+                        :value     ["Huoltaja"]
                         :fieldType "textField"}
-                       {:key "gender", :value "1", :fieldType "textField"}
-                       {:key "guardian-phone", :value ["0501234567"], :fieldType "textField"}
-                       {:key "guardian-firstname", :value ["Testi"], :fieldType "textField"}
-                       {:key "phone", :value "+3584825601805", :fieldType "textField"}
-                       {:key       "abcd",
-                        :value     "Lorem ipsum dolor sit amet, consec",
+                       {:key "gender" :value "1" :fieldType "textField"}
+                       {:key "guardian-phone" :value ["0501234567"] :fieldType "textField"}
+                       {:key "guardian-firstname" :value ["Testi"] :fieldType "textField"}
+                       {:key "phone" :value "+3584825601805" :fieldType "textField"}
+                       {:key       "abcd"
+                        :value     "Lorem ipsum dolor sit amet, consec"
                         :fieldType "textArea"}
-                       {:key "guardian-lastname", :value ["Huoltaja"], :fieldType "textField"}
+                       {:key "guardian-lastname" :value ["Huoltaja"] :fieldType "textField"}
                        {:key "country-of-residence" :value "246" :fieldType "textField"}
-                       {:key "home-town", :value "091", :fieldType "textField"}
-                       {:key       "email",
-                        :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi",
+                       {:key "home-town" :value "091" :fieldType "textField"}
+                       {:key       "email"
+                        :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi"
                         :fieldType "textField"}
-                       {:key       "guardian-name-secondary",
-                        :value     ["Testi Huoltaja"],
+                       {:key       "guardian-name-secondary"
+                        :value     ["Testi Huoltaja"]
                         :fieldType "textField"}
-                       {:key       "guardian-email-secondary",
-                        :value     ["testi2.huoltaja@testiopintopolku.fi"],
+                       {:key       "guardian-email-secondary"
+                        :value     ["testi2.huoltaja@testiopintopolku.fi"]
                         :fieldType "textField"}
-                       {:key       "guardian-email",
-                        :value     ["testi1.huoltaja@testiopintopolku.fi"],
+                       {:key       "guardian-email"
+                        :value     ["testi1.huoltaja@testiopintopolku.fi"]
                         :fieldType "textField"}
-                       {:key "address", :value "Testitie 25601805074", :fieldType "textField"}
-                       {:key "ssn", :value "090296-999D", :fieldType "textField"}
-                       {:key "guardian-firstname-secondary", :value ["Testi"], :fieldType "textField"}
-                       {:key "postal-office", :value "HELSINKI", :fieldType "textField"}
-                       {:key "last-name", :value "Virtanen-Testi", :fieldType "textField"}
-                       {:key "guardian-name", :value ["Testi Huoltaja"], :fieldType "textField"}
-                       {:key "guardian-phone-secondary", :value ["0501234567"], :fieldType "textField"}
-                       {:key "postal-code", :value "00100", :fieldType "textField"}
-                       {:key "preferred-name", :value "Testi", :fieldType "textField"}
-                       {:key "birth-date", :value "09.02.1996", :fieldType "textField"}
-                       {:key "first-name", :value "Testi Henkilö", :fieldType "textField"}},
-   :person-oid       "1.2.246.562.24.25601805074",
+                       {:key "address" :value "Testitie 25601805074" :fieldType "textField"}
+                       {:key "ssn" :value "090296-999D" :fieldType "textField"}
+                       {:key "guardian-firstname-secondary" :value ["Testi"] :fieldType "textField"}
+                       {:key "postal-office" :value "HELSINKI" :fieldType "textField"}
+                       {:key "last-name" :value "Virtanen-Testi" :fieldType "textField"}
+                       {:key "guardian-name" :value ["Testi Huoltaja"] :fieldType "textField"}
+                       {:key "guardian-phone-secondary" :value ["0501234567"] :fieldType "textField"}
+                       {:key "postal-code" :value "00100" :fieldType "textField"}
+                       {:key "preferred-name" :value "Testi" :fieldType "textField"}
+                       {:key "birth-date" :value "09.02.1996" :fieldType "textField"}
+                       {:key "first-name" :value "Testi Henkilö" :fieldType "textField"}}
+   :person-oid       "1.2.246.562.24.25601805074"
    :form             @test-form-id})
 
 (defn expected-application-with-generated-contact-details-abroad
   []
-  {:haku             nil,
-   :lang             "fi",
-   :tunnistautuminen "strong",
-   :id               @test-application-id,
-   :hakukohde        [],
-   :answers          #{{:key       "guardian-lastname-secondary",
-                        :value     ["Huoltaja"],
+  {:haku             nil
+   :ssn              "090296-999D"
+   :eidas-id         nil
+   :lang             "fi"
+   :tunnistautuminen "strong"
+   :id               @test-application-id
+   :hakukohde        []
+   :answers          #{{:key       "guardian-lastname-secondary"
+                        :value     ["Huoltaja"]
                         :fieldType "textField"}
-                       {:key "gender", :value "1", :fieldType "textField"}
-                       {:key "guardian-phone", :value ["0501234567"], :fieldType "textField"}
-                       {:key "guardian-firstname", :value ["Testi"], :fieldType "textField"}
-                       {:key "phone", :value "+3584825601805", :fieldType "textField"}
-                       {:key       "abcd",
-                        :value     "Lorem ipsum dolor sit amet, consec",
+                       {:key "gender" :value "1" :fieldType "textField"}
+                       {:key "guardian-phone" :value ["0501234567"] :fieldType "textField"}
+                       {:key "guardian-firstname" :value ["Testi"] :fieldType "textField"}
+                       {:key "phone" :value "+3584825601805" :fieldType "textField"}
+                       {:key       "abcd"
+                        :value     "Lorem ipsum dolor sit amet, consec"
                         :fieldType "textArea"}
-                       {:key "guardian-lastname", :value ["Huoltaja"], :fieldType "textField"}
-                       {:key       "email",
-                        :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi",
+                       {:key "guardian-lastname" :value ["Huoltaja"] :fieldType "textField"}
+                       {:key       "email"
+                        :value     "testi_henkilo_virtanen_testi-25601805074@testiopintopolku.fi"
                         :fieldType "textField"}
-                       {:key       "guardian-name-secondary",
-                        :value     ["Testi Huoltaja"],
+                       {:key       "guardian-name-secondary"
+                        :value     ["Testi Huoltaja"]
                         :fieldType "textField"}
-                       {:key       "guardian-email-secondary",
-                        :value     ["testi2.huoltaja@testiopintopolku.fi"],
+                       {:key       "guardian-email-secondary"
+                        :value     ["testi2.huoltaja@testiopintopolku.fi"]
                         :fieldType "textField"}
-                       {:key       "guardian-email",
-                        :value     ["testi1.huoltaja@testiopintopolku.fi"],
+                       {:key       "guardian-email"
+                        :value     ["testi1.huoltaja@testiopintopolku.fi"]
                         :fieldType "textField"}
-                       {:key "address", :value "Testitie 25601805074", :fieldType "textField"}
-                       {:key "guardian-firstname-secondary", :value ["Testi"], :fieldType "textField"}
+                       {:key "address" :value "Testitie 25601805074" :fieldType "textField"}
+                       {:key "guardian-firstname-secondary" :value ["Testi"] :fieldType "textField"}
                        {:key "city" :value "London, United Kingdom" :fieldType "textField"}
                        {:key "country-of-residence" :value "826" :fieldType "textField"}
-                       {:key "last-name", :value "Virtanen-Testi", :fieldType "textField"}
-                       {:key "guardian-name", :value ["Testi Huoltaja"], :fieldType "textField"}
-                       {:key "guardian-phone-secondary", :value ["0501234567"], :fieldType "textField"}
-                       {:key "postal-code", :value "00100", :fieldType "textField"}
-                       {:key "preferred-name", :value "Testi", :fieldType "textField"}
-                       {:key "birth-date", :value "09.02.1996", :fieldType "textField"}
-                       {:key "first-name", :value "Testi Henkilö", :fieldType "textField"}},
-   :person-oid       "1.2.246.562.24.25601805074",
+                       {:key "last-name" :value "Virtanen-Testi" :fieldType "textField"}
+                       {:key "guardian-name" :value ["Testi Huoltaja"] :fieldType "textField"}
+                       {:key "guardian-phone-secondary" :value ["0501234567"] :fieldType "textField"}
+                       {:key "postal-code" :value "00100" :fieldType "textField"}
+                       {:key "preferred-name" :value "Testi" :fieldType "textField"}
+                       {:key "birth-date" :value "09.02.1996" :fieldType "textField"}
+                       {:key "first-name" :value "Testi Henkilö" :fieldType "textField"}}
+   :person-oid       "1.2.246.562.24.25601805074"
    :form             @test-form-id})
 
 (describe "Anonymize application with residence in Finland:"

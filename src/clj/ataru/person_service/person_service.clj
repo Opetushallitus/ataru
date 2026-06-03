@@ -71,7 +71,8 @@
 
   (create-or-find-person [_ application]
     (let [person (orpe/extract-person-from-application application)]
-      (if (:eiSuomalaistaHetua person)
+      (if (and (:eiSuomalaistaHetua person)
+               (not (:eidasTunniste person)))
         (let [id (first (:identifications person))
               match-response (person-client/get-person-by-identification
                              oppijanumerorekisteri-cas-client id)
