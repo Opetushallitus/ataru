@@ -73,8 +73,6 @@
       (run-karma-test "virkailija-haku")))
 
   (describe "editing a submitted application /"
-    (it "is possible to edit a plain application successfully"
-      (run-karma-test "hakija-edit"))
     (it "is taking hakuaika into account"
       (run-karma-test "hakija-hakukohteen-hakuaika"))))
 

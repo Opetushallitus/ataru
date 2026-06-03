@@ -61,6 +61,7 @@
                                       :en s/Any}]
     (s/optional-key :verify)        s/Str
     (s/optional-key :limit-reached) (s/maybe #{s/Str})
+    (s/optional-key :locked)        (s/maybe s/Bool)
     :original-value                 (s/maybe Value)}
    (fn [answer]
      (= (:value answer)

@@ -17,12 +17,8 @@ export const waitForResponse = (
   })
 
 export const getJsonResponseKey = async <T>(res: Response, key: string) => {
-  try {
-    const body = await res.json()
-    return Record.has(key, body) ? Option.some(body[key] as T) : Option.none
-  } catch (e) {
-    return Option.none
-  }
+  const body = await res.json()
+  return Record.has(key, body) ? Option.some(body[key] as T) : Option.none
 }
 
 export const unsafeFoldOption = <T>(o: Option.Option<T>): T => {
