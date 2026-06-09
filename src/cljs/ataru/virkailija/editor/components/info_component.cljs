@@ -37,6 +37,7 @@
     (fn [initial-content path]
       (let [applying-as-identified-enabled? (subscribe [:editor/allow-hakeminen-tunnistautuneena?])]
         [:div.editor-form__component-wrapper
+         {:data-test-id "editor-form__infoElement-component-wrapper"}
          [text-header-component/text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
           :sub-header @sub-header]
          [component-content/component-content
