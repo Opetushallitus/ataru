@@ -110,6 +110,12 @@
   (->> (execute yesql-get-forms-by-ids {:ids ids} nil)
        (map assoc-flattened-content)))
 
+(defn fetch-forms-with-content-by-ids
+  "Fetch forms preserving :content (form fields array). Use when form content is needed for question extraction."
+  [ids]
+  (log/info "Fetching forms with content for" (count ids) "ids.")
+  (execute yesql-get-forms-by-ids {:ids ids} nil))
+
 (def fetch-form fetch-latest-version)
 
 (defn form-has-applications [key & [conn]]
