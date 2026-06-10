@@ -1,6 +1,8 @@
 (ns ataru.siirtotiedosto-service
   (:require [ataru.applications.application-store :as application-store]
+            [ataru.applications.question-util :as question-util]
             [ataru.forms.form-store :as form-store]
+            [ataru.siirtotiedosto.toinenaste-enrichment :as toinenaste-enrichment]
             [cheshire.core :as json]
             [taoensso.timbre :as log]
             [clojure.java.io :refer [input-stream]]
@@ -82,7 +84,17 @@
       (let [chunk-results (doall (for [application-ids partitions]
                                           (let [start (System/currentTimeMillis)
                                                 applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)
-                                                {:keys [success error-message]} (save-applications-to-s3 siirtotiedosto-client applications-chunk execution-id (inc @chunks-done) (or (:haku-oid params) ""))]
+                                                form-ids (->> applications-chunk (map :form) distinct)
+                                                questions-by-form-id (->> (form-store/fetch-forms-with-content-by-ids form-ids)
+                                                                          (reduce (fn [m form]
+                                                                                    (assoc m (:id form) (question-util/get-hakurekisteri-toinenaste-specific-questions form)))
+                                                                                  {}))
+                                                enriched-chunk (map (fn [app]
+                                                                      (assoc app :toinenaste
+                                                                             (toinenaste-enrichment/enrich-with-toinenaste
+                                                                               app (get questions-by-form-id (:form app)))))
+                                                                    applications-chunk)
+                                                {:keys [success error-message]} (save-applications-to-s3 siirtotiedosto-client enriched-chunk execution-id (inc @chunks-done) (or (:haku-oid params) ""))]
                                             (log/info execution-id "Applications-chunk" (str (swap! chunks-done inc) "/" (count partitions))
                                                       "complete, took" (- (System/currentTimeMillis) start) ", success " success)
                                             (when success (swap! total-count (fn [acc amt] (+ acc amt)) (count application-ids)))
