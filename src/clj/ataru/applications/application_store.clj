@@ -1065,25 +1065,22 @@
 (defn- unwrap-hakurekisteri-application-toinenaste
   [questions urheilija-amm-hakukohdes haun-hakukohteet
    {:keys [key hakukohde created_time submitted person_oid lang email content attachment_reviews]}]
-  (try
-    (let [answers           (answers-by-key (:answers content))
-          urheilija-amm-set (set urheilija-amm-hakukohdes)
-          shared            (toinenaste-util/build-toinenaste-payload
-                              {:answers                  answers
-                               :hakukohde-oids           hakukohde
-                               :lang                     lang
-                               :person-oid               person_oid
-                               :questions                questions
-                               :get-hakukohde-fn         (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
-                               :urheilija-amm-hakukohde? #(contains? urheilija-amm-set %)})]
-      (assoc shared
-             :oid                       key
-             :createdTime               (.format date-time-formatter created_time) ;viimeisimmän hakemusversion luontihetki
-             :hakemusFirstSubmittedTime (.format date-time-formatter submitted) ;ensimmäisen hakemusversion luontihetki
-             :email                     email
-             :attachments               (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)))
-    (catch Exception e
-      (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
+  (let [answers           (answers-by-key (:answers content))
+        urheilija-amm-set (set urheilija-amm-hakukohdes)
+        shared            (toinenaste-util/build-toinenaste-payload
+                            {:answers                  answers
+                             :hakukohde-oids           hakukohde
+                             :lang                     lang
+                             :person-oid               person_oid
+                             :questions                questions
+                             :get-hakukohde-fn         (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
+                             :urheilija-amm-hakukohde? #(contains? urheilija-amm-set %)})]
+    (assoc shared
+           :oid                       key
+           :createdTime               (.format date-time-formatter created_time) ;viimeisimmän hakemusversion luontihetki
+           :hakemusFirstSubmittedTime (.format date-time-formatter submitted) ;ensimmäisen hakemusversion luontihetki
+           :email                     email
+           :attachments               (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews))))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
@@ -1139,8 +1136,7 @@
                                                                      .toOffsetDateTime)
                                              :offset         offset}
                                             {:connection connection}))
-                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes haun-hakukohteet %))
-                 (remove nil?))]
+                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes haun-hakukohteet %)))]
      (merge {:applications as}
             (when-let [a (first (drop 999 as))]
               {:offset (:oid a)}))))

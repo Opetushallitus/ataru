@@ -362,8 +362,12 @@
           (should-not-be-nil result)
           (should-be-nil (:tutkintoVuosi result))))
 
-    (it "returns nil when an unexpected exception occurs (try/catch wrapper)"
-        ;; A non-map :attachment_reviews makes reduce-kv throw; the try/catch wrapper returns nil.
-        (let [result (unwrap-toinenaste base-questions [] (haun-hakukohteet)
-                                        (create-hakemus {:attachment_reviews [:not-a-map]}))]
-          (should-be-nil result)))))
+    (it "propagates exceptions from malformed input rather than silently returning nil"
+        ;; Loud failure is intentional: previously a broad try/catch returned nil on any exception,
+        ;; which hid real bugs (e.g. the Joda/java.time migration regression) until the affected rows
+        ;; silently disappeared from API responses. The catch was removed; exceptions now surface.
+        (let [thrown (try (unwrap-toinenaste base-questions [] (haun-hakukohteet)
+                                              (create-hakemus {:attachment_reviews [:not-a-map]}))
+                          nil
+                          (catch Exception e e))]
+          (should-not-be-nil thrown)))))
