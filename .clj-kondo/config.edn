@@ -9,7 +9,9 @@
                           re-frame.core/reg-event-ctx dfreeman.re-frame/reg-event-*}}
  :linters {:not-empty?          {:level :off}
            :refer-all           {:exclude [speclj.core]}
-           :unresolved-var {:exclude [taoensso.carmine ring.util.http-response]}
+           :unresolved-var {:exclude [taoensso.carmine 
+                                      ring.util.http-response
+                                      doo.runner/doo-tests]}
            :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
                                            (secretary.core/defroute)

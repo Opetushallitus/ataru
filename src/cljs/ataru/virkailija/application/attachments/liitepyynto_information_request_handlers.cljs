@@ -6,6 +6,13 @@
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
 
+(def ^:private deadline-response-formatters
+  ;; Backend serializes java.time.ZonedDateTime as ISO_OFFSET_DATE_TIME, which
+  ;; omits fractional seconds when they are zero.
+  [iso-formatter
+   (f/formatters :date-time)
+   (f/formatters :date-time-no-ms)])
+
 (def date-formatter (f/formatter "yyyy-MM-dd"))
 
 (def time-formatter (f/formatter "HH:mm"))
@@ -104,12 +111,17 @@
                                   application-key
                                   liitepyynto-key]}]}))
 
-(defn- parse-deadline [deadline]
-  (let [datetime (->> deadline
-                      (f/parse iso-formatter)
-                      c/to-default-time-zone)]
+(defn parse-deadline [deadline]
+  (if-let [datetime (->> deadline-response-formatters
+                         (keep #(try
+                                  (f/parse % deadline)
+                                  (catch :default _
+                                    nil)))
+                         first
+                         c/to-default-time-zone)]
     [(f/unparse date-formatter datetime)
-     (f/unparse time-formatter datetime)]))
+     (f/unparse time-formatter datetime)]
+    (throw (js/Error. (str "Could not parse field deadline: " deadline)))))
 
 (re-frame/reg-event-fx
   :liitepyynto-information-request/set-deadlines
