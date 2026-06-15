@@ -1985,9 +1985,9 @@
    :md-help-cursive                                          {:fi "*kursivoitava sisältö*"
                                                               :sv "*med kursiv stil*"
                                                               :en "*cursive content*"}
-   :md-help-link                                             {:fi "[linkin teksti](http://linkin osoite)"
-                                                              :sv "[länkens text](http://länkens adress)"
-                                                              :en "[link text](http://link address)"}
+   :md-help-link                                             {:fi "[linkin teksti](http://linkin osoite \"kerro mihin linkki vie\")"
+                                                              :sv "[länkens text](http://länkens adress \"berätta vart länken leder\")"
+                                                              :en "[link text](http://link address \"describe where the link goes\")"}
    :md-help-more                                             {:fi "Lisää muotoiluohjeita"
                                                               :sv "Lägg till anvisningar för utformning"
                                                               :en "More instructions"}
