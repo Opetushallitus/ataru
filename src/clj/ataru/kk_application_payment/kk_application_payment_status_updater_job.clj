@@ -201,6 +201,31 @@
   [payments]
   (some #(contains? #{(:ok-by-proxy payment/all-states) (:not-required payment/all-states)} (:state %)) payments))
 
+(defn- set-payment-obligation-reviewed-for-vtj-verified-citizens
+  "Marks kk-application-payment-obligation as 'reviewed' when a payment is set to not-required
+   with reason eu-citizen in this job run. Only fires on state transitions (modified-payments),
+   not on every periodic run, to avoid overriding deliberate virkailija 'unreviewed' decisions."
+  [{:keys [audit-logger]} existing-payments modified-payments]
+  (let [eu-citizen-keys (->> modified-payments
+                             (filter #(and (= (:not-required payment/all-states) (:state %))
+                                          (= (:eu-citizen payment/all-reasons) (:reason %))))
+                             (map :application-key)
+                             set)
+        applications-by-key (into {} (map (juxt (comp :key :application) :application) existing-payments))]
+    (doseq [application-key eu-citizen-keys
+            :let [application (get applications-by-key application-key)]
+            :when application
+            hakukohde-oid (:hakukohde application)]
+      (log/info "Setting kk-application-payment-obligation to 'reviewed' for VTJ-verified EU/Finnish citizen, application"
+                application-key "hakukohde" hakukohde-oid)
+      (application-store/save-application-hakukohde-review
+        application-key
+        hakukohde-oid
+        "kk-application-payment-obligation"
+        "reviewed"
+        {:cronjob "automatic-vtj-verified-eu-citizen"}
+        audit-logger))))
+
 (defn- reset-kk-application-payment-obligation-states-if-needed
   [{:keys [audit-logger] :as job-runner} existing-payments modified-payments]
   (when (seq modified-payments)
@@ -310,6 +335,10 @@
               (reset-kk-application-payment-obligation-states-if-needed job-runner
                                                                         (map :payment existing-payments)
                                                                         modified-payments)
+
+              (set-payment-obligation-reviewed-for-vtj-verified-citizens job-runner
+                                                                         existing-payments
+                                                                         modified-payments)
 
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 
