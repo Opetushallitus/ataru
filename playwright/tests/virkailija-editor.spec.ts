@@ -488,6 +488,26 @@ test.describe('Editori', () => {
     await expect(dropdownKoodisto).toBeHidden()
   })
 
+  test('infotekstin markdown-ohje näyttää linkkiesimerkin tooltip-muodossa', async () => {
+    const toolbar = componentToolbar(page)
+    await toolbar.hover()
+    await toolbar.getByText('Infoteksti', { exact: true }).click()
+
+    const infoElement = page.getByTestId(
+      'editor-form__infoElement-component-wrapper'
+    )
+    await expect(infoElement).toBeVisible()
+    const markdownHelpText = await infoElement
+      .locator('.editor-form__markdown-help-content')
+      .textContent()
+    expect(markdownHelpText).toContain(
+      '[linkin teksti](http://linkin osoite "kerro mihin linkki vie")'
+    )
+
+    await clickRemoveAndConfirm(infoElement)
+    await expect(infoElement).toBeHidden()
+  })
+
   test('lomakkeen lukitseminen ja lukituksen avaaminen', async () => {
     await page.locator('#lock-form').click()
 
