@@ -204,7 +204,10 @@
 (defn- set-payment-obligation-reviewed-for-vtj-verified-citizens
   "Marks kk-application-payment-obligation as 'reviewed' when a payment is set to not-required
    with reason eu-citizen in this job run. Only fires on state transitions (modified-payments),
-   not on every periodic run, to avoid overriding deliberate virkailija 'unreviewed' decisions."
+   not on every periodic run. Only writes when current obligation state is 'unreviewed' or absent
+   — does not override 'in-migri-review' or already-'reviewed' virkailija decisions.
+   Must be called BEFORE reset-kk-application-payment-obligation-states-if-needed so that the
+   reset can still win when there are new unchecked attachments."
   [{:keys [audit-logger]} existing-payments modified-payments]
   (let [eu-citizen-keys (->> modified-payments
                              (filter #(and (= (:not-required payment/all-states) (:state %))
@@ -213,9 +216,17 @@
                              set)
         applications-by-key (into {} (map (juxt (comp :key :application) :application) existing-payments))]
     (doseq [application-key eu-citizen-keys
-            :let [application (get applications-by-key application-key)]
+            :let [application (get applications-by-key application-key)
+                  obligation-reviews-by-hakukohde (group-by :hakukohde
+                                                            (payment/get-kk-application-payment-obligation-reviews
+                                                              application-key))]
             :when application
-            hakukohde-oid (:hakukohde application)]
+            hakukohde-oid (:hakukohde application)
+            :let [existing-state (->> (get obligation-reviews-by-hakukohde hakukohde-oid)
+                                      (sort-by :modified-time)
+                                      last
+                                      :state)]
+            :when (or (nil? existing-state) (= "unreviewed" existing-state))]
       (log/info "Setting kk-application-payment-obligation to 'reviewed' for VTJ-verified EU/Finnish citizen, application"
                 application-key "hakukohde" hakukohde-oid)
       (application-store/save-application-hakukohde-review
@@ -332,13 +343,13 @@
 
               (invalidate-maksut-payments-if-needed maksut-service modified-payments)
 
-              (reset-kk-application-payment-obligation-states-if-needed job-runner
-                                                                        (map :payment existing-payments)
-                                                                        modified-payments)
-
               (set-payment-obligation-reviewed-for-vtj-verified-citizens job-runner
                                                                          existing-payments
                                                                          modified-payments)
+
+              (reset-kk-application-payment-obligation-states-if-needed job-runner
+                                                                        (map :payment existing-payments)
+                                                                        modified-payments)
 
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 
