@@ -145,6 +145,7 @@
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
   (let [hakukohde-selected?  @(subscribe [:application/hakukohde-selected? hakukohde-oid])
+        hakukohde-label      @(subscribe [:application/hakukohde-label hakukohde-oid])
         search-term          @(subscribe [:application/hakukohde-query])
         aria-header-id       (str "hakukohde-search-hit-header-" hakukohde-oid)
         aria-description-id  (str "hakukohde-search-hit-description-" hakukohde-oid)
@@ -156,7 +157,7 @@
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
-       (hilight-text @(subscribe [:application/hakukohde-label hakukohde-oid]) search-term)]
+       (hilight-text hakukohde-label search-term)]
       [:div.application__hakukohde-description
        {:id aria-description-id}
        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]
@@ -182,7 +183,12 @@
           :disabled           (or hakukohteet-full?
                                   (not hakukohde-editable?)
                                   (not-empty rajaavat-hakukohteet))
-          :aria-labelledby    aria-header-id
+          :aria-label         (str 
+                               (translations/get-hakija-translation :add-application-option lang)
+                               ": "
+                               hakukohde-label
+                               )
+          
           :aria-describedby   aria-description-id}
          (translations/get-hakija-translation :add lang)])]]))
 
