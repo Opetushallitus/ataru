@@ -6,6 +6,13 @@
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
 
+(def ^:private deadline-response-formatters
+  ;; Backend serializes java.time.ZonedDateTime as ISO_OFFSET_DATE_TIME, which
+  ;; omits fractional seconds when they are zero.
+  [iso-formatter
+   (f/formatters :date-time)
+   (f/formatters :date-time-no-ms)])
+
 (def date-formatter (f/formatter "yyyy-MM-dd"))
 
 (def time-formatter (f/formatter "HH:mm"))
@@ -104,12 +111,17 @@
                                   application-key
                                   liitepyynto-key]}]}))
 
-(defn- parse-deadline [deadline]
-  (let [datetime (->> deadline
-                      (f/parse iso-formatter)
-                      c/to-default-time-zone)]
+(defn parse-deadline [deadline]
+  (if-let [datetime (->> deadline-response-formatters
+                         (keep #(try
+                                  (f/parse % deadline)
+                                  (catch :default _
+                                    nil)))
+                         first
+                         c/to-default-time-zone)]
     [(f/unparse date-formatter datetime)
-     (f/unparse time-formatter datetime)]))
+     (f/unparse time-formatter datetime)]
+    (throw (js/Error. (str "Could not parse field deadline: " deadline)))))
 
 (re-frame/reg-event-fx
   :liitepyynto-information-request/set-deadlines
@@ -188,11 +200,36 @@
                                  (f/parse-local datetime-formatter)
                                  c/to-utc-time-zone)
                             (catch js/Error _ nil))]
-        {:liitepyynto-information-request/save-deadline
+        {(if (some? last-modified)
+           :liitepyynto-information-request/put-deadline
+           :liitepyynto-information-request/prepare-deadline-save)
          {:application-key application-key
           :liitepyynto-key liitepyynto-key
           :deadline        datetime
           :last-modified   last-modified}}))))
+
+(re-frame/reg-event-fx
+  :liitepyynto-information-request/save-deadline-after-get
+  (fn [_ [_ application-key liitepyynto-key deadline response]]
+    (when-let [last-modified (get-in response [:headers "last-modified"])]
+      {:liitepyynto-information-request/put-deadline
+       {:application-key application-key
+        :liitepyynto-key liitepyynto-key
+        :deadline        deadline
+        :last-modified   last-modified}})))
+
+(re-frame/reg-event-fx
+  :liitepyynto-information-request/handle-deadline-fetch-before-save
+  (fn [_ [_ application-key liitepyynto-key deadline response]]
+    (if (= 404 (:status response))
+      {:liitepyynto-information-request/put-deadline
+       {:application-key application-key
+        :liitepyynto-key liitepyynto-key
+        :deadline        deadline
+        :last-modified   nil}}
+      {:dispatch [:liitepyynto-information-request/show-deadline-error
+                  application-key
+                  liitepyynto-key]})))
 
 (re-frame/reg-event-fx
   :liitepyynto-information-request/delete-deadline
@@ -229,7 +266,23 @@
                            liitepyynto-key]})))
 
 (re-frame/reg-fx
-  :liitepyynto-information-request/save-deadline
+  :liitepyynto-information-request/prepare-deadline-save
+  (fn [{:keys [application-key liitepyynto-key deadline]}]
+    (http (aget js/config "virkailija-caller-id")
+          {:method        :get
+           :url           (str "/lomake-editori/api/applications/" application-key
+                               "/field-deadline/" (name liitepyynto-key))
+           :handler       [:liitepyynto-information-request/save-deadline-after-get
+                           application-key
+                           liitepyynto-key
+                           deadline]
+           :error-handler [:liitepyynto-information-request/handle-deadline-fetch-before-save
+                           application-key
+                           liitepyynto-key
+                           deadline]})))
+
+(re-frame/reg-fx
+  :liitepyynto-information-request/put-deadline
   (fn [{:keys [application-key liitepyynto-key deadline last-modified]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :put

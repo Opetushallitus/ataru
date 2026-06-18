@@ -5,13 +5,25 @@
             [ataru.suoritus.suorituspalvelu-client :as suorituspalvelu-client]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
             [ataru.tarjonta.haku :as haku]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
-            [clj-time.format :as format]
+            [ataru.time :as time]
+            [ataru.time.coerce :as coerce]
+            [ataru.time.format :as format]
             [clojure.set :as set]
             [clojure.string :as string]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]))
+
+(def ^:private suorituspaivamaara-formatter (format/formatter :date))
+
+(defn- ->local-date
+  [t]
+  (let [parsed (cond
+                 (nil? t) nil
+                 (string? t) (or (coerce/from-string t)
+                                 t)
+                 :else t)]
+    (when parsed
+      (time/local-date (time/year parsed) (time/month parsed) (time/day parsed)))))
 
 (defn- parse-opiskelija
   [opiskelija]
@@ -38,9 +50,10 @@
 
 
 (defn filter-lahtokoulut-active-on-ajanhetki [lahtokoulut ajanhetki]
-  (let [paivamaara (coerce/to-local-date ajanhetki)
-        lahtokoulut (filter #(let [alkupvm (format/parse-local-date (:alkuPaivamaara %))
-                                   loppupvm (format/parse-local-date (:loppuPaivamaara %))
+  (let [paivamaara (->local-date ajanhetki)
+        lahtokoulut (filter #(let [alkupvm (format/parse-local-date suorituspaivamaara-formatter (:alkuPaivamaara %))
+                                   loppupvm (when-let [loppu (some-> (:loppuPaivamaara %) not-empty)]
+                                              (format/parse-local-date suorituspaivamaara-formatter loppu))
                                    alkanut? (not (time/before? paivamaara alkupvm))
                                    loppunut? (and (some? loppupvm) (not (time/before? paivamaara loppupvm)))]
                               (and alkanut? (not loppunut?))) lahtokoulut)]
@@ -48,9 +61,11 @@
 
 (defn- get-leikkuripvm [ohjausparametrit-service haku-oid]
   (let [ohjausparametrit (ohjausparametrit-service/get-parametri ohjausparametrit-service haku-oid)
-        leikkuripaivamaara (or (coerce/to-local-date
-                                 (coerce/from-long
-                                   (:date (:suoritustenVahvistuspaiva ohjausparametrit))))
+        leikkuripaivamaara (or (some-> ohjausparametrit
+                                       :suoritustenVahvistuspaiva
+                                       :date
+                                       coerce/from-long
+                                       ->local-date)
                                (time/today))]              ; jos leikkuripäivää ei vielä määritelty käytetään nykyhetkeä
     leikkuripaivamaara))
 

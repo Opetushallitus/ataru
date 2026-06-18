@@ -20,26 +20,29 @@
 
 (defn str->googdate [timestamp-value]
   (->> (for [formatter formatters]
-           (try (f/parse formatter timestamp-value)
-                (catch :default _
-                  nil)))
+         (try (f/parse formatter timestamp-value)
+              (catch :default _
+                nil)))
        (filter some?)
        first))
 
 (defn time->short-str [google-date]
-  (->> google-date
-       c/to-default-time-zone
-       (f/unparse time-formatter-leading-zeros)))
+  (when google-date
+    (->> google-date
+         c/to-default-time-zone
+         (f/unparse time-formatter-leading-zeros))))
 
 (defn time->date [google-date]
-  (->> google-date
-       c/to-default-time-zone
-       (f/unparse date-formatter)))
+  (when google-date
+    (->> google-date
+         c/to-default-time-zone
+         (f/unparse date-formatter))))
 
 (defn time->str [google-date]
-  (str (with-dow google-date)
-       " "
-       (time->short-str google-date)))
+  (when google-date
+    (str (with-dow google-date)
+         " "
+         (time->short-str google-date))))
 
 (defn time->long [google-date]
   (coerce/to-long google-date))

@@ -7,16 +7,16 @@
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
             [ataru.schema.form-schema :as form-schema]
             [cheshire.core :as json]
-            [clj-time.coerce :as c]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
+            [ataru.time :as t]
+            [ataru.time.coerce :as c]
+            [ataru.time.format :as f]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]))
 
-(def haku-checker (s/checker form-schema/Haku))
-(def hakukohde-checker (s/checker form-schema/Hakukohde))
+(def haku-checker (comp (s/checker form-schema/Haku) hakuaika/coerce-hakuajat-times))
+(def hakukohde-checker (comp (s/checker form-schema/Hakukohde) hakuaika/coerce-hakuajat-times))
 (def toteutus-checker (s/checker form-schema/Koulutus))
 (def hakus-by-checker (s/checker [s/Str]))
 (def hakukohde-search-checker (s/checker [s/Str]))

@@ -4,6 +4,7 @@
             [ataru.config.core :refer [config]]
             [ataru.cache.cache-service :as cache]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku]]
             [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
@@ -22,10 +23,13 @@
                                   kouta-internal-cas-client]
   TarjontaService
   (get-hakukohde [_ hakukohde-oid]
-    (cache/get-from hakukohde-cache hakukohde-oid))
+    (some-> (cache/get-from hakukohde-cache hakukohde-oid)
+            hakuaika/coerce-hakuajat-times))
 
   (get-hakukohteet [_ hakukohde-oids]
-    (vals (cache/get-many-from hakukohde-cache hakukohde-oids)))
+    (->> (cache/get-many-from hakukohde-cache hakukohde-oids)
+         vals
+         (map hakuaika/coerce-hakuajat-times)))
 
   (get-hakukohde-name [_ hakukohde-oid]
     (:name (cache/get-from hakukohde-cache hakukohde-oid)))
@@ -60,7 +64,8 @@
                    haun-hakukohteet)))))
 
   (get-haku [_ haku-oid]
-    (cache/get-from haku-cache haku-oid))
+    (some-> (cache/get-from haku-cache haku-oid)
+            hakuaika/coerce-hakuajat-times))
 
   (hakus-by-form-key [_ form-key]
     (->> (concat
@@ -69,7 +74,8 @@
                 (cache/get-from forms-in-use-cache oph-organization))
           (cache/get-from kouta-hakus-by-form-key-cache form-key))
          (cache/get-many-from haku-cache)
-         vals))
+         vals
+         (map hakuaika/coerce-hakuajat-times)))
 
   (get-haku-name [_ haku-oid]
     (:name (cache/get-from haku-cache haku-oid)))

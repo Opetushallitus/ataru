@@ -1,8 +1,8 @@
 (ns ataru.statistics.statistics-service
   (:require [ataru.statistics.statistics-store :as store]
             [ataru.cache.cache-service :as cache]
-            [clj-time.core :as time]
-            [clj-time.format :as time-format]))
+            [ataru.time :as time]
+            [ataru.time.format :as time-format]))
 
 (def category-formatters {:month (time-format/formatter "yyyy-MM-dd")
                           :week  (time-format/formatter "yyyy-MM-dd HH:00")
