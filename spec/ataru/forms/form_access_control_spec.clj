@@ -106,7 +106,7 @@
   (it "Is not able to upsert application payment module as a non-superuser"
       (with-redefs [form-store/fetch-by-key-for-kk-payment-module-job (fn [_] field-id-test-form)]
         (let [non-superuser-session (update session :identity assoc :superuser false)
-              result (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" non-superuser-session nil)
+              result (try (fac/upsert-kk-application-payment-module "test-field-id-change-form" true true non-superuser-session nil)
                           (catch Throwable e
                             (.getMessage e)))]
           (should= "Ei oikeuksia muokata lomaketta" result))))
@@ -116,7 +116,7 @@
                     form-store/create-form-or-increment-version! (fn [_ _ _])
                     form-store/form-has-applications (fn [_] false)]
         (let [superuser-session (update session :identity assoc :superuser true)
-              result (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)]
+              result (fac/upsert-kk-application-payment-module "test-field-id-change-form" true true superuser-session nil)]
           (should= "Lomakkeen maksumoduuli päivitetty" result))))
 
   (it "Adds application payment module"
@@ -126,7 +126,7 @@
                       form-store/create-form-or-increment-version! (fn [_ _ _])
                       form-store/form-has-applications (fn [_] false)]
           (let [superuser-session (update session :identity assoc :superuser true)
-                result (fac/upsert-kk-application-payment-module "test-field-id-change-form" superuser-session nil)]
+                result (fac/upsert-kk-application-payment-module "test-field-id-change-form" true true superuser-session nil)]
             (should= "Lisätty maksumoduuli lomakkeelle" result))))))
 
 (describe
