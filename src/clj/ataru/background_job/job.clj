@@ -48,6 +48,7 @@
    :proletarian/serializer serializer
    :proletarian/archived-job-table "proletarian_archived_jobs"
    :proletarian/polling-interval-ms 2000
+   :proletarian/on-polling-error (constantly false)
    :proletarian/failed-job-fn (fn [attrs e] (log/error e "Failed job after retries" attrs))})
 
 (declare yesql-add-scheduled-job-instance!)
