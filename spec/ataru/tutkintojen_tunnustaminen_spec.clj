@@ -101,7 +101,7 @@
   (mass-delete-application-data [_ _ _ _ _] nil)
   (mass-inactivate-applications [_ _ _ _] nil)
   (mass-reactivate-applications [_ _ _ _] nil)
-  (valinta-tulos-service-applications [_ _ _ _ _] [])
+  (valinta-tulos-service-applications [_ _ _ _ _ _] [])
   (valinta-ui-applications [_ _ _] [])
   (get-tutu-application [_ _] nil)
   (get-tutu-applications [_ _] [])

@@ -1020,6 +1020,10 @@
   (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       (.withZone (time/time-zone-for-id "Europe/Helsinki"))))
 
+(def ^:private utc-date-time-formatter
+  (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss'Z'")
+      (.withZone (time/time-zone-for-id "UTC"))))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time submitted person_oid lang email content
            payment-obligations eligibilities attachment_reviews]}]
@@ -1317,27 +1321,34 @@
        (map unwrap-external-application)))
 
 (defn valinta-tulos-service-applications
-  [haku-oid hakukohde-oid hakemus-oids offset]
+  [haku-oid hakukohde-oid hakemus-oids offset include-yhteystiedot?]
   (let [as (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-             (map #(hash-map :oid (:oid %)
-                             :hakuOid (:haku %)
-                             :hakukohdeOids (:hakukohde %)
-                             :henkiloOid (:person-oid %)
-                             :asiointikieli (:asiointikieli %)
-                             :email (:email %)
-                             :paymentObligations (zipmap (vec (map (fn [x] (key x)) (:payment-obligations %)))
-                                                         (vec (map (fn [x] (case (val x)
-                                                                             "unreviewed" "NOT_CHECKED"
-                                                                             "obligated" "REQUIRED"
-                                                                             "not-obligated" "NOT_REQUIRED"))
-                                                                   (:payment-obligations %)))))
+             (map #(cond-> (hash-map :oid (:oid %)
+                                     :hakuOid (:haku %)
+                                     :hakukohdeOids (:hakukohde %)
+                                     :henkiloOid (:person-oid %)
+                                     :asiointikieli (:asiointikieli %)
+                                     :email (:email %)
+                                     :jattoAjanhetki (some->> (:submitted %) (.format utc-date-time-formatter))
+                                     :paymentObligations (zipmap (vec (map (fn [x] (key x)) (:payment-obligations %)))
+                                                                 (vec (map (fn [x] (case (val x)
+                                                                                     "unreviewed" "NOT_CHECKED"
+                                                                                     "obligated" "REQUIRED"
+                                                                                     "not-obligated" "NOT_REQUIRED"))
+                                                                           (:payment-obligations %)))))
+                     include-yhteystiedot?
+                     (assoc :lahiosoite       (:lahiosoite %)
+                            :postinumero      (:postinumero %)
+                            :postitoimipaikka (:postitoimipaikka %)
+                            :puhelinnumero    (:puhelinnumero %)))
                   (queries/yesql-valinta-tulos-service-applications
-                    {:haku_oid      haku-oid
-                     :hakukohde_oid hakukohde-oid
-                     :hakemus_oids  (some->> (seq hakemus-oids)
-                                             to-array
-                                             (.createArrayOf (:connection connection) "text"))
-                     :offset        offset}
+                    {:haku_oid             haku-oid
+                     :hakukohde_oid        hakukohde-oid
+                     :hakemus_oids         (some->> (seq hakemus-oids)
+                                                   to-array
+                                                   (.createArrayOf (:connection connection) "text"))
+                     :offset               offset
+                     :include_yhteystiedot (boolean include-yhteystiedot?)}
                     {:connection connection})))]
     (merge {:applications as}
            (when-let [a (first (drop 4999 as))]
