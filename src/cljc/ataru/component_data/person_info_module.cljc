@@ -5,6 +5,7 @@
             [clojure.walk]
             [com.rpl.specter :refer [select walker]]
             [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-wrapper-key]]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code aland-country-code]]
             [ataru.constants :refer [system-metadata]]))
 
 (def person-info-module-keys {:onr "onr" :onr-2nd "onr-2nd" :onr-kk-application-payment "onr-kk-application-payment" :onr-astu "onr-astu" :muu "muu"})
@@ -80,7 +81,11 @@
                                  :section-visibility-conditions [{:section-name kk-application-payment-wrapper-key
                                                                   :condition {:comparison-operator "="
                                                                               :data-type "str"
-                                                                              :answer-compared-to "246"}}]
+                                                                              :answer-compared-to finland-country-code}}
+                                                                 {:section-name kk-application-payment-wrapper-key
+                                                                  :condition {:comparison-operator "="
+                                                                              :data-type "str"
+                                                                              :answer-compared-to aland-country-code}}]
                                  :rules           (if gender?
                                                     {:toggle-ssn-based-fields nil}
                                                     {:toggle-ssn-based-fields-without-gender nil})
