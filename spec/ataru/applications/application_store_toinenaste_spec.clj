@@ -4,7 +4,7 @@
             [ataru.applications.application-store :as store]
             [ataru.applications.question-util :as question-util]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]])
-  (:import [org.joda.time DateTime DateTimeZone]))
+  (:import [java.time ZonedDateTime ZoneId]))
 
 ;; The function under test is private; access it via the var.
 (def ^:private unwrap-toinenaste
@@ -96,8 +96,8 @@
   (merge
     {:key                "1.2.246.562.11.99999999991"
      :hakukohde          [hakukohde-oid-1 hakukohde-oid-2]
-     :created_time       (DateTime. 2024 1 15 10 30 0 (DateTimeZone/forID "Europe/Helsinki"))
-     :submitted          (DateTime. 2024 1 15 10 35 0 (DateTimeZone/forID "Europe/Helsinki"))
+     :created_time       (ZonedDateTime/of 2024 1 15 10 30 0 0 (ZoneId/of "Europe/Helsinki"))
+     :submitted          (ZonedDateTime/of 2024 1 15 10 35 0 0 (ZoneId/of "Europe/Helsinki"))
      :person_oid         "1.2.246.562.24.99999999991"
      :lang               "fi"
      :email              "row-email@example.fi"
@@ -148,13 +148,13 @@
         (should= "row-email@example.fi" (:email result))))
 
   (it "formats :createdTime via JodaFormatter as Helsinki-local ISO without offset"
-      (let [t (DateTime. 2024 6 15 12 30 0 (DateTimeZone/forID "Europe/Helsinki"))
+      (let [t (ZonedDateTime/of 2024 6 15 12 30 0 0 (ZoneId/of "Europe/Helsinki"))
             result (unwrap-toinenaste base-questions [] (haun-hakukohteet)
                                       (create-hakemus {:created_time t}))]
         (should= "2024-06-15T12:30:00" (:createdTime result))))
 
   (it "formats :hakemusFirstSubmittedTime via JodaFormatter"
-      (let [t (DateTime. 2024 6 15 12 30 0 (DateTimeZone/forID "Europe/Helsinki"))
+      (let [t (ZonedDateTime/of 2024 6 15 12 30 0 0 (ZoneId/of "Europe/Helsinki"))
             result (unwrap-toinenaste base-questions [] (haun-hakukohteet)
                                       (create-hakemus {:submitted t}))]
         (should= "2024-06-15T12:30:00" (:hakemusFirstSubmittedTime result))))
