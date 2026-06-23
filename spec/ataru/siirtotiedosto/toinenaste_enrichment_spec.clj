@@ -1,8 +1,8 @@
 (ns ataru.siirtotiedosto.toinenaste-enrichment-spec
-  (:require [speclj.core :refer [it describe tags should= should-not-be-nil should-be-nil]]
+  (:require [speclj.core :refer [it describe tags should-not-contain
+                                  should= should-not-be-nil should-be-nil]]
             [ataru.siirtotiedosto.toinenaste-enrichment :as enrichment]
-            [ataru.applications.question-util :as question-util]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]))
+            [ataru.applications.question-util :as question-util]))
 
 (def ^:private hakukohde-oid-1 "1.2.246.562.20.00000000001")
 (def ^:private hakukohde-oid-2 "1.2.246.562.20.00000000002")
@@ -26,6 +26,18 @@
 
 (def ^:private base-questions
   (question-util/get-hakurekisteri-toinenaste-specific-questions form-with-toinenaste-questions))
+
+;; Form that asks the urheilija-amm wrapper question (so the top-level interest field can be populated).
+(def ^:private form-with-urheilija-amm
+  {:content
+   [{:id "d26bac09-1fb2-4be3-8bd1-5071a81decb7"
+     :children [{:id "urheilija-amm-key"
+                 :belongs-to-hakukohderyhma ["g1"]
+                 :options [{:followups [{:id "urheilija-2nd-amm-peruskoulu"}]}
+                            {}]}]}]})
+
+(def ^:private urheilija-amm-questions
+  (question-util/get-hakurekisteri-toinenaste-specific-questions form-with-urheilija-amm))
 
 (defn- make-application
   "Builds a minimal siirtotiedosto application map."
@@ -66,19 +78,86 @@
                        base-questions)]
           (should= "sv" (:kieli result))))
 
-    (it "includes one hakukohde entry per hakukohde OID"
-        (let [result (enrichment/enrich-with-toinenaste
-                       (make-application {:hakukohde [hakukohde-oid-1 hakukohde-oid-2]})
-                       base-questions)]
-          (should= 2 (count (:hakukohteet result)))
-          (should= hakukohde-oid-1 (-> result :hakukohteet first :oid))
-          (should= hakukohde-oid-2 (-> result :hakukohteet second :oid))))
+    (describe ":hakukohteet (tarjonta-independent per-hakukohde fields)"
 
-    (it "returns an empty hakukohteet list when application has no hakukohteet"
-        (let [result (enrichment/enrich-with-toinenaste
-                       (make-application {:hakukohde []})
-                       base-questions)]
-          (should= [] (:hakukohteet result))))
+      (it "includes one entry per applied hakukohde OID"
+          (let [result (enrichment/enrich-with-toinenaste
+                         (make-application {:hakukohde [hakukohde-oid-1 hakukohde-oid-2]})
+                         base-questions)]
+            (should= 2 (count (:hakukohteet result)))
+            (should= hakukohde-oid-1 (-> result :hakukohteet first :oid))
+            (should= hakukohde-oid-2 (-> result :hakukohteet second :oid))))
+
+      (it "returns an empty :hakukohteet vector when the applicant applied to none"
+          (let [result (enrichment/enrich-with-toinenaste
+                         (make-application {:hakukohde []})
+                         base-questions)]
+            (should= [] (:hakukohteet result))))
+
+      (it "omits :harkinnanvaraisuus per hakukohde (tarjonta data not available)"
+          (let [result (enrichment/enrich-with-toinenaste (make-application {}) base-questions)]
+            (doseq [hk (:hakukohteet result)]
+              (should-not-contain :harkinnanvaraisuus hk))))
+
+      (it "omits per-hakukohde :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (tarjonta groups not available)"
+          (let [result (enrichment/enrich-with-toinenaste (make-application {}) base-questions)]
+            (doseq [hk (:hakukohteet result)]
+              (should-not-contain :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta hk))))
+
+      (it "detects terveys SORA per hakukohde from applicant answers"
+          (let [terveys-key (str "sora-terveys_" hakukohde-oid-1)
+                answers (make-answers (keyword terveys-key) "1")
+                result (enrichment/enrich-with-toinenaste
+                         (make-application {:content {:answers answers}})
+                         base-questions)
+                hk1 (first (filter #(= hakukohde-oid-1 (:oid %)) (:hakukohteet result)))
+                hk2 (first (filter #(= hakukohde-oid-2 (:oid %)) (:hakukohteet result)))]
+            (should= true  (:terveys hk1))
+            (should= false (:terveys hk2))))
+
+      (it "detects aiempiPeruminen SORA per hakukohde from applicant answers"
+          (let [aiempi-key (str "sora-aiempi_" hakukohde-oid-2)
+                answers (make-answers (keyword aiempi-key) "1")
+                result (enrichment/enrich-with-toinenaste
+                         (make-application {:content {:answers answers}})
+                         base-questions)
+                hk2 (first (filter #(= hakukohde-oid-2 (:oid %)) (:hakukohteet result)))]
+            (should= true (:aiempiPeruminen hk2))))
+
+      (it "detects kiinnostunutKaksoistutkinnosta per hakukohde from applicant answers"
+          (let [kaksois-key (str "kaksoistutkinto-lukio_" hakukohde-oid-1)
+                answers (make-answers (keyword kaksois-key) "0")
+                result (enrichment/enrich-with-toinenaste
+                         (make-application {:content {:answers answers}})
+                         base-questions)
+                hk1 (first (filter #(= hakukohde-oid-1 (:oid %)) (:hakukohteet result)))
+                hk2 (first (filter #(= hakukohde-oid-2 (:oid %)) (:hakukohteet result)))]
+            (should= true (:kiinnostunutKaksoistutkinnosta hk1))
+            (should= nil  (:kiinnostunutKaksoistutkinnosta hk2)))))
+
+    (describe "top-level :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (per-applicant)"
+
+      (it "is true when the form has the urheilija-amm wrapper and the applicant answered \"0\""
+          (let [answers (make-answers :urheilija-amm-key "0")
+                result (enrichment/enrich-with-toinenaste
+                         (make-application {:content {:answers answers}})
+                         urheilija-amm-questions)]
+            (should= true (:kiinnostunutUrheilijanAmmatillisestaKoulutuksesta result))))
+
+      (it "is false when the form asks the question and the applicant answered something other than \"0\""
+          (let [answers (make-answers :urheilija-amm-key "1")
+                result (enrichment/enrich-with-toinenaste
+                         (make-application {:content {:answers answers}})
+                         urheilija-amm-questions)]
+            (should= false (:kiinnostunutUrheilijanAmmatillisestaKoulutuksesta result))))
+
+      (it "is nil when the form has no urheilija-amm wrapper"
+          (let [result (enrichment/enrich-with-toinenaste (make-application {}) base-questions)]
+            (should-be-nil (:kiinnostunutUrheilijanAmmatillisestaKoulutuksesta result))))
+
+      (it "is nil when the form has the wrapper but the applicant didn't answer"
+          (let [result (enrichment/enrich-with-toinenaste (make-application {}) urheilija-amm-questions)]
+            (should-be-nil (:kiinnostunutUrheilijanAmmatillisestaKoulutuksesta result)))))
 
     (it "extracts contact fields from answers"
         (let [answers (make-answers :email "testi@esimerkki.fi"
@@ -137,35 +216,6 @@
     (it "returns empty huoltajat when no guardian answers present"
         (let [result (enrichment/enrich-with-toinenaste (make-application {}) base-questions)]
           (should= 0 (count (:huoltajat result)))))
-
-    (it "detects terveys SORA per hakukohde"
-        (let [terveys-key (str "sora-terveys_" hakukohde-oid-1)
-              answers (make-answers (keyword terveys-key) "1")
-              result (enrichment/enrich-with-toinenaste
-                       (make-application {:content {:answers answers}})
-                       base-questions)
-              hk1 (first (filter #(= hakukohde-oid-1 (:oid %)) (:hakukohteet result)))
-              hk2 (first (filter #(= hakukohde-oid-2 (:oid %)) (:hakukohteet result)))]
-          (should= true (:terveys hk1))
-          (should= false (:terveys hk2))))
-
-    (it "detects aiempiPeruminen SORA per hakukohde"
-        (let [aiempi-key (str "sora-aiempi_" hakukohde-oid-2)
-              answers (make-answers (keyword aiempi-key) "1")
-              result (enrichment/enrich-with-toinenaste
-                       (make-application {:content {:answers answers}})
-                       base-questions)
-              hk2 (first (filter #(= hakukohde-oid-2 (:oid %)) (:hakukohteet result)))]
-          (should= true (:aiempiPeruminen hk2))))
-
-    (it "computes harkinnanvaraisuus from common reason in answers"
-        (let [answers (make-answers :base-education-2nd "0")
-              result (enrichment/enrich-with-toinenaste
-                       (make-application {:content {:answers answers}})
-                       base-questions)
-              hk1 (first (:hakukohteet result))]
-          (should= (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
-                   (:harkinnanvaraisuus hk1))))
 
     (it "returns nil for tutkintoVuosi when not answered"
         (let [result (enrichment/enrich-with-toinenaste (make-application {}) base-questions)]
