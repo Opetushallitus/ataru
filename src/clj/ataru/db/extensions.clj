@@ -1,9 +1,10 @@
 (ns ataru.db.extensions
   (:require [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c]
+            [ataru.time.coerce :as c]
             [cheshire.core :as json])
   (:import (java.sql PreparedStatement)
-           (org.postgresql.util PGobject)))
+           (org.postgresql.util PGobject)
+           (java.time Instant ZonedDateTime)))
 
 (extend-protocol jdbc/ISQLValue
   clojure.lang.IPersistentCollection
@@ -33,7 +34,12 @@
   (result-set-read-column [v _ _]
     (vec (.getArray v))))
 
-(extend-type org.joda.time.DateTime
+(extend-type ZonedDateTime
+  jdbc/ISQLParameter
+  (set-parameter [v ^PreparedStatement stmt idx]
+    (.setTimestamp stmt idx (c/to-sql-time v))))
+
+(extend-type Instant
   jdbc/ISQLParameter
   (set-parameter [v ^PreparedStatement stmt idx]
     (.setTimestamp stmt idx (c/to-sql-time v))))

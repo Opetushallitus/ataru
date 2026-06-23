@@ -2,8 +2,8 @@
   (:require [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as t]
+            [ataru.time.coerce :as coerce]
+            [ataru.time :as t]
             [speclj.core :refer :all]))
 
 (def attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
@@ -11,8 +11,8 @@
 (defn- in-helsinki-date-time
   [year month day hour]
   (-> (t/date-time year month day)
-      (.withZone (t/time-zone-for-id "Europe/Helsinki"))
-      (.withTime (t/local-time hour 0))))
+      (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+      (t/with-time (t/local-time hour 0))))
 
 (describe "Attachment end time"
           (tags :unit)
@@ -76,7 +76,7 @@
                 (should= (-> application-submitted
                              (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
                              (t/plus (t/days 15))
-                             (.withTime (t/local-time 16 15)))
+                             (t/with-time (t/local-time 16 15)))
                          (attachment-deadline/attachment-deadline-for-hakuaika
                            attachment-deadline-service application-submitted {:oid "hakemuskohtainen-raja-käytössä"} nil))))
 
@@ -86,6 +86,6 @@
                 (should= (-> end
                              (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
                              (t/plus (t/days 20))
-                             (.withTime (t/local-time 15 14)))
+                             (t/with-time (t/local-time 15 14)))
                          (attachment-deadline/attachment-deadline-for-hakuaika
                            attachment-deadline-service nil {:oid "hakukohtainen-raja-käytössä"} hakuajat)))))

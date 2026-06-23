@@ -5,6 +5,7 @@
             [ataru.cljs-util-test]
             [ataru.dob-test]
             [ataru.virkailija.editor.handlers-test]
+            [ataru.virkailija.temporal-test]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs-test]
             [ataru.virkailija.application.virkailija-application-subs-test]
             [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-subs-test]
@@ -30,6 +31,7 @@
            'ataru.cljs-util-test
            'ataru.dob-test
            'ataru.virkailija.editor.handlers-test
+           'ataru.virkailija.temporal-test
            'ataru.virkailija.application.attachments.virkailija-attachment-subs-test
            'ataru.virkailija.application.virkailija-application-subs-test
            'ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-subs-test

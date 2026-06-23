@@ -3,7 +3,7 @@
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [yesql.core :refer [defqueries]]
-            [clj-time.core :as time]))
+            [ataru.time :as time]))
 
 (defqueries "sql/kk-application-payment-queries.sql")
 (defqueries "sql/field-deadline-queries.sql")
