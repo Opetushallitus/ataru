@@ -124,7 +124,7 @@
             apps         [(assoc test-app :form 42 :hakemusOid "h-42")
                           (assoc test-app :form 99 :hakemusOid "h-99")]
             forms        [{:id 42 :content (:content test-form)}
-                          ;; form 99 has no SORA wrapper, so its toinenaste hakukohteet entries differ.
+                          ;; form 99 has no SORA wrapper (different question metadata for that app).
                           {:id 99 :content [{:id "pohjakoulutus-2nd-wrapper"
                                               :children [{:id "base-education-2nd"
                                                           :options [{:followups [{:id "suoritusvuosi-perusopetus"}]}]}]}]}]]
@@ -253,6 +253,12 @@
                      (make-answer :urheilija-2nd-muu-laji "Curling")]
             ta      (:toinenaste (capture-enriched-app form-with-urheilija answers))]
         (should= "Curling" (-> ta :urheilijanLisakysymykset :laji))))
+
+  (it "surfaces the applicant's urheilija-amm interest as a top-level :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta boolean"
+      (let [answers [(make-answer :suoritusvuosi-perusopetus "2024")
+                     (make-answer :urheilija-amm-key "0")]
+            ta      (:toinenaste (capture-enriched-app form-with-urheilija answers))]
+        (should= true (:kiinnostunutUrheilijanAmmatillisestaKoulutuksesta ta))))
 
   (it "leaves urheilijanLisakysymykset/Ammatillinen with all-nil values when the form has no urheilija wrappers, even if the application answers urheilija keys"
       (let [answers [(make-answer :suoritusvuosi-perusopetus "2024")
