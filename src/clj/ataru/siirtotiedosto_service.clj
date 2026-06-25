@@ -2,7 +2,7 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.question-util :as question-util]
             [ataru.forms.form-store :as form-store]
-            [ataru.siirtotiedosto.toinenaste-enrichment :as toinenaste-enrichment]
+            [ataru.siirtotiedosto.siirtotiedosto-toinenaste-enrichment :as toinenaste-enrichment]
             [cheshire.core :as json]
             [taoensso.timbre :as log]
             [clojure.java.io :refer [input-stream]]
