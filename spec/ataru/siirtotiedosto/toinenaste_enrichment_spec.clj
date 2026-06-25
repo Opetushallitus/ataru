@@ -1,7 +1,7 @@
 (ns ataru.siirtotiedosto.toinenaste-enrichment-spec
   (:require [speclj.core :refer [it describe tags should-not-contain
                                   should= should-not-be-nil should-be-nil]]
-            [ataru.siirtotiedosto.toinenaste-enrichment :as enrichment]
+            [ataru.siirtotiedosto.siirtotiedosto-toinenaste-enrichment :as enrichment]
             [ataru.applications.question-util :as question-util]))
 
 (def ^:private hakukohde-oid-1 "1.2.246.562.20.00000000001")
