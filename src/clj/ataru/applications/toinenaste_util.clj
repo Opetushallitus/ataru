@@ -10,9 +10,9 @@
    :valmennusryhma_seurajoukkue :valmennusryhma_piirijoukkue :valmennusryhma_maajoukkue
    :valmentaja_nimi :valmentaja_email :valmentaja_puh :liitto :seura])
 
-(def option-muu "21")
+(def ^:private option-muu-urheilulaji "21")
 
-(defn to-single-value
+(defn- to-single-value
   "Valmentajan yhteystietokentissä vastaukset ovat arrayn sisällä, mutta niitä voi nykytilanteessa olla vain yksi."
   [value]
   (if (coll? value) (first value) value))
@@ -20,7 +20,7 @@
 (defn get-urheilija-laji [answers lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
   (when laji-dropdown-key
     (let [dropdown-answer (-> answers laji-dropdown-key :value)
-          option-text (if (= dropdown-answer option-muu)
+          option-text (if (= dropdown-answer option-muu-urheilulaji)
                         (-> answers muu-laji-key :value)
                         (get (get value-to-label dropdown-answer) (keyword lang)))]
       {:laji option-text})))
@@ -83,7 +83,7 @@
    - :lang                     - application language code (\"fi\"/\"sv\"/\"en\")
    - :person-oid               - person OID
    - :questions                - toinenaste questions metadata
-   - :get-hakukohde-fn         - fn from hakukohde OID -> hakukohde map (used by harkinnanvaraisuus)
+   - :get-hakukohde-fn         - function that returns hakukohde by hakukohde oid (used by harkinnanvaraisuus)
    - :urheilija-amm-hakukohde? - predicate fn from hakukohde OID -> boolean
                                   (true if it offers urheilija-amm training)"
   [{:keys [answers hakukohde-oids lang person-oid questions
