@@ -665,3 +665,29 @@
         :answers
         (comp vec concat)
         [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))
+
+(def application-eu-citizen
+  (-> person-info-form-application-without-kk-application-answer
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543213
+              :person-oid "1.2.3.4.5.808"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))
+
+(def application-finnish-citizen
+  (-> person-info-form-application-without-kk-application-answer
+      (merge {:form       909909,
+              :lang       "fi"
+              :haku       "payment-info-test-kk-haku"
+              :hakukohde  ["payment-info-test-kk-hakukohde"]
+              :id         543214
+              :person-oid "1.2.3.4.5.6"})
+      (update
+        :answers
+        (comp vec concat)
+        [{:key "kk-application-payment-option" :value "8" :fieldType "dropdown"}])))
