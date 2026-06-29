@@ -1,6 +1,11 @@
 (ns ataru.koodisto.koodisto-codes)
 
 (def finland-country-code "246")    ; as defined in maatjavaltiot2
+(def aland-country-code "248")      ; Åland Islands (Ahvenanmaa) — Finnish autonomous region, same exemption as Finland
+
+(def finland-equivalent-country-codes
+  "Country codes exempt from KK application fee on the same grounds as Finnish citizenship."
+  #{finland-country-code aland-country-code})
 
 (def institution-type-codes ["21"   ; AMMATILLINEN_OPPILAITOS
                              "22"   ; AMMATILLINEN_ERITYISOPPILAITOS

@@ -360,6 +360,19 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
+                    (it "should set payment status for Åland (Ahvenanmaa) citizen as not required"
+                        (let [oid "1.2.3.4.5.248"                       ; FakePersonService returns Åland nationality for this one
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-without-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-eu-citizen} payment)))
+
                     (it "should set payment status for VTJ-yksilöity EU citizen as not required"
                         (let [oid "1.2.3.4.5.808"                       ; FakePersonService returns French nationality for this one
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
