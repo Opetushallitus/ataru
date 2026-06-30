@@ -45,7 +45,7 @@
                              (.luoLahetys (-> (ViestinvalitysBuilder/lahetysBuilder)
                                               (.withOtsikko subject)
                                               (.withLahettavaPalvelu "hakemuspalvelu")
-                                              (.withLahettaja (Optional/of "Opetushallitus") from)
+                                              (.withLahettaja (Optional/empty) from)
                                               (.withNormaaliPrioriteetti)
                                               (.withSailytysaika 1825)
                                               (.build))))
