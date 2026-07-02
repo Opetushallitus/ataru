@@ -60,7 +60,10 @@
   (create-paatos-lasku [_ _] {})
   (list-lasku-statuses [_ _] {})
   (list-laskut-by-application-key [_ _] [])
-  (invalidate-laskut [this keys] (invalidate-laskut-fn this keys)))
+  (invalidate-laskut [this keys] (invalidate-laskut-fn this keys))
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
 
 (def mock-maksut-service (->MockMaksutService))
 
