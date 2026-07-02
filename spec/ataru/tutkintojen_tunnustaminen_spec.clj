@@ -62,7 +62,11 @@
     [{:order_id "TTU2354669-1"
      :reference *payment-property-application-key*
      :status :paid
-     :origin "tutu"}]))
+     :origin "tutu"}])
+
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
 
 (def mock-maksut-service (->MockMaksutService))
 

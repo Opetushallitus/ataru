@@ -91,7 +91,8 @@
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service]
             [ataru.background-job.job :as job]
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
-            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job])
+            [ataru.kk-application-payment.kk-application-payment-maksut-poller-job :as kk-application-payment-maksut-poller-job]
+            [ataru.kk-application-payment.kk-application-payment :as kk-application-payment])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -1188,7 +1189,26 @@
               (response/ok result))
             (response/unauthorized {:error (str "Hakemuksen "
                                                 reference
-                                                " käsittely ei ole sallittu")})))))
+                                                " käsittely ei ole sallittu")}))))
+
+      (api/POST "/hakemusmaksu/bulk-state-change" {session :session}
+        :body [input maksut-schema/BulkPaymentStateChange]
+        :return maksut-schema/BulkPaymentStateChangeResult
+        :summary "Korjaa erääntyneiden hakemusmaksujen tiloja. Vain OPH-pääkäyttäjälle."
+        :description "Päivittää hakemusmaksun tilan annetuille hakemuksille. Vain 'overdue'- tai 'awaiting'-tilassa olevat hakemukset päivitetään; muut ohitetaan (poikkeuksena 'not-required', ks. alla). Vastauksessa 'updated' sisältää oikeasti päivittyneet avaimet ja 'skipped' ohitetut.
+
+Tuetut tilamuutokset:
+- state='not-required', reason='eu-citizen' tai 'exemption-field': poistaa laskun. Päivittää myös olemassa olevan 'not-required'-tilan reason-kentän. due-date ei käytössä.
+- state='ok-by-proxy': merkitsee laskun mitätöidyksi. reason- ja due-date-kenttiä ei käytetä.
+- state='awaiting', due-date='YYYY-MM-DD': siirtää eräpäivää eteenpäin. reason ei käytössä.
+
+Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, heitetään poikkeus ja manuaalinen korjaustoimenpide maksut-palveluun voi olla tarpeen."
+        (if (get-in session [:identity :superuser])
+          (let [{:keys [application-keys state reason due-date]} input]
+            (response/ok
+              (kk-application-payment/bulk-change-overdue-payment-state
+                maksut-service application-keys state reason due-date)))
+          (response/unauthorized {}))))
 
     (api/context "/tulos-service" []
       :tags ["tulos-service-api"]
