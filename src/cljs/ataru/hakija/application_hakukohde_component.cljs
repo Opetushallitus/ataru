@@ -207,7 +207,7 @@
                                                 n           (count new-buttons)]
                                             (when (pos? n)
                                               (.focus (nth new-buttons (min idx (dec n))))))))))))
-          :disabled           disabled?
+          :aria-disabled      (str disabled?)
           :aria-label         (str
                                 (translations/get-hakija-translation :add-application-option lang)
                                 ": "
