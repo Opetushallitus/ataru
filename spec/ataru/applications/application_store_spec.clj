@@ -5,6 +5,7 @@
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.forms.form-store :as forms]
+            [schema.core :as s]
             [ataru.util :as util]
             [speclj.core :refer :all])
   (:import [java.util UUID]))
@@ -66,6 +67,57 @@
                            (-> (store/siirto-applications "1" nil ["2"] nil false)
                                first
                                :attachments))))))
+
+(describe "siirtotiedosto timestamp parsing"
+          (tags :unit :siirtotiedosto-timestamp)
+
+          (it "should omit optional modified-time when source value is nil"
+              (let [application (assoc (first fixtures/siirto-applications)
+                                       :application-hakukohde-reviews [{:requirement "processing-state"
+                                                                        :state "unprocessed"
+                                                                        :hakukohde "1.2.246.562.29.123454321"
+                                                                        :modified-time nil}])
+                    result (#'ataru.applications.application-store/unwrap-siirto-application
+                             application)
+                    reviews (:hakukohdeReviews result)
+                    review-schema [{:requirement                    s/Str
+                                    :state                          s/Str
+                                    (s/optional-key :modified-time) java.time.ZonedDateTime
+                                    :hakukohde                      s/Str}]]
+                (should-not-contain :modified-time (first reviews))
+                (should= nil (s/check review-schema reviews))))
+
+          (it "should not try to parse optional modified-time when source key is missing"
+              (let [application (assoc (first fixtures/siirto-applications)
+                                       :application-hakukohde-reviews [{:requirement "processing-state"
+                                                                        :state "unprocessed"
+                                                                        :hakukohde "1.2.246.562.29.123454321"}])
+                    result (#'ataru.applications.application-store/unwrap-siirto-application
+                             application)
+                    reviews (:hakukohdeReviews result)
+                    review-schema [{:requirement                    s/Str
+                                    :state                          s/Str
+                                    (s/optional-key :modified-time) java.time.ZonedDateTime
+                                    :hakukohde                      s/Str}]]
+                (should-not-contain :modified-time (first reviews))
+                (should= nil (s/check review-schema reviews)))))
+
+(describe "hakukohdereview timestamp parsing"
+          (tags :unit)
+
+          (it "should omit optional modified-time when database value is nil"
+              (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                            (should= :db ds-key)
+                                            (should= "yesql-get-application-hakukohde-reviews" (-> query-fn .meta :name))
+                                            (should= {:application_key "application-key"} params)
+                                            [{:requirement "processing-state"
+                                              :state "unprocessed"
+                                              :hakukohde "1.2.246.562.29.123454321"
+                                              :modified_time nil}])]
+                (should= [{:requirement "processing-state"
+                           :state "unprocessed"
+                           :hakukohde "1.2.246.562.29.123454321"}]
+                         (store/get-application-hakukohde-reviews "application-key")))))
 
 (describe "setting person oid to application"
           (tags :unit)

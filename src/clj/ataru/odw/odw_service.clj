@@ -3,7 +3,7 @@
             [ataru.applications.answer-util :as answer-util]
             [ataru.util :as util]
             [clojure.set]
-            [clj-time.core :as t]
+            [ataru.time :as t]
             [ataru.tarjonta.haku :as h]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]

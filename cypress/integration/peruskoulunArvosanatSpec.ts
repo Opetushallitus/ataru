@@ -9,7 +9,8 @@ import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTaytt
 import hakemuksenLahettaminen from '../testit/hakemuksenLahettaminen'
 import peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen from '../testit/arvosanat/peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen'
 
-describe('Peruskoulun arvosanat -osio', () => {
+// Testi siiretty Playwrightiin: playwright/tests/peruskoulun-arvosanat.spec.ts
+describe.skip('Peruskoulun arvosanat -osio', () => {
   kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       peruskoulunArvosanatOsionLisays(lomakkeenTunnisteet, () => {
