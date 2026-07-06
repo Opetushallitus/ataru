@@ -73,6 +73,45 @@
                                          " status: " (:status result)
                                          " response body: " (:body result))))))
 
+(defn- post-force-invalidate-laskut
+  "Force-invalidates maksut invoices regardless of due date (for overdue correction: ok-by-proxy)."
+  [maksut-cas-client keys]
+  (let [url    (url/resolve-url :maksut-service.virkailija-force-invalidate)
+        req    {:keys keys}
+        result (cas/cas-authenticated-post maksut-cas-client url req)]
+    (match/match result
+                 {:status 200 :body _} nil
+
+                 :else (throw-error (str "Could not force-invalidate laskut for keys " (str/join ", " keys)
+                                         " status: " (:status result)
+                                         " response body: " (:body result))))))
+
+(defn- post-delete-laskut
+  "Deletes maksut invoices and their secrets (for overdue correction: not-required)."
+  [maksut-cas-client keys]
+  (let [url    (url/resolve-url :maksut-service.virkailija-delete)
+        req    {:keys keys}
+        result (cas/cas-authenticated-post maksut-cas-client url req)]
+    (match/match result
+                 {:status 200 :body _} nil
+
+                 :else (throw-error (str "Could not delete laskut for keys " (str/join ", " keys)
+                                         " status: " (:status result)
+                                         " response body: " (:body result))))))
+
+(defn- post-update-laskut-due-date
+  "Updates due date on maksut invoices (for overdue correction: awaiting with new due date)."
+  [maksut-cas-client keys due-date]
+  (let [url    (url/resolve-url :maksut-service.virkailija-update-due-date)
+        req    {:keys keys :due-date due-date}
+        result (cas/cas-authenticated-post maksut-cas-client url req)]
+    (match/match result
+                 {:status 200 :body _} nil
+
+                 :else (throw-error (str "Could not update due date for keys " (str/join ", " keys)
+                                         " status: " (:status result)
+                                         " response body: " (:body result))))))
+
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
@@ -99,7 +138,16 @@
     (receipt-get maksut-cas-client order-id))
 
   (invalidate-laskut [_ keys]
-    (post-invalidate-laskut maksut-cas-client keys)))
+    (post-invalidate-laskut maksut-cas-client keys))
+
+  (force-invalidate-laskut [_ keys]
+    (post-force-invalidate-laskut maksut-cas-client keys))
+
+  (delete-laskut [_ keys]
+    (post-delete-laskut maksut-cas-client keys))
+
+  (update-laskut-due-date [_ keys due-date]
+    (post-update-laskut-due-date maksut-cas-client keys due-date)))
 
 (defn new-maksut-service []
   (map->MaksutService {}))

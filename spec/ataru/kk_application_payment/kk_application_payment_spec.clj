@@ -8,6 +8,7 @@
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
                                  before around]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.maksut.maksut-protocol :as maksut-protocol]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
             [ataru.cache.cache-service :as cache-service]
@@ -785,6 +786,142 @@
                           (should= 0 (count changed))
                           (should-be-matching-state {:application-key application-key, :state state-overdue
                                                      :reason nil} payment)))))
+
+(defn- make-mock-maksut-service []
+  (let [calls (atom [])]
+    {:service
+     (reify maksut-protocol/MaksutServiceProtocol
+       (create-kk-application-payment-lasku [_ _] nil)
+       (create-kasittely-lasku [_ _] nil)
+       (create-paatos-lasku [_ _] nil)
+       (list-lasku-statuses [_ _] nil)
+       (list-laskut-by-application-key [_ _] nil)
+       (download-receipt [_ _] nil)
+       (invalidate-laskut [_ _] nil)
+       (force-invalidate-laskut [_ keys]
+         (swap! calls conj {:method :force-invalidate-laskut :keys keys}))
+       (delete-laskut [_ keys]
+         (swap! calls conj {:method :delete-laskut :keys keys}))
+       (update-laskut-due-date [_ keys due-date]
+         (swap! calls conj {:method :update-laskut-due-date :keys keys :due-date due-date})))
+     :calls calls}))
+
+(describe "bulk-change-overdue-payment-state"
+          (tags :unit :kk-application-payment)
+
+          (before (delete-states-and-events!))
+
+          (it "should set state to not-required with eu-citizen reason and call delete-laskut"
+              (let [application-key "1.2.3.4.5.100"
+                    _ (payment/set-application-fee-overdue application-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service [application-key] state-not-required reason-eu-citizen nil)
+                    updated (first (payment/get-raw-payments [application-key]))]
+                (should= {:updated [application-key] :skipped []} result)
+                (should= state-not-required (:state updated))
+                (should= reason-eu-citizen (:reason updated))
+                (should-not-be-nil (:approved-at updated))
+                (should= 1 (count @calls))
+                (should= :delete-laskut (:method (first @calls)))
+                (should= [application-key] (:keys (first @calls)))))
+
+          (it "should set state to not-required with exemption-field reason and call delete-laskut"
+              (let [application-key "1.2.3.4.5.101"
+                    _ (payment/set-application-fee-overdue application-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    _ (payment/bulk-change-overdue-payment-state
+                        service [application-key] state-not-required reason-exemption nil)
+                    updated (first (payment/get-raw-payments [application-key]))]
+                (should= state-not-required (:state updated))
+                (should= reason-exemption (:reason updated))
+                (should= :delete-laskut (:method (first @calls)))))
+
+          (it "should set state to ok-by-proxy and call force-invalidate-laskut"
+              (let [application-key "1.2.3.4.5.102"
+                    _ (payment/set-application-fee-overdue application-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service [application-key] state-ok-by-proxy nil nil)
+                    updated (first (payment/get-raw-payments [application-key]))]
+                (should= {:updated [application-key] :skipped []} result)
+                (should= state-ok-by-proxy (:state updated))
+                (should-be-nil (:reason updated))
+                (should-not-be-nil (:approved-at updated))
+                (should= 1 (count @calls))
+                (should= :force-invalidate-laskut (:method (first @calls)))
+                (should= [application-key] (:keys (first @calls)))))
+
+          (it "should set state to awaiting with new due date and call update-laskut-due-date"
+              (let [application-key "1.2.3.4.5.103"
+                    new-due-date "2030-01-15"
+                    _ (payment/set-application-fee-overdue application-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service [application-key] state-awaiting nil new-due-date)
+                    updated (first (payment/get-raw-payments [application-key]))]
+                (should= {:updated [application-key] :skipped []} result)
+                (should= state-awaiting (:state updated))
+                (should-be-nil (:reason updated))
+                (should-not-be-nil (:due-date updated))
+                (should= 1 (count @calls))
+                (should= :update-laskut-due-date (:method (first @calls)))
+                (should= [application-key] (:keys (first @calls)))
+                (should= new-due-date (:due-date (first @calls)))))
+
+          (it "should handle multiple application keys in bulk"
+              (let [keys ["1.2.3.4.5.110" "1.2.3.4.5.111" "1.2.3.4.5.112"]
+                    _ (doseq [k keys] (payment/set-application-fee-overdue k nil))
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service keys state-ok-by-proxy nil nil)
+                    payments (payment/get-raw-payments keys)]
+                (should= (set keys) (set (:updated result)))
+                (should= [] (:skipped result))
+                (should= 3 (count payments))
+                (should= #{state-ok-by-proxy} (set (map :state payments)))
+                (should= 1 (count @calls))
+                (should= (set keys) (set (:keys (first @calls))))))
+
+          (it "should only send actually-updated keys to maksut, skipping keys not in overdue/awaiting state"
+              (let [overdue-key "1.2.3.4.5.130"
+                    paid-key    "1.2.3.4.5.131"
+                    _ (payment/set-application-fee-overdue overdue-key nil)
+                    _ (payment/set-application-fee-paid paid-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service [overdue-key paid-key] state-ok-by-proxy nil nil)]
+                (should= {:updated [overdue-key] :skipped [paid-key]} result)
+                (should= 1 (count @calls))
+                (should= [overdue-key] (:keys (first @calls)))))
+
+          (it "should update reason when transitioning not-required to not-required"
+              (let [application-key "1.2.3.4.5.140"
+                    _ (payment/set-application-fee-not-required-for-eu-citizen application-key nil)
+                    {:keys [service calls]} (make-mock-maksut-service)
+                    result (payment/bulk-change-overdue-payment-state
+                             service [application-key] state-not-required reason-exemption nil)
+                    updated (first (payment/get-raw-payments [application-key]))]
+                (should= {:updated [application-key] :skipped []} result)
+                (should= 1 (count @calls))
+                (should= :delete-laskut (:method (first @calls)))
+                (should= state-not-required (:state updated))
+                (should= reason-exemption (:reason updated))))
+
+          (it "should throw on invalid target state"
+              (let [{:keys [service]} (make-mock-maksut-service)]
+                (should-throw
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.120"] state-paid nil nil))))
+
+          (it "should throw when not-required is given without reason"
+              (let [{:keys [service]} (make-mock-maksut-service)]
+                (should-throw
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.121"] state-not-required nil nil))))
+
+          (it "should throw when awaiting is given without due-date"
+              (let [{:keys [service]} (make-mock-maksut-service)]
+                (should-throw
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.122"] state-awaiting nil nil)))))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)
