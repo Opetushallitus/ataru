@@ -6,7 +6,9 @@
 (defn from-long
   [value]
   (cond
-    (nil? value) nil
+    ; Joda-yhteensopivuus: clj-timen from-long tulkitsi nil-arvon nykyhetkeksi,
+    ; ja esim. hakuaikojen puuttuvat päättymisajat nojaavat tähän
+    (nil? value) (time/now)
     (number? value) (ZonedDateTime/ofInstant (Instant/ofEpochMilli (long value)) (time/default-zone))
     (instance? ZonedDateTime value) value
     (instance? Instant value) (ZonedDateTime/ofInstant value (time/default-zone))

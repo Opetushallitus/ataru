@@ -1,5 +1,6 @@
 (ns ataru.tarjonta-service.hakuaika-spec
   (:require [ataru.tarjonta-service.hakuaika :as hakuaika]
+            [ataru.time :as ataru-time]
             [clj-time.coerce :as coerce]
             [clj-time.core :as t]
             [clojure.test.check :as tc]
@@ -193,3 +194,19 @@
   (it "parses basic date-time with T separator"
     (let [parsed (hakuaika/basic-date-time-str->date-time "2026-01-15T15:00:00")]
       (should= "15.1.2026 klo 15:00" (hakuaika/date-timez->localized-date-time parsed :fi)))))
+
+(describe "Hakuaika label with missing times"
+  (tags :unit)
+
+  (around [it]
+    (try
+      (ataru-time/set-fixed-now! (java.time.Instant/parse "2026-06-30T09:00:00Z"))
+      (it)
+      (finally
+        (ataru-time/reset-now!))))
+
+  (it "labels nil start and end with current time like Joda from-long did"
+    (let [{:keys [label]} (hakuaika/hakuaika-with-label {:start nil :end nil :on false})]
+      (should= "30.6.2026 klo 12:00" (get-in label [:start :fi]))
+      (should= "30.6.2026 klo 12:00" (get-in label [:end :fi]))
+      (should= "klo 12:00" (get-in label [:end-time :fi])))))
