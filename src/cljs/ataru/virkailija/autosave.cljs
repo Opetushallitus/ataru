@@ -22,6 +22,9 @@
          (vector? subscribe-path)]}
   (let [value-to-watch    (subscribe [:state-query subscribe-path])
         previous          (atom (or last-autosaved-form @value-to-watch))
+        ; last-saved seuraa mitä oikeasti viimeksi tallennettiin, jotta silmukasta
+        ; poistuttaessa ei lähetetä jo tallennettua arvoa uudelleen
+        last-saved        (atom (or last-autosaved-form @value-to-watch))
         change            (chan (sliding-buffer 1))
         watch             (fn [_ _ old new]
                             (reset! previous old)
@@ -31,7 +34,10 @@
                             (reset! stop? true)
                             (close! change)
                             true)
-        bounce            (debounce handler)
+        save!             (fn [current prev]
+                            (reset! last-saved current)
+                            (handler current prev))
+        bounce            (debounce save!)
         when-changed-save (fn [save-fn current prev]
                             (when (changed-predicate current prev)
                               (save-fn current prev)))]
@@ -49,9 +55,8 @@
         (when-changed-save bounce current prev)
         (recur))
 
-      ; save right before exiting loop
       (when-let [current @value-to-watch]
-        (when-changed-save handler current @previous)))
+        (when-changed-save save! current @last-saved)))
 
     (when (some? last-autosaved-form)
       (go (>! change [last-autosaved-form @value-to-watch])))
