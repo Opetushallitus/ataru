@@ -14,7 +14,7 @@
             [ataru.hakija.demo :as demo]
             [ataru.tarjonta.haku :as haku]
             [ataru.hakija.application-handlers :as handlers]
-            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
+            [ataru.koodisto.koodisto-codes :refer [finland-equivalent-country-codes]]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -997,11 +997,11 @@
      (re-frame/subscribe [:application/payment-type])])
   (fn [[nationality-values original-nationality-value payment-type] _]
     (let [is-not-a-finnish-citizen?  (empty?
-                                      (filter (fn [[v & _]] (= (:value v) finland-country-code)) nationality-values))
+                                      (filter (fn [[v & _]] (contains? finland-equivalent-country-codes (:value v))) nationality-values))
           original-nationality-values (map first original-nationality-value)
           was-previously-finnish-citizen-or-empty? (or (empty? original-nationality-values)
                                                        (nil? (first original-nationality-values))
-                                                       (contains? (set original-nationality-values) finland-country-code))]
+                                                       (some finland-equivalent-country-codes original-nationality-values))]
       (and
        (= "payment-type-kk" payment-type)
        was-previously-finnish-citizen-or-empty?
