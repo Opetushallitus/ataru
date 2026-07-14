@@ -12,6 +12,7 @@
 
 (def payment-wrapper (get-in form-with-visibility-conditions [:content 1]))
 (def answer-hiding-wrapper {:nationality {:value [["246"]]}})
+(def answer-hiding-wrapper-aland {:nationality {:value [["248"]]}})
 (def answer-showing-wrapper {:nationality {:value [["200"]["245"]]}})
 
 (defn extract-wrapper-sections [form]
@@ -44,6 +45,13 @@
               (should= true (util/is-field-hidden-by-section-visibility-conditions
                               form-with-visibility-conditions
                               answer-hiding-wrapper
+                              payment-wrapper
+                              false)))
+
+          (it "field is hidden for Åland (Ahvenanmaa) nationality"
+              (should= true (util/is-field-hidden-by-section-visibility-conditions
+                              form-with-visibility-conditions
+                              answer-hiding-wrapper-aland
                               payment-wrapper
                               false)))
 
