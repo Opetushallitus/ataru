@@ -39,11 +39,7 @@
 
 (defn- due-date-to-printable-datetime
   [lang due-date]
-  (let [due-at             (payment/parse-due-date due-date)
-        due-datetime       (time/date-time (time/year due-at) (time/month due-at) (time/day due-at) 23 59)
-        due-datetime-in-tz (time/from-time-zone due-datetime (time/time-zone-for-id "Europe/Helsinki"))
-        formatter          (lang formatters)]
-    (f/unparse formatter due-datetime-in-tz)))
+  (f/unparse (lang formatters) due-date))
 
 (defn- payment-reminder-email-params
   [lang suffix _]
