@@ -1021,8 +1021,9 @@
   (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
       (.withZone (time/time-zone-for-id "Europe/Helsinki"))))
 
-(def UtcJodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss'Z'")
-                                 org.joda.time.DateTimeZone/UTC))
+(def ^:private utc-date-time-formatter
+  (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss'Z'")
+      (.withZone java.time.ZoneOffset/UTC)))
 
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time submitted person_oid lang email content
@@ -1221,7 +1222,7 @@
                                      :henkiloOid (:person-oid %)
                                      :asiointikieli (:asiointikieli %)
                                      :email (:email %)
-                                     :jattoAjanhetki (some->> (:submitted %) (.print UtcJodaFormatter))
+                                     :jattoAjanhetki (some->> (:submitted %) (.format utc-date-time-formatter))
                                      :paymentObligations (zipmap (vec (map (fn [x] (key x)) (:payment-obligations %)))
                                                                  (vec (map (fn [x] (case (val x)
                                                                                      "unreviewed" "NOT_CHECKED"
