@@ -6,6 +6,7 @@
   (:require [ataru.cache.cache-service :as cache]
             [ataru.util.deadline-util :as deadline]
             [ataru.kk-application-payment.kk-application-payment-store :as store]
+            [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.applications.application-store :as application-store]
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
@@ -566,6 +567,69 @@
            (map #(vector (:application-key %) %) payments))))
   ([applications]
    (get-kk-payment-states applications :key)))
+
+(defn bulk-change-overdue-payment-state
+  "Corrects payment states in bulk for overdue (or awaiting) applications.
+  Supported transitions:
+    - 'not-required' with reason 'eu-citizen' or 'exemption-field': deletes invoices from maksut
+      (also updates the reason field if the key is already in not-required state)
+    - 'ok-by-proxy': force-invalidates invoices in maksut
+    - 'awaiting' with due-date: updates due date in ataru and maksut
+
+  Keys in the correct target state may still be updated (e.g. reason change for not-required).
+  The returned :updated list contains the application keys actually changed; :skipped contains the rest.
+
+  WARNING: The DB write and the maksut HTTP call are not atomic. If the HTTP call fails after
+  the DB write has committed, an exception is thrown with the actually-updated keys so that
+  an operator can manually compensate in maksut."
+  [maksut-service application-keys state reason due-date]
+  (if-not (get-in config [:kk-application-payments :enabled?])
+    {:updated [] :skipped []}
+    (do
+      (when (empty? application-keys)
+        (throw (ex-info "application-keys must not be empty" {})))
+      (let [valid-states  #{(:not-required all-states) (:ok-by-proxy all-states) (:awaiting all-states)}
+            valid-reasons #{(:eu-citizen all-reasons) (:exemption-field all-reasons)}]
+        (when-not (contains? valid-states state)
+          (throw (ex-info "Invalid target state for bulk correction"
+                          {:state state :valid-states valid-states})))
+        (when (and (= state (:not-required all-states))
+                   (not (contains? valid-reasons reason)))
+          (throw (ex-info "Invalid reason for not-required state"
+                          {:reason reason :valid-reasons valid-reasons})))
+        (when (and (= state (:awaiting all-states)) (nil? due-date))
+          (throw (ex-info "due-date is required for awaiting state" {:state state})))
+        (log/info "Bulk payment state correction starting: requested" (count application-keys)
+                  "keys, target state" state (when reason (str "reason=" reason)) (when due-date (str "due-date=" due-date))
+                  "| keys:" application-keys)
+        (let [{:keys [db-fn log-action maksut-fn]}
+              (case state
+                "not-required" {:db-fn      #(store/bulk-correct-not-required! application-keys reason)
+                                :log-action "delete-laskut"
+                                :maksut-fn  #(maksut-protocol/delete-laskut maksut-service %)}
+                "ok-by-proxy"  {:db-fn      #(store/bulk-correct-ok-by-proxy! application-keys)
+                                :log-action "force-invalidate-laskut"
+                                :maksut-fn  #(maksut-protocol/force-invalidate-laskut maksut-service %)}
+                "awaiting"     {:db-fn      #(store/bulk-correct-awaiting! application-keys due-date)
+                                :log-action "update-laskut-due-date"
+                                :maksut-fn  #(maksut-protocol/update-laskut-due-date maksut-service % due-date)})
+              updated-keys (db-fn)
+              skipped-keys (vec (remove (set updated-keys) application-keys))]
+          (log/info "DB write complete: updated" (count updated-keys) "of" (count application-keys) "keys"
+                    "| updated:" updated-keys
+                    (when (seq skipped-keys) (str "| skipped (wrong state): " skipped-keys)))
+          (when (seq updated-keys)
+            (log/info "Calling maksut" log-action "for" (count updated-keys) "keys:" updated-keys)
+            (try
+              (maksut-fn updated-keys)
+              (log/info "Maksut" log-action "succeeded for keys:" updated-keys)
+              (catch Exception e
+                (log/error e "Maksut" log-action "FAILED after DB write"
+                           "- manual reconciliation required in maksut for keys:" updated-keys)
+                (throw (ex-info "Maksut call failed after DB write; manual reconciliation required"
+                                {:updated-in-db updated-keys :state state :maksut-action log-action} e)))))
+          {:updated updated-keys
+           :skipped skipped-keys})))))
 
 (defn remove-kk-applications-with-unapproved-payments
   "Filters out applications that have payment info but yet been approved (paid, exempted) for their respective admissions.

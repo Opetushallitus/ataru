@@ -68,7 +68,10 @@
      :origin "tutu"}])
   (list-laskut-by-application-key [_ _] [])
   (download-receipt [_ _] nil)
-  (invalidate-laskut [_ _] nil))
+  (invalidate-laskut [_ _] nil)
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
 
 (def mock-maksut-service (->MockMaksutService))
 
