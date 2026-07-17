@@ -10,6 +10,7 @@
     (stop-fn)))
 
 (defn interval-loop [{:keys [interval-ms
+                             debounce-ms
                              subscribe-path
                              handler
                              ; extra predicate for changing whether a change should be
@@ -17,8 +18,10 @@
                              changed-predicate
                              last-autosaved-form]
                       :or   {interval-ms       2000
+                             debounce-ms       1000
                              changed-predicate not=}}]
   {:pre [(integer? interval-ms)
+         (integer? debounce-ms)
          (vector? subscribe-path)]}
   (let [value-to-watch    (subscribe [:state-query subscribe-path])
         previous          (atom (or last-autosaved-form @value-to-watch))
@@ -30,14 +33,18 @@
                             (reset! previous old)
                             (go (>! change [old new])))
         stop?             (atom false)
-        stop-fn           (fn []
-                            (reset! stop? true)
-                            (close! change)
-                            true)
         save!             (fn [current prev]
                             (reset! last-saved current)
                             (handler current prev))
-        bounce            (debounce save!)
+        bounce            (debounce save! debounce-ms)
+        ; stop-fn peruu vielä laukeamattoman debouncetun tallennuksen, jotta se ei
+        ; laukea myöhemmin ajastimen umpeuduttua ja lähetä samaa arvoa uudelleen sen
+        ; jälkeen kun silmukasta on jo poistuttu ja mahdollinen viimeinen tila flushattu
+        stop-fn           (fn []
+                            (reset! stop? true)
+                            ((:cancel (meta bounce)))
+                            (close! change)
+                            true)
         when-changed-save (fn [save-fn current prev]
                             (when (changed-predicate current prev)
                               (save-fn current prev)))]
