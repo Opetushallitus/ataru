@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "enabledManagers": ["github-actions"],
+  "platformAutomerge": false,
+  "recreateWhen": "always",
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["pin", "pinDigest", "digest"],
+      "groupName": "github-actions",
+      "commitMessageTopic": "github-actions versions"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "groupName": "github-actions versions",
+      "extends": ["schedule:weekly"],
+      "minimumReleaseAge": "7 days"
+    }
+  ]
+}
