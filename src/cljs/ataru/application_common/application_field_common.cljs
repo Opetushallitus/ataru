@@ -78,22 +78,27 @@
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          listener         (reagent/atom nil)
+         mounted?         (reagent/atom false)
          timeout          (atom nil)
          debounced-resize (fn [component]
                             (js/clearTimeout @timeout)
                             (reset!
                              timeout
-                             (js/setTimeout #(set-markdown-height component scroll-height) 200)))
+                             (js/setTimeout (fn [_]
+                                              (when @mounted?
+                                                (set-markdown-height component scroll-height))) 200)))
          lang             (re-frame/subscribe [:application/form-language])]
      (reagent/create-class
       {:component-did-mount
        (fn [component]
+         (reset! mounted? true)
          (set-markdown-height component scroll-height)
          (reset! listener #(debounced-resize component))
          (.addEventListener js/window "resize" @listener))
 
        :component-will-unmount
        (fn [_]
+         (reset! mounted? false)
          (.removeEventListener js/window "resize" @listener))
 
        :component-did-update
