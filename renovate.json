@@ -15,7 +15,6 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "github-actions versions",
-      "extends": ["schedule:weekly"],
       "minimumReleaseAge": "7 days"
     }
   ]
