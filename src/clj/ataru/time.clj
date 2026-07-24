@@ -235,6 +235,10 @@
         zone (.getZone ^ZonedDateTime zdt)]
     (ZonedDateTime/of (.toLocalDate ^ZonedDateTime zdt) local-time zone)))
 
+(defn with-time-in-zone
+  [t local-time zone]
+  (ZonedDateTime/of (.toLocalDate ^ZonedDateTime (->zoned-date-time t)) local-time zone))
+
 (defn to-instant
   [t]
   (->instant t))

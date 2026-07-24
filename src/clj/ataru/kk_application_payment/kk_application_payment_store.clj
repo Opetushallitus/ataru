@@ -21,12 +21,15 @@
 ; Yesql converts PostgreSQL dates to datetimes automatically - and in that case the
 ; true due datetime is the last minute of the day in Helsinki time zone. This also
 ; helps to sidestep various automatic UTC conversion issues in the frontend...
+;
+; NB! The time of day must be set with an explicit local time (23:59) rather than by adding a
+; 23h59m Duration to midnight. A Duration is a fixed elapsed-time amount, so adding it across the
+; daylight saving time transition (when the day in question only has 23 hours) rolls the result
+; over to the next calendar day.
 (defn due-date-to-full-time-in-finnish-tz [payment]
   (if-let [due-date (:due-date payment)]
     (assoc payment :due-date
-                   (time/to-time-zone
-                       (time/plus due-date (time/hours 23) (time/minutes 59))
-                       (time/time-zone-for-id "Europe/Helsinki")))
+                   (time/with-time-in-zone due-date (time/local-time 23 59) (time/time-zone-for-id "Europe/Helsinki")))
     payment))
 
 (defn- exec-db
