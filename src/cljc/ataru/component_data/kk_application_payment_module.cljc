@@ -1,6 +1,7 @@
 (ns ataru.component-data.kk-application-payment-module
   (:require [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [kk-application-payment-module-texts]]
+            [clojure.set :as cs]
             [ataru.constants :refer [system-metadata]]))
 
 (def payment-module-keyword :kk-application-payment-module)
@@ -33,6 +34,17 @@
     "brexit-permit-attachment"
     "permanent-residence-permit"
     "temporary-protection-permit"})
+
+(def sync-triggering-kk-application-payment-attachment-keys
+  (cs/union kk-application-payment-exempt-attachment-keys
+            #{"eu-passport-attachment"
+              "eu-family-passport-attachment"
+              "continuous-residence-passport-attachment"
+              "longterm-passport-attachment"
+              "brexit-passport-attachment"
+              "permanent-residence-passport-attachment"
+              "temporary-protection-passport-attachment"
+              "none-passport-attachment"}))
 
 (defn- kk-option-attachment [metadata id label-key]
   (assoc (component/attachment metadata)

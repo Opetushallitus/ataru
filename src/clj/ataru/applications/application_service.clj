@@ -3,6 +3,7 @@
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
+    [ataru.applications.attachment-review-synchroniser :as attachment-review-synchroniser]
     [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
@@ -382,18 +383,6 @@
           audit-logger)))
     kk-application-payment-obligation-value-changed?))
 
-(defn- save-attachment-hakukohde-reviews
-  [application-key attachment-reviews session audit-logger]
-  (doseq [[hakukohde review] attachment-reviews
-          [attachment-key review-state] review]
-    (application-store/save-attachment-hakukohde-review
-      application-key
-      (name hakukohde)
-      (name attachment-key)
-      review-state
-      session
-      audit-logger)))
-
 (defn- add-selected-hakukohteet
   [states-and-filters
    haku-oid
@@ -749,20 +738,20 @@
           (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-review-state-changed-job
            job-runner
            event-id))
-        (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)
-        (if (aac/applications-review-authorized?
-             organization-service
-             tarjonta-service
-             session
-             (keys (:hakukohde-reviews review))
-             [:edit-applications])
-          (let [needs-refresh? (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)]
-            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
-             job-runner
-             application-key)
-            {:events (get-application-events organization-service application-key)
-             :needs-refresh needs-refresh?})
-          :forbidden))))
+        (let [attachment-reviews-synced? (attachment-review-synchroniser/save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)]
+          (if (aac/applications-review-authorized?
+               organization-service
+               tarjonta-service
+               session
+               (keys (:hakukohde-reviews review))
+               [:edit-applications])
+            (let [needs-refresh? (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)]
+              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
+               job-runner
+               application-key)
+              {:events (get-application-events organization-service application-key)
+               :needs-refresh (or needs-refresh? attachment-reviews-synced?)})
+            :forbidden)))))
 
   (payment-triggered-processing-state-change
     [_ session application-key state email-params]

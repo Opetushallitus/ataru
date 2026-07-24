@@ -10,6 +10,7 @@
     (stop-fn)))
 
 (defn interval-loop [{:keys [interval-ms
+                             debounce-ms
                              subscribe-path
                              handler
                              ; extra predicate for changing whether a change should be
@@ -17,21 +18,33 @@
                              changed-predicate
                              last-autosaved-form]
                       :or   {interval-ms       2000
+                             debounce-ms       1000
                              changed-predicate not=}}]
   {:pre [(integer? interval-ms)
+         (integer? debounce-ms)
          (vector? subscribe-path)]}
   (let [value-to-watch    (subscribe [:state-query subscribe-path])
         previous          (atom (or last-autosaved-form @value-to-watch))
+        ; last-saved seuraa mitä oikeasti viimeksi tallennettiin, jotta silmukasta
+        ; poistuttaessa ei lähetetä jo tallennettua arvoa uudelleen
+        last-saved        (atom (or last-autosaved-form @value-to-watch))
         change            (chan (sliding-buffer 1))
         watch             (fn [_ _ old new]
                             (reset! previous old)
                             (go (>! change [old new])))
         stop?             (atom false)
+        save!             (fn [current prev]
+                            (reset! last-saved current)
+                            (handler current prev))
+        bounce            (debounce save! debounce-ms)
+        ; stop-fn peruu vielä laukeamattoman debouncetun tallennuksen, jotta se ei
+        ; laukea myöhemmin ajastimen umpeuduttua ja lähetä samaa arvoa uudelleen sen
+        ; jälkeen kun silmukasta on jo poistuttu ja mahdollinen viimeinen tila flushattu
         stop-fn           (fn []
                             (reset! stop? true)
+                            ((:cancel (meta bounce)))
                             (close! change)
                             true)
-        bounce            (debounce handler)
         when-changed-save (fn [save-fn current prev]
                             (when (changed-predicate current prev)
                               (save-fn current prev)))]
@@ -49,9 +62,8 @@
         (when-changed-save bounce current prev)
         (recur))
 
-      ; save right before exiting loop
       (when-let [current @value-to-watch]
-        (when-changed-save handler current @previous)))
+        (when-changed-save save! current @last-saved)))
 
     (when (some? last-autosaved-form)
       (go (>! change [last-autosaved-form @value-to-watch])))
