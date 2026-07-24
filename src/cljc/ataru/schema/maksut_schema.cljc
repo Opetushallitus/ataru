@@ -83,3 +83,33 @@
 (s/defschema TutuProcessingEmailRequest
   {:application-key s/Str
    :locale Locale})
+
+(defn- valid-iso-date? [s]
+  (boolean
+    (and (string? s)
+         #?(:clj  (try (java.time.LocalDate/parse s) true
+                       (catch java.time.format.DateTimeParseException _ false))
+            :cljs (when-let [[_ y m d] (re-matches #"(\d{4})-(\d{2})-(\d{2})" s)]
+                    (let [yi (js/parseInt y 10) mi (js/parseInt m 10) di (js/parseInt d 10)
+                          date (js/Date. yi (dec mi) di)]
+                      (and (= (.getFullYear date) yi)
+                           (= (.getMonth date) (dec mi))
+                           (= (.getDate date) di))))))))
+
+(s/defschema BulkPaymentStateChange
+  (s/constrained
+    {:application-keys                    (s/constrained [s/Str] seq 'non-empty-application-keys)
+     :state                               (s/enum "not-required" "ok-by-proxy" "awaiting")
+     (s/optional-key :reason)             (s/maybe (s/enum "eu-citizen" "exemption-field"))
+     (s/optional-key :due-date)           (s/maybe s/Str)}
+    (fn [{:keys [state reason due-date]}]
+      (cond
+        (= state "not-required") (contains? #{"eu-citizen" "exemption-field"} reason)
+        (= state "awaiting")     (valid-iso-date? due-date)
+        (= state "ok-by-proxy")  (and (nil? reason) (nil? due-date))
+        :else                    true))
+    'valid-state-reason-combination))
+
+(s/defschema BulkPaymentStateChangeResult
+  {:updated [s/Str]
+   :skipped [s/Str]})
