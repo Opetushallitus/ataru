@@ -48,7 +48,8 @@
   (fn [[application]]
     (let [person (:person application)]
       (or (:yksiloity person)
-          (:yksiloityVTJ person)))))
+          (:yksiloityVTJ person)
+          (:yksiloityEidas person)))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?

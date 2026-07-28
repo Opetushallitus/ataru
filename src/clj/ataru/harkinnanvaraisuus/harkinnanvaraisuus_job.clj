@@ -16,6 +16,7 @@
             [ataru.config.core :refer [config]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [ataru.person-service.person-service :as person-service]
+            [ataru.person-service.person-util :as person-util]
             [ataru.email.application-email :as application-email]
             [ataru.email.email-util :as email-util]
             [clojure.java.jdbc :as jdbc]
@@ -168,8 +169,7 @@
                                     distinct
                                     (person-service/get-persons person-service)
                                     vals
-                                    (remove #(or (:yksiloity %)
-                                                 (:yksiloityVTJ %)))
+                                    (remove #(person-util/is-yksiloity? %))
                                     (map :oidHenkilo)
                                     distinct
                                     set)]

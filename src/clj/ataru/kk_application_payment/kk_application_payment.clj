@@ -257,7 +257,8 @@
   (:maksullinen-kk-haku? haku))
 
 (defn- is-vtj-yksiloity-eu-citizen? [koodisto-cache person]
-  (let [vtj-yksiloity?   (:yksiloityVTJ person)
+  (let [vtj-yksiloity?   (or (:yksiloityVTJ person)
+                             (:yksiloityEidas person))
         eu-area          (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
                               (filter #(= "EU" (:value %)))
                               (first))

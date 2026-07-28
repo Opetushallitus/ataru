@@ -21,3 +21,6 @@
              {:gender (-> answers :gender :value)})
            (when-not (cs/blank? (-> answers :language :value))
              {:language (-> answers :language :value)}))))
+
+(defn is-yksiloity? [onr-person]
+  (or (:yksiloity onr-person) (:yksiloityVTJ onr-person) (:yksiloityEidas onr-person)))
