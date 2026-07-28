@@ -8,6 +8,7 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.person-service.person-service :as person-service]
+            [ataru.person-service.person-util :as person-util]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [taoensso.timbre :as log]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
@@ -30,7 +31,7 @@
 
 (defn get-yksiloimaton-tai-aidinkieleton-henkilo-oids
   [persons]
-  (set (map :oidHenkilo (filter (fn [person] (or (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))
+  (set (map :oidHenkilo (filter (fn [person] (or (not (person-util/is-yksiloity? person))
                                                  (empty? (get-in person [:aidinkieli :kieliKoodi]))))
                                 (vals persons)))))
 
