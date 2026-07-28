@@ -121,6 +121,7 @@
                ; nämäkin ONR-datasta löytyy; pidetään tallessa jos päätetään myöhemmin käyttää anonymisoinnissa
                ;turvakielto
                ;yksiloityvtj
+               ;yksiloityEidas
                ;master_oid
                ;linkitetyt_oidit
                ]}]

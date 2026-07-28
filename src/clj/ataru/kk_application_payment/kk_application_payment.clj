@@ -256,13 +256,14 @@
   (:maksullinen-kk-haku? haku))
 
 (defn- is-vtj-yksiloity-eu-citizen? [koodisto-cache person]
-  (let [vtj-yksiloity?   (:yksiloityVTJ person)
-        eu-area          (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
-                              (filter #(= "EU" (:value %)))
-                              (first))
+  (let [vahvasti-yksiloity? (or (:yksiloityVTJ person)
+                            (:yksiloityEidas person))
+        eu-area             (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+                                 (filter #(= "EU" (:value %)))
+                                 (first))
         eu-country-codes (set (map :value (:within eu-area)))]
     (if (> (count eu-country-codes) 0)
-      (and vtj-yksiloity?
+      (and vahvasti-yksiloity?
            (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
       (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
 

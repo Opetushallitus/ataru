@@ -4,6 +4,7 @@
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :as codes]
             [ataru.person-service.person-service :as person-service]
+            [ataru.person-service.person-util :as person-util]
             [ataru.applications.application-store :as application-store]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
@@ -23,8 +24,7 @@
    {:keys [person-service tarjonta-service henkilo-cache]}]
   (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
-    (when (or (:yksiloity person)
-              (:yksiloityVTJ person))
+    (when (person-util/is-yksiloity? person)
       (let [finnish-nationality? (nationality-finland? person)
             applications         (->> (application-store/get-application-keys-for-person-oid person-oid)
                                       (map :key)
