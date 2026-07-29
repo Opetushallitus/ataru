@@ -12,6 +12,9 @@
              {:uri "maatjavaltiot2_250"
               :version 1
               :value "250"}
+             {:uri "maatjavaltiot2_752"
+              :version 1
+              :value "752"}
              {:uri "maatjavaltiot2_233"
               :version 1
               :value "233"}

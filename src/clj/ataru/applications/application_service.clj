@@ -263,8 +263,7 @@
                  (distinct (keep :person-oid applications)))]
     (map (fn [application]
            (let [onr-person (get persons (:person-oid application))
-                 person     (if (or (:yksiloity onr-person)
-                                    (:yksiloityVTJ onr-person))
+                 person     (if (person-util/is-yksiloity? onr-person)
                               (merge {:oid            (:oidHenkilo onr-person)
                                       :preferred-name (:kutsumanimi onr-person)
                                       :last-name      (:sukunimi onr-person)
@@ -921,8 +920,7 @@
                                  (person-service/get-persons person-service))
             yksiloimattomat (->> henkilot
                                  vals
-                                 (remove #(or (:yksiloity %)
-                                              (:yksiloityVTJ %)))
+                                 (remove #(person-util/is-yksiloity? %))
                                  (map :oidHenkilo)
                                  distinct
                                  seq)
@@ -968,8 +966,7 @@
                                  (person-service/get-persons person-service))
             yksiloimattomat (->> henkilot
                                  (keep (fn [[oid h]]
-                                         (when-not (or (:yksiloity h)
-                                                       (:yksiloityVTJ h))
+                                         (when-not (person-util/is-yksiloity? h)
                                            oid)))
                                  distinct
                                  seq)]

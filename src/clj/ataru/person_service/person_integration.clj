@@ -14,6 +14,7 @@
    [ataru.cache.cache-service :as cache]
    [ataru.db.db :as db]
    [ataru.person-service.person-service :as person-service]
+   [ataru.person-service.person-util :as person-util]
    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-payment-job]
    [yesql.core :refer [defqueries]])
   (:import [java.util.concurrent Executors TimeUnit]
@@ -123,8 +124,7 @@
   (log/info "Checking person info of" person-oid)
   (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
-    (if (or (:yksiloity person)
-            (:yksiloityVTJ person))
+    (if (ataru.person-service.person-util/is-yksiloity? person)
       (when (update-person-info-as-in-person person-oid person)
         (log/info "Updated person info of" person-oid
                   "to that on oppijanumerorekisteri"))
