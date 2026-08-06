@@ -26,7 +26,24 @@
     :value "ETA"
     :label {}
     :valid { :start "2015-09-03T00:00:00+03:00" }
-    :within {}}])
+    :within {}}
+   {:uri "valtioryhmat_2"
+    :version 1
+    :value "EFTA"
+    :label {}
+    :valid { :start "2015-09-03T00:00:00+03:00" }
+    :within [{:uri "maatjavaltiot2_352"
+              :version 1
+              :value "352"}
+             {:uri "maatjavaltiot2_438"
+              :version 1
+              :value "438"}
+             {:uri "maatjavaltiot2_578"
+              :version 1
+              :value "578"}
+             {:uri "maatjavaltiot2_756"
+              :version 1
+              :value "756"}]}])
 
 (defn haku-with-hakuajat
   [hakuaika-start hakuaika-end]
