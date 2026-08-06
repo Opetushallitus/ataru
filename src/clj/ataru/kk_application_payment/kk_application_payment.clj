@@ -15,6 +15,7 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util :as util]
+            [clojure.set :as set]
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]
@@ -208,8 +209,8 @@
                          :required-at    (:required-at previous-state)
                          :approved-at    "now()"})))
 
-(defn set-application-fee-not-required-for-eu-citizen
-  "Sets kk processing fee not required for the application due to person being EU citizen."
+(defn set-application-fee-not-required-for-eta-citizen
+  "Sets kk processing fee not required for the application due to person being EU/ETA/Switzerland citizen."
   [application-key previous-state]
   (set-application-fee-not-required application-key (:eu-citizen all-reasons) previous-state))
 
@@ -257,17 +258,28 @@
   [haku]
   (:maksullinen-kk-haku? haku))
 
-(defn- is-vtj-yksiloity-eu-citizen? [koodisto-cache person]
-  (let [vahvasti-yksiloity? (or (:yksiloityVTJ person)
-                            (:yksiloityEidas person))
-        eu-area             (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+(defn- is-exempt-for-nationality?
+  "Citizens of ETA (European Economic Area) members (including EU members) and countries with
+   applicable bilateral agreements (currently only Switzerland) are exempt from the application
+   payment. They need to be yksilöity with either VTJ or eIDAS for the nationality to count."
+  [koodisto-cache person]
+  (let [vahvasti-yksiloity?  (or (:yksiloityVTJ person)
+                                 (:yksiloityEidas person))
+        eu-area              (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
                                  (filter #(= "EU" (:value %)))
                                  (first))
-        eu-country-codes (set (map :value (:within eu-area)))]
-    (if (> (count eu-country-codes) 0)
-      (and vahvasti-yksiloity?
-           (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
-      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
+        efta-area            (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+                                 (filter #(= "EFTA" (:value %))) ; EFTA = ETA Outside EU + Switzerland
+                                 (first))
+        eu-country-codes     (set (map :value (:within eu-area)))
+        efta-country-codes   (set (map :value (:within efta-area)))
+        exempt-country-codes (set/union eu-country-codes efta-country-codes)]
+    (when (<= (count eu-country-codes) 0)
+      (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))
+    (when (<= (count efta-country-codes) 0)
+      (throw (ex-info "Could not fetch country codes for EFTA area" {:person-oid (:oid person)})))
+    (and vahvasti-yksiloity?
+         (some #(contains? exempt-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))))
 
 (defn- is-finnish-citizen? [person]
   (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
@@ -489,13 +501,13 @@
        (new-state-fn (:key application) payment)))))
 
 (defn- update-payments-for-applications
-  [applications-payments exempt-keys is-finnish-citizen? is-eu-citizen? has-existing-payment?]
+  [applications-payments exempt-keys is-finnish-citizen? is-eta-citizen? has-existing-payment?]
   (let [map-payments (fn [new-state state-change-fn]
                        (doall
                          (remove nil? (map #(set-payment exempt-keys new-state state-change-fn %) applications-payments))))]
     (cond
-      is-finnish-citizen?   (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
-      is-eu-citizen?        (map-payments (:not-required all-states) set-application-fee-not-required-for-eu-citizen)
+      is-finnish-citizen?   (map-payments (:not-required all-states) set-application-fee-not-required-for-eta-citizen)
+      is-eta-citizen?       (map-payments (:not-required all-states) set-application-fee-not-required-for-eta-citizen)
       has-existing-payment? (map-payments (:ok-by-proxy all-states) set-application-fee-ok-by-proxy)
       :else                 (map-payments (:awaiting all-states) set-application-fee-required))))
 
@@ -533,16 +545,16 @@
                 exempt-keys            (set (map :key (filter (partial exemption-in-application? job-runner)
                                                               applications)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
-                is-eu-citizen?         (is-vtj-yksiloity-eu-citizen? koodisto-cache person)
+                is-eta-citizen?        (is-exempt-for-nationality? koodisto-cache person)
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
             (log/info "Updating application level kk application payment status for person" person-oid "term" term "year" year
                       "is-finnish-citizen?" (boolean is-finnish-citizen?)
-                      "is-eu-citizen?" (boolean is-eu-citizen?)
+                      "is-eta-citizen?" (boolean is-eta-citizen?)
                       "has-existing-payment?" (boolean has-existing-payment?))
             {:person            person
              :existing-payments applications-payments
              :modified-payments (update-payments-for-applications
-                                  applications-payments exempt-keys is-finnish-citizen? is-eu-citizen? has-existing-payment?)}))))))
+                                  applications-payments exempt-keys is-finnish-citizen? is-eta-citizen? has-existing-payment?)}))))))
 
 (defn get-kk-payment-state
   "Returns higher education application fee related info to single application.
