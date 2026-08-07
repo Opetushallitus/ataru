@@ -385,7 +385,7 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
-                    (it "should set payment status for eIDAS-yksilöity EFTA citizen as not required"
+                    (it "should set payment status for eIDAS-yksilöity Swiss citizen as not required"
                         (let [oid "1.2.3.4.5.756"                       ; FakePersonService returns Swiss nationality with yksiloityEidas and yksiloity
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                            (merge
@@ -400,6 +400,19 @@
 
                     (it "should set payment status for non VTJ-yksilöity EU citizen as awaiting"
                         (let [oid "1.2.3.4.5.909"                       ; FakePersonService returns French nationality but no yksiloityVTJ
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-without-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status for non VTJ-yksilöity Swiss citizen as awaiting"
+                        (let [oid "1.2.3.4.5.555"                       ; FakePersonService returns Swiss nationality but no yksiloityVTJ
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                            (merge
                                                                             application-fixtures/application-without-hakemusmaksu-exemption

@@ -163,6 +163,11 @@
                         :yksiloity true
                         :yksiloityVTJ false
                         :yksiloityEidas true})
+      "1.2.3.4.5.555" (merge fake-onr-person  ; Swiss
+                       {:kansalaisuus [{:kansalaisuusKoodi "756"}]
+                        :yksiloity true
+                        :yksiloityVTJ false
+                        :yksiloityEidas false})
       "1.2.3.4.5.752" (merge fake-onr-person  ; Swedish
                              {:kansalaisuus [{:kansalaisuusKoodi "752"}]
                               :yksiloity false
