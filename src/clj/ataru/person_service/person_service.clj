@@ -45,8 +45,7 @@
              {:language aidinkieli}))))
 
 (defn parse-person [application person-from-onr]
-  (let [yksiloity   (or (-> person-from-onr :yksiloity)
-                        (-> person-from-onr :yksiloityVTJ))
+  (let [yksiloity   (person-util/is-yksiloity? person-from-onr)
         person-info (if yksiloity
                       (person-info-from-onr-person person-from-onr)
                       (person-util/person-info-from-application application))]
@@ -103,20 +102,21 @@
   (linked-oids [_ oids]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oids)))
 
-(def fake-onr-person {:oidHenkilo   "1.2.3.4.5.6"
-                      :hetu         "020202A0202"
-                      :etunimet     "Testi"
-                      :kutsumanimi  "Testi"
-                      :sukunimi     "Ihminen"
-                      :syntymaaika  "1941-06-16"
-                      :sukupuoli    "2"
-                      :kansalaisuus [{:kansalaisuusKoodi "246"}]
-                      :aidinkieli   {:id          "742310"
-                                     :kieliKoodi  "fi"
-                                     :kieliTyyppi "suomi"}
-                      :turvakielto  false
-                      :yksiloity    false
-                      :yksiloityVTJ false})
+(def fake-onr-person {:oidHenkilo     "1.2.3.4.5.6"
+                      :hetu           "020202A0202"
+                      :etunimet       "Testi"
+                      :kutsumanimi    "Testi"
+                      :sukunimi       "Ihminen"
+                      :syntymaaika    "1941-06-16"
+                      :sukupuoli      "2"
+                      :kansalaisuus   [{:kansalaisuusKoodi "246"}]
+                      :aidinkieli     {:id          "742310"
+                                       :kieliKoodi  "fi"
+                                       :kieliTyyppi "suomi"}
+                      :turvakielto    false
+                      :yksiloity      false
+                      :yksiloityVTJ   false
+                      :yksiloityEidas false})
 
 (defrecord FakePersonService []
   component/Lifecycle
@@ -158,6 +158,15 @@
                        {:kansalaisuus [{:kansalaisuusKoodi "250"}]
                         :yksiloity true
                         :yksiloityVTJ false})
+      "1.2.3.4.5.248" (merge fake-onr-person  ; Åland Islands nationality
+                             {:kansalaisuus [{:kansalaisuusKoodi "248"}]
+                              :yksiloity true
+                              :yksiloityVTJ true})
+      "1.2.3.4.5.752" (merge fake-onr-person  ; Swedish
+                             {:kansalaisuus [{:kansalaisuusKoodi "752"}]
+                              :yksiloity false
+                              :yksiloityVTJ false
+                              :yksiloityEidas true})
       (merge fake-onr-person
              {:oidHenkilo oid})))
 

@@ -10,6 +10,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.koodisto.koodisto-codes :as codes]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -256,18 +257,19 @@
   (:maksullinen-kk-haku? haku))
 
 (defn- is-vtj-yksiloity-eu-citizen? [koodisto-cache person]
-  (let [vtj-yksiloity?   (:yksiloityVTJ person)
-        eu-area          (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
-                              (filter #(= "EU" (:value %)))
-                              (first))
+  (let [vahvasti-yksiloity? (or (:yksiloityVTJ person)
+                                (:yksiloityEidas person))
+        eu-area             (->> (koodisto/get-koodisto-options koodisto-cache "valtioryhmat" 1 false)
+                                 (filter #(= "EU" (:value %)))
+                                 (first))
         eu-country-codes (set (map :value (:within eu-area)))]
     (if (> (count eu-country-codes) 0)
-      (and vtj-yksiloity?
+      (and vahvasti-yksiloity?
            (some #(contains? eu-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
       (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
 
 (defn- is-finnish-citizen? [person]
-  (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
+  (some #(contains? codes/finland-equivalent-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn- time-is-before-some-attachment-deadlines?
   [attachment-deadline-service application-submitted haku now]

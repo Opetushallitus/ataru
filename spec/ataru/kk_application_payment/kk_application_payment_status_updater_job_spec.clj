@@ -893,6 +893,27 @@
                           :application-key application-key}
                          (select-keys obligation [:requirement :state :hakukohde :application-key]))))
 
+          (it "should automatically set kk-application-payment-obligation to 'reviewed' for eIDAS-verified EU citizen"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-eu-citizen-eidas
+                                     nil)
+                    eu-person-oid (:person-oid application-fixtures/application-eu-citizen-eidas)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid eu-person-oid :term test-term :year test-year} runner)
+                    application-key (:key (application-store/get-application application-id))
+                    payment (first (payment/get-raw-payments [application-key]))
+                    obligation (first (payment/get-kk-application-payment-obligation-reviews application-key))]
+                (should= {:application-key application-key
+                          :state (:not-required payment/all-states)
+                          :reason (:eu-citizen payment/all-reasons)}
+                         (select-keys payment [:application-key :state :reason]))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "reviewed"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys obligation [:requirement :state :hakukohde :application-key]))))
+
           (it "should automatically set kk-application-payment-obligation to 'reviewed' for Finnish citizen"
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
