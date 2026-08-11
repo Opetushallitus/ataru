@@ -3,7 +3,7 @@
             [ataru.applications.application-access-control :as aac]
             [ataru.person-service.person-service :as person-service]
             [ataru.applications.application-store :as application-store]
-            [speclj.core :refer [describe tags it should== should=]]
+            [speclj.core :refer [describe tags it should-not should== should=]]
   )
 )
 
