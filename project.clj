@@ -31,7 +31,6 @@
                          [org.mozilla/rhino "1.7.14"]
                          [org.scala-lang/scala-library "2.12.18"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
-                         [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
                          [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
                          ;transitive from clj-util
@@ -142,7 +141,6 @@
                  [org.clojure/java.jdbc "0.7.12"]
                  [software.amazon.jdbc/aws-advanced-jdbc-wrapper "3.3.0"]
                  [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
-                 [clj-time "0.15.2"]
                  [cheshire/cheshire "6.0.0"]
                  [selmer "1.12.59"]
                  [metosin/ring-http-response "0.9.3"

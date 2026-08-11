@@ -3,7 +3,7 @@
             [ataru.db.db :as db]
             [ataru.dob :as dob]
             [ataru.log.audit-log :as audit-log]
-            [clj-time.coerce :as coerce]
+            [ataru.time.coerce :as coerce]
             [clojure.java.jdbc :as jdbc]
             [clojure.pprint :as pprint]
             [clojure.test.check :as tc]
@@ -17,10 +17,10 @@
 (def hakukohderyhmapalvelu-service (hakukohderyhmapalvelu-service/new-hakukohderyhmapalvelu-service))
 
 (def hakukohderyhma-settings-cache (reify cache-service/Cache
-                      (get-from [this key])
-                      (get-many-from [this keys])
-                      (remove-from [this key])
-                      (clear-all [this])))
+                      (get-from [_this _key])
+                      (get-many-from [_this _keys])
+                      (remove-from [_this _key])
+                      (clear-all [_this])))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
@@ -129,9 +129,9 @@
                  (every? #(= (:application inputs) (:application %))
                          (call-ae inputs))))))
 
-(def ^:dynamic *form-id*)
-(def ^:dynamic *application-id*)
-(def ^:dynamic *application-key*)
+(def ^:dynamic *form-id* nil)
+(def ^:dynamic *application-id* nil)
+(def ^:dynamic *application-key* nil)
 
 (defn- get-reviews []
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
