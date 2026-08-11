@@ -263,9 +263,6 @@
                   (select-keys payment [:application-key :state :maksut-secret]))))
 
           (it "should create a reminder e-mail, a sending job and a sent event"
-              ;Note! this testcase fails if executed within the timeframe of 1 or 2 days before the beginning of DST (kesäaika).
-              ;To bypass this, change the due-date of kk-application-payment below so that it is 1 day after current date,
-              ;instead of default 2 days. Or make some permanent correction to the test case.
               (with-redefs [start-runner-job (stub :start-job)]
                 (let [reminder-maksut-secret "54215421ABCDABCD"
                       application-id (unit-test-db/init-db-fixture
@@ -308,6 +305,84 @@
                     {:application-key application-key :state (:awaiting payment/all-states)
                      :maksut-secret reminder-maksut-secret}
                     (select-keys payment [:application-key :state :maksut-secret]))
+                  (should= 1 (count events)))))
+
+          (it "should show the correct due date in the reminder e-mail across the spring DST transition (kesäajan alku)"
+              ; 2025-03-30 is the day Finland's clocks are moved forward (23-hour day). The due date's time of day
+              ; must be calculated using a local time-of-day (23:59), not a 23h59m elapsed-time Duration added to
+              ; midnight - the latter overflows into the next calendar day (31.3. instead of 30.3.) on this date.
+              (with-redefs [start-runner-job (stub :start-job)]
+                (set-fixed-time "2025-03-28T10:00:00")
+                (let [reminder-maksut-secret "54215421SPRINGDST"
+                      application-id (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                       nil)
+                      application-key (:key (application-store/get-application application-id))
+                      check-mail-fn (fn [mail-content]
+                                      (and
+                                        (str/includes? (:body mail-content) reminder-maksut-secret)
+                                        (str/includes? (:body mail-content) "30 maalisk. 2025 23:59:00 +0300")
+                                        (not (str/includes? (:body mail-content) "31 maalisk."))))
+                      _ (payment-store/create-or-update-kk-application-payment!
+                          {:application-key      application-key
+                           :state                (:awaiting payment/all-states)
+                           :reason               nil
+                           :due-date             "2025-03-30"
+                           :total-sum            payment/kk-application-payment-amount
+                           :maksut-secret        reminder-maksut-secret
+                           :required-at          "now()"
+                           :notification-sent-at nil
+                           :approved-at          nil})
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      payment (first (payment/get-raw-payments [application-key]))
+                      events (filter #(= (:event-type %) "kk-application-payment-reminder-email-sent")
+                                     (application-store/get-application-events application-key))]
+                  (should-have-invoked :start-job
+                                       {:with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})
+                  (should= reminder-maksut-secret (:maksut-secret payment))
+                  (should= 1 (count events)))))
+
+          (it "should show the correct due date in the reminder e-mail across the autumn DST transition (kesäajan loppu)"
+              ; 2025-10-26 is the day Finland's clocks are moved back (25-hour day). The old Duration-based
+              ; calculation didn't shift the calendar date on this transition, but did produce the wrong time
+              ; of day (22:59 instead of 23:59).
+              (with-redefs [start-runner-job (stub :start-job)]
+                (set-fixed-time "2025-10-24T10:00:00")
+                (let [reminder-maksut-secret "54215421AUTUMNDST"
+                      application-id (unit-test-db/init-db-fixture
+                                       form-fixtures/payment-exemption-test-form
+                                       application-fixtures/application-without-hakemusmaksu-exemption
+                                       nil)
+                      application-key (:key (application-store/get-application application-id))
+                      check-mail-fn (fn [mail-content]
+                                      (and
+                                        (str/includes? (:body mail-content) reminder-maksut-secret)
+                                        (str/includes? (:body mail-content) "26 lokak. 2025 23:59:00 +0200")
+                                        (not (str/includes? (:body mail-content) "22:59:00"))))
+                      _ (payment-store/create-or-update-kk-application-payment!
+                          {:application-key      application-key
+                           :state                (:awaiting payment/all-states)
+                           :reason               nil
+                           :due-date             "2025-10-26"
+                           :total-sum            payment/kk-application-payment-amount
+                           :maksut-secret        reminder-maksut-secret
+                           :required-at          "now()"
+                           :notification-sent-at nil
+                           :approved-at          nil})
+                      _ (updater-job/update-kk-payment-status-for-person-handler
+                          {:person_oid test-person-oid :term test-term :year test-year} runner)
+                      payment (first (payment/get-raw-payments [application-key]))
+                      events (filter #(= (:event-type %) "kk-application-payment-reminder-email-sent")
+                                     (application-store/get-application-events application-key))]
+                  (should-have-invoked :start-job
+                                       {:with [:* :*
+                                               "ataru.kk-application-payment.kk-application-payment-email-job"
+                                               check-mail-fn]})
+                  (should= reminder-maksut-secret (:maksut-secret payment))
                   (should= 1 (count events)))))
 
           (it "should not create a reminder e-mail and a sending job too early"
