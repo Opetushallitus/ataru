@@ -158,6 +158,16 @@
                        {:kansalaisuus [{:kansalaisuusKoodi "250"}]
                         :yksiloity true
                         :yksiloityVTJ false})
+      "1.2.3.4.5.756" (merge fake-onr-person  ; Swiss
+                       {:kansalaisuus [{:kansalaisuusKoodi "756"}]
+                        :yksiloity true
+                        :yksiloityVTJ false
+                        :yksiloityEidas true})
+      "1.2.3.4.5.555" (merge fake-onr-person  ; Swiss
+                       {:kansalaisuus [{:kansalaisuusKoodi "756"}]
+                        :yksiloity true
+                        :yksiloityVTJ false
+                        :yksiloityEidas false})
       "1.2.3.4.5.248" (merge fake-onr-person  ; Åland Islands nationality
                              {:kansalaisuus [{:kansalaisuusKoodi "248"}]
                               :yksiloity true

@@ -563,7 +563,7 @@
                              [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "processing"}
                               {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "information-request"}])
             application (application-store/get-application application-id)
-            _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+            _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
             resp         (post-applications-list application-fixtures/applications-list-query)
             status       (:status resp)
             body         (:body resp)
@@ -963,7 +963,7 @@
                                                        application-fixtures/application-without-hakemusmaksu-exemption
                                                        nil)
                     application (get-application-by-id application-id)
-                    _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+                    _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
                     _ (payment/set-application-fee-required (:key application) nil)
                     _ (payment/set-application-fee-paid (:key application) nil)
                     resp (get-application-details (:key application))
@@ -1004,7 +1004,7 @@
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application _] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+                    _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
                     resp (post-valintalaskenta-application-query [(:key application)])
                     status (:status resp)
                     applications (:body resp)]
@@ -1062,7 +1062,7 @@
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application _] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+                    _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
                     resp (post-siirto-application-query [(:key application)])
                     status (:status resp)
                     applications (:body resp)]
@@ -1126,7 +1126,7 @@
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+                    _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
                     resp (post-sure-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
@@ -1204,7 +1204,7 @@
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-eu-citizen (:key application) nil)
+                    _ (payment/set-application-fee-not-required-for-eta-citizen (:key application) nil)
                     resp (post-vts-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (get-in resp [:body :applications])]
