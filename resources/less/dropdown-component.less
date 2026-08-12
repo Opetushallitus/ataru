@@ -92,6 +92,39 @@
   outline: 0;
   padding: 15px 23px;
   position: relative;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.a-dropdown-search {
+  .flex-row(center, flex-start);
+
+  border-bottom: 1px solid @component-gray;
+  margin: 0 23px 10px 23px;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.a-dropdown-search__icon {
+  color: @component-gray;
+  margin-right: 8px;
+}
+
+.a-dropdown-search__input {
+  .default-font();
+
+  background-color: transparent;
+  border: 0;
+  color: @primary-green-700;
+  flex: 1;
+  outline: 0;
+  width: 100%;
+}
+
+.a-dropdown-list__no-results {
+  color: @component-gray;
+  margin: 0 23px;
+  white-space: nowrap;
 }
 
 .a-dropdown-list-container::before {

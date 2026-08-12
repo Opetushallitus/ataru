@@ -1,9 +1,11 @@
 (ns ataru.application-common.components.dropdown-component
   (:require [ataru.application-common.components.button-component :as button-component]
             [clojure.string :as string]
+            [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [schema.core :as s]
             [schema-tools.core :as st]
+            [ataru.translations.translation-util :as translations]
             [ataru.util :as util]))
 
 (s/defschema SelectOptionProps
@@ -99,6 +101,36 @@
        [:i.zmdi.zmdi-check.a-dropdown-list-option__checked])
      [:span label]]))
 
+(s/defn dropdown-search-input
+  [{:keys [query
+           on-change
+           on-key-down
+           listbox-id
+           lang
+           input-ref]} :- {:query       (s/maybe s/Str)
+                           :on-change   s/Any
+                           :on-key-down s/Any
+                           :listbox-id  s/Str
+                           :lang        s/Keyword
+                           :input-ref   s/Any}]
+  [:div.a-dropdown-search
+   [:i.zmdi.zmdi-search.a-dropdown-search__icon
+    {:aria-hidden true}]
+   [:input.a-dropdown-search__input
+    {:ref                input-ref
+     :type               "text"
+     :value              (or query "")
+     :placeholder        (translations/get-hakija-translation :search-dropdown-options lang)
+     :aria-label         (translations/get-hakija-translation :search-dropdown-options lang)
+     :role               "combobox"
+     :aria-expanded      true
+     :aria-haspopup      "listbox"
+     :aria-controls      listbox-id
+     :aria-autocomplete  "list"
+     :on-change          (fn dropdown-search-input-on-change [event]
+                           (on-change (.. event -target -value)))
+     :on-key-down        on-key-down}]])
+
 (s/defn dropdown-list
   [{:keys [expanded?
            options
@@ -106,42 +138,70 @@
            label-id
            dropdown-id
            selected-value
-           data-test-id]} :- {:expanded?      s/Bool
-                              :options        [SelectOptionProps]
-                              :on-click       s/Any
-                              :label-id       s/Str
-                              :dropdown-id    s/Str
-                              :selected-value (s/maybe s/Str)
-                              :data-test-id   (s/maybe s/Str)}]
-  (let [options-with-id    (map-indexed (fn [option-idx option-props]
+           query
+           on-query-change
+           on-search-key-down
+           input-ref
+           lang
+           data-test-id]} :- {:expanded?          s/Bool
+                              :options            [SelectOptionProps]
+                              :on-click           s/Any
+                              :label-id           s/Str
+                              :dropdown-id        s/Str
+                              :selected-value     (s/maybe s/Str)
+                              :query              (s/maybe s/Str)
+                              :on-query-change    s/Any
+                              :on-search-key-down s/Any
+                              :input-ref          s/Any
+                              :lang               s/Keyword
+                              :data-test-id       (s/maybe s/Str)}]
+  (let [filtered-options   (if (string/blank? query)
+                             options
+                             (let [query-lower (string/lower-case query)]
+                               (filter (fn [{:keys [label]}]
+                                        (string/includes? (string/lower-case label) query-lower))
+                                      options)))
+        options-with-id    (map-indexed (fn [option-idx option-props]
                                           (assoc
                                             option-props
                                             :option-id
                                             (str dropdown-id "-option-" option-idx)))
-                                        options)
+                                        filtered-options)
         selected-option-id (->> options-with-id
                                 (filter (fn [{:keys [value]}]
                                           (= value selected-value)))
                                 (map :option-id)
-                                first)]
+                                first)
+        listbox-id         (str dropdown-id "-listbox")]
     [:div.a-component.a-dropdown-list
      {:data-test-id (str data-test-id "-list")
       :class        (when-not expanded?
                       "a-dropdown-list--collapsed")}
-     [:ul.a-dropdown-list-container
-      (cond-> {:aria-labelledby label-id
-               :role            "listbox"
-               :tab-index       "-1"}
-              (not (string/blank? selected-value))
-              (assoc :aria-activedescendant selected-option-id))
-      (map-indexed (fn [option-idx option-props]
-                     (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
-                       ^{:key key}
-                       [dropdown-list-option (merge option-props
-                                                    (cond-> {:on-click       on-click
-                                                             :selected-value selected-value
-                                                             :data-test-id   (str data-test-id "-option-" (:value option-props))}))]))
-                   options-with-id)]]))
+     [dropdown-search-input
+      {:query       query
+       :on-change   on-query-change
+       :on-key-down on-search-key-down
+       :listbox-id  listbox-id
+       :lang        lang
+       :input-ref   input-ref}]
+     (if (empty? options-with-id)
+       [:p.a-dropdown-list__no-results
+        (translations/get-hakija-translation :no-dropdown-search-hits lang)]
+       [:ul.a-dropdown-list-container
+        (cond-> {:id              listbox-id
+                 :aria-labelledby label-id
+                 :role            "listbox"
+                 :tab-index       "-1"}
+                (not (string/blank? selected-value))
+                (assoc :aria-activedescendant selected-option-id))
+        (map-indexed (fn [option-idx option-props]
+                       (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
+                         ^{:key key}
+                         [dropdown-list-option (merge option-props
+                                                      (cond-> {:on-click       on-click
+                                                               :selected-value selected-value
+                                                               :data-test-id   (str data-test-id "-option-" (:value option-props))}))]))
+                     options-with-id)])]))
 
 (s/defn collapse-dropdown
   [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
@@ -152,7 +212,19 @@
   (re-frame/dispatch [:application-components/expand-dropdown {:dropdown-id dropdown-id}]))
 
 (defn dropdown []
-  (let [dropdown-id (util/component-id)]
+  (let [dropdown-id (util/component-id)
+        button-id   (str dropdown-id "-button")
+        input-ref   (atom nil)
+        focus-input (fn []
+                      (reagent/after-render
+                        (fn []
+                          (when-let [el @input-ref]
+                            (.focus el)))))
+        focus-button (fn []
+                       (reagent/after-render
+                         (fn []
+                           (when-let [el (.getElementById js/document button-id)]
+                             (.focus el)))))]
     (s/fn render-dropdown
       [{:keys [options
                unselected-label
@@ -165,14 +237,26 @@
                                   :selected-value                         (s/maybe s/Str)
                                   :on-change                              s/Any
                                   (s/optional-key :data-test-id)          (s/maybe s/Str)}]
-      (let [expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+      (let [lang                     @(re-frame/subscribe [:application/form-language])
+            expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+            query                    @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :query] nil])
             on-dropdown-value-change (fn on-dropdown-value-change [event]
                                        (collapse-dropdown {:dropdown-id dropdown-id})
                                        (on-change event))
             on-dropdown-button-click (fn on-dropdown-button-click []
                                        (if expanded?
                                          (collapse-dropdown {:dropdown-id dropdown-id})
-                                         (expand-dropdown {:dropdown-id dropdown-id})))
+                                         (do (expand-dropdown {:dropdown-id dropdown-id})
+                                             (focus-input))))
+            on-query-change          (fn on-query-change [value]
+                                       (re-frame/dispatch [:application-components/set-dropdown-query
+                                                            {:dropdown-id dropdown-id
+                                                             :query       value}]))
+            on-search-key-down       (fn on-search-key-down [e]
+                                       (when (= "Escape" (.-key e))
+                                         (.preventDefault e)
+                                         (collapse-dropdown {:dropdown-id dropdown-id})
+                                         (focus-button)))
             label-id                 (str dropdown-id "-label")
             button-label             (if-not (string/blank? selected-value)
                                        (->> options
@@ -193,6 +277,7 @@
                             (seq unselected-label-icon)
                             (conj [:<> unselected-label-icon]))
             :on-click     on-dropdown-button-click
+            :id           button-id
             :data-test-id (str data-test-id "-button")
             :aria-attrs   {:aria-haspopup "listbox"}
             :tab-index    "0"}]
@@ -209,10 +294,15 @@
                                (expand-dropdown {:dropdown-id dropdown-id}))
            :on-change        on-dropdown-value-change}]
          [dropdown-list
-          {:expanded?      expanded?
-           :options        options
-           :on-click       on-dropdown-value-change
-           :label-id       label-id
-           :dropdown-id    dropdown-id
-           :selected-value selected-value
-           :data-test-id   data-test-id}]]))))
+          {:expanded?           expanded?
+           :options             options
+           :on-click            on-dropdown-value-change
+           :label-id            label-id
+           :dropdown-id         dropdown-id
+           :selected-value      selected-value
+           :query               query
+           :on-query-change     on-query-change
+           :on-search-key-down  on-search-key-down
+           :input-ref           #(reset! input-ref %)
+           :lang                lang
+           :data-test-id        data-test-id}]]))))
