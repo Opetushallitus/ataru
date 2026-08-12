@@ -1,5 +1,5 @@
 (ns ataru.applications.application-access-control-spec
-  (:require [clj-time.format :as f]
+  (:require [ataru.time.coerce :as coerce]
             [clojure.string :as str]
             [speclj.core :refer [describe tags it should should-not should-be should-contain should=]]
             [ataru.applications.application-access-control :as aac]
@@ -146,8 +146,8 @@
 
   (it "returns application if user has opinto-ohjaaja authorization to lahtokoulu and period matches in jatkuva-haku"
     (let [session      (session-with-rights :opinto-ohjaaja [organization-oid-1])
-          applications [{:created-time (f/parse (:date-time f/formatters) "2024-02-20T00:00:00.000Z") :key "application-1-oid" :person-oid "opiskelija-1-oid" :haku "jatkuva-haku"}
-                        {:created-time (f/parse (:date-time f/formatters) "2024-08-20T00:00:00.000Z") :key "application-2-oid" :person-oid "opiskelija-1-oid" :haku "jatkuva-haku"}]
+          applications [{:created-time (coerce/from-string "2024-02-20T00:00:00.000Z") :key "application-1-oid" :person-oid "opiskelija-1-oid" :haku "jatkuva-haku"}
+                        {:created-time (coerce/from-string "2024-08-20T00:00:00.000Z") :key "application-2-oid" :person-oid "opiskelija-1-oid" :haku "jatkuva-haku"}]
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
       (should= 1 (count result))
       (should-contain "application-1-oid" (map :key result)))))
