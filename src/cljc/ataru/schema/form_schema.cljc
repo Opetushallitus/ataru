@@ -89,7 +89,9 @@
    (s/optional-key :belongs-to-hakukohteet)         [s/Str]
    (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
    (s/optional-key :per-hakukohde)                  s/Bool
-   (s/optional-key :sensitive-answer)               s/Bool})
+   (s/optional-key :sensitive-answer)               s/Bool
+   (s/optional-key :prepend-option)                 {:value s/Str
+                                                     :label localized-schema/LocalizedStringOptional}})
 
 (s/defschema TextFieldOptionCondition
   {:comparison-operator                 (s/enum "<" "=" ">")

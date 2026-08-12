@@ -11,6 +11,10 @@
             [schema-tools.core :as st]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
+(defn- prepend-option [prepend-option options]
+  (cons (assoc prepend-option :key (str "prepended-" (:value prepend-option)))
+        options))
+
 (defn dropdown [field-descriptor idx render-field]
   (let [languages     (re-frame/subscribe [:application/default-languages])
         id            (application-field/answer-key field-descriptor)
@@ -73,12 +77,14 @@
             (map
               (fn [option]
                 [:option {:value (:value option)
-                          :key   (:value option)}
+                          :key   (or (:key option) (:value option))}
                  (util/non-blank-option-label option @languages)])
               (cond->> options
                        (and (some? (:koodisto-source field-descriptor))
                             (not (:koodisto-ordered-by-user field-descriptor)))
-                       (sort-by #(util/non-blank-option-label % @languages))))))]]]
+                       (sort-by #(util/non-blank-option-label % @languages))
+                       (some? (:prepend-option field-descriptor))
+                       (prepend-option (:prepend-option field-descriptor))))))]]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]
