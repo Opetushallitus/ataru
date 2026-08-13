@@ -115,16 +115,12 @@
                  [io.netty/netty-transport-native-epoll "4.1.124.Final"]
                  [io.netty/netty-transport-native-kqueue "4.1.124.Final"]
                  [io.netty/netty-transport-native-unix-common "4.1.124.Final"]
-                 [oph/clj-access-logging "1.0.0-SNAPSHOT" :exclusions [javax.xml.bind/jaxb-api io.findify/s3mock_2.12]]
-                 [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [oph/clj-timbre-access-logging "1.1.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [oph/clj-timbre-auditlog "0.2.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
+                 [fi.vm.sade/auditlogger "9.2.7-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.11.0"
                   :exclusions [commons-io]]
-                 [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12 commons-io]]
+                 [opiskelijavalinnat-utils/clj-ring-db-cas-session "1.0.0-SNAPSHOT"]
                  [ring/ring-defaults "0.4.0"
                   :exclusions [commons-io]]
                  [ring/ring-json "0.5.1"
@@ -178,14 +174,7 @@
 
   :repositories [["github" {:url "https://maven.pkg.github.com/Opetushallitus/packages"
                             :username "private-token"
-                            :password :env/GITHUB_TOKEN}]
-                 ["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
-                              :sign-releases false
-                              :snapshots     false}]
-                 ["snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
-                               :releases {:update :never}}]
-                 ["ext-snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"
-                                   :releases {:update :never}}]]
+                            :password :env/GITHUB_TOKEN}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths ["spec"]
