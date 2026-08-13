@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>221028dedd0e4ab189e777f65fb940797e832859</tag>
+    <tag>929d91204684006d3f42674dbc630c9ddb12ede6</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -1080,12 +1080,6 @@
       <groupId>org.clojure</groupId>
       <artifactId>tools.namespace</artifactId>
       <version>1.5.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>speclj-junit</groupId>
-      <artifactId>speclj-junit</artifactId>
-      <version>0.0.11-20151116.130002-1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
