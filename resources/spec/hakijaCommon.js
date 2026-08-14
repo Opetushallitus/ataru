@@ -55,18 +55,7 @@ const invalidFieldNames = () =>
     $(e).text()
   )
 
-const selectedHakukohteet = () =>
-  testFrame()
-    .find('.application__hakukohde-selected-list')
-    .find('.application__selected-hakukohde-row')
-
-const hakukohdeSearchInput = () =>
-  testFrame().find('.application__hakukohde-selection-search-input input')
-
 const personInfoModule = () => formSections().eq(0)
-
-const selectedHakukohdeName = (hakukohdeRow) =>
-  $(hakukohdeRow).find('.application__hakukohde-header').first().text()
 
 const hasFormField = (fieldId) =>
   testFrame().find('#scroll-to-' + fieldId).length === 1
