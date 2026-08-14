@@ -238,6 +238,51 @@ export const poistaTestiHaku = async (
   await request.delete(getTestiHaunOsoite(hakuOid))
 }
 
+// /hakemus/api/haku/:haku-oid on rajoitettu polkuregexillä [0-9\.]+
+// (ataru.hakija.hakija-routes), joten asetaTestiHaku-kutsuun annettavan
+// haku-oidin täytyy olla vain numeroita ja pisteitä.
+export const luoTestiHaunOid = (): string =>
+  `1.2.246.562.29.${Date.now()}${Math.floor(Math.random() * 10000)}`
+
+export const getTestiHakukohteenOsoite = (hakukohdeOid?: string) =>
+  hakukohdeOid
+    ? `/hakemus/test/tarjonta/hakukohde/${hakukohdeOid}`
+    : '/hakemus/test/tarjonta/hakukohde'
+
+export interface TestiHakukohdeMuutos {
+  oid: string
+  hakuOid?: string
+}
+
+// Muuttaa ajonaikaisesti mock-tarjontapalvelun olemassa olevaa hakukohdetta
+// (ks. ataru.tarjonta-service.mock-tarjonta-service/register-test-hakukohde!),
+// tyypillisesti sen :hakuOid-kenttää osoittamaan testin omaan,
+// asetaTestiHaku-kutsulla rekisteröityyn hakuun. Näin testi voi navigoida
+// hakukohteen kautta (esim. /hakemus/hakukohde/:oid) käyttäen olemassa
+// olevan hakukohteen (esim. "Testihakukohde 1") nimeä ja koulutustietoja,
+// mutta ilman että sen täytyy jakaa hakukohteen alkuperäisen haun
+// lomakeavainta muiden testien kanssa.
+export const asetaTestiHakukohde = async (
+  page: Page,
+  hakukohdeMuutos: TestiHakukohdeMuutos
+): Promise<void> => {
+  const response = await page.request.post(getTestiHakukohteenOsoite(), {
+    data: hakukohdeMuutos,
+  })
+  if (!response.ok()) {
+    throw new Error(
+      `Hakukohteen ${hakukohdeMuutos.oid} testimuutos epäonnistui: ${response.status()} ${await response.text()}`
+    )
+  }
+}
+
+export const poistaTestiHakukohde = async (
+  request: APIRequestContext,
+  hakukohdeOid: string
+): Promise<void> => {
+  await request.delete(getTestiHakukohteenOsoite(hakukohdeOid))
+}
+
 export const expectUusiLomakeValid = async (
   page: Page,
   lomakkeenAvain: string,

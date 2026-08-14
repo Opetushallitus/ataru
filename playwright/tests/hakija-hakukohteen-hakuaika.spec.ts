@@ -1,32 +1,44 @@
+import { randomUUID } from 'crypto'
 import { test, expect, Page } from '@playwright/test'
 import { fillField, selectOption, waitForResponse } from '../playwright-utils'
 import {
   asetaPriorisoivaHakukohderyhma,
   asetaRajaavaHakukohderyhma,
+  asetaTestiHaku,
+  asetaTestiHakukohde,
   getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   haeOletuslomakkeenSisalto,
   kirjauduVirkailijanNakymaan,
   luoLomakeAvaimella,
+  luoTestiHaunOid,
   poistaLomake,
   poistaPriorisoivaHakukohderyhma,
   poistaRajaavaHakukohderyhma,
+  poistaTestiHaku,
+  poistaTestiHakukohde,
 } from '../playwright-ataru-utils'
 
 test.describe.configure({ mode: 'serial' })
 
-// Haku 1.2.246.562.29.65950024187 (mock_tarjonta_service.clj) osoittaa
-// hakijan lomakkeeksi tämän avaimen.
-const LOMAKKEEN_AVAIN = 'hakija-hakukohteen-hakuaika-test-form'
-const HAKU_OID = '1.2.246.562.29.65950024187'
+// Haku ja lomake rekisteröidään ajonaikaisesti (ks. asetaTestiHaku) sen
+// sijaan, että käytettäisiin haun 1.2.246.562.29.65950024187 staattista,
+// dedikoitua avainta "hakija-hakukohteen-hakuaika-test-form" suoraan —
+// näin tämä testi ei ole riippuvainen mock_tarjonta_service.clj:n
+// staattisesta testidatasta.
+const lomakkeenAvain = randomUUID()
+const HAKU_OID = luoTestiHaunOid()
 const HAKUKOHDERYHMA_OID = '1.2.246.562.28.00000000001'
 
-// Nämä kolme hakukohdetta kuuluvat hakuun 65950024187. Vain
-// HAKUKOHDE_HAKUAIKA_OHI_OID:n hakuaika on tarjonnan mock-datassa jo
+// Nämä neljä hakukohdetta ovat olemassa olevaa, sisällöltään valmista
+// tarjonnan testidataa (mock_tarjonta_service.clj), jotka liitetään tämän
+// testin omaan hakuun asetaTestiHaku-kutsun hakukohdeOids-listan kautta.
+// Vain HAKUKOHDE_HAKUAIKA_OHI_OID:n hakuaika on tarjonnan mock-datassa jo
 // mennyt umpeen.
 const HAKUKOHDE_OID = '1.2.246.562.20.49028100003'
 const HAKUKOHDE_HAKUAIKA_OHI_OID = '1.2.246.562.20.49028100001'
 const HAKUKOHDE_OSA_HAKUAJOISTA_OID = '1.2.246.562.20.49028100002'
+const HAKUKOHDE_MUU_OID = '1.2.246.562.20.490281000035'
 
 const METADATA = {
   'created-by': {
@@ -122,10 +134,22 @@ test.beforeAll(async ({ browser }) => {
   await kirjauduVirkailijanNakymaan(page)
 
   const oletusSisalto = await haeOletuslomakkeenSisalto(page)
-  await luoLomakeAvaimella(page, LOMAKKEEN_AVAIN, [
+  await luoLomakeAvaimella(page, lomakkeenAvain, [
     ...oletusSisalto,
     ...HAKUAJAT_OHI_KENTAT,
   ])
+  await asetaTestiHaku(page, {
+    oid: HAKU_OID,
+    ataruLomakeAvain: lomakkeenAvain,
+    usePriority: true,
+    hakukohdeOids: [
+      HAKUKOHDE_HAKUAIKA_OHI_OID,
+      HAKUKOHDE_OSA_HAKUAJOISTA_OID,
+      HAKUKOHDE_OID,
+      HAKUKOHDE_MUU_OID,
+    ],
+  })
+  await asetaTestiHakukohde(page, { oid: HAKUKOHDE_OID, hakuOid: HAKU_OID })
 
   await asetaPriorisoivaHakukohderyhma(page, HAKU_OID, HAKUKOHDERYHMA_OID, [
     [HAKUKOHDE_OID],
@@ -140,7 +164,7 @@ test.beforeAll(async ({ browser }) => {
   )
   if (!hakukohdeResponse.ok()) {
     throw new Error(
-      `Hakukohdetta ${HAKUKOHDE_OID} ei saatu haettua lomakkeen ${LOMAKKEEN_AVAIN} kautta: ${hakukohdeResponse.status()} ${await hakukohdeResponse.text()}`
+      `Hakukohdetta ${HAKUKOHDE_OID} ei saatu haettua lomakkeen ${lomakkeenAvain} kautta: ${hakukohdeResponse.status()} ${await hakukohdeResponse.text()}`
     )
   }
 
@@ -218,7 +242,9 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async ({ request }) => {
-  await poistaLomake(request, LOMAKKEEN_AVAIN)
+  await poistaTestiHakukohde(request, HAKUKOHDE_OID)
+  await poistaTestiHaku(request, HAKU_OID)
+  await poistaLomake(request, lomakkeenAvain)
   await poistaPriorisoivaHakukohderyhma(request, HAKU_OID, HAKUKOHDERYHMA_OID)
   await poistaRajaavaHakukohderyhma(request, HAKU_OID, HAKUKOHDERYHMA_OID)
   await page.close()
