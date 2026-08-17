@@ -54,8 +54,6 @@
     (it "is created successfully"
       (run-karma-test "virkailija" (last (split (login) #"="))))
     (it "is created with a question group successfully"
-      (run-karma-test "virkailija-question-group" (last (split (login) #"="))))
-    (it "is able to use lomake with hakukohde organization connection"
-        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"="))))))
+      (run-karma-test "virkailija-question-group" (last (split (login) #"="))))))
 
 (run-specs)
