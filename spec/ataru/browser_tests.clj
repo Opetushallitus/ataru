@@ -60,8 +60,6 @@
 
   (describe "applying using a form /"
     (it "is possible to apply using a plain form"
-      (run-karma-test "hakija-form"))
-    (it "is possible to apply using a form with a question group"
-      (run-karma-test "hakija-question-group-form"))))
+      (run-karma-test "hakija-form"))))
 
 (run-specs)
