@@ -302,10 +302,9 @@ test('ei salli hakutoiveen lisäämistä väärässä prioriteettijärjestyksess
     page.locator('.application__selected-hakukohde-row--offending-priorization')
   ).toHaveCount(2)
 
-  const invalidFieldNames = await page
-    .locator('.application__invalid-fields > a > div')
-    .allTextContents()
-  expect(invalidFieldNames.join(';')).toBe('Hakukohteet')
+  await expect(
+    page.locator('.application__invalid-fields > a > div')
+  ).toHaveText('Hakukohteet')
 })
 
 test('ei salli hakutoiveen lisäämistä kun rajoittavan hakukohderyhmän raja on täynnä', async () => {
