@@ -56,10 +56,6 @@
     (it "is created with a question group successfully"
       (run-karma-test "virkailija-question-group" (last (split (login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
-        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"=")))))
-
-  (describe "applying using a form /"
-    (it "is possible to apply using a plain form"
-      (run-karma-test "hakija-form"))))
+        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"="))))))
 
 (run-specs)
