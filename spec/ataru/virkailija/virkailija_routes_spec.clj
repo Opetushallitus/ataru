@@ -1444,7 +1444,8 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [[person _ _ _ _] (init-and-get-kk-fixtures)
+              (let [[person _ _ application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required (:key application) nil)
                     resp (get-omatsivut-applications-query person nil)
                     status (:status resp)
                     applications (:body resp)]
@@ -1452,6 +1453,14 @@
                 (should= 1 (count applications))
                 (should= "fi" (:asiointikieli (first applications)))
                 (should= false (:processing (first applications)))
+                (should= "awaiting" (:payment-state (first applications)))
+                (should= (.plusDays (java.time.LocalDate/now)
+                                    payment/kk-application-payment-due-days)
+                         (-> (:payment-due-date (first applications))
+                             java.time.ZonedDateTime/parse
+                             .toLocalDate))
+                (should= "100.00" (:payment-sum (first applications)))
+                (should-be-nil (:payment-reason (first applications)))
                 (should-be-nil (:hakuaikaIsOn (first applications)))
                 (should-be-nil (:hakuaikaEnds (first applications)))))
 
