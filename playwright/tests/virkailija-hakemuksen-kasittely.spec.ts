@@ -209,8 +209,7 @@ test('pisteet säilyvät hakemuksesta toiseen siirryttäessä', async () => {
   await expect(scoreInput()).toHaveValue('42')
   // Muistiinpanokenttä on aina tyhjä UUDEN muistiinpanon kirjoittamista
   // varten — tallennettu muistiinpano näkyy pysyvästi vain
-  // yhteenvetotekstissä, ei tekstialueen arvona (ks. myös alkuperäisen
-  // mocha-testin oma vastaava tarkistus).
+  // yhteenvetotekstissä, ei tekstialueen arvona.
   await expect(reviewNoteSummary()).toBeVisible()
 
   await applicantRow('Kuikeloinen').click()

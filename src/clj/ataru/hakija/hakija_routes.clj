@@ -107,23 +107,11 @@
   []
   (boolean (:dev? env)))
 
-(defn- render-file-in-dev
-  ([filename]
-   (render-file-in-dev filename {}))
-  ([filename opts]
-   (if (is-dev-env?)
-     (selmer/render-file filename opts)
-     (response/not-found "Not found"))))
-
 (declare generate-new-random-key)
 (declare fake-strong-oppija-session-data)
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET ["/hakija-:testname{[A-Za-z\\-]+}-test.html"] [testname]
-      (if (is-dev-env?)
-        (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
-        (response/not-found "Not found")))
     ; Älä käytä latest-application-secret-rajapintaa testeissä, koska se on hauras, jos ajetaan
     ; monta testiä samanaikaisesti. Käytä application-secret-by-id-rajapintaa, joka hakee salaisuuden hakemuksen id:llä.
     ; TODO: Poista latest-application-secret, kunhan kaikki testit on siirretty käyttämään application-secret-by-id:a.
@@ -191,14 +179,6 @@
       (if (is-dev-env?)
         (do (unregister-test-hakukohde! oid)
             (response/ok {}))
-        (response/not-found "Not found")))
-    (api/GET "/virkailija-hakemus-edit-test.html" []
-      (if (is-dev-env?)
-        (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
-        (response/not-found "Not found")))
-    (api/GET "/spec/:filename.js" [filename]
-      (if (is-dev-env?)
-        (render-file-in-dev (str "spec/" filename ".js"))
         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
