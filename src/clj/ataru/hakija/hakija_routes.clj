@@ -181,7 +181,8 @@
     ; /hakemus/hakukohde/:oid) sen sijaan, että se käyttäisi hakua suoraan.
     (api/POST "/test/tarjonta/hakukohde" []
       :body [hakukohde-muutos {:oid s/Str
-                               (s/optional-key :hakuOid) s/Str}]
+                               (s/optional-key :hakuOid) s/Str
+                               (s/optional-key :hakukohteenNimet) {s/Keyword s/Str}}]
       (if (is-dev-env?)
         (do (register-test-hakukohde! hakukohde-muutos)
             (response/ok {}))

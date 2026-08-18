@@ -221,7 +221,8 @@
         (route/not-found "Not found")))
     (api/POST "/test/tarjonta/hakukohde" []
       :body [hakukohde-muutos {:oid s/Str
-                               (s/optional-key :hakuOid) s/Str}]
+                               (s/optional-key :hakuOid) s/Str
+                               (s/optional-key :hakukohteenNimet) {s/Keyword s/Str}}]
       (if (:dev? env)
         (do (register-test-hakukohde! hakukohde-muutos)
             (ok {}))
