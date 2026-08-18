@@ -573,6 +573,10 @@
    :hakukohteet [s/Str]
    :submitted java.time.ZonedDateTime
    :processing s/Bool
+   :payment-state (s/maybe s/Str)
+   :payment-due-date (s/maybe java.time.ZonedDateTime)
+   :payment-sum (s/maybe s/Str)
+   :payment-reason (s/maybe s/Str)
    :form-name (s/maybe localized-schema/LocalizedStringOptional)
    :asiointikieli s/Str
    (s/optional-key :hakuaikaIsOn) (s/maybe s/Bool)
