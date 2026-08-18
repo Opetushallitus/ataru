@@ -27,6 +27,23 @@
   {:id "valintatuloksen-julkaisulupa"
    :fieldClass "formField"})
 
+(def koulutusmarkkinointilupa-field
+  {:id "koulutusmarkkinointilupa"
+   :fieldClass "formField"})
+
+(def asiointikieli-field
+  {:id "asiointikieli"
+   :fieldClass "formField"})
+
+(def expired-field-deadlines
+  (fn [field]
+    {(:id field) {:field-id (:id field)
+                  :deadline past-date}}))
+
+(def hakuajat-in-processing
+  {:uniques []
+   :by-oid {}})
+
 (def allowed-to-edit-person-field
   {:id "address"
    :fieldClass "formField"})
@@ -96,4 +113,47 @@
       (it "should mark allowed person info field as viewable and editable"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:virkailija] false nil true false nil nil allowed-to-edit-person-field)]
           (should-be false? (:cannot-view new-field))
-          (should-be false? (:cannot-edit new-field)))))))
+          (should-be false? (:cannot-edit new-field))))))
+
+  (describe "always-editable lupatiedot fields (koulutusmarkkinointilupa, asiointikieli)"
+    (describe "when hakuaika has ended (expired field deadline)"
+      (it "should mark koulutusmarkkinointilupa as editable even after deadline"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines koulutusmarkkinointilupa-field) false false nil nil koulutusmarkkinointilupa-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
+
+      (it "should mark asiointikieli as editable even after deadline"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines asiointikieli-field) false false nil nil asiointikieli-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
+
+      (it "should mark valintatuloksen-julkaisulupa as not editable after deadline"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines lupatieto-field) false false nil nil lupatieto-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field))))
+
+      (it "should mark normal field as not editable after deadline"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines normal-field) false false nil nil normal-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field)))))
+
+    (describe "when application is in processing state (jatkuva/joustava haku)"
+      (it "should mark koulutusmarkkinointilupa as editable when application is in processing"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil koulutusmarkkinointilupa-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
+
+      (it "should mark asiointikieli as editable when application is in processing"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil asiointikieli-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
+
+      (it "should mark valintatuloksen-julkaisulupa as not editable when application is in processing"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil lupatieto-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field))))
+
+      (it "should mark normal field as not editable when application is in processing"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil normal-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field)))))))

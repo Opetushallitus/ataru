@@ -94,9 +94,15 @@
 
 (def lupatiedot-field-ids #{:lupatiedot-toinen-aste :paatos-opiskelijavalinnasta-sahkopostiin :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
 
+(def always-editable-lupatieto-field-ids #{:koulutusmarkkinointilupa :asiointikieli})
+
 (defn- is-lupatieto-field?
   [field]
   (contains? lupatiedot-field-ids (keyword (:id field))))
+
+(defn- is-always-editable-lupatieto-field?
+  [field]
+  (contains? always-editable-lupatieto-field-ids (keyword (:id field))))
 
 (defn- is-editing-allowed-person-info-field?
   [field]
@@ -139,8 +145,10 @@
   [attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline
    use-toisen-asteen-yhteishaku-restrictions? has-overdue-payment? application-submitted haku]
   (not (and (editing-allowed-for-person-info-field? roles field)
-            (editing-allowed-by-deadlines? attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline application-submitted haku)
-            (application-not-in-processing? roles hakuajat application-in-processing-state?)
+            (or (is-always-editable-lupatieto-field? field)
+                (editing-allowed-by-deadlines? attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline application-submitted haku))
+            (or (is-always-editable-lupatieto-field? field)
+                (application-not-in-processing? roles hakuajat application-in-processing-state?))
             (editing-allowed-by-toisen-asteen-yhteishaku-restrictions? use-toisen-asteen-yhteishaku-restrictions? field)
             (editing-allowed-by-kk-payment-status? roles has-overdue-payment?))))
 
