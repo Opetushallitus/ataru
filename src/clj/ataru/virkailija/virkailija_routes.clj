@@ -85,6 +85,8 @@
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
+            [ataru.test-utils :refer [register-test-haku! unregister-test-haku!
+                                      register-test-hakukohde! unregister-test-hakukohde!]]
             [ataru.time :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
@@ -193,6 +195,41 @@
     (api/GET "/spec/:filename.js" [filename]
       (if (:dev? env)
         (render-file-in-dev (str "spec/" filename ".js") {})
+        (route/not-found "Not found")))
+    ; Peilaa ataru.hakija.hakija-routes/test-routes:n vastaavat rekisteröinnit,
+    ; koska hakija- ja virkailija-puoli ajetaan erillisinä prosesseina, joilla
+    ; kummallakin on oma, prosessikohtainen mock-tarjonta-service-tila
+    ; (defonce test-haut / test-hakukohteet). Testin pitää siis rekisteröidä
+    ; testihakunsa/-hakukohteensa MOLEMPIIN prosesseihin, jotta virkailijan
+    ; hakukohtainen hakemuslistaus (joka hakee haun tiedot tästä prosessista)
+    ; löytää sen.
+    (api/POST "/test/tarjonta/haku" []
+      :body [haku {:oid s/Str
+                   :ataruLomakeAvain s/Str
+                   :hakukohdeOids [s/Str]
+                   (s/optional-key :usePriority) s/Bool
+                   (s/optional-key :kohdejoukkoUri) s/Str
+                   (s/optional-key :kohdejoukonTarkenne) s/Str}]
+      (if (:dev? env)
+        (do (register-test-haku! haku)
+            (ok {}))
+        (route/not-found "Not found")))
+    (api/DELETE "/test/tarjonta/haku/:oid" [oid]
+      (if (:dev? env)
+        (do (unregister-test-haku! oid)
+            (ok {}))
+        (route/not-found "Not found")))
+    (api/POST "/test/tarjonta/hakukohde" []
+      :body [hakukohde-muutos {:oid s/Str
+                               (s/optional-key :hakuOid) s/Str}]
+      (if (:dev? env)
+        (do (register-test-hakukohde! hakukohde-muutos)
+            (ok {}))
+        (route/not-found "Not found")))
+    (api/DELETE "/test/tarjonta/hakukohde/:oid" [oid]
+      (if (:dev? env)
+        (do (unregister-test-hakukohde! oid)
+            (ok {}))
         (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service
