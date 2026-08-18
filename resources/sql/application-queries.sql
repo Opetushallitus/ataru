@@ -139,6 +139,10 @@ SELECT
   a.hakukohde AS hakukohteet,
   a.submitted AS submitted,
   f.name      AS form_name,
+  ap.state    AS payment_state,
+  ap.due_date AS payment_due_date,
+  ap.total_sum AS payment_sum,
+  ap.reason   AS payment_reason,
   coalesce((SELECT CASE value
                        WHEN '1' THEN 'fi'
                        WHEN '2' THEN 'sv'
@@ -158,6 +162,8 @@ JOIN application_reviews AS ar
   ON ar.application_key = a.key
 JOIN forms AS f
   ON f.id = a.form_id
+LEFT JOIN kk_application_payments AS ap
+  ON ap.application_key = a.key
 LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    FROM application_secrets
                    WHERE application_key = a.key
