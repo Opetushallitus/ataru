@@ -148,19 +148,6 @@ temporarily naming them with `focus-it` instead of `it`, see:
 make test-clojurescript
 ```
 
-### Legacy browser tests (Mocha)
-
-To run only browser tests (headless, using puppeteer):
-
-```
-make start-docker test-browser
-```
-
-To run browser tests using a real browser start both virkailija and hakija
-applications with `lein hakija-dev` and `lein virkailija-dev`.
-
-Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
-
 ## Static checks (Linting and type checking)
 
 To run all static checks for code in repo:

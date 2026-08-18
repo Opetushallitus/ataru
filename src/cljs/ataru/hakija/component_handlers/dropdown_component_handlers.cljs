@@ -5,11 +5,13 @@
                                {:keys [dropdown-id-to-toggle
                                        expand?]}]
   (as-> dropdown-specs dropdown-specs'
-        (assoc-in dropdown-specs' [dropdown-id-to-toggle :expanded?] expand?)
+        (cond-> (assoc-in dropdown-specs' [dropdown-id-to-toggle :expanded?] expand?)
+                (not expand?)
+                (assoc-in [dropdown-id-to-toggle :query] nil))
         (reduce-kv (fn collapse-dropdown-component [acc dropdown-id dropdown-spec]
                      (let [dropdown-spec (cond-> dropdown-spec
                                                  (not= dropdown-id dropdown-id-to-toggle)
-                                                 (assoc :expanded? false))]
+                                                 (assoc :expanded? false :query nil))]
                        (assoc acc dropdown-id dropdown-spec)))
                    {}
                    dropdown-specs')))
@@ -31,3 +33,8 @@
                toggle-dropdown-expand
                {:dropdown-id-to-toggle dropdown-id
                 :expand?               true})))
+
+(re-frame/reg-event-db
+  :application-components/set-dropdown-query
+  (fn on-set-dropdown-query-event [db [_ {:keys [dropdown-id query]}]]
+    (assoc-in db [:components :dropdown dropdown-id :query] query)))
