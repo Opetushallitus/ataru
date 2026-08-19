@@ -1,7 +1,7 @@
 (ns ataru.forms.hakukohderyhmat-spec
   (:require [ataru.forms.hakukohderyhmat :as h]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [clj-time.core :as time]
+            [ataru.time :as time]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]

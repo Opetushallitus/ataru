@@ -48,5 +48,7 @@
                                                                           subscribe]}}
  :lint-as {compojure.api.sweet/defroutes clojure.core/def
            speclj.core/with clojure.core/def
+           speclj.core/around clojure.core/fn
+           speclj.core/around-all clojure.core/fn
            ajax.macros/easy-api clojure.core/def}}
 

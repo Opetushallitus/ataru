@@ -11,9 +11,8 @@
             [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
-            [clj-access-logging]
-            [clj-stdout-access-logging]
-            [clj-timbre-access-logging]
+            [ataru.log.access-logging :as access-logging]
+            [ataru.log.timbre-access-logging :as timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -603,8 +602,8 @@
                                           :query-params [{lang :- s/Str nil}]
                                           (render-application lang))))
                                     (route/not-found "<h1>Page not found</h1>")))))
-                            (clj-access-logging/wrap-access-logging)
-                            (clj-timbre-access-logging/wrap-timbre-access-logging
+                            (access-logging/wrap-access-logging)
+                            (timbre-access-logging/wrap-timbre-access-logging
                               {:path (str (-> config :log :hakija-base-path)
                                           "/access_ataru-hakija"
                                           (when (:hostname env) (str "_" (:hostname env))))})

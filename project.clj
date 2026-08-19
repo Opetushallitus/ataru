@@ -31,7 +31,6 @@
                          [org.mozilla/rhino "1.7.14"]
                          [org.scala-lang/scala-library "2.12.18"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
-                         [joda-time "2.12.7"]
                          [net.java.dev.jna/jna "5.8.0"]
                          [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
                          ;transitive from clj-util
@@ -116,16 +115,12 @@
                  [io.netty/netty-transport-native-epoll "4.1.124.Final"]
                  [io.netty/netty-transport-native-kqueue "4.1.124.Final"]
                  [io.netty/netty-transport-native-unix-common "4.1.124.Final"]
-                 [oph/clj-access-logging "1.0.0-SNAPSHOT" :exclusions [javax.xml.bind/jaxb-api io.findify/s3mock_2.12]]
-                 [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [oph/clj-timbre-access-logging "1.1.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [oph/clj-timbre-auditlog "0.2.0-SNAPSHOT" :exclusions [com.google.guava/guava io.findify/s3mock_2.12]]
-                 [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
+                 [fi.vm.sade/auditlogger "9.2.7-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.11.0"
                   :exclusions [commons-io]]
-                 [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT" :exclusions [io.findify/s3mock_2.12 commons-io]]
+                 [opiskelijavalinnat-utils/clj-ring-db-cas-session "1.0.0-SNAPSHOT"]
                  [ring/ring-defaults "0.4.0"
                   :exclusions [commons-io]]
                  [ring/ring-json "0.5.1"
@@ -142,7 +137,6 @@
                  [org.clojure/java.jdbc "0.7.12"]
                  [software.amazon.jdbc/aws-advanced-jdbc-wrapper "3.3.0"]
                  [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
-                 [clj-time "0.15.2"]
                  [cheshire/cheshire "6.0.0"]
                  [selmer "1.12.59"]
                  [metosin/ring-http-response "0.9.3"
@@ -180,14 +174,7 @@
 
   :repositories [["github" {:url "https://maven.pkg.github.com/Opetushallitus/packages"
                             :username "private-token"
-                            :password :env/GITHUB_TOKEN}]
-                 ["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
-                              :sign-releases false
-                              :snapshots     false}]
-                 ["snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
-                               :releases {:update :never}}]
-                 ["ext-snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"
-                                   :releases {:update :never}}]]
+                            :password :env/GITHUB_TOKEN}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths ["spec"]
@@ -355,7 +342,6 @@
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
                                                [org.clojure/tools.namespace "1.5.0"]
-                                               [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
                                                [com.gfredericks/debug-repl "0.0.12"]
                                                [org.testcontainers/testcontainers "2.0.2"]
@@ -374,7 +360,6 @@
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
                                                [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
                                                [org.clojure/tools.namespace "1.5.0"]
-                                               [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
                                                [com.gfredericks/debug-repl "0.0.12"]
                                                [org.testcontainers/testcontainers "2.0.2"]

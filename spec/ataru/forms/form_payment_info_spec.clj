@@ -2,7 +2,7 @@
   (:require
     [ataru.forms.form-payment-info :as payment-info]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [clj-time.core :as t]
+    [ataru.time :as t]
     [speclj.core :refer [describe it should= should-be tags]]
     [ataru.tarjonta-service.mock-tarjonta-service :as mts]))
 
@@ -45,8 +45,7 @@
 
           (describe "with kouta tarjonta-service"
                     (it "returns existing payment info when no haku given"
-                        (let [tarjonta-service (mts/->MockTarjontaKoutaService)
-                              form-with-payment-info (payment-info/add-payment-info-if-higher-education
+                        (let [form-with-payment-info (payment-info/add-payment-info-if-higher-education
                                                        test-non-kk-form-with-existing-payment-info
                                                        nil)
                               payment-info (:properties form-with-payment-info)]

@@ -1,8 +1,7 @@
 (ns ataru.tarjonta-service.hakuaika-spec
   (:require [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.time :as ataru-time]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as t]
+            [ataru.time :as t]
+            [ataru.time.coerce :as coerce]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -130,58 +129,63 @@
                                                 {:start (t/minus now (t/hours 4)) :end (t/minus now (t/hours 2))}]}]
                            (hakuaika/haun-hakuaika-end-and-on haku))))))
 
+; t/date-time builds in the JVM's default zone, so the
+; DST-dependent assertions below need an explicit, machine-independent UTC instant.
+(defn- utc-date-time [year month day hour]
+  (t/from-time-zone (t/date-time year month day hour) (t/time-zone-for-id "UTC")))
+
 (describe "Localized datetime"
           (tags :unit)
 
           (it "Returns datetime in expected format for fi during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "30.10.2024 klo 11:00" (hakuaika/date-timez->localized-date-time datetime :fi))))
 
           (it "Returns datetime in expected format for fi during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "30.6.2024 klo 12:00" (hakuaika/date-timez->localized-date-time datetime :fi))))
 
           (it "Returns datetime in expected format for se during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "30.10.2024 kl. 11:00 UTC+2" (hakuaika/date-timez->localized-date-time datetime :sv))))
 
           (it "Returns datetime in expected format for se during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "30.6.2024 kl. 12:00 UTC+3" (hakuaika/date-timez->localized-date-time datetime :sv))))
 
           (it "Returns datetime in expected format for en during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "Oct. 30, 2024 at 11:00 AM UTC+2" (hakuaika/date-timez->localized-date-time datetime :en))))
 
           (it "Returns datetime in expected format for en during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "Jun. 30, 2024 at 12:00 PM UTC+3" (hakuaika/date-timez->localized-date-time datetime :en)))))
 
 (describe "Localized time"
           (tags :unit)
 
           (it "Returns datetime in expected format for fi during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "klo 11:00" (hakuaika/date-timez->localized-time datetime :fi))))
 
           (it "Returns datetime in expected format for fi during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "klo 12:00" (hakuaika/date-timez->localized-time datetime :fi))))
 
           (it "Returns datetime in expected format for se during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "kl. 11:00 UTC+2" (hakuaika/date-timez->localized-time datetime :sv))))
 
           (it "Returns datetime in expected format for se during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "kl. 12:00 UTC+3" (hakuaika/date-timez->localized-time datetime :sv))))
 
           (it "Returns datetime in expected format for en during Winter time"
-              (let [datetime (t/date-time 2024 10 30 9)]
+              (let [datetime (utc-date-time 2024 10 30 9)]
                 (should= "at 11:00 AM UTC+2" (hakuaika/date-timez->localized-time datetime :en))))
 
           (it "Returns datetime in expected format for en during Summer time"
-              (let [datetime (t/date-time 2024 6 30 9)]
+              (let [datetime (utc-date-time 2024 6 30 9)]
                 (should= "at 12:00 PM UTC+3" (hakuaika/date-timez->localized-time datetime :en)))))
 
 (describe "Basic date-time parsing"
@@ -200,10 +204,10 @@
 
   (around [it]
     (try
-      (ataru-time/set-fixed-now! (java.time.Instant/parse "2026-06-30T09:00:00Z"))
+      (t/set-fixed-now! (java.time.Instant/parse "2026-06-30T09:00:00Z"))
       (it)
       (finally
-        (ataru-time/reset-now!))))
+        (t/reset-now!))))
 
   (it "labels nil start and end with current time like Joda from-long did"
     (let [{:keys [label]} (hakuaika/hakuaika-with-label {:start nil :end nil :on false})]
