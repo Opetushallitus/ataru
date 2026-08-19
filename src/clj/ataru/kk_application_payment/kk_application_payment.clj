@@ -463,9 +463,11 @@
   (let [current-state            (:state payment)
         application-key          (:key application)
         person-oid               (:person-oid application)
-        [new-state new-state-fn] (if (contains? exempt-keys application-key) ; Exemptions only apply to individual applications
-                                   [(:not-required all-states) set-application-fee-not-required-for-exemption]
-                                   [desired-state state-change-fn])]
+        [new-state new-state-fn] (if (= desired-state (:not-required all-states)) ; If desired state is not-required anyway, don't check for exemptions.
+                                   [desired-state state-change-fn]
+                                   (if (contains? exempt-keys application-key) ; Exemptions only apply to individual applications
+                                     [(:not-required all-states) set-application-fee-not-required-for-exemption]
+                                     [desired-state state-change-fn]))]
     (cond
       (= current-state new-state)
       (log/info "Application" application-key "with person-oid" person-oid "already has kk payment status" current-state
