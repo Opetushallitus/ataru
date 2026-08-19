@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>221028dedd0e4ab189e777f65fb940797e832859</tag>
+    <tag>36681b692b476c8b9dc8c43740b8702e73c252d3</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -91,38 +91,6 @@
       </snapshots>
       <releases>
         <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>releases</id>
-      <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-    <repository>
-      <id>snapshots</id>
-      <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-      </releases>
-    </repository>
-    <repository>
-      <id>ext-snapshots</id>
-      <url>https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
       </releases>
     </repository>
   </repositories>
@@ -665,69 +633,9 @@
       <version>4.1.124.Final</version>
     </dependency>
     <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-access-logging</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jaxb-api</artifactId>
-          <groupId>javax.xml.bind</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>s3mock_2.12</artifactId>
-          <groupId>io.findify</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-stdout-access-logging</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google.guava</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>s3mock_2.12</artifactId>
-          <groupId>io.findify</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-timbre-access-logging</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google.guava</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>s3mock_2.12</artifactId>
-          <groupId>io.findify</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>oph</groupId>
-      <artifactId>clj-timbre-auditlog</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>guava</artifactId>
-          <groupId>com.google.guava</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>s3mock_2.12</artifactId>
-          <groupId>io.findify</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>fi.vm.sade</groupId>
       <artifactId>auditlogger</artifactId>
-      <version>9.2.0-SNAPSHOT</version>
+      <version>9.2.7-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fi.vm.sade.java-utils</groupId>
@@ -757,19 +665,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>oph</groupId>
+      <groupId>opiskelijavalinnat-utils</groupId>
       <artifactId>clj-ring-db-cas-session</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>s3mock_2.12</artifactId>
-          <groupId>io.findify</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-io</artifactId>
-          <groupId>commons-io</groupId>
-        </exclusion>
-      </exclusions>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
@@ -1080,12 +978,6 @@
       <groupId>org.clojure</groupId>
       <artifactId>tools.namespace</artifactId>
       <version>1.5.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>speclj-junit</groupId>
-      <artifactId>speclj-junit</artifactId>
-      <version>0.0.11-20151116.130002-1</version>
       <scope>test</scope>
     </dependency>
     <dependency>

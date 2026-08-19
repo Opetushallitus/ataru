@@ -56,9 +56,8 @@
             [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
-            [clj-access-logging]
-            [clj-stdout-access-logging]
-            [clj-timbre-access-logging]
+            [ataru.log.access-logging :as access-logging]
+            [ataru.log.timbre-access-logging :as timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [clout.core :as clout]
@@ -2244,7 +2243,7 @@
                                 (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  (create-wrap-database-backed-session (:session-store this))
-                                                 clj-access-logging/wrap-session-access-logging
+                                                 access-logging/wrap-session-access-logging
                                                  #(crdsa-auth-middleware/with-authentication % (auth-utils/cas-auth-url))]
                                                 (api/middleware [session-client/wrap-session-client-headers
                                                                  session-timeout/wrap-idle-session-timeout]
@@ -2261,8 +2260,8 @@
                                                (assoc :session nil)
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)))
-                            (clj-access-logging/wrap-access-logging)
-                            (clj-timbre-access-logging/wrap-timbre-access-logging
+                            (access-logging/wrap-access-logging)
+                            (timbre-access-logging/wrap-timbre-access-logging
                              {:path (str (-> config :log :virkailija-base-path)
                                          "/access_ataru-editori"
                                          (when (:hostname env) (str "_" (:hostname env))))})
