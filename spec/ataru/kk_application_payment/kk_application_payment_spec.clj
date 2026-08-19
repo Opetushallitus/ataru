@@ -452,6 +452,19 @@
                             (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                        :reason nil} payment))))
 
+                    (it "should set the reason to eu-citizen for EU-citizen when the application has an exemption field"
+                        (let [oid "1.2.3.4.5.808"                       ; FakePersonService returns French nationality for this one
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                             application-fixtures/application-with-hakemusmaksu-exemption
+                                                                             {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-eu-citizen} payment)))
+
                     (it "should use kk application payment obligation reviewed state to bypass attachment deadline"
                         ; before attachment deadline
                         (let [_ (set-fixed-time "2025-01-15T12:00:00")
