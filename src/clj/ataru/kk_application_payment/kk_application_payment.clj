@@ -19,6 +19,7 @@
             [taoensso.timbre :as log]
             [ataru.kk-application-payment.utils :as utils]
             [ataru.config.core :refer [config]]
+            [ataru.log.audit-log :as audit-log]
             [ataru.time.format :as time-format]
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
@@ -582,14 +583,17 @@
   WARNING: The DB write and the maksut HTTP call are not atomic. If the HTTP call fails after
   the DB write has committed, an exception is thrown with the actually-updated keys so that
   an operator can manually compensate in maksut."
-  [maksut-service application-keys state reason due-date]
+  [maksut-service application-keys state reason due-date session audit-logger]
   (if-not (get-in config [:kk-application-payments :enabled?])
     {:updated [] :skipped []}
     (do
       (when (empty? application-keys)
         (throw (ex-info "application-keys must not be empty" {})))
       (let [valid-states  #{(:not-required all-states) (:ok-by-proxy all-states) (:awaiting all-states)}
-            valid-reasons #{(:eu-citizen all-reasons) (:exemption-field all-reasons)}]
+            valid-reasons #{(:eu-citizen all-reasons) (:exemption-field all-reasons)}
+            reason (if (= state (:not-required all-states))
+                         reason
+                         nil)]
         (when-not (contains? valid-states state)
           (throw (ex-info "Invalid target state for bulk correction"
                           {:state state :valid-states valid-states})))
@@ -602,22 +606,31 @@
         (log/info "Bulk payment state correction starting: requested" (count application-keys)
                   "keys, target state" state (when reason (str "reason=" reason)) (when due-date (str "due-date=" due-date))
                   "| keys:" application-keys)
-        (let [{:keys [db-fn log-action maksut-fn]}
+        (let [{:keys [db-fn log-action maksut-fn log-value]}
               (case state
                 "not-required" {:db-fn      #(store/bulk-correct-not-required! application-keys reason)
                                 :log-action "delete-laskut"
+                                :log-value  {:state state :reason reason}
                                 :maksut-fn  #(maksut-protocol/delete-laskut maksut-service %)}
                 "ok-by-proxy"  {:db-fn      #(store/bulk-correct-ok-by-proxy! application-keys)
                                 :log-action "force-invalidate-laskut"
+                                :log-value  {:state state}
                                 :maksut-fn  #(maksut-protocol/force-invalidate-laskut maksut-service %)}
                 "awaiting"     {:db-fn      #(store/bulk-correct-awaiting! application-keys due-date)
                                 :log-action "update-laskut-due-date"
+                                :log-value  {:state state :due-date due-date}
                                 :maksut-fn  #(maksut-protocol/update-laskut-due-date maksut-service % due-date)})
               updated-keys (db-fn)
               skipped-keys (vec (remove (set updated-keys) application-keys))]
           (log/info "DB write complete: updated" (count updated-keys) "of" (count application-keys) "keys"
                     "| updated:" updated-keys
                     (when (seq skipped-keys) (str "| skipped (wrong state): " skipped-keys)))
+          (doseq [key updated-keys]
+            (audit-log/log audit-logger
+                           {:new       log-value
+                            :id        {:applicationOid key}
+                            :session   session
+                            :operation audit-log/operation-modify}))
           (when (seq updated-keys)
             (log/info "Calling maksut" log-action "for" (count updated-keys) "keys:" updated-keys)
             (try

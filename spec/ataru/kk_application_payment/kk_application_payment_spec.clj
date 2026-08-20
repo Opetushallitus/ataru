@@ -3,6 +3,7 @@
             [ataru.fixtures.form :as form-fixtures]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.log.audit-log :as audit-log]
             [ataru.person-service.person-service :as person-service]
             [ataru.time :as time]
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
@@ -78,6 +79,8 @@
    :ohjausparametrit-service fake-ohjausparametrit-service
    :hakukohderyhma-settings-cache fake-hakukohderyhma-settings-cache
    :get-haut-cache fake-haku-cache})
+
+(def audit-logger (audit-log/new-dummy-audit-logger))
 
 (declare conn)
 (defn- delete-states-and-events! []
@@ -816,7 +819,7 @@
                     _ (payment/set-application-fee-overdue application-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service [application-key] state-not-required reason-eu-citizen nil)
+                             service [application-key] state-not-required reason-eu-citizen nil nil audit-logger)
                     updated (first (payment/get-raw-payments [application-key]))]
                 (should= {:updated [application-key] :skipped []} result)
                 (should= state-not-required (:state updated))
@@ -831,7 +834,7 @@
                     _ (payment/set-application-fee-overdue application-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     _ (payment/bulk-change-overdue-payment-state
-                        service [application-key] state-not-required reason-exemption nil)
+                        service [application-key] state-not-required reason-exemption nil nil audit-logger)
                     updated (first (payment/get-raw-payments [application-key]))]
                 (should= state-not-required (:state updated))
                 (should= reason-exemption (:reason updated))
@@ -842,7 +845,7 @@
                     _ (payment/set-application-fee-overdue application-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service [application-key] state-ok-by-proxy nil nil)
+                             service [application-key] state-ok-by-proxy nil nil nil audit-logger)
                     updated (first (payment/get-raw-payments [application-key]))]
                 (should= {:updated [application-key] :skipped []} result)
                 (should= state-ok-by-proxy (:state updated))
@@ -858,7 +861,7 @@
                     _ (payment/set-application-fee-overdue application-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service [application-key] state-awaiting nil new-due-date)
+                             service [application-key] state-awaiting nil new-due-date nil audit-logger)
                     updated (first (payment/get-raw-payments [application-key]))]
                 (should= {:updated [application-key] :skipped []} result)
                 (should= state-awaiting (:state updated))
@@ -874,7 +877,7 @@
                     _ (doseq [k keys] (payment/set-application-fee-overdue k nil))
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service keys state-ok-by-proxy nil nil)
+                             service keys state-ok-by-proxy nil nil nil audit-logger)
                     payments (payment/get-raw-payments keys)]
                 (should= (set keys) (set (:updated result)))
                 (should= [] (:skipped result))
@@ -890,7 +893,7 @@
                     _ (payment/set-application-fee-paid paid-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service [overdue-key paid-key] state-ok-by-proxy nil nil)]
+                             service [overdue-key paid-key] state-ok-by-proxy nil nil nil audit-logger)]
                 (should= {:updated [overdue-key] :skipped [paid-key]} result)
                 (should= 1 (count @calls))
                 (should= [overdue-key] (:keys (first @calls)))))
@@ -900,7 +903,7 @@
                     _ (payment/set-application-fee-not-required-for-eu-citizen application-key nil)
                     {:keys [service calls]} (make-mock-maksut-service)
                     result (payment/bulk-change-overdue-payment-state
-                             service [application-key] state-not-required reason-exemption nil)
+                             service [application-key] state-not-required reason-exemption nil nil audit-logger)
                     updated (first (payment/get-raw-payments [application-key]))]
                 (should= {:updated [application-key] :skipped []} result)
                 (should= 1 (count @calls))
@@ -911,17 +914,17 @@
           (it "should throw on invalid target state"
               (let [{:keys [service]} (make-mock-maksut-service)]
                 (should-throw
-                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.120"] state-paid nil nil))))
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.120"] state-paid nil nil nil audit-logger))))
 
           (it "should throw when not-required is given without reason"
               (let [{:keys [service]} (make-mock-maksut-service)]
                 (should-throw
-                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.121"] state-not-required nil nil))))
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.121"] state-not-required nil nil nil audit-logger))))
 
           (it "should throw when awaiting is given without due-date"
               (let [{:keys [service]} (make-mock-maksut-service)]
                 (should-throw
-                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.122"] state-awaiting nil nil)))))
+                  (payment/bulk-change-overdue-payment-state service ["1.2.3.4.5.122"] state-awaiting nil nil nil audit-logger)))))
 
 (describe "application payment states"
           (tags :unit :kk-application-payment)
