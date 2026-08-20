@@ -1211,7 +1211,7 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
           (let [{:keys [application-keys state reason due-date]} input]
             (response/ok
               (kk-application-payment/bulk-change-overdue-payment-state
-                maksut-service application-keys state reason due-date)))
+                maksut-service application-keys state reason due-date session audit-logger)))
           (response/unauthorized {}))))
 
     (api/context "/tulos-service" []
