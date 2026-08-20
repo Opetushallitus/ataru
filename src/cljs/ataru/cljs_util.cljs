@@ -35,13 +35,19 @@
 (defn debounce
   ([f] (debounce f 1000))
   ([f timeout]
-   (let [id (atom nil)]
-     (fn [& args]
-       (when (not (nil? @id))
-         (js/clearTimeout @id))
-       (reset! id (js/setTimeout
-                    (apply partial f args)
-                    timeout))))))
+   (let [id      (atom nil)
+         cancel! (fn []
+                   (when (not (nil? @id))
+                     (js/clearTimeout @id)
+                     (reset! id nil)))
+         bounced (fn [& args]
+                   (cancel!)
+                   (reset! id (js/setTimeout
+                                (apply partial f args)
+                                timeout)))]
+     ; :cancel mahdollistaa jo ajastetun, mutta ei vielä laukaisseen kutsun peruuttamisen
+     ; ilman että sitä korvataan uudella kutsulla
+     (with-meta bounced {:cancel cancel!}))))
 
 (defn dispatch-after-state
   [& {:keys [predicate handler]}]

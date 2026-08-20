@@ -5,6 +5,7 @@
             [ataru.cljs-util-test]
             [ataru.dob-test]
             [ataru.virkailija.editor.handlers-test]
+            [ataru.virkailija.autosave-test]
             [ataru.virkailija.temporal-test]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-handlers-test]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs-test]
@@ -32,6 +33,7 @@
            'ataru.cljs-util-test
            'ataru.dob-test
            'ataru.virkailija.editor.handlers-test
+           'ataru.virkailija.autosave-test
            'ataru.virkailija.temporal-test
            'ataru.virkailija.application.attachments.liitepyynto-information-request-handlers-test
            'ataru.virkailija.application.attachments.virkailija-attachment-subs-test
