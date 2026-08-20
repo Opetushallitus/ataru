@@ -54,7 +54,7 @@
   application-key)
 
 (defn create-not-required-status [application-key]
-  (payment/set-application-fee-not-required-for-eu-citizen application-key nil)
+  (payment/set-application-fee-not-required-for-eta-citizen application-key nil)
   application-key)
 
 (defn check-state-and-history
@@ -85,7 +85,7 @@
           ; Add some other states that are checked during every test
           (before
             ; The first three ones should always stay as is
-            (payment/set-application-fee-not-required-for-eu-citizen
+            (payment/set-application-fee-not-required-for-eta-citizen
               "1.2.246.562.8.00000000000022225500" nil)
             (payment/set-application-fee-overdue
               "1.2.246.562.8.00000000000022225600" nil)

@@ -6,6 +6,12 @@
     :value "EU"
     :label {}
     :valid { :start "2015-09-03T00:00:00+03:00" }
+    :within {}}
+   {:uri "valtioryhmat_2"
+    :version 1
+    :value "ETA"
+    :label {}
+    :valid { :start "2015-09-03T00:00:00+03:00" }
     :within [{:uri "maatjavaltiot2_246"
               :version 1
               :value "246"}
@@ -20,13 +26,10 @@
               :value "233"}
              {:uri "maatjavaltiot2_056"
               :version 1
-              :value "056"}]}
-   {:uri "valtioryhmat_2"
-    :version 1
-    :value "ETA"
-    :label {}
-    :valid { :start "2015-09-03T00:00:00+03:00" }
-    :within {}}])
+              :value "056"}
+             {:uri "maatjavaltiot2_578"
+              :version 1
+              :value "578"}]}])
 
 (defn haku-with-hakuajat
   [hakuaika-start hakuaika-end]

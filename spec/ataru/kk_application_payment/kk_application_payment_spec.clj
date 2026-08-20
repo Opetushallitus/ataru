@@ -385,8 +385,34 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-eu-citizen} payment)))
 
+                    (it "should set payment status for eIDAS-yksilöity Swiss citizen as not required"
+                        (let [oid "1.2.3.4.5.756"                       ; FakePersonService returns Swiss nationality with yksiloityEidas and yksiloity
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-without-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-eu-citizen} payment)))
+
                     (it "should set payment status for non VTJ-yksilöity EU citizen as awaiting"
                         (let [oid "1.2.3.4.5.909"                       ; FakePersonService returns French nationality but no yksiloityVTJ
+                              application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                           (merge
+                                                                            application-fixtures/application-without-hakemusmaksu-exemption
+                                                                            {:person-oid oid}) nil)
+                              application-key (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status for non VTJ-yksilöity Swiss citizen as awaiting"
+                        (let [oid "1.2.3.4.5.555"                       ; FakePersonService returns Swiss nationality but no yksiloityVTJ
                               application-id (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
                                                                            (merge
                                                                             application-fixtures/application-without-hakemusmaksu-exemption
@@ -802,7 +828,7 @@
 
                     (it "should set and get application fee not required for eu citizen"
                         (save-and-check-single-state
-                          "1.2.3.4.5.7" payment/set-application-fee-not-required-for-eu-citizen
+                          "1.2.3.4.5.7" payment/set-application-fee-not-required-for-eta-citizen
                           state-not-required reason-eu-citizen))
 
                     (it "should set and get application fee not required due to exemption"
@@ -864,7 +890,7 @@
 
                     (it "should reset payment data when setting payment as not required for eu citizen"
                         (let [initial-data (payment/set-application-fee-required "1.2.3.4.5.12" nil)
-                              updated-data (payment/set-application-fee-not-required-for-eu-citizen "1.2.3.4.5.12" initial-data)]
+                              updated-data (payment/set-application-fee-not-required-for-eta-citizen "1.2.3.4.5.12" initial-data)]
                           (should-be-nil     (:approved-at initial-data))
                           (should-not-be-nil (:required-at initial-data))
                           (should-not-be-nil (:due-date    initial-data))
