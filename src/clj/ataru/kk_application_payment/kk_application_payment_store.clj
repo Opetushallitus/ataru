@@ -15,6 +15,9 @@
 (declare yesql-update-maksut-secret!)
 (declare yesql-mark-reminder-sent!)
 (declare yesql-get-field-deadlines)
+(declare yesql-bulk-correct-not-required-returning)
+(declare yesql-bulk-correct-ok-by-proxy-returning)
+(declare yesql-bulk-correct-awaiting-returning)
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))
 
@@ -65,6 +68,23 @@
   (->> (exec-db :db yesql-get-kk-application-payments-for-application-keys {:application_keys application-keys})
        (map ->kebab-case-kw)
        (map due-date-to-full-time-in-finnish-tz)))
+
+(defn bulk-correct-not-required!
+  [application-keys reason]
+  (->> (exec-db :db yesql-bulk-correct-not-required-returning {:application_keys application-keys
+                                                               :reason           reason})
+       (mapv :application_key)))
+
+(defn bulk-correct-ok-by-proxy!
+  [application-keys]
+  (->> (exec-db :db yesql-bulk-correct-ok-by-proxy-returning {:application_keys application-keys})
+       (mapv :application_key)))
+
+(defn bulk-correct-awaiting!
+  [application-keys due-date]
+  (->> (exec-db :db yesql-bulk-correct-awaiting-returning {:application_keys application-keys
+                                                           :due_date         due-date})
+       (mapv :application_key)))
 
 (defn create-or-update-kk-application-payment!
   [{:keys [application-key state reason due-date total-sum maksut-secret
