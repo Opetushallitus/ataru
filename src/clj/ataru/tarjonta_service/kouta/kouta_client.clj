@@ -160,6 +160,20 @@
                                         "status: " status ", "
                                         "body: " body))))))
 
+(defn- post-result
+  [url body cas-client]
+  (log/debug "post-result" url)
+  (let [{:keys [status responseBody]} (cas-client/cas-authenticated-post
+                                cas-client
+                                url
+                                body)]
+    (case status
+      200 (json/parse-string responseBody true)
+      404 nil
+      (throw (new RuntimeException (str "Could not get " url ", "
+                                        "status: " status ", "
+                                        "body: " responseBody))))))
+
 (s/defn ^:always-validate get-haku :- (s/maybe form-schema/Haku)
   [haku-oid :- s/Str
    cas-client]
@@ -180,6 +194,16 @@
           (get-result cas-client)
           ((fn [result] (mapv :oid result)))))
 
+(defn- enrich-hakukohde
+  [hakukohde organization-service hakukohderyhmapalvelu-service hakukohderyhma-settings-cache]
+  (let [tarjoajat (some->> (seq [(:tarjoaja hakukohde)])
+                           (organization-service/get-organizations-for-oids
+                             organization-service))
+        hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
+                          hakukohderyhmapalvelu-service (:oid hakukohde))
+        settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmas)]
+    (parse-hakukohde hakukohde tarjoajat hakukohderyhmas settings)))
+
 (s/defn ^:always-validate get-hakukohde :- (s/maybe form-schema/Hakukohde)
   [hakukohde-oid :- s/Str
    organization-service
@@ -190,13 +214,19 @@
     (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                  (url-helper/resolve-url hakukohde-oid)
                                  (get-result cas-client))]
-      (let [tarjoajat (some->> (seq [(:tarjoaja hakukohde)])
-                               (organization-service/get-organizations-for-oids
-                                organization-service))
-            hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
-                              hakukohderyhmapalvelu-service hakukohde-oid)
-            settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmas)]
-        (parse-hakukohde hakukohde tarjoajat hakukohderyhmas settings)))))
+      (enrich-hakukohde hakukohde organization-service hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))))
+
+(s/defn ^:always-validate get-hakukohteet :- (s/maybe form-schema/Hakukohde)
+  [hakukohde-oids :- [s/Str]
+   organization-service
+   hakukohderyhmapalvelu-service
+   cas-client
+   hakukohderyhma-settings-cache]
+  (when (= (count (first hakukohde-oids)) KOUTA_OID_LENGTH)
+    (let [hakukohteet (some-> :kouta-internal.hakukohteet
+                                 (url-helper/resolve-url)
+                                 (post-result cas-client hakukohde-oids))]
+      (map #(enrich-hakukohde % organization-service hakukohderyhmapalvelu-service hakukohderyhma-settings-cache) hakukohteet))))
 
 (s/defn ^:always-validate get-hakukohderyhma-settings :- (s/maybe s/Any)
   [hakukohderyhma-oid :- s/Str
