@@ -157,7 +157,7 @@
     (str/includes? (:subject mail-content) (str "(Hakemusnumero: " application-key ")"))
     (str/includes? (:body mail-content) "Voit maksaa hakemusmaksun alla olevan linkin kautta:")
     (str/includes? (:body mail-content) (str "Hakemusnumerosi on: " application-key))
-    (str/includes? (:body mail-content) (str "maksut-ui/fi?secret=" test-maksut-secret))
+    (str/includes? (:body mail-content) (str "maksut/fi?secret=" test-maksut-secret))
     (str/includes? (:body mail-content) "Olet hakenut haussa: testing2")
     (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/fi/sivu/hakemusmaksu")))
 
@@ -425,7 +425,7 @@
                                         (str/includes? (:body mail-content) (str "Your application number is: " application-key))
                                         (str/includes? (:body mail-content) "You can find more information about the application fee and exemptions from the fee on our")
                                         (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/en/sivu/application-fee")
-                                        (str/includes? (:body mail-content) (str "maksut-ui/en?secret=" test-maksut-secret))))
+                                        (str/includes? (:body mail-content) (str "maksut/en?secret=" test-maksut-secret))))
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
                       payment (first (payment/get-raw-payments [application-key]))]
@@ -454,7 +454,7 @@
                                         (str/includes? (:body mail-content) (str "Ditt ansökningsnummer är: " application-key))
                                         (str/includes? (:body mail-content) "Du hittar mer information om ansökningsavgiften och grunderna för befrielse från avgiften på vår")
                                         (str/includes? (:body mail-content) "https://opintopolku.fi/konfo/sv/sivu/ansoekningsavgift")
-                                        (str/includes? (:body mail-content) (str "maksut-ui/sv?secret=" test-maksut-secret))))
+                                        (str/includes? (:body mail-content) (str "maksut/sv?secret=" test-maksut-secret))))
                       _ (updater-job/update-kk-payment-status-for-person-handler
                           {:person_oid test-person-oid :term test-term :year test-year} runner)
                       payment (first (payment/get-raw-payments [application-key]))]
