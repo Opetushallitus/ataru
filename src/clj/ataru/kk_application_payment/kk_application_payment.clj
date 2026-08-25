@@ -10,6 +10,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.koodisto.koodisto-codes :as codes]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -268,7 +269,7 @@
       (throw (ex-info "Could not fetch country codes for EU area" {:person-oid (:oid person)})))))
 
 (defn- is-finnish-citizen? [person]
-  (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
+  (some #(contains? codes/finland-equivalent-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn- time-is-before-some-attachment-deadlines?
   [attachment-deadline-service application-submitted haku now]
@@ -460,14 +461,19 @@
 
 (defn- set-payment
   [exempt-keys desired-state state-change-fn {:keys [application payment]}]
-  (let [current-state            (:state payment)
-        application-key          (:key application)
-        person-oid               (:person-oid application)
-        [new-state new-state-fn] (if (contains? exempt-keys application-key) ; Exemptions only apply to individual applications
-                                   [(:not-required all-states) set-application-fee-not-required-for-exemption]
-                                   [desired-state state-change-fn])]
+  (let [current-state                       (:state payment)
+        current-reason                      (:reason payment)
+        application-key                     (:key application)
+        person-oid                          (:person-oid application)
+        [new-state new-state-fn new-reason] (if (= desired-state (:not-required all-states)) ; If desired state is not-required anyway, don't check for exemptions.
+                                              [desired-state state-change-fn (:eu-citizen all-reasons)]
+                                              (if (contains? exempt-keys application-key) ; Exemptions only apply to individual applications
+                                                [(:not-required all-states) set-application-fee-not-required-for-exemption (:exemption-field all-reasons)]
+                                                [desired-state state-change-fn nil]))
+        reason-unchanged?                   (or (not= new-state (:not-required all-states))
+                                                 (= current-reason new-reason))]
     (cond
-      (= current-state new-state)
+      (and (= current-state new-state) reason-unchanged?)
       (log/info "Application" application-key "with person-oid" person-oid "already has kk payment status" current-state
                 "not changing kk application payment state")
 
@@ -483,7 +489,9 @@
       :else
       (do
        (log/info "Changing kk application payment state for application" application-key
-                 "with person-oid" person-oid "to" new-state)
+                 "with person-oid" person-oid "to" new-state
+                 (when (and (= current-state new-state) (not reason-unchanged?))
+                   (str "(reason changing from " current-reason " to " new-reason ")")))
        (new-state-fn (:key application) payment)))))
 
 (defn- update-payments-for-applications
