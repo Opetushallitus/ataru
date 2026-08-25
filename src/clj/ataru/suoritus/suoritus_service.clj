@@ -120,22 +120,30 @@
          (sort-by :alkupaiva)
          (last)))
 
-  (hakemuksen-lahtokoulut [_ hakemus]
-    (if-let [haku-oid (:haku hakemus)]
-      (let [haku (tarjonta-service/get-haku tarjonta-service haku-oid)
-            lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache (:person-oid hakemus)))
-            ajanhetki (cond
-                        (haku/jatkuva-haku? haku) (:created-time hakemus)
-                        (:yhteishaku haku) (get-leikkuripvm ohjausparametrit-service (:haku hakemus))
-                        :else nil)
-            aktiiviset (if (some? ajanhetki)
-                         (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki)
-                         #{})]
-        (log/info "Haettiin lähtökoulut henkilölle" (:person-oid hakemus) "haussa" (:haku hakemus) "ajanhetkellä" (str ajanhetki))
-        aktiiviset)
+  (hakemuksen-lahtokoulut [_ {:keys [haku person-oid created-time] hakemus-key :key}]
+    (cond
+      (nil? haku)
       (do
-        (log/info "Henkilön" (:person-oid hakemus) "Hakemuksella ei hakua, lähtökouluja ei haeta.")
-        #{})))
+        (log/info "Hakemuksella" hakemus-key "henkilölle" person-oid "ei hakua, lähtökouluja ei haeta.")
+        #{})
+
+      (nil? person-oid)
+      (do
+        (log/info "Hakemuksella" hakemus-key "haussa" haku "ei person-oidia, lähtökouluja ei haeta.")
+        #{})
+
+      :else
+      (let [haun-tiedot (tarjonta-service/get-haku tarjonta-service haku)
+            ajanhetki   (cond
+                          (haku/jatkuva-haku? haun-tiedot) created-time
+                          (:yhteishaku haun-tiedot)        (get-leikkuripvm ohjausparametrit-service haku))]
+        (if (some? ajanhetki)
+          (let [lahtokoulut (:lahtokoulut (cache/get-from lahtokoulut-cache person-oid))]
+            (log/info "Haettiin lähtökoulut henkilölle" person-oid "haussa" haku "ajanhetkellä" (str ajanhetki))
+            (filter-lahtokoulut-active-on-ajanhetki lahtokoulut ajanhetki))
+          (do
+            (log/info "Hakemuksella" hakemus-key "haussa" haku "ei ajanhetkeä, lähtökouluja ei haeta.")
+            #{})))))
 
   (hakemuksen-avainarvot [_ hakemus-oid]
     (let [avainarvot (suorituspalvelu-client/hakemuksen-avainarvot hakemus-oid)]

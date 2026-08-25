@@ -9,9 +9,12 @@
 (def lahtokoulu2 {:oppilaitosOid "2.3.4" :alkuPaivamaara "2024-09-01" :loppuPaivamaara "2025-06-30" :luokka "9A"})
 (def lahtokoulut-response {:lahtokoulut [lahtokoulu1 lahtokoulu2]})
 
+(def test-person-oid "1.2.246.562.24.1")
+
 (def test-jatkuva-haku {:hakutapa-uri "hakutapa_03"})
 (def test-yhteishaku {:hakutapa-uri "joku-hakutapa"
                       :yhteishaku true})
+(def test-muu-haku {:hakutapa-uri "joku-hakutapa"})
 
 (describe "suoritus-service-jatkuva-haku"
           (tags :unit :suoritus)
@@ -25,7 +28,7 @@
                     (spec)))
 
           (it "palauttaa jatkuvalle haulle hakemuksen luomishetken lähtökoulun"
-                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1"})]
+                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1" :person-oid test-person-oid})]
                           (should= #{lahtokoulu1}
                                    data))))
 
@@ -43,7 +46,7 @@
                     (spec)))
 
           (it "palauttaa yhteishaulle leikkupäivän lähtökoulun"
-                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1"})]
+                        (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1" :person-oid test-person-oid})]
                           (should= #{lahtokoulu2}
                                    data))))
 
@@ -62,5 +65,39 @@
                          data)))
           (it "palauttaa tyhjän setin kun haku on nil"
               (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku nil})]
+                (should= #{}
+                         data))))
+
+(describe "suoritus-service-hakemus-ilman-person-oidia"
+          (tags :unit :suoritus)
+          (with-stubs)
+
+          (around [spec]
+                  (with-redefs [tarjonta/get-haku (stub :haku
+                                                        {:return test-jatkuva-haku})
+                                cache/get-from #(throw (AssertionError. "Should not be called"))]
+                    (spec)))
+
+          (it "palauttaa tyhjän setin kun person-oidia ei ole"
+              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1"})]
+                (should= #{}
+                         data)))
+          (it "palauttaa tyhjän setin kun person-oid on nil"
+              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1" :person-oid nil})]
+                (should= #{}
+                         data))))
+
+(describe "suoritus-service-haku-ilman-ajanhetkea"
+          (tags :unit :suoritus)
+          (with-stubs)
+
+          (around [spec]
+                  (with-redefs [tarjonta/get-haku (stub :haku
+                                                        {:return test-muu-haku})
+                                cache/get-from #(throw (AssertionError. "Should not be called"))]
+                    (spec)))
+
+          (it "palauttaa tyhjän setin eikä hae lähtökouluja kun haku ei ole jatkuva eikä yhteishaku"
+              (let [data (suoritus-service/hakemuksen-lahtokoulut service {:created-time "2024-06-02T21:00:00.000Z" :haku "1.1.1" :person-oid test-person-oid})]
                 (should= #{}
                          data))))
