@@ -16,6 +16,7 @@ let lomakkeenTunnisteet: { lomakkeenAvain: string; lomakkeenId: number }
 
 const TEST_HAKUKOHDE_OID_1 = '1.2.246.562.20.00000000001'
 const TEST_HAKUKOHDE_OID_2 = '1.2.246.562.20.00000000002'
+const TEST_PRIORISOIVA_HAKUKOHDE_RYHMA_OID = '1.2.246.562.28.00000000001'
 
 const testTarjontaHakukohteet = [
   {
@@ -24,7 +25,7 @@ const testTarjontaHakukohteet = [
     'can-be-applied-to?': true,
     hakuaika: { on: true },
     'opetuskieli-koodi-urit': ['oppilaitoksenopetuskieli_1'],
-    hakukohderyhmat: [],
+    hakukohderyhmat: [TEST_PRIORISOIVA_HAKUKOHDE_RYHMA_OID],
   },
   {
     oid: TEST_HAKUKOHDE_OID_2,
@@ -32,7 +33,7 @@ const testTarjontaHakukohteet = [
     'can-be-applied-to?': true,
     hakuaika: { on: true },
     'opetuskieli-koodi-urit': ['oppilaitoksenopetuskieli_1'],
-    hakukohderyhmat: [],
+    hakukohderyhmat: [TEST_PRIORISOIVA_HAKUKOHDE_RYHMA_OID],
   },
 ]
 
@@ -122,7 +123,15 @@ test.beforeAll(async ({ browser }) => {
         tarjonta: {
           ...(json.tarjonta ?? {}),
           hakukohteet: testTarjontaHakukohteet,
+          'prioritize-hakukohteet': true,
         },
+        'priorisoivat-hakukohderyhmat': [
+          {
+            'haku-oid': '1.2.246.562.29.00000000000000000001',
+            'hakukohderyhma-oid': TEST_PRIORISOIVA_HAKUKOHDE_RYHMA_OID,
+            prioriteetit: [[TEST_HAKUKOHDE_OID_2], [TEST_HAKUKOHDE_OID_1]],
+          },
+        ],
         content: contentWithOptions,
       },
     })
@@ -290,6 +299,64 @@ test('Arrow navigation includes selected hakukohde rows in its sequence', async 
       .locator('.application__search-hit-hakukohde-row--select-button')
       .first()
   ).toBeFocused()
+
+  await ensureSearchClosed()
+})
+
+test('Priorization warning is announced from active priority controls', async () => {
+  await openSearch()
+  await fillSearchAndWaitForResults('Te', 2)
+
+  await page
+    .locator('.application__search-hit-hakukohde-row--select-button')
+    .first()
+    .click()
+
+  const firstSelectedRow = page
+    .locator('.application__selected-hakukohde-row')
+    .filter({ hasText: 'Testikoulutus A' })
+  const secondSelectedRow = page
+    .locator('.application__selected-hakukohde-row')
+    .filter({ hasText: 'Testikoulutus B' })
+
+  const firstWarningId = `hakukohde-priorization-warning-${TEST_HAKUKOHDE_OID_1}`
+  const secondWarningId = `hakukohde-priorization-warning-${TEST_HAKUKOHDE_OID_2}`
+
+  for (const [row, warningId] of [
+    [firstSelectedRow, firstWarningId],
+    [secondSelectedRow, secondWarningId],
+  ] as const) {
+    const warning = row.locator(
+      '.application__selected-hakukohde-row--offending-priorization'
+    )
+
+    await expect(warning).toHaveAttribute('id', warningId)
+    await expect(warning).toHaveAttribute('role', 'alert')
+    await expect(warning).toHaveAttribute('aria-live', 'polite')
+    await expect(warning.locator('.zmdi-alert-circle')).toHaveAttribute(
+      'aria-hidden',
+      'true'
+    )
+    await expect(warning).toContainText(
+      'Hakukohteet ovat väärässä ensisijaisuusjärjestyksessä'
+    )
+    await expect(warning).toContainText('Testikoulutus B')
+    await expect(warning).toContainText(
+      'tulee olla korkeammalla prioriteetillä kuin'
+    )
+    await expect(warning).toContainText('Testikoulutus A')
+  }
+
+  await expect(
+    firstSelectedRow.locator(
+      '.application__selected-hakukohde-row--priority-decrease'
+    )
+  ).toHaveAttribute('aria-describedby', firstWarningId)
+  await expect(
+    secondSelectedRow.locator(
+      '.application__selected-hakukohde-row--priority-increase'
+    )
+  ).toHaveAttribute('aria-describedby', secondWarningId)
 
   await ensureSearchClosed()
 })
