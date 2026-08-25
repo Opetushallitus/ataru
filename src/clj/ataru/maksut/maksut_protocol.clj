@@ -13,4 +13,10 @@
 
   (download-receipt [this order-id])
 
-  (invalidate-laskut [this application-keys]))
+  (invalidate-laskut [this application-keys])
+
+  (force-invalidate-laskut [this application-keys])
+
+  (delete-laskut [this application-keys])
+
+  (update-laskut-due-date [this application-keys due-date]))

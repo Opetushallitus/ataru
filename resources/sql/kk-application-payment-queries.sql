@@ -92,3 +92,30 @@ WHERE application_key = :application_key;
 UPDATE kk_application_payments
 SET reminder_sent_at = now()
 WHERE application_key = :application_key;
+
+-- name: yesql-bulk-correct-not-required-returning
+UPDATE kk_application_payments
+SET state      = 'not-required',
+    reason     = :reason,
+    approved_at = now()
+WHERE application_key IN (:application_keys)
+  AND state IN ('overdue', 'awaiting', 'not-required')
+RETURNING application_key;
+
+-- name: yesql-bulk-correct-ok-by-proxy-returning
+UPDATE kk_application_payments
+SET state      = 'ok-by-proxy',
+    reason     = NULL,
+    approved_at = now()
+WHERE application_key IN (:application_keys)
+  AND state IN ('overdue', 'awaiting')
+RETURNING application_key;
+
+-- name: yesql-bulk-correct-awaiting-returning
+UPDATE kk_application_payments
+SET state    = 'awaiting',
+    reason   = NULL,
+    due_date = :due_date::date
+WHERE application_key IN (:application_keys)
+  AND state IN ('overdue', 'awaiting')
+RETURNING application_key;

@@ -42,7 +42,10 @@
                                      (remove nil?)))
   (list-laskut-by-application-key [_ key] (if (= key "1.2.246.562.8.00000000000022225300")
                                             [{:secret "1234567890"}]
-                                            [])))
+                                            []))
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
 
 (def mock-maksut-service (->MockMaksutService))
 
