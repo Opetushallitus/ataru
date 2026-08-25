@@ -380,6 +380,7 @@ WHERE a.key = :application_key;
 
 -- name: yesql-applications-authorization-data
 SELECT
+  a.key,
   a.haku,
   a.hakukohde,
   a.person_oid,
