@@ -154,10 +154,19 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             goToApplicationHandling()
             navigateToUnprocessedHautTab()
             cy.reload()
+            // The school-of-departure fetch is dispatched from the haku/filter click handlers only
+            // when the user's role (opinto-ohjaaja-or-admin?) is already known. That role is resolved
+            // asynchronously from /user-info on app boot, so without waiting here the clicks below can
+            // race ahead of it and silently skip dispatching the organization fetch entirely. Cypress's
+            // legacy XHR interception (cy.server()/cy.route()) does not reliably survive cy.reload() in
+            // this app/version combination (confirmed: cy.wait() on an aliased route here times out with
+            // "no request ever occurred" even for /user-info, which is unconditionally fetched on every
+            // boot), so a fixed wait is used instead of waiting on a network alias.
+            cy.wait(5000)
             clickFirstHaku()
             cy.get('#open-application-filters').click()
             cy.get('#school-search').should('not.exist')
-            cy.get('#selected-school').should('exist')
+            cy.get('#selected-school', { timeout: 15000 }).should('exist')
             cy.get('#selected-school').contains('Haagan peruskoulu')
             cy.get('#open-application-filters').click()
           })

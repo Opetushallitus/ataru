@@ -302,6 +302,7 @@
                                        :id    "application-handling-list"}]
                                      (for [application applications
                                            :let [selected? (= @selected-key (:key application))]]
+                                       ^{:key (:key application)}
                                        [application-list-row application selected? select-application])))})))
 
 (defn application-list-header [_]
