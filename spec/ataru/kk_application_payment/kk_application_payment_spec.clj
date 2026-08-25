@@ -495,6 +495,48 @@
                             (should-be-matching-state {:application-key linked-application-key, :state state-overdue
                                                        :reason nil} linked-payment)))))
 
+                    (it "should correct reason from exemption-field to eu-citizen when citizenship data changes while application stays not-required"
+                        (let [oid              "1.2.3.4.5.303"     ; FakePersonService returns non-EU nationality for this one
+                              application-id   (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                             application-fixtures/application-with-hakemusmaksu-exemption
+                                                                             nil)
+                              application-key  (:key (application-store/get-application application-id))
+                              [changed payment] (update-payment application-key oid)]
+                          ; Initially exempt via the application's own exemption field, since the person is not (yet) known to be an EU/ETA citizen.
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)
+
+                          ; Background data now shows the person actually is an EU/ETA citizen (e.g. VTJ verification completed
+                          ; after the application was submitted). The application stays "not-required", but the reason must be
+                          ; corrected to reflect the real grounds instead of being left stale.
+                          (with-redefs [payment/is-vtj-yksiloity-eu-citizen? (constantly true)]
+                            (let [[changed payment] (update-payment application-key oid)]
+                              (should= 1 (count changed))
+                              (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                         :reason reason-eu-citizen} payment)))))
+
+                    (it "should correct reason from eu-citizen to exemption-field when citizenship data changes while application stays not-required"
+                        (let [oid              "1.2.3.4.5.303"     ; FakePersonService returns non-EU nationality for this one
+                              application-id   (unit-test-db/init-db-fixture form-fixtures/payment-exemption-test-form
+                                                                             application-fixtures/application-with-hakemusmaksu-exemption
+                                                                             nil)
+                              application-key  (:key (application-store/get-application application-id))]
+                          ; Person is initially (incorrectly) considered an EU/ETA citizen.
+                          (with-redefs [payment/is-vtj-yksiloity-eu-citizen? (constantly true)]
+                            (let [[changed payment] (update-payment application-key oid)]
+                              (should= 1 (count changed))
+                              (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                         :reason reason-eu-citizen} payment)))
+
+                          ; Citizenship data is corrected: the person is not actually an EU/ETA citizen, but the application's
+                          ; own exemption field still applies, so the application stays "not-required" - only the reason
+                          ; should change, back to exemption-field.
+                          (let [[changed payment] (update-payment application-key oid)]
+                            (should= 1 (count changed))
+                            (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                       :reason reason-exemption} payment))))
+
           (describe "with exemption"
                     (around [spec]
                             (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2024 1 1)]
