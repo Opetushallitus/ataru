@@ -1624,14 +1624,20 @@
         :body-params [{hakuOid :- s/Str nil}
                       {hakukohdeOid :- s/Str nil}
                       {hakemusOids :- [s/Str] nil}
-                      {offset :- s/Str nil}]
-        :return {:applications            [{:oid                  s/Str
-                                            :hakuOid              s/Str
-                                            :hakukohdeOids        [s/Str]
-                                            :henkiloOid           s/Str
-                                            :asiointikieli        s/Str
-                                            :email                s/Str
-                                            :paymentObligations   {s/Keyword s/Str}}]
+                      {offset :- s/Str nil}
+                      {includeYhteystiedot :- s/Bool false}]
+        :return {:applications            [{:oid                              s/Str
+                                            :hakuOid                          s/Str
+                                            :hakukohdeOids                    [s/Str]
+                                            :henkiloOid                       s/Str
+                                            :asiointikieli                    s/Str
+                                            :email                            s/Str
+                                            :jattoAjanhetki                   (s/maybe s/Str)
+                                            (s/optional-key :lahiosoite)       (s/maybe s/Str)
+                                            (s/optional-key :postinumero)      (s/maybe s/Str)
+                                            (s/optional-key :postitoimipaikka) (s/maybe s/Str)
+                                            (s/optional-key :puhelinnumero)    (s/maybe s/Str)
+                                            :paymentObligations               {s/Keyword s/Str}}]
                  (s/optional-key :offset) s/Str}
         (cond (and (nil? hakuOid) (nil? hakukohdeOid) (nil? (seq hakemusOids)))
               (response/bad-request {:error "No query parameter given"})
@@ -1650,7 +1656,8 @@
                   hakuOid
                   hakukohdeOid
                   hakemusOids
-                  offset))))
+                  offset
+                  includeYhteystiedot))))
 
       (api/GET "/valinta-ui" {session :session}
         :summary "Applications for valinta-ui"
