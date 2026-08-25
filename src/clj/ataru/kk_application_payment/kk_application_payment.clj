@@ -11,6 +11,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.koodisto.koodisto :as koodisto]
+            [ataru.koodisto.koodisto-codes :as codes]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -276,7 +277,7 @@
          (some #(contains? exempt-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))))
 
 (defn- is-finnish-citizen? [person]
-  (some #(= "246" (:kansalaisuusKoodi %)) (:kansalaisuus person)))
+  (some #(contains? codes/finland-equivalent-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn- time-is-before-some-attachment-deadlines?
   [attachment-deadline-service application-submitted haku now]

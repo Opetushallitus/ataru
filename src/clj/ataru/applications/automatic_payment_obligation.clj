@@ -11,8 +11,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string]))
 
-(defn nationality-finland? [person]
-  (some #(= codes/finland-country-code (:kansalaisuusKoodi %)) (:kansalaisuus person)))
+(defn nationality-finland-or-aland? [person]
+  (some #(contains? codes/finland-equivalent-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
 (defn- korkeakouluhaku? [tarjonta-service haku-oid]
   (clojure.string/starts-with?
@@ -25,7 +25,7 @@
   (cache/remove-from henkilo-cache person-oid)
   (let [person (person-service/get-person person-service person-oid)]
     (when (person-util/is-yksiloity? person)
-      (let [finnish-nationality? (nationality-finland? person)
+      (let [finnish-nationality? (nationality-finland-or-aland? person)
             applications         (->> (application-store/get-application-keys-for-person-oid person-oid)
                                       (map :key)
                                       (map application-store/get-latest-application-by-key))]

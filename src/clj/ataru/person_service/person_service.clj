@@ -173,6 +173,10 @@
                               :yksiloity false
                               :yksiloityVTJ false
                               :yksiloityEidas true})
+      "1.2.3.4.5.248" (merge fake-onr-person  ; Åland Islands nationality
+                             {:kansalaisuus [{:kansalaisuusKoodi "248"}]
+                              :yksiloity true
+                              :yksiloityVTJ true})
       (merge fake-onr-person
              {:oidHenkilo oid})))
 
