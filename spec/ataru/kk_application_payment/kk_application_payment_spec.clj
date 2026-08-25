@@ -553,7 +553,7 @@
                           ; Background data now shows the person actually is an EU/ETA citizen (e.g. VTJ verification completed
                           ; after the application was submitted). The application stays "not-required", but the reason must be
                           ; corrected to reflect the real grounds instead of being left stale.
-                          (with-redefs [payment/is-vtj-yksiloity-eu-citizen? (constantly true)]
+                          (with-redefs [payment/is-eta-equivalent-citizen? (constantly true)]
                             (let [[changed payment] (update-payment application-key oid)]
                               (should= 1 (count changed))
                               (should-be-matching-state {:application-key application-key, :state state-not-required
@@ -566,7 +566,7 @@
                                                                              nil)
                               application-key  (:key (application-store/get-application application-id))]
                           ; Person is initially (incorrectly) considered an EU/ETA citizen.
-                          (with-redefs [payment/is-vtj-yksiloity-eu-citizen? (constantly true)]
+                          (with-redefs [payment/is-eta-equivalent-citizen? (constantly true)]
                             (let [[changed payment] (update-payment application-key oid)]
                               (should= 1 (count changed))
                               (should-be-matching-state {:application-key application-key, :state state-not-required
