@@ -78,6 +78,28 @@ const fillSearchAndWaitForResults = async (
   ).toHaveCount(expectedCount)
 }
 
+const ensureTwoHakukohteetSelected = async () => {
+  const selectedRows = page.locator('.application__selected-hakukohde-row')
+  let selectedRowCount = await selectedRows.count()
+
+  if (selectedRowCount === 0) {
+    await page
+      .locator('.application__search-hit-hakukohde-row--select-button')
+      .first()
+      .click()
+    selectedRowCount = 1
+  }
+
+  if (selectedRowCount === 1) {
+    await page
+      .locator('.application__search-hit-hakukohde-row--select-button')
+      .first()
+      .click()
+  }
+
+  await expect(selectedRows).toHaveCount(2)
+}
+
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(120000)
   page = await browser.newPage()
@@ -307,17 +329,11 @@ test('Priorization warning is announced from active priority controls', async ()
   await openSearch()
   await fillSearchAndWaitForResults('Te', 2)
 
-  await page
-    .locator('.application__search-hit-hakukohde-row--select-button')
-    .first()
-    .click()
+  const selectedRows = page.locator('.application__selected-hakukohde-row')
+  await ensureTwoHakukohteetSelected()
 
-  const firstSelectedRow = page
-    .locator('.application__selected-hakukohde-row')
-    .filter({ hasText: 'Testikoulutus A' })
-  const secondSelectedRow = page
-    .locator('.application__selected-hakukohde-row')
-    .filter({ hasText: 'Testikoulutus B' })
+  const firstSelectedRow = selectedRows.nth(0)
+  const secondSelectedRow = selectedRows.nth(1)
 
   const firstWarningId = `hakukohde-priorization-warning-${TEST_HAKUKOHDE_OID_1}`
   const secondWarningId = `hakukohde-priorization-warning-${TEST_HAKUKOHDE_OID_2}`
