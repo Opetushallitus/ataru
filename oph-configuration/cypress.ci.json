@@ -4,5 +4,13 @@
   "pageLoadTimeout": 120000,
   "requestTimeout": 120000,
   "responseTimeout": 120000,
+  "defaultCommandTimeout": 10000,
+  "chromeWebSecurity": false,
+  "viewportWidth": 1500,
+  "viewportHeight": 1000,
+  "retries": {
+    "runMode": 2,
+    "openMode": 0
+  },
   "video": false
 }

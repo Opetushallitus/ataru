@@ -5,34 +5,34 @@ export default (
   testit: () => void
 ) => {
   describe(kuvaus, () => {
+    const rowSelector = `#application-list-row-${hakemusoid.replace(
+      /\./g,
+      '\\.'
+    )}`
+
     it(`Hae testihenkilön ${hakuteksti} hakemus`, () => {
       cy.get(
         '.application__search-control-tab-selector-wrapper--search'
       ).click()
-      cy.get('#ssn-search-field').clear().type(hakuteksti, { delay: 50 })
+      // A search reloads the list through two chained debounces: :application/search-by-term
+      // waits 500 ms for a real term (0 ms for a blank one), and the :application/reload-applications
+      // it dispatches waits another 500 ms before the POST. So clearing and then typing produces
+      // two list responses, roughly a second apart. Both have to be consumed here: one left in
+      // flight lands during the next test and re-renders the list right as the row is clicked.
+      cy.get('#ssn-search-field').then(($field) => {
+        // .clear() on an already empty field fires no on-change, so it triggers no reload
+        // to wait for. Only the later invocations of this helper have a term to clear.
+        if ($field.val() !== '') {
+          cy.get('#ssn-search-field').clear()
+          cy.wait('@listApplications')
+        }
+      })
+      cy.get('#ssn-search-field').type(hakuteksti, { delay: 50 })
       cy.wait('@listApplications')
     })
 
     it('Avaa hakemus tarkasteltavaksi', () => {
-      const rowSelector = `#application-list-row-${hakemusoid.replace(
-        /\./g,
-        '\\.'
-      )}`
-      // The row can detach mid re-render right as we click it; retry with a fresh cy.get()
-      // when that happens instead of guessing a settle wait.
-      const clickRow = (attemptsLeft = 4) => {
-        const onFail = (err: Error) => {
-          if (attemptsLeft > 1 && /detached from the DOM/.test(err.message)) {
-            clickRow(attemptsLeft - 1)
-          } else {
-            throw err
-          }
-        }
-        Cypress.once('fail', onFail)
-        cy.get(rowSelector).should('be.visible').click()
-        cy.then(() => Cypress.off('fail', onFail))
-      }
-      clickRow()
+      cy.get(rowSelector).should('be.visible').click()
     })
 
     testit()

@@ -579,10 +579,14 @@
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
          :fetch-hakukohde-groups      [hakukohderyhmat-promise]}))))
 
-(reg-event-db
+(reg-event-fx
   :editor/handle-user-info
-  (fn [db [_ user-info-response]]
-    (assoc-in db [:editor :user-info] user-info-response)))
+  (fn [{db :db} [_ user-info-response]]
+    ;; Lähtökoulusuodattimen organisaatiohaku on vartioitu käyttäjän roolilla, joka selviää vasta
+    ;; tästä vastauksesta. Herätetään haku uudelleen, jos rooli ehti perille vasta haun valinnan
+    ;; jälkeen - muuten hakua ei dispatchata koskaan.
+    {:db       (assoc-in db [:editor :user-info] user-info-response)
+     :dispatch [:application/maybe-fetch-schools-of-departure]}))
 
 (defn- languages->kwd [form]
   (update form :languages

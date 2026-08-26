@@ -157,22 +157,12 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             clickFirstHaku()
             cy.get('#open-application-filters').click()
 
-            // The org fetch only dispatches once the user's role is known; if the click above
-            // raced ahead of it, reopen once the role has actually loaded (signalled by either
-            // element rendering) so the fetch is retried instead of never happening.
-            cy.get('#school-search, #selected-school', {
-              timeout: 15000,
-            }).should('exist')
-            cy.get('body').then(($body) => {
-              if ($body.find('#selected-school').length === 0) {
-                cy.get('#open-application-filters').click()
-                cy.get('#open-application-filters').click()
-              }
-            })
-
-            cy.get('#school-search').should('not.exist')
-            cy.get('#selected-school', { timeout: 15000 }).should('exist')
+            // The organization fetch is dispatched by whichever of {user-info, haku selection,
+            // haut metadata} lands last, so cy.get() retrying here is enough - no fixed wait.
+            // Assert the selection first: #school-search would also be absent while the fetch is
+            // still in flight, so checking it first could pass vacuously.
             cy.get('#selected-school').contains('Haagan peruskoulu')
+            cy.get('#school-search').should('not.exist')
             cy.get('#open-application-filters').click()
           })
         })

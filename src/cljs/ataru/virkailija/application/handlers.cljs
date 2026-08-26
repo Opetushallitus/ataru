@@ -874,9 +874,12 @@
                     (update :hakukohteet merge (keys-to-names hakukohteet))
                     (update :hakukohderyhmat merge (keys-to-names hakukohderyhmat))
                     (update :fetching-haut dec)
-                    (update :fetching-hakukohteet dec))]
+                    (update :fetching-hakukohteet dec))
+         ;; Lähtökoulujen haku vaatii [:haut ...] -datan, joka täyttyy vasta tässä. Jos haku oli
+         ;; ehditty valita jo ennen tämän vastauksen saapumista, aiempi yritys ohitettiin.
+         dispatch-n (conj (vec dispatch-n-after) [:application/maybe-fetch-schools-of-departure])]
      {:db         new-db
-      :dispatch-n dispatch-n-after})))
+      :dispatch-n dispatch-n})))
 
 (reg-event-fx
  :application/refresh-haut-and-hakukohteet
