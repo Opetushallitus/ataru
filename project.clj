@@ -379,14 +379,18 @@
              :hakija-cypress        {:env {:dev? "true"}
                                      :target-path "target/target-cypess-hakija"}
 
-             :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"
-                                                            "-Dclojure.main.report=stderr"]}]
+             :virkailija-dev-opts {:target-path "target-virkailija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"
+                                                           "-Dclojure.main.report=stderr"]}
 
-             :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
+             :hakija-dev-opts     {:target-path "target-hakija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"]}
+
+             :virkailija-dev [:dev :virkailija-dev-opts]
+
+             :hakija-dev     [:dev :hakija-dev-opts]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
