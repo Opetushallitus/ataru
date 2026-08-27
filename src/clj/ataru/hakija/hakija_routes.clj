@@ -33,7 +33,8 @@
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
                                       alter-application-to-hakuaikaloppu-for-secret
-                                      register-test-haku! unregister-test-haku!]]
+                                      register-test-haku! unregister-test-haku!
+                                      register-test-hakukohde! unregister-test-hakukohde!]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
@@ -171,6 +172,22 @@
     (api/DELETE "/test/tarjonta/haku/:oid" [oid]
       (if (is-dev-env?)
         (do (unregister-test-haku! oid)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    ; Antaa testien muuttaa ajonaikaisesti olemassa olevan hakukohteen
+    ; kenttiä (esim. :hakuOid osoittamaan testin omaan, edellä
+    ; rekisteröityyn hakuun), kun testi navigoi hakukohteen kautta (esim.
+    ; /hakemus/hakukohde/:oid) sen sijaan, että se käyttäisi hakua suoraan.
+    (api/POST "/test/tarjonta/hakukohde" []
+      :body [hakukohde-muutos {:oid s/Str
+                               (s/optional-key :hakuOid) s/Str}]
+      (if (is-dev-env?)
+        (do (register-test-hakukohde! hakukohde-muutos)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    (api/DELETE "/test/tarjonta/hakukohde/:oid" [oid]
+      (if (is-dev-env?)
+        (do (unregister-test-hakukohde! oid)
             (response/ok {}))
         (response/not-found "Not found")))
     (api/GET "/virkailija-hakemus-edit-test.html" []
