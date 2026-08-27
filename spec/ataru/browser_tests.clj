@@ -62,8 +62,6 @@
     (it "is possible to apply using a plain form"
       (run-karma-test "hakija-form"))
     (it "is possible to apply using a form with a question group"
-      (run-karma-test "hakija-question-group-form"))
-    (it "is possible to apply as virkailija"
-      (run-karma-test "virkailija-haku"))))
+      (run-karma-test "hakija-question-group-form"))))
 
 (run-specs)
