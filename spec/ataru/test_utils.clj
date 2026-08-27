@@ -8,6 +8,7 @@
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
             [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.time.coerce :as coerce]
@@ -106,6 +107,12 @@
 
 (defn get-latest-application-secret []
   (application-store/get-latest-application-secret))
+
+(defn register-test-haku! [haku]
+  (mock-tarjonta-service/register-test-haku! haku))
+
+(defn unregister-test-haku! [haku-oid]
+  (mock-tarjonta-service/unregister-test-haku! haku-oid))
 
 (defn alter-application-to-hakuaikaloppu-for-secret [secret]
   (let [application (application-store/get-latest-version-of-application-for-edit false {:secret secret})

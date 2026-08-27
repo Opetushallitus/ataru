@@ -32,7 +32,8 @@
             [ataru.config.core :refer [config]]
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
-                                      alter-application-to-hakuaikaloppu-for-secret]]
+                                      alter-application-to-hakuaikaloppu-for-secret
+                                      register-test-haku! unregister-test-haku!]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
@@ -148,6 +149,28 @@
     (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
       (if (is-dev-env?)
         (do (alter-application-to-hakuaikaloppu-for-secret secret)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    ; Antaa testien rekisteröidä ajonaikaisesti oman, testikohtaisen hakunsa
+    ; mock-tarjontapalveluun sen sijaan, että ne jakaisivat staattista,
+    ; kaikille testeille yhteistä testidataa (mock_tarjonta_service.clj).
+    ; Näin esim. eri Playwright-tiedostot voivat käyttää omaa hakuaan
+    ; törmäämättä toistensa siivoustoimenpiteisiin, kun tiedostot ajetaan
+    ; rinnakkain eri workereissa.
+    (api/POST "/test/tarjonta/haku" []
+      :body [haku {:oid s/Str
+                   :ataruLomakeAvain s/Str
+                   :hakukohdeOids [s/Str]
+                   (s/optional-key :usePriority) s/Bool
+                   (s/optional-key :kohdejoukkoUri) s/Str
+                   (s/optional-key :kohdejoukonTarkenne) s/Str}]
+      (if (is-dev-env?)
+        (do (register-test-haku! haku)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    (api/DELETE "/test/tarjonta/haku/:oid" [oid]
+      (if (is-dev-env?)
+        (do (unregister-test-haku! oid)
             (response/ok {}))
         (response/not-found "Not found")))
     (api/GET "/virkailija-hakemus-edit-test.html" []
