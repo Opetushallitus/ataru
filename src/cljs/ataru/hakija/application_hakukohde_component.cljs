@@ -191,6 +191,10 @@
          {:aria-hidden "true"}]
         [:button.application__search-hit-hakukohde-row--select-button
          {:data-hakukohde-oid hakukohde-oid
+          ;; Tämä todennäköisesti rikkoutuu React 18:n createRoot-juuren kanssa, koska sen automaattinen batching 
+          ;; voi muuttaa tilan eri ajoituksella kuin milloin alla oleva querySelectorAll+focus ajetaan,
+          ;; jolloin fokus ei kohdistu mihinkään. Vastaavissa rakenteissa muualla on sama riski.
+          ;; TODO: Muutetaan tämä ja kaikki muutkin renderöintiaikana tehdyt DOM-queryt käyttämään refejä, jotta vältytään vaikeasti havaittavilta bugeilta.
           :on-click           (when-not disabled?
                                 (fn [e]
                                   (let [btn     (.-currentTarget e)
