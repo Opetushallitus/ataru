@@ -17,6 +17,12 @@
   &:focus-visible {
     outline: auto;
   }
+  &:disabled,
+  &[disabled] {
+    color: @neutral-grey-600;
+    cursor: default;
+    pointer-events: none;
+  }
 }
 
 .a-button > * {

@@ -640,6 +640,14 @@ body {
   font-size: 16px;
   position: relative;
   display: inline-block;
+
+  .a-dropdown {
+    width: @form-select-width;
+  }
+
+  .application__lock-icon-container + .a-dropdown {
+    width: @form-select-width - @lock-icon-width;
+  }
 }
 
 .application__form-select-label {
