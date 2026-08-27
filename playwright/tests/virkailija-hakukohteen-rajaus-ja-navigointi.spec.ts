@@ -19,19 +19,25 @@ test.describe.configure({ mode: 'serial' })
 
 let page: Page
 
-// Samat mock_tarjonta_service.clj:n valmiit testihakukohteet, joita
-// hakija-hakukohde.spec.ts ja hakija-haku.spec.ts jo käyttävät (nimillä
-// "Testihakukohde 1"/"2"). Toisin kuin hakija-hakukohde.spec.ts:ssä (jossa
-// vain suoraan navigoitava hakukohde pitää osoittaa uudelleen), TÄSSÄ
-// testissä molempien oma :hakuOid-kenttä pitää osoittaa uudelleen tähän
-// testihakuun (asetaTestiHakukohde): hakukohde-rajaus-suodattimen
-// valitseminen navigoi virkailijan puolella suoraan osoitteeseen
-// /lomake-editori/applications/hakukohde/:oid, ja tämä reitti hakee
-// hakukohteen (siis myös Testihakukohteen 2) oman :hakuOid-kentän
-// ratkaistakseen, minkä haun hakemuksia listataan — vanhalla, oletusarvon
-// mukaisella :hakuOid:lla tämän testin omat hakemukset eivät löytyisi.
-const HAKUKOHDE_1 = '1.2.246.562.20.49028196523'
-const HAKUKOHDE_2 = '1.2.246.562.20.49028196524'
+// Täysin uudet, tälle testille yksinomaiset hakukohde-oidit — EI
+// mock_tarjonta_service.clj:n valmiita, nimettyjä "Testihakukohde 1/2/3"
+// -hakukohteita (oidit 49028196523-525), joita hakija-hakukohde.spec.ts ja
+// hakija-haku.spec.ts myös käyttävät. Näiden jakaminen aiheutti ajoittain
+// sen, että hakija-haku.spec.ts:n hakutulosten järjestys meni sekaisin
+// (havaittu "Testihakukohde 3" "Testihakukohde 2":n sijaan silloin, kun
+// tämä testi ajettiin samanaikaisesti toisessa workerissa) — ilmeisesti
+// molempien tiedostojen samanaikainen, ajonaikainen rekisteröinti samaan,
+// prosessin jaettuun mock-tarjontapalvelun tilaan (mock_tarjonta_service.clj:n
+// test-hakukohteet-atomi) saattoi vaikuttaa toisen tiedoston hakutulosten
+// iterointijärjestykseen. register-test-hakukohde! palaa base-hakukohde-
+// pohjaan tuntemattomalle oidille (ks. mock_tarjonta_service.clj), joten
+// täysin uuden oidin rekisteröinti nimineen (asetaTestiHakukohde,
+// hakukohteenNimet-kenttä) luo tälle testille kokonaan oman, kenenkään
+// muun testin kanssa jakamattoman hakukohteen.
+const HAKUKOHDE_1 = '1.2.246.562.20.90000000001'
+const HAKUKOHDE_1_NIMI = 'Rajaustesti 1'
+const HAKUKOHDE_2 = '1.2.246.562.20.90000000002'
+const HAKUKOHDE_2_NIMI = 'Rajaustesti 2'
 
 const hakuOid = luoTestiHaunOid()
 const lomakkeenAvain = randomUUID()
@@ -93,7 +99,7 @@ const submitHakemus = async (hakija: Hakija) => {
   await fillField(
     page,
     page.locator('.application__form-text-input-in-box'),
-    'Testihakukohde 2'
+    HAKUKOHDE_2_NIMI
   )
   await page
     .locator('.application__search-hit-hakukohde-row--select-button')
@@ -195,8 +201,16 @@ test.beforeAll(async ({ browser }) => {
     usePriority: true,
     hakukohdeOids: [HAKUKOHDE_1, HAKUKOHDE_2],
   })
-  await asetaTestiHakukohde(page, { oid: HAKUKOHDE_1, hakuOid })
-  await asetaTestiHakukohde(page, { oid: HAKUKOHDE_2, hakuOid })
+  await asetaTestiHakukohde(page, {
+    oid: HAKUKOHDE_1,
+    hakuOid,
+    hakukohteenNimet: { kieli_fi: HAKUKOHDE_1_NIMI },
+  })
+  await asetaTestiHakukohde(page, {
+    oid: HAKUKOHDE_2,
+    hakuOid,
+    hakukohteenNimet: { kieli_fi: HAKUKOHDE_2_NIMI },
+  })
 
   for (const hakija of HAKIJAT) {
     await submitHakemus(hakija)
@@ -217,7 +231,7 @@ test('suodattaa hakukohteen mukaan ja valitsee sen oletuksena hakemuksen tiedois
   await expect(applicantRows()).toHaveCount(2)
 
   await rajausToggleButton().click()
-  const testihakukohde2 = rajausListItem('Testihakukohde 2')
+  const testihakukohde2 = rajausListItem(HAKUKOHDE_2_NIMI)
   await expect(testihakukohde2).toBeVisible()
   await clickAndWaitForListReload(testihakukohde2)
 

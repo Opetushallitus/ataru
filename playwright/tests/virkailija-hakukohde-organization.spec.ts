@@ -14,9 +14,15 @@ test.describe.configure({ mode: 'serial' })
 // haku (1.2.246.562.29.65950024188) osoittaa kiinteästi tämän avaimiseen
 // lomakkeeseen, joten lomake pitää luoda juuri tällä avaimella eikä satunnaisella.
 const LOMAKKEEN_AVAIN = 'hakukohteen-organisaatiosta-form'
+const LOMAKKEEN_NIMI = 'hakukohteen-organisaatiosta'
 
 const formListItems = (page: Page) =>
   page.locator('.editor-form__list').locator('a')
+
+const formListItemByName = (page: Page, nimi: string) =>
+  formListItems(page).filter({
+    has: page.locator('.editor-form__list-form-name', { hasText: nimi }),
+  })
 
 let page: Page
 
@@ -25,12 +31,7 @@ test.beforeAll(async ({ browser }) => {
 
   await kirjauduVirkailijanNakymaan(page)
   const sisalto = await haeOletuslomakkeenSisalto(page)
-  await luoLomakeAvaimella(
-    page,
-    LOMAKKEEN_AVAIN,
-    sisalto,
-    'hakukohteen-organisaatiosta'
-  )
+  await luoLomakeAvaimella(page, LOMAKKEEN_AVAIN, sisalto, LOMAKKEEN_NIMI)
 
   await kirjauduVirkailijanNakymaan(page, 'USER-WITH-HAKUKOHDE-ORGANIZATION')
 })
@@ -40,18 +41,19 @@ test.afterAll(async ({ request }) => {
   await page.close()
 })
 
-test('näyttää vain hakukohteen organisaation kautta assosioituneen lomakkeen', async () => {
-  await expect(formListItems(page)).toHaveCount(1)
-  await expect(
-    formListItems(page).locator('.editor-form__list-form-name')
-  ).toHaveText('hakukohteen-organisaatiosta')
+test('näyttää hakukohteen organisaation kautta assosioituneen lomakkeen', async () => {
+  // Ei odoteta lomakelistan olevan tarkalleen yhden mittainen — tietokanta on
+  // pysyvä ja jaettu myös muiden, mahdollisesti rinnakkain ajettavien
+  // testien kanssa, joten muitakin (esim. DEVELOPER-tiketillä luotuja,
+  // oletusorganisaatioon assosioituvia) lomakkeita voi näkyä samalla.
+  // Todennetaan sen sijaan suoraan, että juuri TÄMÄ, hakukohteen
+  // organisaation kautta assosioitunut lomake näkyy.
+  await expect(formListItemByName(page, LOMAKKEEN_NIMI)).toHaveCount(1)
 })
 
 test('hakukohteen organisaation kautta assosioitunut käyttäjä voi muokata lomaketta', async () => {
-  await formListItems(page).first().click()
-  await expect(page.getByTestId('form-name-input')).toHaveValue(
-    'hakukohteen-organisaatiosta'
-  )
+  await formListItemByName(page, LOMAKKEEN_NIMI).click()
+  await expect(page.getByTestId('form-name-input')).toHaveValue(LOMAKKEEN_NIMI)
 
   const toolbar = page.getByTestId('component-toolbar')
   await toolbar.hover()
