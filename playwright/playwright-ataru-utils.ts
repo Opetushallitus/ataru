@@ -13,12 +13,10 @@ import * as Option from 'fp-ts/lib/Option'
 // joka kutsukerralla eri henkilötunnus. Kiinteitä henkilötunnuksia (esim.
 // "020202A0202") ei pidä käyttää testeissä, jotka hakevat hakemuksia
 // henkilötunnuksen perusteella lomake-/hakurajauksetta — Playwright-testit
-// ajetaan pysyvää, ajojen välillä säilyvää tietokantaa vasten (toisin kuin
-// vanhat speclj-selaintestit, joilla oli oma, joka ajolla nollautuva
-// tietokantansa), joten samaa kiinteää henkilötunnusta uudelleenkäyttävät
-// testit kerryttävät siihen hakemuksia ajojen yli ja rikkovat lopulta
-// tarkkoja määrätarkistuksia (ks. virkailija-hakemuksen-haku-ja-
-// muokkauslinkki.spec.ts).
+// ajetaan pysyvää, ajojen välillä säilyvää tietokantaa vasten, joten samaa
+// kiinteää henkilötunnusta uudelleenkäyttävät testit kerryttävät siihen
+// hakemuksia ajojen yli ja rikkovat lopulta tarkkoja määrätarkistuksia
+// (ks. virkailija-hakemuksen-haku-ja-muokkauslinkki.spec.ts).
 export const createUniqueSSN = (): string => {
   // Päivä rajataan 1-28:aan, jotta se on validi kaikille kuukausille ilman
   // kuukausikohtaista päivälukumäärän tarkistusta. Vuosi rajataan
@@ -100,10 +98,10 @@ export const lisaaLomake = async (
     ),
     clickLisaaLomakeButton(page),
   ])
-  return Promise.resolve({
+  return {
     lomakkeenId: await getJsonResponseKey<number>(response, 'id'),
     lomakkeenAvain: await getJsonResponseKey<string>(response, 'key'),
-  })
+  }
 }
 
 export const teeJaOdotaLomakkeenTallennusta = async (
@@ -154,15 +152,15 @@ export const taytaHenkilotietomoduuli = async (
 ) => {
   // Henkilötietomoduulin täyttäminen
   for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
-    const loc = page.getByTestId(`${idPrefix}-input`)
     if (idPrefix === 'home-town') {
-      await selectOption(page, loc, value)
-    } else {
-      await loc.fill(value)
-      // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
-      // eslint-disable-next-line playwright/no-wait-for-timeout
-      await page.waitForTimeout(50)
+      await selectOption(page, page.getByTestId(`${idPrefix}-input`), value)
+      continue
     }
+    const loc = page.getByTestId(`${idPrefix}-input`)
+    await loc.fill(value)
+    // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(50)
   }
 }
 
@@ -749,11 +747,7 @@ export const fillAndSubmitQuestionGroupApplication = async (
   )
 
   const selectNth = async (fieldIndex: number, value: string) => {
-    await selectOption(
-      page,
-      formFields.nth(fieldIndex).locator('select').first(),
-      value
-    )
+    await selectOption(page, formFields.nth(fieldIndex), value)
   }
 
   await Promise.all([
@@ -789,7 +783,7 @@ export const fillAndSubmitQuestionGroupApplication = async (
   await expect(page.getByTestId('postal-office-input')).toHaveValue(
     /JYV.*SKYL.*/
   )
-  await selectOption(page, page.getByTestId('home-town-input'), '179')
+  await selectOption(page, page.getByTestId('home-town-input'), 'Jyväskylä')
 
   await selectNth(14, '1')
   await page

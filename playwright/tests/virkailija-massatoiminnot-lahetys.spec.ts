@@ -144,7 +144,6 @@ const hakukohdeStateCells = () =>
   page.locator('.application-handling__hakukohde-state')
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await page.route(

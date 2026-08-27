@@ -69,12 +69,12 @@ test.afterAll(async ({ request }) => {
 })
 
 const getAllByTestId = (loc: Locator | Page, testId: string) =>
-  loc.locator(`[data-test-id=${testId}]`)
+  loc.getByTestId(testId)
 
 test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   //Painikkeet, yksi valittavissa, koodisto -elementin lisäys
   const valikko = page.getByTestId('component-toolbar')
-  await valikko.dispatchEvent('mouseover')
+  await valikko.hover()
 
   const lisaysLinkki = valikko.getByText(
     'Painikkeet, yksi valittavissa, koodisto'
@@ -145,12 +145,16 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   await expect(page.getByTestId('postal-office-input')).toHaveValue('HELSINKI')
 
   // Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"
-  await page
-    .getByText(
-      'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)',
-      { exact: true }
-    )
-    .click()
+  const koulutusVaihtoehto =
+    'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+  await page.getByText(koulutusVaihtoehto, { exact: true }).click()
+  // Klikkaus itsessään ei takaa, että valinta on jo ehtinyt kirjautua
+  // sovelluksen tilaan (ks. application_form_components.cljs, jossa sekä
+  // input että label saavat aria-checkedin vasta committed-tilan mukaan) —
+  // odotetaan siis näkyvää vahvistusta muistin/timeoutin arvaamisen sijaan.
+  await expect(
+    page.getByRole('radio', { name: koulutusVaihtoehto, exact: true }).first()
+  ).toBeChecked()
 
   await Promise.all([
     waitForResponse(page, 'POST', (url) =>
@@ -171,9 +175,5 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   ).toBeVisible()
 
   // Näyttää valitun koodiarvon
-  await expect(
-    page.getByText(
-      'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
-    )
-  ).toBeVisible()
+  await expect(page.getByText(koulutusVaihtoehto)).toBeVisible()
 })

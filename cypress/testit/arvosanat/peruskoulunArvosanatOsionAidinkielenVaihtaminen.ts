@@ -4,11 +4,11 @@ import * as dropdown from '../../dropdown'
 export default () => {
   describe('Peruskoulun arvosanat -osion äidinkielen vaihtaminen ruotsiksi', () => {
     before(() => {
-      dropdown.asetaHakijanNakymanPudotusvalikonArvo('language-input', 'SV')
+      dropdown.setDropdownValue('language-input', 'SV')
     })
 
     after(() => {
-      dropdown.asetaHakijanNakymanPudotusvalikonArvo('language-input', 'FI')
+      dropdown.setDropdownValue('language-input', 'FI')
     })
 
     it('Näyttää peruskoulun arvosanat -osiossa ruotsin kielen edellyttämät oppiaineet', () => {
