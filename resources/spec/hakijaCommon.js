@@ -4,18 +4,12 @@ const virkailijaCreateSecret = '{{virkailija-create-secret}}'
 
 const newForm = (formName) => {
   const testFormKey = '{{test-form-key}}'
-  const testQuestionGroupFormKey = '{{test-question-group-form-key}}'
   let formKey
 
-  switch (formName) {
-    case 'testForm':
-      formKey = testFormKey
-      break
-    case 'testQuestionGroupForm':
-      formKey = testQuestionGroupFormKey
-      break
-    default:
-      console.log('No valid test form key found! Test will fail.. :(')
+  if (formName === 'testForm') {
+    formKey = testFormKey
+  } else {
+    console.log('No valid test form key found! Test will fail.. :(')
   }
 
   if (!formKey) {
