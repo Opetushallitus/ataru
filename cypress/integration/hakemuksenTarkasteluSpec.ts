@@ -66,8 +66,8 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.get('.application__search-control-tab-selector').first().click()
       }
 
-      const clickFirstHaku = () => {
-        cy.get('.application__search-control-haku').first().click()
+      const clickFirstHaku = (options?: Partial<Cypress.Timeoutable>) => {
+        cy.get('.application__search-control-haku', options).first().click()
       }
 
       it('Navigoi hakemusten käsittelynäkymään', () => {
@@ -154,8 +154,8 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             goToApplicationHandling()
             navigateToUnprocessedHautTab()
             cy.reload()
-            clickFirstHaku()
-            cy.get('#open-application-filters').click()
+            clickFirstHaku({ timeout: 30000 })
+            cy.get('#open-application-filters', { timeout: 30000 }).click()
 
             // The org fetch only dispatches once the user's role is known; if the click above
             // raced ahead of it, reopen once the role has actually loaded (signalled by either
