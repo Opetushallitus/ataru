@@ -267,6 +267,12 @@ pull-playwright-image:
 
 ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
 
+ci-test-playwright: export CI := true
+ci-test-playwright: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci pull-playwright-image wait-for-cypress-ci test-playwright-docker
+
+ci-test-cypress: export CI := true
+ci-test-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress wait-for-cypress-ci test-cypress-ci
+
 ci-test-playwright-and-cypress: export CI := true
 ci-test-playwright-and-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress pull-playwright-image wait-for-cypress-ci test-playwright-docker test-cypress-ci stop-pm2-ci stop-docker
 
