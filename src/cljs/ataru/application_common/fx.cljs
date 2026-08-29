@@ -125,6 +125,19 @@
           validation-debounce-ms)))))
 
 (re-frame/reg-fx
+  :validate-debounced-n
+  (fn [validation-params-n]
+    (doall (for [field-params validation-params-n]
+      (let [{:keys [field-descriptor field-idx group-idx] :as params} field-params
+            id                           (keyword (:id field-descriptor))
+            debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))]
+        (js/clearTimeout (@validation-debounces debounce-id))
+        (swap! validation-debounces assoc debounce-id
+               (js/setTimeout
+                 #(async-validate-value params)
+                 validation-debounce-ms)))))))
+
+(re-frame/reg-fx
   :set-window-close-callback
   (fn []
     (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
