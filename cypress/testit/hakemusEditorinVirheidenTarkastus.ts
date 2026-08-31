@@ -14,13 +14,25 @@ export default (
     })
 
     it('Avaa hakemus tarkasteltavaksi', () => {
-      // A short settle wait before clicking: the row can still be mid re-render right after
-      // the previous test's list load/selection state settles, which detaches it from the DOM
-      // for an instant even with a stable React key on the row.
-      cy.wait(500)
-      cy.get(`#application-list-row-${hakemusoid.replace(/\./g, '\\.')}`)
-        .should('be.visible')
-        .click()
+      const rowSelector = `#application-list-row-${hakemusoid.replace(
+        /\./g,
+        '\\.'
+      )}`
+      // The row can detach mid re-render right as we click it; retry with a fresh cy.get()
+      // when that happens instead of guessing a settle wait.
+      const clickRow = (attemptsLeft = 4) => {
+        const onFail = (err: Error) => {
+          if (attemptsLeft > 1 && /detached from the DOM/.test(err.message)) {
+            clickRow(attemptsLeft - 1)
+          } else {
+            throw err
+          }
+        }
+        Cypress.once('fail', onFail)
+        cy.get(rowSelector).should('be.visible').click()
+        cy.then(() => Cypress.off('fail', onFail))
+      }
+      clickRow()
     })
 
     testit()
