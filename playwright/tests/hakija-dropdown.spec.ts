@@ -23,19 +23,6 @@ test.describe.configure({ mode: 'parallel' })
 // kaikki locatorit skoopataan tämän yhden kentän omaan
 // .application__form-field-wrapperiin nimen (label) perusteella sen sijaan,
 // että luotettaisiin sivun ainoaan pudotusvalikkoon.
-//
-// Lomake luodaan kerran koko tiedostolle. Jokainen testi saa oman, juuri
-// sitä varten luodun sivun Playwrightin omalta page-fixturelta (oikeilla
-// viewport-/kosketusasetuksilla per describe, ks. test.use) ja avaa
-// lomakkeen sillä — Playwright sulkee sivun testin jälkeen itse. Tämä
-// (eikä describe-tason muuttujaan tallennettu, beforeEachissa uudelleen-
-// asetettava sivu) on ainoa turvallinen tapa jakaa sivun elinkaari testien
-// kesken, kun testit voivat ajaa rinnakkain (mode: 'parallel'): jaettu
-// muuttuja voisi vaihtua kesken testin, jos toisen testin beforeEach ehtii
-// ajaa samalla, kun edellinen testi on vielä await-tilassa. Jokainen testi
-// ajaa siis itse auki myös kaiken tarvitsemansa esitilan (esim. valitsee
-// vaihtoehdon ensin, jos testi koskee sen tyhjentämistä), koska testit
-// eivät enää voi riippua toistensa jättämästä tilasta.
 
 const metadata = {
   'created-by': {
@@ -87,12 +74,31 @@ const dropdownFieldFixture: FormNode = {
 
 const OPTION_COUNT = 12
 
+// Toinen pudotusvalikko, jolla ei koskaan ole tyhjää/valitsematonta vaihtoehtoa. Testaa, että tyhjennysnappi pysyy piilossa tällaiselle kentälle valinnan jälkeenkin.
+const NO_BLANK_OPTION_LABEL = 'Onko sinulla ajokortti?'
+
+const noBlankOptionFieldFixture: FormNode = {
+  fieldClass: 'formField',
+  fieldType: 'dropdown',
+  id: 'pw-no-blank-option-dropdown',
+  label: { fi: NO_BLANK_OPTION_LABEL },
+  metadata,
+  params: {},
+  'no-blank-option': true,
+  options: [
+    { value: 'true', label: { fi: 'Kyllä' } },
+    { value: 'false', label: { fi: 'Ei' } },
+  ],
+}
+
 const lomakkeenAvain = randomUUID()
 
-const getField = (page: Page) =>
+const getFieldByLabel = (page: Page, label: string) =>
   page
     .locator('.application__form-field')
-    .filter({ has: page.getByLabel(DROPDOWN_LABEL, { exact: true }) })
+    .filter({ has: page.getByLabel(label, { exact: true }) })
+
+const getField = (page: Page) => getFieldByLabel(page, DROPDOWN_LABEL)
 
 const getCombobox = (page: Page) => getField(page).getByRole('combobox')
 
@@ -106,18 +112,39 @@ const getOption = (page: Page, name: string) =>
 const getClearButton = (page: Page) =>
   getField(page).getByRole('button', { name: CLEAR_BUTTON_LABEL })
 
+// Avausnappi (karetti) on aria-hidden ja tab-index -1 — se on tarkoituksella
+// poissa saavutettavuuspuusta, joten sitä ei voi (eikä pidä) tavoittaa
+// getByRolella. Tämä on ainoa paikka koko tiedostossa, jossa locator
+// osoittaa suoraan komponentin omaan CSS-luokkaan.
+const getTriggerButton = (page: Page) =>
+  getField(page).locator('button.a-dropdown-trigger')
+
+const getNoBlankOptionCombobox = (page: Page) =>
+  getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('combobox')
+
+const getNoBlankOptionOption = (page: Page, name: string) =>
+  getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('option', { name })
+
+const getNoBlankOptionClearButton = (page: Page) =>
+  getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('button', {
+    name: CLEAR_BUTTON_LABEL,
+  })
+
 // Odottaa, että näppäimistöllä siirretty korostus (ks. move-active-to
 // dropdown_component.cljs:ssä) on oikeasti ehtinyt renderöityä ennen kuin
 // Enter lähetetään — move-active-ton oma re-frame/dispatch on asynkroninen
 // eikä siis ole vielä varmasti käsitelty pelkän edeltävän näppäinpainalluksen
-// valmistumisesta. Käytetään vain ajoituksen synkronointiin, ei testin
-// varsinaisena väitteenä (se pysyy lopulta valitun arvon tarkistuksessa).
+// valmistumisesta.
 const waitForActiveOption = async (page: Page, name: string) => {
   const optionId = await getOption(page, name).getAttribute('id')
   await expect(getCombobox(page)).toHaveAttribute(
     'aria-activedescendant',
     optionId ?? ''
   )
+}
+
+const waitForNoActiveOption = async (page: Page) => {
+  await expect(getCombobox(page)).not.toHaveAttribute('aria-activedescendant')
 }
 
 const avaaLomake = async (page: Page): Promise<void> => {
@@ -136,6 +163,7 @@ test.beforeAll(async ({ browser }) => {
   await luoLomakeAvaimella(page, lomakkeenAvain, [
     ...sisalto,
     dropdownFieldFixture,
+    noBlankOptionFieldFixture,
   ])
   await page.close()
 })
@@ -277,13 +305,88 @@ test.describe('Työpöytänäkymä', () => {
     await getCombobox(page).fill('S')
     await expect(getListbox(page)).toBeVisible()
   })
+
+  test('avausnapin klikkaus avaa ja sulkee valikon', async ({ page }) => {
+    await getTriggerButton(page).click()
+    await expect(getListbox(page)).toBeVisible()
+    await getTriggerButton(page).click()
+    await expect(getListbox(page)).toBeHidden()
+  })
+
+  test('kentän oman labelin klikkaus ei sulje auki olevaa valikkoa', async ({
+    page,
+  }) => {
+    // Kentän <label> on DOM:ssa .a-dropdownin ulkopuolella, joten se
+    // tulkittaisiin ilman erillistä poikkeusta ulkopuoliseksi klikkaukseksi
+    // (ks. make-outside-click-listener dropdown_component.cljs:ssä).
+    await getCombobox(page).click()
+    await expect(getListbox(page)).toBeVisible()
+    await getField(page).locator('label').click()
+    await expect(getListbox(page)).toBeVisible()
+  })
+
+  test('ei-tyhjennettävä kenttä ei näytä tyhjennysnappia valinnan jälkeenkään', async ({
+    page,
+  }) => {
+    await getNoBlankOptionCombobox(page).click()
+    await getNoBlankOptionOption(page, 'Kyllä').click()
+    await expect(getNoBlankOptionCombobox(page)).toHaveValue('Kyllä')
+    await expect(getNoBlankOptionClearButton(page)).toHaveCount(0)
+  })
+
+  test('ArrowDown auki olevassa valikossa siirtää kohdistusta eteenpäin yksi vaihtoehto kerrallaan', async ({
+    page,
+  }) => {
+    await getCombobox(page).click()
+    await getCombobox(page).press('ArrowDown')
+    await waitForActiveOption(page, 'Suomi')
+    await getCombobox(page).press('ArrowDown')
+    await waitForActiveOption(page, 'Ruotsi')
+    await getCombobox(page).press('Enter')
+    await expect(getCombobox(page)).toHaveValue('Ruotsi')
+  })
+
+  test('ArrowUp siirtää kohdistusta taaksepäin ja lopulta pois listasta', async ({
+    page,
+  }) => {
+    await getCombobox(page).click()
+    await getCombobox(page).press('ArrowDown')
+    await waitForActiveOption(page, 'Suomi')
+    await getCombobox(page).press('ArrowDown')
+    await waitForActiveOption(page, 'Ruotsi')
+    await getCombobox(page).press('ArrowUp')
+    await waitForActiveOption(page, 'Suomi')
+    await getCombobox(page).press('ArrowUp')
+    await waitForNoActiveOption(page)
+    // Korostuksen puuttuessa seuraava ArrowDown palaa listan alkuun sen
+    // sijaan, että se jatkaisi siitä, mihin korostus viimeksi jäi — tämä on
+    // ainoa tapa todentaa käyttäytymisen kautta, että ArrowUp todella
+    // poisti korostuksen sen sijaan, että se olisi vain jäänyt paikoilleen.
+    await getCombobox(page).press('ArrowDown')
+    await waitForActiveOption(page, 'Suomi')
+    await getCombobox(page).press('Enter')
+    await expect(getCombobox(page)).toHaveValue('Suomi')
+  })
+
+  test('näppäimet eivät tee mitään kun suodatettu lista on tyhjä', async ({
+    page,
+  }) => {
+    await getCombobox(page).click()
+    await getCombobox(page).fill('ei osumaa xyz')
+    await expect(getField(page).getByText('Ei hakutuloksia')).toBeVisible()
+    await getCombobox(page).press('ArrowDown')
+    await getCombobox(page).press('ArrowUp')
+    await getCombobox(page).press('Home')
+    await getCombobox(page).press('End')
+    await getCombobox(page).press('Enter')
+    await expect(getCombobox(page)).toHaveValue('ei osumaa xyz')
+    await expect(getField(page).getByText('Ei hakutuloksia')).toBeVisible()
+    await getCombobox(page).press('Escape')
+    await expect(getCombobox(page)).toHaveValue('')
+  })
 })
 
 test.describe('Mobiilinäkymä', () => {
-  // mobile-max-width (dropdown_component.cljs) on 593px — valitaan selvästi
-  // sen alle, jotta @mobile? on varmasti totta. hasTouch tarvitaan, jotta
-  // locator.tap() toimii (Playwright vaatii sen eksplisiittisesti
-  // kontekstilta).
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 
   test.beforeEach(async ({ page }) => {
