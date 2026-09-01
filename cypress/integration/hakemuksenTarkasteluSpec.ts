@@ -159,9 +159,11 @@ describe('Hakemuksen tietojen tarkastelu', () => {
 
             // The org fetch only dispatches once the user's role is known; if the click above
             // raced ahead of it, reopen once the role has actually loaded (signalled by either
-            // element rendering) so the fetch is retried instead of never happening.
+            // element rendering) so the fetch is retried instead of never happening. Role
+            // resolution after cy.reload() can be as slow as the other role-dependent waits
+            // above, so use the same generous timeout here.
             cy.get('#school-search, #selected-school', {
-              timeout: 15000,
+              timeout: 30000,
             }).should('exist')
             cy.get('body').then(($body) => {
               if ($body.find('#selected-school').length === 0) {
@@ -171,7 +173,7 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             })
 
             cy.get('#school-search').should('not.exist')
-            cy.get('#selected-school', { timeout: 15000 }).should('exist')
+            cy.get('#selected-school', { timeout: 30000 }).should('exist')
             cy.get('#selected-school').contains('Haagan peruskoulu')
             cy.get('#open-application-filters').click()
           })
