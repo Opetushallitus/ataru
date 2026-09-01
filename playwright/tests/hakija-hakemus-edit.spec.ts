@@ -1,6 +1,8 @@
 import { expect, Page, test } from '@playwright/test'
 import {
   fillField,
+  getFieldByLabel,
+  selectOption,
   unsafeFoldOption,
   waitForResponse,
 } from '../playwright-utils'
@@ -536,10 +538,12 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
-    await page
-      .getByRole('combobox', { name: /Kansalaisuus/i })
-      .selectOption({ label: 'Suomi' })
-    await page.getByTestId('language-input').selectOption({ label: 'suomi' })
+    await selectOption(page, await getFieldByLabel(page, /Kansalaisuus/i), {
+      label: 'Suomi',
+    })
+    await selectOption(page, page.getByTestId('language-input'), {
+      label: 'suomi',
+    })
 
     await expect(getSubmitButton(page)).toBeEnabled()
 
