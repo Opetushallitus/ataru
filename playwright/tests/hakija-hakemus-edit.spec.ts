@@ -395,7 +395,7 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     )
     expect(
       await getDropdownOptionValue(page.getByTestId('home-town-input'))
-    ).toBe('061')
+    ).toBe('061') // Forssa
 
     const extraFieldsToCheck = legacyExtraFieldDefinitions.filter(
       (field) => field.value.length > 0 && field.fieldType !== 'singleChoice'
@@ -576,6 +576,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
 
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
-    expect(await getDropdownOptionValue(homeTownInput)).toBe('853')
+    expect(await getDropdownOptionValue(homeTownInput)).toBe('853') // Jyväskylä
   })
 })

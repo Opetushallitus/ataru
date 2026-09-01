@@ -50,35 +50,39 @@ export const fillField = async (
   await page.waitForTimeout(50)
 }
 
-type SelectOptionValue = string | { label: string } | { value: string }
+// Jos pelkkä string, voi olla value tai label
+type SelectOption = string | { label: string } | { value: string }
 
 const resolveOptionLabel = async (
   listbox: Locator,
-  value: SelectOptionValue
+  option: SelectOption
 ): Promise<string> => {
-  if (typeof value === 'object' && 'label' in value) {
-    return value.label
+  if (typeof option === 'object' && 'label' in option) {
+    return option.label
   }
-  const optionValue = typeof value === 'string' ? value : value.value
-  // Listan <li>-vaihtoehdoilla ei ole arvoa omana attribuuttinaan (ks.
-  // dropdown-popup dropdown_component.cljs:ssä) — se on koodattu
-  // data-test-idn loppuun ("...-option-<arvo>").
-  const option = listbox.locator(`[data-test-id$="-option-${optionValue}"]`)
-  if ((await option.count()) === 0) {
-    // Kutsuja on saattanut antaa jo valmiiksi näkyvän tekstin (esim.
-    // kuntakoodiston sijasta suoraan kunnan nimen) eikä arvoa vastaavaa
-    // vaihtoehtoa löytynyt — käytetään sitä silloin sellaisenaan
-    // hakusanana sen sijaan, että jäätäisiin odottamaan olematonta
-    // vaihtoehtoa.
-    return optionValue
+  const optionValue = typeof option === 'string' ? option : option.value
+
+  // Koodistopohjaiset (esim. maa/kansalaisuus/kotikunta) listat ladataan
+  // asynkronisesti eivätkä siis välttämättä ole vielä renderöityneet heti
+  // popupin avautuessa
+  await listbox
+    .getByRole('option')
+    .first()
+    .waitFor({ state: 'attached', timeout: 5000 })
+
+  // string-tyyppinen option voi olla joko value tai label
+  let optionEl = listbox.locator(`[data-value="${optionValue}"]`)
+  if (typeof option === 'string' && (await optionEl.count()) === 0) {
+    optionEl = listbox.getByRole('option', { name: option })
   }
-  const text = await option.textContent()
+
+  const text = await optionEl.textContent()
   return text ?? optionValue
 }
 
 const selectFilteredDropdownOption = async (
   input: Locator,
-  value: SelectOptionValue
+  value: SelectOption
 ) => {
   const listboxId = await input.getAttribute('aria-controls')
   if (!listboxId) {
@@ -87,13 +91,13 @@ const selectFilteredDropdownOption = async (
     })
   }
   const listbox = input.page().locator(`[id="${listboxId}"]`)
-  const label = await resolveOptionLabel(listbox, value)
+  // Koodistopohjaiset (esim. maa/kansalaisuus/kotikunta) listat ladataan
+  // vasta kentän avaamisen yhteydessä eivätkä siis ole vielä olemassa
+  // DOM:issa ollenkaan ennen tätä klikkausta
   await input.click()
+  const label = await resolveOptionLabel(listbox, value)
   await input.fill(label)
-  // .first(): suodatettu lista voi sisältää useita osumia (esim. haku "suo"
-  // löytää sekä "Suomi" että "Suomen ..." -alkuiset vaihtoehdot) — annettua
-  // label-arvoa vastaava vaihtoehto on näistä ylin.
-  await listbox.getByRole('option').first().click()
+  await listbox.getByRole('option', { name: label }).first().click()
   // Valinnan klikkaus sulkee popupin (ks. on-option-click/collapse-dropdown
   // dropdown_component.cljs:ssä), mutta sulkeutuminen tapahtuu vasta
   // seuraavassa renderöinnissä eikä välttömästi ehdi valmiiksi ennen kuin
@@ -121,56 +125,59 @@ export const getFieldByLabel = async (
   return scope.locator(`[id="${forId}"]`)
 }
 
-export const selectOption = async (
-  page: Page,
-  locator: Locator,
-  value: SelectOptionValue
-) => {
+const getDropdown = async (
+  locator: Locator
+): Promise<{
+  type: 'filtered' | 'native'
+  locator: Locator
+}> => {
   let role = await locator.getAttribute('role')
   let tagName = await locator.evaluate((el) => el.tagName.toLowerCase())
+  let input = locator
 
   if (role !== 'combobox' && tagName !== 'select') {
     // locator saattaa osoittaa koko kentän wrapperiin (esim.
-    // .application__form-field) eikä suoraan combobox-inputiin tai
-    // <select>iin — etsitään todellinen kohde sen sisältä.
-    const inner = locator.locator('[role="combobox"], select').first()
-    if ((await inner.count()) > 0) {
-      locator = inner
-      role = await inner.getAttribute('role')
-      tagName = await inner.evaluate((el) => el.tagName.toLowerCase())
+    // .application__form-field)
+    input = locator.locator('[role="combobox"], select').first()
+    if ((await input.count()) > 0) {
+      role = await input.getAttribute('role')
+      tagName = await input.evaluate((el) => el.tagName.toLowerCase())
     }
   }
 
   if (role === 'combobox') {
-    await selectFilteredDropdownOption(locator, value)
+    return { type: 'filtered', locator: input }
   } else if (tagName === 'select') {
-    await locator.selectOption(value)
+    return { type: 'native', locator: input }
   } else {
     throw new AssertionError({
-      message: `Cannot select option for element with tag name "${tagName}" and role "${role}"`,
+      message: `Cannot determine dropdown type for element with tag name "${tagName}" and role "${role}"`,
     })
   }
+}
 
-  // Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä.
-  // eslint-disable-next-line playwright/no-wait-for-timeout
-  await page.waitForTimeout(50)
+export const selectOption = async (
+  page: Page,
+  locator: Locator,
+  value: SelectOption
+) => {
+  const { type: dropdownType, locator: dropdownLocator } =
+    await getDropdown(locator)
+
+  switch (dropdownType) {
+    case 'filtered':
+      return selectFilteredDropdownOption(dropdownLocator, value)
+    case 'native':
+      return dropdownLocator.selectOption(value)
+    default:
+      throw new AssertionError({
+        message: `Cannot select option for element with unknown dropdown type "${dropdownType}"`,
+      })
+  }
 }
 
 export const getDropdownOptionValue = async (
   input: Locator
 ): Promise<string | null> => {
-  const listboxId = await input.getAttribute('aria-controls')
-  if (!listboxId) {
-    throw new AssertionError({
-      message: 'Dropdown combobox has no aria-controls attribute',
-    })
-  }
-  const listbox = input.page().locator(`[id="${listboxId}"]`)
-  const selected = listbox.locator('[aria-selected="true"]')
-  if ((await selected.count()) === 0) {
-    return null
-  }
-  const dataTestId = await selected.getAttribute('data-test-id')
-  const match = dataTestId?.match(/-option-(.+)$/)
-  return match ? match[1] : null
+  return input.getAttribute('data-selected-option-value')
 }

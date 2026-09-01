@@ -102,28 +102,36 @@ const getField = (page: Page) => getFieldByLabel(page, DROPDOWN_LABEL)
 
 const getCombobox = (page: Page) => getField(page).getByRole('combobox')
 
-const getListbox = (page: Page) => getField(page).getByRole('listbox')
+const getListbox = async (page: Page) => {
+  const combobox = getCombobox(page)
+  const listboxId = await combobox.getAttribute('aria-controls')
+  const listbox = page.locator(`[id="${listboxId}"]`)
+  return listbox
+}
 
-const getOptions = (page: Page) => getField(page).getByRole('option')
+const getOptions = (listbox: Locator) => listbox.getByRole('option')
 
-const getOption = (page: Page, name: string) =>
-  getField(page).getByRole('option', { name })
+const getOption = (listbox: Locator, name: string) =>
+  listbox.getByRole('option', { name })
 
 const getClearButton = (page: Page) =>
   getField(page).getByRole('button', { name: CLEAR_BUTTON_LABEL })
 
-// Avausnappi (karetti) on aria-hidden ja tab-index -1 — se on tarkoituksella
+// Avausnappi on aria-hidden ja tab-index -1 — se on tarkoituksella
 // poissa saavutettavuuspuusta, joten sitä ei voi (eikä pidä) tavoittaa
-// getByRolella. Tämä on ainoa paikka koko tiedostossa, jossa locator
-// osoittaa suoraan komponentin omaan CSS-luokkaan.
+// getByRolella.
 const getTriggerButton = (page: Page) =>
   getField(page).locator('button.a-dropdown-trigger')
 
 const getNoBlankOptionCombobox = (page: Page) =>
   getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('combobox')
 
-const getNoBlankOptionOption = (page: Page, name: string) =>
-  getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('option', { name })
+const getNoBlankOptionListbox = async (page: Page) => {
+  const combobox = getNoBlankOptionCombobox(page)
+  const listboxId = await combobox.getAttribute('aria-controls')
+  const listbox = page.locator(`[id="${listboxId}"]`)
+  return listbox
+}
 
 const getNoBlankOptionClearButton = (page: Page) =>
   getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('button', {
@@ -136,7 +144,9 @@ const getNoBlankOptionClearButton = (page: Page) =>
 // eikä siis ole vielä varmasti käsitelty pelkän edeltävän näppäinpainalluksen
 // valmistumisesta.
 const waitForActiveOption = async (page: Page, name: string) => {
-  const optionId = await getOption(page, name).getAttribute('id')
+  const listbox = await getListbox(page)
+  const option = await getOption(listbox, name)
+  const optionId = await option.getAttribute('id')
   await expect(getCombobox(page)).toHaveAttribute(
     'aria-activedescendant',
     optionId ?? ''
@@ -207,25 +217,28 @@ test.describe('Työpöytänäkymä', () => {
 
   test('valikko on aluksi tyhjä ja suljettu', async ({ page }) => {
     await expect(getCombobox(page)).toHaveValue('')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(await getListbox(page)).toBeHidden()
     await expect(getClearButton(page)).toHaveCount(0)
   })
 
   test('klikkaus avaa valikon ja näyttää kaikki vaihtoehdot', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
+    const options = await getOptions(listbox)
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+    await expect(listbox).toBeVisible()
+    await expect(options).toHaveCount(OPTION_COUNT)
   })
 
   test('pitkätkin vaihtoehdot pysyvät näkymän leveyden sisällä', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
     const viewport = page.viewportSize()
     const fieldBox = await getField(page).boundingBox()
-    const listboxBox = await getListbox(page).boundingBox()
+    const listboxBox = await listbox.boundingBox()
     expect(fieldBox?.width).toBeLessThanOrEqual(viewport?.width ?? Infinity)
     expect(listboxBox?.width).toBeLessThanOrEqual(viewport?.width ?? Infinity)
   })
@@ -233,10 +246,13 @@ test.describe('Työpöytänäkymä', () => {
   test('kirjoittaminen suodattaa vaihtoehdot kirjainkoosta riippumatta', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
+    const options = getOptions(listbox)
+
     await getCombobox(page).click()
     await getCombobox(page).fill('RUOT')
-    await expect(getOptions(page)).toHaveCount(1)
-    await expect(getOption(page, 'Ruotsi')).toBeVisible()
+    await expect(options).toHaveCount(1)
+    await expect(getOption(listbox, 'Ruotsi')).toBeVisible()
   })
 
   test('haun tyhjentäminen palauttaa kaikki vaihtoehdot näkyviin', async ({
@@ -245,22 +261,26 @@ test.describe('Työpöytänäkymä', () => {
     await getCombobox(page).click()
     await getCombobox(page).fill('RUOT')
     await getCombobox(page).fill('')
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+    const listbox = await getListbox(page)
+    const options = getOptions(listbox)
+    await expect(options).toHaveCount(OPTION_COUNT)
   })
 
   test('vaihtoehdon klikkaaminen valitsee sen, sulkee valikon ja näyttää tyhjennysnapin', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await getOption(page, 'Ruotsi').click()
+    await getOption(listbox, 'Ruotsi').click()
     await expect(getCombobox(page)).toHaveValue('Ruotsi')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
     await expect(getClearButton(page)).toBeVisible()
   })
 
   test('tyhjennysnappi tyhjentää valinnan ja katoaa itse', async ({ page }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await getOption(page, 'Ruotsi').click()
+    await getOption(listbox, 'Ruotsi').click()
     await getClearButton(page).click()
     await expect(getCombobox(page)).toHaveValue('')
     await expect(getClearButton(page)).toBeHidden()
@@ -269,12 +289,13 @@ test.describe('Työpöytänäkymä', () => {
   test('nuolinäppäimellä ja Enterillä voi valita ensimmäisen vaihtoehdon suljetusta valikosta', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).focus()
     await getCombobox(page).press('ArrowDown')
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getCombobox(page).press('Enter')
     await expect(getCombobox(page)).toHaveValue('Suomi')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
   })
 
   test('End valitsee listan viimeisen ja Home ensimmäisen vaihtoehdon', async ({
@@ -286,15 +307,16 @@ test.describe('Työpöytänäkymä', () => {
     // odotusta välissä Enter voi osua renderiin, jossa valikko ei ole vielä
     // auki tai korostus ei ole vielä siirtynyt End/Home-näppäimen
     // kohteeseen (ks. waitForActiveOption).
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getCombobox(page).press('End')
     await waitForActiveOption(page, 'Färsaaret')
     await getCombobox(page).press('Enter')
     await expect(getCombobox(page)).toHaveValue('Färsaaret')
 
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getCombobox(page).press('Home')
     await waitForActiveOption(page, 'Suomi')
     await getCombobox(page).press('Enter')
@@ -304,59 +326,61 @@ test.describe('Työpöytänäkymä', () => {
   test('Escape sulkee valikon eikä muuta olemassa olevaa valintaa', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await getOption(page, 'Suomi').click()
+    await getOption(listbox, 'Suomi').click()
 
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getCombobox(page).press('Escape')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
     await expect(getCombobox(page)).toHaveValue('Suomi')
   })
 
   test('klikkaus valikon ulkopuolelle sulkee sen', async ({ page }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await page.getByTestId('application-header-label').click()
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
   })
 
   test('siirtyminen kenttään näppäimistöllä (Tab) ei avaa valikkoa, mutta kirjoittaminen avaa', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await page.getByLabel('Äidinkieli').focus()
     await page.keyboard.press('Tab')
     await expect(getCombobox(page)).toBeFocused()
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
     await getCombobox(page).fill('S')
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
   })
 
   test('avausnapin klikkaus avaa ja sulkee valikon', async ({ page }) => {
+    const listbox = await getListbox(page)
     await getTriggerButton(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getTriggerButton(page).click()
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
   })
 
   test('kentän oman labelin klikkaus sulkee auki olevan valikon työpöydällä', async ({
     page,
   }) => {
-    // Työpöydällä label ja kenttä ovat selvästi erilliset elementit, joten
-    // labelin klikkaus käyttäytyy kuten mikä tahansa muu ulkopuolinen
-    // klikkaus (ks. make-outside-click-listener dropdown_component.cljs:ssä
-    // — poikkeus labelille on käytössä vain mobiilissa).
+    const listbox = await getListbox(page)
     await getCombobox(page).click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getField(page).locator('label').click()
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
   })
 
   test('ei-tyhjennettävä kenttä ei näytä tyhjennysnappia valinnan jälkeenkään', async ({
     page,
   }) => {
     await getNoBlankOptionCombobox(page).click()
-    await getNoBlankOptionOption(page, 'Kyllä').click()
+    const listbox = await getNoBlankOptionListbox(page)
+    await getOption(listbox, 'Kyllä').click()
     await expect(getNoBlankOptionCombobox(page)).toHaveValue('Kyllä')
     await expect(getNoBlankOptionClearButton(page)).toHaveCount(0)
   })
@@ -385,10 +409,10 @@ test.describe('Työpöytänäkymä', () => {
     await waitForActiveOption(page, 'Suomi')
     await getCombobox(page).press('ArrowUp')
     await waitForNoActiveOption(page)
-    // Korostuksen puuttuessa seuraava ArrowDown palaa listan alkuun sen
+    // Kohdistuksen puuttuessa seuraava ArrowDown palaa listan alkuun sen
     // sijaan, että se jatkaisi siitä, mihin korostus viimeksi jäi — tämä on
     // ainoa tapa todentaa käyttäytymisen kautta, että ArrowUp todella
-    // poisti korostuksen sen sijaan, että se olisi vain jäänyt paikoilleen.
+    // poisti kohdistuksen sen sijaan, että se olisi vain jäänyt paikoilleen.
     await getCombobox(page).press('ArrowDown')
     await waitForActiveOption(page, 'Suomi')
     await getCombobox(page).press('Enter')
@@ -400,14 +424,15 @@ test.describe('Työpöytänäkymä', () => {
   }) => {
     await getCombobox(page).click()
     await getCombobox(page).fill('ei osumaa xyz')
-    await expect(getField(page).getByText('Ei hakutuloksia')).toBeVisible()
+    const listbox = await getListbox(page)
+    await expect(listbox).toContainText('Ei hakutuloksia')
     await getCombobox(page).press('ArrowDown')
     await getCombobox(page).press('ArrowUp')
     await getCombobox(page).press('Home')
     await getCombobox(page).press('End')
     await getCombobox(page).press('Enter')
     await expect(getCombobox(page)).toHaveValue('ei osumaa xyz')
-    await expect(getField(page).getByText('Ei hakutuloksia')).toBeVisible()
+    await expect(listbox).toContainText('Ei hakutuloksia')
     await getCombobox(page).press('Escape')
     await expect(getCombobox(page)).toHaveValue('')
   })
@@ -421,8 +446,9 @@ test.describe('Mobiilinäkymä', () => {
   })
 
   test('valikko on aluksi tyhjä ja suljettu', async ({ page }) => {
+    const listbox = await getListbox(page)
     await expect(getCombobox(page)).toHaveValue('')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
     await expect(getClearButton(page)).toHaveCount(0)
   })
 
@@ -430,68 +456,77 @@ test.describe('Mobiilinäkymä', () => {
     page,
   }) => {
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+    const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
+    await expect(getOptions(listbox)).toHaveCount(OPTION_COUNT)
   })
 
   test('kentän oman labelin napautus ei sulje auki olevaa valikkoa mobiilissa', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getField(page).locator('label').tap()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
   })
 
   test('pitkätkin vaihtoehdot pysyvät kokoruutunäkymän leveyden sisällä', async ({
     page,
   }) => {
     await getCombobox(page).tap()
+    const listbox = await getListbox(page)
     const viewport = page.viewportSize()
     const fieldBox = await getField(page).boundingBox()
-    const listboxBox = await getListbox(page).boundingBox()
+    const listboxBoundingBox = await listbox.boundingBox()
     expect(fieldBox?.width).toBeLessThanOrEqual(viewport?.width ?? Infinity)
-    expect(listboxBox?.width).toBeLessThanOrEqual(viewport?.width ?? Infinity)
+    expect(listboxBoundingBox?.width).toBeLessThanOrEqual(
+      viewport?.width ?? Infinity
+    )
   })
 
   test('valikon uudelleennapautus ei sulje sitä ja vaihtoehdon voi silti valita', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(listbox).toBeVisible()
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
-    await getOption(page, 'Norja').tap()
+    await expect(listbox).toBeVisible()
+    await expect(getOptions(listbox)).toHaveCount(OPTION_COUNT)
+    await getOption(listbox, 'Norja').tap()
     await expect(getCombobox(page)).toHaveValue('Norja')
-    await expect(getListbox(page)).toBeHidden()
+    await expect(listbox).toBeHidden()
   })
 
   test('valikon voi avata uudelleen valinnan jälkeen', async ({ page }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).tap()
-    await getOption(page, 'Norja').tap()
+    await getOption(listbox, 'Norja').tap()
 
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+    await expect(listbox).toBeVisible()
+    await expect(getOptions(listbox)).toHaveCount(OPTION_COUNT)
   })
 
   test('kirjoittaminen suodattaa vaihtoehdot myös mobiilissa', async ({
     page,
   }) => {
+    const listbox = await getListbox(page)
     await getCombobox(page).tap()
     await getCombobox(page).fill('saar')
-    await expect(getOptions(page)).toHaveCount(1)
-    await expect(getOption(page, 'Färsaaret')).toBeVisible()
+    await expect(getOptions(listbox)).toHaveCount(1)
+    await expect(getOption(listbox, 'Färsaaret')).toBeVisible()
     await getCombobox(page).fill('')
-    await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+    await expect(getOptions(listbox)).toHaveCount(OPTION_COUNT)
   })
 
   test('tyhjennysnappi näkyy valinnan jälkeen ja tyhjentää arvon', async ({
     page,
   }) => {
     await getCombobox(page).tap()
-    await getOption(page, 'Norja').tap()
+    const listbox = await getListbox(page)
+    await getOption(listbox, 'Norja').tap()
     await expect(getClearButton(page)).toBeVisible()
     await getClearButton(page).tap()
     await expect(getCombobox(page)).toHaveValue('')
@@ -506,7 +541,7 @@ test.describe('Mobiilinäkymä', () => {
     expect(await dispatchTouchmove(page.locator('body'))).toBe(false)
 
     await getCombobox(page).tap()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(await getListbox(page)).toBeVisible()
 
     const label = page.getByText(DROPDOWN_LABEL, { exact: true })
 
@@ -515,6 +550,11 @@ test.describe('Mobiilinäkymä', () => {
     expect(await dispatchTouchmove(page.locator('body'))).toBe(true)
     expect(await dispatchTouchmove(label)).toBe(true)
     expect(await dispatchTouchmove(banner)).toBe(true)
-    expect(await dispatchTouchmove(getOptions(page).first())).toBe(false)
+
+    const listbox = await getListbox(page)
+
+    expect(await dispatchTouchmove((await getOptions(listbox)).first())).toBe(
+      false
+    )
   })
 })

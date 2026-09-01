@@ -13,6 +13,19 @@
 ;; Pidettävä samana kuin @mobile-width component-layout.less:ssä.
 (def ^:private mobile-max-width 593)
 
+;; Pidettävä samana kuin .a-dropdown-popupin margin-top dropdown-component.
+;; less:ssä — vähennetään käytettävissä olevasta tilasta sync-popup-
+;; geometry!:ssä, koska top asetetaan kentän alareunaan mutta popupin
+;; todellinen näkyvä alareuna on vielä tämän marginaalin verran alempana.
+(def ^:private popup-margin-top 4)
+
+;; Kynnys, jonka alle jäävä tila kentän ALAPUOLELLA saa työpöydällä laukaista
+;; popupin kääntämisen kentän YLÄPUOLELLE (ks. sync-popup-geometry!) — jos
+;; tätä ei tehtäisi, kentän alapuolelle jäisi tilaa vielä sen verran, että
+;; popup näyttäisi teknisesti "mahtuvan", mutta käytännössä liian vähän
+;; nähdäkseen kuin ehkä yhden vaihtoehdon kerrallaan.
+(def ^:private min-usable-popup-height 80)
+
 (def ^:private banner-height-mobile 90)
 
 (defn- mobile-viewport? []
@@ -68,25 +81,32 @@
 ;; tapahtumien kuuntelijoiden tehdasfunktiot
 ;; ---------------------------------------------------------------------
 
-(defn- make-outside-click-listener [dropdown-id root-ref input-ref mobile?]
+(defn- make-outside-click-listener [dropdown-id root-ref popup-ref input-ref mobile?]
   (fn outside-click-listener [e]
-    (let [;; Mobiilissa label näytetään kentän kanssa venytettynä, eikä sen näpäyttämisen haluta piilottavan pudotusvalikkoa
+    (let [target (.-target e)
+          ;; Mobiilissa label näytetään kentän kanssa venytettynä, eikä sen näpäyttämisen haluta piilottavan pudotusvalikkoa
           mobile-own-label-click? (and @mobile?
-                                 (= @input-ref (some-> (.-target e) (.closest "label") .-control)))]
+                                        (= @input-ref (some-> target (.closest "label") .-control)))
+          ;; Popup renderöidään Reactin portaalilla document.bodyyn
+          ;; (ks. render-dropdown), jotta se ei koskaan jää minkään esi-isän
+          ;; stacking contextin alle — se ei siis ole enää @root-refin DOM-
+          ;; jälkeläinen, joten sen sisällä klikkaaminen pitää tunnistaa
+          ;; erikseen, ettei sitä tulkita ulkopuoliseksi klikkaukseksi.
+          inside?                 (or (and @root-ref (.contains @root-ref target))
+                                      (and @popup-ref (.contains @popup-ref target)))]
       (when (and (not mobile-own-label-click?)
-                 @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
-                 @root-ref
-                 (not (.contains @root-ref (.-target e))))
+                 (not inside?)
+                 @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false]))
         (collapse-dropdown {:dropdown-id dropdown-id})))))
 
-(defn- make-resize-listener [dropdown-id mobile? sync-popup-height!]
+(defn- make-resize-listener [dropdown-id mobile? sync-popup-geometry!]
   (fn resize-listener []
     (reset! mobile? (mobile-viewport?))
     (when @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
       (if @mobile?
         (lock-body-scroll!)
         (reagent/after-render unlock-body-scroll!)))
-    (sync-popup-height!)))
+    (sync-popup-geometry!)))
 
 ;; Kun virtuaalinäppäimistö on auki, mobiiliselaimet voivat "panoroida"
 ;; visuaalista viewportia pitääkseen fokusoidun kentän näkyvissä — tämä ei
@@ -157,6 +177,16 @@
   (let [dropdown-id             (util/component-id)
         input-ref               (atom nil)
         root-ref                (atom nil)
+        ;; Popupin sijoitusankkuri (ks. sync-popup-geometry!) — erikseen
+        ;; root-refistä, koska mobiilin kokoruututilassa hakija.less venyttää
+        ;; koko @root-refin (.a-dropdown) täyttämään koko jäljellä olevan
+        ;; ruudun (ks. application__dropdown-fullscreen-wrapper), mikä oli
+        ;; ennen portaalia tarkoituksellista: se antoi TILAN popupille, joka
+        ;; oli silloin sen oma flex-lapsi. Nyt popup ei enää ole sen DOM-
+        ;; jälkeläinen, joten root-refin reunat eivät enää vastaa kentän
+        ;; todellista, näkyvää sijaintia — sen käyttäminen ankkurina asettaisi
+        ;; popupin lähelle ruudun alareunaa aina kokoruututilassa.
+        field-ref               (atom nil)
         ;; option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten.
         option-refs             (atom {})
         register-option-ref     (fn register-option-ref [option-id]
@@ -170,20 +200,65 @@
         ;; esitystä vai ei.
         mobile?                 (reagent/atom (mobile-viewport?))
         resize-listener         (atom nil)
-        ;; Kokoruutuvalikon listan korkeus lasketaan jäljellä olevaan tilaan:
-        ;; kutistuu virtuaalinäppäimistön auki ollessa ja kasvaa takaisin täyteen kokoon sen sulkeutuessa niillä selaimilla jotka ilmoittavat siitä window.visualViewportin kautta.
         popup-ref               (atom nil)
-        popup-max-height        (reagent/atom nil)
         viewport-resize-listener (atom nil)
-        sync-popup-height!      (fn sync-popup-height! []
-                                   (when-let [el @popup-ref]
-                                     (let [available (- (viewport-height)
-                                                        (.-top (.getBoundingClientRect el)))
-                                           available (-> available
-                                                        (max 100)
-                                                        js/Math.round)]
-                                       (when (not= available @popup-max-height)
-                                         (reset! popup-max-height available)))))
+        ;; Popup renderöidään Reactin portaalilla suoraan document.bodyyn
+        ;; (ks. render-dropdown), jotta mikään esi-isän stacking context (esim.
+        ;; jokin toinen, tämän DOM-alipuun ulkopuolinen elementti) ei voi
+        ;; koskaan jäädä sen z-indexin yläpuolelle. Koska se ei siis enää saa
+        ;; sijaintiaan/kokoaan ilmaiseksi CSS:llä @root-refin suhteen, ne
+        ;; lasketaan tässä JS:llä: leveys/sivusijainti kentän oman
+        ;; getBoundingClientRectin mukaan, ja korkeus jäljellä olevaan
+        ;; tilaan kentän alapuolella (mobiilin kokoruututilassa kutistuu/
+        ;; kasvaa myös virtuaalinäppäimistön mukaan niillä selaimilla jotka
+        ;; ilmoittavat siitä window.visualViewportin kautta). Työpöydällä
+        ;; tämä on tarpeen, koska position: fixed -popup ei enää ole
+        ;; sivun normaalissa dokumenttivirrassa (ks. dropdown-component.
+        ;; less) — sivun vierittäminen ei siis enää tuo sen mahdollista
+        ;; ruudun ulkopuolelle jäävää osaa näkyviin, kuten ennen portaalia,
+        ;; joten sen pitää itse mahtua jäljellä olevaan tilaan.
+        portal-container        (atom nil)
+        sync-popup-geometry!    (fn sync-popup-geometry! []
+                                   (when-let [popup-el @popup-ref]
+                                     (when-let [anchor-el @field-ref]
+                                       (let [rect        (.getBoundingClientRect anchor-el)
+                                             style       (.-style popup-el)
+                                             vh          (viewport-height)
+                                             space-below (- vh (.-bottom rect) popup-margin-top)
+                                             space-above (- (.-top rect) popup-margin-top)]
+                                         (set! (.-position style) "fixed")
+                                         (set! (.-left style) (str (.-left rect) "px"))
+                                         (set! (.-width style) (str (.-width rect) "px"))
+                                         (cond
+                                           @mobile?
+                                           (do (set! (.-bottom style) "")
+                                               (set! (.-top style) (str (.-bottom rect) "px"))
+                                               (set! (.-height style) (str (-> space-below (max 100) js/Math.round) "px"))
+                                               (set! (.-maxHeight style) "none"))
+
+                                           ;; Työpöydällä popup näytetään oletuksena kentän
+                                           ;; alapuolella, mutta jos siellä ei ole riittävästi
+                                           ;; tilaa JA yläpuolella on enemmän, näytetään se sen
+                                           ;; sijaan kentän yläpuolella (vrt. natiivi <select>
+                                           ;; tai muut popover-komponentit) — muuten sivun
+                                           ;; alareunan lähellä oleva kenttä jättäisi popupin
+                                           ;; osittain tai kokonaan näkymän ulkopuolelle, eikä
+                                           ;; sitä position: fixed -sijoittelun vuoksi voisi enää
+                                           ;; tuoda näkyviin sivua vierittämällä.
+                                           (and (< space-below min-usable-popup-height)
+                                                (> space-above space-below))
+                                           (do (set! (.-top style) "")
+                                               (set! (.-bottom style) (str (js/Math.round (+ (- vh (.-top rect)) popup-margin-top)) "px"))
+                                               (set! (.-height style) "")
+                                               (set! (.-maxHeight style) (str (js/Math.round (min (max space-above 0) 300)) "px")))
+
+                                           :else
+                                           (do (set! (.-bottom style) "")
+                                               (set! (.-top style) (str (.-bottom rect) "px"))
+                                               (set! (.-height style) "")
+                                               ;; min: CSS:n oma 300px-oletus säilyy silloin
+                                               ;; kun kentän alapuolella on riittävästi tilaa.
+                                               (set! (.-maxHeight style) (str (js/Math.round (min (max space-below 0) 300)) "px"))))))))
         focus-input             (fn []
                                    (reagent/after-render
                                      (fn []
@@ -193,16 +268,22 @@
     (reagent/create-class
       {:component-did-mount
        (fn [_this]
-         (reset! outside-click-listener (make-outside-click-listener dropdown-id root-ref input-ref mobile?))
+         ;; Erillinen DOM-solmu popupin portaalikohteeksi — luodaan kerran
+         ;; mountissa ja poistetaan unmountissa, jotta useampi tämän
+         ;; komponentin instanssi ei koskaan jaa samaa säiliötä.
+         (reset! portal-container (.createElement js/document "div"))
+         (.appendChild (.-body js/document) @portal-container)
+
+         (reset! outside-click-listener (make-outside-click-listener dropdown-id root-ref popup-ref input-ref mobile?))
          ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita
          ;; ennen kuin kohde-elementin oma click-käsittelijä (esim. toisen
          ;; kentän avausklikkaus) ehtii reagoida.
          (.addEventListener js/document "mousedown" @outside-click-listener true)
 
-         (reset! resize-listener (make-resize-listener dropdown-id mobile? sync-popup-height!))
+         (reset! resize-listener (make-resize-listener dropdown-id mobile? sync-popup-geometry!))
          (.addEventListener js/window "resize" @resize-listener)
 
-         (reset! viewport-resize-listener sync-popup-height!)
+         (reset! viewport-resize-listener sync-popup-geometry!)
          (when-let [vv (.-visualViewport js/window)]
            (.addEventListener vv "resize" @viewport-resize-listener)
            (.addEventListener vv "scroll" @viewport-resize-listener))
@@ -223,7 +304,9 @@
            (.removeEventListener vv "scroll" @viewport-resize-listener))
          (.removeEventListener js/document "touchmove" fullscreen-touchmove-listener
                                 #js {:passive false})
-         (unlock-body-scroll!))
+         (unlock-body-scroll!)
+         (when-let [el @portal-container]
+           (.removeChild (.-body js/document) el)))
 
        :reagent-render
        (s/fn render-dropdown
@@ -367,9 +450,11 @@
                fullscreen?        (and expanded? @mobile?)
                ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-
                ;; kuuntelijat (ks. component-did-mount) pitävät sen ajan
-               ;; tasalla myös näppäimistön sulkeutuessa.
-               _                  (when fullscreen?
-                                    (reagent/after-render sync-popup-height!))]
+               ;; tasalla myös näppäimistön sulkeutuessa. Tarvitaan aina kun
+               ;; auki (ei vain kokoruututilassa), koska popup on nyt
+               ;; portaali eikä saa sijaintiaan enää ilmaiseksi CSS:llä.
+               _                  (when expanded?
+                                    (reagent/after-render sync-popup-geometry!))]
            [:div.a-dropdown
               {:ref     #(reset! root-ref %)
                :class   (str (when disabled? "a-dropdown--disabled ")
@@ -377,6 +462,7 @@
                :on-blur on-dropdown-blur}
               [view/dropdown-field
                {:input-ref             #(reset! input-ref %)
+                :field-ref             #(reset! field-ref %)
                 :id                    id
                 :value                 input-value
                 :unselected-label      unselected-label
@@ -399,16 +485,24 @@
                 :on-input-focus        on-input-focus
                 :on-clear-click        on-clear-click
                 :on-trigger-click      on-trigger-click}]
-              [view/dropdown-popup
-               {:expanded?        expanded?
-                :options-with-id  options-with-id
-                :on-click         on-option-click
-                :label-id         label-id
-                :dropdown-id      dropdown-id
-                :selected-value   selected-value
-                :active-option-id (:option-id active-option)
-                :register-ref     register-option-ref
-                :popup-ref        #(reset! popup-ref %)
-                :max-height       (when fullscreen? @popup-max-height)
-                :lang             lang
-                :data-test-id     data-test-id}]]))})))
+              ;; Portaali document.bodyyn (ks. component-did-mount) — popup ei
+              ;; ole enää tämän divin DOM-jälkeläinen, joten mikään esi-isän
+              ;; stacking context ei voi koskaan jäädä sen z-indexin päälle.
+              ;; Sijainti/koko lasketaan JS:llä (ks. sync-popup-geometry!),
+              ;; koska CSS ei enää voi asemoida sitä @root-refin suhteen.
+              (when @portal-container
+                (js/ReactDOM.createPortal
+                  (reagent/as-element
+                    [view/dropdown-popup
+                     {:expanded?        expanded?
+                      :options-with-id  options-with-id
+                      :on-click         on-option-click
+                      :label-id         label-id
+                      :dropdown-id      dropdown-id
+                      :selected-value   selected-value
+                      :active-option-id (:option-id active-option)
+                      :register-ref     register-option-ref
+                      :popup-ref        #(reset! popup-ref %)
+                      :lang             lang
+                      :data-test-id     data-test-id}])
+                  @portal-container))]))})))
