@@ -107,7 +107,6 @@ const applicationKeyOf = async (lastName: string): Promise<string> => {
 }
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page)
