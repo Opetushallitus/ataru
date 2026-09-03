@@ -37,36 +37,9 @@ const userOrganizationsRoute = (route: Route) =>
     kayttajallaVainYksiOrganisaatio ? 'lahtokoulu.json' : 'lahtokoulut.json'
   )(route)
 
-// :application/select-haku (joka laukeaa reitityksestä sivun latautuessa)
-// tarkastaa synkronisesti sekä käyttäjän oikeudet (GET /api/user-info) että
-// haun kohdejoukon (GET /api/haku?haku-oid=...) päättääkseen, onko kyseessä
-// lähtökoulusuodatinta käyttävä toisen asteen yhteishaku. Sivun ensimmäisellä
-// lataamisella kumpikaan haku ei ehdi valmistua ennen tätä tarkastusta, joten
-// lähtökoulusuodattimen organisaatiokysely ei koskaan käynnisty — eikä sitä
-// enää myöhemmin uudelleenyritetä. Odotetaan siis haun tietojen latautumista
-// ja navigoidaan sen jälkeen sovelluksen sisäisesti (ilman sivun
-// uudelleenlatausta) samaan hakuun uudelleen, jolloin sekä käyttäjä- että
-// haun tiedot ovat jo ladattuina ja select-haku käynnistää
-// organisaatiokyselyn odotetusti.
 const naytaHaunHakemukset = async () => {
   const haunOsoite = `/lomake-editori/applications/haku/${hakuOid}?ensisijaisesti=false`
   await page.goto(haunOsoite)
-  await page.getByTestId('show-results').click()
-  await page.waitForResponse((response) =>
-    response.url().includes(`/api/haku?haku-oid=${hakuOid}`)
-  )
-  await page.evaluate((osoite) => {
-    const ataru = (
-      window as unknown as {
-        ataru: {
-          virkailija: {
-            routes: { navigate_to_click_handler: (path: string) => void }
-          }
-        }
-      }
-    ).ataru
-    ataru.virkailija.routes.navigate_to_click_handler(osoite)
-  }, `${haunOsoite}&uudelleennavigointi=true`)
   await page.getByTestId('show-results').click()
 }
 
