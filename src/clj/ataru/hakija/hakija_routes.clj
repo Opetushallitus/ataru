@@ -152,7 +152,8 @@
                    :hakukohdeOids [s/Str]
                    (s/optional-key :usePriority) s/Bool
                    (s/optional-key :kohdejoukkoUri) s/Str
-                   (s/optional-key :kohdejoukonTarkenne) s/Str}]
+                   (s/optional-key :kohdejoukonTarkenne) s/Str
+                   (s/optional-key :hakutapaUri) s/Str}]
       (if (is-dev-env?)
         (do (register-test-haku! haku)
             (response/ok {}))
