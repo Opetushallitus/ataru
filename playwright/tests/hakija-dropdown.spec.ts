@@ -5,7 +5,6 @@ import {
   FormNode,
   getHakijanNakymanOsoite,
   getLomakkeenHaunOsoite,
-  haeOletuslomakkeenSisalto,
   kirjauduVirkailijanNakymaan,
   luoLomakeAvaimella,
   poistaLomake,
@@ -13,16 +12,8 @@ import {
 
 test.describe.configure({ mode: 'parallel' })
 
-// Testaa ataru.application-common.components.dropdown-component/dropdown-
-// komponentin toimintaa käyttäjän näkökulmasta (haku, näppäimistönavigointi,
-// valinta, tyhjennys) sekä työpöytä- että mobiilinäkymässä. Lomakkeella on
-// tarkoituksella vain yksi käyttäjän määrittelemä kenttä — pudotusvalikko.
-//
-// Oletuslomakkeen henkilötietomoduulissa on kuitenkin muitakin samaa
-// komponenttia käyttäviä kenttiä (esim. kotikunta, kansalaisuus), joten
-// kaikki locatorit skoopataan tämän yhden kentän omaan
-// .application__form-field-wrapperiin nimen (label) perusteella sen sijaan,
-// että luotettaisiin sivun ainoaan pudotusvalikkoon.
+// Testaa hakijan puolen dropdown-komponentin toimintaa minimaalisen lomakkeen kautta.
+// Yksikkötestaaminen olisi hankalaa, koska komponentti käyttä re-framea tilan tallentamiseen.
 
 const metadata = {
   'created-by': {
@@ -37,6 +28,21 @@ const metadata = {
   },
 }
 
+// Hakemuksen käsittely (ks. mm. :application/validate-hakukohteet) olettaa
+// aina tämän kentän olevan olemassa, vaikka lomakkeella ei olisi oikeita
+// hakukohteita
+const hakukohteetFieldFixture: FormNode = {
+  fieldClass: 'formField',
+  fieldType: 'hakukohteet',
+  id: 'hakukohteet',
+  label: { fi: 'Hakukohteet', sv: 'Ansökningsmål', en: 'Application options' },
+  metadata,
+  params: {},
+  options: [],
+  validators: ['hakukohteet'],
+  'exclude-from-answers-if-hidden': true,
+}
+
 const DROPDOWN_LABEL = 'Valitse maa'
 const CLEAR_BUTTON_LABEL = 'Tyhjennä'
 
@@ -48,11 +54,6 @@ const dropdownFieldFixture: FormNode = {
   metadata,
   params: {},
   validators: [],
-  // Useita vaihtoehtoja (jotta lista myös vierittyy) ja mukana muutama
-  // huomattavan pitkä, katkeamaton nimi — nämä eivät mahdu kentän/listan
-  // leveyteen, joten ne osuvat samaan flexbox-min-width-loukkuun, joka
-  // aiemmin levensi koko kentän yli 100 % leveän (ks. min-width: 0
-  // dropdown-component.less:ssä).
   options: [
     { value: 'fi', label: { fi: 'Suomi' } },
     { value: 'se', label: { fi: 'Ruotsi' } },
@@ -117,9 +118,6 @@ const getOption = (listbox: Locator, name: string) =>
 const getClearButton = (page: Page) =>
   getField(page).getByRole('button', { name: CLEAR_BUTTON_LABEL })
 
-// Avausnappi on aria-hidden ja tab-index -1 — se on tarkoituksella
-// poissa saavutettavuuspuusta, joten sitä ei voi (eikä pidä) tavoittaa
-// getByRolella.
 const getTriggerButton = (page: Page) =>
   getField(page).locator('button.a-dropdown-trigger')
 
@@ -192,14 +190,21 @@ const avaaLomake = async (page: Page): Promise<void> => {
   ])
 }
 
+// Ei haeta oletuslomakkeen sisältöä (hakukohteet + koko henkilötieto-
+// moduuli) editorin "Uusi lomake" -napin kautta, kuten muut hakija-testit
+// yleensä tekevät (ks. haeOletuslomakkeenSisalto playwright-ataru-utils.
+// ts:ssä) — tämän tiedoston omat kentät eivät tarvitse henkilötieto-
+// moduulia ollenkaan, pelkkä hakukohteetFieldFixture riittää pitämään
+// hakijan puolen re-frame-koodin tyytyväisenä, ja sen välttäminen säästää
+// yhden ylimääräisen editori-UI:n kautta kulkevan luonti-/haku-/poisto-
+// kierroksen jokaiselta testiajolta.
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage()
   await kirjauduVirkailijanNakymaan(page)
-  const sisalto = await haeOletuslomakkeenSisalto(page)
   await luoLomakeAvaimella(page, lomakkeenAvain, [
-    ...sisalto,
-    dropdownFieldFixture,
+    hakukohteetFieldFixture,
     noBlankOptionFieldFixture,
+    dropdownFieldFixture,
   ])
   await page.close()
 })
@@ -258,11 +263,13 @@ test.describe('Työpöytänäkymä', () => {
   test('haun tyhjentäminen palauttaa kaikki vaihtoehdot näkyviin', async ({
     page,
   }) => {
-    await getCombobox(page).click()
-    await getCombobox(page).fill('RUOT')
-    await getCombobox(page).fill('')
     const listbox = await getListbox(page)
     const options = getOptions(listbox)
+
+    await getCombobox(page).click()
+    await getCombobox(page).fill('RUOT')
+    await expect(options).toHaveCount(1)
+    await getCombobox(page).fill('')
     await expect(options).toHaveCount(OPTION_COUNT)
   })
 
@@ -349,7 +356,7 @@ test.describe('Työpöytänäkymä', () => {
     page,
   }) => {
     const listbox = await getListbox(page)
-    await page.getByLabel('Äidinkieli').focus()
+    await getNoBlankOptionCombobox(page).focus()
     await page.keyboard.press('Tab')
     await expect(getCombobox(page)).toBeFocused()
     await expect(listbox).toBeHidden()
@@ -409,10 +416,6 @@ test.describe('Työpöytänäkymä', () => {
     await waitForActiveOption(page, 'Suomi')
     await getCombobox(page).press('ArrowUp')
     await waitForNoActiveOption(page)
-    // Kohdistuksen puuttuessa seuraava ArrowDown palaa listan alkuun sen
-    // sijaan, että se jatkaisi siitä, mihin korostus viimeksi jäi — tämä on
-    // ainoa tapa todentaa käyttäytymisen kautta, että ArrowUp todella
-    // poisti kohdistuksen sen sijaan, että se olisi vain jäänyt paikoilleen.
     await getCombobox(page).press('ArrowDown')
     await waitForActiveOption(page, 'Suomi')
     await getCombobox(page).press('Enter')
@@ -536,8 +539,6 @@ test.describe('Mobiilinäkymä', () => {
   test('kokoruutuvalikon ollessa auki touchmove ei vieritä/panoroi sivua muualla, mutta listan sisällä se sallitaan', async ({
     page,
   }) => {
-    // Regressiotesti: virtuaalinäppäimistön avautuminen voi saada mobiili-
-    // selaimen "panoroimaan" koko sivua, ellei touchmovea ole estetty.
     expect(await dispatchTouchmove(page.locator('body'))).toBe(false)
 
     await getCombobox(page).tap()
