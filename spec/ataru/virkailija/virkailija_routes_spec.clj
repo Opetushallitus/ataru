@@ -149,13 +149,6 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
-(defn- get-tilastokeskus-application-query [query]
-  (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
-      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
-      (mock/content-type "application/json")
-      ((deref virkailija-routes))
-      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
-
 (defn- get-valinta-ui-application-query [query]
   (-> (mock/request :get "/lomake-editori/api/external/valinta-ui" query)
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
@@ -1228,47 +1221,6 @@
               (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-overdue (:key application) nil)
                     resp (get-valinta-ui-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications)))))
-
-(describe "tilastokeskus"
-          (tags :unit)
-
-          (after-all
-            (db/nuke-kk-payment-data))
-
-          (it "should return an application"
-              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should return an application with kk payment data"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-exemption (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should not return an application awaiting kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-required (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications))))
-
-          (it "should not return an application with overdue kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-overdue (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
