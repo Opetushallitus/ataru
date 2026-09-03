@@ -657,8 +657,6 @@
             :application-hakukohde-reviews)))
 
 
-(defn get-latest-application-by-key-for-odw [application-key]
-  (exec-db :db queries/yesql-get-single-odw-application-by-key {:key application-key}))
 
 (defn get-latest-applications-by-haku [haku-oid limit offset]
   (exec-db :db queries/yesql-get-applications-by-haku {:haku haku-oid :limit limit :offset (or offset 0)}))

@@ -1723,48 +1723,6 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
           (response/ok mapping)
           (response/unauthorized {:error "Unauthorized"})))
 
-      (api/GET "/odw" {session :session}
-        :summary "Get odw report"
-        :query-params [{fromDate :- s/Str nil}
-                       {offset :- s/Int nil}
-                       {limit :- s/Int nil}
-                       {toDate :- s/Str nil}
-                       {hakuOid :- s/Str nil}]
-        :return [{s/Keyword s/Any}]
-        (if-let [applications (access-controlled-application/get-applications-for-odw
-                                organization-service
-                                session
-                                person-service
-                                tarjonta-service
-                                valintalaskentakoostepalvelu-service
-                                suoritus-service
-                                fromDate
-                                limit
-                                offset
-                                toDate
-                                hakuOid
-                                nil)]
-          (response/ok applications)
-          (response/unauthorized {:error "Unauthorized"})))
-      (api/GET "/odw/:application-key" {session :session}
-        :summary "get odw report for a single application"
-        :path-params [application-key :- String]
-        :return [{s/Keyword s/Any}]
-        (if-let [applications (access-controlled-application/get-applications-for-odw
-                                organization-service
-                                session
-                                person-service
-                                tarjonta-service
-                                valintalaskentakoostepalvelu-service
-                                suoritus-service
-                                nil
-                                nil
-                                nil
-                                nil
-                                nil
-                                application-key)]
-          (response/ok applications)
-          (response/unauthorized {:error "Unauthorized"})))
 
       (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
