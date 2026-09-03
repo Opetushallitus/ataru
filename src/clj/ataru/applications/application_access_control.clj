@@ -5,7 +5,6 @@
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-store :as application-store]
     [ataru.person-service.person-service :as person-service]
-    [ataru.odw.odw-service :as odw-service]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
     [ataru.valintapiste.valintapiste-service :as valintapiste-service]
     [ataru.util :as util]
@@ -324,15 +323,6 @@
     (constantly nil)
     (constantly nil)
     #(application-store/onr-applications person-oids)))
-
-(defn get-applications-for-odw [organization-service session person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset to-date haku-oid application-key]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    (constantly nil)
-    (constantly nil)
-    #(odw-service/get-applications-for-odw person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset to-date haku-oid application-key)))
 
 (defn get-applications-for-valintapiste [organization-service session haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
