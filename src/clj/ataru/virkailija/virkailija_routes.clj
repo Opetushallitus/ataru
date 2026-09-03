@@ -1766,22 +1766,6 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
 
-      (api/GET "/tilastokeskus" {session :session}
-        :summary "Get application info for tilastokeskus"
-        :query-params [hakuOid :- s/Str
-                       {hakukohdeOid :- s/Str nil}]
-        :return [ataru-schema/TilastokeskusApplication]
-        (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
-                                                                                                session
-                                                                                                person-service
-                                                                                                tarjonta-service
-                                                                                                valintalaskentakoostepalvelu-service
-                                                                                                suoritus-service
-                                                                                                hakuOid
-                                                                                                hakukohdeOid)]
-          (response/ok applications)
-          (response/unauthorized {:error "Unauthorized"})))
-
       (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
         :query-params [{hakukohdeOid :- s/Str nil}

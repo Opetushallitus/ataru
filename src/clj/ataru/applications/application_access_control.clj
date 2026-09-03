@@ -7,7 +7,6 @@
     [ataru.person-service.person-service :as person-service]
     [ataru.odw.odw-service :as odw-service]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-    [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
     [ataru.valintapiste.valintapiste-service :as valintapiste-service]
     [ataru.util :as util]
     [clojure.set :as set]
@@ -334,15 +333,6 @@
     (constantly nil)
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset to-date haku-oid application-key)))
-
-(defn get-applications-for-tilastokeskus [organization-service session person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid]
-  (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    (constantly nil)
-    (constantly nil)
-    #(tilastokeskus-service/get-application-info-for-tilastokeskus person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service haku-oid hakukohde-oid)))
 
 (defn get-applications-for-valintapiste [organization-service session haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
