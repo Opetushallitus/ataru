@@ -10,9 +10,11 @@
   (let [tutu-application (tutkintojen-tunnustaminen-store/get-application "" application-id)
         application-key (:key tutu-application)
         form (get-form form-by-id-cache koodisto-cache attachment-deadline-service tutu-application)]
+    (log/info (str "Trying to send edit notification XXXXXXXXX for application " application-id " to Tutu"))
     (when (tutu-form? form)
       (let [url (resolve-url :tutu-service.hakemus-update-notification application-key)
             response (cas/cas-authenticated-get tutu-cas-client url)]
+        (log/info (str "Now sending edit notification YYYYYYYYY for application " application-key " to Tutu"))
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending edit notification for application " application-key " to Tutu failed"))))
         (log/info (str "Sending edit notification for application " application-key " successfully sent to Tutu"))))))
