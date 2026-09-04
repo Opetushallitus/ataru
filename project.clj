@@ -86,9 +86,11 @@
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"
                   :exclusions [commons-io]]
-                 [aleph "0.9.3"
+                 [aleph "0.9.11"
                   :exclusions [io.netty/netty-buffer
                                io.netty/netty-codec
+                               io.netty/netty-codec-base
+                               io.netty/netty-codec-compression
                                io.netty/netty-codec-dns
                                io.netty/netty-codec-http
                                io.netty/netty-codec-http2
@@ -107,8 +109,9 @@
                                io.netty/netty-transport-native-unix-common
                                org.clojure/tools.logging]]
                  ; pinning netty deps to same version because of conflicting transitive deps
-                 ; (aleph 4.1.x vs java-cas 2.3.0 / async-http-client 3.0.12 joka vaatii netty 4.2.x).
-                 ; aleph 0.9.11 toimii 4.2.17:llä (savutestattu). Versio: ~netty-version tiedoston alussa.
+                 ; (aleph julistaa netty 4.1.137 vs java-cas 2.3.0 / async-http-client 3.0.12 joka vaatii netty 4.2.x).
+                 ; Mikään aleph-julkaisu ei tue netty 4.2:ta, mutta aleph 0.9.11 toimii 4.2.17:llä
+                 ; (savutestattu: kaikki nsä:t latautuvat, GET/stream/gzip/multipart/POST -> 200). Versio: ~netty-version tiedoston alussa.
                  [io.netty/netty-buffer ~netty-version]
                  [io.netty/netty-codec ~netty-version]
                  [io.netty/netty-codec-base ~netty-version]
