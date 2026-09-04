@@ -49,7 +49,13 @@
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
                          [org.jboss.xnio/xnio-nio "3.8.14.Final"]
-                         [org.testcontainers/testcontainers "2.0.2"]]
+                         [org.testcontainers/testcontainers "2.0.2"]
+                         ;; buddy-core 1.12 (clj-ring-db-cas-session -> buddy-auth -> buddy-sign -> buddy-core)
+                         ;; pudottaa haavoittuvan bouncycastle *-jdk15on 1.70 -ketjun; bc-jdk18on 1.85 = CVE-2026-8763 ym.
+                         [buddy/buddy-core "1.12.0-430"]
+                         [org.bouncycastle/bcprov-jdk18on ~bouncycastle-version]
+                         [org.bouncycastle/bcpkix-jdk18on ~bouncycastle-version]
+                         [org.bouncycastle/bcutil-jdk18on ~bouncycastle-version]]
   :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
@@ -140,11 +146,6 @@
                   ;; (CVE-2024-7708, CVE-2024-8184, CVE-2026-2332, CVE-2026-10050)
                   :exclusions [commons-io ring/ring-jetty-adapter]]
                  [opiskelijavalinnat-utils/clj-ring-db-cas-session "1.0.0-SNAPSHOT"]
-                 ;; buddy-core 1.12 -> pudottaa haavoittuvan bouncycastle *-jdk15on 1.70 -ketjun
-                 [buddy/buddy-core "1.12.0-430"]
-                 [org.bouncycastle/bcprov-jdk18on ~bouncycastle-version]
-                 [org.bouncycastle/bcpkix-jdk18on ~bouncycastle-version]
-                 [org.bouncycastle/bcutil-jdk18on ~bouncycastle-version]
                  [ring/ring-defaults "0.4.0"
                   :exclusions [commons-io]]
                  [ring/ring-json "0.5.1"
