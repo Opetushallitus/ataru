@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>1d3f996264496a5c2e901f1c88918a6220f0da21</tag>
+    <tag>5c75f927007ac64e69d3706053f7653f45c00f54</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -472,7 +472,7 @@
     <dependency>
       <groupId>aleph</groupId>
       <artifactId>aleph</artifactId>
-      <version>0.9.3</version>
+      <version>0.9.11</version>
       <exclusions>
         <exclusion>
           <artifactId>netty-buffer</artifactId>
@@ -480,6 +480,14 @@
         </exclusion>
         <exclusion>
           <artifactId>netty-codec</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-base</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-compression</artifactId>
           <groupId>io.netty</groupId>
         </exclusion>
         <exclusion>
