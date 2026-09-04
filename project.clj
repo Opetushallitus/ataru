@@ -1,9 +1,15 @@
+;; Riippuvuusperheiden versiot yhtenä totuutena. Leiningen ei tue Maven-BOM importia
+;; (:scope "import"), joten artefaktit listataan eksplisiittisesti mutta versio jaetaan muuttujalla.
+(def jackson-version "2.18.10")    ; CVE-2026-54512/54513 (CRITICAL), CVE-2026-59889 ym.
+(def netty-version "4.2.17.Final") ; CVE-2026-44249, CVE-2026-75595 (CRITICAL) ym.; java-cas 2.3.0 / AHC 3.0.12
+(def bouncycastle-version "1.85")  ; CVE-2026-8763 ym. (CRITICAL)
+
 (defproject ataru "0.1.0-SNAPSHOT"
-  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core "2.18.3"]
-                         [com.fasterxml.jackson.core/jackson-databind "2.18.3"]
-                         [com.fasterxml.jackson.core/jackson-annotations "2.18.3"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.18.3"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.18.3"]
+  :managed-dependencies [[com.fasterxml.jackson.core/jackson-core ~jackson-version]
+                         [com.fasterxml.jackson.core/jackson-databind ~jackson-version]
+                         [com.fasterxml.jackson.core/jackson-annotations ~jackson-version]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor ~jackson-version]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-smile ~jackson-version]
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
                          [org.apache.commons/commons-io "2.19.0"]
@@ -15,7 +21,8 @@
                          [com.cognitect/transit-clj "1.0.333"]
                          [org.apache.httpcomponents/httpcore "4.4.16"]
                          [org.apache.httpcomponents/httpasyncclient "4.1.5"]
-                         [com.taoensso/encore "3.113.0"]
+                         ;; nippy 3.8.1 vaatii encore >= 3.161 (enc/threadlocal)
+                         [com.taoensso/encore "3.169.1"]
                          [ring/ring-core "1.10.0"]
                          [ring/ring-codec "1.2.0"]
                          [com.google.code.gson/gson "2.10.1"]
@@ -28,18 +35,27 @@
                          [commons-fileupload "1.6.0"]
                          [riddley "0.2.0"]
                          [instaparse "1.4.12"]
-                         [org.mozilla/rhino "1.7.14"]
+                         [org.mozilla/rhino "1.7.15.1"]
                          [org.scala-lang/scala-library "2.12.18"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]
                          [net.java.dev.jna/jna "5.8.0"]
-                         [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
+                         [opiskelijavalinnat-utils/java-cas "2.3.0-SNAPSHOT"]
+                         ;; carmine/nippy: aircompressor 0.27 -> 2.0.3 (CVE-2025-67721); nippy 3.8.1 käyttää 2.0.3:a
+                         [com.taoensso/nippy "3.8.1"]
+                         [io.airlift/aircompressor "2.0.3"]
                          ;transitive from clj-util
-                         [io.undertow/undertow-core "2.3.20.Final"]
-                         [org.apache.commons/commons-lang3 "3.14.0"]
+                         [io.undertow/undertow-core "2.3.25.Final"]
+                         [org.apache.commons/commons-lang3 "3.20.0"]
                          [org.jboss.threads/jboss-threads "3.5.0.Final"]
                          [org.jboss.xnio/xnio-api "3.8.14.Final"]
                          [org.jboss.xnio/xnio-nio "3.8.14.Final"]
-                         [org.testcontainers/testcontainers "2.0.2"]]
+                         [org.testcontainers/testcontainers "2.0.2"]
+                         ;; buddy-core 1.12 (clj-ring-db-cas-session -> buddy-auth -> buddy-sign -> buddy-core)
+                         ;; pudottaa haavoittuvan bouncycastle *-jdk15on 1.70 -ketjun; bc-jdk18on 1.85 = CVE-2026-8763 ym.
+                         [buddy/buddy-core "1.12.0-430"]
+                         [org.bouncycastle/bcprov-jdk18on ~bouncycastle-version]
+                         [org.bouncycastle/bcpkix-jdk18on ~bouncycastle-version]
+                         [org.bouncycastle/bcutil-jdk18on ~bouncycastle-version]]
   :dependencies [[org.clojure/clojure "1.11.2"]
 
                  ; clojurescript
@@ -76,9 +92,11 @@
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"
                   :exclusions [commons-io]]
-                 [aleph "0.9.3"
+                 [aleph "0.9.11"
                   :exclusions [io.netty/netty-buffer
                                io.netty/netty-codec
+                               io.netty/netty-codec-base
+                               io.netty/netty-codec-compression
                                io.netty/netty-codec-dns
                                io.netty/netty-codec-http
                                io.netty/netty-codec-http2
@@ -97,29 +115,36 @@
                                io.netty/netty-transport-native-unix-common
                                org.clojure/tools.logging]]
                  ; pinning netty deps to same version because of conflicting transitive deps
-                 [io.netty/netty-buffer "4.1.124.Final"]
-                 [io.netty/netty-codec "4.1.124.Final"]
-                 [io.netty/netty-codec-dns "4.1.124.Final"]
-                 [io.netty/netty-codec-http "4.1.124.Final"]
-                 [io.netty/netty-codec-http2 "4.1.124.Final"]
-                 [io.netty/netty-codec-socks "4.1.124.Final"]
-                 [io.netty/netty-common "4.1.124.Final"]
-                 [io.netty/netty-handler "4.1.124.Final"]
-                 [io.netty/netty-handler-proxy "4.1.124.Final"]
-                 [io.netty/netty-resolver "4.1.124.Final"]
-                 [io.netty/netty-resolver-dns "4.1.124.Final"]
-                 [io.netty/netty-resolver-dns-native-macos "4.1.124.Final"]
-                 [io.netty/netty-transport "4.1.124.Final"]
-                 [io.netty/netty-transport-classes-epoll "4.1.124.Final"]
-                 [io.netty/netty-transport-classes-kqueue "4.1.124.Final"]
-                 [io.netty/netty-transport-native-epoll "4.1.124.Final"]
-                 [io.netty/netty-transport-native-kqueue "4.1.124.Final"]
-                 [io.netty/netty-transport-native-unix-common "4.1.124.Final"]
+                 ; (aleph julistaa netty 4.1.137 vs java-cas 2.3.0 / async-http-client 3.0.12 joka vaatii netty 4.2.x).
+                 ; Mikään aleph-julkaisu ei tue netty 4.2:ta, mutta aleph 0.9.11 toimii 4.2.17:llä
+                 ; (savutestattu: kaikki nsä:t latautuvat, GET/stream/gzip/multipart/POST -> 200). Versio: ~netty-version tiedoston alussa.
+                 [io.netty/netty-buffer ~netty-version]
+                 [io.netty/netty-codec ~netty-version]
+                 [io.netty/netty-codec-base ~netty-version]
+                 [io.netty/netty-codec-compression ~netty-version]
+                 [io.netty/netty-codec-dns ~netty-version]
+                 [io.netty/netty-codec-http ~netty-version]
+                 [io.netty/netty-codec-http2 ~netty-version]
+                 [io.netty/netty-codec-socks ~netty-version]
+                 [io.netty/netty-common ~netty-version]
+                 [io.netty/netty-handler ~netty-version]
+                 [io.netty/netty-handler-proxy ~netty-version]
+                 [io.netty/netty-resolver ~netty-version]
+                 [io.netty/netty-resolver-dns ~netty-version]
+                 [io.netty/netty-resolver-dns-native-macos ~netty-version]
+                 [io.netty/netty-transport ~netty-version]
+                 [io.netty/netty-transport-classes-epoll ~netty-version]
+                 [io.netty/netty-transport-classes-kqueue ~netty-version]
+                 [io.netty/netty-transport-native-epoll ~netty-version]
+                 [io.netty/netty-transport-native-kqueue ~netty-version]
+                 [io.netty/netty-transport-native-unix-common ~netty-version]
                  [fi.vm.sade/auditlogger "9.2.7-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.11.0"
-                  :exclusions [commons-io]]
+                  ;; ataru ajaa alephilla -> ring-jetty-adapter (Jetty 11.0.18) on käyttämätön, poistetaan
+                  ;; (CVE-2024-7708, CVE-2024-8184, CVE-2026-2332, CVE-2026-10050)
+                  :exclusions [commons-io ring/ring-jetty-adapter]]
                  [opiskelijavalinnat-utils/clj-ring-db-cas-session "1.0.0-SNAPSHOT"]
                  [ring/ring-defaults "0.4.0"
                   :exclusions [commons-io]]
@@ -135,14 +160,18 @@
                  [environ "1.2.0"]
                  [org.clojure/core.async "1.6.681"]
                  [org.clojure/java.jdbc "0.7.12"]
-                 [software.amazon.jdbc/aws-advanced-jdbc-wrapper "3.3.0"]
-                 [org.postgresql/postgresql "42.7.2" :exclusions [org.checkerframework/checker-qual]]
+                 ;; 3.3.0 -> 4.0.1: CVE-2026-11400 + CVE-2026-14265 (HIGH), 3.x-linjalle ei korjausta.
+                 ;; 4.0.0 breaking changes koskevat vain omia custom-plugineja (ataru käyttää vakioita).
+                 ;; 4.0.1 korjaa nimenomaan EFM/EFM2:n non-RDS-URLeilla (localhost) -> lokaali/CI ok.
+                 ;; db.clj lisää wrapperDialect=aurora-pg vain kun :server-name != "localhost" (= Aurora-ympäristöt).
+                 [software.amazon.jdbc/aws-advanced-jdbc-wrapper "4.0.1"]
+                 [org.postgresql/postgresql "42.7.12" :exclusions [org.checkerframework/checker-qual]]
                  [cheshire/cheshire "6.0.0"]
                  [selmer "1.12.59"]
                  [metosin/ring-http-response "0.9.3"
                   :exclusions [commons-io]]
-                 [opiskelijavalinnat-utils/java-cas "2.0.0-SNAPSHOT"]
-                 [org.asynchttpclient/async-http-client "3.0.1"]
+                 [opiskelijavalinnat-utils/java-cas "2.3.0-SNAPSHOT"]
+                 [org.asynchttpclient/async-http-client "3.0.12"]
                  [ring/ring-session-timeout "0.3.0"]
                  [org.apache.poi/poi-ooxml "5.3.0"]
                  [org.clojure/core.cache "1.0.225"]
@@ -152,7 +181,7 @@
                  [ring/ring-mock "0.4.0"]
                  [speclj "3.4.3"]
                  [org.clojure/test.check "1.1.1"]
-                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20220608.1" :exclusions [com.google.guava/guava]]
+                 [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20260101.1" :exclusions [com.google.guava/guava]]
                  [software.amazon.awssdk/s3 "2.36.3"]
                  [software.amazon.awssdk/sqs "2.36.3"]
                  [software.amazon.awssdk/cloudwatch "2.36.3"]

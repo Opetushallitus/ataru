@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/ataru</url>
     <connection>scm:git:git://github.com/Opetushallitus/ataru.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/ataru.git</developerConnection>
-    <tag>36681b692b476c8b9dc8c43740b8702e73c252d3</tag>
+    <tag>0b1d0707961454d343d2b865cf75ccac8a099a55</tag>
   </scm>
   <build>
     <sourceDirectory>src/clj</sourceDirectory>
@@ -99,27 +99,27 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.18.3</version>
+        <version>2.18.10</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.18.3</version>
+        <version>2.18.10</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.18.3</version>
+        <version>2.18.10</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-cbor</artifactId>
-        <version>2.18.3</version>
+        <version>2.18.10</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-smile</artifactId>
-        <version>2.18.3</version>
+        <version>2.18.10</version>
       </dependency>
       <dependency>
         <groupId>com.github.fge</groupId>
@@ -179,7 +179,7 @@
       <dependency>
         <groupId>com.taoensso</groupId>
         <artifactId>encore</artifactId>
-        <version>3.113.0</version>
+        <version>3.169.1</version>
       </dependency>
       <dependency>
         <groupId>ring</groupId>
@@ -239,7 +239,7 @@
       <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino</artifactId>
-        <version>1.7.14</version>
+        <version>1.7.15.1</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
@@ -259,17 +259,27 @@
       <dependency>
         <groupId>opiskelijavalinnat-utils</groupId>
         <artifactId>java-cas</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.taoensso</groupId>
+        <artifactId>nippy</artifactId>
+        <version>3.8.1</version>
+      </dependency>
+      <dependency>
+        <groupId>io.airlift</groupId>
+        <artifactId>aircompressor</artifactId>
+        <version>2.0.3</version>
       </dependency>
       <dependency>
         <groupId>io.undertow</groupId>
         <artifactId>undertow-core</artifactId>
-        <version>2.3.20.Final</version>
+        <version>2.3.25.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.14.0</version>
+        <version>3.20.0</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.threads</groupId>
@@ -290,6 +300,26 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers</artifactId>
         <version>2.0.2</version>
+      </dependency>
+      <dependency>
+        <groupId>buddy</groupId>
+        <artifactId>buddy-core</artifactId>
+        <version>1.12.0-430</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk18on</artifactId>
+        <version>1.85</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -462,7 +492,7 @@
     <dependency>
       <groupId>aleph</groupId>
       <artifactId>aleph</artifactId>
-      <version>0.9.3</version>
+      <version>0.9.11</version>
       <exclusions>
         <exclusion>
           <artifactId>netty-buffer</artifactId>
@@ -470,6 +500,14 @@
         </exclusion>
         <exclusion>
           <artifactId>netty-codec</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-base</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-codec-compression</artifactId>
           <groupId>io.netty</groupId>
         </exclusion>
         <exclusion>
@@ -545,92 +583,102 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-buffer</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-base</artifactId>
+      <version>4.2.17.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-compression</artifactId>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-dns</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-http2</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-codec-socks</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-common</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler-proxy</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-resolver</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-resolver-dns</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-resolver-dns-native-macos</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-classes-epoll</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-classes-kqueue</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-kqueue</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-unix-common</artifactId>
-      <version>4.1.124.Final</version>
+      <version>4.2.17.Final</version>
     </dependency>
     <dependency>
       <groupId>fi.vm.sade</groupId>
@@ -661,6 +709,10 @@
         <exclusion>
           <artifactId>commons-io</artifactId>
           <groupId>commons-io</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>ring-jetty-adapter</artifactId>
+          <groupId>ring</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -739,12 +791,12 @@
     <dependency>
       <groupId>software.amazon.jdbc</groupId>
       <artifactId>aws-advanced-jdbc-wrapper</artifactId>
-      <version>3.3.0</version>
+      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.7.2</version>
+      <version>42.7.12</version>
       <exclusions>
         <exclusion>
           <artifactId>checker-qual</artifactId>
@@ -776,12 +828,12 @@
     <dependency>
       <groupId>opiskelijavalinnat-utils</groupId>
       <artifactId>java-cas</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
+      <version>2.3.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.asynchttpclient</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>3.0.1</version>
+      <version>3.0.12</version>
     </dependency>
     <dependency>
       <groupId>ring</groupId>
@@ -837,7 +889,7 @@
     <dependency>
       <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
       <artifactId>owasp-java-html-sanitizer</artifactId>
-      <version>20220608.1</version>
+      <version>20260101.1</version>
       <exclusions>
         <exclusion>
           <artifactId>guava</artifactId>
