@@ -6,22 +6,48 @@
             [clojure.string :as string]
             [taoensso.timbre :as log]))
 
+;; Portti 25431 = paikallisesta koneesta QA/prod-Auroraan avattu SSH-tunneli
+;; (server-name pysyy "localhost"). Tunnelin läpi näkyy vain yksi endpoint, joten
+;; wrapperin failover2/efm2/topology-pluginit eivät toimi — topology-discovery
+;; aikakatkeaa (FailoverFailedSQLException) heti kun yksikin yhteys pätkii. Siksi
+;; tunnelissa pluginit kytketään pois ja wrapper käyttäytyy kuin plain postgres.
+;; keepalive pidetään silti päällä, jottei tunneli mene idlenä kiinni.
+(def ^:private aurora-tunnel-port 25431)
+
+(defn- aurora?
+  "Ollaanko oikeaa Aurora-endpointtia vasten (= ei localhost, ei SSH-tunneli)."
+  [db-config]
+  (not= "localhost" (:server-name db-config)))
+
+(defn- aurora-tunnel?
+  "Onko localhost-yhteys itse asiassa SSH-tunneli QA/prod-Auroraan (portti 25431)."
+  [db-config]
+  (and (= "localhost" (:server-name db-config))
+       (contains? #{aurora-tunnel-port (str aurora-tunnel-port)} (:port-number db-config))))
+
 (defn- jdbc-url [db-config schema]
-  (let [aurora? (not= "localhost" (:server-name db-config))
-        params  (cond-> []
-                  aurora? (into [; activates aurora-pg topology detection (via replica_host_status)
-                                 ; and enables the failover2 + efm2 + auroraStaleDns plugin chain
-                                 "wrapperDialect=aurora-pg"
-                                 ; how long the wrapper tries to complete failover before giving up with
-                                 ; FailoverFailedSQLException — HikariCP connection-timeout must exceed this
-                                 "failoverTimeoutMs=120000"
-                                 ; how often to poll replica_host_status during failover to find the new writer
-                                 "failoverClusterTopologyRefreshRateMs=2000"
-                                 ; how often to attempt a connection to the newly promoted writer
-                                 "failoverWriterReconnectIntervalMs=2000"
-                                 ; normal topology refresh rate — determines how quickly a writer loss is detected
-                                 "clusterTopologyRefreshRateMs=30000"])
-                  schema  (conj (str "currentSchema=" schema)))]
+  (let [params (cond-> []
+                 (aurora? db-config)
+                 (into [; activates aurora-pg topology detection (via replica_host_status)
+                        ; and enables the failover2 + efm2 + auroraStaleDns plugin chain
+                        "wrapperDialect=aurora-pg"
+                        ; how long the wrapper tries to complete failover before giving up with
+                        ; FailoverFailedSQLException — HikariCP connection-timeout must exceed this
+                        "failoverTimeoutMs=120000"
+                        ; how often to poll replica_host_status during failover to find the new writer
+                        "failoverClusterTopologyRefreshRateMs=2000"
+                        ; how often to attempt a connection to the newly promoted writer
+                        "failoverWriterReconnectIntervalMs=2000"
+                        ; normal topology refresh rate — determines how quickly a writer loss is detected
+                        "clusterTopologyRefreshRateMs=30000"])
+
+                 ; SSH-tunneli Auroraan: ei failover2/efm2/topology-plugineja (topology-
+                 ; discovery ei toimi yhden portin yhteyden läpi) -> plain postgres
+                 (aurora-tunnel? db-config)
+                 (conj "wrapperPlugins=")
+
+                 schema
+                 (conj (str "currentSchema=" schema)))]
     (str "jdbc:aws-wrapper:postgresql://"
          (:server-name db-config)
          ":"
@@ -36,18 +62,21 @@
   [ds-key]
   (let [db-config (ds-key config)
         schema    (:schema db-config)
-        aurora?   (not= "localhost" (:server-name db-config))]
+        aurora?   (aurora? db-config)
+        ; pidä idle-yhteydet elossa myös SSH-tunnelissa, ettei tunneli mene kiinni
+        keepalive? (or aurora? (aurora-tunnel? db-config))]
     (merge {:auto-commit        false
             :read-only          false
             ; must exceed failoverTimeoutMs (120000) so HikariCP doesn't give up before the wrapper succeeds
+            ; (tunnelissa failover on pois päältä, joten oletus 30000 riittää)
             :connection-timeout (if aurora? 150000 30000)
             :validation-timeout 5000
             :idle-timeout       600000
             :max-lifetime       1800000
             :minimum-idle       10
             :maximum-pool-size  10
-            ; detect dead idle connections proactively after failover (0 = disabled for localhost)
-            :keepalive-time     (if aurora? 30000 0)
+            ; detect dead idle connections proactively (0 = disabled for plain local dev)
+            :keepalive-time     (if keepalive? 30000 0)
             :pool-name          "db-pool"
             :jdbc-url           (jdbc-url db-config schema)
             :driver-class-name  "software.amazon.jdbc.Driver"
