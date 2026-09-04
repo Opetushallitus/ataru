@@ -13,14 +13,13 @@
 ;; alempana.
 (def popup-margin-top 4)
 
-;; Kynnys, jonka alle jäävä tila kentän ALAPUOLELLA saa työpöydällä laukaista
-;; popupin kääntämisen kentän YLÄPUOLELLE (ks. dropdown-geometry) — jos tätä
+;; Kynnys, jonka alle jäävä tila kentän alapuolella saa työpöydällä laukaista
+;; popupin kääntämisen kentän yläpuolelle (ks. dropdown-geometry) — jos tätä
 ;; ei tehtäisi, kentän alapuolelle jäisi tilaa vielä sen verran, että popup
-;; näyttäisi teknisesti "mahtuvan", mutta käytännössä liian vähän nähdäkseen
-;; kuin ehkä yhden vaihtoehdon kerrallaan.
+;; näyttäisi teknisesti "mahtuvan", mutta käytännössä liian vähän että käyttäjä näkisi vaihtoehtoja.
 (def min-usable-popup-height 80)
 
-(def banner-height-mobile 90)
+(def scroll-to-top-padding 8)
 
 (defn mobile-viewport? []
   (<= (.-innerWidth js/window) mobile-max-width))
@@ -31,19 +30,20 @@
     (.-innerHeight js/window)))
 
 ;; Kun kenttä fokusoidaan mobiilissa, vieritetään sivu heti niin, että kentän
-;; oma <label> (ei itse syötekenttä/select) asettuu yläbannerin alapuolelle.
+;; oma <label> (ei itse syötekenttä/select) asettuu ruudun ylälaitaan
 (defn scroll-field-to-top! [label-id]
   (when (and label-id (mobile-viewport?))
     (when-let [label-el (.getElementById js/document label-id)]
-      (let [top (.-top (.getBoundingClientRect label-el))]
-        (.scrollBy js/window #js {:top (- top banner-height-mobile)
-                                   :left 0
-                                   :behavior "instant"})))))
+      (set! (.. label-el -style -scrollMarginTop) (str scroll-to-top-padding "px"))
+      (.scrollIntoView label-el #js {:block "start" :behavior "instant"}))))
+
+(defn- scrolling-element []
+  (or (.-scrollingElement js/document) (.-documentElement js/document)))
 
 ;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään venytettynä, jolloin koko sivun vieritys disabloidaan.
 (defn lock-body-scroll! []
   (when (mobile-viewport?)
-    (.add (.-classList (.-body js/document)) "a-dropdown-fullscreen-open")))
+    (.add (.-classList (scrolling-element)) "a-dropdown-fullscreen-open")))
 
 (defn unlock-body-scroll! []
-  (.remove (.-classList (.-body js/document)) "a-dropdown-fullscreen-open"))
+  (.remove (.-classList (scrolling-element)) "a-dropdown-fullscreen-open"))
