@@ -22,7 +22,7 @@
                                  ; normal topology refresh rate — determines how quickly a writer loss is detected
                                  "clusterTopologyRefreshRateMs=30000"])
                   schema  (conj (str "currentSchema=" schema)))]
-    (str "jdbc:aws-wrapper:postgresql://"
+    (str (if aurora? "jdbc:aws-wrapper:postgresql://" "jdbc:postgresql://")
          (:server-name db-config)
          ":"
          (:port-number db-config)
@@ -50,13 +50,14 @@
             :keepalive-time     (if aurora? 30000 0)
             :pool-name          "db-pool"
             :jdbc-url           (jdbc-url db-config schema)
-            :driver-class-name  "software.amazon.jdbc.Driver"
-            ; After a successful writer failover the wrapper throws FailoverSuccessSQLException (08S02),
-            ; which HikariCP would normally treat as fatal and evict the connection — even though the
-            ; wrapper already reconnected it to the new writer. HikariCPSQLException overrides that:
-            ; it returns DO_NOT_EVICT for 08S02 and 08007 so the connection stays in the pool
-            ; and the caller can retry the operation on the already-recovered connection.
-            :exception-override-class-name "software.amazon.jdbc.util.HikariCPSQLException"}
+            :driver-class-name  (if aurora? "software.amazon.jdbc.Driver" "org.postgresql.Driver")}
+           (when aurora?
+             ; After a successful writer failover the wrapper throws FailoverSuccessSQLException (08S02),
+             ; which HikariCP would normally treat as fatal and evict the connection — even though the
+             ; wrapper already reconnected it to the new writer. HikariCPSQLException overrides that:
+             ; it returns DO_NOT_EVICT for 08S02 and 08007 so the connection stays in the pool
+             ; and the caller can retry the operation on the already-recovered connection.
+             {:exception-override-class-name "software.amazon.jdbc.util.HikariCPSQLException"})
            (-> db-config
                (dissoc :schema
                        :adapter

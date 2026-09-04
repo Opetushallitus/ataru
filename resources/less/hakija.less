@@ -7,10 +7,17 @@
 @notification-banner-height: 70px;
 @notification-banner-height-mobile: 23px;
 @total-banner-height: 97px;
-@total-banner-height-mobile: 90px;
+@total-banner-height-mobile: 82px;
+
+// overflow-y täällä (ei bodyssa), jotta <html> omistaa vierityksen suoraan
+// eikä propagoituna bodystä — muuten esim. vierityksen lukitseminen
+// <html>:lle katkaisisi propagoinnin ja rikkoisi position: sticky
+// -elementtien asemoinnin (ks. dropdown-viewport/lock-body-scroll!).
+html {
+  overflow-y: scroll;
+}
 
 body {
-  overflow-y: scroll;
   &.ataru-app__hakija {
     p {
       color: @neutral-grey-900;
@@ -45,9 +52,30 @@ body {
 .application__banner-container {
   z-index: 10;
   display: inline-block;
-  position: fixed;
+  position: sticky;
   width: 100%;
   top: 0;
+
+  // Mobiilissa ylätunniste piilotetaan (ks. banner.cljs) alaspäin
+  // vieritettäessä lisätilan saamiseksi ja tuodaan takaisin ylöspäin
+  // vieritettäessä, kuten mobiiliselainten osoiterivit. transform (ei
+  // display/visibility) mahdollistaa pehmeän liu'un.
+  @media only screen and (max-width: @mobile-width) {
+    transition: transform 0.3s ease-in-out;
+
+    &.application__banner-container--hidden {
+      transform: translateY(-100%);
+    }
+  }
+}
+
+// Kokoruutuvalikko peittää koko näytön, joten ylätunniste pakotetaan aina
+// piiloon :has()-valitsimella sen ollessa auki — ei riippuvainen siitä, mitä
+// JS:n vieritykseen sidottu piilotuslogiikka (banner.cljs) juuri päättäisi.
+@media only screen and (max-width: @mobile-width) {
+  body:has(.a-dropdown--fullscreen) .application__banner-container {
+    transform: translateY(-100%);
+  }
 }
 /* Allows centering of top-banner which contains logo and send-button */
 .application__top-banner-container {
@@ -164,7 +192,6 @@ body {
 
 .application__wrapper-contents {
   margin-top: 13px;
-  width: 75%;
 }
 .application__form-field {
   display: flex;
@@ -585,23 +612,10 @@ body {
 }
 
 .application__form-content-area {
-  margin-top: @total-banner-height;
   margin-right: auto;
   margin-left: auto;
   margin-bottom: 150px;
   width: @desktop-content-width;
-
-  &.application__form-content-area--demo {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
-
-  &.application__form-content-area--editing {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
-
-  &.application__form-content-area--preview {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
 }
 
 .application__editable-content {
@@ -640,6 +654,86 @@ body {
   font-size: 16px;
   position: relative;
   display: inline-block;
+
+  .a-dropdown {
+    width: @form-select-width;
+  }
+
+  .application__lock-icon-container + .a-dropdown {
+    width: @form-select-width - @lock-icon-width;
+  }
+}
+
+// application__form-field on display: flex; flex-direction: column (ks.
+// yllä), joka pakottaa sen suorat lapset (label, select-wrapper, ...)
+// pinoutumaan lohkotasoisina flex-itemeinä niiden omasta display-arvosta
+// riippumatta (label on itse asiassa display: inline, select-wrapper
+// inline-block). Tämä wrapperi on nyt niiden VÄLISSÄ, joten sen on
+// toistettava sama flex-asettelu AINA — muuten label ja kenttä palaisivat
+// normaaliin inline-virtaukseen kapealla näytöllä silloin kun kokoruutu-
+// tila ei ole päällä, jolloin label-kentän väli riippuisi rivitulkinnasta
+// eikä application__form-field-labelin margin-bottomista.
+.application__dropdown-fullscreen-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+// Kapealla näytöllä (esim. puhelin) auki oleva pudotusvalikko laajenee koko
+// näytön kokoiseksi virtuaalinäppäimistön ajaksi (ks. a-dropdown--fullscreen
+// dropdown-component.less:ssä, joka itse vain venyy täyttämään tämän
+// säiliön). Tämä wrapperi ottaa vastuun koko näytön peittävästä kiinnittä-
+// misestä :has()-valitsimella, jotta sivun oma label (ja mahdollinen info-
+// teksti/hakukohdenimet) tulee mukaan kokoruutuesitykseen sen sijaan, että
+// ataru.application-common.components.dropdown-component joutuisi
+// toistamaan labelin tekstin itse.
+@media only screen and (max-width: @mobile-width) {
+  .application__dropdown-fullscreen-wrapper:has(.a-dropdown--fullscreen) {
+    background-color: white;
+    bottom: 0;
+    left: 0;
+    padding: 8px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 9999;
+
+    // .application__form-select-wrapper .a-dropdown (ks. yllä tässä
+    // tiedostossa) asettaa kentälle kiinteän @form-select-width-leveyden
+    // korkeammalla spesifisyydellä — nostetaan spesifisyyttä, jotta
+    // kokoruutuvalikko täyttää koko näytön leveyden.
+    .a-dropdown {
+      width: auto;
+    }
+
+    // a-dropdown--fullscreenin "flex: 1" (dropdown-component.less) toimii
+    // vain jos se on suora flex-lapsi tälle kiinnitetylle wrapperille —
+    // todellisuudessa sen ja tämän välissä on kaksi tasoa (form-select-
+    // wrapper, joka on normaalisti display: inline-block, ja input-
+    // container). Ilman flex/min-height-ketjua koko välissä a-dropdown
+    // (ja siis myös sen popup) jää korkeudeltaan "auto":ksi eli venyy
+    // sisältönsä (esim. 25 vaihtoehtoa) mukaiseksi sen sijaan, että sillä
+    // olisi todellinen, ruudulle rajattu korkeus — jolloin popupin oma
+    // overflow-y: auto ei koskaan aktivoidu eikä listaa voi vierittää
+    // ollenkaan. Muutetaan siis myös nämä flex-kolonneiksi/riveiksi jotka
+    // venyvät (flex: 1) ja voivat kutistua (min-height: 0, min-width: 0)
+    // VAIN silloin kun kokoruutuvalikko on auki, jottei työpöytäasettelu
+    // (display: inline-block) muutu miksikään. min-width: 0 estää pitkää
+    // (katkeamatonta) vaihtoehtotekstiä pakottamasta koko ketjua leveämmäksi
+    // kuin 100 % (flex-itemin oletus min-width on muuten "auto").
+    .application__form-select-wrapper {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .application__input-container {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+  }
 }
 
 .application__form-select-label {
@@ -1420,20 +1514,7 @@ th.application__readonly-adjacent--header {
     font-size: 16px;
   }
   .application__form-content-area {
-    margin-top: @total-banner-height-mobile;
     width: auto;
-
-    &.application__form-content-area--demo {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
-
-    &.application__form-content-area--editing {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
-
-    &.application__form-content-area--preview {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
   }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,
@@ -2545,10 +2626,6 @@ th.application__readonly-adjacent--header {
 @media print {
   .application__banner-container {
     display: none;
-  }
-
-  .application__form-content-area {
-    margin-top: 0;
   }
 }
 

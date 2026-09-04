@@ -1,218 +1,119 @@
 (ns ataru.application-common.components.dropdown-component
-  (:require [ataru.application-common.components.button-component :as button-component]
-            [clojure.string :as string]
-            [re-frame.core :as re-frame]
-            [schema.core :as s]
-            [schema-tools.core :as st]
-            [ataru.util :as util]))
+  (:require [reagent.core :as reagent]
+            [ataru.util :as util]
+            [ataru.application-common.components.dropdown-viewport :as viewport]
+            [ataru.application-common.components.dropdown-geometry :as geometry]
+            [ataru.application-common.components.dropdown-listeners :as listeners]
+            [ataru.application-common.components.dropdown-render :as render]))
 
-(s/defschema SelectOptionProps
-  {:value s/Str
-   :label s/Str})
+;; ---------------------------------------------------------------------
+;; Yhden komponentti-instanssin refit, atomit ja niistä riippuvat
+;; tehdasfunktiot — luodaan kerran komponentin luonnin yhteydessä ja
+;; kulkevat sen jälkeen "context"-mappina sekä elinkaarimetodeille että
+;; jokaiselle renderöinnille (ks. dropdown-render).
+;; ---------------------------------------------------------------------
 
-(s/defn dropdown-chevron
-  [{:keys [expanded?]} :- {:expanded? s/Bool}]
-  [:i.zmdi.a-dropdown-button--chevron
-   {:aria-hidden true
-    :class       (if expanded?
-                   "zmdi-chevron-up"
-                   "zmdi-chevron-down")}])
+(defn- make-dropdown-context [dropdown-id]
+  (let [input-ref             (atom nil)
+        root-ref              (atom nil)
+        field-ref             (atom nil)
+        option-refs           (atom {})
+        popup-ref             (atom nil)
+        portal-container      (atom nil)
+        mobile?               (reagent/atom (viewport/mobile-viewport?))
+        sync-popup-geometry!  (geometry/make-sync-popup-geometry! popup-ref field-ref mobile?)]
+    {:dropdown-id                   dropdown-id
 
-(s/defn dropdown-select-option
-  [{:keys [value
-           label
-           selected-value]} :- (st/assoc
-                                 SelectOptionProps
-                                 :selected-value
-                                 (s/maybe s/Str))]
-  [:option
-   {:value    value
-    :selected (when (= value selected-value)
-                true)}
-   label])
+     ;; Viittaus näkyvään syötekenttään (<input>-elementti).
+     :input-ref                     input-ref
 
-(s/defn dropdown-select
-  [{:keys [expanded?
-           options
-           unselected-label
-           selected-value
-           on-click
-           dropdown-id
-           on-change]} :- {:expanded?        s/Bool
-                           :options          [SelectOptionProps]
-                           :unselected-label s/Str
-                           :selected-value   (s/maybe s/Str)
-                           :on-click         s/Any
-                           :dropdown-id      s/Str
-                           :on-change        s/Any}]
-  [:div.a-native-component.a-dropdown-select-container
-   [:select.a-dropdown-select
-    {:aria-hidden true
-     :on-click    on-click
-     :on-change   (fn dropdown-select-on-change [event]
-                    (let [value (.. event -target -value)]
-                      (on-change value)))
-     :value       (or selected-value "")}
-    [dropdown-select-option
-     {:value          ""
-      :label          unselected-label
-      :selected-value nil}]
-    (map-indexed (fn [option-idx option-props]
-                   (let [key (str "dropdown-select-" dropdown-id "-option-" option-idx)]
-                     ^{:key key}
-                     [dropdown-select-option (assoc
-                                               option-props
-                                               :selected-value
-                                               selected-value)]))
-                 options)]
-   [dropdown-chevron
-    {:expanded? expanded?}]])
+     ;; Viittaus komponentin juurielementtiin (.a-dropdown).
+     :root-ref                      root-ref
 
-(s/defn dropdown-list-option
-  [{:keys [value
-           label
-           on-click
-           option-id
-           selected-value
-           data-test-id]} :- (st/assoc
-                               SelectOptionProps
-                               :on-click s/Any
-                               :option-id s/Str
-                               :selected-value (s/maybe s/Str)
-                               :data-test-id (s/maybe s/Str))]
-  (let [selected? (= selected-value value)]
-    [:li.a-dropdown-list__option
-     {:id            option-id
-      :on-click      (fn dropdown-list-option-on-click []
-                       (on-click value))
-      :on-key-down   (fn [e]
-                       (when (or (= " " (.-key e))
-                                 (= "Enter" (.-key e)))
-                         (.preventDefault e)
-                         (on-click value)))
-      :role          "option"
-      :aria-selected (when selected?
-                       true)
-      :data-test-id  data-test-id
-      :tab-index     "0"}
-     (when selected?
-       [:i.zmdi.zmdi-check.a-dropdown-list-option__checked])
-     [:span label]]))
+     ;; Popupin sijoitusankkuri (ks. dropdown-geometry) — erikseen
+     ;; root-refistä, koska mobiilin kokoruututilassa hakija.less venyttää
+     ;; koko root-refin (.a-dropdown) täyttämään koko jäljellä olevan
+     ;; ruudun (ks. application__dropdown-fullscreen-wrapper), mikä oli
+     ;; ennen portaalia tarkoituksellista: se antoi TILAN popupille, joka
+     ;; oli silloin sen oma flex-lapsi. Nyt popup ei enää ole sen DOM-
+     ;; jälkeläinen, joten root-refin reunat eivät enää vastaa kentän
+     ;; todellista, näkyvää sijaintia — sen käyttäminen ankkurina asettaisi
+     ;; popupin lähelle ruudun alareunaa aina kokoruututilassa.
+     :field-ref                     field-ref
 
-(s/defn dropdown-list
-  [{:keys [expanded?
-           options
-           on-click
-           label-id
-           dropdown-id
-           selected-value
-           data-test-id]} :- {:expanded?      s/Bool
-                              :options        [SelectOptionProps]
-                              :on-click       s/Any
-                              :label-id       s/Str
-                              :dropdown-id    s/Str
-                              :selected-value (s/maybe s/Str)
-                              :data-test-id   (s/maybe s/Str)}]
-  (let [options-with-id    (map-indexed (fn [option-idx option-props]
-                                          (assoc
-                                            option-props
-                                            :option-id
-                                            (str dropdown-id "-option-" option-idx)))
-                                        options)
-        selected-option-id (->> options-with-id
-                                (filter (fn [{:keys [value]}]
-                                          (= value selected-value)))
-                                (map :option-id)
-                                first)]
-    [:div.a-component.a-dropdown-list
-     {:data-test-id (str data-test-id "-list")
-      :class        (when-not expanded?
-                      "a-dropdown-list--collapsed")}
-     [:ul.a-dropdown-list-container
-      (cond-> {:aria-labelledby label-id
-               :role            "listbox"
-               :tab-index       "-1"}
-              (not (string/blank? selected-value))
-              (assoc :aria-activedescendant selected-option-id))
-      (map-indexed (fn [option-idx option-props]
-                     (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
-                       ^{:key key}
-                       [dropdown-list-option (merge option-props
-                                                    (cond-> {:on-click       on-click
-                                                             :selected-value selected-value
-                                                             :data-test-id   (str data-test-id "-option-" (:value option-props))}))]))
-                   options-with-id)]]))
+     ;; Viittaukset option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten,
+     ;; jota move-active-to (ks. dropdown-render) käyttää korostetun
+     ;; vaihtoehdon vierittämiseen näkyviin.
+     :option-refs                   option-refs
 
-(s/defn collapse-dropdown
-  [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
-  (re-frame/dispatch [:application-components/collapse-dropdown {:dropdown-id dropdown-id}]))
+     ;; Viittaus popupin elementtiin (portaalin sisällä), jota
+     ;; sync-popup-geometry! käyttää sijainnin/koon asettamiseen.
+     :popup-ref                     popup-ref
 
-(s/defn expand-dropdown
-  [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
-  (re-frame/dispatch [:application-components/expand-dropdown {:dropdown-id dropdown-id}]))
+     ;; Erillinen DOM-solmu popupin portaalikohteeksi (ks. mount-dropdown!
+     ;; alempana) — luodaan kerran mountissa ja poistetaan unmountissa,
+     ;; jotta useampi tämän komponentin instanssi ei koskaan jaa samaa
+     ;; säiliötä.
+     :portal-container              portal-container
+
+     ;; Reaktiivinen atomi: onko näkymä tällä hetkellä mobiilileveydellä.
+     ;; Reaktiivisuus varmistaa, että suunnan vaihto (esim. puhelimen
+     ;; kääntäminen) auki olevan listan aikana päivittää heti, käytetäänkö
+     ;; kokoruutuesitystä vai ei.
+     :mobile?                       mobile?
+
+     ;; Funktio, joka synkronoi popupin sijainnin ja koon DOM:iin
+     ;; (ks. dropdown-geometry).
+     :sync-popup-geometry!          sync-popup-geometry!
+
+     ;; Funktio, joka palauttaa yksittäiselle vaihtoehdolle React-ref-
+     ;; callbackin option-refsin päivittämiseksi.
+     :register-option-ref           (fn register-option-ref [option-id]
+                                      (fn [el]
+                                        (if el
+                                          (swap! option-refs assoc option-id el)
+                                          (swap! option-refs dissoc option-id))))
+
+     ;; Funktio, joka fokusoi syötekentän renderöinnin jälkeen (ks.
+     ;; on-trigger-click dropdown-renderissä).
+     :focus-input                   (fn focus-input []
+                                      (reagent/after-render
+                                       (fn []
+                                         (when-let [el @input-ref]
+                                           (.focus el)))))
+
+     ;; Tapahtumakäsittelijä komponentin ulkopuolelle klikkaamiselle
+     :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref input-ref mobile?)
+
+     ;; Tapahtumakäsittelijä ikkunan koon muutokselle.
+     :resize-listener               (listeners/make-resize-listener dropdown-id mobile? sync-popup-geometry!)
+
+     ;; Tapahtumakäsittelijä kokoruutuvalikon taustavierityksen
+     ;; estämiselle mobiilissa.
+     :fullscreen-touchmove-listener (listeners/make-fullscreen-touchmove-listener root-ref)}))
+
+;; ---------------------------------------------------------------------
+;; Elinkaarimetodit
+;; ---------------------------------------------------------------------
+
+(defn- mount-dropdown! [{:keys [portal-container] :as context}]
+  (reset! portal-container (.createElement js/document "div"))
+  (.appendChild (.-body js/document) @portal-container)
+  (listeners/attach-listeners! context))
+
+(defn- unmount-dropdown! [{:keys [portal-container] :as context}]
+  (listeners/detach-listeners! context)
+  (viewport/unlock-body-scroll!)
+  (when-let [el @portal-container]
+    (.removeChild (.-body js/document) el)))
+
+;; ---------------------------------------------------------------------
+;; Pääkomponentti
+;; ---------------------------------------------------------------------
 
 (defn dropdown []
-  (let [dropdown-id (util/component-id)]
-    (s/fn render-dropdown
-      [{:keys [options
-               unselected-label
-               unselected-label-icon
-               selected-value
-               on-change
-               data-test-id]} :- {:options                                [SelectOptionProps]
-                                  :unselected-label                       s/Str
-                                  (s/optional-key :unselected-label-icon) [(s/one s/Str "icon component")]
-                                  :selected-value                         (s/maybe s/Str)
-                                  :on-change                              s/Any
-                                  (s/optional-key :data-test-id)          (s/maybe s/Str)}]
-      (let [expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
-            on-dropdown-value-change (fn on-dropdown-value-change [event]
-                                       (collapse-dropdown {:dropdown-id dropdown-id})
-                                       (on-change event))
-            on-dropdown-button-click (fn on-dropdown-button-click []
-                                       (if expanded?
-                                         (collapse-dropdown {:dropdown-id dropdown-id})
-                                         (expand-dropdown {:dropdown-id dropdown-id})))
-            label-id                 (str dropdown-id "-label")
-            button-label             (if-not (string/blank? selected-value)
-                                       (->> options
-                                            (filter (fn filter-dropdown-select-option [{option-value :value}]
-                                                      (= option-value selected-value)))
-                                            (map :label)
-                                            (first))
-                                       unselected-label)]
-        [:div.a-dropdown
-         [:div.a-dropdown-button-container.a-component
-          {:class (when expanded?
-                    "a-component")}
-          [button-component/button
-           {:label        (cond->> [:span.a-dropdown-button__label
-                                    {:aria-labelledby label-id
-                                     :aria-expanded   expanded?}
-                                    button-label]
-                            (seq unselected-label-icon)
-                            (conj [:<> unselected-label-icon]))
-            :on-click     on-dropdown-button-click
-            :data-test-id (str data-test-id "-button")
-            :aria-attrs   {:aria-haspopup "listbox"}
-            :tab-index    "0"}]
-          (when-not (seq unselected-label-icon)
-            [dropdown-chevron
-             {:expanded? expanded?}])]
-         [dropdown-select
-          {:expanded?        expanded?
-           :options          options
-           :unselected-label unselected-label
-           :selected-value   selected-value
-           :dropdown-id      dropdown-id
-           :on-click         (fn []
-                               (expand-dropdown {:dropdown-id dropdown-id}))
-           :on-change        on-dropdown-value-change}]
-         [dropdown-list
-          {:expanded?      expanded?
-           :options        options
-           :on-click       on-dropdown-value-change
-           :label-id       label-id
-           :dropdown-id    dropdown-id
-           :selected-value selected-value
-           :data-test-id   data-test-id}]]))))
+  (let [context (make-dropdown-context (util/component-id))]
+    (reagent/create-class
+      {:component-did-mount    (fn [_this] (mount-dropdown! context))
+       :component-will-unmount (fn [_this] (unmount-dropdown! context))
+       :reagent-render         (fn [props] (render/render-dropdown context props))})))

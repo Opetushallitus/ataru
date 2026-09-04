@@ -57,7 +57,7 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 ### Running Playwright and Cypress tests
 
-**If you write new tests, please use Playwright. Also consider migrating some legacy Cypress & Mocha tests to Playwright.**
+**If you write new tests, please use Playwright. Also consider migrating some legacy Cypress tests to Playwright.**
 
 #### Running as in CI
 
@@ -147,19 +147,6 @@ temporarily naming them with `focus-it` instead of `it`, see:
 ```
 make test-clojurescript
 ```
-
-### Legacy browser tests (Mocha)
-
-To run only browser tests (headless, using puppeteer):
-
-```
-make start-docker test-browser
-```
-
-To run browser tests using a real browser start both virkailija and hakija
-applications with `lein hakija-dev` and `lein virkailija-dev`.
-
-Then navigate to a test suite of your choosing, e.g. [http://localhost:8350/lomake-editori/virkailija-test.html](http://localhost:8350/lomake-editori/virkailija-test.html)
 
 ## Static checks (Linting and type checking)
 
