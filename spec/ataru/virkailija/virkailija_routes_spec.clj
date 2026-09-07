@@ -149,13 +149,6 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
-(defn- get-tilastokeskus-application-query [query]
-  (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
-      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
-      (mock/content-type "application/json")
-      ((deref virkailija-routes))
-      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
-
 (defn- get-valinta-ui-application-query [query]
   (-> (mock/request :get "/lomake-editori/api/external/valinta-ui" query)
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
@@ -1233,47 +1226,6 @@
                 (should= 200 status)
                 (should= 0 (count applications)))))
 
-(describe "tilastokeskus"
-          (tags :unit)
-
-          (after-all
-            (db/nuke-kk-payment-data))
-
-          (it "should return an application"
-              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should return an application with kk payment data"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-exemption (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should not return an application awaiting kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-required (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications))))
-
-          (it "should not return an application with overdue kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-overdue (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications)))))
-
 (describe "valintapiste"
           (tags :unit)
 
@@ -1444,7 +1396,8 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [[person _ _ _ _] (init-and-get-kk-fixtures)
+              (let [[person _ _ application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required (:key application) nil)
                     resp (get-omatsivut-applications-query person nil)
                     status (:status resp)
                     applications (:body resp)]
@@ -1452,6 +1405,14 @@
                 (should= 1 (count applications))
                 (should= "fi" (:asiointikieli (first applications)))
                 (should= false (:processing (first applications)))
+                (should= "awaiting" (:payment-state (first applications)))
+                (should= (.plusDays (java.time.LocalDate/now)
+                                    payment/kk-application-payment-due-days)
+                         (-> (:payment-due-date (first applications))
+                             java.time.ZonedDateTime/parse
+                             .toLocalDate))
+                (should= "100.00" (:payment-sum (first applications)))
+                (should-be-nil (:payment-reason (first applications)))
                 (should-be-nil (:hakuaikaIsOn (first applications)))
                 (should-be-nil (:hakuaikaEnds (first applications)))))
 

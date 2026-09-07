@@ -657,8 +657,6 @@
             :application-hakukohde-reviews)))
 
 
-(defn get-latest-application-by-key-for-odw [application-key]
-  (exec-db :db queries/yesql-get-single-odw-application-by-key {:key application-key}))
 
 (defn get-latest-applications-by-haku [haku-oid limit offset]
   (exec-db :db queries/yesql-get-applications-by-haku {:haku haku-oid :limit limit :offset (or offset 0)}))
@@ -1521,23 +1519,6 @@
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)
       (->kebab-case-kw)))
-
-(defn- unwrap-tilastokeskus-application
-  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content hakemus-tila lahetysaika]}]
-  (let [answers (answers-by-key (:answers content))]
-    {:hakemus_oid    hakemus-oid
-     :hakemus_tila   hakemus-tila
-     :haku_oid       haku-oid
-     :henkilo_oid    henkilo-oid
-     :hakukohde_oids hakukohde-oids
-     :content        content
-     :kotikunta      (-> answers :home-town :value)
-     :asuinmaa       (-> answers :country-of-residence :value)
-     :submitted      lahetysaika}))
-
-(defn get-application-info-for-tilastokeskus [haku-oid hakukohde-oid]
-  (->> (exec-db :db queries/yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
-       (map unwrap-tilastokeskus-application)))
 
 (defn get-application-info-for-valintapiste [haku-oid hakukohde-oid]
   (->> (exec-db :db queries/yesql-valintapiste-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
