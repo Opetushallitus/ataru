@@ -12,7 +12,11 @@
                          [com.fasterxml.jackson.dataformat/jackson-dataformat-smile ~jackson-version]
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
-                         [org.apache.commons/commons-io "2.19.0"]
+                         ;; riippuvuuskonfliktit: poi-ooxml 5.3.0 toi commons-io 2.16.1 / commons-compress 1.26.2 /
+                         ;; log4j-api 2.23.1 -> pinnataan uudempiin (testcontainers/log4j-to-slf4j haluavat jo nämä)
+                         [commons-io "2.20.0"]
+                         [org.apache.commons/commons-compress "1.28.0"]
+                         [org.apache.logging.log4j/log4j-api "2.25.2"]
                          [org.clojure/clojure "1.11.2"]
                          [org.clojure/data.json "1.0.0"]
                          [org.clojure/core.memoize "1.0.257"]
@@ -152,7 +156,8 @@
                   :exclusions [commons-io]]
                  [ring-ratelimit "0.2.3"]
                  [bk/ring-gzip "0.3.0"]
-                 [yesql "0.5.3"]
+                 ;; 0.5.4: clj-ring-db-cas-session tuo tämän, ei pidetä 0.5.3:ssa
+                 [yesql "0.5.4"]
                  [com.layerware/hugsql "0.5.3"]
                  ; Flyway 4 breaks our migrations
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
@@ -180,7 +185,8 @@
                  [hikari-cp "3.0.1"]
                  [ring/ring-mock "0.4.0"]
                  [speclj "3.4.3"]
-                 [org.clojure/test.check "1.1.1"]
+                 ;; 1.1.3: aleph -> malli tuo tämän, ei pidetä 1.1.1:ssä
+                 [org.clojure/test.check "1.1.3"]
                  [com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer "20260101.1" :exclusions [com.google.guava/guava]]
                  [software.amazon.awssdk/s3 "2.36.3"]
                  [software.amazon.awssdk/sqs "2.36.3"]
