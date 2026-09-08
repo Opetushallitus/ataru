@@ -12,8 +12,7 @@ import {
 
 test.describe.configure({ mode: 'parallel' })
 
-// Testaa hakijan puolen dropdown-komponentin toimintaa minimaalisen lomakkeen kautta.
-// Yksikkötestaaminen olisi hankalaa, koska komponentti käyttä re-framea tilan tallentamiseen.
+// Testaa hakijan puolen dropdown-komponentin toimintaa minimaalisen lomakkeen kautta. Yksikkötestaaminen olisi hankalaa, koska komponentti käyttä re-framea tilan tallentamiseen.
 
 const metadata = {
   'created-by': {
@@ -28,9 +27,7 @@ const metadata = {
   },
 }
 
-// Hakemuksen käsittely (ks. mm. :application/validate-hakukohteet) olettaa
-// aina tämän kentän olevan olemassa, vaikka lomakkeella ei olisi oikeita
-// hakukohteita
+// Hakemuksen käsittely (ks. mm. :application/validate-hakukohteet) olettaa aina tämän kentän olevan olemassa, vaikka lomakkeella ei olisi oikeita hakukohteita
 const hakukohteetFieldFixture: FormNode = {
   fieldClass: 'formField',
   fieldType: 'hakukohteet',
@@ -155,13 +152,7 @@ const waitForNoActiveOption = async (page: Page) => {
   await expect(getCombobox(page)).not.toHaveAttribute('aria-activedescendant')
 }
 
-// Lähettää synteettisen, peruutettavissa olevan touchmove-tapahtuman
-// annetulle elementille ja palauttaa, kutsuiko joku kuuntelija sille
-// preventDefaultia (ks. make-fullscreen-touchmove-listener dropdown_
-// component.cljs:ssä) — ei yritä todentaa itse sivun visuaalista
-// vierittymistä/panorointia, koska sen simulointi ja havaitseminen
-// luotettavasti pelkillä synteettisillä kosketustapahtumilla ei ole
-// mielekästä (todellinen selaimen oma "panorointi" ei reagoi niihin).
+// Lähettää synteettisen touchmove-tapahtuman annetulle elementille ja palauttaa, kutsuiko joku kuuntelija sille preventDefaultia (ks. make-fullscreen-touchmove-listener dropdown_component.cljs:ssä) — ei yritä todentaa itse sivun visuaalista vierittymistä/panorointia, koska sen simulointi ja havaitseminen luotettavasti pelkillä synteettisillä kosketustapahtumilla ei ole mielekästä (todellinen selaimen oma "panorointi" ei reagoi niihin).
 const dispatchTouchmove = (locator: Locator): Promise<boolean> =>
   locator.evaluate((el) => {
     const touch = new Touch({
@@ -289,6 +280,23 @@ test.describe('Työpöytänäkymä', () => {
     await getCombobox(page).click()
     await getOption(listbox, 'Ruotsi').click()
     await getClearButton(page).click()
+    await expect(getCombobox(page)).toHaveValue('')
+    await expect(getClearButton(page)).toBeHidden()
+  })
+
+  test('tyhjennysnappi on Tabilla tavoitettavissa ja Enterillä käytettävissä', async ({
+    page,
+  }) => {
+    const listbox = await getListbox(page)
+    await getCombobox(page).click()
+    await getOption(listbox, 'Ruotsi').click()
+    await expect(getClearButton(page)).toBeVisible()
+
+    await getCombobox(page).focus()
+    await page.keyboard.press('Tab')
+    await expect(getClearButton(page)).toBeFocused()
+    await page.keyboard.press('Enter')
+
     await expect(getCombobox(page)).toHaveValue('')
     await expect(getClearButton(page)).toBeHidden()
   })
@@ -438,6 +446,58 @@ test.describe('Työpöytänäkymä', () => {
     await expect(listbox).toContainText('Ei hakutuloksia')
     await getCombobox(page).press('Escape')
     await expect(getCombobox(page)).toHaveValue('')
+  })
+
+  test('Backspace tyhjässä kentässä tyhjentää valinnan', async ({ page }) => {
+    const listbox = await getListbox(page)
+    await getCombobox(page).click()
+    await getOption(listbox, 'Ruotsi').click()
+
+    await getCombobox(page).click()
+    await expect(listbox).toBeVisible()
+    await getCombobox(page).fill('')
+    await expect(getCombobox(page)).toHaveValue('')
+
+    await getCombobox(page).press('Backspace')
+
+    await expect(getCombobox(page)).toHaveValue('')
+    await expect(getClearButton(page)).toBeHidden()
+  })
+
+  test('Backspace ei tyhjennä valintaa niin kauan kuin kentässä on vielä tekstiä', async ({
+    page,
+  }) => {
+    const listbox = await getListbox(page)
+    await getCombobox(page).click()
+    await getOption(listbox, 'Ruotsi').click()
+
+    await getCombobox(page).click()
+    await expect(listbox).toBeVisible()
+    await getCombobox(page).press('Backspace')
+    await expect(getCombobox(page)).toHaveValue('Ruots')
+    await expect(getClearButton(page)).toBeVisible()
+
+    await getCombobox(page).press('Escape')
+    await expect(getCombobox(page)).toHaveValue('Ruotsi')
+  })
+
+  test('Backspace ei tyhjennä valintaa ei-tyhjennettävässä kentässä', async ({
+    page,
+  }) => {
+    const listbox = await getNoBlankOptionListbox(page)
+    await getNoBlankOptionCombobox(page).click()
+    await getOption(listbox, 'Kyllä').click()
+
+    await getNoBlankOptionCombobox(page).click()
+    await expect(listbox).toBeVisible()
+    await getNoBlankOptionCombobox(page).fill('')
+    await expect(getNoBlankOptionCombobox(page)).toHaveValue('')
+
+    await getNoBlankOptionCombobox(page).press('Backspace')
+
+    await expect(getNoBlankOptionClearButton(page)).toHaveCount(0)
+    await getNoBlankOptionCombobox(page).press('Escape')
+    await expect(getNoBlankOptionCombobox(page)).toHaveValue('Kyllä')
   })
 })
 
