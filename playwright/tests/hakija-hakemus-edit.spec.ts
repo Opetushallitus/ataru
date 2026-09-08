@@ -8,6 +8,7 @@ import {
   waitForResponse,
 } from '../playwright-utils'
 import {
+  getApplicationIdFromSubmitResponse,
   getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   getHakijanNakymanOsoite,
@@ -328,12 +329,8 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
       page.locator('.application__sent-placeholder-text')
     ).toBeVisible()
 
-    const submitPayload = (await submitResponse.json()) as { id?: number }
-    const applicationId = submitPayload.id
-    if (!applicationId) {
-      throw new Error('Missing application id in submit response')
-    }
-
+    const applicationId =
+      await getApplicationIdFromSubmitResponse(submitResponse)
     modifySecret = await getApplicationSecretById(page, applicationId)
     requireModifySecret(modifySecret)
   })
@@ -560,12 +557,8 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
       page.locator('.application__sent-placeholder-text')
     ).toBeVisible()
 
-    const submitPayload = (await submitResponse.json()) as { id?: number }
-    const applicationId = requireValue(
-      submitPayload.id,
-      'Missing application id in authenticated hakija submit response'
-    )
-
+    const applicationId =
+      await getApplicationIdFromSubmitResponse(submitResponse)
     const hakijaSecret = await getApplicationSecretById(page, applicationId)
 
     // Clear the strong-auth session to verify that locking is based on
