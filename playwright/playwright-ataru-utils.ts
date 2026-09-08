@@ -1,6 +1,7 @@
 import { Page, Locator, expect, APIRequestContext } from '@playwright/test'
 import {
   fillField,
+  getFieldByLabel,
   getJsonResponseKey,
   selectOption,
   unsafeFoldOption,
@@ -155,14 +156,13 @@ export const taytaHenkilotietomoduuli = async (
   for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
     const loc = page.getByTestId(`${idPrefix}-input`)
     if (idPrefix === 'home-town') {
-      await loc.selectOption(value)
+      await selectOption(page, loc, value)
     } else {
       await loc.fill(value)
+      // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await page.waitForTimeout(50)
     }
-
-    // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
-    // eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(100)
   }
 }
 
@@ -811,12 +811,12 @@ export const fillAndSubmitQuestionGroupApplication = async (
   // Dropdown
   await selectOption(
     page,
-    row0.getByRole('combobox', { name: /Kysymysryhmä: pudotusvalikko/i }),
+    await getFieldByLabel(row0, /Kysymysryhmä: pudotusvalikko/i),
     '0'
   )
   await selectOption(
     page,
-    row1.getByRole('combobox', { name: /Kysymysryhmä: pudotusvalikko/i }),
+    await getFieldByLabel(row1, /Kysymysryhmä: pudotusvalikko/i),
     '1'
   )
 
