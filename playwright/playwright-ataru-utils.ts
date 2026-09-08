@@ -197,6 +197,47 @@ export const luoLomakeAvaimella = async (
   }
 }
 
+export const getTestiHaunOsoite = (hakuOid?: string) =>
+  hakuOid
+    ? `/hakemus/test/tarjonta/haku/${hakuOid}`
+    : '/hakemus/test/tarjonta/haku'
+
+export interface TestiHaku {
+  oid: string
+  ataruLomakeAvain: string
+  hakukohdeOids: string[]
+  usePriority?: boolean
+  kohdejoukkoUri?: string
+  kohdejoukonTarkenne?: string
+}
+
+// Rekisteröi ajonaikaisesti mock-tarjontapalveluun testikohtaisen haun (ks.
+// ataru.hakija.hakija-routes/test-routes ja
+// ataru.tarjonta-service.mock-tarjonta-service/register-test-haku!), jotta
+// testin ei tarvitse jakaa staattista, kaikille testeille yhteistä
+// mock_tarjonta_service.clj:n testidataa (ja sen :ataruLomakeAvain-kenttää)
+// muiden, mahdollisesti rinnakkain ajettavien testitiedostojen kanssa.
+export const asetaTestiHaku = async (
+  page: Page,
+  haku: TestiHaku
+): Promise<void> => {
+  const response = await page.request.post(getTestiHaunOsoite(), {
+    data: haku,
+  })
+  if (!response.ok()) {
+    throw new Error(
+      `Testihaun ${haku.oid} rekisteröinti epäonnistui: ${response.status()} ${await response.text()}`
+    )
+  }
+}
+
+export const poistaTestiHaku = async (
+  request: APIRequestContext,
+  hakuOid: string
+): Promise<void> => {
+  await request.delete(getTestiHaunOsoite(hakuOid))
+}
+
 export const expectUusiLomakeValid = async (
   page: Page,
   lomakkeenAvain: string,
