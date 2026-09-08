@@ -3,9 +3,12 @@
   (ulkopuolelle klikkaaminen, ikkunan koon muuttuminen, kokoruutuvalikon
   taustavieritys mobiilissa) sekä globaalien tapahtumakäsittelijöiden kytkeminen/irrottaminen."
   (:require [reagent.core :as reagent]
-            [re-frame.core :as re-frame]
+            [re-frame.db :as db]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-actions :as actions]))
+
+(defn- expanded? [dropdown-id]
+  (get-in @db/app-db [:components :dropdown dropdown-id :expanded?] false))
 
 ;; ---------------------------------------------------------------------
 ;; tapahtumien kuuntelijoiden tehdasfunktiot
@@ -27,13 +30,13 @@
                                       (and @popup-ref (.contains @popup-ref target)))]
       (when (and (not mobile-own-label-click?)
                  (not inside?)
-                 @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false]))
+                 (expanded? dropdown-id))
         (actions/collapse-dropdown {:dropdown-id dropdown-id})))))
 
 (defn make-resize-listener [dropdown-id mobile? sync-popup-geometry!]
   (fn resize-listener []
     (reset! mobile? (viewport/mobile-viewport?))
-    (when @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+    (when (expanded? dropdown-id)
       (if @mobile?
         (viewport/lock-body-scroll!)
         (reagent/after-render viewport/unlock-body-scroll!)))
