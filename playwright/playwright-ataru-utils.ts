@@ -8,6 +8,36 @@ import {
 } from './playwright-utils'
 import * as Option from 'fp-ts/lib/Option'
 
+// Muodollisesti pätevä (ks. ataru.ssn/ssn? tarkistusmerkkilaskenta), mutta
+// joka kutsukerralla eri henkilötunnus. Kiinteitä henkilötunnuksia (esim.
+// "020202A0202") ei pidä käyttää testeissä, jotka hakevat hakemuksia
+// henkilötunnuksen perusteella lomake-/hakurajauksetta — Playwright-testit
+// ajetaan pysyvää, ajojen välillä säilyvää tietokantaa vasten (toisin kuin
+// vanhat speclj-selaintestit, joilla oli oma, joka ajolla nollautuva
+// tietokantansa), joten samaa kiinteää henkilötunnusta uudelleenkäyttävät
+// testit kerryttävät siihen hakemuksia ajojen yli ja rikkovat lopulta
+// tarkkoja määrätarkistuksia (ks. virkailija-hakemuksen-haku-ja-
+// muokkauslinkki.spec.ts).
+export const createUniqueSSN = (): string => {
+  // Päivä rajataan 1-28:aan, jotta se on validi kaikille kuukausille ilman
+  // kuukausikohtaista päivälukumäärän tarkistusta. Vuosi rajataan
+  // 2000-2020:een (vuosisatamerkki "A" = 2000-luku, ks. ataru.ssn/valid-year?),
+  // jotta henkilötunnus pysyy validina (ei tulevaisuudessa) riippumatta
+  // siitä, minä vuonna testi ajetaan.
+  const paiva = String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')
+  const kuukausi = String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')
+  const vuosi = String(Math.floor(Math.random() * 21)).padStart(2, '0')
+  const vuosisataMerkki = 'A'
+  const yksilonumero = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
+  const tarkistusmerkit = '0123456789ABCDEFHJKLMNPRSTUVWXY'
+  const tarkistusluku = Number.parseInt(
+    paiva + kuukausi + vuosi + yksilonumero,
+    10
+  )
+  const tarkistusmerkki = tarkistusmerkit[tarkistusluku % 31]
+  return `${paiva}${kuukausi}${vuosi}${vuosisataMerkki}${yksilonumero}${tarkistusmerkki}`
+}
+
 // Kytkee selaimen konsolivirheiden/-varoitusten ja käsittelemättömien
 // poikkeusten tulostuksen testin ajon ajaksi Node-puolen konsoliin. Pois
 // päältä oletuksena, koska normaalilla ajolla tulostus on vain kohinaa —
@@ -219,10 +249,22 @@ export const luoLomakeAvaimella = async (
   }
 }
 
+// Hakija- ja virkailija-puoli ajetaan kaksena erillisenä prosessina, joilla
+// kummallakin on oma, prosessikohtainen mock-tarjonta-service-tila (defonce
+// test-haut / test-hakukohteet), joten testihaku/-hakukohde pitää
+// rekisteröidä MOLEMPIIN, jotta esim. virkailijan hakukohtainen
+// hakemuslistaus (joka hakee haun tiedot omasta, virkailijan prosessista)
+// löytää sen. Ks. ataru.hakija.hakija-routes/test-routes ja sen peilaus
+// ataru.virkailija.virkailija-routes/test-routes:ssa.
 export const getTestiHaunOsoite = (hakuOid?: string) =>
   hakuOid
     ? `/hakemus/test/tarjonta/haku/${hakuOid}`
     : '/hakemus/test/tarjonta/haku'
+
+export const getVirkailijaTestiHaunOsoite = (hakuOid?: string) =>
+  hakuOid
+    ? `/lomake-editori/test/tarjonta/haku/${hakuOid}`
+    : '/lomake-editori/test/tarjonta/haku'
 
 export interface TestiHaku {
   oid: string
@@ -233,23 +275,28 @@ export interface TestiHaku {
   kohdejoukonTarkenne?: string
 }
 
-// Rekisteröi ajonaikaisesti mock-tarjontapalveluun testikohtaisen haun (ks.
-// ataru.hakija.hakija-routes/test-routes ja
-// ataru.tarjonta-service.mock-tarjonta-service/register-test-haku!), jotta
-// testin ei tarvitse jakaa staattista, kaikille testeille yhteistä
+// Rekisteröi ajonaikaisesti mock-tarjontapalveluun testikohtaisen haun
+// molempiin prosesseihin (ks. yllä oleva kommentti), jotta testin ei
+// tarvitse jakaa staattista, kaikille testeille yhteistä
 // mock_tarjonta_service.clj:n testidataa (ja sen :ataruLomakeAvain-kenttää)
 // muiden, mahdollisesti rinnakkain ajettavien testitiedostojen kanssa.
 export const asetaTestiHaku = async (
   page: Page,
   haku: TestiHaku
 ): Promise<void> => {
-  const response = await page.request.post(getTestiHaunOsoite(), {
-    data: haku,
-  })
-  if (!response.ok()) {
-    throw new Error(
-      `Testihaun ${haku.oid} rekisteröinti epäonnistui: ${response.status()} ${await response.text()}`
-    )
+  const [hakijaVastaus, virkailijaVastaus] = await Promise.all([
+    page.request.post(getTestiHaunOsoite(), { data: haku }),
+    page.request.post(getVirkailijaTestiHaunOsoite(), { data: haku }),
+  ])
+  for (const [nimi, vastaus] of [
+    ['hakija', hakijaVastaus],
+    ['virkailija', virkailijaVastaus],
+  ] as const) {
+    if (!vastaus.ok()) {
+      throw new Error(
+        `Testihaun ${haku.oid} rekisteröinti epäonnistui (${nimi}): ${vastaus.status()} ${await vastaus.text()}`
+      )
+    }
   }
 }
 
@@ -257,7 +304,10 @@ export const poistaTestiHaku = async (
   request: APIRequestContext,
   hakuOid: string
 ): Promise<void> => {
-  await request.delete(getTestiHaunOsoite(hakuOid))
+  await Promise.all([
+    request.delete(getTestiHaunOsoite(hakuOid)),
+    request.delete(getVirkailijaTestiHaunOsoite(hakuOid)),
+  ])
 }
 
 // /hakemus/api/haku/:haku-oid on rajoitettu polkuregexillä [0-9\.]+
@@ -271,30 +321,43 @@ export const getTestiHakukohteenOsoite = (hakukohdeOid?: string) =>
     ? `/hakemus/test/tarjonta/hakukohde/${hakukohdeOid}`
     : '/hakemus/test/tarjonta/hakukohde'
 
+export const getVirkailijaTestiHakukohteenOsoite = (hakukohdeOid?: string) =>
+  hakukohdeOid
+    ? `/lomake-editori/test/tarjonta/hakukohde/${hakukohdeOid}`
+    : '/lomake-editori/test/tarjonta/hakukohde'
+
 export interface TestiHakukohdeMuutos {
   oid: string
   hakuOid?: string
 }
 
 // Muuttaa ajonaikaisesti mock-tarjontapalvelun olemassa olevaa hakukohdetta
-// (ks. ataru.tarjonta-service.mock-tarjonta-service/register-test-hakukohde!),
-// tyypillisesti sen :hakuOid-kenttää osoittamaan testin omaan,
-// asetaTestiHaku-kutsulla rekisteröityyn hakuun. Näin testi voi navigoida
-// hakukohteen kautta (esim. /hakemus/hakukohde/:oid) käyttäen olemassa
-// olevan hakukohteen (esim. "Testihakukohde 1") nimeä ja koulutustietoja,
-// mutta ilman että sen täytyy jakaa hakukohteen alkuperäisen haun
-// lomakeavainta muiden testien kanssa.
+// molemmissa prosesseissa (ks. asetaTestiHaku:n kommentti), tyypillisesti
+// sen :hakuOid-kenttää osoittamaan testin omaan, asetaTestiHaku-kutsulla
+// rekisteröityyn hakuun. Näin testi voi navigoida hakukohteen kautta (esim.
+// /hakemus/hakukohde/:oid) käyttäen olemassa olevan hakukohteen (esim.
+// "Testihakukohde 1") nimeä ja koulutustietoja, mutta ilman että sen
+// täytyy jakaa hakukohteen alkuperäisen haun lomakeavainta muiden
+// testien kanssa.
 export const asetaTestiHakukohde = async (
   page: Page,
   hakukohdeMuutos: TestiHakukohdeMuutos
 ): Promise<void> => {
-  const response = await page.request.post(getTestiHakukohteenOsoite(), {
-    data: hakukohdeMuutos,
-  })
-  if (!response.ok()) {
-    throw new Error(
-      `Hakukohteen ${hakukohdeMuutos.oid} testimuutos epäonnistui: ${response.status()} ${await response.text()}`
-    )
+  const [hakijaVastaus, virkailijaVastaus] = await Promise.all([
+    page.request.post(getTestiHakukohteenOsoite(), { data: hakukohdeMuutos }),
+    page.request.post(getVirkailijaTestiHakukohteenOsoite(), {
+      data: hakukohdeMuutos,
+    }),
+  ])
+  for (const [nimi, vastaus] of [
+    ['hakija', hakijaVastaus],
+    ['virkailija', virkailijaVastaus],
+  ] as const) {
+    if (!vastaus.ok()) {
+      throw new Error(
+        `Hakukohteen ${hakukohdeMuutos.oid} testimuutos epäonnistui (${nimi}): ${vastaus.status()} ${await vastaus.text()}`
+      )
+    }
   }
 }
 
@@ -302,7 +365,10 @@ export const poistaTestiHakukohde = async (
   request: APIRequestContext,
   hakukohdeOid: string
 ): Promise<void> => {
-  await request.delete(getTestiHakukohteenOsoite(hakukohdeOid))
+  await Promise.all([
+    request.delete(getTestiHakukohteenOsoite(hakukohdeOid)),
+    request.delete(getVirkailijaTestiHakukohteenOsoite(hakukohdeOid)),
+  ])
 }
 
 export const expectUusiLomakeValid = async (
