@@ -114,6 +114,12 @@
 (defn unregister-test-haku! [haku-oid]
   (mock-tarjonta-service/unregister-test-haku! haku-oid))
 
+(defn register-test-hakukohde! [hakukohde-muutos]
+  (mock-tarjonta-service/register-test-hakukohde! hakukohde-muutos))
+
+(defn unregister-test-hakukohde! [hakukohde-oid]
+  (mock-tarjonta-service/unregister-test-hakukohde! hakukohde-oid))
+
 (defn alter-application-to-hakuaikaloppu-for-secret [secret]
   (let [application (application-store/get-latest-version-of-application-for-edit false {:secret secret})
         hakukohde   (vec (cons "1.2.246.562.20.49028100001" (rest (:hakukohde application))))

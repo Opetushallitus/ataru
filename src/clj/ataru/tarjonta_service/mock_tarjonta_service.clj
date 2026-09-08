@@ -401,6 +401,28 @@
                                  {:oid          "1.2.246.562.20.11111111111"
                                   :tutkintoonJohtava true})})
 
+;; Playwright-testit voivat rekisteröidä tähän omia, ajonaikaisesti tehtyjä
+;; muutoksia hakukohteisiin (ks. ataru.test-utils/register-test-hakukohde!
+;; ja hakija-routes.clj:n /hakemus/test/tarjonta/hakukohde-reitti). Tätä
+;; tarvitaan lähinnä, kun testi haluaa vaihtaa jonkin OLEMASSA OLEVAN
+;; hakukohteen (esim. "Testihakukohde 1", oid 49028196523) :hakuOid-kentän
+;; osoittamaan testin omaan, dynaamisesti rekisteröityyn hakuun sen sijaan,
+;; että testi navigoi hakukohteen kautta suoraan haun 65950024186 kaltaiseen
+;; staattiseen, muiden testien mahdollisesti jakamaan hakuun. Rekisteröinti
+;; yhdistetään olemassa olevaan hakukohteeseen (jos sellainen on), jotta
+;; esim. hakukohteen nimeä ja koulutustietoja ei tarvitse toistaa testissä.
+(defonce test-hakukohteet (atom {}))
+
+(defn register-test-hakukohde!
+  [hakukohde-muutos]
+  (let [pohja (or (get hakukohde (keyword (:oid hakukohde-muutos)))
+                  base-hakukohde)]
+    (swap! test-hakukohteet assoc (:oid hakukohde-muutos) (merge pohja hakukohde-muutos))))
+
+(defn unregister-test-hakukohde!
+  [hakukohde-oid]
+  (swap! test-hakukohteet dissoc hakukohde-oid))
+
 (def koulutus
   {:1.2.246.562.17.74335799461 {:oid                  "1.2.246.562.17.74335799461"
                                 :koulutuskoodi-name   {:fi "Koulutuskoodi"}
@@ -441,7 +463,8 @@
   (stop [this] this)
 
   (get-hakukohde [_ hakukohde-oid]
-    (when-let [h ((keyword hakukohde-oid) hakukohde)]
+    (when-let [h (or (get @test-hakukohteet hakukohde-oid)
+                      ((keyword hakukohde-oid) hakukohde))]
       (tarjonta-client/parse-hakukohde h)))
 
   (get-hakukohteet [this hakukohde-oids]
@@ -453,18 +476,27 @@
       {:fi "Testihakukohde"}))
 
   (hakukohde-search [_ haku-oid _]
-    (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
-                                                   (map tarjonta-client/parse-hakukohde)
-                                                   (map #(assoc % :user-organization? true))))]
+    (let [to-hakukohteet (fn [hakukohde-oids]
+                           (->> hakukohde-oids
+                                (map #(or (get @test-hakukohteet (name %))
+                                          (get hakukohde %)))
+                                (remove nil?)
+                                (map tarjonta-client/parse-hakukohde)
+                                (map #(assoc % :user-organization? true))))]
          (case haku-oid
                "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
                                                              :1.2.246.562.20.49028100002
                                                              :1.2.246.562.20.49028100003
                                                              :1.2.246.562.20.490281000035])
                "1.2.246.562.29.65950024188" (to-hakukohteet [:1.2.246.562.20.49028100004])
-               (to-hakukohteet [:1.2.246.562.20.49028196523
-                                :1.2.246.562.20.49028196524
-                                :1.2.246.562.20.49028196525]))))
+               ;; Playwright-testien ajonaikaisesti rekisteröimät haut (ks.
+               ;; register-test-haku!) haetaan niiden omalla hakukohdeOids-listalla,
+               ;; jottei niiden tarvitse jakaa alla olevaa oletuslistaa.
+               (if-let [testihaku (get @test-haut haku-oid)]
+                 (to-hakukohteet (map keyword (:hakukohdeOids testihaku)))
+                 (to-hakukohteet [:1.2.246.562.20.49028196523
+                                  :1.2.246.562.20.49028196524
+                                  :1.2.246.562.20.49028196525])))))
 
   (get-haku [_ haku-oid]
     (when-let [h (or (get @test-haut haku-oid)
