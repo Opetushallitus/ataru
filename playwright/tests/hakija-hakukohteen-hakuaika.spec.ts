@@ -128,7 +128,6 @@ let page: Page
 let modifySecret: string
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page)
@@ -204,8 +203,8 @@ test.beforeAll(async ({ browser }) => {
   await fillField(page, page.getByTestId('postal-code-input'), '40100')
   await expect(page.getByTestId('postal-office-input')).not.toHaveValue('')
 
-  await selectOption(page, page.getByTestId('home-town-input'), '179')
-  await selectOption(page, page.getByTestId('language-input'), 'FI')
+  await selectOption(page, page.getByTestId('home-town-input'), 'Jyväskylä')
+  await selectOption(page, page.getByTestId('language-input'), 'suomi')
 
   // Ei täytetä hakuaikakysymyksiä tässä vaiheessa: mikään niistä ei ole
   // pakollinen, eikä "hakuajat-ohi" ole vielä edes näkyvissä, koska sen

@@ -1,6 +1,7 @@
 import { expect, Page, test } from '@playwright/test'
 import {
   fillField,
+  getDropdownOptionValue,
   getFieldByLabel,
   selectOption,
   unsafeFoldOption,
@@ -392,7 +393,9 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     await expect(page.getByTestId('postal-code-input')).toHaveValue(
       seededValues.postalCode
     )
-    await expect(page.getByTestId('home-town-input')).toHaveValue('061')
+    expect(
+      await getDropdownOptionValue(page.getByTestId('home-town-input'))
+    ).toBe('061')
 
     const extraFieldsToCheck = legacyExtraFieldDefinitions.filter(
       (field) => field.value.length > 0 && field.fieldType !== 'singleChoice'
@@ -573,6 +576,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
 
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
-    await expect(homeTownInput).toHaveValue('853')
+    expect(await getDropdownOptionValue(homeTownInput)).toBe('853')
   })
 })
