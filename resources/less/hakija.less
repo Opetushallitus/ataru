@@ -9,8 +9,15 @@
 @total-banner-height: 97px;
 @total-banner-height-mobile: 82px;
 
-body {
+// overflow-y täällä (ei bodyssa), jotta <html> omistaa vierityksen suoraan
+// eikä propagoituna bodystä — muuten esim. vierityksen lukitseminen
+// <html>:lle katkaisisi propagoinnin ja rikkoisi position: sticky
+// -elementtien asemoinnin (ks. dropdown-viewport/lock-body-scroll!).
+html {
   overflow-y: scroll;
+}
+
+body {
   &.ataru-app__hakija {
     p {
       color: @neutral-grey-900;
@@ -45,9 +52,30 @@ body {
 .application__banner-container {
   z-index: 10;
   display: inline-block;
-  position: fixed;
+  position: sticky;
   width: 100%;
   top: 0;
+
+  // Mobiilissa ylätunniste piilotetaan (ks. banner.cljs) alaspäin
+  // vieritettäessä lisätilan saamiseksi ja tuodaan takaisin ylöspäin
+  // vieritettäessä, kuten mobiiliselainten osoiterivit. transform (ei
+  // display/visibility) mahdollistaa pehmeän liu'un.
+  @media only screen and (max-width: @mobile-width) {
+    transition: transform 0.3s ease-in-out;
+
+    &.application__banner-container--hidden {
+      transform: translateY(-100%);
+    }
+  }
+}
+
+// Kokoruutuvalikko peittää koko näytön, joten ylätunniste pakotetaan aina
+// piiloon :has()-valitsimella sen ollessa auki — ei riippuvainen siitä, mitä
+// JS:n vieritykseen sidottu piilotuslogiikka (banner.cljs) juuri päättäisi.
+@media only screen and (max-width: @mobile-width) {
+  body:has(.a-dropdown--fullscreen) .application__banner-container {
+    transform: translateY(-100%);
+  }
 }
 /* Allows centering of top-banner which contains logo and send-button */
 .application__top-banner-container {
@@ -584,23 +612,10 @@ body {
 }
 
 .application__form-content-area {
-  margin-top: @total-banner-height;
   margin-right: auto;
   margin-left: auto;
   margin-bottom: 150px;
   width: @desktop-content-width;
-
-  &.application__form-content-area--demo {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
-
-  &.application__form-content-area--editing {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
-
-  &.application__form-content-area--preview {
-    margin-top: @total-banner-height + @notification-banner-height;
-  }
 }
 
 .application__editable-content {
@@ -679,13 +694,7 @@ body {
     padding: 8px;
     position: fixed;
     right: 0;
-    // Ei 0: renderöidään tarkoituksella ylätunnisteen (@total-banner-height-
-    // mobile) ALLE sen sijaan, että yritettäisiin voittaa siltä z-index-
-    // kilpailu — esi-isän kesken oleva opacity/transform/filter-animaatio
-    // luo aina uuden stacking contextin riippumatta z-indexin arvosta, joten
-    // "renderöidy ylätunnisteen päälle" ei ole luotettavasti korjattavissa
-    // CSS:llä ollenkaan.
-    top: @total-banner-height-mobile;
+    top: 0;
     z-index: 9999;
 
     // .application__form-select-wrapper .a-dropdown (ks. yllä tässä
@@ -1505,20 +1514,7 @@ th.application__readonly-adjacent--header {
     font-size: 16px;
   }
   .application__form-content-area {
-    margin-top: @total-banner-height-mobile;
     width: auto;
-
-    &.application__form-content-area--demo {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
-
-    &.application__form-content-area--editing {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
-
-    &.application__form-content-area--preview {
-      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
-    }
   }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,
@@ -2630,10 +2626,6 @@ th.application__readonly-adjacent--header {
 @media print {
   .application__banner-container {
     display: none;
-  }
-
-  .application__form-content-area {
-    margin-top: 0;
   }
 }
 
