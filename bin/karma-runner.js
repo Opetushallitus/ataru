@@ -56,8 +56,6 @@ const getUrl = () => {
             return 'http://localhost:8350/lomake-editori/virkailija-question-group-test.html';
         case 'virkailija-with-hakukohde-organization':
             return 'http://localhost:8350/lomake-editori/virkailija-with-hakukohde-organization-test.html';
-        case 'hakija-form':
-            return 'http://localhost:8351/hakemus/hakija-form-test.html';
         default:
             console.log('invalid app: ' + app);
             process.exit(1);

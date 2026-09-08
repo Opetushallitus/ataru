@@ -8,6 +8,26 @@ import {
 } from './playwright-utils'
 import * as Option from 'fp-ts/lib/Option'
 
+// Kytkee selaimen konsolivirheiden/-varoitusten ja käsittelemättömien
+// poikkeusten tulostuksen testin ajon ajaksi Node-puolen konsoliin. Pois
+// päältä oletuksena, koska normaalilla ajolla tulostus on vain kohinaa —
+// päällä kannattaa pitää tilapäisesti silloin, kun testi jää jumiin tavalla,
+// jota DOM-tason virheet eivät suoraan selitä.
+export const naytaSelaimenVirheetKonsolissa = (
+  page: Page,
+  enabled = false
+): void => {
+  if (!enabled) {
+    return
+  }
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' || msg.type() === 'warning') {
+      console.log(`[browser-${msg.type()}]`, msg.text())
+    }
+  })
+  page.on('pageerror', (err) => console.log('[browser-pageerror]', err))
+}
+
 export const getSensitiveAnswer = (page: Page | Locator): Locator =>
   page.getByTestId('checkbox-sensitive-answer')
 

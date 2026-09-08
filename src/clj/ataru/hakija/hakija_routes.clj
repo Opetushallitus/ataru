@@ -31,7 +31,7 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.palaute.palaute-client :as palaute-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
+            [ataru.test-utils :refer [get-latest-application-secret
                                       alter-application-to-hakuaikaloppu-for-secret
                                       register-test-haku! unregister-test-haku!
                                       register-test-hakukohde! unregister-test-hakukohde!]]
@@ -195,13 +195,8 @@
         (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
         (response/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
-      ;; Test vars params is a hack to get form ids from fixtures to the test file
-      ;; without having to pass them as url params. Also enables tests to be run
-      ;; individually when navigating to any test file.
       (if (is-dev-env?)
-        (render-file-in-dev (str "spec/" filename ".js")
-                            (when (= "hakijaCommon" filename)
-                              (get-test-vars-params)))
+        (render-file-in-dev (str "spec/" filename ".js"))
         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
