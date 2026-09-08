@@ -1498,11 +1498,6 @@
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
                             (add-application-event-in-tx db event session)))
 
-(defn get-applications-newer-than [date limit offset]
-  (exec-db :db queries/yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
-
-(defn get-applications-between-start-and-end [start end limit offset]
-  (exec-db :db queries/yesql-get-applications-by-created-time-between-start-and-end {:start start :end end :limit limit :offset (or offset 0)}))
 
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
