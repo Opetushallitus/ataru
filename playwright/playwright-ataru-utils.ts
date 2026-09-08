@@ -1,4 +1,10 @@
-import { Page, Locator, expect, APIRequestContext } from '@playwright/test'
+import {
+  Page,
+  Locator,
+  expect,
+  APIRequestContext,
+  Response,
+} from '@playwright/test'
 import {
   fillField,
   getJsonResponseKey,
@@ -77,9 +83,6 @@ export const getHakemuksenLahettamisenOsoite = () => '/hakemus/api/application'
 
 export const getHakemuksenMuokkausOsoite = (secret: string) =>
   `/hakemus?modify=${secret}`
-
-export const getLatestApplicationSecretOsoite = () =>
-  '/hakemus/latest-application-secret'
 
 const getLomakkeenEsikatseluOsoite = (lomakkeenAvain: string) =>
   `/lomake-editori/api/preview/form/${lomakkeenAvain}?lang=fi`
@@ -496,6 +499,16 @@ export const poistaPriorisoivaHakukohderyhma = async (
   await request.delete(
     getPriorisoivatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid)
   )
+}
+
+export const getApplicationIdFromSubmitResponse = async (
+  submitResponse: Response
+): Promise<number> => {
+  const { id } = (await submitResponse.json()) as { id?: number }
+  if (!id) {
+    throw new Error('Missing application id in submit response')
+  }
+  return id
 }
 
 export const getApplicationSecretById = async (

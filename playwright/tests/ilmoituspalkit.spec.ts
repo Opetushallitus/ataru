@@ -2,10 +2,11 @@ import { test, expect, Page } from '@playwright/test'
 import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 
 import {
+  getApplicationIdFromSubmitResponse,
+  getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   getHakemuksenMuokkausOsoite,
   getHakijanNakymanOsoite,
-  getLatestApplicationSecretOsoite,
   getLomakkeenHaunOsoite,
   kirjauduVirkailijanNakymaan,
   lisaaLomake,
@@ -77,7 +78,7 @@ test('Preview-ilmoituspalkki häviää muokkaustilaan palatessa', async () => {
 test('Muokkaustilan ilmoituspalkki näkyy hakemusta muokattaessa', async () => {
   await taytaHenkilotietomoduuli(page)
 
-  await Promise.all([
+  const [submitResponse] = await Promise.all([
     waitForResponse(page, 'POST', (url) =>
       url.includes(getHakemuksenLahettamisenOsoite())
     ),
@@ -85,10 +86,8 @@ test('Muokkaustilan ilmoituspalkki näkyy hakemusta muokattaessa', async () => {
   ])
   await page.getByTestId('send-feedback-button').click()
 
-  const secretResponse = await page.request.get(
-    getLatestApplicationSecretOsoite()
-  )
-  const secret = await secretResponse.text()
+  const applicationId = await getApplicationIdFromSubmitResponse(submitResponse)
+  const secret = await getApplicationSecretById(page, applicationId)
 
   await page.goto(getHakemuksenMuokkausOsoite(secret))
 
