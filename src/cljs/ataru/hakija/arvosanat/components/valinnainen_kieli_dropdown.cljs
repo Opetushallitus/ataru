@@ -1,5 +1,5 @@
 (ns ataru.hakija.arvosanat.components.valinnainen-kieli-dropdown
-  (:require [ataru.hakija.components.dropdown-component :as dropdown-component]
+  (:require [ataru.hakija.components.hakija-dropdown-component :as dropdown-component]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [re-frame.core :as re-frame]
             [schema.core :as s]
