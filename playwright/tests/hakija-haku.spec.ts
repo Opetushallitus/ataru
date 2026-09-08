@@ -77,9 +77,18 @@ const openHakukohdeSearch = async (page: Page) => {
 }
 
 const selectNthHakukohdeSearchHit = async (page: Page, n: number) => {
-  await page
-    .locator('.application__search-hit-hakukohde-row--select-button')
+  // Indeksoidaan .application__search-hit-hakukohde-row -riviin (joka pysyy
+  // näkyvissä koko hakusession ajan, ks. search-hit-hakukohde-row
+  // application_hakukohde_component.cljs:ssä), EI suoraan --select-button
+  // -painikkeeseen: valinnan jälkeen rivin painike korvautuu valintamerkillä
+  // eikä ole enää osa --select-button-listaa, jolloin JÄLJELLÄ olevien
+  // rivien indeksit siirtyisivät alaspäin. Kun tehtiin kaksi valintaa peräkkäin
+  // ilman väliin jäävää odotusta toinen klikkaus saattoi siis satunnaisesti
+  // osua väärään hakukohteeseen, jos ensimmäisen valinnan aiheuttama
+  // uudelleenrenderöinti ehti tapahtua ennen toista klikkausta.
+  await getSearchHits(page)
     .nth(n)
+    .locator('.application__search-hit-hakukohde-row--select-button')
     .click()
 }
 

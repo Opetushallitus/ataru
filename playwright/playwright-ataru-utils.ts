@@ -329,6 +329,19 @@ export const getVirkailijaTestiHakukohteenOsoite = (hakukohdeOid?: string) =>
 export interface TestiHakukohdeMuutos {
   oid: string
   hakuOid?: string
+  // Vain uusille, mock_tarjonta_service.clj:n staattisessa hakukohde-
+  // mapissa ennestään tuntemattomille oideille: nimettömän
+  // base-hakukohde-pohjan sijaan hakukohteelle saa oman nimen (ks.
+  // register-test-hakukohde!, joka asetetaan base-hakukohde:en, jos oidia ei jo
+  // löydy). Näin testi voi rekisteröidä TÄYSIN OMAN, kenenkään muun testin
+  // kanssa jakamattoman hakukohteen sen sijaan, että se joutuisi
+  // uudelleenkäyttämään jotakin ennestään olemassa olevaa, mahdollisesti
+  // muidenkin (esim. hakija-haku.spec.ts:n tai hakija-hakukohde.spec.ts:n)
+  // samanaikaisesti käyttämää hakukohdetta (esim. "Testihakukohde 1/2/3",
+  // oidit 49028196523-525) — kahden tiedoston rekisteröidessä samaan
+  // hakukohteeseen ajonaikaisia muutoksia samanaikaisesti eri workereissa on
+  // havaittu ajoittain sekoittavan toisen tiedoston hakutulosten järjestystä.
+  hakukohteenNimet?: { kieli_fi: string; kieli_sv?: string }
 }
 
 // Muuttaa ajonaikaisesti mock-tarjontapalvelun olemassa olevaa hakukohdetta
@@ -338,7 +351,9 @@ export interface TestiHakukohdeMuutos {
 // /hakemus/hakukohde/:oid) käyttäen olemassa olevan hakukohteen (esim.
 // "Testihakukohde 1") nimeä ja koulutustietoja, mutta ilman että sen
 // täytyy jakaa hakukohteen alkuperäisen haun lomakeavainta muiden
-// testien kanssa.
+// testien kanssa. Uudelle, ennestään tuntemattomalle oidille (ks.
+// hakukohteenNimet-kentän kommentti) tämä sen sijaan LUO täysin uuden,
+// eristetyn hakukohteen.
 export const asetaTestiHakukohde = async (
   page: Page,
   hakukohdeMuutos: TestiHakukohdeMuutos
