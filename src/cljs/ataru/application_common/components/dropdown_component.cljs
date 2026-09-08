@@ -92,15 +92,16 @@
 ;; visuaalista viewportia pitääkseen fokusoidun kentän näkyvissä — tämä ei
 ;; ole minkään elementin CSS-overflow-vieritystä (html/body overflow: hidden
 ;; ei siis auta) eikä touch-action-hallittu ele, vaan selaimen oma reaktio
-;; kosketusliikkeeseen fokusoidulla kentällä. Ainoa luotettava tapa estää se
-;; on preventDefault() touchmove-tapahtumasta, paitsi silloin kun kosketus
-;; on itse listan (popup) sisällä, jonka oma sisäinen vieritys pitää
-;; säilyttää.
+;; kosketusliikkeeseen fokusoidulla kentällä, eikä se rajoitu kosketuksiin
+;; jotka alkavat itse .a-dropdownin sisältä (esim. myös ylätunnisteesta tai
+;; kentän omasta <label>-elementistä alkava veto voi laukaista sen). Ainoa
+;; luotettava tapa estää se on preventDefault() touchmove-tapahtumasta koko
+;; sivulla kokoruutuvalikon ollessa auki, paitsi silloin kun kosketus on
+;; itse listan (popup) sisällä, jonka oma sisäinen vieritys pitää säilyttää.
 (defn- make-fullscreen-touchmove-listener [root-ref]
   (fn fullscreen-touchmove-listener [e]
     (when-let [root @root-ref]
       (when (and (.contains (.-classList root) "a-dropdown--fullscreen")
-                 (.contains root (.-target e))
                  (not (some-> (.-target e) (.closest ".a-dropdown-popup"))))
         (.preventDefault e)))))
 
