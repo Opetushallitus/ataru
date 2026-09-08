@@ -70,14 +70,6 @@
                            "response body: "
                            (:body result))))))
 
-(defn opiskelijoiden-suoritukset-by-personoid
-  [valintalaskentakoostepalvelu-cas-client haku-oid hakemus-oids]
-  (let [url          (url/resolve-url :valintalaskentakoostepalvelu-service.opiskelijan-suoritukset haku-oid)
-        request-body hakemus-oids
-        result       (cas/cas-authenticated-post
-                       valintalaskentakoostepalvelu-cas-client
-                       url
-                       request-body)]
     (match result
            {:status 200 :body response-body}
            (json/parse-string response-body true)
