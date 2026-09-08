@@ -203,6 +203,9 @@
         props          (assoc props
                           :disabled?  disabled?
                           :clearable? (not (false? clearable?)))
+        _              (actions/maybe-collapse-when-disabled!
+                         {:dropdown-id (:dropdown-id context)
+                          :disabled?   disabled?})
         state          (compute-dropdown-state context props)
         {:keys [expanded? query options-with-id active-option label-id listbox-id
                 value->label]} state
