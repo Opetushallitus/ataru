@@ -49,15 +49,11 @@ const addCookie = page => {
 };
 
 const getUrl = () => {
-    switch (app) {
-        case 'virkailija':
-            return 'http://localhost:8350/lomake-editori/virkailija-test.html';
-        case 'virkailija-question-group':
-            return 'http://localhost:8350/lomake-editori/virkailija-question-group-test.html';
-        default:
-            console.log('invalid app: ' + app);
-            process.exit(1);
+    if (app === 'virkailija') {
+        return 'http://localhost:8350/lomake-editori/virkailija-test.html';
     }
+    console.log('invalid app: ' + app);
+    process.exit(1);
 };
 
 puppeteer.launch({
