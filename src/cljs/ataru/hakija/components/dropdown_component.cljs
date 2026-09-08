@@ -56,27 +56,35 @@
                               name
                               (str "-input")))]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor form-field-id]
-     (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
-       [hakukohde-names-component/question-hakukohde-names field-descriptor])
-     [:div.application__form-text-input-info-text
-      [info-text-component/info-text field-descriptor]]
-     [:div.application__form-select-wrapper
-      [:div.application__input-container
-       (when locked?
-         [:div.application__lock-icon-container
-          [icons/icon-lock-closed]])
-       [dropdown-component/dropdown
-        {:options          select-options
-         :unselected-label unselected-label
-         :selected-value   (:value answer)
-         :on-change        on-change
-         :disabled?        disabled?
-         :required?        (application-field/is-required-field? field-descriptor)
-         :invalid?         (not (:valid answer))
-         :id               form-field-id
-         :aria-labelledby  (str form-field-id "-label")
-         :data-test-id     data-test-id}]]]
+     ;; Kääritty omaan wrapperiin (ei suoraan application__form-field:iin),
+     ;; jotta application__dropdown-fullscreen-wrapper:has(.a-dropdown--
+     ;; fullscreen) (hakija.less) osaa kiinnittää juuri labelin ja kentän
+     ;; koko näytön kokoiseksi mobiilissa listan ollessa auki — sivun oma
+     ;; label jäisi muuten piiloon position: fixed -kokoruutuvalikon alle,
+     ;; eikä ataru.application-common.components.dropdown-component tarvitse
+     ;; tietää labeleista mitään.
+     [:div.application__dropdown-fullscreen-wrapper
+      [form-field-label-component/form-field-label field-descriptor form-field-id]
+      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
+        [hakukohde-names-component/question-hakukohde-names field-descriptor])
+      [:div.application__form-text-input-info-text
+       [info-text-component/info-text field-descriptor]]
+      [:div.application__form-select-wrapper
+       [:div.application__input-container
+        (when locked?
+          [:div.application__lock-icon-container
+           [icons/icon-lock-closed]])
+        [dropdown-component/dropdown
+         {:options          select-options
+          :unselected-label unselected-label
+          :selected-value   (:value answer)
+          :on-change        on-change
+          :disabled?        disabled?
+          :required?        (application-field/is-required-field? field-descriptor)
+          :invalid?         (not (:valid answer))
+          :id               form-field-id
+          :aria-labelledby  (str form-field-id "-label")
+          :data-test-id     data-test-id}]]]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]
