@@ -25,7 +25,7 @@ const formName = `Testilomake ${Date.now()}`
 type FormNode = {
   id?: string
   fieldType?: string
-  children?: FormNode[]
+  children?: Array<FormNode>
   module?: string
   [key: string]: unknown
 }
@@ -643,15 +643,6 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
   await fillField(page, getFormFields().nth(33).locator('input'), '1,323')
 
   await selectOption(page, getFormFields().nth(34).locator('select'), '810')
-
-  // TILAPÄINEN DIAGNOSTIIKKA: näyttää virheessä, mitkä kentät jäivät
-  // virheellisiksi, jos lähetä-painike ei aktivoidu.
-  if (await getInvalidFieldsStatus().count()) {
-    await getInvalidFieldsStatus().click()
-    await expect(page.locator('.application__invalid-fields a div')).toHaveText(
-      []
-    )
-  }
 
   await expect(page.getByTestId('send-application-button')).toBeEnabled()
 

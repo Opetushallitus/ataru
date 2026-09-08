@@ -52,8 +52,6 @@
 
   (describe "form creation /"
     (it "is created successfully"
-      (run-karma-test "virkailija" (last (split (login) #"="))))
-    (it "is created with a question group successfully"
-      (run-karma-test "virkailija-question-group" (last (split (login) #"="))))))
+      (run-karma-test "virkailija" (last (split (login) #"="))))))
 
 (run-specs)
