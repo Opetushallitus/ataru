@@ -1,8 +1,7 @@
 (ns ataru.application-common.components.dropdown-listeners
-  "DOM-tapahtumankuuntelijoiden tehdasfunktiot dropdown-componentille
+  "DOM-tapahtumakäsittelijöiden tehdasfunktiot dropdown-componentille
   (ulkopuolelle klikkaaminen, ikkunan koon muuttuminen, kokoruutuvalikon
-  taustavieritys mobiilissa) sekä niiden kytkeminen/irrottaminen komponentin
-  elinkaaren mukana."
+  taustavieritys mobiilissa) sekä globaalien tapahtumakäsittelijöiden kytkeminen/irrottaminen."
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [ataru.application-common.components.dropdown-viewport :as viewport]
@@ -61,7 +60,7 @@
 ;; kuuntelijoiden kytkeminen/irrottaminen (ks. dropdown-component)
 ;; ---------------------------------------------------------------------
 
-(defn attach-listeners! [{:keys [outside-click-listener resize-listener
+(defn attach-global-listeners! [{:keys [outside-click-listener resize-listener
                                   fullscreen-touchmove-listener sync-popup-geometry!]}]
   ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita ennen
   ;; kuin kohde-elementin oma click-käsittelijä (esim. toisen kentän
@@ -79,7 +78,7 @@
   (.addEventListener js/document "touchmove" fullscreen-touchmove-listener
                       #js {:passive false}))
 
-(defn detach-listeners! [{:keys [outside-click-listener resize-listener
+(defn detach-global-listeners! [{:keys [outside-click-listener resize-listener
                                   fullscreen-touchmove-listener sync-popup-geometry!]}]
   (.removeEventListener js/document "mousedown" outside-click-listener true)
   (.removeEventListener js/window "resize" resize-listener)
