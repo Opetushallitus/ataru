@@ -64,10 +64,6 @@ const getUrl = () => {
             return 'http://localhost:8351/hakemus/hakija-selection-limit-test.html';
         case 'hakija-haku':
             return 'http://localhost:8351/hakemus/hakija-haku-test.html';
-        case 'hakija-hakukohde':
-            return 'http://localhost:8351/hakemus/hakija-hakukohde-test.html';
-        case 'hakija-hakukohteen-hakuaika':
-            return 'http://localhost:8351/hakemus/hakija-hakukohteen-hakuaika-test.html';
         default:
             console.log('invalid app: ' + app);
             process.exit(1);

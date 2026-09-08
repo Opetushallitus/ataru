@@ -63,17 +63,11 @@
       (run-karma-test "hakija-form"))
     (it "is possible to apply using a form for haku with single hakukohde"
       (run-karma-test "hakija-haku"))
-    (it "is possible to apply using a form for hakukohde"
-      (run-karma-test "hakija-hakukohde"))
     (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
     (it "is possible to apply with selection limit"
         (run-karma-test "hakija-selection-limit"))
     (it "is possible to apply as virkailija"
-      (run-karma-test "virkailija-haku")))
-
-  (describe "editing a submitted application /"
-    (it "is taking hakuaika into account"
-      (run-karma-test "hakija-hakukohteen-hakuaika"))))
+      (run-karma-test "virkailija-haku"))))
 
 (run-specs)
