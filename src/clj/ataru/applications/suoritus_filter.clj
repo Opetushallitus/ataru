@@ -6,7 +6,5 @@
   (when now
     (time/year now)))
 
-(defn luokkatasot-for-suoritus-filter
-  []
-  ["7" "8" "9" "10" "VALMA" "TELMA" "TUVA" "ML" "OPISTOVUOSI" "valmistava"])
+
 
