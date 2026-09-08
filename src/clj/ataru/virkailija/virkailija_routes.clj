@@ -194,10 +194,6 @@
       (if (:dev? env)
         (render-file-in-dev "templates/virkailija-selection-limit-test.html" {})
         (route/not-found "Not found")))
-    (api/GET "/virkailija-with-hakukohde-organization-test.html" []
-      (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-with-hakukohde-organization-test.html" {})
-        (route/not-found "Not found")))
     (api/GET "/spec/:filename.js" [filename]
       (if (:dev? env)
         (render-file-in-dev (str "spec/" filename ".js") {})
