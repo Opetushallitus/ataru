@@ -94,7 +94,7 @@
 
 (def lupatiedot-field-ids #{:lupatiedot-toinen-aste :paatos-opiskelijavalinnasta-sahkopostiin :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
 
-(def always-editable-lupatieto-field-ids #{:koulutusmarkkinointilupa :asiointikieli})
+(def always-editable-lupatieto-field-ids #{:koulutusmarkkinointilupa :asiointikieli :valintatuloksen-julkaisulupa})
 
 (defn- is-lupatieto-field?
   [field]
