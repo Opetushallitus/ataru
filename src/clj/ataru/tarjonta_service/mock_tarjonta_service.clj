@@ -138,8 +138,10 @@
                                                 :hakukausiVuosi              2025
                                                 :koulutuksenAlkamisVuosi     2025
                                                 :hakuaikas                   [{:hakuaikaId "10291885",
-                                                                               :alkuPvm    (coerce/to-long (t/date-time 2025 1 1 8 0)),
-                                                                               :loppuPvm   (coerce/to-long (t/date-time 2025 2 8 0 0)),
+                                                                               :alkuPvm    (- (System/currentTimeMillis)
+                                                                                              86400000),
+                                                                               :loppuPvm   (+ (System/currentTimeMillis)
+                                                                                              86400000),
                                                                                :nimet      {:kieli_sv "", :kieli_fi "", :kieli_en ""}}]})
    :1.2.246.562.29.65950024187               (merge
                                                base-haku

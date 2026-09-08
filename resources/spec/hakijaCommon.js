@@ -147,5 +147,3 @@ const adjacentReadonlyAnswer = (index) =>
     .text()
 
 const submitButtonEnabled = () => !submitButton().prop('disabled')
-
-const submitButtonDisabled = () => !submitButtonEnabled()

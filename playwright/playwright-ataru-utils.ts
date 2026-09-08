@@ -1,5 +1,9 @@
 import { Page, Locator, expect, APIRequestContext } from '@playwright/test'
-import { getJsonResponseKey, waitForResponse } from './playwright-utils'
+import {
+  getJsonResponseKey,
+  unsafeFoldOption,
+  waitForResponse,
+} from './playwright-utils'
 import * as Option from 'fp-ts/lib/Option'
 
 export const getSensitiveAnswer = (page: Page | Locator): Locator =>
@@ -121,6 +125,78 @@ export const poistaLomake = async (
   })
 }
 
+// Luo tilapäisen lomakkeen saadakseen palvelimen tuottaman oletussisällön
+// (hakukohteet-kentän ja henkilötietomoduulin), jota voidaan käyttää
+// pohjana muille API:n kautta luotaville testilomakkeille.
+export const haeOletuslomakkeenSisalto = async (
+  page: Page
+): Promise<unknown[]> => {
+  const lomake = await lisaaLomake(page)
+  const lomakkeenId = unsafeFoldOption(lomake.lomakkeenId)
+  const lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
+
+  const response = await page.request.get(
+    `/lomake-editori/api/forms/${lomakkeenId}`
+  )
+  const form = (await response.json()) as { content: unknown[] }
+
+  await poistaLomake(page.request, lomakkeenAvain)
+
+  return form.content
+}
+
+// Luo (tai korvaa) lomakkeen tietyllä, kutsujan valitsemalla avaimella
+// suoraan API:n kautta. Tätä tarvitaan, kun testissä pitää saada hakija
+// ohjattua hakukohteen/haun kautta lomakkeelle, jonka avain on kiinnitetty
+// tarjonnan mock-datassa (ks. mock_tarjonta_service.clj:n
+// :ataruLomakeAvain-kentät) — lomaketta ei silloin voi luoda editorin
+// "Uusi lomake" -napista, koska sen avain olisi palvelimen generoima.
+export const luoLomakeAvaimella = async (
+  page: Page,
+  lomakkeenAvain: string,
+  content: unknown[],
+  nimi = 'Testilomake'
+): Promise<void> => {
+  // Poistetaan mahdollinen edellisestä epäonnistuneesta ajosta jäänyt
+  // samanavaiminen lomake, jotta luonti on turvallista ajaa uudestaan.
+  await poistaLomake(page.request, lomakkeenAvain)
+
+  const response = await page.request.post(
+    getUudenLomakkeenLahettamisenOsoite(),
+    {
+      data: {
+        key: lomakkeenAvain,
+        name: { fi: nimi },
+        content,
+        languages: ['fi'],
+        locked: null,
+        'locked-by': null,
+      },
+    }
+  )
+  if (!response.ok()) {
+    throw new Error(
+      `Lomakkeen luonti avaimella ${lomakkeenAvain} epäonnistui: ${response.status()} ${await response.text()}`
+    )
+  }
+  const created = (await response.json()) as { key?: string }
+  if (created.key !== lomakkeenAvain) {
+    throw new Error(
+      `Lomake luotiin avaimella "${created.key}" halutun "${lomakkeenAvain}" sijaan`
+    )
+  }
+
+  // Varmistetaan heti, että lomake on myös hakijan puolelta haettavissa
+  // pyydetyllä avaimella, jotta mahdollinen virhe paljastuu tässä eikä vasta
+  // myöhemmin oudoksi jäävänä tyhjänä sivuna.
+  const haettu = await page.request.get(getLomakkeenHaunOsoite(lomakkeenAvain))
+  if (!haettu.ok()) {
+    throw new Error(
+      `Juuri luotua lomaketta ${lomakkeenAvain} ei saatu haettua hakijan rajapinnasta: ${haettu.status()} ${await haettu.text()}`
+    )
+  }
+}
+
 export const expectUusiLomakeValid = async (
   page: Page,
   lomakkeenAvain: string,
@@ -134,6 +210,101 @@ export const expectUusiLomakeValid = async (
   await expect(esikatseluLinkki).toHaveAttribute(
     'href',
     getLomakkeenEsikatseluOsoite(lomakkeenAvain)
+  )
+}
+
+export const getRajaavatHakukohderyhmatOsoite = (
+  hakuOid: string,
+  hakukohderyhmaOid: string
+) =>
+  `/lomake-editori/api/rajaavat-hakukohderyhmat/${hakuOid}/ryhma/${hakukohderyhmaOid}`
+
+export const getPriorisoivatHakukohderyhmatOsoite = (
+  hakuOid: string,
+  hakukohderyhmaOid: string
+) =>
+  `/lomake-editori/api/priorisoivat-hakukohderyhmat/${hakuOid}/ryhma/${hakukohderyhmaOid}`
+
+export const asetaRajaavaHakukohderyhma = async (
+  page: Page,
+  hakuOid: string,
+  hakukohderyhmaOid: string,
+  raja: number
+): Promise<void> => {
+  // Poistetaan mahdollinen aiempi asetus ensin, jotta luonti on turvallista
+  // ajaa uudestaan (luonti palauttaa 409, jos sama pari on jo olemassa).
+  await page.request.delete(
+    getRajaavatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid)
+  )
+
+  const response = await page.request.put(
+    getRajaavatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid),
+    {
+      // Palvelin yrittää jäsentää If-Unmodified-Since-otsaketta aina, kun
+      // If-None-Match ei ole "*", ja kaatuu 400:aan, jos kumpaakaan ei ole
+      // annettu. "*" kertoo, että kyseessä on luonti, ei päivitys.
+      headers: { 'If-None-Match': '*' },
+      data: {
+        'haku-oid': hakuOid,
+        'hakukohderyhma-oid': hakukohderyhmaOid,
+        raja,
+      },
+    }
+  )
+  if (!response.ok()) {
+    throw new Error(
+      `Rajaavan hakukohderyhmän ${hakukohderyhmaOid} asettaminen epäonnistui: ${response.status()}`
+    )
+  }
+}
+
+export const poistaRajaavaHakukohderyhma = async (
+  request: APIRequestContext,
+  hakuOid: string,
+  hakukohderyhmaOid: string
+): Promise<void> => {
+  await request.delete(
+    getRajaavatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid)
+  )
+}
+
+export const asetaPriorisoivaHakukohderyhma = async (
+  page: Page,
+  hakuOid: string,
+  hakukohderyhmaOid: string,
+  prioriteetit: string[][]
+): Promise<void> => {
+  await page.request.delete(
+    getPriorisoivatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid)
+  )
+
+  const response = await page.request.put(
+    getPriorisoivatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid),
+    {
+      // Ks. asetaRajaavaHakukohderyhma: "*" kertoo palvelimelle, että
+      // kyseessä on luonti, jotta If-Unmodified-Since-jäsennys ohitetaan.
+      headers: { 'If-None-Match': '*' },
+      data: {
+        'haku-oid': hakuOid,
+        'hakukohderyhma-oid': hakukohderyhmaOid,
+        prioriteetit,
+      },
+    }
+  )
+  if (!response.ok()) {
+    throw new Error(
+      `Priorisoivan hakukohderyhmän ${hakukohderyhmaOid} asettaminen epäonnistui: ${response.status()}`
+    )
+  }
+}
+
+export const poistaPriorisoivaHakukohderyhma = async (
+  request: APIRequestContext,
+  hakuOid: string,
+  hakukohderyhmaOid: string
+): Promise<void> => {
+  await request.delete(
+    getPriorisoivatHakukohderyhmatOsoite(hakuOid, hakukohderyhmaOid)
   )
 }
 
