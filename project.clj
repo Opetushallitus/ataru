@@ -419,7 +419,8 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
+            "start-figwheel-dev"     ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev"]
+            "start-figwheel-cypress" ["with-profile" "figwheel" "figwheel" "virkailija-cypress" "hakija-cypress"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]

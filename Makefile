@@ -10,6 +10,7 @@ VIRKAILIJA_RELOADED ?= false
 HAKIJA_RELOADED ?= false
 
 FIGWHEEL=ataru-figwheel
+FIGWHEEL_CYPRESS=ataru-figwheel-cypress
 CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
@@ -17,7 +18,7 @@ HAKIJA_CYPRESS_BACKEND=ataru-hakija-cypress-backend-8353
 VIRKAILIJA_CYPRESS_BACKEND=ataru-virkailija-cypress-backend-8352
 
 DEV_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_BACKEND) $(VIRKAILIJA_BACKEND)
-CYPRESS_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
+CYPRESS_SERVICES = $(FIGWHEEL_CYPRESS) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
 
 DOCKER_CONTAINERS_TEST = ataru-test-db ataru-test-ftpd ataru-test-redis
 DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ftpd ataru-test-redis
