@@ -248,6 +248,21 @@
                                                {:oid                 "jatkuva-haku"
                                                 :hakutapaUri         hakutapa-jatkuva-haku})})
 
+;; Playwright-testit voivat rekisteröidä tähän omia, ajonaikaisesti luotuja
+;; hakuja (ks. ataru.test-utils/register-test-haku! ja
+;; hakija-routes.clj:n /hakemus/test/tarjonta/haku-reitti), jolloin niiden ei
+;; tarvitse jakaa yllä olevaa staattista, kaikille testeille yhteistä
+;; testidataa (ja sen esim. :ataruLomakeAvain-kenttää) muiden testien kanssa.
+(defonce test-haut (atom {}))
+
+(defn register-test-haku!
+  [haku]
+  (swap! test-haut assoc (:oid haku) (merge base-haku haku)))
+
+(defn unregister-test-haku!
+  [haku-oid]
+  (swap! test-haut dissoc haku-oid))
+
 (def hakukohde
   {:1.2.246.562.20.49028196522             base-hakukohde
 
@@ -452,7 +467,8 @@
                                 :1.2.246.562.20.49028196525]))))
 
   (get-haku [_ haku-oid]
-    (when-let [h ((keyword haku-oid) haut)]
+    (when-let [h (or (get @test-haut haku-oid)
+                      ((keyword haku-oid) haut))]
       (tarjonta-client/parse-haku h)))
 
   (hakus-by-form-key [this form-key]

@@ -62,8 +62,6 @@ const getUrl = () => {
             return 'http://localhost:8351/hakemus/hakija-question-group-form-test.html';
         case 'hakija-selection-limit':
             return 'http://localhost:8351/hakemus/hakija-selection-limit-test.html';
-        case 'hakija-haku':
-            return 'http://localhost:8351/hakemus/hakija-haku-test.html';
         default:
             console.log('invalid app: ' + app);
             process.exit(1);
