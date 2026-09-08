@@ -143,7 +143,6 @@
     (println (str "using application " (:key application)))
     (cond->
      {:test-form-key                (:key test-form)
-      :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
       :test-form-application-secret (:secret application)
       :virkailija-create-secret     (create-fake-virkailija-create-secret)}
 
