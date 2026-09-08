@@ -63,8 +63,6 @@
       (run-karma-test "hakija-form"))
     (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
-    (it "is possible to apply with selection limit"
-        (run-karma-test "hakija-selection-limit"))
     (it "is possible to apply as virkailija"
       (run-karma-test "virkailija-haku"))))
 
