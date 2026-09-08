@@ -81,6 +81,7 @@
           :on-change        on-change
           :disabled?        disabled?
           :required?        (application-field/is-required-field? field-descriptor)
+          :clearable?       (not (:no-blank-option field-descriptor))
           :invalid?         (not (:valid answer))
           :id               form-field-id
           :aria-labelledby  (str form-field-id "-label")
