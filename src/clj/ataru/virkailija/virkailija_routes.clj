@@ -169,12 +169,6 @@
     (api/GET client-sub-routes {session :session} (render-virkailija-page (-> session :identity :lang)))
     (api/GET "/virhe" {session :session} (render-virkailija-page (-> session :identity :lang)))))
 
-(defn- render-file-in-dev
-  [filename js-config]
-  (if (:dev? env)
-    (selmer/render-file filename {:config (json/generate-string js-config)})
-    (not-found "Not found")))
-
 (defn- create-wrap-database-backed-session [session-store]
   (fn [handler]
     (ring-session/wrap-session handler
@@ -184,18 +178,6 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/virkailija-test.html" []
-      (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-test.html" {})
-        (route/not-found "Not found")))
-    (api/GET "/virkailija-selection-limit-test.html" []
-      (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-selection-limit-test.html" {})
-        (route/not-found "Not found")))
-    (api/GET "/spec/:filename.js" [filename]
-      (if (:dev? env)
-        (render-file-in-dev (str "spec/" filename ".js") {})
-        (route/not-found "Not found")))
     ; Peilaa ataru.hakija.hakija-routes/test-routes:n vastaavat rekisteröinnit,
     ; koska hakija- ja virkailija-puoli ajetaan erillisinä prosesseina, joilla
     ; kummallakin on oma, prosessikohtainen mock-tarjonta-service-tila

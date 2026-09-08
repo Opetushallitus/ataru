@@ -236,19 +236,13 @@ install-cypress:
 # Test db management
 # ----------------
 
-compile-test-code: $(NODE_MODULES) compile-less 
-	lein with-profile test cljsbuild once virkailija-min hakija-min
-
 test-clojurescript: $(NODE_MODULES)
 	lein with-profile test doo chrome test once
 
-test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
-	lein with-profile test spec -t ui
-
 test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
-	lein with-profile test spec -t ~ui
+	lein with-profile test spec
 
-test: start-docker-test test-clojurescript test-clojure test-browser
+test: start-docker-test test-clojurescript test-clojure
 
 test-playwright-docker:
 	./bin/run-playwright-tests-in-docker.sh
@@ -270,8 +264,6 @@ process-resources:
 
 pull-playwright-image: 
 	./bin/pull-playwright-image.sh
-
-ci-test-mocha:start-docker-test test-browser
 
 ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
 
