@@ -6,6 +6,7 @@ import {
   haeOletuslomakkeenSisalto,
   kirjauduVirkailijanNakymaan,
   luoLomakeAvaimella,
+  luoTestiHaunOid,
   poistaLomake,
   poistaTestiHaku,
   taytaHenkilotietomoduuli,
@@ -34,12 +35,6 @@ const MULTIPLE_HAKUKOHDE_OIDS = [
   '1.2.246.562.20.49028196525',
   '1.2.246.562.20.11111111111',
 ]
-
-// /hakemus/api/haku/:haku-oid on rajoitettu polkuregexillä [0-9\.]+
-// (hakija_routes.clj), joten testihaun oidin täytyy olla vain numeroita ja
-// pisteitä, tai lomakkeen datan hakeva XHR ei löydä reittiä.
-const randomHakuOid = () =>
-  `1.2.246.562.29.${Date.now()}${Math.floor(Math.random() * 10000)}`
 
 const getHaunOsoite = (hakuOid: string) => `/hakemus/haku/${hakuOid}`
 
@@ -150,7 +145,7 @@ test.describe('hakemus KK-haulla, jolla on yksi hakukohde', () => {
 
 test.describe('hakemus KK-haulla, jolla on useita hakukohteita', () => {
   let page: Page
-  const hakuOid = randomHakuOid()
+  const hakuOid = luoTestiHaunOid()
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
@@ -199,7 +194,7 @@ test.describe('hakemus KK-haulla, jolla on useita hakukohteita', () => {
 
 test.describe('hakemus haulla, jolla on useita hakukohteita', () => {
   let page: Page
-  const hakuOid = randomHakuOid()
+  const hakuOid = luoTestiHaunOid()
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
