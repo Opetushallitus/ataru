@@ -658,8 +658,6 @@
 
 
 
-(defn get-latest-applications-by-haku [haku-oid limit offset]
-  (exec-db :db queries/yesql-get-applications-by-haku {:haku haku-oid :limit limit :offset (or offset 0)}))
 
 (defn post-process-application-attachments [koodisto-cache
                                             tarjonta-service
