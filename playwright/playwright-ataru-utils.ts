@@ -273,6 +273,7 @@ export interface TestiHaku {
   usePriority?: boolean
   kohdejoukkoUri?: string
   kohdejoukonTarkenne?: string
+  hakutapaUri?: string
 }
 
 // Rekisteröi ajonaikaisesti mock-tarjontapalveluun testikohtaisen haun
