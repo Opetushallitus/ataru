@@ -7,6 +7,7 @@
     [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
+    [ataru.config.url-helper :as url-helper]
     [ataru.email.application-email-jobs :as email]
     [ataru.forms.form-payment-info :as payment-info]
     [ataru.forms.form-store :as form-store]
@@ -539,6 +540,16 @@
            application))
        applications))
 
+(defn- add-payment-link [app]
+  (-> app
+      (assoc :payment-link
+             (when-let [payment-secret (:payment-secret app)]
+               (url-helper/resolve-url
+                :maksut-service.hakija-get-by-secret
+                payment-secret
+                (:asiointikieli app))))
+      (dissoc :payment-secret)))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -892,7 +903,8 @@
            :linked-oids
            (mapcat #(aac/omatsivut-applications organization-service session %))
            (map mark-whether-application-is-in-processing)
-           (map apply-hakuaika-if-necessary))))
+           (map apply-hakuaika-if-necessary)
+           (map add-payment-link))))
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]

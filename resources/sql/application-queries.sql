@@ -143,6 +143,7 @@ SELECT
   ap.due_date AS payment_due_date,
   ap.total_sum AS payment_sum,
   ap.reason   AS payment_reason,
+  ap.maksut_secret   AS payment_secret,
   coalesce((SELECT CASE value
                        WHEN '1' THEN 'fi'
                        WHEN '2' THEN 'sv'

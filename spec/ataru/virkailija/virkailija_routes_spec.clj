@@ -1398,6 +1398,7 @@
           (it "should return an application"
               (let [[person _ _ application _] (init-and-get-kk-fixtures)
                     _ (payment/set-application-fee-required (:key application) nil)
+                    _ (payment/set-maksut-secret (:key application) "secret")
                     resp (get-omatsivut-applications-query person nil)
                     status (:status resp)
                     applications (:body resp)]
@@ -1413,6 +1414,7 @@
                              .toLocalDate))
                 (should= "100.00" (:payment-sum (first applications)))
                 (should-be-nil (:payment-reason (first applications)))
+                (should= "https://toimimaton.hakija-host-arvo.test.edn-tiedostosta/maksut/fi?secret=secret" (:payment-link (first applications)))
                 (should-be-nil (:hakuaikaIsOn (first applications)))
                 (should-be-nil (:hakuaikaEnds (first applications)))))
 
