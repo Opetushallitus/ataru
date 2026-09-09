@@ -138,11 +138,11 @@ SELECT
   a.email     AS email,
   a.hakukohde AS hakukohteet,
   a.submitted AS submitted,
-  f.name      AS form_name,
-  ap.state    AS payment_state,
-  ap.due_date AS payment_due_date,
-  ap.total_sum AS payment_sum,
-  ap.reason   AS payment_reason,
+  f.name      AS formName,
+  ap.state    AS paymentState,
+  ap.due_date AS paymentDueDate,
+  ap.total_sum AS paymentSum,
+  ap.reason   AS paymentReason,
   ap.maksut_secret   AS payment_secret,
   coalesce((SELECT CASE value
                        WHEN '1' THEN 'fi'
