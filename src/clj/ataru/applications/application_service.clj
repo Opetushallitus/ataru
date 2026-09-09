@@ -542,7 +542,7 @@
 
 (defn- add-payment-link [app]
   (-> app
-      (assoc :payment-link
+      (assoc :paymentLink
              (when-let [payment-secret (:payment-secret app)]
                (url-helper/resolve-url
                 :maksut-service.hakija-get-by-secret
@@ -553,7 +553,7 @@
 (defn- normalize-payment-due-date [app]
   (if (:payment-due-date app)
     (update app
-            :payment-due-date
+            :paymentDueDate
             #(time/with-time-in-zone
               %
               (time/local-time 23 59)
