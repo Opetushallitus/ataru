@@ -32,6 +32,7 @@
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
+            [ataru.time :as time]
             [yesql.core :as sql]))
 
 (declare yesql-get-latest-application-by-key)
@@ -1407,7 +1408,7 @@
                 (should= "fi" (:asiointikieli (first applications)))
                 (should= false (:processing (first applications)))
                 (should= "awaiting" (:payment-state (first applications)))
-                (should= (.plusDays (java.time.LocalDate/now)
+                (should= (.plusDays (time/today (time/time-zone-for-id "Europe/Helsinki"))
                                     payment/kk-application-payment-due-days)
                          (-> (:payment-due-date (first applications))
                              java.time.ZonedDateTime/parse
