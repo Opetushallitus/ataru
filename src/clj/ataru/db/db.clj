@@ -26,7 +26,8 @@
        (contains? #{aurora-tunnel-port (str aurora-tunnel-port)} (:port-number db-config))))
 
 (defn- jdbc-url [db-config schema]
-  (let [params (cond-> []
+  (let [host-pattern (:cluster-instance-host-pattern db-config)
+        params (cond-> []
                  (aurora? db-config)
                  (into [; activates aurora-pg topology detection (via replica_host_status)
                         ; and enables the failover2 + efm2 + auroraStaleDns plugin chain
@@ -40,6 +41,13 @@
                         "failoverWriterReconnectIntervalMs=2000"
                         ; normal topology refresh rate — determines how quickly a writer loss is detected
                         "clusterTopologyRefreshRateMs=30000"])
+
+                 ; Aurora custom-CNAMEn (Route53) takana: wrapper 4.x ei osaa mäpätä CNAME-hostia
+                 ; klusterin instansseihin -> failover2:n topology-discovery jumittaa ~60 s per
+                 ; yhteys ja tyhjentää poolin (aws-advanced-jdbc-wrapper#2035). Ympäristökohtainen
+                 ; pattern kertoo miltä instanssien hostnamet näyttävät; ? = instanssin tunniste.
+                 (and (aurora? db-config) (not (string/blank? host-pattern)))
+                 (conj (str "clusterInstanceHostPattern=" host-pattern))
 
                  ; SSH-tunneli Auroraan: ei failover2/efm2/topology-plugineja (topology-
                  ; discovery ei toimi yhden portin yhteyden läpi) -> plain postgres
@@ -91,7 +99,8 @@
                        :adapter
                        :database-name
                        :server-name
-                       :port-number)))))
+                       :port-number
+                       :cluster-instance-host-pattern)))))
 
 (defonce datasource (atom {}))
 
