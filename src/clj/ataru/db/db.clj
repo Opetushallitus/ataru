@@ -80,16 +80,28 @@
        (catch IllegalArgumentException _
          original-exception)))
 
+(def ^:private clearable-database-names
+  #{"ataru-dev" "ataru-test"})
+
 (defn clear-db! [ds-key schema-name]
-  (let [ds-key (keyword ds-key)]
-    (if (:allow-db-clear? (:server config))
+  (let [ds-key    (keyword ds-key)
+        db-config (ds-key config)]
+    (cond
+      (not (:allow-db-clear? (:server config)))
+      (throw (RuntimeException. (str "Clearing database is not allowed! "
+                                     "check that you run with correct mode. "
+                                     "Current config name is " (config-name))))
+
+      (not (contains? clearable-database-names (:database-name db-config)))
+      (throw (RuntimeException. (str "Refusing to clear database: database-name '"
+                                     (:database-name db-config) "' is not one of "
+                                     clearable-database-names ".")))
+
+      :else
       (try (jdbc/db-do-commands {:datasource (get-datasource ds-key)} true
                                 [(str "drop schema if exists " schema-name " cascade")
                                  (str "create schema " schema-name)])
-           (catch Exception e (log/error (get-next-exception-or-original e))))
-      (throw (RuntimeException. (str "Clearing database is not allowed! "
-                                     "check that you run with correct mode. "
-                                     "Current config name is " (config-name)))))))
+           (catch Exception e (log/error (get-next-exception-or-original e)))))))
 
 (defmacro exec [ds-key query params]
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]

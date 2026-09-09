@@ -6,6 +6,7 @@ import {
   asetaRajaavaHakukohderyhma,
   asetaTestiHaku,
   asetaTestiHakukohde,
+  getApplicationIdFromSubmitResponse,
   getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   haeOletuslomakkeenSisalto,
@@ -223,12 +224,7 @@ test.beforeAll(async ({ browser }) => {
     page.locator('.application__sent-placeholder-text')
   ).toBeVisible()
 
-  const submitPayload = (await submitResponse.json()) as { id?: number }
-  const applicationId = submitPayload.id
-  if (!applicationId) {
-    throw new Error('Missing application id in submit response')
-  }
-
+  const applicationId = await getApplicationIdFromSubmitResponse(submitResponse)
   modifySecret = await getApplicationSecretById(page, applicationId)
 
   // Muutetaan hakemuksen ensimmäinen hakutoive sellaiseksi, jonka hakuaika on

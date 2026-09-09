@@ -4,6 +4,6 @@ export const setDropdownValue = (dataTestIdPrefix: string, value: string) =>
     .click()
     .then(() =>
       cy
-        .get(`[data-test-id=${dataTestIdPrefix}-option-${value}]`)
+        .get(`[data-value="${value}"]`)
         .click({ force: true })
     )

@@ -5,6 +5,12 @@ Basic usage:
 make start
 	Starts all applications and docker containers
 
+make start-dev:
+        Starts the local dev applications and docker containers
+
+make start-cypress: 
+        Starts applications and docker containers needed for running Cypress/Playwright-tests
+
 make stop
 	Stop all applications and docker containers
 
@@ -44,9 +50,8 @@ make log, make logs
 make clean
 	Clean project. Removes unused docker containers and cleans compiled classes
 
-make nuke-test-db, clear-test-db
-        These targets manage test database. Typical run order is nuke, clear since
-        clear runs the migrations.
+make clear-test-db, clear-cypress-db
+        Clear the test database. Doesn't run migrations. Cypress/Playwright use separate database from other tests, and they are cleared automatically when running start-cypress.
 
 make test-clojurescript, test-browser, test-clojure
         Test targets. These targets DO NOT clear the database between runs in order

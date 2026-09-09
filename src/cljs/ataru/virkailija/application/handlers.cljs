@@ -453,7 +453,15 @@
                                      :id :reload-applications
                                      :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
                                                                                                                                           {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
-                                                                                                                                         [:application/fetch-form-contents]]]}}
+                                                                                                                                         [:application/fetch-form-contents]
+                                                                                                                                         ;; maybe-fetch-schools-of-departure tarkastaa onko
+                                                                                                                                         ;; valittu haku toisen asteen yhteishaku suoraan :haut
+                                                                                                                                         ;; db:stä (ks. toisen-asteen-yhteishaku-selected?) — jos
+                                                                                                                                         ;; select-haku ym. kutsuivat tätä ennen kuin haun tiedot
+                                                                                                                                         ;; ehtivät db:hen, tarkastus epäonnistui eikä sitä
+                                                                                                                                         ;; yritetty enää uudelleen. Kutsutaan siis tässä
+                                                                                                                                         ;; uudelleen; funktio itse ohittaa turhat haut.
+                                                                                                                                         [:application/maybe-fetch-schools-of-departure]]]}}
          (some? (get-in db [:request-handles :applications-list]))
          (assoc :http-abort (get-in db [:request-handles :applications-list]))))
      {:db db
@@ -928,20 +936,20 @@
    (assoc-in db [:application :information-request :message] message)))
 
 (reg-event-db
-  :application/toggle-information-request-send-reminder
-  (fn [db [_ send-reminder?]]
-    (if send-reminder?
-      (-> db
-          (assoc-in [:application :information-request :send-reminder?] false)
-          (assoc-in [:application :information-request :reminder-days] nil))
-      (-> db
-          (assoc-in [:application :information-request :send-reminder?] true)
-          (assoc-in [:application :information-request :reminder-days] 12)))))
+ :application/toggle-information-request-send-reminder
+ (fn [db [_ send-reminder?]]
+   (if send-reminder?
+     (-> db
+         (assoc-in [:application :information-request :send-reminder?] false)
+         (assoc-in [:application :information-request :reminder-days] nil))
+     (-> db
+         (assoc-in [:application :information-request :send-reminder?] true)
+         (assoc-in [:application :information-request :reminder-days] 12)))))
 
 (reg-event-db
-  :application/set-information-request-reminder-days
-  (fn [db [_ days]]
-    (assoc-in db [:application :information-request :reminder-days] (js/parseInt days))))
+ :application/set-information-request-reminder-days
+ (fn [db [_ days]]
+   (assoc-in db [:application :information-request :reminder-days] (js/parseInt days))))
 
 (reg-event-fx
  :application/submit-information-request

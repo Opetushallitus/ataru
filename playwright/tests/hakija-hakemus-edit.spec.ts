@@ -8,6 +8,7 @@ import {
   waitForResponse,
 } from '../playwright-utils'
 import {
+  getApplicationIdFromSubmitResponse,
   getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   getHakijanNakymanOsoite,
@@ -328,12 +329,8 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
       page.locator('.application__sent-placeholder-text')
     ).toBeVisible()
 
-    const submitPayload = (await submitResponse.json()) as { id?: number }
-    const applicationId = submitPayload.id
-    if (!applicationId) {
-      throw new Error('Missing application id in submit response')
-    }
-
+    const applicationId =
+      await getApplicationIdFromSubmitResponse(submitResponse)
     modifySecret = await getApplicationSecretById(page, applicationId)
     requireModifySecret(modifySecret)
   })
@@ -395,7 +392,7 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     )
     expect(
       await getDropdownOptionValue(page.getByTestId('home-town-input'))
-    ).toBe('061')
+    ).toBe('061') // Forssa
 
     const extraFieldsToCheck = legacyExtraFieldDefinitions.filter(
       (field) => field.value.length > 0 && field.fieldType !== 'singleChoice'
@@ -560,12 +557,8 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
       page.locator('.application__sent-placeholder-text')
     ).toBeVisible()
 
-    const submitPayload = (await submitResponse.json()) as { id?: number }
-    const applicationId = requireValue(
-      submitPayload.id,
-      'Missing application id in authenticated hakija submit response'
-    )
-
+    const applicationId =
+      await getApplicationIdFromSubmitResponse(submitResponse)
     const hakijaSecret = await getApplicationSecretById(page, applicationId)
 
     // Clear the strong-auth session to verify that locking is based on
@@ -576,6 +569,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
 
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
-    expect(await getDropdownOptionValue(homeTownInput)).toBe('853')
+    expect(await getDropdownOptionValue(homeTownInput)).toBe('853') // Jyväskylä
   })
 })

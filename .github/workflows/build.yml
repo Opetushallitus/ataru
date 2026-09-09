@@ -25,16 +25,7 @@ jobs:
       - uses: ./.github/actions/prepare-clojure-env
 
       - name: Check dependencies
-        run: |
-          echo "Checking for confusing dependencies..."
-          matches=$(lein deps :tree | grep 'confusing dependencies' || true)
-          if [ -n "$matches" ]; then
-            echo "Found confusing dependencies:"
-            echo "$matches"
-            exit 1
-          else
-            echo "No confusing dependencies found."
-          fi
+        run : bin/check-confusing-dependencies.sh
 
   test-playwright:
     needs: [check-dependencies]
