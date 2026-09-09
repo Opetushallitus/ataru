@@ -553,12 +553,21 @@
 (defn- normalize-payment-due-date [app]
   (if (:payment-due-date app)
     (update app
-            :paymentDueDate
+            :payment-due-date
             #(time/with-time-in-zone
               %
               (time/local-time 23 59)
               (time/time-zone-for-id "Europe/Helsinki")))
     app))
+
+(defn- to-omatsivut-application [app]
+  (set/rename-keys
+   app
+   {:payment-state    :paymentState
+    :payment-due-date :paymentDueDate
+    :payment-sum      :paymentSum
+    :payment-reason   :paymentReason
+    :form-name        :formName}))
 
 (defprotocol ApplicationService
   (get-person [this application])
@@ -915,7 +924,8 @@
            (map mark-whether-application-is-in-processing)
            (map apply-hakuaika-if-necessary)
            (map normalize-payment-due-date)
-           (map add-payment-link))))
+           (map add-payment-link)
+           (map to-omatsivut-application))))
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
