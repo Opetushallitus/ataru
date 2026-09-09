@@ -21,7 +21,7 @@ let page: Page
 let lomakkeenTunnisteet: { lomakkeenAvain: string; lomakkeenId: number }
 
 // Generate unique test identifier to prevent conflicts with parallel tests
-const testRunId = `${Date.now()}-${Math.random().toString(36).substring(7)}`
+const testRunId = crypto.randomUUID()
 
 const formName = `SSN_testilomake_${testRunId}`
 
@@ -270,7 +270,7 @@ test('Hakijan SSN-lomake näyttää oikeat kentät ja voidaan lähettää ilman 
   await fillField(page, page.getByTestId('postal-code-input'), '40100')
   await expect(page.getByTestId('postal-office-input')).toHaveValue('JYVÄSKYLÄ')
 
-  await selectOption(page, page.getByTestId('home-town-input'), '179')
+  await selectOption(page, page.getByTestId('home-town-input'), 'Jyväskylä')
 
   await expect(invalidFieldStatus(page)).toHaveCount(0)
   await expect(page.getByTestId('send-application-button')).toBeEnabled()

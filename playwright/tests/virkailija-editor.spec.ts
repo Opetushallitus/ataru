@@ -272,6 +272,88 @@ test.describe('Editori', () => {
     await expect(dropdown).toBeHidden()
   })
 
+  test('lisää pudotusvalikko, jonka jatkokysymyksenä vierekkäiset tekstikentät', async () => {
+    await clickComponentToolbar(page, 'dropdown')
+    const dropdown = page.getByTestId('editor-form__dropdown-component-wrapper')
+    await dropdown
+      .getByTestId('editor-form__dropdown-label')
+      .fill('Päätason pudotusvalikko')
+    const options = dropdown
+      .getByTestId('editor-form__multi-options-container')
+      .locator('.editor-form__multi-options-wrapper-outer')
+    await options.nth(0).locator('input').fill('Pudotusvalikon 1. vaihtoehto')
+    await dropdown.locator('.editor-form__add-dropdown-item a').click()
+    await options.nth(1).locator('input').fill('Pudotusvalikon 2. vaihtoehto')
+
+    await options.nth(0).getByTestId('followup-question-followups').click()
+    await clickComponentToolbar(dropdown, 'adjacent-fieldset')
+    const adjacentFieldset = dropdown.getByTestId(
+      'editor-form__adjacent-fieldset-component-wrapper'
+    )
+    const adjacentFields = adjacentFieldset.locator(
+      '.editor-form__adjacent-fieldset-container .editor-form__component-wrapper'
+    )
+    // Työkalurivi katoaa, kun kenttiä on jo 3 (ks. adjacent_fieldset-
+    // komponentin (< 3 children) -ehto), ja jokainen "lisää kenttä" -klikkaus
+    // laukaisee oman re-renderöintinsä — odotetaan siis kentän määrän
+    // kasvavan ennen seuraavaa klikkausta, jotta klikkaukset eivät kilpaile
+    // samasta, vielä päivittymättömästä lapsimäärästä keskenään.
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(1)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(2)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(3)
+    await adjacentFields
+      .nth(0)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys A')
+    await adjacentFields.nth(0).getByLabel('Pakollinen tieto').click()
+    await adjacentFields
+      .nth(1)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys B')
+    await adjacentFields
+      .nth(2)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys C')
+    await adjacentFields.nth(2).getByLabel('Pakollinen tieto').click()
+
+    await expect(
+      dropdown.getByTestId('editor-form__dropdown-label')
+    ).toHaveValue('Päätason pudotusvalikko')
+    await expect(options.nth(0).locator('input')).toHaveValue(
+      'Pudotusvalikon 1. vaihtoehto'
+    )
+    await expect(options.nth(1).locator('input')).toHaveValue(
+      'Pudotusvalikon 2. vaihtoehto'
+    )
+    await expect(
+      adjacentFields.nth(0).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys A')
+    await expect(
+      adjacentFields.nth(0).getByLabel('Pakollinen tieto')
+    ).toBeChecked()
+    await expect(
+      adjacentFields.nth(1).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys B')
+    await expect(
+      adjacentFields.nth(1).getByLabel('Pakollinen tieto')
+    ).not.toBeChecked()
+    await expect(
+      adjacentFields.nth(2).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys C')
+    await expect(
+      adjacentFields.nth(2).getByLabel('Pakollinen tieto')
+    ).toBeChecked()
+
+    await clickRemoveAndConfirm(dropdown)
+    await expect(dropdown).toBeHidden()
+  })
+
   test('lisää pudotusvalikko koodisto', async () => {
     await clickComponentToolbar(page, 'dropdown-koodisto')
     const dropdown = page.getByTestId('editor-form__dropdown-component-wrapper')
@@ -328,27 +410,26 @@ test.describe('Editori', () => {
     const adjacentFieldset = singleChoice.getByTestId(
       'editor-form__adjacent-fieldset-component-wrapper'
     )
-    await componentToolbar(adjacentFieldset).hover()
-    await componentToolbar(adjacentFieldset).locator('li').click()
-    await componentToolbar(adjacentFieldset).hover()
-    await componentToolbar(adjacentFieldset).locator('li').click()
-    await componentToolbar(adjacentFieldset).hover()
-    await componentToolbar(adjacentFieldset).locator('li').click()
-    await adjacentFieldset
+    const adjacentFieldsetFields = adjacentFieldset
       .locator('.editor-form__adjacent-fieldset-container')
       .locator('.editor-form__text-field')
-      .nth(0)
-      .fill('Jatkokysymys A')
-    await adjacentFieldset
-      .locator('.editor-form__adjacent-fieldset-container')
-      .locator('.editor-form__text-field')
-      .nth(1)
-      .fill('Jatkokysymys B')
-    await adjacentFieldset
-      .locator('.editor-form__adjacent-fieldset-container')
-      .locator('.editor-form__text-field')
-      .nth(2)
-      .fill('Jatkokysymys C')
+    // Työkalurivi katoaa, kun kenttiä on jo 3 (ks. adjacent_fieldset-
+    // komponentin (< 3 children) -ehto), ja jokainen "lisää kenttä" -klikkaus
+    // laukaisee oman re-renderöintinsä — odotetaan siis kentän määrän
+    // kasvavan ennen seuraavaa klikkausta, jotta klikkaukset eivät kilpaile
+    // samasta, vielä päivittymättömästä lapsimäärästä keskenään.
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFieldsetFields).toHaveCount(1)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFieldsetFields).toHaveCount(2)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFieldsetFields).toHaveCount(3)
+    await adjacentFieldsetFields.nth(0).fill('Jatkokysymys A')
+    await adjacentFieldsetFields.nth(1).fill('Jatkokysymys B')
+    await adjacentFieldsetFields.nth(2).fill('Jatkokysymys C')
 
     await expect(options.nth(0).locator('input')).toHaveValue('Vaihtoehto 1')
     await expect(options.nth(1).locator('input')).toHaveValue('Vaihtoehto 2')
@@ -363,27 +444,174 @@ test.describe('Editori', () => {
     await expect(
       singleChoiceOptions.nth(1).locator('.editor-form__text-field')
     ).toHaveValue('En')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(0)
-    ).toHaveValue('Jatkokysymys A')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(1)
-    ).toHaveValue('Jatkokysymys B')
-    await expect(
-      adjacentFieldset
-        .locator('.editor-form__adjacent-fieldset-container')
-        .locator('.editor-form__text-field')
-        .nth(2)
-    ).toHaveValue('Jatkokysymys C')
+    await expect(adjacentFieldsetFields.nth(0)).toHaveValue('Jatkokysymys A')
+    await expect(adjacentFieldsetFields.nth(1)).toHaveValue('Jatkokysymys B')
+    await expect(adjacentFieldsetFields.nth(2)).toHaveValue('Jatkokysymys C')
 
     await clickRemoveAndConfirm(multipleChoice)
     await expect(multipleChoice).toBeHidden()
+  })
+
+  test('lisää painikkeet (yksi valittavissa) lomakeosioon jatkokysymysketjulla', async () => {
+    await clickComponentToolbar(page, 'lomakeosio')
+    const lomakeosio = page.getByTestId(
+      'editor-form__wrapperElement-component-wrapper'
+    )
+    await lomakeosio.locator('.editor-form__text-field').fill('Painikeosio')
+
+    await clickSubComponentToolbar(lomakeosio, 'painikkeet-yksi-valittavissa')
+    const singleChoice = lomakeosio.getByTestId(
+      'editor-form__singleChoice-component-wrapper'
+    )
+    await singleChoice
+      .getByTestId('editor-form__singleChoice-label')
+      .fill('Lyhyen listan kysymys')
+    // .first(): kysymyksen oma "Pakollinen tieto" -valintaruutu renderöityy
+    // ENNEN vaihtoehtoja ja jatkokysymyksiä (ks. dropdown_component.cljs),
+    // mutta locator pysyy voimassa myös myöhemmin lisättävien sisäkkäisten
+    // jatkokysymysten (joilla on OMAT "Pakollinen tieto" -valintaruutunsa)
+    // jälkeen — .first() varmistaa, että osutaan aina juuri tähän omaan
+    // ruutuun eikä mihinkään niistä.
+    await singleChoice.getByLabel('Pakollinen tieto').first().click()
+
+    const singleChoiceOptions = singleChoice
+      .getByTestId('editor-form__multi-options-container')
+      .locator('.editor-form__multi-options-wrapper-outer')
+    await singleChoice.locator('.editor-form__add-dropdown-item a').click()
+    await singleChoiceOptions
+      .nth(0)
+      .locator('.editor-form__text-field')
+      .fill('Ensimmäinen vaihtoehto')
+    await singleChoice.locator('.editor-form__add-dropdown-item a').click()
+    await singleChoiceOptions
+      .nth(1)
+      .locator('.editor-form__text-field')
+      .fill('Toinen vaihtoehto')
+
+    // Tarkistetaan vaihtoehtojen arvot HETI, ennen kuin option 0:lle lisätään
+    // jatkokysymys — jatkokysymyksen komponentilla (multipleChoiceFollowup)
+    // on OMA editor-form__multi-options-container-elementtinsä, joka on
+    // aidosti singleChoice'n oman options-containerin JÄLKELÄINEN (ks.
+    // dropdown_component.cljs: followup-question-overlay renderöityy
+    // option-rivin SISARUKSENA saman containerin sisällä, ei sen
+    // ulkopuolella) — .locator('.editor-form__multi-options-wrapper-outer')
+    // löytäisi siis jatkokysymyksen lisäämisen jälkeen MYÖS sen omat
+    // vaihtoehdot samasta, yhdestä containerista, eikä niitä voi enää
+    // erottaa CSS-luokan perusteella. Siksi näiden kahden arvon tarkistus ei
+    // voi odottaa testin loppuun asti niin kuin muut tarkistukset.
+    await expect(
+      singleChoiceOptions.nth(0).locator('.editor-form__text-field')
+    ).toHaveValue('Ensimmäinen vaihtoehto')
+    await expect(
+      singleChoiceOptions.nth(1).locator('.editor-form__text-field')
+    ).toHaveValue('Toinen vaihtoehto')
+
+    await singleChoiceOptions
+      .nth(0)
+      .getByTestId('followup-question-followups')
+      .click()
+    await clickComponentToolbar(singleChoice, 'multiple-choice')
+    const multipleChoiceFollowup = singleChoice.getByTestId(
+      'editor-form__multipleChoice-component-wrapper'
+    )
+    await multipleChoiceFollowup
+      .getByTestId('editor-form__multipleChoice-label')
+      .fill('Monivalinta jatkokysymyksenä')
+    await multipleChoiceFollowup.getByLabel('Pakollinen tieto').click()
+
+    const multipleChoiceFollowupOptions = multipleChoiceFollowup
+      .getByTestId('editor-form__multi-options-container')
+      .locator('.editor-form__multi-options-wrapper-outer')
+    await multipleChoiceFollowup
+      .locator('.editor-form__add-dropdown-item a')
+      .click()
+    await multipleChoiceFollowupOptions
+      .nth(0)
+      .locator('input')
+      .fill('Jatkokysymys A')
+    await multipleChoiceFollowup
+      .locator('.editor-form__add-dropdown-item a')
+      .click()
+    await multipleChoiceFollowupOptions
+      .nth(1)
+      .locator('input')
+      .fill('Jatkokysymys B')
+
+    // "Lisää komponentti" -työkalurivi jatkokysymyksen sisällölle renderöityy
+    // saman ylätason jatkokysymyskuoren SISARUKSENA (ks.
+    // followup_question.cljs: [followups [toolbar/followup-toolbar ...]]),
+    // ei multipleChoiceFollowup'n omana lapsena — siksi haetaan singleChoice
+    // ‑tasolta (option 0:n oma jatkokysymyskuori on singleChoice'n
+    // alipuussa), ei multipleChoiceFollowup'sta.
+    await clickComponentToolbar(singleChoice, 'adjacent-fieldset')
+    const adjacentFieldset = singleChoice.getByTestId(
+      'editor-form__adjacent-fieldset-component-wrapper'
+    )
+    const adjacentFields = adjacentFieldset.locator(
+      '.editor-form__adjacent-fieldset-container .editor-form__component-wrapper'
+    )
+    // Työkalurivi katoaa, kun kenttiä on jo 3 (ks. adjacent_fieldset-
+    // komponentin (< 3 children) -ehto), ja jokainen "lisää kenttä" -klikkaus
+    // laukaisee oman re-renderöintinsä — odotetaan siis kentän määrän
+    // kasvavan ennen seuraavaa klikkausta, jotta klikkaukset eivät kilpaile
+    // samasta, vielä päivittymättömästä lapsimäärästä keskenään.
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(1)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(2)
+    await componentToolbar(adjacentFieldset).hover()
+    await componentToolbar(adjacentFieldset).locator('li').click()
+    await expect(adjacentFields).toHaveCount(3)
+    await adjacentFields
+      .nth(0)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys A')
+    await adjacentFields.nth(0).getByLabel('Pakollinen tieto').click()
+    await adjacentFields
+      .nth(1)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys B')
+    await adjacentFields
+      .nth(2)
+      .locator('.editor-form__text-field')
+      .fill('Jatkokysymys C')
+    await adjacentFields.nth(2).getByLabel('Pakollinen tieto').click()
+
+    await expect(
+      singleChoice.getByTestId('editor-form__singleChoice-label')
+    ).toHaveValue('Lyhyen listan kysymys')
+    await expect(
+      singleChoice.getByLabel('Pakollinen tieto').first()
+    ).toBeChecked()
+    await expect(
+      multipleChoiceFollowup.getByTestId('editor-form__multipleChoice-label')
+    ).toHaveValue('Monivalinta jatkokysymyksenä')
+    await expect(
+      multipleChoiceFollowup.getByLabel('Pakollinen tieto')
+    ).toBeChecked()
+    await expect(
+      adjacentFields.nth(0).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys A')
+    await expect(
+      adjacentFields.nth(0).getByLabel('Pakollinen tieto')
+    ).toBeChecked()
+    await expect(
+      adjacentFields.nth(1).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys B')
+    await expect(
+      adjacentFields.nth(1).getByLabel('Pakollinen tieto')
+    ).not.toBeChecked()
+    await expect(
+      adjacentFields.nth(2).locator('.editor-form__text-field')
+    ).toHaveValue('Jatkokysymys C')
+    await expect(
+      adjacentFields.nth(2).getByLabel('Pakollinen tieto')
+    ).toBeChecked()
+
+    await clickRemoveAndConfirm(lomakeosio)
+    await expect(lomakeosio).toBeHidden()
   })
 
   test('lisää monivalinta koodisto', async () => {
@@ -547,6 +775,19 @@ test.describe('Editori', () => {
     await lomakeosio
       .locator('.editor-form__text-field')
       .fill('Kopioitava testiosio')
+
+    // Kopiointi kohdistuu koko komponenttipuuhun, joten osion sisällä oleva
+    // alikysymys pitää lisätä ENNEN kopiointia, jotta testi todentaa myös
+    // sisäkkäisen sisällön säilymisen kopioinnin ja liittämisen yli — ei
+    // pelkän osion omaa otsikkoa.
+    await clickSubComponentToolbar(lomakeosio, 'tekstialue')
+    const tekstialue = lomakeosio.getByTestId(
+      'editor-form__text-area-component-wrapper'
+    )
+    await tekstialue
+      .getByTestId('tekstikenttä-kysymys')
+      .fill('Osion alikysymys')
+
     await lomakeosio.locator('.editor-form__component-button').nth(1).click()
     await page.locator('.close-details-button').click()
 
@@ -562,8 +803,18 @@ test.describe('Editori', () => {
       .locator('.editor-form__component-button')
       .click()
 
-    await expect(lomakeosio.locator('.editor-form__text-field')).toHaveValue(
-      'Kopioitava testiosio'
-    )
+    // .first(): osion oma otsikkokenttä renderöityy ennen sen lapsia (ks.
+    // myös jo olemassa oleva "lisää lomakeosio" -testi, joka käyttää samasta
+    // syystä .nth(0):aa) — nyt kun osiolla on lapsi (tekstialue, jolla on
+    // OMAT .editor-form__text-field-luokkaiset kenttänsä), pelkkä
+    // .locator(...) ilman rajausta olisi moniselitteinen.
+    await expect(
+      lomakeosio.locator('.editor-form__text-field').first()
+    ).toHaveValue('Kopioitava testiosio')
+    await expect(
+      lomakeosio
+        .getByTestId('editor-form__text-area-component-wrapper')
+        .getByTestId('tekstikenttä-kysymys')
+    ).toHaveValue('Osion alikysymys')
   })
 })

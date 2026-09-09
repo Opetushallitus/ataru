@@ -6,7 +6,9 @@
                          [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.18.3"]
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
-                         [org.apache.commons/commons-io "2.19.0"]
+                         [commons-io "2.20.0"]
+                         [org.apache.commons/commons-compress "1.28.0"]
+                         [org.apache.logging.log4j/log4j-api "2.25.2"]
                          [org.clojure/clojure "1.11.2"]
                          [org.clojure/data.json "1.0.0"]
                          [org.clojure/core.memoize "1.0.257"]
@@ -97,24 +99,24 @@
                                io.netty/netty-transport-native-unix-common
                                org.clojure/tools.logging]]
                  ; pinning netty deps to same version because of conflicting transitive deps
-                 [io.netty/netty-buffer "4.1.124.Final"]
-                 [io.netty/netty-codec "4.1.124.Final"]
-                 [io.netty/netty-codec-dns "4.1.124.Final"]
-                 [io.netty/netty-codec-http "4.1.124.Final"]
-                 [io.netty/netty-codec-http2 "4.1.124.Final"]
-                 [io.netty/netty-codec-socks "4.1.124.Final"]
-                 [io.netty/netty-common "4.1.124.Final"]
-                 [io.netty/netty-handler "4.1.124.Final"]
-                 [io.netty/netty-handler-proxy "4.1.124.Final"]
-                 [io.netty/netty-resolver "4.1.124.Final"]
-                 [io.netty/netty-resolver-dns "4.1.124.Final"]
-                 [io.netty/netty-resolver-dns-native-macos "4.1.124.Final"]
-                 [io.netty/netty-transport "4.1.124.Final"]
-                 [io.netty/netty-transport-classes-epoll "4.1.124.Final"]
-                 [io.netty/netty-transport-classes-kqueue "4.1.124.Final"]
-                 [io.netty/netty-transport-native-epoll "4.1.124.Final"]
-                 [io.netty/netty-transport-native-kqueue "4.1.124.Final"]
-                 [io.netty/netty-transport-native-unix-common "4.1.124.Final"]
+                 [io.netty/netty-buffer "4.1.126.Final"]
+                 [io.netty/netty-codec "4.1.126.Final"]
+                 [io.netty/netty-codec-dns "4.1.126.Final"]
+                 [io.netty/netty-codec-http "4.1.126.Final"]
+                 [io.netty/netty-codec-http2 "4.1.126.Final"]
+                 [io.netty/netty-codec-socks "4.1.126.Final"]
+                 [io.netty/netty-common "4.1.126.Final"]
+                 [io.netty/netty-handler "4.1.126.Final"]
+                 [io.netty/netty-handler-proxy "4.1.126.Final"]
+                 [io.netty/netty-resolver "4.1.126.Final"]
+                 [io.netty/netty-resolver-dns "4.1.126.Final"]
+                 [io.netty/netty-resolver-dns-native-macos "4.1.126.Final"]
+                 [io.netty/netty-transport "4.1.126.Final"]
+                 [io.netty/netty-transport-classes-epoll "4.1.126.Final"]
+                 [io.netty/netty-transport-classes-kqueue "4.1.126.Final"]
+                 [io.netty/netty-transport-native-epoll "4.1.126.Final"]
+                 [io.netty/netty-transport-native-kqueue "4.1.126.Final"]
+                 [io.netty/netty-transport-native-unix-common "4.1.126.Final"]
                  [fi.vm.sade/auditlogger "9.2.7-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
@@ -127,7 +129,7 @@
                   :exclusions [commons-io]]
                  [ring-ratelimit "0.2.3"]
                  [bk/ring-gzip "0.3.0"]
-                 [yesql "0.5.3"]
+                 [yesql "0.5.4"]
                  [com.layerware/hugsql "0.5.3"]
                  ; Flyway 4 breaks our migrations
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
@@ -379,14 +381,18 @@
              :hakija-cypress        {:env {:dev? "true"}
                                      :target-path "target/target-cypess-hakija"}
 
-             :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"
-                                                            "-Dclojure.main.report=stderr"]}]
+             :virkailija-dev-opts {:target-path "target-virkailija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"
+                                                           "-Dclojure.main.report=stderr"]}
 
-             :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
+             :hakija-dev-opts     {:target-path "target-hakija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"]}
+
+             :virkailija-dev [:dev :virkailija-dev-opts]
+
+             :hakija-dev     [:dev :hakija-dev-opts]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
@@ -413,7 +419,8 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
+            "start-figwheel-dev"     ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev"]
+            "start-figwheel-cypress" ["with-profile" "figwheel" "figwheel" "virkailija-cypress" "hakija-cypress"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]
