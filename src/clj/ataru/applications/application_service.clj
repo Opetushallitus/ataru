@@ -550,6 +550,16 @@
                 (:asiointikieli app))))
       (dissoc :payment-secret)))
 
+(defn- normalize-payment-due-date [app]
+  (if (:payment-due-date app)
+    (update app
+            :payment-due-date
+            #(time/with-time-in-zone
+              %
+              (time/local-time 23 59)
+              (time/time-zone-for-id "Europe/Helsinki")))
+    app))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -904,6 +914,7 @@
            (mapcat #(aac/omatsivut-applications organization-service session %))
            (map mark-whether-application-is-in-processing)
            (map apply-hakuaika-if-necessary)
+           (map normalize-payment-due-date)
            (map add-payment-link))))
 
   (get-applications-for-valintalaskenta
