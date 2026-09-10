@@ -15,9 +15,13 @@
     (when (and (tutu-form? form)
                (= "information-request" (:message-type information-request))
                timestamp)
-      (let [url (resolve-url :tutu-service.state-change-notification application-key "information-request"
-                             {"timestamp" (str timestamp)})
-            response (cas/cas-authenticated-get tutu-cas-client url)]
+      (let [url (resolve-url :tutu-service.state-change)
+            req {:hakemusOid application-key
+                 :tila "information-request"
+                 :timestamp timestamp
+                 :submitted (:submitted tutu-application)
+                 :latestVersionCreated (:created tutu-application)}
+            response (cas/cas-authenticated-put tutu-cas-client url req)]
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending information-request notification for application " application-key " to Tutu failed"))))
         (log/info (str "Information-request notification for application " application-key " successfully sent to Tutu"))))))

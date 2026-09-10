@@ -560,7 +560,7 @@
                                                          (String.))))))))
 
   (it "should send information request notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-information-request-notification {:return {:status 200}})]
+      (with-redefs [cas/cas-authenticated-put (stub :send-information-request-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-information-request-handler
           {:information-request {:application-key *application-key*
                                  :message-type    "information-request"}}
