@@ -11,7 +11,7 @@
         application-key (:key tutu-application)
         form (get-form form-by-id-cache koodisto-cache attachment-deadline-service tutu-application)]
     (when (tutu-form? form)
-      (let [url (resolve-url :tutu-service.hakemus-update-notification application-key)
+      (let [url (resolve-url :tutu-service.hakemus-update application-key)
             response (cas/cas-authenticated-get tutu-cas-client url)]
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending edit notification for application " application-key " to Tutu failed"))))
