@@ -61,11 +61,22 @@
 (defn- trimmed-or-empty-value [value]
   (clojure.string/trim (or value "")))
 
+(defn- validation-error-id
+  [form-field-id]
+  (str form-field-id "-validation-error"))
+
+(defn- validation-error-describedby
+  [form-field-id errors]
+  (when (not-empty (filter some? errors))
+    {:aria-describedby (validation-error-id form-field-id)}))
+
+
 (defn- validation-error
-  [errors]
+  [form-field-id errors]
   (let [languages @(subscribe [:application/default-languages])]
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
+       {:id (validation-error-id form-field-id)}
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
@@ -149,13 +160,30 @@
                               :on-paste      (fn [event]
                                                  (.preventDefault event))
                               :data-test-id  "email-input"}
+                              (validation-error-describedby
+                               form-field-id
+                              (some-> answer
+                                      :errors
+                                      first
+                                      :email-main-error))
                              (when @(subscribe [:application/cannot-edit? id])
                                    {:disabled true}))]
-                     [validation-error (some-> answer
-                                               :errors
-                                               first
-                                               :email-main-error)]
-                     (let [id           :verify-email
+                     [validation-error form-field-id
+                      (some-> answer
+                              :errors
+                              first
+                              :email-main-error)]
+                     (let [id              :verify-email
+                           verify-error-id "verify-email"
+                           verify-errors   (concat
+                                             (some-> answer
+                                                     :errors
+                                                     first
+                                                     :email-verify-error)
+                                             (some-> answer
+                                                     :errors
+                                                     first
+                                                     :email-has-applied-error))
                            get-verify-value (fn []
                                               (cond cannot-view?
                                                          "***********"
@@ -171,38 +199,34 @@
                              :for id}
                             [:span text-verify [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]]
                            [:input.application__form-text-input
-                            {:id           id
-                             :type         "text"
-                             :required     true
-                             :on-blur      (fn [_]
-                                             (swap! local-state assoc
-                                                    :focused-verify? false)
-                                             (email-verify-field-change field-descriptor (:value answer)
-                                                                          (trimmed-or-empty-value (get-verify-value))))
+                            (merge {:id           id
+                                    :type         "text"
+                                    :required     true
+                                    :on-blur      (fn [_]
+                                                    (swap! local-state assoc
+                                                           :focused-verify? false)
+                                                    (email-verify-field-change field-descriptor (:value answer)
+                                                                               (trimmed-or-empty-value (get-verify-value))))
 
-                             :on-paste     (fn [event]
-                                               (.preventDefault event))
-                             :on-change    (event->value (fn [value]
-                                                             (swap! local-state assoc
-                                                                    :focused-verify? true
-                                                                    :value-verify value)
-                                                             (email-verify-field-change field-descriptor (:value answer) (get-verify-value))))
-                             :value        (get-verify-value)
-                             :class        (str size-class
-                                                (if show-error?
-                                                    " application__form-field-error"
-                                                    " application__form-text-input--normal"))
-                             :aria-invalid (not (:valid answer))
-                             :autoComplete autocomplete-off
-                             :data-test-id "verify-email-input"}]
-                           [validation-error (some-> answer
-                                                     :errors
-                                                     first
-                                                     :email-verify-error)]
-                           [validation-error (some-> answer
-                                                     :errors
-                                                     first
-                                                     :email-has-applied-error)]])]))))
+                                    :on-paste     (fn [event]
+                                                    (.preventDefault event))
+                                    :on-change    (event->value (fn [value]
+                                                                  (swap! local-state assoc
+                                                                         :focused-verify? true
+                                                                         :value-verify value)
+                                                                  (email-verify-field-change field-descriptor (:value answer) (get-verify-value))))
+                                    :value        (get-verify-value)
+                                    :class        (str size-class
+                                                       (if show-error?
+                                                         " application__form-field-error"
+                                                         " application__form-text-input--normal"))
+                                    :aria-invalid (not (:valid answer))
+                                    :autoComplete autocomplete-off
+                                    :data-test-id "verify-email-input"}
+                                   (validation-error-describedby
+                                     verify-error-id
+                                     verify-errors))]
+                           [validation-error verify-error-id verify-errors]])]))))
 
 (defn- options-satisfying-condition [field-descriptor answer-value options]
   (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
@@ -304,14 +328,21 @@
                                        (:value @local-state)
                                        :else
                                        value)
-                   :data-test-id data-test-id}
+                  :data-test-id data-test-id}
+                 (validation-error-describedby
+                   form-field-id
+                   (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
+                           first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
+                           vals ;mapin arvot listana (jonka koko 1)
+                           first))
                   (when (or disabled? cannot-edit? locked)
                     {:disabled true}))]]
 
-         [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
-                                   first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
-                                   vals ;mapin arvot listana (jonka koko 1)
-                                   first)] ;kaivettava listan sisältä se varsinainen errors-vector
+         [validation-error form-field-id
+          (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
+                  first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
+                  vals ;mapin arvot listana (jonka koko 1)
+                  first)] ;kaivettava listan sisältä se varsinainen errors-vector
          (when (not (or (string/blank? value)
                         show-error?))
            [text-field-followups-container field-descriptor options value idx])]))))
@@ -825,9 +856,10 @@
         validator-name validator-keyword]
     (fn []
       (let [{:keys [errors]} @(subscribe [:application/answer id])]
-        [validation-error (some-> errors
-                                  first
-                                  validator-name)]))))
+        [validation-error (name id)
+         (some-> errors
+                 first
+                 validator-name)]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])

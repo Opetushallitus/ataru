@@ -44,7 +44,7 @@
      (translations/get-hakija-translation :remove lang)]))
 
 (defn- selected-hakukohde-increase-priority
-  [hakukohde-oid priority-number disabled?]
+  [hakukohde-oid priority-number disabled? describedby]
   (let [increase-disabled? (or disabled? (= priority-number 1))
         lang               @(subscribe [:application/form-language])]
     [:span.application__selected-hakukohde-row--priority-increase
@@ -54,12 +54,13 @@
         :tab-index  0
         :role       "button"
         :aria-label (translations/get-hakija-translation :increase-priority lang)
+        :aria-describedby describedby
         :on-key-up #(when (a11y/is-enter-or-space? %)
                      (dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))
         :on-click   #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1])})]))
 
 (defn- selected-hakukohde-decrease-priority
-  [hakukohde-oid priority-number disabled?]
+  [hakukohde-oid priority-number disabled? describedby]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
         decrease-disabled?   (or disabled? (= priority-number (count selected-hakukohteet)))
         lang                 @(subscribe [:application/form-language])]
@@ -70,22 +71,28 @@
         :tab-index  0
         :role       "button"
         :aria-label (translations/get-hakija-translation :decrease-priority lang)
+        :aria-describedby describedby
         :on-key-up #(when (a11y/is-enter-or-space? %)
                      (dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))
         :on-click   #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1])})]))
 
 (defn- prioritize-hakukohde-buttons
-  [hakukohde-oid disabled?]
+  [hakukohde-oid disabled? describedby]
   (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
     [:div.application__selected-hakukohde-row--priority-changer
-     [selected-hakukohde-increase-priority hakukohde-oid priority-number disabled?]
+     [selected-hakukohde-increase-priority hakukohde-oid priority-number disabled? describedby]
      priority-number
-     [selected-hakukohde-decrease-priority hakukohde-oid priority-number disabled?]]))
+     [selected-hakukohde-decrease-priority hakukohde-oid priority-number disabled? describedby]]))
 
-(defn- offending-priorization [should-be-higher should-be-lower]
-  (let [lang @(subscribe [:application/form-language])]
+(defn- offending-priorization [hakukohde-oid should-be-higher should-be-lower]
+  (let [lang @(subscribe [:application/form-language])
+        warning-id (str "hakukohde-priorization-warning-" hakukohde-oid)]
     [:div.application__selected-hakukohde-row--offending-priorization
-     [:i.zmdi.zmdi-alert-circle]
+     {:id warning-id
+      :role "alert"
+      :aria-live "polite"}
+     [:i.zmdi.zmdi-alert-circle
+      {:aria-hidden "true"}]
      [:div
       [:div.application__selected-hakukohde-row--offending-priorization-heading
        (translations/get-hakija-translation :application-priorization-invalid lang)]
@@ -105,11 +112,18 @@
         rajaavat-hakukohteet               @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
         lang                               @(subscribe [:application/form-language])
         virkailija?                        @(subscribe [:application/virkailija?])
-        archived?                          @(subscribe [:application/hakukohde-archived? hakukohde-oid])]
+        archived?                          @(subscribe [:application/hakukohde-archived? hakukohde-oid])
+        priorization-warning-id            (str "hakukohde-priorization-warning-" hakukohde-oid)
+        has-priorization-warning?              (or (seq should-be-higher) 
+                                               (seq should-be-lower))]
     [:div.application__selected-hakukohde-row.animated
      {:class (if deleting? "fadeOut" "fadeIn")}
      (when prioritize-hakukohteet?
-       [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
+       [prioritize-hakukohde-buttons 
+        hakukohde-oid
+        (not hakukohde-editable?)
+        (when has-priorization-warning?
+          priorization-warning-id)])
      [:div.application__selected-hakukohde-row--content
       [:div.application__hakukohde-header
        (when (and virkailija? archived?)
@@ -134,9 +148,15 @@
                    [:li.application__search-hit-hakukohde-row--limitting-hakukohde
                     @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])
       (if (seq should-be-higher)
-        (offending-priorization (first should-be-higher) hakukohde-oid)
+        (offending-priorization 
+         hakukohde-oid
+         (first should-be-higher)
+         hakukohde-oid)
         (when (seq should-be-lower)
-          (offending-priorization hakukohde-oid (first should-be-lower))))]
+          (offending-priorization 
+           hakukohde-oid 
+           hakukohde-oid 
+           (first should-be-lower))))]
      [:div.application__selected-hakukohde-row--buttons
       (cond (and haku-editable? hakukohde-editable?)
             [selected-hakukohde-row-remove hakukohde-oid false]
