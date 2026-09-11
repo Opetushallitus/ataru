@@ -13,8 +13,12 @@
         new-state (:state (first (filter #(= "processing-state" (:requirement %)) (:application-hakukohde-reviews tutu-application))))]
     (when (and (tutu-form? form)
                 new-state)
-      (let [url (resolve-url :tutu-service.state-change-notification application-key new-state)
-            response (cas/cas-authenticated-get tutu-cas-client url)]
+      (let [url (resolve-url :tutu-service.state-change)
+            req {:hakemusOid application-key
+                 :tila new-state
+                 :submitted (:submitted tutu-application)
+                 :latestVersionCreated (:created tutu-application)}
+            response (cas/cas-authenticated-put tutu-cas-client url req)]
         (when (not (<= 200 (:status response) 299))
           (throw (Exception. (str "Sending notification of state change to " new-state " for application " application-key " to Tutu failed"))))
         (log/info (str "Sending notification of state change to " new-state "for application " application-key " successfully sent to Tutu"))))))
