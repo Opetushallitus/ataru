@@ -135,7 +135,7 @@ lein with-profile test spec <PATH_TO_TEST_FILE>
 e.g.
 
 ```
-lein with-profile test spec spec/ataru/applications/answer_util_spec.clj
+lein with-profile test spec spec/ataru/applications/applications.application_access_control_spec.clj
 ```
 
 Hint: you can also run only individual tests in a file by 

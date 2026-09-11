@@ -7,6 +7,7 @@
     [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
+    [ataru.config.url-helper :as url-helper]
     [ataru.email.application-email-jobs :as email]
     [ataru.forms.form-payment-info :as payment-info]
     [ataru.forms.form-store :as form-store]
@@ -539,6 +540,35 @@
            application))
        applications))
 
+(defn- add-payment-link [app]
+  (-> app
+      (assoc :paymentLink
+             (when-let [payment-secret (:payment-secret app)]
+               (url-helper/resolve-url
+                :maksut-service.hakija-get-by-secret
+                payment-secret
+                (:asiointikieli app))))
+      (dissoc :payment-secret)))
+
+(defn- normalize-payment-due-date [app]
+  (if (:payment-due-date app)
+    (update app
+            :payment-due-date
+            #(time/with-time-in-zone
+              %
+              (time/local-time 23 59)
+              (time/time-zone-for-id "Europe/Helsinki")))
+    app))
+
+(defn- to-omatsivut-application [app]
+  (set/rename-keys
+   app
+   {:payment-state    :paymentState
+    :payment-due-date :paymentDueDate
+    :payment-sum      :paymentSum
+    :payment-reason   :paymentReason
+    :form-name        :formName}))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -892,7 +922,10 @@
            :linked-oids
            (mapcat #(aac/omatsivut-applications organization-service session %))
            (map mark-whether-application-is-in-processing)
-           (map apply-hakuaika-if-necessary))))
+           (map apply-hakuaika-if-necessary)
+           (map normalize-payment-due-date)
+           (map add-payment-link)
+           (map to-omatsivut-application))))
 
   (get-applications-for-valintalaskenta
     [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]

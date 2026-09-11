@@ -100,11 +100,6 @@
       haku-oid
       hakemus-oid))
 
-  (opiskelijoiden-suoritukset [_ haku-oid hakemus-oids]
-    (client/opiskelijoiden-suoritukset-by-personoid
-      valintalaskentakoostepalvelu-cas-client
-      haku-oid
-      hakemus-oids))
 
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
     (cache/get-many-from valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache hakemus-oids))
