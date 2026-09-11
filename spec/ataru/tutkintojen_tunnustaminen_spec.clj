@@ -681,7 +681,7 @@
           (should-be empty? attachments))))
 
   (it "should send state change notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-state-change-notification {:return {:status 200}})]
+      (with-redefs [cas/cas-authenticated-put (stub :send-state-change-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-state-change-handler
           {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
