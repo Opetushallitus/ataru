@@ -4,7 +4,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up JDK 17
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
       with:
         java-version: '17'
         distribution: 'corretto'
@@ -21,7 +21,7 @@ runs:
         lein: 2.9.1
 
     - name: Cache dependencies
-      uses: actions/cache@v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       id: maven-cache
       with:
         path: ~/.m2/repository
