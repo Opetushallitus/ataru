@@ -83,11 +83,11 @@
     (let [application-key (-> db :application :selected-key)]
       (get-in db [:application :yksilollistetty-matikka-aikka-by-application-key application-key]))))
 
-(def grade-order ["PK_AI" "PK_A1" "PK_A12" "PK_A2" "PK_A22"
+(def grade-order ["PK_AI" "PK_AOM" "PK_A1" "PK_A12" "PK_A2" "PK_A22"
                  "PK_B1" "PK_B2" "PK_B22" "PK_B23"
-                 "PK_MA" "PK_BI" "PK_GE" "PK_FY" "PK_KE"
+                 "PK_MA" "PK_BI" "PK_GE" "PK_FY" "PK_KE" "PK_YL"
                  "PK_TE" "PK_KT" "PK_HI" "PK_YH" "PK_MU"
-                 "PK_KU" "PK_KS" "PK_LI" "PK_KO"])
+                 "PK_KU" "PK_KS" "PK_LI" "PK_KO" "PK_OP" "PK_OPA"])
 
 (re-frame/reg-sub
   :application/grades
