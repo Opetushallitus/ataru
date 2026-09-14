@@ -13,6 +13,15 @@
 (def oppiaine-valinnainen-postfix "_VAL")
 (def oppiaine-aidinkieli-prefix "PK_AI")
 
+;; Oppiaineen label haetaan kahdesta koodistosta, koska kumpikin sisältää koodeja joita toisessa ei ole:
+;; - "oppiaineetyleissivistava" on ensisijainen ja sitä on laajennettu tätä näkymää varten numeroiduilla
+;;   kielivarianteilla (A12, A22, B22, B23, B32, B33), joita koski-koodistossa ei ole.
+;; - "koskioppiaineetyleissivistava" on toissijainen. Suorituspalvelu tunnistaa aineet sen perusteella,
+;;   ja siellä on mm. AOM (äidinkielenomainen kieli), OP, OPA, YL ja ET, jotka puuttuvat ensisijaisesta.
+;; Ilman toissijaista näiden aineiden rivit katoaisivat Arvosanat-välilehdeltä, koska get-arvosanat
+;; pudottaa rivin jolle kumpikaan koodisto ei anna labelia.
+(def oppiaine-label-koodistot ["oppiaineetyleissivistava" "koskioppiaineetyleissivistava"])
+
 (defn- suoritus-value-true?
   [suoritus key]
   (= "true" (key suoritus)))
@@ -46,8 +55,9 @@
     (->> (keys suoritus)
          (filter #(string/includes? (str %) "PK_"))
          (map (fn [aine]
-                {:key aine
-                 :label (get-koodi-label "oppiaineetyleissivistava" 1 (last (string/split (str aine) #"PK_")))}))
+                (let [koodi (last (string/split (str aine) #"PK_"))]
+                  {:key   aine
+                   :label (some #(get-koodi-label % 1 koodi) oppiaine-label-koodistot)})))
          (filter #(not (nil? (:label %))))
          (map (fn [aine]
                 (merge aine
