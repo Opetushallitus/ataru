@@ -12,9 +12,6 @@
     "plugin:cypress/recommended",
     "plugin:chai-friendly/recommended"
   ],
-  "env": {
-    "mocha": true
-  },
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "error"

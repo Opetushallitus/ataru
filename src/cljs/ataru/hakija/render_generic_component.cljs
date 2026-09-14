@@ -1,5 +1,5 @@
 (ns ataru.hakija.render-generic-component
-  (:require [ataru.hakija.components.dropdown-component :as dropdown-component]
+  (:require [ataru.hakija.components.hakija-dropdown-component :as dropdown-component]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [schema.core :as s])
   (:require-macros [cljs.core.match :refer [match]]))

@@ -10,6 +10,7 @@ VIRKAILIJA_RELOADED ?= false
 HAKIJA_RELOADED ?= false
 
 FIGWHEEL=ataru-figwheel
+FIGWHEEL_CYPRESS=ataru-figwheel-cypress
 CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
@@ -17,7 +18,7 @@ HAKIJA_CYPRESS_BACKEND=ataru-hakija-cypress-backend-8353
 VIRKAILIJA_CYPRESS_BACKEND=ataru-virkailija-cypress-backend-8352
 
 DEV_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_BACKEND) $(VIRKAILIJA_BACKEND)
-CYPRESS_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
+CYPRESS_SERVICES = $(FIGWHEEL_CYPRESS) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
 
 DOCKER_CONTAINERS_TEST = ataru-test-db ataru-test-ftpd ataru-test-redis
 DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ftpd ataru-test-redis
@@ -87,11 +88,11 @@ start-pm2: $(NODE_MODULES) start-docker
 	$(foreach service, $(DEV_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-cypress: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+start-pm2-cypress: $(NODE_MODULES) start-docker-cypress clear-cypress-db run-fake-deps-server
 	$(foreach service, $(CYPRESS_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-ci: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+start-pm2-ci: $(NODE_MODULES) start-docker-cypress clear-cypress-db run-fake-deps-server
 	$(PM2) start pm2.ci.config.js
 
 start-watch: $(NODE_MODULES)
@@ -161,10 +162,13 @@ stop-fake-deps-server:
 init-test-db: run-fake-deps-server
 	lein with-profile test run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
 
-nuke-test-db:
+clear-test-db:
 	lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
 
-load-test-fixture: nuke-test-db init-test-db
+clear-cypress-db:
+	CONFIG=config/cypress.edn lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
+
+load-test-fixture: clear-test-db init-test-db
 	lein with-profile test run -m ataru.fixtures.db.browser-test-db/init-db-fixture
 
 # ----------------
@@ -182,7 +186,7 @@ stop: stop-pm2 stop-pm2-ci stop-docker stop-fake-deps-server
 
 restart: stop-pm2 start-pm2
 
-clean: nuke-test-db stop clean-lein clean-docker
+clean: clear-test-db stop clean-lein clean-docker
 	rm -rf node_modules
 	rm *.log
 
@@ -236,19 +240,13 @@ install-cypress:
 # Test db management
 # ----------------
 
-compile-test-code: $(NODE_MODULES) compile-less 
-	lein with-profile test cljsbuild once virkailija-min hakija-min
-
 test-clojurescript: $(NODE_MODULES)
 	lein with-profile test doo chrome test once
 
-test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
-	lein with-profile test spec -t ui
+test-clojure: $(NODE_MODULES) clear-test-db init-test-db
+	lein with-profile test spec
 
-test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
-	lein with-profile test spec -t ~ui
-
-test: start-docker-test test-clojurescript test-clojure test-browser
+test: start-docker-test test-clojurescript test-clojure
 
 test-playwright-docker:
 	./bin/run-playwright-tests-in-docker.sh
@@ -259,7 +257,6 @@ test-playwright: $(NODE_MODULES)
 test-cypress-ci: $(NODE_MODULES) 
 	pnpm run cypress:run:ci
 
-reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 
 process-resources:
 	lein resource
@@ -271,9 +268,13 @@ process-resources:
 pull-playwright-image: 
 	./bin/pull-playwright-image.sh
 
-ci-test-mocha:start-docker-test test-browser
-
 ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
+
+ci-test-playwright: export CI := true
+ci-test-playwright: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci pull-playwright-image wait-for-cypress-ci test-playwright-docker
+
+ci-test-cypress: export CI := true
+ci-test-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress wait-for-cypress-ci test-cypress-ci
 
 ci-test-playwright-and-cypress: export CI := true
 ci-test-playwright-and-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress pull-playwright-image wait-for-cypress-ci test-playwright-docker test-cypress-ci stop-pm2-ci stop-docker
