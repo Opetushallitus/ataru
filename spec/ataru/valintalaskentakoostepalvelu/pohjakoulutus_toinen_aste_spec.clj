@@ -5,13 +5,18 @@
                                                                                   oppiaine-valinnainen-postfix]]
             [clojure.string :as string]))
 
+;; Nämä oppiainekoodit ovat vain koskioppiaineetyleissivistava-koodistossa, eivät oppiaineetyleissivistava-koodistossa.
+(def ^:private koski-only-oppiaineet #{"AOM" "OP" "OPA" "YL" "ET"})
+
 (defn- dummy-get-koodi
-  [_ _ koodi]
+  [uri _ koodi]
   (when (not (or
                (nil? koodi)
                (string/includes? koodi oppiaine-lang-postfix)
                (string/includes? koodi "SUORITUSVUOSI")
-               (string/includes? koodi oppiaine-valinnainen-postfix)))
+               (string/includes? koodi oppiaine-valinnainen-postfix)
+               (and (= uri "oppiaineetyleissivistava")
+                    (contains? koski-only-oppiaineet koodi))))
     koodi))
 
 (def suoritus {:POHJAKOULUTUS "Perusopetus"
@@ -42,6 +47,16 @@
                           (should= 8 (get-in arvosanat [1 :value]))
                           (should= "MA" (get-in arvosanat [1 :label]))
                           (should= :PK_MA (get-in arvosanat [1 :key]))))
+
+                    (it "returns äidinkielenomainen kieli (AOM) from koskioppiaineetyleissivistava when it is missing from oppiaineetyleissivistava"
+                        (let [grades {:PK_AOM 8 :PK_AOM_OPPIAINE "pl" :PK_MA 9}
+                              result (pohjakoulutus-for-application dummy-get-koodi (merge suoritus grades))
+                              arvosanat (vec (:arvosanat result))
+                              aom (first (filter #(= :PK_AOM (:key %)) arvosanat))]
+                          (should= 2 (count arvosanat))
+                          (should= 8 (:value aom))
+                          (should= "AOM" (:label aom))
+                          (should= "pl" (:lang aom))))
 
                     (it "returns arvosanat with valinnaiset"
                         (let [grades {:PK_FY 9 :PK_FY_VAL1 8 :PK_FY_VAL2 10 :PK_FY_VAL3 7}
