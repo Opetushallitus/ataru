@@ -37,6 +37,11 @@
                    (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
                        (str "SSN " ssn " is not valid")))))
 
+             (doseq [century-char ["|" "+" "G" "T" "Z"]]
+               (let [ssn (str "010101" century-char "0090")]
+                 (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn}))))
+                     (str "SSN " ssn " should not be valid"))))
+
              (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
              (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
              (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))

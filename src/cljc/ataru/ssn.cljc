@@ -4,7 +4,7 @@
             [clojure.string :as string]
             [ataru.feature-config :refer [feature-enabled?]]))
 
-(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A-F|U-Y])(\d{3})([0-9a-zA-Z])$")
+(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-]|[A-F]|[U-Y])(\d{3})([0-9a-zA-Z])$")
 
 (def ^:private check-chars {0  "0"
                             1  "1"
