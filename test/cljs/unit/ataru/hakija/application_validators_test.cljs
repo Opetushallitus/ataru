@@ -42,6 +42,16 @@
                  (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn}))))
                      (str "SSN " ssn " should not be valid"))))
 
+             ;; individual numbers 000 and 001 are never issued
+             (doseq [ssn ["010101-000P" "010101-001R"]]
+               (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn}))))
+                   (str "SSN " ssn " should not be valid")))
+
+             ;; bounds of the real range, plus a temporary one which is allowed while the feature is off
+             (doseq [ssn ["010101-002S" "010101-899P" "010101-960N"]]
+               (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
+                   (str "SSN " ssn " is not valid")))
+
              (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
              (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
              (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
