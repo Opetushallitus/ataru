@@ -62,15 +62,21 @@
   (clojure.string/trim (or value "")))
 
 (defn- validation-error
-  [errors]
+  [id errors]
   (let [languages @(subscribe [:application/default-languages])]
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
+       {:id id :role "alert"}
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
                                    {:key (str "error-" idx)}))
                       errors))])))
+
+(defn- describedby-id
+  "Palauttaa id:n jos vastaava virhe on olemassa, muuten nil - sopii suoraan :aria-describedby-attribuutin arvoksi."
+  [id error]
+  (when (not-empty error) id))
 
 (defn info-element [field-descriptor _]
   (let [languages              (subscribe [:application/default-languages])
@@ -109,6 +115,12 @@
                                         (multi-value-field-change field-descriptor idx %)
                                         (textual-field-change field-descriptor %))
                      show-error?   @(subscribe [:application/show-validation-error-class? id idx nil])
+                     email-main-error        (some-> answer :errors first :email-main-error)
+                     email-verify-error      (some-> answer :errors first :email-verify-error)
+                     email-has-applied-error (some-> answer :errors first :email-has-applied-error)
+                     email-main-error-id        (str form-field-id "-email-main-error")
+                     email-verify-error-id      (str form-field-id "-email-verify-error")
+                     email-has-applied-error-id (str form-field-id "-email-has-applied-error")
                      value         (cond cannot-view?
                                          "***********"
                                          (:focused? @local-state)
@@ -141,6 +153,9 @@
                                                               (on-change value)))
                               :required      (is-required-field? field-descriptor)
                               :aria-invalid  (not (:valid answer))
+                              :aria-describedby (not-empty (string/join " " (keep identity
+                                                                                   [(describedby-id email-main-error-id email-main-error)
+                                                                                    (describedby-id email-has-applied-error-id email-has-applied-error)])))
                               :autoComplete  autocomplete-off
                               :value         value
                               :default-value (if @(subscribe [:application/cannot-view? id])
@@ -151,10 +166,7 @@
                               :data-test-id  "email-input"}
                              (when @(subscribe [:application/cannot-edit? id])
                                    {:disabled true}))]
-                     [validation-error (some-> answer
-                                               :errors
-                                               first
-                                               :email-main-error)]
+                     [validation-error email-main-error-id email-main-error]
                      (let [id           :verify-email
                            get-verify-value (fn []
                                               (cond cannot-view?
@@ -193,16 +205,11 @@
                                                     " application__form-field-error"
                                                     " application__form-text-input--normal"))
                              :aria-invalid (not (:valid answer))
+                             :aria-describedby (describedby-id email-verify-error-id email-verify-error)
                              :autoComplete autocomplete-off
                              :data-test-id "verify-email-input"}]
-                           [validation-error (some-> answer
-                                                     :errors
-                                                     first
-                                                     :email-verify-error)]
-                           [validation-error (some-> answer
-                                                     :errors
-                                                     first
-                                                     :email-has-applied-error)]])]))))
+                           [validation-error email-verify-error-id email-verify-error]
+                           [validation-error email-has-applied-error-id email-has-applied-error]])]))))
 
 (defn- options-satisfying-condition [field-descriptor answer-value options]
   (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
@@ -251,6 +258,8 @@
                                (when (seq (:section-visibility-conditions field-descriptor))
                                  (handle-section-visibility-on-blur field-descriptor (get @local-state :value))))
             form-field-id    (application-field/form-field-id field-descriptor idx)
+            field-error      (some-> errors first vals first)
+            field-error-id   (str form-field-id "-error")
             data-test-id     (if (some #{id} [:first-name
                                               :preferred-name
                                               :last-name
@@ -296,6 +305,7 @@
                                                  (on-change value)))
                    :required     (is-required-field? field-descriptor)
                    :aria-invalid (not valid)
+                   :aria-describedby (describedby-id field-error-id field-error)
                    :tab-index    "0"
                    :autoComplete autocomplete-off
                    :value        (cond cannot-view?
@@ -308,10 +318,7 @@
                   (when (or disabled? cannot-edit? locked)
                     {:disabled true}))]]
 
-         [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
-                                   first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
-                                   vals ;mapin arvot listana (jonka koko 1)
-                                   first)] ;kaivettava listan sisältä se varsinainen errors-vector
+         [validation-error field-error-id field-error]
          (when (not (or (string/blank? value)
                         show-error?))
            [text-field-followups-container field-descriptor options value idx])]))))
@@ -821,13 +828,14 @@
           :autoComplete    autocomplete-off}]))))
 
 (defn- validation-error-for-validator [{:keys [field-descriptor]} validator-keyword]
-  (let [id          (keyword (:id field-descriptor))
-        validator-name validator-keyword]
+  (let [id             (keyword (:id field-descriptor))
+        validator-name validator-keyword
+        error-id       (str (:id field-descriptor) "-" (name validator-keyword) "-error")]
     (fn []
       (let [{:keys [errors]} @(subscribe [:application/answer id])]
-        [validation-error (some-> errors
-                                  first
-                                  validator-name)]))))
+        [validation-error error-id (some-> errors
+                                           first
+                                           validator-name)]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
