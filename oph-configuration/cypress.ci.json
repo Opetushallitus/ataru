@@ -1,12 +1,8 @@
 {
   "baseUrl": "http://localhost:8354",
-  "chromeWebSecurity": false,
-  "defaultCommandTimeout": 10000,
   "fixturesFolder": "cypress/fixtures",
   "pageLoadTimeout": 120000,
   "requestTimeout": 120000,
   "responseTimeout": 120000,
-  "viewportWidth": 1500,
-  "viewportHeight": 1000,
   "video": false
 }
