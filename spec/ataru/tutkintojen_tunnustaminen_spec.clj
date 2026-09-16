@@ -653,7 +653,7 @@
               (should= "fi" lang))))))
 
   (it "should send tutu application edit notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-edit-notification {:return {:status 200}})]
+      (with-redefs [cas/cas-authenticated-put (stub :send-edit-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-edit-handler
           {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
