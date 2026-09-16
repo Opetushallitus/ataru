@@ -76,7 +76,7 @@
   (let [languages @(subscribe [:application/default-languages])]
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
-       {:id (validation-error-id form-field-id)}
+       {:id (validation-error-id form-field-id) :role "alert"}
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
