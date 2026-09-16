@@ -145,36 +145,7 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         })
 
         describe('Käyttäjällä on oikeus vain yhteen organisaatioon', () => {
-          // Lähtökoulukyselyn dispatchaa ainoastaan #open-application-filters -klikkaus (ja
-          // haun/lomakkeen valinta), ja molemmat on ehdollistettu käyttäjän roolilla, joka
-          // selviää vasta asynkronisesti /user-info -kutsusta. Jos klikkaus ehtii ennen sitä,
-          // kyselyä ei koskaan tehdä eikä sovellus yritä sitä uudelleen. Avataan siis suodatin
-          // uudestaan kunnes lähtökoulusuodatin on oikeasti renderöitynyt.
-          const openFiltersUntilSchoolFilterRendered = (attemptsLeft = 8) => {
-            cy.get('#open-application-filters').click()
-            cy.get('.application-handling__filters-popup').should('exist')
-            cy.get('body').then(($body) => {
-              if ($body.find('#school-search, #selected-school').length === 0) {
-                if (attemptsLeft <= 1) {
-                  throw new Error(
-                    'Lähtökoulusuodatin ei renderöitynyt suodatinikkunaan'
-                  )
-                }
-                cy.get('#open-application-filters').click()
-                cy.get('.application-handling__filters-popup').should(
-                  'not.exist'
-                )
-                // Odotus ei ole settle-arvaus vaan antaa /user-info -kutsulle aikaa ehtiä
-                // maaliin ennen seuraavaa yritystä (8 x 1s).
-                cy.wait(1000)
-                openFiltersUntilSchoolFilterRendered(attemptsLeft - 1)
-              }
-            })
-          }
-
           it('Hakemusten rajauksessa on valittu lähtökouluksi käyttäjän ainoa organisaatio', () => {
-            // Tämä route on rekisteröitävä uloimman beforeEachin (3 organisaatiota) jälkeen,
-            // jotta se voittaa — järjestysriippuvuus, joka rikkoutuu helposti.
             cy.route(
               'GET',
               '/lomake-editori/api/organization/user-organizations*',
@@ -184,8 +155,20 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             navigateToUnprocessedHautTab()
             cy.reload()
             clickFirstHaku()
+            cy.get('#open-application-filters').click()
 
-            openFiltersUntilSchoolFilterRendered()
+            // The org fetch only dispatches once the user's role is known; if the click above
+            // raced ahead of it, reopen once the role has actually loaded (signalled by either
+            // element rendering) so the fetch is retried instead of never happening.
+            cy.get('#school-search, #selected-school', {
+              timeout: 15000,
+            }).should('exist')
+            cy.get('body').then(($body) => {
+              if ($body.find('#selected-school').length === 0) {
+                cy.get('#open-application-filters').click()
+                cy.get('#open-application-filters').click()
+              }
+            })
 
             cy.get('#school-search').should('not.exist')
             cy.get('#selected-school', { timeout: 15000 }).should('exist')
