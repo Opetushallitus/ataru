@@ -786,7 +786,7 @@
 (defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (fn [{:keys [field-descriptor labelledby question-group-idx row-idx]}]
+    (fn [{:keys [field-descriptor labelledby question-group-idx row-idx error-id]}]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
@@ -823,14 +823,14 @@
           :on-change       on-change
           :disabled        cannot-edit?
           :aria-invalid    (not valid)
+          :aria-describedby (when (not valid) error-id)
           :aria-labelledby labelledby
           :tab-index       "0"
           :autoComplete    autocomplete-off}]))))
 
-(defn- validation-error-for-validator [{:keys [field-descriptor]} validator-keyword]
+(defn- validation-error-for-validator [{:keys [field-descriptor error-id]} validator-keyword]
   (let [id             (keyword (:id field-descriptor))
-        validator-name validator-keyword
-        error-id       (str (:id field-descriptor) "-" (name validator-keyword) "-error")]
+        validator-name validator-keyword]
     (fn []
       (let [{:keys [errors]} @(subscribe [:application/answer id])]
         [validation-error error-id (some-> errors
@@ -869,7 +869,8 @@
                        (map-indexed (fn adjacent-text-fields-column [col-idx child]
                                       (let [key            (str "adjacent-field-" row-idx "-" col-idx)
                                             field-label-id (generic-label-component/id-for-label child
-                                                                                                 question-group-idx)]
+                                                                                                 question-group-idx)
+                                            error-id       (str (:id child) "-" row-idx "-email-simple-error")]
                                         ^{:key key}
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
@@ -879,8 +880,9 @@
                                           {:field-descriptor   child
                                            :labelledby         (str header-label-id " " field-label-id)
                                            :question-group-idx question-group-idx
-                                           :row-idx            row-idx}]
-                                         [validation-error-for-validator {:field-descriptor child} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
+                                           :row-idx            row-idx
+                                           :error-id           error-id}]
+                                         [validation-error-for-validator {:field-descriptor child :error-id error-id} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
