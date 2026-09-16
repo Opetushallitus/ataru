@@ -560,7 +560,7 @@
                                                          (String.))))))))
 
   (it "should send information request notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-information-request-notification {:return {:status 200}})]
+      (with-redefs [cas/cas-authenticated-put (stub :send-information-request-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-information-request-handler
           {:information-request {:application-key *application-key*
                                  :message-type    "information-request"}}
@@ -655,7 +655,7 @@
   (it "should send tutu application edit notification message to tutu-backend"
       (with-redefs [cas/cas-authenticated-get (stub :send-edit-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-edit-handler
-          {:application-id *application-id*}
+          {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
            :koodisto-cache   koodisto-cache-mock})
         (should-have-invoked :send-edit-notification {:times 1})))
@@ -681,7 +681,7 @@
           (should-be empty? attachments))))
 
   (it "should send state change notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-state-change-notification {:return {:status 200}})]
+      (with-redefs [cas/cas-authenticated-put (stub :send-state-change-notification {:return {:status 200}})]
         (tutkintojen-tunnustaminen-state-change-handler
           {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
