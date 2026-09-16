@@ -22,5 +22,5 @@
                  :latestVersionCreated (:created tutu-application)}
             response (cas/cas-authenticated-put tutu-cas-client url req)]
         (when (not (<= 200 (:status response) 299))
-          (throw (Exception. (str "Sending information-request notification for application " application-key " to Tutu failed"))))
+          (throw (Exception. (str "Sending information-request notification for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
         (log/info (str "Information-request notification for application " application-key " successfully sent to Tutu"))))))
