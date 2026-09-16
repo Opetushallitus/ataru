@@ -8,7 +8,8 @@
 
 (defn tutkintojen-tunnustaminen-edit-handler [{:keys [application-key]} {:keys [form-by-id-cache koodisto-cache attachment-deadline-service tutu-cas-client]}]
   (let [tutu-application (application-store/get-tutu-application application-key)
-        form (get-form form-by-id-cache koodisto-cache attachment-deadline-service tutu-application)]
+        form (get-form form-by-id-cache koodisto-cache attachment-deadline-service
+                       (assoc tutu-application :form-id (:form_id tutu-application)))]
     (when (tutu-form? form)
       (let [url (resolve-url :tutu-service.hakemus-update application-key)
             response (cas/cas-authenticated-get tutu-cas-client url)]
