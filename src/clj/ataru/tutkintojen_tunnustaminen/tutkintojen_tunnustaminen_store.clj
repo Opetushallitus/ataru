@@ -58,14 +58,14 @@
                                                        {:application-id application-id})))))
 
 (defn start-tutu-application-edit-notification-job
-  [job-runner application-id]
+  [job-runner application-key]
   (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
     (log/info "Started tutu application edit notification (to tutu-application) job with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
                                                        connection
                                                        "tutu-application-edit-notification-job"
-                                                       {:application-id application-id})))))
+                                                       {:application-key application-key})))))
 
 (defn start-tutkintojen-tunnustaminen-review-state-changed-job
   [job-runner event-id]

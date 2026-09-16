@@ -13,9 +13,8 @@
         new-state (:state (first (filter #(= "processing-state" (:requirement %)) (:application-hakukohde-reviews tutu-application))))]
     (when (and (tutu-form? form)
                 new-state)
-      (let [url (resolve-url :tutu-service.state-change)
-            req {:hakemusOid application-key
-                 :tila new-state
+      (let [url (resolve-url :tutu-service.state-change application-key)
+            req {:tila new-state
                  :submitted (:submitted tutu-application)
                  :latestVersionCreated (:created tutu-application)}
             response (cas/cas-authenticated-put tutu-cas-client url req)]
