@@ -15,9 +15,8 @@
     (when (and (tutu-form? form)
                (= "information-request" (:message-type information-request))
                timestamp)
-      (let [url (resolve-url :tutu-service.state-change)
-            req {:hakemusOid application-key
-                 :tila "information-request"
+      (let [url (resolve-url :tutu-service.state-change application-key)
+            req {:tila "information-request"
                  :timestamp timestamp
                  :submitted (:submitted tutu-application)
                  :latestVersionCreated (:created tutu-application)}
