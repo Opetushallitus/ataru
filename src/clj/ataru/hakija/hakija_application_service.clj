@@ -3,6 +3,7 @@
     [ataru.applications.application-service :as application-service]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
+    [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
     [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
@@ -504,8 +505,11 @@
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
-  (when (nil? (:person-oid application))
-    (start-person-creation-job job-runner application-id))
+  (if (nil? (:person-oid application))
+    (start-person-creation-job job-runner application-id)
+    (automatic-payment-obligation/start-automatic-payment-obligation-job-for-application
+     job-runner
+     application-id))
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
@@ -523,6 +527,9 @@
     application-id)
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+   job-runner
+   application-id)
+  (automatic-payment-obligation/start-automatic-payment-obligation-job-for-application
    job-runner
    application-id))
 

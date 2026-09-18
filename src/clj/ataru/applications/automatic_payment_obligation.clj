@@ -48,6 +48,15 @@
                    "automatic-payment-obligation-job"
                    {:person-oid person-oid})))
 
+(defn start-automatic-payment-obligation-job-for-application
+  "Re-runs the automatic payment obligation check for the person behind an
+   application. Used when an application is edited (e.g. new hakukohde added
+   after submission) so that an already verified payment obligation status
+   is propagated to the newly added hakukohde as well."
+  [job-runner application-id]
+  (when-let [person-oid (:person-oid (application-store/get-application application-id))]
+    (start-automatic-payment-obligation-job job-runner person-oid)))
+
 (defn start-automatic-payment-obligation-job-for-haku
   [job-runner haku-oid]
   (log/info (str "Running automatic payment obligation job for haku " haku-oid))
