@@ -505,17 +505,15 @@
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
-  (if (nil? (:person-oid application))
-    (start-person-creation-job job-runner application-id)
-    (automatic-payment-obligation/start-automatic-payment-obligation-job-for-application
-     job-runner
-     application-id))
+  (if-let [person-oid (:person-oid application)]
+    (automatic-payment-obligation/start-automatic-payment-obligation-job job-runner person-oid)
+    (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id _]
+(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id application]
   (application-email/start-email-edit-confirmation-job attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
@@ -529,9 +527,8 @@
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
    application-id)
-  (automatic-payment-obligation/start-automatic-payment-obligation-job-for-application
-   job-runner
-   application-id))
+  (when-let [person-oid (:person-oid application)]
+    (automatic-payment-obligation/start-automatic-payment-obligation-job job-runner person-oid)))
 
 (defn- tutu-form? [form]
   (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
@@ -694,7 +691,7 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
+        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id application))
       (do
         (audit-log/log audit-logger
                        {:new       application-empty-answers-removed
