@@ -3117,6 +3117,12 @@ th.application__readonly-adjacent--header {
   position: relative;
 }
 
+// Vastaanoton tila on henkilö- ja hakukohdekohtainen, joten sitä ei näytetä
+// hakemuksilla, joita se ei voi koskea (esim. hylätty hakemus).
+.application-handling__vastaanotto-ei-koske-hakemusta {
+  color: @disabled-font-gray;
+}
+
 .application-handling__count-tag {
   font-size: 11px;
   line-height: 13px;

@@ -113,6 +113,60 @@
            (key virkailija-texts)])
         (get-vastaanotto-tila-translation-key-mapping kk-haku?)))
 
+(def ^:private kaikki-vastaanottotilat
+  #{"KESKEN"
+    "VASTAANOTTANUT_SITOVASTI"
+    "EHDOLLISESTI_VASTAANOTTANUT"
+    "PERUNUT"
+    "PERUUTETTU"
+    "EI_VASTAANOTETTU_MAARA_AIKANA"
+    "OTTANUT_VASTAAN_TOISEN_PAIKAN"})
+
+;; Vastaanotto tallennetaan valinta-tulos-servicessä henkilön ja hakukohteen
+;; perusteella, ei hakemuksen. Jos henkilöllä on samaan hakukohteeseen useampi
+;; hakemus, sama vastaanoton tila palautuu kaikille hakemuksille. Valinnan tila
+;; sen sijaan on hakemuskohtainen, joten sen avulla voidaan päätellä, voiko
+;; vastaanoton tila koskea tätä hakemusta.
+;;
+;; Pariteetit on johdettu valinta-tulos-servicen omasta validoinnista
+;; (ErillishaunValinnantulosStrategy/validateTilat): tässä ovat ne
+;; yhdistelmät, jotka service ylipäätään hyväksyy tallennettavaksi.
+(def valinnantilan-sallimat-vastaanottotilat
+  {"KESKEN"                 #{"KESKEN"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}
+   "HYVAKSYTTY"             kaikki-vastaanottotilat
+   "VARASIJALTA_HYVAKSYTTY" kaikki-vastaanottotilat
+   "HYLATTY"                #{"KESKEN"}
+   "VARALLA"                #{"KESKEN"}
+   ;; PERUUNTUNUT + PERUNUT/PERUUTETTU jää kiinni validateTilatin viimeiseen
+   ;; ehtoon, koska poikkeus koskee vain tiloja joissa valinnan ja vastaanoton
+   ;; tila ovat samat
+   "PERUUNTUNUT"            #{"KESKEN"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"
+                              "OTTANUT_VASTAAN_TOISEN_PAIKAN"}
+   "PERUNUT"                #{"KESKEN"
+                              "PERUNUT"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}
+   "PERUUTETTU"             #{"KESKEN"
+                              "PERUUTETTU"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}})
+
+(defn vastaanotto-koskee-tata-hakemusta?
+  "Kertoo, voiko valinnan tuloksen vastaanoton tila koskea juuri tätä hakemusta.
+   Palauttaa true myös silloin kun vastaanoton tilaa ei ole tai se on KESKEN,
+   jolloin mitään toisen hakemuksen tietoa ei voi vuotaa näkyviin.
+
+   Puuttuvaa valinnan tilaa käsitellään KESKENinä, koska käyttöliittymä näyttää
+   sen niin, ks. default-kevyt-valinta-property-value. Tuntematon valinnan tila
+   sallii kaiken, jotta tietoa ei piiloteta varmuuden vuoksi."
+  [{:keys [valinnantila vastaanottotila]}]
+  (or (nil? vastaanottotila)
+      (= "KESKEN" vastaanottotila)
+      (contains? (get valinnantilan-sallimat-vastaanottotilat
+                      (or valinnantila "KESKEN")
+                      kaikki-vastaanottotilat)
+                 vastaanottotila)))
+
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla
