@@ -5,6 +5,7 @@
             [goog.crypt.Md5]
             [cljs-time.core :as c]
             [ataru.filename-normalizer :as normalizer]
+            [ataru.hakija.attachment-path :as attachment-path]
             [ataru.cljs-util :as util]
             [clojure.string]))
 
@@ -36,9 +37,9 @@
     (dispatch (conj error-handler status))))
 
 (defn upload-file
-  [url finished-url file field-id attachment-idx application-attachments-id handlers]
+  [url finished-url file field-id upload-id application-attachments-id handlers]
   {:pre [(every? (complement clojure.string/blank?) [url field-id application-attachments-id])
-         (every? some? [file attachment-idx handlers])]}
+         (every? some? [file upload-id handlers])]}
   (hex-md5-hash
    file
    (fn [md5-hash]
@@ -49,7 +50,7 @@
                 (str
                  application-attachments-id "-"
                  field-id "-"
-                 attachment-idx "-"
+                 upload-id "-"
                  md5-hash)
                 file
                 0]))))
@@ -117,14 +118,13 @@
 
 (reg-event-db
   :application-file-upload/handle-attachment-progress-resumable
-  (fn [db [_ field-descriptor attachment-idx question-group-idx evt file-part-number]]
-    (if (.-lengthComputable evt)
+  (fn [db [_ field-descriptor upload-id question-group-idx evt file-part-number]]
+    (if-let [path (and (.-lengthComputable evt)
+                       (attachment-path/path-by-upload-id db
+                                                          (keyword (:id field-descriptor))
+                                                          question-group-idx
+                                                          upload-id))]
       (let [now           (c/now)
-            path          (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
-                                  (some? question-group-idx)
-                                  (conj question-group-idx)
-                                  true
-                                  (conj attachment-idx))
             prev-uploaded (get-in db (conj path :uploaded-size) 0)
             uploaded-size (+ (.-loaded evt) (* file-part-number max-part-size))
             last-progress (get-in db (conj path :last-progress))

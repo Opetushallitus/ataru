@@ -2,7 +2,7 @@
   (:require [ataru.config :as config]
             [ataru.constants :as constants]
             [clojure.string :as string]
-            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
+            [re-frame.core :refer [reg-event-db reg-event-fx dispatch after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
             [ataru.application.option-visibility :as option-visibility]
@@ -16,6 +16,7 @@
             [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
+            [ataru.hakija.attachment-path :as attachment-path]
             [ataru.hakija.try-selection :refer [try-selection]]
             [ataru.translations.translation-util :as translations]
             [cljs.core.match :refer-macros [match]]
@@ -1315,33 +1316,29 @@
 (reg-event-fx
   :application/start-attachment-upload
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx upload-id file retries]]
     (resumable-upload/upload-file
       "/hakemus/api/files/signed-upload"
       "/hakemus/api/files/mark-upload-delivered"
       file
       (:id field-descriptor)
-      attachment-idx
+      upload-id
       (get-in db [:application :attachments-id])
-      {:handler          [:application/handle-attachment-upload field-descriptor question-group-idx attachment-idx]
-       :error-handler    [:application/handle-attachment-upload-error field-descriptor question-group-idx attachment-idx file (inc retries)]
-       :cancel-handler   [:application/handle-attachment-upload-cancelled field-descriptor question-group-idx attachment-idx]
-       :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
-       :started-handler  [:application/handle-attachment-upload-started field-descriptor question-group-idx attachment-idx]})))
+      {:handler          [:application/handle-attachment-upload field-descriptor question-group-idx upload-id]
+       :error-handler    [:application/handle-attachment-upload-error field-descriptor question-group-idx upload-id file (inc retries)]
+       :cancel-handler   [:application/handle-attachment-upload-cancelled field-descriptor question-group-idx upload-id]
+       :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor upload-id question-group-idx]
+       :started-handler  [:application/handle-attachment-upload-started field-descriptor question-group-idx upload-id]})))
 
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/add-single-attachment-resumable
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]] 
-    (let [id       (keyword (:id field-descriptor)) 
-          filename (:filename @(subscribe [:application/answer
-                                           id
-                                           question-group-idx
-                                           attachment-idx]))]
-      {:db       (assoc-in db [:attachments-uploading id filename] :downloading)
-       :dispatch [:application/start-attachment-upload field-descriptor question-group-idx attachment-idx file retries]})))
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx upload-id file retries]]
+    (let [id   (keyword (:id field-descriptor))
+          path (attachment-path/path-by-upload-id db id question-group-idx upload-id)]
+      (when path
+        {:db       (assoc-in db [:attachments-uploading id (get-in db (conj path :filename))] :downloading)
+         :dispatch [:application/start-attachment-upload field-descriptor question-group-idx upload-id file retries]}))))
 
 (reg-event-fx
   :application/add-attachments
@@ -1357,7 +1354,8 @@
                                                      (= (.-size file) (:size %)))
                                                (filter #(not= (:status %) :deleting) existing-attachments)))
                                        files)
-          new-attachments      (map (fn [file]
+          upload-ids           (mapv (fn [_] (str (random-uuid))) new-files)
+          new-attachments      (map (fn [file upload-id]
                                       (cond
                                         (< max-attachment-size-bytes (.-size file))
                                         {:value    ""
@@ -1383,8 +1381,10 @@
                                          :last-progress (c/now)
                                          :speed         0
                                          :status        :uploading
-                                         :valid         false}))
-                                    new-files)]
+                                         :valid         false
+                                         :upload-id     upload-id}))
+                                    new-files
+                                    upload-ids)]
       {:db         (-> (if (some? question-group-idx)
                          (-> db
                              (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
@@ -1395,15 +1395,15 @@
                          (update-in db [:application :answers id :values] into new-attachments))
                        (set-repeatable-field-value id)
                        (set-repeatable-application-field-top-level-valid id true))
-       :dispatch-n (keep-indexed (fn [idx file]
-                                   (when (< 0 (.-size file) (inc max-attachment-size-bytes))
-                                     [:application/add-single-attachment-resumable
-                                      field-descriptor
-                                      question-group-idx
-                                      (+ (count existing-attachments) idx)
-                                      file
-                                      0]))
-                                 new-files)})))
+       :dispatch-n (keep (fn [[file upload-id]]
+                           (when (< 0 (.-size file) (inc max-attachment-size-bytes))
+                             [:application/add-single-attachment-resumable
+                              field-descriptor
+                              question-group-idx
+                              upload-id
+                              file
+                              0]))
+                         (map vector new-files upload-ids))})))
 
 (reg-event-fx
   :application/set-attachment-valid
@@ -1416,60 +1416,54 @@
        :dispatch-n [[:application/set-validator-processed id]
                     [:application/run-rules (:rules field-descriptor)]]})))
 
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/handle-attachment-upload
   [check-schema-interceptor]
-  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx response]]
-    (let [id       (keyword (:id field-descriptor))
-          path     (if question-group-idx
-                     [:application :answers id :values question-group-idx attachment-idx]
-                     [:application :answers id :values attachment-idx])
-          filename (:filename @(subscribe [:application/answer
-                                           id
-                                           question-group-idx
-                                           attachment-idx]))
-          new-db   (-> db
-                       (update-in [:attachments-uploading id] dissoc filename)
-                       (assoc-in path {:value    (:key response)
-                                       :filename (:filename response)
-                                       :size     (:size response)
-                                       :status   :ready
-                                       :valid    true})
-                       (set-repeatable-field-value id)
-                       (set-validator-processing id))]
-      {:db                 new-db
-       :validate-debounced {:value                        (if (some? question-group-idx)
-                                                            (get-in new-db [:application :answers id :value question-group-idx])
-                                                            (get-in new-db [:application :answers id :value]))
-                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in db [:application :answers])
-                            :field-descriptor             field-descriptor
-                            :editing?                     (get-in db [:application :editing?])
-                            :virkailija?                  (contains? (:application db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-attachment-valid
-                                                                       field-descriptor
-                                                                       valid?
-                                                                       errors]))}})))
+  (fn [{db :db} [_ field-descriptor question-group-idx upload-id response]]
+    (let [id (keyword (:id field-descriptor))]
+      (when-let [path (attachment-path/path-by-upload-id db id question-group-idx upload-id)]
+        (let [filename (get-in db (conj path :filename))
+              new-db   (-> db
+                           (update-in [:attachments-uploading id] dissoc filename)
+                           (assoc-in path {:value    (:key response)
+                                           :filename (:filename response)
+                                           :size     (:size response)
+                                           :status   :ready
+                                           :valid    true})
+                           (set-repeatable-field-value id)
+                           (set-validator-processing id))]
+          {:db                 new-db
+           :validate-debounced {:value                        (if (some? question-group-idx)
+                                                                (get-in new-db [:application :answers id :value question-group-idx])
+                                                                (get-in new-db [:application :answers id :value]))
+                                :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                                :answers-by-key               (get-in db [:application :answers])
+                                :field-descriptor             field-descriptor
+                                :editing?                     (get-in db [:application :editing?])
+                                :virkailija?                  (contains? (:application db) :virkailija-secret)
+                                :on-validated                 (fn [[valid? errors]]
+                                                                (dispatch [:application/set-attachment-valid
+                                                                           field-descriptor
+                                                                           valid?
+                                                                           errors]))}})))))
 
 (reg-event-db
   :application/handle-attachment-upload-started
   [check-schema-interceptor]
-  (fn [db [_ field-descriptor question-group-idx attachment-idx request]]
-    (let [id (keyword (:id field-descriptor))]
-      (if (some? question-group-idx)
-        (assoc-in db [:application :answers id :values question-group-idx attachment-idx :request] request)
-        (assoc-in db [:application :answers id :values attachment-idx :request] request)))))
+  (fn [db [_ field-descriptor question-group-idx upload-id request]]
+    (if-let [path (attachment-path/path-by-upload-id db
+                                                     (keyword (:id field-descriptor))
+                                                     question-group-idx
+                                                     upload-id)]
+      (assoc-in db (conj path :request) request)
+      db)))
 
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/handle-attachment-upload-error
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries response-status]]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx upload-id file retries response-status]]
     (let [id            (keyword (:id field-descriptor))
+          path          (attachment-path/path-by-upload-id db id question-group-idx upload-id)
           current-error (case response-status
                           ;; misc error in resumable file transfer, retry:
                           409 :file-upload-retransmit
@@ -1480,48 +1474,46 @@
                           ;; generic error, e.g. transfer interrupted:
                           :file-upload-error)]
       
-      (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
+      (cond
+        (nil? path)
+        {:db db}
+
+        (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable
                                            field-descriptor
                                            question-group-idx
-                                           attachment-idx
+                                           upload-id
                                            file
                                            retries]
                             :timeout      (+ 2000 (rand-int 2000))}}
+
+        :else
         {:db (-> db
-                 (update-in [:attachments-uploading id] dissoc (:filename @(subscribe [:application/answer
-                                                                                       id
-                                                                                       question-group-idx
-                                                                                       attachment-idx])))
-                 (update-in (if question-group-idx
-                              [:application :answers id :values question-group-idx attachment-idx]
-                              [:application :answers id :values attachment-idx])
+                 (update-in [:attachments-uploading id] dissoc (get-in db (conj path :filename)))
+                 (update-in path
                             merge
                             {:valid  false
                              :status :error
                              :errors [[current-error]]}))}))))
 
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/handle-attachment-upload-cancelled
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx]]
-    (let [id (keyword (:id field-descriptor))]
-      {:db       (update-in db
-                            [:attachments-uploading id]
-                            dissoc
-                            (:filename @(subscribe [:application/answer
-                                                    id
-                                                    question-group-idx
-                                                    attachment-idx])))
-       :dispatch [:application/handle-attachment-delete
-                  field-descriptor
-                  question-group-idx
-                  attachment-idx
-                  nil
-                  nil]})))
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx upload-id]]
+    (let [id   (keyword (:id field-descriptor))
+          path (attachment-path/path-by-upload-id db id question-group-idx upload-id)]
+      (when path
+        {:db       (update-in db
+                              [:attachments-uploading id]
+                              dissoc
+                              (get-in db (conj path :filename)))
+         :dispatch [:application/handle-attachment-delete
+                    field-descriptor
+                    question-group-idx
+                    (last path)
+                    nil
+                    nil]}))))
 
 (reg-event-fx
   :application/handle-attachment-delete
