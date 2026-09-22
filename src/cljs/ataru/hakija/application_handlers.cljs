@@ -1325,6 +1325,7 @@
       (get-in db [:application :attachments-id])
       {:handler          [:application/handle-attachment-upload field-descriptor question-group-idx attachment-idx]
        :error-handler    [:application/handle-attachment-upload-error field-descriptor question-group-idx attachment-idx file (inc retries)]
+       :cancel-handler   [:application/handle-attachment-upload-cancelled field-descriptor question-group-idx attachment-idx]
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
        :started-handler  [:application/handle-attachment-upload-started field-descriptor question-group-idx attachment-idx]})))
 
@@ -1501,6 +1502,27 @@
                              :status :error
                              :errors [[current-error]]}))}))))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
+(reg-event-fx
+  :application/handle-attachment-upload-cancelled
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx]]
+    (let [id (keyword (:id field-descriptor))]
+      {:db       (update-in db
+                            [:attachments-uploading id]
+                            dissoc
+                            (:filename @(subscribe [:application/answer
+                                                    id
+                                                    question-group-idx
+                                                    attachment-idx])))
+       :dispatch [:application/handle-attachment-delete
+                  field-descriptor
+                  question-group-idx
+                  attachment-idx
+                  nil
+                  nil]})))
+
 (reg-event-fx
   :application/handle-attachment-delete
   [check-schema-interceptor]
@@ -1561,11 +1583,12 @@
   :application/cancel-attachment-upload
   [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx]]
-    {:http-abort (get-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
-                                    (some? question-group-idx)
-                                    (conj question-group-idx)
-                                    true
-                                    (conj attachment-idx :request)))}))
+    (when-let [request (get-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
+                                          (some? question-group-idx)
+                                          (conj question-group-idx)
+                                          true
+                                          (conj attachment-idx :request)))]
+      {:http-abort request})))
 
 (reg-event-db
   :application/rating-hover

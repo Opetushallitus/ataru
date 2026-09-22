@@ -28,6 +28,13 @@
                             (cb (crypt/byteArrayToHex (.digest md5))))))
      (.readAsArrayBuffer fr (.slice file start end)))))
 
+(defn- dispatch-failure
+  "Aborting an in-flight request is a user cancellation, anything else is a transfer failure."
+  [{:keys [error-handler cancel-handler]} {:keys [status failure]}]
+  (if (and (= :aborted failure) (some? cancel-handler))
+    (dispatch cancel-handler)
+    (dispatch (conj error-handler status))))
+
 (defn upload-file
   [url finished-url file field-id attachment-idx application-attachments-id handlers]
   {:pre [(every? (complement clojure.string/blank?) [url field-id application-attachments-id])
@@ -49,7 +56,7 @@
 
 (reg-event-fx
   :application-file-upload/mark-upload-delivered
-  (fn [_ [_ _ finished-url {:keys [handler error-handler]} file-id file]]
+  (fn [_ [_ _ finished-url {:keys [handler error-handler started-handler] :as handlers} file-id file]]
     (let [filename                (normalizer/normalize-filename (.-name file))
           size                    (.-size file)
           response-handler        (fn [xhrio]
@@ -58,45 +65,43 @@
                                         201 (dispatch (conj handler {:filename filename
                                                                      :key      file-id
                                                                      :size     size}))
-                                        (dispatch (conj error-handler status)))))]
-      (PUT (str finished-url
-                "?file-id=" file-id
-                "&file-size=" size
-                "&file-name=" filename)
-           {:response-format {:read        identity
-                                           :description "raw"}
-            :params          {:file-id          file-id
-                              :file-size        (.-size file)
-                              :file-name        (normalizer/normalize-filename (.-name file))}
-            :headers         {"Caller-Id" (aget js/config "hakija-caller-id")
-                              "CSRF"      (util/csrf-token)}
-            :handler         response-handler
-            :error-handler   (fn [{:keys [status]}]
-                               (dispatch (conj error-handler status)))})
-      {})))
+                                        (dispatch (conj error-handler status)))))
+          req                     (PUT (str finished-url
+                                            "?file-id=" file-id
+                                            "&file-size=" size
+                                            "&file-name=" filename)
+                                    {:response-format {:read        identity
+                                                       :description "raw"}
+                                     :params          {:file-id          file-id
+                                                       :file-size        (.-size file)
+                                                       :file-name        (normalizer/normalize-filename (.-name file))}
+                                     :headers         {"Caller-Id" (aget js/config "hakija-caller-id")
+                                                       "CSRF"      (util/csrf-token)}
+                                     :handler         response-handler
+                                     :error-handler   (partial dispatch-failure handlers)})]
+      {:dispatch (conj started-handler req)})))
 
 (reg-event-fx
   :application-file-upload/upload-using-signed-url
-  (fn [_ [_ url finished-url {:keys [progress-handler error-handler] :as handlers} file-id file file-part-number]]
+  (fn [_ [_ url finished-url {:keys [progress-handler error-handler started-handler] :as handlers} file-id file file-part-number]]
     (let [mark-upload-delivered   [:application-file-upload/mark-upload-delivered url finished-url handlers file-id file]
           response-handler        (fn [xhrio]
                                     (let [status (or (:status xhrio) (.getStatus xhrio))]
                                       (case status
                                         200 (dispatch mark-upload-delivered)
-                                        (dispatch (conj error-handler status)))))]
-      (PUT url
-            {:response-format {:read        identity
-                              :description "raw"}
-            :handler         response-handler
-            :error-handler   (fn [{:keys [status]}]
-                               (dispatch (conj error-handler status)))
-            :progress-handler #(dispatch (conj progress-handler % file-part-number))
-            :body             file})
-      {})))
+                                        (dispatch (conj error-handler status)))))
+          req                     (PUT url
+                                    {:response-format {:read        identity
+                                                       :description "raw"}
+                                     :handler          response-handler
+                                     :error-handler    (partial dispatch-failure handlers)
+                                     :progress-handler #(dispatch (conj progress-handler % file-part-number))
+                                     :body             file})]
+      {:dispatch (conj started-handler req)})))
 
 (reg-event-fx
   :application-file-upload/fetch-signed-url-for-upload
-  (fn [_ [_ url finished-url {:keys [error-handler started-handler] :as handlers} file-id file file-part-number]]
+  (fn [_ [_ url finished-url {:keys [started-handler] :as handlers} file-id file file-part-number]]
     (let [params                 (merge json-params
                                         {:params        {:file-id          file-id
                                                          :file-size        (.-size file)
@@ -106,8 +111,7 @@
                                                           (dispatch [:application-file-upload/upload-using-signed-url signed-url finished-url handlers key file file-part-number]))
                                          :headers       {"Caller-Id" (aget js/config "hakija-caller-id")
                                                          "CSRF"      (util/csrf-token)}
-                                         :error-handler (fn [{:keys [status]}]
-                                                          (dispatch (conj error-handler status)))})
+                                         :error-handler (partial dispatch-failure handlers)})
           req                    (GET url params)]
       {:dispatch (conj started-handler req)})))
 
