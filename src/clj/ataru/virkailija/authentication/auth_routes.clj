@@ -45,6 +45,13 @@
              #{"ROLE_APP_ATARU_EDITORI_CRUD_1.2.246.562.10.00000000001"
                "ROLE_APP_ATARU_HAKEMUS_CRUD_1.2.246.562.10.00000000001"}]
 
+            ;; Samat organisaatiot kuin oletuskäyttäjällä, mutta vain katseluoikeus hakemuksiin.
+            "VIEW-ONLY-USER"
+            ["1.2.246.562.11.55555555555"
+             "1.2.246.562.11.11111111015"
+             #{"ROLE_APP_ATARU_HAKEMUS_READ_1.2.246.562.10.0439845"
+               "ROLE_APP_ATARU_HAKEMUS_READ_1.2.246.562.28.1"}]
+
             ;; default (if unknown ticket)
             ["1.2.246.562.11.11111111111"
              "1.2.246.562.11.11111111012"
@@ -64,7 +71,8 @@
   (contains? #{"DEVELOPER"
                "SUPERUSER"
                "OPINTO-OHJAAJA"
-               "USER-WITH-HAKUKOHDE-ORGANIZATION"}
+               "USER-WITH-HAKUKOHDE-ORGANIZATION"
+               "VIEW-ONLY-USER"}
              ticket))
 
 (defn- use-fake-login-provider?
