@@ -826,13 +826,17 @@
           (response/ok notes)
           (response/unauthorized {:error "Hakemuksien käsittely ei ole sallittu"})))
 
-      (api/DELETE "/notes/:note-id" []
+      (api/DELETE "/notes/:note-id" {session :session}
         :summary "Remove note"
         :return {:id s/Int}
         :path-params [note-id :- s/Int]
-        (if-let [note-id (application-service/remove-review-note note-id)]
-          (response/ok {:id note-id})
-          (response/bad-request)))
+        (case (application-service/remove-review-note application-service session note-id)
+          :not-found    (response/not-found {:error (str "Muistiinpanoa " note-id " ei löytynyt")})
+          :unauthorized (response/unauthorized {:error (str "Muistiinpanon " note-id " poisto ei ole sallittu")})
+          ;; Muut tapaukset: poisto onnistui, tai nil eli muistiinpano oli jo poistettu
+          ;; kirjoitushetkellä. Poisto on idempotentti, joten molemmissa lopputulos on
+          ;; kutsujan haluama eikä virhettä ole syytä näyttää.
+          (response/ok {:id note-id})))
 
       (api/PUT "/review" {session :session}
         :summary "Update existing application review"

@@ -21,7 +21,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
-            [ataru.test-utils :refer [login should-have-header]]
+            [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
+                                      should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
@@ -30,8 +31,8 @@
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
             [speclj.core :refer [after-all around before before-all describe
-                                 it run-specs should should-be-nil should-not-be-nil should=
-                                 tags with]]
+                                 it run-specs should should-be-nil should-contain
+                                 should-not-be-nil should= tags with]]
             [ataru.time :as time]
             [yesql.core :as sql]))
 
@@ -66,6 +67,11 @@
                                  :jatkuva-or-joustava-haku?           false
                                  :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
+;; Auditlokimerkinnät kerätään testien tarkastettaviksi. Järjestelmä rakennetaan delayn takana
+;; kerran, joten atomi tyhjennetään testikohtaisesti (before).
+(def audit-log-capture (new-capturing-audit-logger))
+(def audit-entries (first audit-log-capture))
+
 (def virkailija-routes
   (delay
     (-> (component/system-map
@@ -86,7 +92,7 @@
           :session-store (create-session-store (ataru-db/get-datasource :db))
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
-          :audit-logger (audit-log/new-dummy-audit-logger)
+          :audit-logger (second audit-log-capture)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
@@ -267,6 +273,24 @@
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
+
+(defn- post-review-note
+  ([note] (post-review-note note nil))
+  ([note user]
+   (-> (mock/request :post (str "/lomake-editori/api/applications/notes/" (:application-key note))
+                     (json/generate-string note))
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       (mock/content-type "application/json")
+       ((deref virkailija-routes))
+       parse-body)))
+
+(defn- delete-review-note
+  ([note-id] (delete-review-note note-id nil))
+  ([note-id user]
+   (-> (mock/request :delete (str "/lomake-editori/api/applications/notes/" note-id))
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       ((deref virkailija-routes))
+       parse-body)))
 
 (defn- update-payment-info [key payment-info]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/update-payment-info")
@@ -676,6 +700,138 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(defn- init-application-keys
+  "Luo annetun määrän hakemuksia samalla lomakkeella ja palauttaa niiden avaimet."
+  [n]
+  (->> (db/init-db-fixture
+         fixtures/minimal-form
+         (repeat n (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))))
+       (map get-application-by-id)
+       (map :key)))
+
+(describe "Review note audit logging"
+          (tags :unit :review-note-audit)
+
+          (before (reset! audit-entries []))
+
+          (it "Should write one audit entry when a review note is added"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (post-review-note {:application-key application-key
+                                                       :notes           "Muistiinpano hakijasta"})
+                    note-id         (get-in resp [:body :id])
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should-not-be-nil note-id)
+                (should= 1 (count entries))
+                (should= (str note-id) (get-in (first entries) [:target :noteId]))
+                (should-contain "Muistiinpano hakijasta" (pr-str (:changes (first entries))))))
+
+          (it "Should record state-name as requirement in the audit target"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (post-review-note {:application-key application-key
+                                                       :notes           "Käsittelymerkintä"
+                                                       :state-name      "processing-state"})
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "processing-state" (get-in (first entries) [:target :requirement]))))
+
+          ;; Tämä testi kiinnittää mapv-korjauksen: laiskalla map:llä tallennus ja lokitus
+          ;; tapahtuisivat vasta vastausta serialisoitaessa, jolloin merkintöjä olisi nolla.
+          (it "Should write one audit entry per application for mass review notes"
+              (let [application-keys (init-application-keys 3)
+                    resp             (post-review-notes {:application-keys application-keys
+                                                         :notes            "Massamuistiinpano"})]
+                (should= 200 (:status resp))
+                (should= 3 (count (audit-entries-for audit-entries "lisäys")))
+                (doseq [application-key application-keys]
+                  (should= 1 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key))))))
+
+          (it "Should write a delete audit entry containing the removed note text"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Poistettava muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id)
+                    entries         (audit-entries-for audit-entries "poisto" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= note-id (get-in resp [:body :id]))
+                (should= 1 (count entries))
+                (should-contain "Poistettava muistiinpano" (pr-str (:changes (first entries))))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
+          (it "Should not remove the note or write a delete entry for an unauthorized user"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Toisen organisaation muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "USER-WITH-HAKUKOHDE-ORGANIZATION")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Muistiinpanolla ei ole hakukohdetta, jolloin oikeustarkistus kohdistuu hakemukseen.
+          ;; Pelkkä katseluoikeus ei riitä poistoon, vaikka se riittääkin muistiinpanon lisäykseen.
+          (it "Should not allow a view-only user to delete a note without hakukohde"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Vain katseluoikeus"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Massapassivointi ja -palautus luovat muistiinpanon store-kerroksessa suoraan
+          ;; (application_store.clj inactivate-application / reactivate-application), eivät
+          ;; muistiinpanoreitin kautta. Varmistetaan että myös nämä auditlokitetaan.
+          (it "Should write a lisäys entry for the note created by mass inactivate"
+              (let [message          "Hakemuksilta puuttuu pakollisia tietoja"
+                    application-keys (init-application-keys 2)
+                    _                (reset! audit-entries [])
+                    resp             (post-mass-inactivate-applications application-keys message)]
+                (should= 200 (:status resp))
+                (doseq [application-key application-keys]
+                  (let [entries (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                    (should= 1 (count entries))
+                    (should-contain message (pr-str (:changes (first entries))))))))
+
+          (it "Should write a lisäys entry for the note created by mass reactivate"
+              (let [application-keys (init-application-keys 2)
+                    _                (post-mass-inactivate-applications application-keys "Passivoidaan")
+                    _                (reset! audit-entries [])
+                    resp             (post-mass-reactivate-applications application-keys "Palautetaan käsittelyyn")]
+                (should= 200 (:status resp))
+                (doseq [application-key application-keys]
+                  (let [entries (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                    (should= 1 (count entries))
+                    (should-contain "Palautetaan käsittelyyn" (pr-str (:changes (first entries))))))))
+
+          ;; Huom: kirjautuminen tuottaa oman "kirjautuminen"-merkintänsä, joten tarkastellaan
+          ;; vain muistiinpanoon liittyviä operaatioita.
+          (it "Should return 404 and write no note audit entry for an unknown note"
+              (let [resp (delete-review-note 999999)]
+                (should= 404 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 0 (count (audit-entries-for audit-entries "epäonnistunut")))))
+
+          ;; Poisto on idempotentti: toinen kutsu onnistuu, mutta ei tuota uutta merkintää.
+          (it "Should not write a second delete entry when a note is removed twice"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Kahdesti poistettava"})
+                                            [:body :id])
+                    _               (delete-review-note note-id)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id)]
+                (should= 200 (:status resp))
+                (should= note-id (get-in resp [:body :id]))
+                (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
 
 (describe "Mass inactivate applications"
           (tags :unit :api-applications)
