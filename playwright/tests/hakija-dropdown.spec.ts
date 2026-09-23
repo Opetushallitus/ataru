@@ -106,6 +106,28 @@ const koodistoDropdownFieldFixture: FormNode = {
   'koodisto-source': { uri: 'maatjavaltiot2', version: 2 },
 }
 
+// Neljäs pudotusvalikko: :no-blank-option true ja käsin kirjoitettu
+// ensimmäinen vaihtoehto, jonka arvo on "" mutta jolla on oma, oikea label
+// ("Ei koske minua") — tarkoitettu ihan tavalliseksi valittavaksi vastaukseksi,
+// ei pelkäksi "ei vielä vastattu" -sijaismerkiksi. Testaa, että tällainen
+// vaihtoehto pysyy valittavissa listassa eikä katoa.
+const BLANK_VALUE_OPTION_LABEL = 'Valitse soveltuvuus'
+const BLANK_VALUE_OPTION_TEXT = 'Ei koske minua'
+
+const blankValueOptionFieldFixture: FormNode = {
+  fieldClass: 'formField',
+  fieldType: 'dropdown',
+  id: 'pw-blank-value-option-dropdown',
+  label: { fi: BLANK_VALUE_OPTION_LABEL },
+  metadata,
+  params: {},
+  'no-blank-option': true,
+  options: [
+    { value: '', label: { fi: BLANK_VALUE_OPTION_TEXT } },
+    { value: 'kylla', label: { fi: 'Kyllä' } },
+  ],
+}
+
 const lomakkeenAvain = randomUUID()
 
 const getFieldByLabel = (page: Page, label: string) =>
@@ -164,6 +186,16 @@ const getKoodistoDropdownClearButton = (page: Page) =>
   getFieldByLabel(page, KOODISTO_DROPDOWN_LABEL).getByRole('button', {
     name: CLEAR_BUTTON_LABEL,
   })
+
+const getBlankValueOptionCombobox = (page: Page) =>
+  getFieldByLabel(page, BLANK_VALUE_OPTION_LABEL).getByRole('combobox')
+
+const getBlankValueOptionListbox = async (page: Page) => {
+  const combobox = getBlankValueOptionCombobox(page)
+  const listboxId = await combobox.getAttribute('aria-controls')
+  const listbox = page.locator(`[id="${listboxId}"]`)
+  return listbox
+}
 
 // Odottaa, että näppäimistöllä siirretty korostus (ks. move-active-to
 // dropdown_component.cljs:ssä) on oikeasti ehtinyt renderöityä ennen kuin
@@ -229,6 +261,7 @@ test.beforeAll(async ({ browser }) => {
     noBlankOptionFieldFixture,
     dropdownFieldFixture,
     koodistoDropdownFieldFixture,
+    blankValueOptionFieldFixture,
   ])
   await page.close()
 })
@@ -441,6 +474,33 @@ test.describe('Työpöytänäkymä', () => {
     await getOption(listbox, 'Suomi').click()
     await expect(getKoodistoDropdownCombobox(page)).toHaveValue('Suomi')
     await expect(getKoodistoDropdownClearButton(page)).toHaveCount(0)
+  })
+
+  test('Erikseen lisätty "tyhjä"-arvoinen vaihtoehto pysyy valittavissa', async ({
+    page,
+  }) => {
+    const listbox = await getBlankValueOptionListbox(page)
+
+    await getBlankValueOptionCombobox(page).click()
+    await getOption(listbox, BLANK_VALUE_OPTION_TEXT).click()
+    await expect(getBlankValueOptionCombobox(page)).toHaveValue(
+      BLANK_VALUE_OPTION_TEXT
+    )
+
+    // Vaihdetaan toiseen vaihtoehtoon ja varmistetaan, että alkuperäinen
+    // tyhjäarvoinen vaihtoehto on edelleen listassa ja valittavissa
+    // uudelleen — se ei siis kadonnut listasta pelkäksi alkutilan
+    // placeholder-tekstiksi.
+    await getBlankValueOptionCombobox(page).click()
+    await getOption(listbox, 'Kyllä').click()
+    await expect(getBlankValueOptionCombobox(page)).toHaveValue('Kyllä')
+
+    await getBlankValueOptionCombobox(page).click()
+    await expect(getOption(listbox, BLANK_VALUE_OPTION_TEXT)).toBeVisible()
+    await getOption(listbox, BLANK_VALUE_OPTION_TEXT).click()
+    await expect(getBlankValueOptionCombobox(page)).toHaveValue(
+      BLANK_VALUE_OPTION_TEXT
+    )
   })
 
   test('ArrowDown auki olevassa valikossa siirtää kohdistusta eteenpäin yksi vaihtoehto kerrallaan', async ({
