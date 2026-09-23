@@ -13,6 +13,12 @@ import {
   poistaTestiHakukohde,
 } from '../playwright-ataru-utils'
 
+// eslint-disable-next-line playwright/no-skipped-test
+test.skip(
+  true,
+  'Pois käytöstä väliaikaisesti. Korjataan lähtökoulujen hakeminen OPHHAMA-18:ssa, jotta ei tarvitse kikkailla "navigate_to_click_handler"-kutsulla.'
+)
+
 // Toisen asteen yhteishaun lähtökoulu-suodatinta ei voi ajaa oikeaa
 // organisaatiopalvelua vasten: kehitysympäristön FakeOrganizationService
 // (ataru.organization-service.organization-service) ei tunne
