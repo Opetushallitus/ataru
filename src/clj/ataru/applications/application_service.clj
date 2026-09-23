@@ -14,6 +14,7 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
+    [ataru.log.audit-log :as audit-log]
     [ataru.maksut.maksut-store :as maksut-store]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
@@ -528,6 +529,29 @@
      application-keys
      [:view-applications :edit-applications])))
 
+(defn- check-review-note-delete-rights
+  "Muistiinpanon poisto on kirjoitusoperaatio, joten se vaatii :edit-applications-oikeuden myös
+   silloin kun muistiinpanolla ei ole hakukohdetta.
+
+   Huom: check-review-rights sallii hakukohteettomassa haarassa myös pelkän katseluoikeuden
+   ([:view-applications :edit-applications] tarkoittaa 'jompikumpi', ks.
+   session-organizations/select-organizations-for-rights). Lisäyksessä tuo vanha käytös on
+   säilytetty ennallaan, mutta poistoon sitä ei ole syytä laajentaa."
+  [hakukohde application-keys organization-service tarjonta-service session]
+  (if (not (clojure.string/blank? hakukohde))
+    (aac/applications-review-authorized?
+     organization-service
+     tarjonta-service
+     session
+     [(keyword hakukohde)] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
+     [:edit-applications])
+    (aac/applications-access-authorized?
+     organization-service
+     tarjonta-service
+     session
+     application-keys
+     [:edit-applications])))
+
 (defn- remove-uneligibility-reasons-when-not-uneligible
   [applications]
   (map (fn [application]
@@ -581,6 +605,7 @@
   (send-modify-application-link-email [this attachment-deadline-service application-key payment-url session])
   (add-review-note [this session note])
   (add-review-notes [this session review-notes])
+  (remove-review-note [this session note-id])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid with-haku-aika])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
@@ -874,7 +899,7 @@
       (when review-note-rights
         (enrich-virkailija-organizations
          organization-service
-         (application-store/add-review-note note session)))))
+         (application-store/add-review-note note session audit-logger)))))
 
   (add-review-notes [_ session review-notes]
     (let [hakukohde (:hakukohde review-notes) ;; jos on hakukohderajaus, on vaan yksi valittu hakukohde
@@ -886,9 +911,29 @@
                         :hakukohde                (:hakukohde review-notes)
                         :state-name               (:state-name review-notes))
                       (:application-keys review-notes))]
-          (map
-           #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
+          ;; mapv, jotta tallennus ja auditlokitus tapahtuvat pyynnön käsittelyn aikana
+          ;; eivätkä vasta vastausta serialisoitaessa
+          (mapv
+           #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session audit-logger))
            notes)))))
+
+  (remove-review-note [_ session note-id]
+    (if-let [note (application-store/get-review-note-by-id note-id)]
+      (if (check-review-note-delete-rights (:hakukohde note)
+                                           [(:application-key note)]
+                                           organization-service
+                                           tarjonta-service
+                                           session)
+        (application-store/remove-review-note note session audit-logger)
+        (do
+          (audit-log/log audit-logger
+                         {:new       {:attempted "remove-review-note"}
+                          :id        {:applicationOid (:application-key note)
+                                      :noteId         (str note-id)}
+                          :session   session
+                          :operation audit-log/operation-failed})
+          :unauthorized))
+      :not-found))
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
@@ -1271,9 +1316,6 @@
    session
    params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
   (get-applications-paged application-service session params))
-
-(defn remove-review-note [note-id]
-  (application-store/remove-review-note note-id))
 
 (defn- init-cipher
   [nonce mode]

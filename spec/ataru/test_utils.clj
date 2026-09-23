@@ -13,13 +13,15 @@
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
             [ataru.time.format :as format]
+            [cheshire.core :as json]
             [clojure.string :as clj-string]
             [ring.mock.request :as mock]
             [speclj.core :refer [should-contain should-not-be-nil
                                  should-not-contain should=]]
             [yesql.core :as sql])
 
-  (:import [java.io File FileOutputStream]
+  (:import [fi.vm.sade.auditlog DummyAuditLog]
+           [java.io File FileOutputStream]
            [java.time Instant]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
@@ -39,6 +41,34 @@
        first
        (clj-string/split #";")
        first)))
+
+(defn new-capturing-audit-logger
+  "Palauttaa [entries logger], missä entries on atomi ja logger kelpaa :audit-logger-riippuvuudeksi.
+   Jokainen merkintä on muotoa
+   {:user {...} :operation \"lisäys\" :target {...} :changes [...]}.
+
+   Periytetään DummyAuditLogista eikä rakenneta Auditia suoraan, jotta testiajoon ei synny
+   HeartbeatDaemon-säiettä eikä tiedostokirjoitusta."
+  []
+  (let [entries (atom [])
+        ->clj   (fn [json-el] (json/parse-string (str json-el) true))]
+    [entries
+     (proxy [DummyAuditLog] []
+       (log [user operation target changes]
+         (swap! entries conj
+                {:user      (->clj (.asJson user))
+                 :operation (.name operation)
+                 :target    (->clj (.asJson target))
+                 :changes   (->clj (.asJsonArray changes))})))]))
+
+(defn audit-entries-for
+  "Suodattaa merkinnät operaation ja valinnaisen target-kentän perusteella.
+   Operaatiot ovat audit_log.clj:n suomenkielisiä nimiä, esim. \"lisäys\", \"poisto\"."
+  ([entries operation]
+   (filter #(= operation (:operation %)) @entries))
+  ([entries operation target-key target-value]
+   (filter #(= target-value (get-in % [:target target-key]))
+           (audit-entries-for entries operation))))
 
 (defn should-have-header
   [header expected-val resp]
