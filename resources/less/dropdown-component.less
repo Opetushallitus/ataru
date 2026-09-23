@@ -19,7 +19,7 @@
   box-sizing: border-box;
   cursor: text;
   height: 43px;
-  padding: 0 8px;
+  padding: 0 0 0 8px;
   width: 100%;
 
   &:focus-within {
@@ -61,11 +61,9 @@
 
   background: transparent;
   border: 0;
-  border-radius: 50%;
   color: @neutral-grey-600;
   cursor: pointer;
   flex-shrink: 0;
-  padding: 0;
 
   &:hover {
     color: @neutral-grey-900;
@@ -81,9 +79,8 @@
 }
 
 .a-dropdown-clear-button {
-  height: 32px;
-  margin-right: 4px;
-  width: 32px;
+  align-self: stretch;
+  padding: 0 8px;
 
   .zmdi {
     font-size: 20px;
@@ -91,8 +88,9 @@
 }
 
 .a-dropdown-trigger {
-  height: 24px;
-  width: 24px;
+  align-self: stretch;
+  border-radius: 0 2px 2px 0;
+  padding: 0 12px;
 }
 
 // Täytetty kolmio (caret) zmdi-chevron-ikonin sijaan.
