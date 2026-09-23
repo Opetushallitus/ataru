@@ -400,3 +400,36 @@ test('Focus ring on the always-green priority-decrease button meets the WCAG 1.4
     `focus ring ${ringColor} against halo ${haloColor} is below the WCAG 1.4.11 3:1 minimum`
   ).toBeGreaterThanOrEqual(3)
 })
+
+test('Focus ring on the attachment-remove confirm button meets the WCAG 1.4.11 non-text contrast minimum (OY-5403)', async () => {
+  // application__form-attachment-remove-button__confirm carries both this
+  // class and .application__form-attachment-remove-button at once (see
+  // src/cljs/ataru/hakija/components/attachment.cljs:88,109 - the "Vahvista
+  // poisto"/"Vahvista latauksen peruutus" button). Both classes have an
+  // equal-specificity `:focus` rule in hakija.less; previously the __confirm
+  // one was declared later and overrode the accessible-focus-ring mixin with
+  // a flat box-shadow matching its own hover background - reintroducing the
+  // bug in red. The real button only appears after uploading a file and
+  // clicking "Poista" once, so this instead exercises the exact class/rule
+  // pairing directly against the page's already-loaded, real stylesheet.
+  const boxShadow = await page.evaluate(() => {
+    const button = document.createElement('button')
+    button.className =
+      'application__form-attachment-remove-button application__form-attachment-remove-button__confirm'
+    document.body.appendChild(button)
+    button.focus()
+    const boxShadow = getComputedStyle(button).boxShadow
+    button.remove()
+    return boxShadow
+  })
+
+  const [haloColor, ringColor] = parseBoxShadowColors(boxShadow)
+  expect(
+    haloColor && ringColor,
+    `expected a two-layer halo+ring box-shadow, got: "${boxShadow}"`
+  ).toBeTruthy()
+  expect(
+    contrastRatio(haloColor, ringColor),
+    `focus ring ${ringColor} against halo ${haloColor} is below the WCAG 1.4.11 3:1 minimum`
+  ).toBeGreaterThanOrEqual(3)
+})

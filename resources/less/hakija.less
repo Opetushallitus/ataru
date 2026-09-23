@@ -911,8 +911,7 @@ textarea.application__form-text-area__size-large {
       background-color: darken(@sg-color-red, 20%);
     }
     &:focus {
-      box-shadow: 0px 0px 0px 3px darken(@sg-color-red, 20%);
-      outline: none;
+      .accessible-focus-ring(darken(@sg-color-red, 20%));
     }
   }
 }
