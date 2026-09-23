@@ -579,10 +579,16 @@
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
          :fetch-hakukohde-groups      [hakukohderyhmat-promise]}))))
 
-(reg-event-db
+(reg-event-fx
   :editor/handle-user-info
-  (fn [db [_ user-info-response]]
-    (assoc-in db [:editor :user-info] user-info-response)))
+  (fn [{db :db} [_ user-info-response]]
+    ;; maybe-fetch-schools-of-departure tarkastaa käyttäjän oikeudet
+    ;; :editor :user-infosta (ks. opinto-ohjaaja-or-admin?) — jos haku
+    ;; valittiin ennen kuin user-info ehdittin asettaa tässä, tarkastus 
+    ;; epäonnistui eikä sitä yritetty enää uudelleen. Kutsutaan siis tässä  
+    ;; uudelleen; funktio itse ohittaa turhat haut.
+    {:db       (assoc-in db [:editor :user-info] user-info-response)
+     :dispatch [:application/maybe-fetch-schools-of-departure]}))
 
 (defn- languages->kwd [form]
   (update form :languages
