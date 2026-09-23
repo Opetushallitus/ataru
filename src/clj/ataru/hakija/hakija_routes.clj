@@ -31,8 +31,10 @@
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.palaute.palaute-client :as palaute-client]
-            [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret
-                                      alter-application-to-hakuaikaloppu-for-secret]]
+            [ataru.test-utils :refer [get-latest-application-secret
+                                      alter-application-to-hakuaikaloppu-for-secret
+                                      register-test-haku! unregister-test-haku!
+                                      register-test-hakukohde! unregister-test-hakukohde!]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
@@ -104,23 +106,11 @@
   []
   (boolean (:dev? env)))
 
-(defn- render-file-in-dev
-  ([filename]
-   (render-file-in-dev filename {}))
-  ([filename opts]
-   (if (is-dev-env?)
-     (selmer/render-file filename opts)
-     (response/not-found "Not found"))))
-
 (declare generate-new-random-key)
 (declare fake-strong-oppija-session-data)
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET ["/hakija-:testname{[A-Za-z\\-]+}-test.html"] [testname]
-      (if (is-dev-env?)
-        (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
-        (response/not-found "Not found")))
     ; Älä käytä latest-application-secret-rajapintaa testeissä, koska se on hauras, jos ajetaan
     ; monta testiä samanaikaisesti. Käytä application-secret-by-id-rajapintaa, joka hakee salaisuuden hakemuksen id:llä.
     ; TODO: Poista latest-application-secret, kunhan kaikki testit on siirretty käyttämään application-secret-by-id:a.
@@ -150,18 +140,45 @@
         (do (alter-application-to-hakuaikaloppu-for-secret secret)
             (response/ok {}))
         (response/not-found "Not found")))
-    (api/GET "/virkailija-hakemus-edit-test.html" []
+    ; Antaa testien rekisteröidä ajonaikaisesti oman, testikohtaisen hakunsa
+    ; mock-tarjontapalveluun sen sijaan, että ne jakaisivat staattista,
+    ; kaikille testeille yhteistä testidataa (mock_tarjonta_service.clj).
+    ; Näin esim. eri Playwright-tiedostot voivat käyttää omaa hakuaan
+    ; törmäämättä toistensa siivoustoimenpiteisiin, kun tiedostot ajetaan
+    ; rinnakkain eri workereissa.
+    (api/POST "/test/tarjonta/haku" []
+      :body [haku {:oid s/Str
+                   :ataruLomakeAvain s/Str
+                   :hakukohdeOids [s/Str]
+                   (s/optional-key :usePriority) s/Bool
+                   (s/optional-key :kohdejoukkoUri) s/Str
+                   (s/optional-key :kohdejoukonTarkenne) s/Str
+                   (s/optional-key :hakutapaUri) s/Str}]
       (if (is-dev-env?)
-        (render-file-in-dev "templates/virkailija-hakemus-edit-test.html")
+        (do (register-test-haku! haku)
+            (response/ok {}))
         (response/not-found "Not found")))
-    (api/GET "/spec/:filename.js" [filename]
-      ;; Test vars params is a hack to get form ids from fixtures to the test file
-      ;; without having to pass them as url params. Also enables tests to be run
-      ;; individually when navigating to any test file.
+    (api/DELETE "/test/tarjonta/haku/:oid" [oid]
       (if (is-dev-env?)
-        (render-file-in-dev (str "spec/" filename ".js")
-                            (when (= "hakijaCommon" filename)
-                              (get-test-vars-params)))
+        (do (unregister-test-haku! oid)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    ; Antaa testien muuttaa ajonaikaisesti olemassa olevan hakukohteen
+    ; kenttiä (esim. :hakuOid osoittamaan testin omaan, edellä
+    ; rekisteröityyn hakuun), kun testi navigoi hakukohteen kautta (esim.
+    ; /hakemus/hakukohde/:oid) sen sijaan, että se käyttäisi hakua suoraan.
+    (api/POST "/test/tarjonta/hakukohde" []
+      :body [hakukohde-muutos {:oid s/Str
+                               (s/optional-key :hakuOid) s/Str
+                               (s/optional-key :hakukohteenNimet) {s/Keyword s/Str}}]
+      (if (is-dev-env?)
+        (do (register-test-hakukohde! hakukohde-muutos)
+            (response/ok {}))
+        (response/not-found "Not found")))
+    (api/DELETE "/test/tarjonta/hakukohde/:oid" [oid]
+      (if (is-dev-env?)
+        (do (unregister-test-hakukohde! oid)
+            (response/ok {}))
         (response/not-found "Not found")))))
 
 (api/defroutes james-routes
