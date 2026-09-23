@@ -11,6 +11,35 @@ import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 
 test.describe.configure({ mode: 'serial' })
 
+// Extracts each rgb()/rgba() color from a computed `box-shadow` value, in
+// declaration order. The application's `.accessible-focus-ring()` LESS mixin
+// (see resources/less/vars.less) always emits exactly two layers: a light
+// halo immediately around the element, then a darker ring outside it. This
+// guarantees the ring is visible against a fixed, known color instead of the
+// element's own (possibly similarly-colored) background - see OY-5403.
+const parseBoxShadowColors = (boxShadow: string): string[] =>
+  boxShadow.match(/rgba?\([^)]+\)/g) ?? []
+
+const relativeLuminance = ([r, g, b]: number[]): number => {
+  const toLinear = (channel: number) => {
+    const s = channel / 255
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4)
+  }
+  const [rl, gl, bl] = [r, g, b].map(toLinear)
+  return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl
+}
+
+const toRgbTuple = (rgb: string): number[] =>
+  (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number)
+
+// WCAG contrast ratio, per https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
+const contrastRatio = (colorA: string, colorB: string): number => {
+  const lA = relativeLuminance(toRgbTuple(colorA))
+  const lB = relativeLuminance(toRgbTuple(colorB))
+  const [lighter, darker] = lA > lB ? [lA, lB] : [lB, lA]
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 let page: Page
 let lomakkeenTunnisteet: { lomakkeenAvain: string; lomakkeenId: number }
 
@@ -122,6 +151,9 @@ test.beforeAll(async ({ browser }) => {
         tarjonta: {
           ...(json.tarjonta ?? {}),
           hakukohteet: testTarjontaHakukohteet,
+          // Needed so the priority-increase/decrease controls render once
+          // more than one hakukohde is selected (see :application/prioritize-hakukohteet?)
+          'prioritize-hakukohteet': true,
         },
         content: contentWithOptions,
       },
@@ -134,6 +166,15 @@ test.beforeAll(async ({ browser }) => {
     ),
     page.goto(getHakijanNakymanOsoite(lomakkeenTunnisteet.lomakkeenAvain)),
   ])
+
+  // Buttons animate their box-shadow/background-color on :hover/:focus
+  // (see button-mixin in resources/less/button-component.less). Zeroing the
+  // transition duration makes computed-style reads of those properties
+  // deterministic instead of racing the animation.
+  await page.addStyleTag({
+    content:
+      '* { transition-duration: 0s !important; transition-delay: 0s !important; }',
+  })
 })
 
 test.afterAll(async ({ request }) => {
@@ -292,4 +333,70 @@ test('Arrow navigation includes selected hakukohde rows in its sequence', async 
   ).toBeFocused()
 
   await ensureSearchClosed()
+})
+
+test('Focus ring on the hovered/active "Lisää" button meets the WCAG 1.4.11 non-text contrast minimum (OY-5403)', async () => {
+  // Reproduces the reported bug: the button's hover/active background
+  // (@primary-green-700) sits right next to the focus ring, which used to be
+  // a fixed dark green (@primary-green-900) - only ~1.95:1 contrast.
+  await openSearch()
+  const addButton = page
+    .locator('.application__search-hit-hakukohde-row--select-button')
+    .first()
+  await expect(addButton).toBeVisible()
+
+  await addButton.hover()
+  await addButton.focus()
+  await expect(addButton).toBeFocused()
+
+  const boxShadow = await addButton.evaluate(
+    (el) => getComputedStyle(el).boxShadow
+  )
+  const [haloColor, ringColor] = parseBoxShadowColors(boxShadow)
+  expect(
+    haloColor && ringColor,
+    `expected a two-layer halo+ring box-shadow, got: "${boxShadow}"`
+  ).toBeTruthy()
+  expect(
+    contrastRatio(haloColor, ringColor),
+    `focus ring ${ringColor} against halo ${haloColor} is below the WCAG 1.4.11 3:1 minimum`
+  ).toBeGreaterThanOrEqual(3)
+
+  await ensureSearchClosed()
+})
+
+test('Focus ring on the always-green priority-decrease button meets the WCAG 1.4.11 non-text contrast minimum (OY-5403)', async () => {
+  // This control is drawn entirely out of @primary-green-700 borders (a
+  // triangle), so its focus ring is adjacent to that green at all times, not
+  // just on hover - the clearest case of the reported bug.
+
+  // Select the second hakukohde too: with only one hakukohde selected, both
+  // priority-increase and priority-decrease are disabled (and unfocusable).
+  await openSearch()
+  await page
+    .locator('.application__search-hit-hakukohde-row--select-button')
+    .first()
+    .click()
+  await ensureSearchClosed()
+
+  const decreaseButton = page
+    .locator(
+      '.application__selected-hakukohde-row--priority-decrease:not(.disabled)'
+    )
+    .first()
+  await decreaseButton.focus()
+  await expect(decreaseButton).toBeFocused()
+
+  const boxShadow = await decreaseButton.evaluate(
+    (el) => getComputedStyle(el).boxShadow
+  )
+  const [haloColor, ringColor] = parseBoxShadowColors(boxShadow)
+  expect(
+    haloColor && ringColor,
+    `expected a two-layer halo+ring box-shadow, got: "${boxShadow}"`
+  ).toBeTruthy()
+  expect(
+    contrastRatio(haloColor, ringColor),
+    `focus ring ${ringColor} against halo ${haloColor} is below the WCAG 1.4.11 3:1 minimum`
+  ).toBeGreaterThanOrEqual(3)
 })
