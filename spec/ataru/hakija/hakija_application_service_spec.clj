@@ -1,10 +1,18 @@
 (ns ataru.hakija.hakija-application-service-spec
-  (:require [ataru.files.file-store :as file-store]
+  (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
+            [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
+            [ataru.email.application-email-jobs :as application-email]
+            [ataru.files.file-store :as file-store]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
-            [speclj.core :refer [describe it should-be should-not-be should-contain should=]]))
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+            [speclj.core :refer [describe it should-be should-not-be should-contain should=
+                                  with-stubs stub should-have-invoked should-not-have-invoked]]))
 
 (def edited-cannot-edit-questions #'hakija-application-service/edited-cannot-edit-questions)
 (def remove-orphan-attachments-when-stored #'hakija-application-service/remove-orphan-attachments-when-stored)
+(def start-hakija-edit-jobs #'hakija-application-service/start-hakija-edit-jobs)
+(def start-virkailija-edit-jobs #'hakija-application-service/start-virkailija-edit-jobs)
 (def form-with-followup {:content [{:id      "id"
                                     :options [{:value 0 :followups [{:id          "followup-id"
                                                                      :cannot-view true
@@ -231,3 +239,97 @@
                                        store-result))]
       (should= ["orphan-key"] deleted)
       (should= store-result result))))
+
+(describe "start-hakija-edit-jobs"
+  (with-stubs)
+
+  (it "re-triggers the automatic payment obligation check for the edited application's person-oid"
+    (with-redefs [application-email/start-email-edit-confirmation-job
+                  (stub :start-email-edit-confirmation-job)
+
+                  tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
+                  (stub :start-tutkintojen-tunnustaminen-edit-job)
+
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
+                  (stub :start-tutu-application-edit-notification-job)
+
+                  hakija-application-service/start-attachment-finalizer-job
+                  (stub :start-attachment-finalizer-job)
+
+                  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+                  (stub :start-automatic-eligibility-if-ylioppilas-job)
+
+                  automatic-payment-obligation/start-automatic-payment-obligation-job
+                  (stub :start-automatic-payment-obligation-job)]
+      (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
+                              :organization-service :ohjausparametrit-service :job-runner
+                              "application-id" "application-key" {:person-oid "1.2.246.562.24.00000000001"})
+      (should-have-invoked :start-automatic-payment-obligation-job
+                           {:with [:job-runner "1.2.246.562.24.00000000001"]})))
+
+  (it "does not start the automatic payment obligation job when the application has no person-oid yet"
+    (with-redefs [application-email/start-email-edit-confirmation-job
+                  (stub :start-email-edit-confirmation-job)
+
+                  tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
+                  (stub :start-tutkintojen-tunnustaminen-edit-job)
+
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
+                  (stub :start-tutu-application-edit-notification-job)
+
+                  hakija-application-service/start-attachment-finalizer-job
+                  (stub :start-attachment-finalizer-job)
+
+                  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+                  (stub :start-automatic-eligibility-if-ylioppilas-job)
+
+                  automatic-payment-obligation/start-automatic-payment-obligation-job
+                  (stub :start-automatic-payment-obligation-job)]
+      (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
+                              :organization-service :ohjausparametrit-service :job-runner
+                              "application-id" "application-key" {:person-oid nil})
+      (should-not-have-invoked :start-automatic-payment-obligation-job))))
+
+(describe "start-virkailija-edit-jobs"
+  (with-stubs)
+
+  (it "starts the automatic payment obligation job when the application already has a person-oid"
+    (with-redefs [virkailija-edit/invalidate-virkailija-update-and-rewrite-secret
+                  (stub :invalidate-virkailija-update-and-rewrite-secret)
+
+                  hakija-application-service/start-person-creation-job
+                  (stub :start-person-creation-job)
+
+                  hakija-application-service/start-attachment-finalizer-job
+                  (stub :start-attachment-finalizer-job)
+
+                  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+                  (stub :start-automatic-eligibility-if-ylioppilas-job)
+
+                  automatic-payment-obligation/start-automatic-payment-obligation-job
+                  (stub :start-automatic-payment-obligation-job)]
+      (start-virkailija-edit-jobs :job-runner :virkailija-secret "application-id"
+                                  {:person-oid "1.2.246.562.24.00000000001"})
+      (should-have-invoked :start-automatic-payment-obligation-job
+                           {:with [:job-runner "1.2.246.562.24.00000000001"]})
+      (should-not-have-invoked :start-person-creation-job)))
+
+  (it "starts person creation instead when the application has no person-oid yet"
+    (with-redefs [virkailija-edit/invalidate-virkailija-update-and-rewrite-secret
+                  (stub :invalidate-virkailija-update-and-rewrite-secret)
+
+                  hakija-application-service/start-person-creation-job
+                  (stub :start-person-creation-job)
+
+                  hakija-application-service/start-attachment-finalizer-job
+                  (stub :start-attachment-finalizer-job)
+
+                  automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+                  (stub :start-automatic-eligibility-if-ylioppilas-job)
+
+                  automatic-payment-obligation/start-automatic-payment-obligation-job
+                  (stub :start-automatic-payment-obligation-job)]
+      (start-virkailija-edit-jobs :job-runner :virkailija-secret "application-id"
+                                  {:person-oid nil})
+      (should-have-invoked :start-person-creation-job {:with [:job-runner "application-id"]})
+      (should-not-have-invoked :start-automatic-payment-obligation-job))))
