@@ -476,6 +476,12 @@
    :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
                                                  :sv "Sök läroanstalt eller utbildningar"
                                                  :en "Search for educational instituion or study programme"}
+   :search-dropdown-options                     {:fi "Hae"
+                                                 :sv "Sök"
+                                                 :en "Search"}
+   :no-dropdown-search-hits                     {:fi "Ei hakutuloksia"
+                                                 :sv "Inga sökresultat"
+                                                 :en "No search results found"}
    :close-application-options                   {:fi "Sulje koulutusten haku"
                                                  :sv "Dölj hämta ansökningsmål"
                                                  :en "Close study program search"}

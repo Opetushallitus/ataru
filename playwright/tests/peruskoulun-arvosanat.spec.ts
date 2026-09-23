@@ -11,7 +11,11 @@ import {
   taytaHenkilotietomoduuli,
   teeJaOdotaLomakkeenTallennusta,
 } from '../playwright-ataru-utils'
-import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
+import {
+  selectOption,
+  unsafeFoldOption,
+  waitForResponse,
+} from '../playwright-utils'
 
 const TESTILOMAKKEEN_NIMI = 'Testilomake'
 
@@ -280,12 +284,12 @@ test.describe('Peruskoulun arvosanat -osio', () => {
       )
 
       const aidinkieli = page.getByTestId('language-input')
-      await aidinkieli.selectOption('SV')
+      await selectOption(page, aidinkieli, 'SV')
       await expect(aidinkieli).toHaveValue('SV')
       await expect(page.getByTestId('oppiaineen-arvosana-A2')).toBeVisible()
       await expect(page.getByTestId('oppiaineen-arvosana-B1')).toHaveCount(0)
 
-      await aidinkieli.selectOption('FI')
+      await selectOption(page, aidinkieli, 'FI')
       await expect(aidinkieli).toHaveValue('FI')
       await expect(page.getByTestId('oppiaineen-arvosana-B1')).toBeVisible()
 
