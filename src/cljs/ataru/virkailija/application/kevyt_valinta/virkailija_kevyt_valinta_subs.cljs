@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs
   (:require [ataru.feature-config :as fc]
             [ataru.collections :as coll]
+            [ataru.application.review-states :as review-states]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
             [re-frame.core :as re-frame]
@@ -251,6 +252,35 @@
   (fn [[hakukohde-oids rights-by-hakukohde]]
     (kvr/kevyt-valinta-write-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)))
 
+(defn- kevyt-valinta-property-koskee-tata-hakemusta?
+  "Voiko tieto koskea tätä hakemusta. Vain vastaanotto ja ilmoittautuminen
+   tallennetaan valinta-tulos-servicessä henkilön ja hakukohteen perusteella;
+   muut ovat hakemuskohtaisia eivätkä voi vuotaa hakemusten välillä."
+  [kevyt-valinta-property valinnan-tulos]
+  (case kevyt-valinta-property
+    :kevyt-valinta/vastaanotto-tila      (review-states/vastaanotto-koskee-tata-hakemusta? valinnan-tulos)
+    :kevyt-valinta/ilmoittautumisen-tila (review-states/ilmoittautuminen-koskee-tata-hakemusta? valinnan-tulos)
+    true))
+
+(defn- read-only-states-for-hakemus
+  "Tilat hakemukselle, jonka valinnan tuloksessa on henkilön toisen hakemuksen
+   tietoja. Tätä hakemusta ei voi muokata, koska tallennuspyyntöön jouduttaisiin
+   kirjaamaan vastaanotto tai ilmoittautuminen, joka ei koske sitä. :checked
+   näyttää arvon pelkkänä tekstinä, :grayed-out jättää rivin arvon kokonaan pois."
+  [valinnan-tulos]
+  (letfn [(state-for [nayta-arvo?]
+            ;; :grayed-out myös silloin kun arvoa ei ole, koska ilmoittautumisen
+            ;; ja julkaisun tilalle ei ole oletusarvoa eikä tyhjää riviä kannata
+            ;; näyttää, ks. default-kevyt-valinta-property-value
+            (if nayta-arvo? :checked :grayed-out))]
+    {:kevyt-valinta/valinnan-tila         :checked
+     :kevyt-valinta/julkaisun-tila        (state-for (some? (:julkaistavissa valinnan-tulos)))
+     :kevyt-valinta/vastaanotto-tila      (state-for (kevyt-valinta-property-koskee-tata-hakemusta?
+                                                       :kevyt-valinta/vastaanotto-tila valinnan-tulos))
+     :kevyt-valinta/ilmoittautumisen-tila (state-for (and (some? (:ilmoittautumistila valinnan-tulos))
+                                                          (kevyt-valinta-property-koskee-tata-hakemusta?
+                                                            :kevyt-valinta/ilmoittautumisen-tila valinnan-tulos)))}))
+
 (defn match-kevytvalinta-states
   [valinnan-tulos-for-application kevyt-valinta-write-rights?]
   (let [{valinnan-tila                :valinnantila
@@ -317,7 +347,24 @@
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked
-            :kevyt-valinta/ilmoittautumisen-tila :unchecked})))
+            :kevyt-valinta/ilmoittautumisen-tila :unchecked}
+
+           ;; Yksikään ehto ei täsmää esim. kun julkaistavissa on nil mutta
+           ;; vastaanoton tila ei ole. Ilman tätä core.match heittäisi. Tiedot
+           ;; näytetään, mutta muokattavaksi ei tarjota mitään, koska emme tiedä
+           ;; mikä yhdistelmä on kyseessä.
+           :else
+           (read-only-states-for-hakemus valinnan-tulos-for-application))))
+
+(defn kevytvalinta-states-for-hakemus
+  "Kuten match-kevytvalinta-states, mutta huomioi että vastaanotto ja
+   ilmoittautuminen tallennetaan valinta-tulos-servicessä henkilön ja
+   hakukohteen perusteella, jolloin valinnan tuloksessa voi olla henkilön
+   toisen saman hakukohteen hakemuksen tietoja."
+  [valinnan-tulos kevyt-valinta-write-rights?]
+  (if (review-states/henkilotason-tiedot-koskevat-tata-hakemusta? valinnan-tulos)
+    (match-kevytvalinta-states valinnan-tulos kevyt-valinta-write-rights?)
+    (read-only-states-for-hakemus valinnan-tulos)))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-selection-state
@@ -325,7 +372,7 @@
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])])
   (fn [[valinnan-tulos-for-application kevyt-valinta-write-rights?] [_ kevyt-valinta-property]]
-    (let [kevyt-valinta-states (match-kevytvalinta-states valinnan-tulos-for-application kevyt-valinta-write-rights?)]
+    (let [kevyt-valinta-states (kevytvalinta-states-for-hakemus valinnan-tulos-for-application kevyt-valinta-write-rights?)]
       (kevyt-valinta-states kevyt-valinta-property))))
 
 (re-frame/reg-sub
@@ -385,8 +432,23 @@
                                   {:kevyt-valinta/valinnan-tila         :checked
                                    :kevyt-valinta/julkaisun-tila        :checked
                                    :kevyt-valinta/vastaanotto-tila      :checked
-                                   :kevyt-valinta/ilmoittautumisen-tila :checked})
-          checkmark-state  (checkmark-states kevyt-valinta-property)]
+                                   :kevyt-valinta/ilmoittautumisen-tila :checked}
+
+                                  ;; ks. sama catch-all match-kevytvalinta-statesissa. Täällä
+                                  ;; :checked tarkoittaa "vaihe tehty", joten tuntemattomasta
+                                  ;; yhdistelmästä ei väitetä mitään.
+                                  :else
+                                  {:kevyt-valinta/valinnan-tila         :unchecked
+                                   :kevyt-valinta/julkaisun-tila        :unchecked
+                                   :kevyt-valinta/vastaanotto-tila      :unchecked
+                                   :kevyt-valinta/ilmoittautumisen-tila :unchecked})
+          ;; Merkki ei saa olla ristiriidassa rivin kanssa: piilotetaan vain se
+          ;; tieto joka ei koske tätä hakemusta. Muiden vaiheiden merkit
+          ;; kertovat edelleen todellisen tilanteen.
+          checkmark-state  (if (kevyt-valinta-property-koskee-tata-hakemusta? kevyt-valinta-property
+                                                                              valinnan-tulos-for-application)
+                             (checkmark-states kevyt-valinta-property)
+                             :grayed-out)]
       (cond (and ongoing-request-property
                  (not (coll/before? kevyt-valinta-property
                                     ongoing-request-property

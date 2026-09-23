@@ -441,13 +441,43 @@
               :override-args       {:params  request-body
                                     :headers {"If-Unmodified-Since" formatted-now}}
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
-              :handler-args        {:application-key application-key}}})))
+              :handler-args        {:application-key application-key
+                                    :hakukohde-oid   hakukohde-oid}}})))
+
+(defn- saman-henkilon-muut-hakemukset-hakukohteeseen
+  "Ladatut hakemukset, jotka kuuluvat samalle henkilölle ja samaan
+   hakukohteeseen kuin annettu hakemus. Vastaanotto ja ilmoittautuminen
+   tallennetaan valinta-tulos-servicessä henkilön ja hakukohteen perusteella,
+   joten muutos näkyy myös näillä hakemuksilla ja niiden tiedot on haettava
+   uudelleen. Hakemukset, joita ei ole listalla, eivät näy käyttäjälle.
+
+   Vertailu tehdään hakemuksen oman henkilö-oidin perusteella, joten linkitetyt
+   henkilö-oidit (henkiloviitteet valinta-tulos-servicessä) jäävät tunnistamatta
+   ja päivittyvät vasta kun lista ladataan uudelleen."
+  [db application-key hakukohde-oid]
+  (let [applications (-> db :application :applications)
+        henkilo-oid  (->> applications
+                          (filter (comp (partial = application-key) :key))
+                          (first)
+                          (:person)
+                          (:oid))]
+    (when henkilo-oid
+      (->> applications
+           (filter (fn [{hakemus-key :key hakukohde-oids :hakukohde person :person}]
+                     (and (not= hakemus-key application-key)
+                          (= henkilo-oid (:oid person))
+                          (some (partial = hakukohde-oid) hakukohde-oids))))
+           (map :key)))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
-  (fn [{db :db} [_ _ {application-key :application-key}]]
-    {:db       (update-in db
-                          [:application :kevyt-valinta]
-                          dissoc
-                          :kevyt-valinta-ui/ongoing-request-for-property)
-     :dispatch [:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key application-key}]}))
+  (fn [{db :db} [_ _ {application-key :application-key
+                      hakukohde-oid   :hakukohde-oid}]]
+    {:db         (update-in db
+                            [:application :kevyt-valinta]
+                            dissoc
+                            :kevyt-valinta-ui/ongoing-request-for-property)
+     :dispatch-n (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key application-key}]]
+                       (map (fn [sisaruksen-key]
+                              [:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key sisaruksen-key}]))
+                       (saman-henkilon-muut-hakemukset-hakukohteeseen db application-key hakukohde-oid))}))

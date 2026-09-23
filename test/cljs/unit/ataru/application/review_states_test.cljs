@@ -52,3 +52,62 @@
        {:valinnantila "PERUUNTUNUT" :vastaanottotila "PERUNUT"}                 false
        {:valinnantila "PERUNUT" :vastaanottotila "PERUUTETTU"}                  false
        {:valinnantila "PERUUTETTU" :vastaanottotila "PERUNUT"}                  false))
+
+;; Ilmoittautuminen tallennetaan samoin henkilön ja hakukohteen perusteella.
+;; Sallittu joukko on tiukempi kuin vastaanotolla: valinta-tulos-service
+;; hyväksyy ilmoittautumisen vain hyväksytylle ja vastaanottaneelle hakijalle.
+(deftest test-ilmoittautuminen-koskee-tata-hakemusta?
+  (are [valinnantulos expected]
+       (= (review-states/ilmoittautuminen-koskee-tata-hakemusta? valinnantulos)
+          expected)
+
+       ;; Ilmoittautumisen tilaa ei ole tai se on EI_TEHTY, mitään ei voi vuotaa
+       nil                                                                      true
+       {}                                                                       true
+       {:valinnantila "HYLATTY" :ilmoittautumistila "EI_TEHTY"}                 true
+
+       ;; Hyväksytty ja vastaanottanut
+       {:valinnantila       "HYVAKSYTTY"
+        :vastaanottotila    "VASTAANOTTANUT_SITOVASTI"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             true
+       {:valinnantila       "VARASIJALTA_HYVAKSYTTY"
+        :vastaanottotila    "VASTAANOTTANUT_SITOVASTI"
+        :ilmoittautumistila "LASNA_SYKSY"}                                      true
+
+       ;; Hyväksytty mutta vastaanottoa ei ole tehty: ilmoittautuminen ei voi
+       ;; olla tämän hakemuksen tieto
+       {:valinnantila       "HYVAKSYTTY"
+        :vastaanottotila    "KESKEN"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false
+       {:valinnantila       "HYVAKSYTTY"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false
+
+       ;; Valinnan tila ei kanna ilmoittautumista lainkaan
+       {:valinnantila       "HYLATTY"
+        :vastaanottotila    "VASTAANOTTANUT_SITOVASTI"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false
+       {:valinnantila       "VARALLA"
+        :vastaanottotila    "VASTAANOTTANUT_SITOVASTI"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false
+       {:valinnantila       "PERUNUT"
+        :vastaanottotila    "PERUNUT"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false))
+
+(deftest test-henkilotason-tiedot-koskevat-tata-hakemusta?
+  (are [valinnantulos expected]
+       (= (review-states/henkilotason-tiedot-koskevat-tata-hakemusta? valinnantulos)
+          expected)
+
+       nil                                                                      true
+       {:valinnantila "HYLATTY" :vastaanottotila "KESKEN"}                      true
+       {:valinnantila       "HYVAKSYTTY"
+        :vastaanottotila    "VASTAANOTTANUT_SITOVASTI"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             true
+
+       ;; Vastaanotto vuotaa
+       {:valinnantila "HYLATTY" :vastaanottotila "VASTAANOTTANUT_SITOVASTI"}    false
+
+       ;; Vain ilmoittautuminen vuotaa
+       {:valinnantila       "HYVAKSYTTY"
+        :vastaanottotila    "KESKEN"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"}                             false))

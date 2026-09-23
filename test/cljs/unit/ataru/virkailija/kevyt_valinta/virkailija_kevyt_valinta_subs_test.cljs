@@ -102,3 +102,76 @@
                                                                 :kevyt-valinta/julkaisun-tila        :checked
                                                                 :kevyt-valinta/vastaanotto-tila      :checked
                                                                 :kevyt-valinta/ilmoittautumisen-tila :unchecked}))
+
+;; Vastaanotto ja ilmoittautuminen tallennetaan valinta-tulos-servicessä
+;; henkilön ja hakukohteen perusteella, joten henkilön saman hakukohteen toisen
+;; hakemuksen tiedot palautuvat myös tälle hakemukselle. Silloin hakemus
+;; näytetään vain luettavana eikä vuotavaa tietoa näytetä lainkaan.
+(deftest test-kevytvalinta-states-for-hakemus
+  (are [valinnan-tulos kevyt-valinta-write-rights? expected-result]
+       (= (k/kevytvalinta-states-for-hakemus valinnan-tulos kevyt-valinta-write-rights?)
+          expected-result)
+
+       ;; Ei vuotoa: sama tulos kuin match-kevytvalinta-statesilla
+       {:valinnantila "HYLATTY"
+        :julkaistavissa true} true                              (k/match-kevytvalinta-states
+                                                                  {:valinnantila "HYLATTY"
+                                                                   :julkaistavissa true}
+                                                                  true)
+
+       {:julkaistavissa true
+        :vastaanottotila "KESKEN"} true                         (k/match-kevytvalinta-states
+                                                                  {:julkaistavissa true
+                                                                   :vastaanottotila "KESKEN"}
+                                                                  true)
+
+       ;; Vuotanut vastaanotto hylätyllä hakemuksella: piilotetaan ja koko
+       ;; paneeli vain luettavaksi
+       {:valinnantila    "HYLATTY"
+        :julkaistavissa  true
+        :vastaanottotila "VASTAANOTTANUT_SITOVASTI"} true       {:kevyt-valinta/valinnan-tila         :checked
+                                                                 :kevyt-valinta/julkaisun-tila        :checked
+                                                                 :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                                                 :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+       ;; Sama ilman muokkausoikeuksia: tämä on se polku joka vuotaa nykyisin,
+       ;; koska match-kevytvalinta-states palauttaa kaikille :checked
+       {:valinnantila    "HYLATTY"
+        :julkaistavissa  true
+        :vastaanottotila "VASTAANOTTANUT_SITOVASTI"} false      {:kevyt-valinta/valinnan-tila         :checked
+                                                                 :kevyt-valinta/julkaisun-tila        :checked
+                                                                 :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                                                 :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+       ;; Vuotanut ilmoittautuminen, vastaanotto kuuluu tälle hakemukselle
+       {:valinnantila       "HYVAKSYTTY"
+        :julkaistavissa     true
+        :vastaanottotila    "KESKEN"
+        :ilmoittautumistila "LASNA_KOKO_LUKUVUOSI"} true        {:kevyt-valinta/valinnan-tila         :checked
+                                                                 :kevyt-valinta/julkaisun-tila        :checked
+                                                                 :kevyt-valinta/vastaanotto-tila      :checked
+                                                                 :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
+
+       ;; julkaistavissa nil + vuotanut vastaanotto: ei mene matchiin lainkaan,
+       ;; koska tiedot eivät koske tätä hakemusta
+       {:valinnantila    "HYLATTY"
+        :vastaanottotila "VASTAANOTTANUT_SITOVASTI"} true       {:kevyt-valinta/valinnan-tila         :checked
+                                                                 :kevyt-valinta/julkaisun-tila        :grayed-out
+                                                                 :kevyt-valinta/vastaanotto-tila      :grayed-out
+                                                                 :kevyt-valinta/ilmoittautumisen-tila :grayed-out}))
+
+;; julkaistavissa tulee valinta-tulos-servicestä LEFT JOINilla, joten se voi
+;; olla nil vaikka vastaanoton tila ei ole. Tällainen yhdistelmä ei täsmää
+;; yhteenkään ehtoon, ja ilman catch-allia core.match heittäisi. Tiedot
+;; näytetään, mutta mitään ei tarjota muokattavaksi.
+(deftest test-match-kevytvalinta-states-tuntematon-yhdistelma
+  (are [valinnan-tulos expected-result]
+       (= (k/match-kevytvalinta-states valinnan-tulos true)
+          expected-result)
+
+       ;; Valinnan tila on hakemuskohtaista tietoa eikä sitä piiloteta
+       {:valinnantila    "HYVAKSYTTY"
+        :vastaanottotila "VASTAANOTTANUT_SITOVASTI"}            {:kevyt-valinta/valinnan-tila         :checked
+                                                                 :kevyt-valinta/julkaisun-tila        :grayed-out
+                                                                 :kevyt-valinta/vastaanotto-tila      :checked
+                                                                 :kevyt-valinta/ilmoittautumisen-tila :grayed-out}))

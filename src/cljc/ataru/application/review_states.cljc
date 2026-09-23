@@ -167,6 +167,36 @@
                       kaikki-vastaanottotilat)
                  vastaanottotila)))
 
+;; Ilmoittautuminen tallennetaan valinta-tulos-servicessä samoin henkilön ja
+;; hakukohteen perusteella, joten se vuotaa hakemusten välillä samalla tavalla
+;; kuin vastaanotto. Sallittu joukko on tiukempi: valinta-tulos-servicen oma
+;; validointi (ErillishaunValinnantulosStrategy/validateTilat) hylkää
+;; ilmoittautumisen, ellei hakija ole hyväksytty ja vastaanottanut.
+(def valinnantilat-joihin-ilmoittautuminen-voi-liittya
+  #{"HYVAKSYTTY"
+    "VARASIJALTA_HYVAKSYTTY"})
+
+(defn ilmoittautuminen-koskee-tata-hakemusta?
+  "Kertoo, voiko valinnan tuloksen ilmoittautumisen tila koskea juuri tätä
+   hakemusta. Palauttaa true myös silloin kun ilmoittautumisen tilaa ei ole tai
+   se on EI_TEHTY, jolloin mitään toisen hakemuksen tietoa ei voi vuotaa
+   näkyviin."
+  [{:keys [valinnantila vastaanottotila ilmoittautumistila] :as valinnantulos}]
+  (or (nil? ilmoittautumistila)
+      (= "EI_TEHTY" ilmoittautumistila)
+      (and (vastaanotto-koskee-tata-hakemusta? valinnantulos)
+           (contains? valinnantilat-joihin-ilmoittautuminen-voi-liittya valinnantila)
+           (not (contains? #{nil "KESKEN"} vastaanottotila)))))
+
+(defn henkilotason-tiedot-koskevat-tata-hakemusta?
+  "Tosi, kun kaikki henkilö- ja hakukohdekohtaisesti tallennetut tiedot voivat
+   koskea tätä hakemusta. Epätosi tarkoittaa, että valinnan tuloksessa on
+   henkilön toisen hakemuksen tietoja, jolloin hakemuksesta ei voi muodostaa
+   kelvollista tallennuspyyntöä valinta-tulos-serviceen."
+  [valinnantulos]
+  (and (vastaanotto-koskee-tata-hakemusta? valinnantulos)
+       (ilmoittautuminen-koskee-tata-hakemusta? valinnantulos)))
+
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla
