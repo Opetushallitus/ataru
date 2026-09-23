@@ -121,6 +121,7 @@
 ;; CSS:llä kutsujansa suhteen — tämä komponentti ei siis ota niihin kantaa.
 (s/defn dropdown-popup
   [{:keys [expanded?
+           fullscreen?
            options-with-id
            on-click
            label-id
@@ -131,6 +132,7 @@
            popup-ref
            lang
            data-test-id]} :- {:expanded?                            s/Bool
+                              (s/optional-key :fullscreen?)         s/Bool
                               :options-with-id                      [(st/assoc SelectOptionProps :option-id s/Str)]
                               :on-click                             s/Any
                               :label-id                             s/Str
@@ -146,8 +148,8 @@
      {:ref          popup-ref
       :data-test-id (str data-test-id "-list")
       :tab-index    "-1"
-      :class        (when-not expanded?
-                      "a-dropdown-popup--collapsed")}
+      :class        (str (when-not expanded? "a-dropdown-popup--collapsed ")
+                          (when fullscreen? "a-dropdown-popup--fullscreen"))}
      ;; id pysyy aina samana kuin dropdown-fieldin aria-controls, myös silloin
      ;; kun suodatus ei löydä yhtään vaihtoehtoa — muuten aria-controls
      ;; osoittaisi olemattomaan elementtiin eikä esim. testien tai

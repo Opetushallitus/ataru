@@ -2,8 +2,7 @@
   "DOM-tapahtumakäsittelijöiden tehdasfunktiot dropdown-componentille
   (ulkopuolelle klikkaaminen, ikkunan koon muuttuminen, kokoruutuvalikon
   taustavieritys mobiilissa) sekä globaalien tapahtumakäsittelijöiden kytkeminen/irrottaminen."
-  (:require [reagent.core :as reagent]
-            [re-frame.db :as db]
+  (:require [re-frame.db :as db]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-actions :as actions]))
 
@@ -33,13 +32,9 @@
                  (expanded? dropdown-id))
         (actions/collapse-dropdown {:dropdown-id dropdown-id})))))
 
-(defn make-resize-listener [dropdown-id mobile? sync-popup-geometry!]
+(defn make-resize-listener [mobile? sync-popup-geometry!]
   (fn resize-listener []
     (reset! mobile? (viewport/mobile-viewport?))
-    (when (expanded? dropdown-id)
-      (if @mobile?
-        (viewport/lock-body-scroll!)
-        (reagent/after-render viewport/unlock-body-scroll!)))
     (sync-popup-geometry!)))
 
 ;; Kun virtuaalinäppäimistö on auki, mobiiliselaimet voivat "panoroida"
