@@ -109,46 +109,27 @@
   }
 }
 
-// dropdown_component.cljs:n lock-body-scroll!/unlock-body-scroll! lisää/poistaa
-// tämän luokan sekä document.documentElementiin (<html>) että document.bodyyn
-// kokoruutuvalikon ollessa auki — ilman tätä sääntöä sivu jää vierittyväksi
-// kokoruutuvalikon alla, jolloin näytöllä on sekä valikon oma vieritys että
-// sivun vieritys yhtä aikaa. Standards-modessa (tämän sovelluksen tila)
-// todellinen vierittyvä elementti on <html>, ei <body> — pelkkä body riittäisi
-// vain quirks-modessa, joten molemmat lukitaan varmuuden vuoksi.
-html.a-dropdown-fullscreen-open,
-body.a-dropdown-fullscreen-open {
+// Lisätään/poistetaan lock-body-scroll!/unlock-body-scroll! (dropdown-viewport)
+// mukana document.scrollingElementiin kokoruutuvalikon ollessa auki.
+.a-dropdown-fullscreen-open {
   overflow: hidden;
 
-  // Kesken oleva opacity-animaatio (animate.css:n .animated-luokka, esim.
-  // lomakkeen osion fadeIn) luo esi-isälle uuden stacking contextin niin
-  // kauan kuin opacity < 1 — tämä "vangitsee" position: fixed -kokoruutu-
-  // valikon z-indexin siitä huolimatta, kuinka suuri se on, jolloin esim.
-  // ylätunniste voi jäädä sen päälle. Pakotetaan opacity valmiiksi
-  // kokoruutuvalikon ollessa auki, jotta stacking context ei jää väliin.
-  // Ei kosketa animation-nimeä (esim. "animation: none"): sen muuttaminen
-  // pois päältä ja takaisin päälle käynnistäisi animaation alusta, jolloin
-  // valikon sulkeutuessa nähtäisiin koko fade-in uudestaan. !important-
-  // opacity riittää yksin, koska se ohittaa kaskadissa animaation ajaman
-  // opacityn joka tapauksessa — animaatio saa siis edetä taustalla
-  // huomaamatta ja päätyä luonnolliseen lopputilaansa (opacity: 1) itse.
+  // Kesken oleva opacity-animaatio (animate.css .animated) luo esi-isälle
+  // stacking contextin, joka vangitsee popupin z-indexin alleen. Pakotetaan
+  // opacity valmiiksi 1:ksi (ei animation-nimeä koske, ettei animaatio
+  // käynnisty uudestaan sulkeutuessa).
   .animated {
     opacity: 1 !important;
   }
 }
 
-// a-dropdown--fullscreen ei itse ota kantaa koko näytön peittävään
-// kiinnittämiseen (position: fixed, top/z-index/tausta) — se on kutsujan
-// vastuulla (ks. esim. hakija.less:n .application__dropdown-fullscreen-
-// wrapper), koska vain kutsuja tietää mitä muuta (esim. label) pitäisi
-// näkyä sen mukana. Tämä venyy vain täyttämään sen säiliön, johon se
-// päätyy.
+// Ei itse kiinnitä koko näyttöä (position: fixed ym.) — se on kutsujan
+// vastuulla (ks. hakija.less .application__dropdown-fullscreen-wrapper),
+// koska vain kutsuja tietää mitä muuta (esim. label) pitää näkyä mukana.
+// Tämä vain venyy täyttämään säiliönsä.
 @media only screen and (max-width: @mobile-width) {
-  // min-width: 0: tämä on flex-item (oman kiinnitetyn wrapperinsa lapsena),
-  // ja flex-itemin OLETUS min-width on "auto" eli "älä kutista sisällön
-  // min-content-leveyden alle" — popup ei enää ole tämän DOM-jälkeläinen
-  // (ks. a-dropdown-popup), joten sen sisältö ei enää voi levittää tätä,
-  // mutta muu mahdollinen sisältö silti voisi.
+  // min-width: 0, koska flex-itemin oletus (auto) ei kutistuisi sisällön
+  // min-content-leveyttä pienemmäksi.
   .a-dropdown--fullscreen {
     .flex-column(stretch, flex-start);
 
@@ -180,21 +161,17 @@ body.a-dropdown-fullscreen-open {
   }
 }
 
-// Renderöidään Reactin portaalilla document.bodyyn (ks. dropdown-component/
-// sync-popup-geometry!), joten position/top/left/width tulevat suoraan
-// JS:stä sen inline-tyylinä — tämä ei siis ole enää suhteessa mihinkään
-// kutsujan elementtiin CSS:llä. position: fixed vain oletusarvona, jotta
-// popup ei näy väärässä kohdassa sitä hetkeä ennen kuin JS ehtii asemoida
-// sen ensimmäisen kerran.
+// Renderöidään React-portaalilla document.bodyyn (ks. dropdown-geometry),
+// joten position/top/left/width tulevat JS:stä inline-tyylinä eivätkä ole
+// enää suhteessa kutsujaan CSS:llä. position: fixed on vain oletusarvo,
+// ettei popup näy väärässä kohdassa ennen ensimmäistä JS-asemointia.
 .a-dropdown-popup {
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.20);
   margin-top: 4px;
   max-height: 300px;
-  // Estää scrollin "ketjuuntumisen" taustalle (rubber-band/overscroll-
-  // efekti), kun listaa vieritetään sen ylä-/alarajaan asti — ilman tätä
-  // kosketuseleen jatkaminen rajan yli vierittää body:ä.
+  // Estää scrollin "ketjuuntumisen" taustalle listan ylä-/alarajalla.
   overscroll-behavior: contain;
   overflow-y: auto;
   padding: 4px 0;
@@ -241,19 +218,16 @@ body.a-dropdown-fullscreen-open {
   }
 }
 
-// Näppäimistöllä nuolinäppäimin korostettu vaihtoehto (aria-activedescendant) —
-// eri tila kuin --selected, jotta käyttäjä näkee sekä nykyisen valinnan että
-// sen minne nuolinäppäimet ovat parhaillaan siirtymässä.
+// Nuolinäppäimillä korostettu vaihtoehto — eri tila kuin --selected, jotta
+// nykyinen valinta ja näppäimistön kohde erottuvat toisistaan.
 .a-dropdown-list__option--active {
   outline: 2px solid @a-dropdown-menu-item-selected-color;
   outline-offset: -2px;
 }
 
 .a-dropdown-list__option-label {
-  // min-width: 0 tarpeen, koska tämä on flex-item (a-dropdown-list__option
-  // on flex-row) — ilman sitä flex-itemin oletus min-width: auto pitää sen
-  // vähintään tekstin oman (katkeamattoman) min-content-leveyden mukaisena,
-  // eikä alla oleva ellipsis pääsisi koskaan leikkaamaan sitä lyhyemmäksi.
+  // min-width: 0, jotta ellipsis pääsee leikkaamaan tekstin — muuten
+  // flex-itemin oletus min-width: auto pitäisi sen tekstin levyisenä.
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
