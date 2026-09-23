@@ -113,6 +113,90 @@
            (key virkailija-texts)])
         (get-vastaanotto-tila-translation-key-mapping kk-haku?)))
 
+(def ^:private kaikki-vastaanottotilat
+  #{"KESKEN"
+    "VASTAANOTTANUT_SITOVASTI"
+    "EHDOLLISESTI_VASTAANOTTANUT"
+    "PERUNUT"
+    "PERUUTETTU"
+    "EI_VASTAANOTETTU_MAARA_AIKANA"
+    "OTTANUT_VASTAAN_TOISEN_PAIKAN"})
+
+;; Vastaanotto tallennetaan valinta-tulos-servicessä henkilön ja hakukohteen
+;; perusteella, ei hakemuksen. Jos henkilöllä on samaan hakukohteeseen useampi
+;; hakemus, sama vastaanoton tila palautuu kaikille hakemuksille. Valinnan tila
+;; sen sijaan on hakemuskohtainen, joten sen avulla voidaan päätellä, voiko
+;; vastaanoton tila koskea tätä hakemusta.
+;;
+;; Pariteetit on johdettu valinta-tulos-servicen omasta validoinnista
+;; (ErillishaunValinnantulosStrategy/validateTilat): tässä ovat ne
+;; yhdistelmät, jotka service ylipäätään hyväksyy tallennettavaksi.
+(def valinnantilan-sallimat-vastaanottotilat
+  {"KESKEN"                 #{"KESKEN"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}
+   "HYVAKSYTTY"             kaikki-vastaanottotilat
+   "VARASIJALTA_HYVAKSYTTY" kaikki-vastaanottotilat
+   "HYLATTY"                #{"KESKEN"}
+   "VARALLA"                #{"KESKEN"}
+   ;; PERUUNTUNUT + PERUNUT/PERUUTETTU jää kiinni validateTilatin viimeiseen
+   ;; ehtoon, koska poikkeus koskee vain tiloja joissa valinnan ja vastaanoton
+   ;; tila ovat samat
+   "PERUUNTUNUT"            #{"KESKEN"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"
+                              "OTTANUT_VASTAAN_TOISEN_PAIKAN"}
+   "PERUNUT"                #{"KESKEN"
+                              "PERUNUT"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}
+   "PERUUTETTU"             #{"KESKEN"
+                              "PERUUTETTU"
+                              "EI_VASTAANOTETTU_MAARA_AIKANA"}})
+
+(defn vastaanotto-koskee-tata-hakemusta?
+  "Kertoo, voiko valinnan tuloksen vastaanoton tila koskea juuri tätä hakemusta.
+   Palauttaa true myös silloin kun vastaanoton tilaa ei ole tai se on KESKEN,
+   jolloin mitään toisen hakemuksen tietoa ei voi vuotaa näkyviin.
+
+   Puuttuvaa valinnan tilaa käsitellään KESKENinä, koska käyttöliittymä näyttää
+   sen niin, ks. default-kevyt-valinta-property-value. Tuntematon valinnan tila
+   sallii kaiken, jotta tietoa ei piiloteta varmuuden vuoksi."
+  [{:keys [valinnantila vastaanottotila]}]
+  (or (nil? vastaanottotila)
+      (= "KESKEN" vastaanottotila)
+      (contains? (get valinnantilan-sallimat-vastaanottotilat
+                      (or valinnantila "KESKEN")
+                      kaikki-vastaanottotilat)
+                 vastaanottotila)))
+
+;; Ilmoittautuminen tallennetaan valinta-tulos-servicessä samoin henkilön ja
+;; hakukohteen perusteella, joten se vuotaa hakemusten välillä samalla tavalla
+;; kuin vastaanotto. Sallittu joukko on tiukempi: valinta-tulos-servicen oma
+;; validointi (ErillishaunValinnantulosStrategy/validateTilat) hylkää
+;; ilmoittautumisen, ellei hakija ole hyväksytty ja vastaanottanut.
+(def valinnantilat-joihin-ilmoittautuminen-voi-liittya
+  #{"HYVAKSYTTY"
+    "VARASIJALTA_HYVAKSYTTY"})
+
+(defn ilmoittautuminen-koskee-tata-hakemusta?
+  "Kertoo, voiko valinnan tuloksen ilmoittautumisen tila koskea juuri tätä
+   hakemusta. Palauttaa true myös silloin kun ilmoittautumisen tilaa ei ole tai
+   se on EI_TEHTY, jolloin mitään toisen hakemuksen tietoa ei voi vuotaa
+   näkyviin."
+  [{:keys [valinnantila vastaanottotila ilmoittautumistila] :as valinnantulos}]
+  (or (nil? ilmoittautumistila)
+      (= "EI_TEHTY" ilmoittautumistila)
+      (and (vastaanotto-koskee-tata-hakemusta? valinnantulos)
+           (contains? valinnantilat-joihin-ilmoittautuminen-voi-liittya valinnantila)
+           (not (contains? #{nil "KESKEN"} vastaanottotila)))))
+
+(defn henkilotason-tiedot-koskevat-tata-hakemusta?
+  "Tosi, kun kaikki henkilö- ja hakukohdekohtaisesti tallennetut tiedot voivat
+   koskea tätä hakemusta. Epätosi tarkoittaa, että valinnan tuloksessa on
+   henkilön toisen hakemuksen tietoja, jolloin hakemuksesta ei voi muodostaa
+   kelvollista tallennuspyyntöä valinta-tulos-serviceen."
+  [valinnantulos]
+  (and (vastaanotto-koskee-tata-hakemusta? valinnantulos)
+       (ilmoittautuminen-koskee-tata-hakemusta? valinnantulos)))
+
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla

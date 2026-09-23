@@ -80,12 +80,29 @@
                                                                             :kevyt-valinta/vastaanotto-tila
                                                                             application-key
                                                                             hakukohde-oid]))
-        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
+        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])
+        valinnan-tulos                                       (when kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                               @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application
+                                                                            application-key
+                                                                            hakukohde-oid]))]
     [:span.application-handling__hakukohde-vastaanotto-cell
      {:data-test-id "list-hakukohde-vastaanotto-state"}
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
-      (if kevyt-valinta-enabled-for-application-and-hakukohde?
-        (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
+      (cond
+        (not kevyt-valinta-enabled-for-application-and-hakukohde?)
+        @(subscribe [:editor/virkailija-translation :incomplete])
+
+        ;; Vastaanotto haetaan valinta-tulos-servicestä henkilön ja hakukohteen
+        ;; perusteella, joten sama tieto palautuu henkilön kaikille saman
+        ;; hakukohteen hakemuksille. Ei näytetä sitä hakemuksilla, joita se ei
+        ;; voi koskea.
+        (not (review-states/vastaanotto-koskee-tata-hakemusta? valinnan-tulos))
+        [:span.application-handling__vastaanotto-ei-koske-hakemusta
+         {:data-test-id "list-hakukohde-vastaanotto-state-ei-koske-hakemusta"}
+         "–"]
+
+        :else
+        (let [kevyt-valinta-property-exists? (some? valinnan-tulos)
               translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
                                              :kevyt-valinta/vastaanotto-tila
                                              kevyt-valinta-property-value
@@ -98,8 +115,7 @@
                       "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
              :title (if kevyt-valinta-property-exists?
                       @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
-                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]])
-        @(subscribe [:editor/virkailija-translation :incomplete]))]]))
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]]))]]))
 
 (defn- hakemuksen-valinnan-tila-sarake [{:keys [application-key
                                                 application-hakukohde-reviews

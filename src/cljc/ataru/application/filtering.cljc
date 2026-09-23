@@ -41,6 +41,17 @@
                                 set)]
         (not (empty? (set/intersection states-to-include relevant-states)))))))
 
+(defn- vastaanoton-tila-jos-koskee-hakemusta
+  "Hakemuksen vastaanoton tila hakukohteessa, tai nil jos vastaanotto ei voi
+   koskea tätä hakemusta, ks. review-states/vastaanotto-koskee-tata-hakemusta?"
+  [valinnan-tulokset hakukohde-oid]
+  (let [valinnantulos (-> valinnan-tulokset
+                          (get hakukohde-oid)
+                          :valinnantulos)]
+    (when (review-states/vastaanotto-koskee-tata-hakemusta? valinnantulos)
+      (or (:vastaanottotila valinnantulos)
+          "KESKEN"))))
+
 (defn filter-by-kevyt-valinta-vastaanotto-state
   [db
    application-key
@@ -55,12 +66,8 @@
       (let [valinnan-tulokset (-> db :valinta-tulos-service (get application-key))
             relevant-states   (->>
                                 hakukohde-oids
-                                (map (fn [hakukohde-oid]
-                                       (or (-> valinnan-tulokset
-                                               (get hakukohde-oid)
-                                               :valinnantulos
-                                               :vastaanottotila)
-                                           "KESKEN")))
+                                (keep (partial vastaanoton-tila-jos-koskee-hakemusta
+                                               valinnan-tulokset))
                                 set)]
         (not (empty? (set/intersection states-to-include relevant-states)))))))
 
@@ -85,15 +92,10 @@
             (->> hakukohde-oids
                  (filter (fn [hakukohde-oid]
                            (contains? selected-hakukohde-oids hakukohde-oid)))
-                 (map (fn [hakukohde-oid]
-                        (let [raw-vastaanoton-tila (-> db
-                                                       :valinta-tulos-service
-                                                       (get application-key)
-                                                       (get hakukohde-oid)
-                                                       :valinnantulos
-                                                       :vastaanottotila)]
-                          (or raw-vastaanoton-tila
-                              "KESKEN"))))
+                 (keep (partial vastaanoton-tila-jos-koskee-hakemusta
+                                (-> db
+                                    :valinta-tulos-service
+                                    (get application-key))))
                  (reduce (fn [acc vastaanoton-tila]
                            (update acc
                                    vastaanoton-tila
