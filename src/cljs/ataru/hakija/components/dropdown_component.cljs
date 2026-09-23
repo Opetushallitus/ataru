@@ -114,6 +114,10 @@
      (cond-> {:options               options
               :unselected-label      unselected-label
               :selected-value        (:value answer)
+              ;; Ei omaa <label>-elementtiä (ks. render_generic_component ja
+              ;; valinnainen_kieli_dropdown), joten kentän saavutettava nimi
+              ;; tulee aria-labelistä eikä aria-labelledbystä.
+              :aria-label            (-> field-descriptor :label lang)
               :on-change             (fn [value]
                                        (re-frame/dispatch [:application/set-repeatable-application-field
                                                            field-descriptor

@@ -527,7 +527,7 @@ test('henkilötietomoduulin täyttäminen', async () => {
     phone: '0123456789',
     address: 'Katutie 12 B',
     'postal-code': '40100',
-    'home-town': '179',
+    'home-town': 'Jyväskylä',
   })
 
   await expect(getInvalidFieldsStatus()).toHaveText('Tarkista 3 tietoa')
@@ -563,14 +563,14 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
     'Pakollisen tekstialueen vastaus'
   )
 
-  await selectOption(page, getFormFields().nth(17).locator('select'), '2')
+  await selectOption(page, getFormFields().nth(17), '2')
   await fillField(
     page,
     getFormFields().nth(18).locator('input'),
     'Jatkokysymyksen vastaus'
   )
 
-  await selectOption(page, getFormFields().nth(19).locator('select'), '120')
+  await selectOption(page, getFormFields().nth(19), '120')
 
   await clickFieldRadio(getFormFields().nth(20), 'Toinen vaihtoehto')
   await clickFieldRadio(getFormFields().nth(21), 'En')
@@ -632,7 +632,7 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
     'Oikea vierekkäinen'
   )
 
-  await selectOption(page, getFormFields().nth(31).locator('select'), '0')
+  await selectOption(page, getFormFields().nth(31), '0')
 
   await adjacentMultiRakenne(
     getFormFields().nth(32),
@@ -642,7 +642,7 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
 
   await fillField(page, getFormFields().nth(33).locator('input'), '1,323')
 
-  await selectOption(page, getFormFields().nth(34).locator('select'), '810')
+  await selectOption(page, getFormFields().nth(34), 'Entinen Neuvostoliitto')
 
   await expect(page.getByTestId('send-application-button')).toBeEnabled()
 

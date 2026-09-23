@@ -19,22 +19,13 @@
 (defn- mobile-viewport? []
   (<= (.-innerWidth js/window) mobile-max-width))
 
-;; window.visualViewport kutistuu virtuaalinäppäimistön auki ollessa niillä
-;; selaimilla, jotka tukevat sitä — window.innerHeight ja vh-yksiköt eivät
-;; reagoi näppäimistöön ollenkaan millään selaimella, koska CSS:n
-;; spesifikaatio jättää näppäimistön tarkoituksella pois viewport-mittojen
-;; laskennasta.
 (defn- viewport-height []
   (if-let [vv (.-visualViewport js/window)]
     (.-height vv)
     (.-innerHeight js/window)))
 
 ;; Kun kenttä fokusoidaan mobiilissa, vieritetään sivu heti niin, että kentän
-;; oma <label> (ei itse syötekenttä/select) asettuu ylätunnisteen alapuolelle
-;; — näin sekä otsikko että kenttä pysyvät näkyvissä, eikä pelkkä selaimen
-;; oma "scroll into view" -käytös (esim. virtuaalinäppäimistön avautuessa)
-;; jätä niitä johonkin muuhun, vaikeammin ennustettavaan kohtaan. Itse kenttää
-;; tai labelia ei muuteta millään tavalla — ainoastaan sivun vieritys.
+;; oma <label> (ei itse syötekenttä/select) asettuu ylätunnisteen alapuolelle.
 (defn- scroll-field-to-top! [label-id]
   (when (and label-id (mobile-viewport?))
     (when-let [label-el (.getElementById js/document label-id)]
@@ -43,21 +34,12 @@
                                    :left 0
                                    :behavior "instant"})))))
 
-;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään kokoruutuna (ks.
-;; render-dropdownin loppu ja a-dropdown--fullscreen dropdown-component.less:
-;; ssä) — taustan vieritys lukitaan samaksi ajaksi, ettei sivu vieritykin
-;; samanaikaisesti listan sisäisen vierityksen kanssa. Luokka lisätään sekä
-;; <html>:iin että <body>:iin, koska standards-modessa (tämän sovelluksen
-;; tila) sivun todellinen vierittyvä elementti on <html>, ei <body> — pelkkä
-;; body.overflow:hidden ei siis riitä lukitsemaan mitään, vaikka se on
-;; historiallisesti totuttu tapa kirjoittaa tämä.
+;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään kokoruutuna, jolloin koko sivun vieritys disabloidaan.
 (defn- lock-body-scroll! []
   (when (mobile-viewport?)
-    (.add (.-classList (.-documentElement js/document)) "a-dropdown-fullscreen-open")
     (.add (.-classList (.-body js/document)) "a-dropdown-fullscreen-open")))
 
 (defn- unlock-body-scroll! []
-  (.remove (.-classList (.-documentElement js/document)) "a-dropdown-fullscreen-open")
   (.remove (.-classList (.-body js/document)) "a-dropdown-fullscreen-open"))
 
 (s/defn dropdown-caret
@@ -71,67 +53,23 @@
                                 :lang     s/Keyword}]
   [:button.a-dropdown-clear-button
    {:type          "button"
-    :tab-index     "-1"
     :aria-label    (translations/get-hakija-translation :clear lang)
-    ;; Ilman tätä hiiren/kosketuksen painallus siirtää fokuksen napista
+    ;; Ilman tätä hiiren/kosketuksen painallus siirtää fokuksen
     ;; syötekentästä nappiin ennen kuin click ehtii tapahtua. Koska nappi
     ;; poistuu DOM:sta heti valinnan tyhjennyttyä (renderöidään vain kun
     ;; arvo on valittu), fokusoidun napin poistaminen laukaisee selaimen
     ;; oman blur-tapahtuman (relatedTarget null), jonka juuritason
     ;; on-dropdown-blur tulkitsee fokuksen poistumisena koko komponentista
     ;; ja sulkee kokoruutuvalikon (ja vapauttaa vieritys-lukon) hetkeksi.
+    ;; Näppäimistöllä nappi täytyy kuitenkin voida fokusoida (jotta arvon
+    ;; voi tyhjentää ilman hiirtä), joten sama poistumis-blur syntyy silloin
+    ;; Enter/Space-aktivoinnista — on-click suojaa sen suppress-blur-close?
+    ;; -lipulla samaan tapaan kuin mobiilin uudelleenfokusointi.
     :on-mouse-down (fn [e] (.preventDefault e))
     :on-click      (fn dropdown-clear-button-on-click [e]
                      (.stopPropagation e)
                      (on-click))}
    [:i.zmdi.zmdi-close {:aria-hidden true}]])
-
-(s/defn dropdown-select-option
-  [{:keys [value
-           label]} :- SelectOptionProps]
-  [:option {:value value} label])
-
-(s/defn dropdown-select
-  [{:keys [expanded?
-           options
-           unselected-label
-           selected-value
-           on-click
-           dropdown-id
-           disabled?
-           id
-           data-test-id
-           on-change]} :- {:expanded?                     s/Bool
-                           :options                       [SelectOptionProps]
-                           :unselected-label              s/Str
-                           :selected-value                (s/maybe s/Str)
-                           :on-click                      s/Any
-                           :dropdown-id                   s/Str
-                           (s/optional-key :disabled?)    s/Bool
-                           (s/optional-key :id)           (s/maybe s/Str)
-                           (s/optional-key :data-test-id) (s/maybe s/Str)
-                           :on-change                     s/Any}]
-  [:div.a-dropdown-select-container
-   [:select.a-dropdown-select
-    {:aria-hidden  true
-     :disabled     (boolean disabled?)
-     :id           id
-     :data-test-id data-test-id
-     :on-click     on-click
-     :on-change    (fn dropdown-select-on-change [event]
-                     (let [value (.. event -target -value)]
-                       (on-change value)))
-     :value        (or selected-value "")}
-    [dropdown-select-option
-     {:value ""
-      :label unselected-label}]
-    (map-indexed (fn [option-idx option-props]
-                   (let [key (str "dropdown-select-" dropdown-id "-option-" option-idx)]
-                     ^{:key key}
-                     [dropdown-select-option option-props]))
-                 options)]
-   [dropdown-caret
-    {:expanded? expanded?}]])
 
 (s/defn dropdown-list-option
   [{:keys [value
@@ -202,7 +140,7 @@
                               :lang                                 s/Keyword
                               :data-test-id                         (s/maybe s/Str)}]
   (let [listbox-id (str dropdown-id "-listbox")]
-    [:div.a-component.a-dropdown-popup
+    [:div.a-dropdown-popup
      {:ref          popup-ref
       :data-test-id (str data-test-id "-list")
       :tab-index    "-1"
@@ -293,8 +231,7 @@
         sync-popup-height!      (fn sync-popup-height! []
                                    (when-let [el @popup-ref]
                                      (let [available (- (viewport-height)
-                                                        (.-top (.getBoundingClientRect el))
-                                                        8)
+                                                        (.-top (.getBoundingClientRect el)))
                                            available (-> available
                                                         (max 100)
                                                         js/Math.round)]
@@ -327,7 +264,15 @@
                  (fn [e]
                    (when (and @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
                               @root-ref
-                              (not (.contains @root-ref (.-target e))))
+                              (not (.contains @root-ref (.-target e)))
+                              ;; Kentän oma <label> on DOM:ssa .a-dropdownin
+                              ;; ulkopuolella (ks. render-dropdown/label-id),
+                              ;; vaikka se näyttää mobiilissa kokoruutu-
+                              ;; esityksen osalta kuuluvan siihen. Ilman tätä
+                              ;; tarkistusta labelin näpäytys tulkittaisiin
+                              ;; ulkopuoliseksi klikkaukseksi ja sulkisi juuri
+                              ;; avatun listan.
+                              (not= @input-ref (some-> (.-target e) (.closest "label") .-control)))
                      (collapse-dropdown {:dropdown-id dropdown-id}))))
          ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita
          ;; ennen kuin kohde-elementin oma click-käsittelijä (esim. toisen
@@ -335,11 +280,23 @@
          (.addEventListener js/document "mousedown" @outside-click-listener true)
 
          (reset! resize-listener
-                 (fn [] (reset! mobile? (mobile-viewport?))))
+                 (fn []
+                   (reset! mobile? (mobile-viewport?))
+                   ;; lock/unlock-body-scroll! ajetaan muuten vain avattaessa/
+                   ;; suljettaessa (ks. expand-dropdown/collapse-dropdown) —
+                   ;; jos näyttö kääntyy tai ikkunaa venytetään auki olevan
+                   ;; listan aikana yli/ali mobiili-rajan, fullscreen? vaihtuu
+                   ;; ilman että kumpikaan niistä ajaa, jolloin vieritys-lukko
+                   ;; jää joko päälle vaikka kokoruutuesitys on jo poistunut,
+                   ;; tai puuttuu vaikka kokoruutuesitys on juuri ilmestynyt.
+                   (when @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+                     (if @mobile?
+                       (lock-body-scroll!)
+                       (reagent/after-render unlock-body-scroll!)))
+                   (sync-popup-height!)))
          (.addEventListener js/window "resize" @resize-listener)
 
          (reset! viewport-resize-listener sync-popup-height!)
-         (.addEventListener js/window "resize" @viewport-resize-listener)
          (when-let [vv (.-visualViewport js/window)]
            (.addEventListener vv "resize" @viewport-resize-listener)
            (.addEventListener vv "scroll" @viewport-resize-listener))
@@ -355,7 +312,6 @@
        (fn [_this]
          (.removeEventListener js/document "mousedown" @outside-click-listener true)
          (.removeEventListener js/window "resize" @resize-listener)
-         (.removeEventListener js/window "resize" @viewport-resize-listener)
          (when-let [vv (.-visualViewport js/window)]
            (.removeEventListener vv "resize" @viewport-resize-listener)
            (.removeEventListener vv "scroll" @viewport-resize-listener))
@@ -375,6 +331,7 @@
                   invalid?
                   id
                   aria-labelledby
+                  aria-label
                   data-test-id]} :- {:options                                [SelectOptionProps]
                                      :unselected-label                       s/Str
                                      ;; Yksittäinen hiccup-elementti (esim. [:i.zmdi...]), ei merkkijono.
@@ -386,6 +343,9 @@
                                      (s/optional-key :invalid?)              s/Bool
                                      (s/optional-key :id)                    (s/maybe s/Str)
                                      (s/optional-key :aria-labelledby)       (s/maybe s/Str)
+                                     ;; Vaihtoehto aria-labelledby:lle silloin, kun kentällä ei
+                                     ;; ole omaa näkyvää <label>-elementtiä (ks. hakija-dropdown).
+                                     (s/optional-key :aria-label)            (s/maybe s/Str)
                                      (s/optional-key :data-test-id)          (s/maybe s/Str)}]
          (let [disabled?          (boolean disabled?)
                lang               @(re-frame/subscribe [:application/form-language])
@@ -393,6 +353,7 @@
                                         @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false]))
                query              @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :query] nil])
                active-index       @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :active-index] nil])
+               value->label       (into {} (map (juxt :value :label)) options)
                options-with-id    (->> (if (string/blank? query)
                                          options
                                          (let [query-lower (string/lower-case query)]
@@ -417,8 +378,7 @@
                                                           :active-index idx}]))
                ;; Popup on korkeintaan 300px korkea ja vierittyvä, joten pitkässä
                ;; listassa (esim. maat) korostettu vaihtoehto pitää vierittää
-               ;; näkyviin, muuten se katoaa näkymästä muutaman nuolinäppäimen
-               ;; painalluksen jälkeen.
+               ;; näkyviin.
                move-active-to     (fn move-active-to [idx]
                                     (set-active-index idx)
                                     (when-let [option-id (:option-id (get options-with-id idx))]
@@ -435,7 +395,18 @@
                                     (when-not disabled?
                                       (when-not expanded?
                                         (on-query-change nil)
-                                        (expand-dropdown {:dropdown-id dropdown-id}))))
+                                        (expand-dropdown {:dropdown-id dropdown-id})
+                                        ;; :on-focus (alempana) ei riitä yksin:
+                                        ;; valinnan tekeminen ei koskaan
+                                        ;; sumenna kenttää (ks. dropdown-list-
+                                        ;; option/dropdown-clear-button), joten
+                                        ;; kentän avaaminen uudestaan saman
+                                        ;; valinnan jälkeen ei enää laukaise
+                                        ;; aitoa focus-tapahtumaa — sivu jäisi
+                                        ;; silloin vierittämättä, vaikka
+                                        ;; käyttäjä olisi sillä välin
+                                        ;; vierittänyt sivua itse.
+                                        (scroll-field-to-top! (or aria-labelledby (str dropdown-id "-label"))))))
                ;; Pelkkä näppäimistöfokus (esim. Tab kenttään) ei avaa listaa —
                ;; vain klikkaus, nuolinäppäimet tai kirjoittaminen avaavat sen.
                ;;
@@ -522,23 +493,33 @@
                                       (if expanded?
                                         (collapse-dropdown {:dropdown-id dropdown-id})
                                         (do (open-popup)
-                                            ;; Ei fokusoida eksplisiittisesti
-                                            ;; mobiilissa: :read-only on jo
-                                            ;; poistunut siihen mennessä kun
-                                            ;; focus-input (after-render)
-                                            ;; ehtii ajaa, joten .focus()
-                                            ;; toisi virtuaalinäppäimistön
-                                            ;; esiin heti ensimmäisestä
-                                            ;; avauksesta (ks. on-input-click).
-                                            (when-not @mobile?
+                                            (if @mobile?
+                                              ;; React on tässä vaiheessa jo
+                                              ;; poistanut :read-only-attri-
+                                              ;; buutin (expanded? on nyt
+                                              ;; totta), joten pelkkä .focus()
+                                              ;; toisi virtuaalinäppäimistön
+                                              ;; esiin heti ensimmäisestä
+                                              ;; avauksesta (ks. on-input-click).
+                                              ;; DOM-fokus pitää silti saada
+                                              ;; kenttään (esim. Escapea ja
+                                              ;; nuolinäppäimiä varten) —
+                                              ;; asetetaan readOnly hetkeksi
+                                              ;; suoraan DOM:iin fokusoinnin
+                                              ;; ajaksi ja palautetaan heti
+                                              ;; perään, jotta React ei jää
+                                              ;; luulemaan sen olevan yhä
+                                              ;; totta.
+                                              (reagent/after-render
+                                                (fn []
+                                                  (when-let [el @input-ref]
+                                                    (set! (.-readOnly el) true)
+                                                    (.focus el)
+                                                    (set! (.-readOnly el) false))))
                                               (focus-input))))))
                label-id           (str dropdown-id "-label")
                listbox-id         (str dropdown-id "-listbox")
-               selected-label     (->> options
-                                       (filter (fn filter-dropdown-select-option [{option-value :value}]
-                                                 (= option-value selected-value)))
-                                       (map :label)
-                                       first)
+               selected-label     (get value->label selected-value)
                button-label       (if-not (string/blank? selected-value)
                                     selected-label
                                     unselected-label)
@@ -562,11 +543,12 @@
                :class   (str (when disabled? "a-dropdown--disabled ")
                               (when fullscreen? "a-dropdown--fullscreen"))
                :on-blur on-dropdown-blur}
-              [:div.a-dropdown-field.a-component
+              [:div.a-dropdown-field
              (when (seq unselected-label-icon)
                [:span.a-dropdown-field__icon unselected-label-icon])
              [:input.a-dropdown-input
               {:ref                  #(reset! input-ref %)
+               :id                   id
                :type                 "text"
                :value                input-value
                :placeholder          unselected-label
@@ -584,9 +566,18 @@
                :required             (boolean required?)
                :aria-invalid         (boolean invalid?)
                :autoComplete         "off"
-               :data-test-id         (str data-test-id "-button")
+               :data-test-id         data-test-id
                :role                 "combobox"
-               :aria-labelledby      (or aria-labelledby label-id)
+               ;; label-id on tämän komponentin itsensä keksimä id, johon ei
+               ;; ole olemassa vastaavaa DOM-elementtiä ellei kutsuja anna
+               ;; omaa aria-labelledbytä (ks. hakija/dropdown_component.cljs/
+               ;; dropdown). Osoittaminen olemattomaan id:hen jättäisi
+               ;; kentän ilman saavutettavaa nimeä, joten sitä käytetään
+               ;; oletuksena vain kun kutsuja ei ole antanut myöskään
+               ;; aria-labeliä (ks. hakija-dropdown).
+               :aria-labelledby      (or aria-labelledby
+                                         (when-not aria-label label-id))
+               :aria-label           aria-label
                :aria-expanded        expanded?
                :aria-haspopup        "listbox"
                :aria-controls        listbox-id
@@ -602,9 +593,19 @@
                  ;; Nappi katoaa DOM:sta heti tyhjennyksen jälkeen (renderöidään
                  ;; vain kun arvo on valittu), jolloin fokus katoaisi kokonaan
                  ;; ellei sitä siirretä eksplisiittisesti takaisin kenttään.
+                 ;; Näppäimistöllä nappi on tässä vaiheessa myös itse
+                 ;; fokusoitu, joten sen poistuminen laukaisisi juuritason
+                 ;; blurin (ks. dropdown-clear-button) ja sulkisi listan
+                 ;; ellei sitä suojattaisi samalla suppress-blur-close?
+                 ;; -lipulla kuin mobiilin uudelleenfokusointia.
                  :on-click (fn dropdown-clear-button-clicked []
+                             (reset! suppress-blur-close? true)
                              (on-change "")
-                             (focus-input))}])
+                             (reagent/after-render
+                               (fn []
+                                 (when-let [el @input-ref]
+                                   (.focus el))
+                                 (reset! suppress-blur-close? false))))}])
              [:button.a-dropdown-trigger
               {:type      "button"
                :tab-index "-1"
@@ -613,19 +614,6 @@
                :on-click  on-trigger-click}
               [dropdown-caret
                {:expanded? expanded?}]]]
-            [dropdown-select
-             {:expanded?        expanded?
-              :options          options
-              :unselected-label unselected-label
-              :selected-value   selected-value
-              :dropdown-id      dropdown-id
-              :disabled?        disabled?
-              :id               id
-              :data-test-id     data-test-id
-              :on-click         (fn []
-                                  (when-not disabled?
-                                    (expand-dropdown {:dropdown-id dropdown-id})))
-              :on-change        on-option-click}]
             [dropdown-popup
              {:expanded?        expanded?
               :options-with-id  options-with-id

@@ -189,38 +189,6 @@ body.a-dropdown-fullscreen-open {
   }
 }
 
-// Piilotettu apuelementti, jota mm. Playwright-testit käyttävät kentän id:n
-// kautta — ei todellista käyttöliittymää (ks. dropdown-select
-// dropdown_component.cljs:ssä).
-.a-dropdown-select-container {
-  display: none;
-}
-
-.a-dropdown-select {
-  .default-font();
-
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: transparent;
-  border: 0;
-  color: @neutral-grey-900;
-  flex: 1;
-  font-size: 16px;
-  height: 100%;
-  min-width: 0;
-  outline: 0;
-  padding: 0;
-
-  &:disabled {
-    color: @disabled-font-gray;
-  }
-}
-
-.a-dropdown-select--collapsed {
-  display: none;
-}
-
 .a-dropdown-popup {
   background-color: white;
   border-radius: 4px;
