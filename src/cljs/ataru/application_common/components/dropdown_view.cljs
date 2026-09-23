@@ -19,20 +19,20 @@
 
 (defn get-filtered-options-with-id
   "Suodattaa vaihtoehdot query:llä (tapauksesta riippumaton osamerkkijonohaku
-  labelista) ja lisää kullekin option-id:n, jota käytetään DOM-id:nä ja
-  aria-activedescendant-viittauksissa."
+  labelista) ja lisää kullekin option-id:n, jota käytetään DOM-id:nä, 
+  aria-activedescendant-viittauksissa, sekä optioneiden key-attribuuttina."
   [dropdown-id options query]
-  (->> (if (string/blank? query)
-         options
-         (let [query-lower (string/lower-case query)]
-           (filter (fn [{:keys [label]}]
-                     (string/includes? (string/lower-case label) query-lower))
-                   options)))
-       (map-indexed (fn [option-idx option-props]
-                      (assoc option-props
-                             :option-id
-                             (str dropdown-id "-option-" option-idx))))
-       vec))
+  (let [options-with-id (map (fn [option-props]
+                                (assoc option-props
+                                       :option-id
+                                       (str dropdown-id "-option-" (:value option-props))))
+                              options)]
+    (vec (if (string/blank? query)
+           options-with-id
+           (let [query-lower (string/lower-case query)]
+             (filter (fn [{:keys [label]}]
+                       (string/includes? (string/lower-case label) query-lower))
+                     options-with-id))))))
 
 (defn find-selected-index [options-with-id selected-value]
   (when-not (string/blank? selected-value)
@@ -83,15 +83,13 @@
            option-id
            selected-value
            active?
-           register-ref
-           data-test-id]} :- (st/assoc
+           register-ref]} :- (st/assoc
                                SelectOptionProps
                                :on-click s/Any
                                :option-id s/Str
                                :selected-value (s/maybe s/Str)
                                :active? s/Bool
-                               :register-ref s/Any
-                               :data-test-id (s/maybe s/Str))]
+                               :register-ref s/Any)]
   (let [selected? (= selected-value value)]
     [:li.a-dropdown-list__option
      {:id            option-id
@@ -106,7 +104,10 @@
       :role          "option"
       :aria-selected (when selected?
                        true)
-      :data-test-id  data-test-id
+      ;; Testien (ks. playwright-utils.ts/resolveOptionLabel) ja muun
+      ;; ulkopuolisen tarkastelun koti raa'alle arvolle — vrt.
+      ;; dropdown-field/data-selected-option-value.
+      :data-value    value
       :tab-index     "-1"}
      [:span.a-dropdown-list__option-label label]]))
 
@@ -116,6 +117,10 @@
 ;; dropdown-field) — ARIA-yhdistelmäruutumallissa se kuuluu sille
 ;; elementille, jolla on todellinen näppäimistöfokus, ei sille jota se
 ;; osoittaa.
+;; Sijainti ja koko (ks. dropdown-component/sync-popup-geometry!) asetetaan
+;; suoraan DOM:iin popup-refin kautta, koska popup renderöidään Reactin
+;; portaalilla document.bodyyn eikä siis voi enää saada niitä ilmaiseksi
+;; CSS:llä kutsujansa suhteen — tämä komponentti ei siis ota niihin kantaa.
 (s/defn dropdown-popup
   [{:keys [expanded?
            options-with-id
@@ -126,7 +131,6 @@
            active-option-id
            register-ref
            popup-ref
-           max-height
            lang
            data-test-id]} :- {:expanded?                            s/Bool
                               :options-with-id                      [(st/assoc SelectOptionProps :option-id s/Str)]
@@ -137,12 +141,6 @@
                               (s/optional-key :active-option-id)    (s/maybe s/Str)
                               :register-ref                         s/Any
                               (s/optional-key :popup-ref)           s/Any
-                              ;; visualViewportista laskettu, jäljellä olevaan
-                              ;; tilaan mukautuva korkeus ylikirjoittaa CSS:n
-                              ;; staattisen max-heightin (ks. dropdown-
-                              ;; component/sync-popup-height!), ettei lista
-                              ;; mene virtuaalinäppäimistön alle.
-                              (s/optional-key :max-height)          (s/maybe s/Int)
                               :lang                                 s/Keyword
                               :data-test-id                         (s/maybe s/Str)}]
   (let [listbox-id (str dropdown-id "-listbox")]
@@ -150,28 +148,28 @@
      {:ref          popup-ref
       :data-test-id (str data-test-id "-list")
       :tab-index    "-1"
-      :style        (when max-height
-                      {:max-height max-height})
       :class        (when-not expanded?
                       "a-dropdown-popup--collapsed")}
-     (if (empty? options-with-id)
-       [:p.a-dropdown-empty
-        (translations/get-hakija-translation :no-dropdown-search-hits lang)]
-       [:ul.a-dropdown-list
-        {:id              listbox-id
-         :aria-labelledby label-id
-         :tab-index        "-1"
-         :role            "listbox"}
-        (map-indexed (fn [option-idx option-props]
-                       (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
-                         ^{:key key}
-                         [dropdown-list-option (merge option-props
-                                                      {:on-click       on-click
-                                                       :selected-value selected-value
-                                                       :active?        (= active-option-id (:option-id option-props))
-                                                       :register-ref   register-ref
-                                                       :data-test-id   (str data-test-id "-option-" (:value option-props))})]))
-                     options-with-id)])]))
+     ;; id pysyy aina samana kuin dropdown-fieldin aria-controls, myös silloin
+     ;; kun suodatus ei löydä yhtään vaihtoehtoa — muuten aria-controls
+     ;; osoittaisi olemattomaan elementtiin eikä esim. testien tai
+     ;; ruudunlukijan id-pohjainen haku löytäisi tätä ollenkaan.
+     [:ul.a-dropdown-list
+      {:id              listbox-id
+       :aria-labelledby label-id
+       :tab-index        "-1"
+       :role            "listbox"}
+      (if (empty? options-with-id)
+        [:li.a-dropdown-empty
+         (translations/get-hakija-translation :no-dropdown-search-hits lang)]
+        (map (fn [option-props]
+               ^{:key (:option-id option-props)}
+               [dropdown-list-option (merge option-props
+                                            {:on-click       on-click
+                                             :selected-value selected-value
+                                             :active?        (= active-option-id (:option-id option-props))
+                                             :register-ref   register-ref})])
+             options-with-id))]]))
 
 ;; Kentän oma osa (syötekenttä + tyhjennysnappi + avausnappi) — erillään
 ;; dropdown-popupista samasta syystä kuin popup on omansa: kutsujan
@@ -179,6 +177,7 @@
 ;; osan omat propsit selkeästi nimettyinä.
 (s/defn dropdown-field
   [{:keys [input-ref
+           field-ref
            id
            value
            unselected-label
@@ -201,6 +200,7 @@
            on-input-focus
            on-clear-click
            on-trigger-click]} :- {:input-ref                               s/Any
+                                  (s/optional-key :field-ref)              s/Any
                                   (s/optional-key :id)                     (s/maybe s/Str)
                                   :value                                   s/Str
                                   :unselected-label                        s/Str
@@ -224,6 +224,7 @@
                                   :on-clear-click                          s/Any
                                   :on-trigger-click                        s/Any}]
   [:div.a-dropdown-field
+   {:ref field-ref}
    (when (seq unselected-label-icon)
      [:span.a-dropdown-field__icon unselected-label-icon])
    [:input.a-dropdown-input
@@ -237,6 +238,13 @@
      :aria-invalid          invalid?
      :autoComplete          "off"
      :data-test-id          data-test-id
+     ;; Kentän NÄKYVÄ value on valitun vaihtoehdon label (haku-/näyttöteksti),
+     ;; ei sen taustalla oleva raaka arvo (esim. koodistokoodi) — sille ei
+     ;; muuten ole mitään kotia DOM:issa, koska vaihtoehtolista (ks. dropdown-
+     ;; popup) renderöityy vasta kentän ensimmäisen avaamisen jälkeen eikä
+     ;; sen aria-selected-tilaan siis voi luottaa. Puhtaasti tarkastelua
+     ;; varten, ei ARIA:a eikä käyttöliittymälogiikkaa.
+     :data-selected-option-value selected-value
      :role                  "combobox"
      ;; label-id on kutsujan (dropdown-component/render-dropdown) keksimä
      ;; id, johon ei ole olemassa vastaavaa DOM-elementtiä ellei kutsuja
