@@ -12,11 +12,6 @@
        (or (vector? (first value))
            (nil? (first value)))))
 
-(defn gender-int-to-string [gender]
-  (case gender
-    "1" "mies"
-    "2" "nainen"
-    nil))
 
 (defn map-kv [m f]
   (reduce-kv #(assoc %1 %2 (f %3)) {} m))
@@ -446,7 +441,7 @@
 
 (defn to-vec
   "Get value wrapped into vector, if it's not a vector"
-  [val] 
+  [val]
   (if (vector? val) val [val]))
 
 (defn koodi-uri-base [koodi-uri] (-> koodi-uri (string/split #"#") first))

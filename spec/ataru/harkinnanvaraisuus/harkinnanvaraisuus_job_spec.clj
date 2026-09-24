@@ -57,7 +57,6 @@
 
   (hakukohde-uses-valintalaskenta? [_ _] true)
   (opiskelijan-suoritukset [_ _ _] [])
-  (opiskelijoiden-suoritukset [_ _ _] [])
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
          (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "EI_HARKINNANVARAINEN"))
   (hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache [_ hakemus-oids]
@@ -106,7 +105,6 @@
 
   (hakukohde-uses-valintalaskenta? [_ _] true)
   (opiskelijan-suoritukset [_ _ _] [])
-  (opiskelijoiden-suoritukset [_ _ _] [])
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
     (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "SURE_YKS_MAT_AI"))
   (hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache [_ hakemus-oids]
