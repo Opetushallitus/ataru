@@ -118,11 +118,10 @@
 
 (reg-event-db
   :application-file-upload/handle-attachment-progress-resumable
-  (fn [db [_ field-descriptor upload-id question-group-idx evt file-part-number]]
+  (fn [db [_ field-descriptor upload-id evt file-part-number]]
     (if-let [path (and (.-lengthComputable evt)
                        (attachment-path/path-by-upload-id db
                                                           (keyword (:id field-descriptor))
-                                                          question-group-idx
                                                           upload-id))]
       (let [now           (c/now)
             prev-uploaded (get-in db (conj path :uploaded-size) 0)
