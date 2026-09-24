@@ -1506,7 +1506,7 @@
         (nil? path)
         (drop-attachment-upload db field-descriptor upload-id)
 
-        (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
+        (and (contains? #{:file-upload-failed :file-upload-retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable
                                            field-descriptor
