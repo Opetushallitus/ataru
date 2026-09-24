@@ -1571,10 +1571,14 @@
   :application/cancel-attachment-upload
   [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor upload-id]]
+    ;; The row goes right away, whatever stage the upload is at. A request still in
+    ;; flight is aborted; at every other stage (hashing, retry backoff, between
+    ;; requests) the next step of the upload finds its row gone and stops there.
     (let [path    (attachment-path/path-by-upload-id db (keyword (:id field-descriptor)) upload-id)
           request (when path (get-in db (conj path :request)))]
-      (when (some? request)
-        {:http-abort request}))))
+      (cond-> (drop-attachment-upload db field-descriptor upload-id)
+              (some? request)
+              (assoc :http-abort request)))))
 
 (reg-event-db
   :application/rating-hover
@@ -1723,6 +1727,29 @@
        :dispatch-n (mapcat (partial set-empty-value-dispatch repeat-count)
                            (:children field-descriptor))})))
 
+(defn- stop-uploads-in-question-group-row
+  "Uploads into a removed question group row stop with it: they no longer hold back
+   sending the application, and a request in flight is aborted. An upload with no
+   request in flight stops at its next step, which finds its row gone."
+  [effects db descendants idx]
+  (let [uploads (for [child      descendants
+                      :when      (= "attachment" (:fieldType child))
+                      :let       [id  (keyword (:id child))
+                                  row (get-in db [:application :answers id :values idx])]
+                      :when      (vector? row)
+                      attachment row
+                      :when      (= :uploading (:status attachment))]
+                  [id attachment])]
+    (-> effects
+        (update :db #(reduce (fn [db [id {:keys [upload-id]}]]
+                               (update-in db [:attachments-uploading id] dissoc upload-id))
+                             %
+                             uploads))
+        (update :fx (fnil into []) (keep (fn [[_ {:keys [request]}]]
+                                           (when (some? request)
+                                             [:http-abort request]))
+                                         uploads)))))
+
 (reg-event-fx
   :application/remove-question-group-row
   [check-schema-interceptor]
@@ -1743,12 +1770,16 @@
                                                (set-repeatable-application-field-top-level-valid id true))))
                                        count-decremented
                                        descendants)]
-      {:db         (field-visibility/set-field-visibility
-                    descendants-modified
-                    field-descriptor)
-       :dispatch-n  (conj (mapv (fn [descendant]
-                           [:application/run-rules (:rules descendant)])
-                         descendants) [:application/handle-section-visibility-conditions])})))
+      (stop-uploads-in-question-group-row
+       {:db         (field-visibility/set-field-visibility
+                     descendants-modified
+                     field-descriptor)
+        :dispatch-n  (conj (mapv (fn [descendant]
+                            [:application/run-rules (:rules descendant)])
+                          descendants) [:application/handle-section-visibility-conditions])}
+       db
+       descendants
+       idx))))
 
 (reg-event-db
   :application/remove-question-group-mouse-over

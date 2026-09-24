@@ -1,6 +1,6 @@
 (ns ataru.hakija.resumable-upload
   (:require [ajax.core :refer [GET PUT]]
-            [re-frame.core :refer [dispatch reg-event-fx reg-event-db]]
+            [re-frame.core :refer [dispatch reg-event-fx reg-event-db ->interceptor]]
             [goog.crypt :as crypt]
             [goog.crypt.Md5]
             [cljs-time.core :as c]
@@ -36,6 +36,23 @@
     (dispatch cancel-handler)
     (dispatch (conj error-handler status))))
 
+(def ^:private stop-when-abandoned
+  "Runs before each step of an upload, whose event carries the handlers map as its
+   fourth element. Once the attachment row is gone, because the user cancelled the
+   upload or removed the question group row it was in, the step is skipped and the
+   cancellation reported instead. A cancel can land while no request is in flight to
+   abort (hashing, between requests), so it is this check that stops the upload then."
+  (->interceptor
+   :id :stop-when-abandoned
+   :before (fn [context]
+             (let [db                                          (get-in context [:coeffects :db])
+                   {:keys [field-id upload-id cancel-handler]} (get-in context [:coeffects :event 3])]
+               (if (attachment-path/path-by-upload-id db (keyword field-id) upload-id)
+                 context
+                 (assoc context
+                        :queue   []
+                        :effects (cond-> {} (some? cancel-handler) (assoc :dispatch cancel-handler))))))))
+
 (defn upload-file
   [url finished-url file field-id upload-id application-attachments-id handlers]
   {:pre [(every? (complement clojure.string/blank?) [url field-id application-attachments-id])
@@ -46,7 +63,7 @@
      (dispatch [:application-file-upload/fetch-signed-url-for-upload
                 url
                 finished-url
-                handlers
+                (assoc handlers :field-id field-id :upload-id upload-id)
                 (str
                  application-attachments-id "-"
                  field-id "-"
@@ -57,6 +74,7 @@
 
 (reg-event-fx
   :application-file-upload/mark-upload-delivered
+  [stop-when-abandoned]
   (fn [_ [_ _ finished-url {:keys [handler error-handler started-handler] :as handlers} file-id file]]
     (let [filename                (normalizer/normalize-filename (.-name file))
           size                    (.-size file)
@@ -84,6 +102,7 @@
 
 (reg-event-fx
   :application-file-upload/upload-using-signed-url
+  [stop-when-abandoned]
   (fn [_ [_ url finished-url {:keys [progress-handler error-handler started-handler] :as handlers} file-id file file-part-number]]
     (let [mark-upload-delivered   [:application-file-upload/mark-upload-delivered url finished-url handlers file-id file]
           response-handler        (fn [xhrio]
@@ -102,6 +121,7 @@
 
 (reg-event-fx
   :application-file-upload/fetch-signed-url-for-upload
+  [stop-when-abandoned]
   (fn [_ [_ url finished-url {:keys [started-handler] :as handlers} file-id file file-part-number]]
     (let [params                 (merge json-params
                                         {:params        {:file-id          file-id
