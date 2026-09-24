@@ -176,6 +176,19 @@
       (file-store/delete-file liiteri-cas-client attachment-key))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
+(defn- remove-orphan-attachments-when-stored
+  "Poistaa aiemman version orpoliitteet vain jos uusi versio saatiin persistoitua.
+   Poiston epäonnistuminen ei kaada jo onnistunutta tallennusta; orvot tiedostot
+   jäävät Liiteriin ja virhe logitetaan."
+  [liiteri-cas-client new-application old-application store-result]
+  (when (:passed? store-result)
+    (try
+      (remove-orphan-attachments liiteri-cas-client new-application old-application)
+      (catch Exception e
+        (log/error e (str "Failed to remove orphan attachments of application "
+                          (:key old-application))))))
+  store-result)
+
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
   (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
     virkailija-secret))
@@ -455,18 +468,20 @@
       (assoc validation-result :key (:key latest-application))
 
       :else
-      (do
-        (remove-orphan-attachments liiteri-cas-client final-application latest-application)
-        (try
-          (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
-            :key (:key latest-application))
-          (catch clojure.lang.ExceptionInfo e
-            (if (= :limit-reached (-> e ex-data :cause))
-              {:passed?  false
-               :failures ["Selection limit reached"]
-               :key      (:key latest-application)
-               :code     :selection-limit-reached}
-              (throw e))))))))
+      (let [store-result (try
+                           (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
+                             :key (:key latest-application))
+                           (catch clojure.lang.ExceptionInfo e
+                             (if (= :limit-reached (-> e ex-data :cause))
+                               {:passed?  false
+                                :failures ["Selection limit reached"]
+                                :key      (:key latest-application)
+                                :code     :selection-limit-reached}
+                               (throw e))))]
+        (remove-orphan-attachments-when-stored liiteri-cas-client
+                                               final-application
+                                               latest-application
+                                               store-result)))))
 
 (defn- start-person-creation-job [job-runner application-id]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
