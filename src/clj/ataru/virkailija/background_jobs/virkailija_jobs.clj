@@ -10,6 +10,7 @@
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-service :as tutkintojen-tunnustaminen-service]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-send-job :as tutkintojen-tunnustaminen-send-job]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
+            [ataru.background-job.clean-old-sessions :as clean-old-sessions]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
             [ataru.background-job.job :refer [report-job cleanup-job]]
@@ -79,5 +80,9 @@
                           :type     "clean-old-forms-job"
                           :schedule "0 3 * * *"
                           :queue    default-retry-strategy}
+   "clean-old-sessions-job" {:handler  clean-old-sessions/clean-old-sessions-job-step
+                             :type     "clean-old-sessions-job"
+                             :schedule "0 4 * * *"
+                             :queue    default-retry-strategy}
    (:type report-job) report-job
    (:type cleanup-job) cleanup-job})
