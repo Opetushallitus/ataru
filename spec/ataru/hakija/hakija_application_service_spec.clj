@@ -1,8 +1,8 @@
 (ns ataru.hakija.hakija-application-service-spec
   (:require [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.automatic-eligibility :as automatic-eligibility]
-            [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.email.application-email-jobs :as application-email]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [speclj.core :refer [describe it should-be should-not-be should-contain should=
@@ -179,7 +179,7 @@
 (describe "start-hakija-edit-jobs"
   (with-stubs)
 
-  (it "re-triggers the automatic payment obligation check for the edited application's person-oid"
+  (it "re-triggers the kk application payment status update for the edited application"
     (with-redefs [application-email/start-email-edit-confirmation-job
                   (stub :start-email-edit-confirmation-job)
 
@@ -195,15 +195,15 @@
                   automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                   (stub :start-automatic-eligibility-if-ylioppilas-job)
 
-                  automatic-payment-obligation/start-automatic-payment-obligation-job
-                  (stub :start-automatic-payment-obligation-job)]
+                  kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job
+                  (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
                               :organization-service :ohjausparametrit-service :job-runner
                               "application-id" {:person-oid "1.2.246.562.24.00000000001"})
-      (should-have-invoked :start-automatic-payment-obligation-job
-                           {:with [:job-runner "1.2.246.562.24.00000000001"]})))
+      (should-have-invoked :start-update-kk-payment-status-for-application-id-job
+                           {:with [:job-runner "application-id"]})))
 
-  (it "does not start the automatic payment obligation job when the application has no person-oid yet"
+  (it "does not start the kk application payment status update when the application has no person-oid yet"
     (with-redefs [application-email/start-email-edit-confirmation-job
                   (stub :start-email-edit-confirmation-job)
 
@@ -219,17 +219,17 @@
                   automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                   (stub :start-automatic-eligibility-if-ylioppilas-job)
 
-                  automatic-payment-obligation/start-automatic-payment-obligation-job
-                  (stub :start-automatic-payment-obligation-job)]
+                  kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job
+                  (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
                               :organization-service :ohjausparametrit-service :job-runner
                               "application-id" {:person-oid nil})
-      (should-not-have-invoked :start-automatic-payment-obligation-job))))
+      (should-not-have-invoked :start-update-kk-payment-status-for-application-id-job))))
 
 (describe "start-virkailija-edit-jobs"
   (with-stubs)
 
-  (it "starts the automatic payment obligation job when the application already has a person-oid"
+  (it "starts the kk application payment status update when the application already has a person-oid"
     (with-redefs [virkailija-edit/invalidate-virkailija-update-and-rewrite-secret
                   (stub :invalidate-virkailija-update-and-rewrite-secret)
 
@@ -242,12 +242,12 @@
                   automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                   (stub :start-automatic-eligibility-if-ylioppilas-job)
 
-                  automatic-payment-obligation/start-automatic-payment-obligation-job
-                  (stub :start-automatic-payment-obligation-job)]
+                  kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job
+                  (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-virkailija-edit-jobs :job-runner :virkailija-secret "application-id"
                                   {:person-oid "1.2.246.562.24.00000000001"})
-      (should-have-invoked :start-automatic-payment-obligation-job
-                           {:with [:job-runner "1.2.246.562.24.00000000001"]})
+      (should-have-invoked :start-update-kk-payment-status-for-application-id-job
+                           {:with [:job-runner "application-id"]})
       (should-not-have-invoked :start-person-creation-job)))
 
   (it "starts person creation instead when the application has no person-oid yet"
@@ -263,9 +263,9 @@
                   automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                   (stub :start-automatic-eligibility-if-ylioppilas-job)
 
-                  automatic-payment-obligation/start-automatic-payment-obligation-job
-                  (stub :start-automatic-payment-obligation-job)]
+                  kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job
+                  (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-virkailija-edit-jobs :job-runner :virkailija-secret "application-id"
                                   {:person-oid nil})
       (should-have-invoked :start-person-creation-job {:with [:job-runner "application-id"]})
-      (should-not-have-invoked :start-automatic-payment-obligation-job))))
+      (should-not-have-invoked :start-update-kk-payment-status-for-application-id-job))))
