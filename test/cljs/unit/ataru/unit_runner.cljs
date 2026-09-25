@@ -21,6 +21,7 @@
             [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test]
             [ataru.collections-test]
             [ataru.hakija.handlers-util-test]
+            [ataru.hakija.attachment-path-test]
             [ataru.application-common.hakukohde-specific-questions-test]
             [ataru.application-common.application-field-common-test]
             [ataru.hakija.form-tools-test]
@@ -49,6 +50,7 @@
            'ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test
            'ataru.collections-test
            'ataru.hakija.handlers-util-test
+           'ataru.hakija.attachment-path-test
            'ataru.application-common.hakukohde-specific-questions-test
            'ataru.application-common.application-field-common-test
            'ataru.hakija.form-tools-test
