@@ -1019,6 +1019,24 @@
                           :application-key application-key}
                          (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
 
+          (it "should reset 'exemption-not-verified' kk application payment obligation state of all hakukohteet when applicant delivers exemption attachment"
+              (let [hakukohteet ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"]
+                    application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    (assoc application-fixtures/application-with-hakemusmaksu-exemption :hakukohde hakukohteet)
+                                    nil))
+                    application-key (:key application)]
+                (doseq [hakukohde hakukohteet]
+                  (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde hakukohde
+                                                                              :review-requirement "kk-application-payment-obligation"
+                                                                              :review-state "exemption-not-verified"} application-key))
+                (edit-application-as-applicant application (add-attachment-answer "passport-attachment"))
+                (should= #{{:hakukohde "payment-info-test-kk-hakukohde" :state "unreviewed"}
+                           {:hakukohde "payment-info-test-kk-hakukohde-2" :state "unreviewed"}}
+                         (set (map #(select-keys % [:hakukohde :state])
+                                   (payment/get-kk-application-payment-obligation-reviews application-key))))))
+
           (it "should not reset 'exemption-not-verified' kk application payment obligation state when applicant only removes exemption attachment files"
               (let [application-key (init-application-with-attachment-and-obligation-state
                                       "passport-attachment" ["passport-1" "passport-2"] "exemption-not-verified")]
