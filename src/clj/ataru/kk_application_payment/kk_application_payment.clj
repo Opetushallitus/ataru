@@ -71,9 +71,10 @@
    :exemption-field "exemption-field"})
 
 (def kk-application-payment-obligation-states
-  {:unreviewed      "unreviewed"
-   :reviewed        "reviewed"
-   :in-migri-review "in-migri-review"})
+  {:unreviewed             "unreviewed"
+   :reviewed               "reviewed"
+   :in-migri-review        "in-migri-review"
+   :exemption-not-verified "exemption-not-verified"})
 
 (defn get-due-date-for-todays-payment []
   (let [time-now (time/now)
