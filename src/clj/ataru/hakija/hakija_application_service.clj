@@ -3,7 +3,6 @@
     [ataru.applications.application-service :as application-service]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
-    [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
     [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
@@ -38,7 +37,8 @@
     [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
     [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
     [ataru.tarjonta.haku :as h]
-    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]))
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
+    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session]
   {:pre [(boolean? is-modify?)]}
@@ -520,8 +520,8 @@
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
-  (if-let [person-oid (:person-oid application)]
-    (automatic-payment-obligation/start-automatic-payment-obligation-job job-runner person-oid)
+  (if (some? (:person-oid application))
+    (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job job-runner application-id)
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
@@ -542,8 +542,8 @@
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
    application-id)
-  (when-let [person-oid (:person-oid application)]
-    (automatic-payment-obligation/start-automatic-payment-obligation-job job-runner person-oid)))
+  (when (some? (:person-oid application))
+    (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job job-runner application-id)))
 
 (defn- tutu-form? [form]
   (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
