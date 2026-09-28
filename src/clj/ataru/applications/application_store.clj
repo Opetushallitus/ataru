@@ -4,6 +4,7 @@
             [ataru.application.option-visibility :refer [visibility-checker]]
             [ataru.application.review-states :as application-review-states]
             [ataru.component-data.base-education-module-higher :as higher-module]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.component-data.koski-tutkinnot-module :as ktm]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
@@ -137,15 +138,19 @@
            (map :oid))
       ["form"])))
 
+(defn- attachment-answer-empty?
+  [answer]
+  (or (empty? answer)
+      (and (or (vector? (first answer)) (nil? (first answer)))
+           (every? empty? answer))))
+
 (defn- create-attachment-reviews
   [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp]
   (let [value-changed? (and update?
                             (not= old-answer answer))
         review-base    {:application_key application-key
                         :attachment_key  (:id attachment-field)
-                        :state           (if (or (empty? answer)
-                                                 (and (or (vector? (first answer)) (nil? (first answer)))
-                                                      (every? empty? answer)))
+                        :state           (if (attachment-answer-empty? answer)
                                            "attachment-missing"
                                            "not-checked")
                         :updated?        value-changed?}]
@@ -386,6 +391,51 @@
           (some? form)
           (form->form-id)))
 
+(defn- auditlog-review-modify
+  [review old-value session audit-logger]
+  (audit-log/log audit-logger
+                 {:new       review
+                  :old       old-value
+                  :id        {:applicationOid (:application_key review)
+                              :hakukohdeOid   (:hakukohde review)
+                              :requirement    (:requirement review)}
+                  :session   session
+                  :operation audit-log/operation-modify}))
+
+(defn- kk-application-payment-exempt-attachment-delivered?
+  [old-answers new-answers]
+  (some (fn [attachment-key]
+          (let [answer (get-in new-answers [(keyword attachment-key) :value])]
+            (and (not (attachment-answer-empty? answer))
+                 (not= answer (get-in old-answers [(keyword attachment-key) :value])))))
+        payment-module/kk-application-payment-exempt-attachment-keys))
+
+(defn- reset-exemption-not-verified-reviews
+  "When the applicant delivers a new kk application payment exemption attachment, the payment obligation
+   state 'exemption-not-verified' is returned to 'unreviewed' so that virkailija will review it again."
+  [application-key session audit-logger conn]
+  (let [connection {:connection conn}]
+    (doseq [existing-review (queries/yesql-get-application-hakukohde-reviews {:application_key application-key} connection)
+            :when (and (= "kk-application-payment-obligation" (:requirement existing-review))
+                       (= "exemption-not-verified" (:state existing-review)))
+            :let [review-to-store {:application_key application-key
+                                   :requirement     (:requirement existing-review)
+                                   :state           "unreviewed"
+                                   :hakukohde       (:hakukohde existing-review)
+                                   :modified_time   (time/now)}]]
+      (log/info "Changing kk-application-payment-obligation review from 'exemption-not-verified' to 'unreviewed' for application"
+                application-key ", hakukohde" (:hakukohde existing-review))
+      (auditlog-review-modify review-to-store existing-review session audit-logger)
+      (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
+      (queries/yesql-add-application-event<! {:application_key          application-key
+                                              :event_type               "hakukohde-review-state-change"
+                                              :new_review_state         (:state review-to-store)
+                                              :review_key               (:requirement review-to-store)
+                                              :hakukohde                (:hakukohde review-to-store)
+                                              :virkailija_oid           nil
+                                              :virkailija_organizations nil}
+                                             connection))))
+
 (defn- merge-applications [new-application old-application]
   (merge new-application
          (select-keys old-application [:key :haku :person-oid :secret])))
@@ -412,11 +462,13 @@
 
                                              :else
                                              (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
+          old-answers                      (-> old-application :answers util/answers-by-key)
+          new-answers                      (-> new-application :answers util/answers-by-key)
           {:keys [id key] :as new-application} (add-new-application-version
                                                 (merge-applications new-application old-application)
                                                 updated-by-applicant?
                                                 applied-hakukohteet
-                                                (-> old-application :answers util/answers-by-key)
+                                                old-answers
                                                 form
                                                 true
                                                 conn
@@ -436,6 +488,10 @@
                                              {:connection conn})
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form {:connection conn})
+
+      (when (and updated-by-applicant?
+                 (kk-application-payment-exempt-attachment-delivered? old-answers new-answers))
+        (reset-exemption-not-verified-reviews key session audit-logger conn))
 
       (audit-log/log audit-logger
                      {:new       (application->loggable-form new-application)
@@ -799,17 +855,6 @@
        (mapv #(if (nil? (:virkailija-organizations %))
                 (dissoc % :virkailija-organizations)
                 %))))
-
-(defn- auditlog-review-modify
-  [review old-value session audit-logger]
-  (audit-log/log audit-logger
-                 {:new       review
-                  :old       old-value
-                  :id        {:applicationOid (:application_key review)
-                              :hakukohdeOid   (:hakukohde review)
-                              :requirement    (:requirement review)}
-                  :session   session
-                  :operation audit-log/operation-modify}))
 
 (defn- edit-application-right-organizations->json [session]
   (->> (-> session :identity :user-right-organizations :edit-applications)

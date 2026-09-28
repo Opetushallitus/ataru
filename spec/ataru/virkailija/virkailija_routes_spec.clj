@@ -636,6 +636,34 @@
             body         (:body resp)
             applications (:applications body)]
         (should= 200 status)
+        (should= 0 (count applications))))
+
+  (it "Should include application with matching kk application payment obligation state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :filters :kk-application-payment-obligation]
+                                {:unreviewed false :reviewed false :in-migri-review false :exemption-not-verified true}))
+            _ (db/init-db-fixture
+                fixtures/minimal-form
+                (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                [{:hakukohde "1.2.246.562.20.49028196524" :review-requirement "kk-application-payment-obligation" :review-state "exemption-not-verified"}])
+            resp         (post-applications-list query)
+            status       (:status resp)
+            applications (get-in resp [:body :applications])]
+        (should= 200 status)
+        (should= 1 (count applications))))
+
+  (it "Should filter out application with non-matching kk application payment obligation state"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc-in [:states-and-filters :filters :kk-application-payment-obligation]
+                                {:unreviewed false :reviewed false :in-migri-review false :exemption-not-verified true}))
+            _ (db/init-db-fixture
+                fixtures/minimal-form
+                (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
+                [{:hakukohde "1.2.246.562.20.49028196524" :review-requirement "kk-application-payment-obligation" :review-state "reviewed"}])
+            resp         (post-applications-list query)
+            status       (:status resp)
+            applications (get-in resp [:body :applications])]
+        (should= 200 status)
         (should= 0 (count applications)))))
 
 (describe "Field deadline"
@@ -1362,6 +1390,30 @@
                             :state "reviewed"
                             :hakukohde "payment-info-test-kk-hakukohde-2"}}
                          (set (map #(select-keys % [:requirement :state :hakukohde]) reviews-after-update)))))
+
+            (it "should sync 'exemption-not-verified' kk-application-payment-obligation value to other hakukohteet"
+                (let [{:keys [application-id application-key]} (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "unreviewed"}
+                                                                                  {:hakukohde "payment-info-test-kk-hakukohde-2"
+                                                                                   :review-requirement "kk-application-payment-obligation"
+                                                                                   :review-state "unreviewed"}])
+                      review-update-response (update-review {:id              application-id
+                                                             :application-key application-key
+                                                             :state           "active"
+                                                             :hakukohde-reviews
+                                                             {:payment-info-test-kk-hakukohde
+                                                              {:kk-application-payment-obligation "exemption-not-verified"}}})
+                      reviews-after-update (application-store/get-application-hakukohde-reviews application-key)]
+                  (should= 200 (:status review-update-response))
+                  (should= true (:needs-refresh (:body review-update-response)))
+                  (should= #{{:requirement "kk-application-payment-obligation"
+                              :state "exemption-not-verified"
+                              :hakukohde "payment-info-test-kk-hakukohde"}
+                             {:requirement "kk-application-payment-obligation"
+                              :state "exemption-not-verified"
+                              :hakukohde "payment-info-test-kk-hakukohde-2"}}
+                           (set (map #(select-keys % [:requirement :state :hakukohde]) reviews-after-update)))))
 
             (it "should sync values on when there are existing reviews of type kk-application-payment-obligation"
                 (let [{:keys [application-id application-key]} (init-application [{:hakukohde "payment-info-test-kk-hakukohde"
