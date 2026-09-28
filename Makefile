@@ -236,19 +236,13 @@ install-cypress:
 # Test db management
 # ----------------
 
-compile-test-code: $(NODE_MODULES) compile-less 
-	lein with-profile test cljsbuild once virkailija-min hakija-min
-
 test-clojurescript: $(NODE_MODULES)
 	lein with-profile test doo chrome test once
 
-test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
-	lein with-profile test spec -t ui
-
 test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
-	lein with-profile test spec -t ~ui
+	lein with-profile test spec
 
-test: start-docker-test test-clojurescript test-clojure test-browser
+test: start-docker-test test-clojurescript test-clojure
 
 test-playwright-docker:
 	./bin/run-playwright-tests-in-docker.sh
@@ -271,9 +265,13 @@ process-resources:
 pull-playwright-image: 
 	./bin/pull-playwright-image.sh
 
-ci-test-mocha:start-docker-test test-browser
-
 ci-test-non-ui: start-docker-test lint test-clojurescript test-clojure
+
+ci-test-playwright: export CI := true
+ci-test-playwright: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci pull-playwright-image wait-for-cypress-ci test-playwright-docker
+
+ci-test-cypress: export CI := true
+ci-test-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress wait-for-cypress-ci test-cypress-ci
 
 ci-test-playwright-and-cypress: export CI := true
 ci-test-playwright-and-cypress: clean-lein $(NODE_MODULES) stop build-cypress-ci start-pm2-ci install-cypress pull-playwright-image wait-for-cypress-ci test-playwright-docker test-cypress-ci stop-pm2-ci stop-docker

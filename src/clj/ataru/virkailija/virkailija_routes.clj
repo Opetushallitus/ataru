@@ -84,6 +84,8 @@
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
+            [ataru.test-utils :refer [register-test-haku! unregister-test-haku!
+                                      register-test-hakukohde! unregister-test-hakukohde!]]
             [ataru.time :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
@@ -167,12 +169,6 @@
     (api/GET client-sub-routes {session :session} (render-virkailija-page (-> session :identity :lang)))
     (api/GET "/virhe" {session :session} (render-virkailija-page (-> session :identity :lang)))))
 
-(defn- render-file-in-dev
-  [filename js-config]
-  (if (:dev? env)
-    (selmer/render-file filename {:config (json/generate-string js-config)})
-    (not-found "Not found")))
-
 (defn- create-wrap-database-backed-session [session-store]
   (fn [handler]
     (ring-session/wrap-session handler
@@ -182,25 +178,42 @@
 
 (api/defroutes test-routes
   (api/undocumented
-    (api/GET "/virkailija-test.html" []
+    ; Peilaa ataru.hakija.hakija-routes/test-routes:n vastaavat rekisteröinnit,
+    ; koska hakija- ja virkailija-puoli ajetaan erillisinä prosesseina, joilla
+    ; kummallakin on oma, prosessikohtainen mock-tarjonta-service-tila
+    ; (defonce test-haut / test-hakukohteet). Testin pitää siis rekisteröidä
+    ; testihakunsa/-hakukohteensa MOLEMPIIN prosesseihin, jotta virkailijan
+    ; hakukohtainen hakemuslistaus (joka hakee haun tiedot tästä prosessista)
+    ; löytää sen.
+    (api/POST "/test/tarjonta/haku" []
+      :body [haku {:oid s/Str
+                   :ataruLomakeAvain s/Str
+                   :hakukohdeOids [s/Str]
+                   (s/optional-key :usePriority) s/Bool
+                   (s/optional-key :kohdejoukkoUri) s/Str
+                   (s/optional-key :kohdejoukonTarkenne) s/Str
+                   (s/optional-key :hakutapaUri) s/Str}]
       (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-test.html" {})
+        (do (register-test-haku! haku)
+            (ok {}))
         (route/not-found "Not found")))
-    (api/GET "/virkailija-question-group-test.html" []
+    (api/DELETE "/test/tarjonta/haku/:oid" [oid]
       (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-question-group-test.html" {})
+        (do (unregister-test-haku! oid)
+            (ok {}))
         (route/not-found "Not found")))
-    (api/GET "/virkailija-selection-limit-test.html" []
+    (api/POST "/test/tarjonta/hakukohde" []
+      :body [hakukohde-muutos {:oid s/Str
+                               (s/optional-key :hakuOid) s/Str
+                               (s/optional-key :hakukohteenNimet) {s/Keyword s/Str}}]
       (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-selection-limit-test.html" {})
+        (do (register-test-hakukohde! hakukohde-muutos)
+            (ok {}))
         (route/not-found "Not found")))
-    (api/GET "/virkailija-with-hakukohde-organization-test.html" []
+    (api/DELETE "/test/tarjonta/hakukohde/:oid" [oid]
       (if (:dev? env)
-        (render-file-in-dev "templates/virkailija-with-hakukohde-organization-test.html" {})
-        (route/not-found "Not found")))
-    (api/GET "/spec/:filename.js" [filename]
-      (if (:dev? env)
-        (render-file-in-dev (str "spec/" filename ".js") {})
+        (do (unregister-test-hakukohde! oid)
+            (ok {}))
         (route/not-found "Not found")))))
 
 (defn api-routes [{:keys [organization-service

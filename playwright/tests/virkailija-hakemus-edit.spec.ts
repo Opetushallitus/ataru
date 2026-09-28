@@ -5,6 +5,8 @@ import {
   waitForResponse,
 } from '../playwright-utils'
 import {
+  getApplicationIdFromSubmitResponse,
+  getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
   getHakijanNakymanOsoite,
   getLomakkeenHaunOsoite,
@@ -171,15 +173,6 @@ const injectEditFieldFormData = async (page: Page, formId: number) => {
   }
 }
 
-const getLatestApplicationSecret = async (page: Page): Promise<string> => {
-  const response = await page.request.get('/hakemus/latest-application-secret')
-  if (!response.ok()) {
-    throw new Error('Failed to fetch latest application secret')
-  }
-
-  return (await response.text()).trim().replace(/^"|"$/g, '')
-}
-
 const getApplicationKeyBySecret = async (
   page: Page,
   applicationSecret: string
@@ -335,31 +328,16 @@ test.describe('Virkailijan hakemuksen muokkaus', () => {
       page.locator('.application__sent-placeholder-text')
     ).toBeVisible()
 
-    // Build virkailija edit secret for the exact application created in this bootstrap.
-
-    let applicationKey: string | null = null
-    let applicationSecret: string | null = null
-
-    try {
-      const payload = (await submitResponse.json()) as {
-        key?: string
-        secret?: string
-        application?: { key?: string; secret?: string }
-      }
-      applicationKey = payload.key ?? payload.application?.key ?? null
-      applicationSecret = payload.secret ?? payload.application?.secret ?? null
-    } catch {
-      // ignore JSON parsing errors and try fallback below
-    }
-
-    if (!applicationKey && applicationSecret) {
-      applicationKey = await getApplicationKeyBySecret(page, applicationSecret)
-    }
-
-    if (!applicationKey) {
-      const latestSecret = await getLatestApplicationSecret(page)
-      applicationKey = await getApplicationKeyBySecret(page, latestSecret)
-    }
+    const applicationId =
+      await getApplicationIdFromSubmitResponse(submitResponse)
+    const applicationSecret = await getApplicationSecretById(
+      page,
+      applicationId
+    )
+    const applicationKey = await getApplicationKeyBySecret(
+      page,
+      applicationSecret
+    )
 
     virkailijaSecret = await getVirkailijaSecretByApplicationKey(
       page,

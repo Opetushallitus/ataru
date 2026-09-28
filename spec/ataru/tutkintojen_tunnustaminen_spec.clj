@@ -115,7 +115,7 @@
 (def job-runner
   (map->FakeJobRunner {:maksut-service mock-maksut-service}))
 
-(defn- get-file
+(defn- get-file-once
   [filename]
   (let [config (get-in config [:tutkintojen-tunnustaminen :ftp])
         r (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
@@ -125,6 +125,20 @@
               :env {"LFTP_PASSWORD" (:password config)})]
     (when (zero? (:exit r))
       (:out r))))
+
+(defn- get-file
+  "Reads a file from the ASHA SFTP server, retrying for a bit since the
+  server has occasionally been observed to serve an empty file right after
+  it was written (rename appears before the content is visible to a new
+  connection)."
+  [filename]
+  (loop [attempts-left 5]
+    (let [content (get-file-once filename)]
+      (if (or (not (string/blank? content))
+              (zero? attempts-left))
+        content
+        (do (Thread/sleep 1000)
+            (recur (dec attempts-left)))))))
 
 (defn- delete-file
   [filename]
