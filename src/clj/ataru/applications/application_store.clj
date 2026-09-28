@@ -138,19 +138,15 @@
            (map :oid))
       ["form"])))
 
-(defn- attachment-answer-empty?
-  [answer]
-  (or (empty? answer)
-      (and (or (vector? (first answer)) (nil? (first answer)))
-           (every? empty? answer))))
-
 (defn- create-attachment-reviews
   [attachment-field answer old-answer update? application-key hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp]
   (let [value-changed? (and update?
                             (not= old-answer answer))
         review-base    {:application_key application-key
                         :attachment_key  (:id attachment-field)
-                        :state           (if (attachment-answer-empty? answer)
+                        :state           (if (or (empty? answer)
+                                                 (and (or (vector? (first answer)) (nil? (first answer)))
+                                                      (every? empty? answer)))
                                            "attachment-missing"
                                            "not-checked")
                         :updated?        value-changed?}]
@@ -402,12 +398,20 @@
                   :session   session
                   :operation audit-log/operation-modify}))
 
+(defn- attachment-file-ids
+  [answer]
+  (->> (flatten [answer])
+       (filter string?)
+       set))
+
 (defn- kk-application-payment-exempt-attachment-delivered?
+  "True when some kk application payment exemption attachment answer contains a file that was not there before.
+   Removing files only does not count as delivering an attachment."
   [old-answers new-answers]
   (some (fn [attachment-key]
-          (let [answer (get-in new-answers [(keyword attachment-key) :value])]
-            (and (not (attachment-answer-empty? answer))
-                 (not= answer (get-in old-answers [(keyword attachment-key) :value])))))
+          (let [value-of (fn [answers] (get-in answers [(keyword attachment-key) :value]))]
+            (seq (clojure.set/difference (attachment-file-ids (value-of new-answers))
+                                         (attachment-file-ids (value-of old-answers))))))
         payment-module/kk-application-payment-exempt-attachment-keys))
 
 (defn- reset-exemption-not-verified-reviews
