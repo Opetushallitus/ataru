@@ -293,6 +293,8 @@ test('Tyhjennä palauttaa fokuksen hakukenttään', async () => {
     await expect(input).toBeFocused()
     await expect(clearButton).toHaveCount(0)
   }
+
+  await ensureSearchClosed()
 })
 
 test('Clicking Lisää moves focus to selected row; selected row has aria-selected=true; checkmark icon has aria-hidden=true', async () => {
