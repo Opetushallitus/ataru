@@ -529,28 +529,41 @@
      application-keys
      [:view-applications :edit-applications])))
 
-(defn- check-review-note-delete-rights
-  "Muistiinpanon poisto on kirjoitusoperaatio, joten se vaatii :edit-applications-oikeuden myös
-   silloin kun muistiinpanolla ei ole hakukohdetta.
+(defn- own-review-note?
+  "Muistiinpano on käyttäjän oma, kun sen tekijän oid vastaa istunnon oidia. Tuntematon tekijä
+   (nil) ei ole koskaan 'oma', jottei oiditonta riviä voi poistaa pelkällä katseluoikeudella."
+  [note session]
+  (let [note-oid (:virkailija-oid note)]
+    (and (some? note-oid)
+         (= note-oid (-> session :identity :oid)))))
 
-   Huom: check-review-rights sallii hakukohteettomassa haarassa myös pelkän katseluoikeuden
-   ([:view-applications :edit-applications] tarkoittaa 'jompikumpi', ks.
-   session-organizations/select-organizations-for-rights). Lisäyksessä tuo vanha käytös on
-   säilytetty ennallaan, mutta poistoon sitä ei ole syytä laajentaa."
-  [hakukohde application-keys organization-service tarjonta-service session]
-  (if (not (clojure.string/blank? hakukohde))
+(defn- check-review-note-delete-rights
+  "Hakukohteelliseen muistiinpanoon vaaditaan aina :edit-applications-oikeus, myös omaan:
+   hakukohteelle kirjattu muistiinpano on osa hakukohteen käsittelyä.
+
+   Hakukohteettomaan muistiinpanoon riittää oman muistiinpanon kohdalla hakemuksen
+   katseluoikeus — sama oikeus jolla se on voitu lisätäkin (ks. check-review-rights).
+   Toisen tekemän poistoon vaaditaan muokkausoikeus.
+
+   Oikeustaso joustaa, organisaatiorajaus ei: molemmissa haaroissa vaaditaan yhä oikeus juuri
+   tähän hakukohteeseen tai hakemukseen. Oikeuslista tarkoittaa 'jompikumpi', ks.
+   session-organizations/select-organizations-for-rights."
+  [note organization-service tarjonta-service session]
+  (if (not (clojure.string/blank? (:hakukohde note)))
     (aac/applications-review-authorized?
      organization-service
      tarjonta-service
      session
-     [(keyword hakukohde)] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
+     [(keyword (:hakukohde note))] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
      [:edit-applications])
     (aac/applications-access-authorized?
      organization-service
      tarjonta-service
      session
-     application-keys
-     [:edit-applications])))
+     [(:application-key note)]
+     (if (own-review-note? note session)
+       [:view-applications :edit-applications]
+       [:edit-applications]))))
 
 (defn- remove-uneligibility-reasons-when-not-uneligible
   [applications]
@@ -919,15 +932,17 @@
 
   (remove-review-note [_ session note-id]
     (if-let [note (application-store/get-review-note-by-id note-id)]
-      (if (check-review-note-delete-rights (:hakukohde note)
-                                           [(:application-key note)]
+      (if (check-review-note-delete-rights note
                                            organization-service
                                            tarjonta-service
                                            session)
         (application-store/remove-review-note note session audit-logger)
         (do
           (audit-log/log audit-logger
-                         {:new       {:attempted "remove-review-note"}
+                         ;; own-note erottaa "toisen muistiinpano" -epäonnistumisen siitä, ettei
+                         ;; käyttäjällä ole lainkaan oikeutta hakemukseen tai hakukohteeseen
+                         {:new       {:attempted "remove-review-note"
+                                      :own-note  (own-review-note? note session)}
                           :id        {:applicationOid (:application-key note)
                                       :noteId         (str note-id)}
                           :session   session

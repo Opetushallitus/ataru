@@ -1656,7 +1656,9 @@
    ylimääräistä auditlokimerkintää ei synny."
   [note session audit-logger]
   (when-not (zero? (exec-db :db queries/yesql-remove-review-note! {:id (:id note)}))
-    (auditlog-review-note (dissoc note :virkailija-oid :removed)
+    ;; virkailija-oid jätetään merkintään, sillä se on myös poiston oikeusperuste: oman muistiinpanon
+    ;; saa poistaa pelkällä katseluoikeudella
+    (auditlog-review-note (dissoc note :removed)
                           session
                           audit-logger
                           audit-log/operation-delete)

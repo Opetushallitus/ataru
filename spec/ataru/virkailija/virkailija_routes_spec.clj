@@ -28,6 +28,7 @@
             [ataru.virkailija.virkailija-routes :as v]
             [cheshire.core :as json]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
+            [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
             [speclj.core :refer [after-all around before before-all describe
@@ -701,6 +702,21 @@
                     status           (:status resp)]
                 (should= 200 status))))
 
+(defn- set-review-note-author!
+  "Asettaa muistiinpanon tekijän suoraan kantaan. Reitin kautta tekijäksi tulee aina kirjautunut
+   käyttäjä, joten omistajuutta koskevia tapauksia (tekijätön rivi, toisen käyttäjän omistama
+   hakukohteellinen muistiinpano) ei voi muuten rakentaa."
+  [note-id virkailija-oid]
+  (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
+    (jdbc/execute! conn ["UPDATE application_review_notes SET virkailija_oid = ? WHERE id = ?"
+                         virkailija-oid note-id])))
+
+;; auth_routes.clj:n fake-kirjautumisen henkiloOid, josta tulee istunnon :oid
+(def ^:private view-only-user-oid "1.2.246.562.11.11111111015")
+
+;; application-review-notes-with-hakukohde-fixtuurin hakukohde, johon oletuskäyttäjällä on oikeus
+(def ^:private authorized-hakukohde "1.2.246.562.29.93102260101")
+
 (defn- init-application-keys
   "Luo annetun määrän hakemuksia samalla lomakkeella ja palauttaa niiden avaimet."
   [n]
@@ -774,17 +790,62 @@
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
 
-          ;; Muistiinpanolla ei ole hakukohdetta, jolloin oikeustarkistus kohdistuu hakemukseen.
-          ;; Pelkkä katseluoikeus ei riitä poistoon, vaikka se riittääkin muistiinpanon lisäykseen.
-          (it "Should not allow a view-only user to delete a note without hakukohde"
+          ;; Katseluoikeus riittää oman muistiinpanon poistoon: samalla oikeudella se on voitu
+          ;; lisätäkin, joten lisäys ilman poistomahdollisuutta olisi epäsymmetrinen.
+          (it "Should allow a view-only user to delete their own note"
               (let [application-key (first (init-application-keys 1))
                     note-id         (get-in (post-review-note {:application-key application-key
-                                                               :notes           "Vain katseluoikeus"})
+                                                               :notes           "Oma muistiinpano"}
+                                                              "VIEW-ONLY-USER")
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto" :applicationOid application-key)))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Muistiinpanolla ei ole hakukohdetta, jolloin oikeustarkistus kohdistuu hakemukseen.
+          ;; Toisen tekemän muistiinpanon poisto on käsittelytoimenpide, johon katseluoikeus ei riitä.
+          (it "Should not allow a view-only user to delete another user's note"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Toisen muistiinpano"})
                                             [:body :id])
                     _               (reset! audit-entries [])
                     resp            (delete-review-note note-id "VIEW-ONLY-USER")]
                 (should= 401 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Tekijätön muistiinpano ei ole kenenkään oma, joten siihen vaaditaan muokkausoikeus.
+          (it "Should not treat a note with no author as the view-only user's own note"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Tekijätön muistiinpano"}
+                                                              "VIEW-ONLY-USER")
+                                            [:body :id])
+                    _               (set-review-note-author! note-id nil)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Hakukohteellinen muistiinpano on osa hakukohteen käsittelyä, joten omistajuus ei
+          ;; kevennä vaatimusta: poistoon tarvitaan muokkausoikeus vaikka muistiinpano olisi oma.
+          (it "Should require edit rights to delete an own note that has a hakukohde"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :hakukohde       authorized-hakukohde
+                                                               :notes           "Oma hakukohteellinen muistiinpano"})
+                                            [:body :id])
+                    _               (set-review-note-author! note-id view-only-user-oid)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
 
           ;; Massapassivointi ja -palautus luovat muistiinpanon store-kerroksessa suoraan
