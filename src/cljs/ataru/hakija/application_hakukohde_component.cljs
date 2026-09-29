@@ -98,9 +98,9 @@
        (translations/get-hakija-translation :application-priorization-invalid lang)]
       [:div
        (first (translations/get-hakija-translation :should-be-higher-priorization-than lang))
-       [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
+       [:span (str "\"" @(subscribe [:application/hakukohde-label should-be-higher]) "\"")]
        (last (translations/get-hakija-translation :should-be-higher-priorization-than lang))
-       [:em (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]]))
+       [:span (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]]))
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -296,12 +296,11 @@
                   "application__hakukohde-selection-search-arrow-up--prioritized")}]
        [:div.application__hakukohde-selection-search-container
         [:div.application__hakukohde-selection-search-close-button
-         [:a {:aria-label (translations/get-hakija-translation :close-application-options @lang)
-              :tab-index 0
-              :on-key-up #(when (a11y/is-enter-or-space? %)
-                            (hakukohde-search-toggle-event-handler %))
-              :on-click hakukohde-search-toggle-event-handler}
-          [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
+         [:button.a-button
+          {:type "button"
+           :aria-label (translations/get-hakija-translation :close-application-options @lang)
+           :on-click hakukohde-search-toggle-event-handler}
+          [:i.zmdi.zmdi-close.zmdi-hc-lg {:aria-hidden "true"}]]]
         [:div.application__hakukohde-selection-search-input.application__form-text-input-box
          [:input.application__form-text-input-in-box
           {:on-change        #(do (reset! search-input (.-value (.-target %)))
@@ -318,10 +317,15 @@
            :aria-autocomplete "list"}]
          (when (not (empty? @search-input))
            [:div.application__form-clear-text-input-in-box
-            [:a
-             {:on-click #(do (reset! search-input "")
-                             (dispatch [:application/hakukohde-query-change search-input]))}
-             [:i.zmdi.zmdi-close]]])]
+            [:button.a-button
+             {:type    "button"
+              :aria-label (translations/get-hakija-translation :clear @lang)
+              :on-click (fn [_]
+                           (reset! search-input "")
+                           (dispatch
+                            [:application/hakukohde-query-change search-input])
+                           (r/after-render focus-input))}
+             [:i.zmdi.zmdi-close {:aria-hidden "true"}]]])]
         [:p#hakukohde-search-results-label.visually-hidden
          (translations/get-hakija-translation :hakukohde-search-results @lang)]
         [:div.application__hakukohde-selection-search-results
@@ -340,9 +344,8 @@
              [search-hit-hakukohde-row hakukohde-oid]))]
         (when @(subscribe [:application/show-more-hakukohdes?])
           [:div.application__show_more_hakukohdes_container
-           [:span.application__show_more_hakukohdes
-            {:tab-index 0
-             :role "button"
+           [:button.application__show_more_hakukohdes
+            {:type "button"
              :on-click #(dispatch [:application/show-more-hakukohdes])}
             (translations/get-hakija-translation :show-more @lang)]])]])))
 
@@ -353,17 +356,18 @@
    [scroll-to-anchor field-descriptor]])
 
 (defn- select-new-hakukohde-row []
-  (let [lang @(subscribe [:application/form-language])]
+  (let [lang @(subscribe [:application/form-language])
+        search-open? @(subscribe [:application/show-hakukohde-search])]
     (when @(subscribe [:application/hakukohteet-editable?])
       (if @(subscribe [:application/hakukohteet-full?])
         (let [max-hakukohteet @(subscribe [:application/max-hakukohteet])]
           [:span.application__hakukohde-max-selected
            (translations/get-hakija-translation :applications_at_most lang max-hakukohteet)])
         [:div.application__hakukohde-selection-open-search-wrapper
-         [:a.application__hakukohde-selection-open-search
-          {:tab-index 0
-           :on-key-up #(when (a11y/is-enter-or-space? %)
-                         (hakukohde-search-toggle-event-handler %))
+         [:button.a-button.application__hakukohde-selection-open-search
+          {:type "button"
+           :aria-expanded (boolean search-open?)
+           :aria-controls "hakukohde-search-listbox"
            :on-click hakukohde-search-toggle-event-handler}
           (translations/get-hakija-translation :add-application-option lang)]]))))
 
