@@ -714,7 +714,8 @@ body {
   width: 5%;
   text-align: right;
   > i { font-weight: bold; }
-  > a {
+  > a,
+  > button {
     position: absolute;
     right: 10px;
     bottom: 10px;
@@ -740,6 +741,11 @@ textarea.application__form-text-input {
 }
 .application__form-repeatable-text--addremove {
   margin-left: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: @sg-color-green;
+  cursor: pointer;
 }
 .application__form-repeatable-text-wrap {
   margin-top: 10px;
@@ -1745,8 +1751,17 @@ th.application__readonly-adjacent--header {
 }
 
 .application__hakukohde-selection-open-search {
-  color: @pale-blue;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: @primary-green-700;
+  font-size: 16px;
   margin-left: 40px;
+  text-decoration: underline;
+
+  &:hover {
+    color: @primary-green-900;
+  }
 
   &--disabled {
     color: @sg-gray-lighten-3;
