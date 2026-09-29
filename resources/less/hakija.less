@@ -911,8 +911,7 @@ textarea.application__form-text-area__size-large {
       background-color: darken(@sg-color-red, 20%);
     }
     &:focus {
-      box-shadow: 0px 0px 0px 3px darken(@sg-color-red, 20%);
-      outline: none;
+      .accessible-focus-ring(darken(@sg-color-red, 20%));
     }
   }
 }
@@ -933,8 +932,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-upload-input:focus + label {
-  box-shadow: 0px 0px 0px 3px @primary-green-900;
-  outline: none;
+  .accessible-focus-ring();
 }
 
 .application__form-upload-label {
@@ -1680,8 +1678,7 @@ th.application__readonly-adjacent--header {
 
   button:focus,
   #koulutustyyppi-btn:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
-    outline: none;
+    .accessible-focus-ring();
   }
 
   #koulutustyyppi-close-btn {
@@ -1691,7 +1688,7 @@ th.application__readonly-adjacent--header {
     font-weight: 600;
 
     :focus {
-      box-shadow: 0px 0px 0px 3px @primary-green-900;
+      .accessible-focus-ring();
     }
   }
 }
@@ -1739,8 +1736,7 @@ th.application__readonly-adjacent--header {
   border-image-repeat: round;
   padding: 25px 0px 25px 0px;
   .application__hakukohde-selection-open-search:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
-    outline: none;
+    .accessible-focus-ring();
   }
 }
 
@@ -1798,8 +1794,7 @@ th.application__readonly-adjacent--header {
   position: relative;
   .application__hakukohde-selection-search-close-button {
     a:focus {
-      box-shadow: 0px 0px 0px 3px @primary-green-900;
-      outline: none;
+      .accessible-focus-ring();
     }
   }
 }
@@ -1891,7 +1886,7 @@ th.application__readonly-adjacent--header {
   border-bottom: 12px solid @primary-green-700;
 
   &:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
   }
 
   &:hover {
@@ -1919,7 +1914,7 @@ th.application__readonly-adjacent--header {
   border-top: 12px solid @primary-green-700;
 
   &:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
   }
 
   &:hover {
@@ -2033,15 +2028,8 @@ th.application__readonly-adjacent--header {
   }
 
   &[aria-selected="true"]:focus {
-    outline: none;
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
     border-radius: 3px;
-
-    // box-shadow is invisible in Windows High Contrast mode; outline is used instead
-    @media (forced-colors: active) {
-      outline: 3px solid ButtonText;
-      box-shadow: none;
-    }
   }
 }
 
