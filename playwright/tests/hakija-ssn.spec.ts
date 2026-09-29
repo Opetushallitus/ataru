@@ -55,6 +55,21 @@ const expectFieldHidden = async (page: Page, id: string) => {
 const invalidFieldStatus = (page: Page) =>
   page.locator('.application__invalid-field-status-title')
 
+const expectErrorDescribedBy = async (
+  page: Page,
+  fieldTestId: string,
+  errorText: string
+) => {
+  const field = page.getByTestId(fieldTestId)
+
+  await expect(field).toHaveAttribute('aria-invalid', 'true')
+  await expect(field).toHaveAttribute('aria-describedby')
+
+  const describedBy = await field.getAttribute('aria-describedby')
+
+  await expect(page.locator(`#${describedBy}`)).toContainText(errorText)
+}
+
 const withInjectedNationalityOptions = (nodes: FormNode[]): FormNode[] => {
   return nodes.map((node) => {
     const next = { ...node }
@@ -228,6 +243,44 @@ test('Hakijan SSN-lomake näyttää oikeat kentät ja voidaan lähettää ilman 
   await expectFieldHidden(page, 'passport-number')
   await expectFieldHidden(page, 'national-id-number')
   await expect(invalidFieldStatus(page)).toHaveText('Tarkista 10 tietoa')
+
+  await fillField(page, page.getByTestId('ssn-input'), '280782-915')
+  await page.getByTestId('phone-input').click()
+  await expectErrorDescribedBy(
+    page,
+    'ssn-input',
+    'Henkilötunnuksen on oltava muodossa PPKKVVvälimerkkiNNNT'
+  )
+
+  await fillField(page, page.getByTestId('email-input'), 'saku@saku.co')
+  await fillField(page, page.getByTestId('verify-email-input'), 'eri@saku.co')
+  await page.getByTestId('phone-input').click()
+  await expectErrorDescribedBy(
+    page,
+    'verify-email-input',
+    'Sähköpostiosoitteet eivät ole samanlaiset'
+  )
+
+  await fillField(page, page.getByTestId('phone-input'), '898')
+  await page.getByTestId('postal-code-input').click()
+  await expectErrorDescribedBy(
+    page,
+    'phone-input',
+    'Matkapuhelinnumero on virheellinen'
+  )
+
+  await fillField(page, page.getByTestId('postal-code-input'), '9999')
+  await page.getByTestId('phone-input').click()
+  await expectErrorDescribedBy(
+    page,
+    'postal-code-input',
+    'Postinumerossa on oltava viisi numeroa'
+  )
+
+  await fillField(page, page.getByTestId('ssn-input'), '010101A123N')
+  await fillField(page, page.getByTestId('verify-email-input'), 'saku@saku.co')
+  await fillField(page, page.getByTestId('phone-input'), '0123456789')
+  await fillField(page, page.getByTestId('postal-code-input'), '40100')
 
   await fillField(page, getFieldById(page, 'first-name'), 'Etunimi Tokanimi')
   await getFieldById(page, 'first-name').press('Tab')
