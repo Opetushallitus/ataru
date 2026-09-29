@@ -277,6 +277,24 @@ test('Escape key closes search panel and returns focus to open-search button', a
   ).toBeFocused()
 })
 
+test('Tyhjennä palauttaa fokuksen hakukenttään', async () => {
+  await openSearch()
+
+  const input = page.locator('.application__form-text-input-in-box')
+
+  for (const key of ['Enter', 'Space']) {
+    await input.fill('oikeusnotaari')
+
+    const clearButton = page.getByRole('button', { name: 'Tyhjennä' })
+    await clearButton.focus()
+    await clearButton.press(key)
+
+    await expect(input).toHaveValue('')
+    await expect(input).toBeFocused()
+    await expect(clearButton).toHaveCount(0)
+  }
+})
+
 test('Clicking Lisää moves focus to selected row; selected row has aria-selected=true; checkmark icon has aria-hidden=true', async () => {
   await openSearch()
   await fillSearchAndWaitForResults('Te', 2)

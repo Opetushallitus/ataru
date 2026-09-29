@@ -395,9 +395,12 @@
            :on-blur         on-blur
            :on-change       on-change}]
          (when (and (not cannot-edit?) (not last?))
-           [:a.application__form-repeatable-text--addremove
+           [:button.application__form-repeatable-text--addremove
+            {:type       "button"
+             :aria-label (tu/get-hakija-translation :remove-row lang)
+             :on-click   remove-field}
             [:i.zmdi.zmdi-close.zmdi-hc-lg
-             {:on-click remove-field}]])]))))
+             {:aria-hidden true}]])]))))
 
 (defn repeatable-text-field
   [field-descriptor idx]
@@ -759,15 +762,21 @@
     (fn [field-descriptor idx]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
-            followups (get-visible-followups field-descriptor (:value answer) options)]
+            followups (get-visible-followups field-descriptor (:value answer) options)
+            info-text (util/non-blank-val
+                       (-> field-descriptor :params :info-text :label) @languages)
+            info-text-id (str (application-field/form-field-id field-descriptor idx) "-info")]
         [:div.application__form-field.application__form-single-choice-button-container
          [generic-label-component/generic-label field-descriptor idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
-         [:div.application__form-text-input-info-text
-          [info-text-component/info-text field-descriptor]]
+         (when info-text
+           [:div.application__form-text-input-info-text
+            {:id info-text-id}
+            [info-text-component/info-text field-descriptor]])
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
+           :aria-describedby (when info-text info-text-id)
            :aria-invalid    (not (:valid answer))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
@@ -885,16 +894,23 @@
                                          [validation-error-for-validator {:field-descriptor child :error-id error-id} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
-                         [:a {:data-row-idx row-idx
-                              :on-click     remove-on-click}
+                         [:button.a-button
+                          {:type        "button"
+                           :data-row-idx row-idx
+                           :aria-label (tu/get-hakija-translation :remove-row lang)
+                           :on-click     remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (tu/get-hakija-translation :remove-row lang)]
-                          [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])]))
+                          [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg
+                           {:aria-hidden true}]])]))
                doall)]
          (when (and (get-in field-descriptor [:params :repeatable])
                     (not (some deref cannot-edits?)))
-           [:a.application__form-add-new-row
-            {:on-click add-on-click}
-            [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
+           [:button.a-button.application__form-add-new-row
+            {:type     "button"
+             :on-click add-on-click}
+            [:i.zmdi.zmdi-plus-square
+             {:aria-hidden true}]
+            (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
