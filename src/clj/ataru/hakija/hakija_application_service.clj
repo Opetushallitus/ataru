@@ -37,7 +37,8 @@
     [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
     [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
     [ataru.tarjonta.haku :as h]
-    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]))
+    [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
+    [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session]
   {:pre [(boolean? is-modify?)]}
@@ -504,14 +505,15 @@
 (defn- start-virkailija-edit-jobs
   [job-runner virkailija-secret application-id application]
   (virkailija-edit/invalidate-virkailija-update-and-rewrite-secret virkailija-secret)
-  (when (nil? (:person-oid application))
+  (if (some? (:person-oid application))
+    (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job job-runner application-id)
     (start-person-creation-job job-runner application-id))
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id _]
+(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id application]
   (application-email/start-email-edit-confirmation-job attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
@@ -524,7 +526,9 @@
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
-   application-id))
+   application-id)
+  (when (some? (:person-oid application))
+    (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-application-id-job job-runner application-id)))
 
 (defn- tutu-form? [form]
   (or (= "payment-type-tutu" (get-in form [:properties :payment :type]))
@@ -687,7 +691,7 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
+        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id application))
       (do
         (audit-log/log audit-logger
                        {:new       application-empty-answers-removed

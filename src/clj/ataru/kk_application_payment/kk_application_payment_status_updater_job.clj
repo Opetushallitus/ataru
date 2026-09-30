@@ -197,21 +197,32 @@
   [payments]
   (some #(contains? #{(:ok-by-proxy payment/all-states) (:not-required payment/all-states)} (:state %)) payments))
 
+(defn- eu-citizen-not-required-payment?
+  [payment]
+  (and (= (:not-required payment/all-states) (:state payment))
+       (= (:eu-citizen payment/all-reasons) (:reason payment))))
+
 (defn- set-payment-obligation-reviewed-for-vtj-verified-citizens
-  "Marks kk-application-payment-obligation as 'reviewed' when a payment is set to not-required
-   with reason eu-citizen in this job run. Only fires on state transitions (modified-payments),
-   not on every periodic run. Only writes when current obligation state is 'unreviewed' or absent
-   — does not override 'in-migri-review' or already-'reviewed' virkailija decisions.
+  "Marks kk-application-payment-obligation as 'reviewed' for applications whose payment is not required
+   with reason eu-citizen.
+   - When the payment was set to not-required in this job run (modified-payments), writes the state for
+     hakukohteet whose current obligation state is 'unreviewed' or absent.
+   - When the payment was already not-required before this job run (e.g. applicant added new hakukohteet
+     by editing the application), writes the state only for hakukohteet with no obligation state at all.
+   Never overrides 'in-migri-review', 'exemption-not-verified' or already-'reviewed' virkailija decisions.
    Must be called BEFORE reset-kk-application-payment-obligation-states-if-needed so that the
    reset can still win when there are new unchecked attachments."
   [{:keys [audit-logger]} existing-payments modified-payments]
-  (let [eu-citizen-keys (->> modified-payments
-                             (filter #(and (= (:not-required payment/all-states) (:state %))
-                                          (= (:eu-citizen payment/all-reasons) (:reason %))))
-                             (map :application-key)
-                             set)
+  (let [modified-keys       (->> modified-payments
+                                 (filter eu-citizen-not-required-payment?)
+                                 (map :application-key)
+                                 set)
+        existing-keys       (->> existing-payments
+                                 (filter (comp eu-citizen-not-required-payment? :payment))
+                                 (map (comp :key :application))
+                                 set)
         applications-by-key (into {} (map (juxt (comp :key :application) :application) existing-payments))]
-    (doseq [application-key eu-citizen-keys
+    (doseq [application-key (into modified-keys existing-keys)
             :let [application (get applications-by-key application-key)
                   obligation-reviews-by-hakukohde (group-by :hakukohde
                                                             (payment/get-kk-application-payment-obligation-reviews
@@ -222,7 +233,9 @@
                                       (sort-by :modified-time)
                                       last
                                       :state)]
-            :when (or (nil? existing-state) (= "unreviewed" existing-state))]
+            :when (or (nil? existing-state)
+                      (and (contains? modified-keys application-key)
+                           (= "unreviewed" existing-state)))]
       (log/info "Setting kk-application-payment-obligation to 'reviewed' for VTJ-verified EU/Finnish citizen, application"
                 application-key "hakukohde" hakukohde-oid)
       (application-store/save-application-hakukohde-review

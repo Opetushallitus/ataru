@@ -971,6 +971,51 @@
                           :application-key application-key}
                          (select-keys obligation [:requirement :state :hakukohde :application-key]))))
 
+          (it "should set kk-application-payment-obligation to 'reviewed' for VTJ-verified EU citizen's hakukohde added by editing the application"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-eu-citizen
+                                     nil)
+                    eu-person-oid (:person-oid application-fixtures/application-eu-citizen)
+                    application-key (:key (application-store/get-application application-id))
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid eu-person-oid :term test-term :year test-year} runner)
+                    _ (application-store/update-application
+                        (-> (application-store/get-application application-id)
+                            (assoc :hakukohde ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"]))
+                        ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"]
+                        form-fixtures/payment-exemption-test-form {} audit-logger nil)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:application_id (:id (application-store/get-latest-application-by-key application-key))} runner)
+                    obligations (payment/get-kk-application-payment-obligation-reviews application-key)]
+                (should= #{{:requirement "kk-application-payment-obligation"
+                            :state "reviewed"
+                            :hakukohde "payment-info-test-kk-hakukohde"}
+                           {:requirement "kk-application-payment-obligation"
+                            :state "reviewed"
+                            :hakukohde "payment-info-test-kk-hakukohde-2"}}
+                         (set (map #(select-keys % [:requirement :state :hakukohde]) obligations)))))
+
+          (it "should not override existing kk-application-payment-obligation states when VTJ-verified EU citizen's payment was already not required"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-eu-citizen
+                                     nil)
+                    eu-person-oid (:person-oid application-fixtures/application-eu-citizen)
+                    application-key (:key (application-store/get-application application-id))
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid eu-person-oid :term test-term :year test-year} runner)
+                    _ (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                                  :review-requirement "kk-application-payment-obligation"
+                                                                                  :review-state "unreviewed"} application-key)
+                    _ (updater-job/update-kk-payment-status-for-person-handler
+                        {:person_oid eu-person-oid :term test-term :year test-year} runner)
+                    obligations (payment/get-kk-application-payment-obligation-reviews application-key)]
+                (should= [{:requirement "kk-application-payment-obligation"
+                           :state "unreviewed"
+                           :hakukohde "payment-info-test-kk-hakukohde"}]
+                         (map #(select-keys % [:requirement :state :hakukohde]) obligations))))
+
           (it "should automatically set kk-application-payment-obligation to 'reviewed' for Finnish citizen"
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
