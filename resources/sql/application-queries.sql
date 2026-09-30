@@ -139,6 +139,11 @@ SELECT
   a.hakukohde AS hakukohteet,
   a.submitted AS submitted,
   f.name      AS form_name,
+  ap.state    AS payment_state,
+  ap.due_date AS payment_due_date,
+  ap.total_sum AS payment_sum,
+  ap.reason   AS payment_reason,
+  ap.maksut_secret   AS payment_secret,
   coalesce((SELECT CASE value
                        WHEN '1' THEN 'fi'
                        WHEN '2' THEN 'sv'
@@ -158,6 +163,8 @@ JOIN application_reviews AS ar
   ON ar.application_key = a.key
 JOIN forms AS f
   ON f.id = a.form_id
+LEFT JOIN kk_application_payments AS ap
+  ON ap.application_key = a.key
 LEFT JOIN LATERAL (SELECT secret, age(now(), created_time)
                    FROM application_secrets
                    WHERE application_key = a.key
@@ -985,149 +992,7 @@ WHERE a.person_oid IS NOT NULL AND
 ORDER BY a.key, a.id desc
 LIMIT 200000;
 
---name: yesql-get-applications-by-created-time
-SELECT
-  a.key,
-  a.submitted,
-  a.haku,
-  a.hakukohde,
-  a.person_oid AS "person-oid",
-  (SELECT content
-   FROM answers_as_content
-   WHERE application_id = a.id) AS content,
-  application_reviews.state,
-  payment_obligations.states AS "payment-obligations",
-  eligibilities.states AS eligibilities
-FROM latest_applications AS a
-JOIN application_reviews
-  ON application_reviews.application_key = a.key
-LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                   FROM application_hakukohde_reviews AS payment_obligations
-                   WHERE payment_obligations.requirement = 'payment-obligation' AND
-                         application_key = a.key
-                   GROUP BY application_key) AS payment_obligations
-  ON true
-LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                   FROM application_hakukohde_reviews AS payment_obligations
-                   WHERE payment_obligations.requirement = 'eligibility-state' AND
-                         application_key = a.key
-                   GROUP BY application_key) AS eligibilities
-  ON true
-WHERE a.person_oid IS NOT NULL AND
-      (a.created_time >= :date::DATE OR
-       application_reviews.modified_time >= :date::DATE OR
-       EXISTS (SELECT 1
-               FROM application_hakukohde_reviews
-               WHERE application_key = a.key AND
-                     modified_time >= :date::DATE))
-ORDER BY a.created_time DESC
-LIMIT :limit
-OFFSET :offset;
 
---name: yesql-get-applications-by-created-time-between-start-and-end
-SELECT
-    a.key,
-    a.submitted,
-    a.haku,
-    a.hakukohde,
-    a.person_oid AS "person-oid",
-    (SELECT content
-     FROM answers_as_content
-     WHERE application_id = a.id) AS content,
-    application_reviews.state,
-    payment_obligations.states AS "payment-obligations",
-    eligibilities.states AS eligibilities
-FROM latest_applications AS a
-         JOIN application_reviews
-              ON application_reviews.application_key = a.key
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'payment-obligation' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS payment_obligations
-                   ON true
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'eligibility-state' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS eligibilities
-                   ON true
-WHERE a.person_oid IS NOT NULL AND
-    ((a.created_time::DATE >= :start::DATE AND a.created_time::DATE <= :end::DATE) OR
-       (application_reviews.modified_time::DATE >= :start::DATE AND application_reviews.modified_time::DATE <= :end::DATE) OR
-       EXISTS (SELECT 1
-               FROM application_hakukohde_reviews
-               WHERE application_key = a.key AND
-                     modified_time::DATE >= :start::DATE AND
-                     modified_time::DATE <= :end::DATE))
-ORDER BY a.created_time DESC
-    LIMIT :limit
-OFFSET :offset;
-
---name: yesql-get-applications-by-haku
-SELECT
-    a.key,
-    a.submitted,
-    a.haku,
-    a.hakukohde,
-    a.person_oid AS "person-oid",
-    (SELECT content
-     FROM answers_as_content
-     WHERE application_id = a.id) AS content,
-    application_reviews.state,
-    payment_obligations.states AS "payment-obligations",
-    eligibilities.states AS eligibilities
-FROM latest_applications AS a
-         JOIN application_reviews
-              ON application_reviews.application_key = a.key
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'payment-obligation' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS payment_obligations
-                   ON true
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'eligibility-state' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS eligibilities
-                   ON true
-WHERE a.person_oid IS NOT NULL AND
-    a.haku = :haku
-ORDER BY a.created_time DESC
-    LIMIT :limit
-OFFSET :offset;
-
---name: yesql-get-single-odw-application-by-key
-SELECT
-    a.key,
-    a.submitted,
-    a.haku,
-    a.hakukohde,
-    a.person_oid AS "person-oid",
-    (SELECT content
-     FROM answers_as_content
-     WHERE application_id = a.id) AS content,
-    application_reviews.state,
-    payment_obligations.states AS "payment-obligations",
-    eligibilities.states AS eligibilities
-FROM latest_applications AS a
-         JOIN application_reviews
-              ON application_reviews.application_key = a.key
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'payment-obligation' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS payment_obligations
-                   ON true
-         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                            FROM application_hakukohde_reviews AS payment_obligations
-                            WHERE payment_obligations.requirement = 'eligibility-state' AND
-                                    application_key = a.key
-                            GROUP BY application_key) AS eligibilities
-                   ON true
-WHERE a.person_oid IS NOT NULL
-  AND a.key = :key;
 
 --name: yesql-onr-applications
 SELECT a.key AS key,
@@ -1152,25 +1017,6 @@ VALUES (:application_key, :notes, :virkailija_oid, :hakukohde, :state_name, :vir
 -- name: yesql-remove-review-note!
 UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
 
---name: yesql-tilastokeskus-applications
-SELECT
-  haku AS "haku-oid",
-  key AS "hakemus-oid",
-  person_oid "henkilo-oid",
-  hakukohde AS "hakukohde-oids",
-  (SELECT content
-   FROM answers_as_content
-   WHERE application_id = la.id) AS "content",
-  state AS "hakemus-tila",
-  submitted AS "lahetysaika"
-FROM latest_applications AS la
-JOIN application_reviews ON application_key = la.key
-WHERE person_oid IS NOT NULL
-  AND haku IS NOT NULL
-  AND haku = :haku_oid
-  AND state <> 'inactivated'
-  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
-ORDER BY created_time DESC;
 
 --name: yesql-valintapiste-applications
 SELECT

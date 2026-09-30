@@ -573,7 +573,12 @@
    :hakukohteet [s/Str]
    :submitted java.time.ZonedDateTime
    :processing s/Bool
-   :form-name (s/maybe localized-schema/LocalizedStringOptional)
+   :paymentState (s/maybe s/Str)
+   :paymentDueDate (s/maybe java.time.ZonedDateTime)
+   :paymentSum (s/maybe s/Str)
+   :paymentReason (s/maybe s/Str)
+   :paymentLink (s/maybe s/Str)
+   :formName (s/maybe localized-schema/LocalizedStringOptional)
    :asiointikieli s/Str
    (s/optional-key :hakuaikaIsOn) (s/maybe s/Bool)
    (s/optional-key :hakuaikaEnds) (s/maybe s/Num)})
@@ -721,24 +726,6 @@
    :passinNumero (s/maybe s/Str)
    :idTunnus     (s/maybe s/Str)})
 
-(s/defschema TilastokeskusApplication
-  {:hakemus_oid                       s/Str
-   :hakemus_tila                      s/Str
-   :haku_oid                          s/Str
-   :henkilo_oid                       s/Str
-   :hakukohde_oids                    [s/Str]
-   :kotikunta                         (s/maybe s/Str)
-   :asuinmaa                          (s/maybe s/Str)
-   :submitted                         java.time.ZonedDateTime
-   :pohjakoulutus_kk                  [{:pohjakoulutuskklomake          s/Str
-                                        (s/optional-key :suoritusvuosi) s/Int}]
-   :pohjakoulutus_kk_ulk_country      (s/maybe s/Str)
-   (s/optional-key :pohjakoulutus_2aste)               (s/maybe s/Str)
-   (s/optional-key :pohjakoulutus_2aste_suorituskieli) (s/maybe s/Str)
-   (s/optional-key :pohjakoulutus_2aste_lahtokoulu_oid) (s/maybe s/Str)
-   :hakutoiveet                       [{:hakukohde_oid (s/maybe s/Str)
-                                        :sija          s/Int
-                                        :harkinnanvaraisuuden_syy (s/maybe s/Str)}]})
 
 (s/defschema ValintaApplication
   {:hakemusOid          s/Str

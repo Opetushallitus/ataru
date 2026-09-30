@@ -32,6 +32,7 @@
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
+            [ataru.time :as time]
             [yesql.core :as sql]))
 
 (declare yesql-get-latest-application-by-key)
@@ -144,13 +145,6 @@
 
 (defn- get-omatsivut-applications-query [person query]
   (-> (mock/request :get (str "/lomake-editori/api/external/omatsivut/applications/" person) query)
-      (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
-      (mock/content-type "application/json")
-      ((deref virkailija-routes))
-      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
-
-(defn- get-tilastokeskus-application-query [query]
-  (-> (mock/request :get "/lomake-editori/api/external/tilastokeskus" query)
       (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
       (mock/content-type "application/json")
       ((deref virkailija-routes))
@@ -1233,47 +1227,6 @@
                 (should= 200 status)
                 (should= 0 (count applications)))))
 
-(describe "tilastokeskus"
-          (tags :unit)
-
-          (after-all
-            (db/nuke-kk-payment-data))
-
-          (it "should return an application"
-              (let [[_ _ _ _ haku-oid] (init-and-get-kk-fixtures)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should return an application with kk payment data"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-not-required-for-exemption (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 1 (count applications))))
-
-          (it "should not return an application awaiting kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-required (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications))))
-
-          (it "should not return an application with overdue kk payment"
-              (let [[_ _ _ application haku-oid] (init-and-get-kk-fixtures)
-                    _ (payment/set-application-fee-overdue (:key application) nil)
-                    resp (get-tilastokeskus-application-query {:hakuOid haku-oid})
-                    status (:status resp)
-                    applications (:body resp)]
-                (should= 200 status)
-                (should= 0 (count applications)))))
-
 (describe "valintapiste"
           (tags :unit)
 
@@ -1444,7 +1397,9 @@
             (db/nuke-kk-payment-data))
 
           (it "should return an application"
-              (let [[person _ _ _ _] (init-and-get-kk-fixtures)
+              (let [[person _ _ application _] (init-and-get-kk-fixtures)
+                    _ (payment/set-application-fee-required (:key application) nil)
+                    _ (payment/set-maksut-secret (:key application) "secret")
                     resp (get-omatsivut-applications-query person nil)
                     status (:status resp)
                     applications (:body resp)]
@@ -1452,6 +1407,15 @@
                 (should= 1 (count applications))
                 (should= "fi" (:asiointikieli (first applications)))
                 (should= false (:processing (first applications)))
+                (should= "awaiting" (:paymentState (first applications)))
+                (should= (.plusDays (time/today (time/time-zone-for-id "Europe/Helsinki"))
+                                    payment/kk-application-payment-due-days)
+                         (-> (:paymentDueDate (first applications))
+                             java.time.ZonedDateTime/parse
+                             .toLocalDate))
+                (should= "100.00" (:paymentSum (first applications)))
+                (should-be-nil (:paymentReason (first applications)))
+                (should= "https://toimimaton.hakija-host-arvo.test.edn-tiedostosta/maksut/fi?secret=secret" (:paymentLink (first applications)))
                 (should-be-nil (:hakuaikaIsOn (first applications)))
                 (should-be-nil (:hakuaikaEnds (first applications)))))
 
