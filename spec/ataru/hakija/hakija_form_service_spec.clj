@@ -115,7 +115,7 @@
           (should-be false? (:cannot-view new-field))
           (should-be false? (:cannot-edit new-field))))))
 
-  (describe "always-editable lupatiedot fields (koulutusmarkkinointilupa, asiointikieli)"
+  (describe "always-editable lupatiedot fields (koulutusmarkkinointilupa, asiointikieli, valintatuloksen-julkaisulupa)"
     (describe "when hakuaika has ended (expired field deadline)"
       (it "should mark koulutusmarkkinointilupa as editable even after deadline"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines koulutusmarkkinointilupa-field) false false nil nil koulutusmarkkinointilupa-field)]
@@ -127,10 +127,10 @@
           (should-be false? (:cannot-view new-field))
           (should-be false? (:cannot-edit new-field))))
 
-      (it "should mark valintatuloksen-julkaisulupa as not editable after deadline"
+      (it "should mark valintatuloksen-julkaisulupa as editable even after deadline"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines lupatieto-field) false false nil nil lupatieto-field)]
           (should-be false? (:cannot-view new-field))
-          (should-be true? (:cannot-edit new-field))))
+          (should-be false? (:cannot-edit new-field))))
 
       (it "should mark normal field as not editable after deadline"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines normal-field) false false nil nil normal-field)]
@@ -148,10 +148,10 @@
           (should-be false? (:cannot-view new-field))
           (should-be false? (:cannot-edit new-field))))
 
-      (it "should mark valintatuloksen-julkaisulupa as not editable when application is in processing"
+      (it "should mark valintatuloksen-julkaisulupa as editable when application is in processing"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil lupatieto-field)]
           (should-be false? (:cannot-view new-field))
-          (should-be true? (:cannot-edit new-field))))
+          (should-be false? (:cannot-edit new-field))))
 
       (it "should mark normal field as not editable when application is in processing"
         (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-in-processing [:hakija] true nil false false nil nil normal-field)]
