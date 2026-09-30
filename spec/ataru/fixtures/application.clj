@@ -561,6 +561,7 @@
                              {:attachment-states-to-include
                               ["not-checked"
                                "checked"
+                               "non-exempting-attachment"
                                "incomplete-attachment"
                                "attachment-missing"
                                "overdue"
