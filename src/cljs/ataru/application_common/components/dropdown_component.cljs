@@ -231,7 +231,16 @@
 
 (s/defn collapse-dropdown
   [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
-  (unlock-body-scroll!)
+  ;; unlock-body-scroll! ei saa ajaa synkronisesti tässä: se poistaisi html/
+  ;; body:n vieritys-lukon HETI, mutta a-dropdown--fullscreen-luokka (jonka
+  ;; poistuminen on se, mikä oikeasti saa kokoruutuvalikon lakkaamasta
+  ;; olemasta position: fixed :has()-wrapperin kautta) poistuu vasta kun
+  ;; expanded?-tilan muutos on ehtinyt renderöityä. Näiden kahden välissä
+  ;; oleva hetki, jolloin vieritys on jo sallittu mutta kokoruutuylitys on
+  ;; silti kiinnitetty, aiheutti näkyvän välähdyksen (koko sivu "venyi"
+  ;; hetkeksi) valinnan yhteydessä — after-render synkronoi ne samaan
+  ;; committiin.
+  (reagent/after-render unlock-body-scroll!)
   (re-frame/dispatch [:application-components/collapse-dropdown {:dropdown-id dropdown-id}]))
 
 (s/defn expand-dropdown
@@ -243,6 +252,16 @@
   (let [dropdown-id             (util/component-id)
         input-ref               (atom nil)
         root-ref                (atom nil)
+        ;; Kun kenttää kosketetaan uudestaan listan ollessa jo auki (ks.
+        ;; on-input-click), kenttä sumennetaan ja fokusoidaan heti uudestaan
+        ;; pakottaaksemme aidon fokusoitumistapahtuman, jotta virtuaali-
+        ;; näppäimistö nousee esiin (pelkkä jo-fokusoidun kentän fokusointi
+        ;; uudestaan ei riitä). Tämä sumennus kuitenkin kuplii juuritason
+        ;; on-dropdown-bluriin asti, joka muuten tulkitsisi sen "fokus
+        ;; poistui koko komponentista" -signaaliksi ja sulkisi listan —
+        ;; tämä lippu ohittaa sen väliaikaisesti sumennuksen ja uudelleen-
+        ;; fokusoinnin ajaksi.
+        suppress-blur-close?    (atom false)
         ;; option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten.
         ;; Käytetään React:in itsensä ylläpitämiä :ref-kutsuja document-tason
         ;; getElementById-haun sijaan, koska React 18:n createRoot-juuren
@@ -419,8 +438,30 @@
                                         (expand-dropdown {:dropdown-id dropdown-id}))))
                ;; Pelkkä näppäimistöfokus (esim. Tab kenttään) ei avaa listaa —
                ;; vain klikkaus, nuolinäppäimet tai kirjoittaminen avaavat sen.
+               ;;
+               ;; Mobiilissa ensimmäinen kosketus (expanded? on vielä false
+               ;; tässä, koska se on tämän renderin, siis ENNEN klikkausta,
+               ;; arvo) avaa vain listan: kenttä on silloin read-only (ks.
+               ;; :read-only alempana), joten kosketus fokusoi sen ilman että
+               ;; virtuaalinäppäimistö nousee esiin. Kun lista on JO auki,
+               ;; kosketus kentän päällä tulkitaan haluksi kirjoittaa/hakea —
+               ;; kenttä ei ole silloin enää read-only, mutta koska se on jo
+               ;; fokusoitu, pelkkä sen fokusointi uudestaan ei toisi näppäi-
+               ;; mistöä esiin (selain päättää sen näkyvyyden vain aidosta,
+               ;; uudesta fokusoitumisesta) — sumennetaan siis ensin ja
+               ;; fokusoidaan sitten uudestaan.
                on-input-click     (fn on-input-click [_e]
-                                    (open-popup))
+                                    (let [was-expanded? expanded?]
+                                      (open-popup)
+                                      (when (and @mobile? was-expanded?)
+                                        (reset! suppress-blur-close? true)
+                                        (when-let [el @input-ref]
+                                          (.blur el))
+                                        (reagent/after-render
+                                          (fn []
+                                            (when-let [el @input-ref]
+                                              (.focus el))
+                                            (reset! suppress-blur-close? false))))))
                on-input-change    (fn on-input-change [e]
                                     (open-popup)
                                     (on-query-change (.. e -target -value)))
@@ -429,11 +470,12 @@
                ;; ei sulje listaa — vain fokuksen siirtyminen kokonaan
                ;; komponentin ulkopuolelle sulkee sen.
                on-dropdown-blur   (fn on-dropdown-blur [e]
-                                    (let [related-target (.-relatedTarget e)]
-                                      (when (or (nil? related-target)
-                                                (and @root-ref
-                                                     (not (.contains @root-ref related-target))))
-                                        (collapse-dropdown {:dropdown-id dropdown-id}))))
+                                    (when-not @suppress-blur-close?
+                                      (let [related-target (.-relatedTarget e)]
+                                        (when (or (nil? related-target)
+                                                  (and @root-ref
+                                                       (not (.contains @root-ref related-target))))
+                                          (collapse-dropdown {:dropdown-id dropdown-id})))))
                on-option-click    (fn on-option-click [value]
                                     (collapse-dropdown {:dropdown-id dropdown-id})
                                     (on-change value))
@@ -480,7 +522,16 @@
                                       (if expanded?
                                         (collapse-dropdown {:dropdown-id dropdown-id})
                                         (do (open-popup)
-                                            (focus-input)))))
+                                            ;; Ei fokusoida eksplisiittisesti
+                                            ;; mobiilissa: :read-only on jo
+                                            ;; poistunut siihen mennessä kun
+                                            ;; focus-input (after-render)
+                                            ;; ehtii ajaa, joten .focus()
+                                            ;; toisi virtuaalinäppäimistön
+                                            ;; esiin heti ensimmäisestä
+                                            ;; avauksesta (ks. on-input-click).
+                                            (when-not @mobile?
+                                              (focus-input))))))
                label-id           (str dropdown-id "-label")
                listbox-id         (str dropdown-id "-listbox")
                selected-label     (->> options
@@ -520,6 +571,16 @@
                :value                input-value
                :placeholder          unselected-label
                :disabled             disabled?
+               ;; Estävät virtuaalinäppäimistön avautumisen kentän
+               ;; ensimmäisestä kosketuksesta mobiilissa (ks. on-input-click)
+               ;; — vain listan avaaminen, ei kirjoittaminen, on ensimmäisen
+               ;; kosketuksen tarkoitus. Molemmat poistuvat heti kun lista on
+               ;; auki. read-only ei riitä yksin: esim. Firefox Androidilla
+               ;; se ei estä näppäimistön avautumista, joten myös
+               ;; input-mode "none" tarvitaan (selainten dokumentoitu tapa
+               ;; sanoa "tämä kenttä ei tarvitse virtuaalinäppäimistöä").
+               :read-only            (boolean (and @mobile? (not expanded?)))
+               :inputMode            (when (and @mobile? (not expanded?)) "none")
                :required             (boolean required?)
                :aria-invalid         (boolean invalid?)
                :autoComplete         "off"
