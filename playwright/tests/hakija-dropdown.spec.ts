@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { test, expect, Page } from '@playwright/test'
+import { test, expect, Page, Locator } from '@playwright/test'
 import { waitForResponse } from '../playwright-utils'
 import {
   FormNode,
@@ -146,6 +146,32 @@ const waitForActiveOption = async (page: Page, name: string) => {
 const waitForNoActiveOption = async (page: Page) => {
   await expect(getCombobox(page)).not.toHaveAttribute('aria-activedescendant')
 }
+
+// Lähettää synteettisen, peruutettavissa olevan touchmove-tapahtuman
+// annetulle elementille ja palauttaa, kutsuiko joku kuuntelija sille
+// preventDefaultia (ks. make-fullscreen-touchmove-listener dropdown_
+// component.cljs:ssä) — ei yritä todentaa itse sivun visuaalista
+// vierittymistä/panorointia, koska sen simulointi ja havaitseminen
+// luotettavasti pelkillä synteettisillä kosketustapahtumilla ei ole
+// mielekästä (todellinen selaimen oma "panorointi" ei reagoi niihin).
+const dispatchTouchmove = (locator: Locator): Promise<boolean> =>
+  locator.evaluate((el) => {
+    const touch = new Touch({
+      identifier: 1,
+      target: el,
+      clientX: 10,
+      clientY: 10,
+    })
+    const event = new TouchEvent('touchmove', {
+      bubbles: true,
+      cancelable: true,
+      touches: [touch],
+      targetTouches: [touch],
+      changedTouches: [touch],
+    })
+    el.dispatchEvent(event)
+    return event.defaultPrevented
+  })
 
 const avaaLomake = async (page: Page): Promise<void> => {
   await Promise.all([
@@ -470,5 +496,25 @@ test.describe('Mobiilinäkymä', () => {
     await getClearButton(page).tap()
     await expect(getCombobox(page)).toHaveValue('')
     await expect(getClearButton(page)).toBeHidden()
+  })
+
+  test('kokoruutuvalikon ollessa auki touchmove ei vieritä/panoroi sivua muualla, mutta listan sisällä se sallitaan', async ({
+    page,
+  }) => {
+    // Regressiotesti: virtuaalinäppäimistön avautuminen voi saada mobiili-
+    // selaimen "panoroimaan" koko sivua, ellei touchmovea ole estetty.
+    expect(await dispatchTouchmove(page.locator('body'))).toBe(false)
+
+    await getCombobox(page).tap()
+    await expect(getListbox(page)).toBeVisible()
+
+    const label = page.getByText(DROPDOWN_LABEL, { exact: true })
+
+    const banner = page.locator('.application__banner-container')
+
+    expect(await dispatchTouchmove(page.locator('body'))).toBe(true)
+    expect(await dispatchTouchmove(label)).toBe(true)
+    expect(await dispatchTouchmove(banner)).toBe(true)
+    expect(await dispatchTouchmove(getOptions(page).first())).toBe(false)
   })
 })
