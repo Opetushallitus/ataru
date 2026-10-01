@@ -6,6 +6,10 @@
        :server-name "{{ataru_db_host}}"
        :port-number {{ataru_db_port}}
        :schema "public"
+       ; aws-jdbc-wrapperin failover2/topology tarvitsee tämän kun :server-name on custom-CNAME
+       ; (aws-advanced-jdbc-wrapper#2035). Muoto: "?.<cluster-resource-id>.eu-west-1.rds.amazonaws.com"
+       ; (? = instanssin tunniste). Tyhjänä ei lisätä wrapperiin.
+       :cluster-instance-host-pattern "{{ataru_db_cluster_instance_host_pattern | default('') }}"
        :minimum-idle {{ataru_db_max_pool_size}}
        :maximum-pool-size {{ataru_db_max_pool_size}}}
 
