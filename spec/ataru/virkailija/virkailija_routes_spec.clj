@@ -31,9 +31,10 @@
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
+            [clojure.string :as clj-string]
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-contain
-                                 should-not-be-nil should= tags with]]
+                                 should-not-be-nil should-not-contain should= should-not= tags with xit]]
             [ataru.time :as time]
             [yesql.core :as sql]))
 
@@ -893,6 +894,203 @@
                 (should= 200 (:status resp))
                 (should= note-id (get-in resp [:body :id]))
                 (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
+
+(defn- raw-get
+  "GET ilman body-parsintaa: nämä reitit vastaavat 307-uudelleenohjauksella."
+  ([path] (raw-get path nil))
+  ([path user]
+   (-> (mock/request :get path)
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       ((deref virkailija-routes)))))
+
+(defn- secret-from-redirect
+  "Poimii virkailija-secretin Location-otsakkeesta."
+  [resp]
+  (some-> (get-in resp [:headers "Location"])
+          (clj-string/split #"virkailija-secret=")
+          second
+          (clj-string/split #"&")
+          first))
+
+(defn- select-organization
+  "Valitsee organisaation annetuilla oikeuksilla. Samaa evästettä käyttämällä valinta säilyy
+   istunnossa seuraaviin pyyntöihin."
+  [oid rights cookie]
+  (-> (mock/request :post (str "/lomake-editori/api/organization/user-organization/" oid
+                               "?rights=" (clj-string/join "&rights=" rights)))
+      (update-in [:headers] assoc "cookie" cookie)
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-form-with-cookie [form cookie]
+  (-> (mock/request :post "/lomake-editori/api/forms" (json/generate-string form))
+      (update-in [:headers] assoc "cookie" cookie)
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+;; Oletuskäyttäjällä ja VIEW-ONLY-USERilla on sama organisaatio mutta eri oikeustaso
+;; (auth_routes.clj: EDITORI_CRUD vs HAKEMUS_READ). Kun lomake kiinnitetään tähän
+;; organisaatioon, testissä eroaa vain oikeus, ei organisaatiojäsenyys.
+(def ^:private shared-organization "1.2.246.562.10.0439845")
+
+(defn- user-info [cookie]
+  (-> (mock/request :get "/lomake-editori/api/user-info")
+      (update-in [:headers] assoc "cookie" cookie)
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- rights-for-organization [cookie oid]
+  (->> (get-in (user-info cookie) [:body :organizations])
+       (filter #(= oid (:oid %)))
+       first
+       :rights
+       set))
+
+(defn- resend-modify-link [application-key]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/" application-key "/resend-modify-link"))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      ((deref virkailija-routes))
+      parse-body))
+
+(describe "Secret minting audit logging"
+          (tags :unit :secret-audit)
+
+          (before (reset! audit-entries []))
+
+          (it "Should write a lisäys entry when a create secret is minted for a haku"
+              (let [resp    (raw-get "/lomake-editori/api/preview/haku/1.2.246.562.29.1?lang=fi")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.29.1" (get-in (first entries) [:target :hakuOid]))
+                (should-contain "virkailija-create" (pr-str (:changes (first entries))))))
+
+          (it "Should write a lisäys entry when a create secret is minted for a form"
+              (let [resp    (raw-get "/lomake-editori/api/preview/form/some-form-key?lang=sv")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should= "some-form-key" (get-in (first entries) [:target :formKey]))
+                (should-contain "sv" (pr-str (:changes (first entries))))))
+
+          ;; Itse salaisuus ei saa päätyä auditlokille. Merkinnästä käy ilmi vain mihin ja millainen tunniste luotiin.
+          (it "Should never write the minted secret into the audit entry"
+              (let [resp   (raw-get "/lomake-editori/api/preview/haku/1.2.246.562.29.1?lang=fi")
+                    secret (secret-from-redirect resp)
+                    entry  (first (audit-entries-for audit-entries "lisäys"))]
+                (should-not-be-nil secret)
+                (should-not-contain secret (pr-str entry))))
+
+          (it "Should write a lisäys entry when an update secret is minted for an application"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/modify"))
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "virkailija-update" (pr-str (:changes (first entries))))
+                (should-not-be-nil (secret-from-redirect resp))
+                (should-not-contain (secret-from-redirect resp) (pr-str (first entries)))))
+
+          (it "Should write a lisäys entry when a rewrite secret is minted for an application"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/rewrite-modify")
+                                             "SUPERUSER")
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "virkailija-rewrite" (pr-str (:changes (first entries))))
+                (should-not-be-nil (secret-from-redirect resp))
+                (should-not-contain (secret-from-redirect resp) (pr-str (first entries)))))
+
+          ;; Rewrite-secret vaatii pääkäyttäjäoikeudet; ilman niitä salaisuutta ei luoda eikä
+          ;; merkintää synny.
+          (it "Should not mint a rewrite secret or write an entry for a non-superuser"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/rewrite-modify"))]
+                (should= 400 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key)))))
+
+          ;; Linkin uudelleenlähetys kierrättää hakijan salaisuuden, joten se on muutos.
+          ;; Ennen tätä lokiin jäi vain oikeustarkistuksen "luku"-merkintä.
+          ;;
+          ;; PENDING: reitti ei ole ajettavissa tässä harnessissa. Sähköpostin lähetys
+          ;; (application_email_jobs/start-email-submit-confirmation-job) kaatuu NPE:hen
+          ;; tarjonta_parser/parse-hakukohde:ssa, koska mock-tarjonnasta puuttuu tämän
+          ;; fixtuurin haulta :kohdejoukko-uri. Kaatuminen tapahtuu ennen auditlokikutsua,
+          ;; eli kyse on jaetun testifixtuurin puutteesta, ei tämän muutoksen. Poista xit
+          ;; kun mock-tarjonta kattaa fixtuurin haun.
+          (xit "Should write a muutos entry when a modify link is resent"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (resend-modify-link application-key)
+                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "secret-rotated" (pr-str (:changes (first entries)))))))
+
+;; Organisaation valinta ei ole auditlokitettu, koska se vain kaventaa toimivaltaa (pääkäyttäjä valitsee itselleen
+;; pääkäyttäjän oikeuksia kapeammat oikeudet johonkin organisaatioon).
+(describe "Organization selection rights"
+          (tags :unit :organization-selection)
+
+          (it "Should not attach requested rights to a non-superuser's selected organization"
+              (let [cookie (login @virkailija-routes "VIEW-ONLY-USER")
+                    resp   (select-organization shared-organization
+                                                ["form-edit" "edit-applications"]
+                                                cookie)
+                    rights (set (get-in resp [:body :rights]))]
+                (should= 200 (:status resp))
+                ;; VIEW-ONLY-USERilla on vain ATARU_HAKEMUS_READ, eikä pyydettyjä oikeuksia
+                ;; kirjoiteta istuntoon.
+                (should-contain "view-applications" rights)
+                (should-not-contain "form-edit" rights)
+                (should-not-contain "edit-applications" rights)))
+
+          (it "Should deny a form edit on the user's own organization when the right is missing"
+              (let [cookie (login @virkailija-routes "VIEW-ONLY-USER")
+                    form   (assoc fixtures/form-with-content :organization-oid shared-organization)
+                    rights (rights-for-organization cookie shared-organization)
+                    resp   (post-form-with-cookie form cookie)]
+                ;; Käyttäjä kuuluu organisaatioon, mutta vain katseluoikeudella.
+                (should-contain "view-applications" rights)
+                (should-not-contain "form-edit" rights)
+                (should= 400 (:status resp))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> resp :body :error))))
+
+          ;; Varsinainen vuototesti. Ei-pääkäyttäjä ei saa asettaa itselleen laajempia oikeuksia omaan organisaatioon.
+          (it "Should not let requested rights enable a form edit for a non-superuser"
+              (let [cookie      (login @virkailija-routes "VIEW-ONLY-USER")
+                    form        (assoc fixtures/form-with-content :organization-oid shared-organization)
+                    before      (post-form-with-cookie form cookie)
+                    _           (select-organization shared-organization ["form-edit"] cookie)
+                    after       (post-form-with-cookie form cookie)
+                    ;; Verrokki: samaan organisaatioon form-edit-oikeuden omaava käyttäjä pääsee
+                    ;; samasta pyynnöstä läpi, joten esto johtuu oikeudesta eikä lomakkeesta.
+                    with-rights (post-form-with-cookie form (login @virkailija-routes nil))]
+                (should= 200 (:status with-rights))
+                (should= 400 (:status before))
+                (should= 400 (:status after))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> before :body :error))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> after :body :error))))
+
+          ;; Muu kuin pääkäyttäjä ei pääse käsiksi koko organisaatiolistaan, joten vierasta
+          ;; organisaatiota ei voi valita lainkaan.
+          (it "Should not let a non-superuser select an organization they do not belong to"
+              (let [cookie       (login @virkailija-routes "VIEW-ONLY-USER")
+                    foreign-org  "1.2.246.562.10.22"
+                    own-rights   (rights-for-organization cookie foreign-org)
+                    resp         (select-organization foreign-org ["view-applications"] cookie)]
+                ;; Organisaatio on olemassa (fake-org-by-oid: "Omnia") mutta ei käyttäjän omissa.
+                (should= #{} own-rights)
+                (should= 400 (:status resp))
+                ;; Reitti palauttaa oman (bad-request {}) -haaransa, eli select-organization
+                ;; palautti nil. Tyhjä body erottaa tämän user-feedback-exceptionista, joka
+                ;; tuottaisi {:error ...} — eli esto ei tule poikkeuksesta vaan haun tuloksesta.
+                (should= {} (:body resp)))))
 
 (describe "Mass inactivate applications"
           (tags :unit :api-applications)

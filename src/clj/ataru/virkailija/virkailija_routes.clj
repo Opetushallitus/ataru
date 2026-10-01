@@ -57,6 +57,7 @@
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [ataru.log.access-logging :as access-logging]
+            [ataru.log.audit-log :as audit-log]
             [ataru.log.timbre-access-logging :as timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -215,6 +216,40 @@
         (do (unregister-test-hakukohde! oid)
             (ok {}))
         (route/not-found "Not found")))))
+
+(defn- audit-log-create-secret
+  "Auditlokimerkintä virkailijan create-secretin luonnista. Salaisuutta itseään ei kirjata:
+   merkinnästä käy ilmi mihin ja millainen tunniste luotiin, ei tunnistetta."
+  [audit-logger session id lang]
+  (audit-log/log audit-logger
+                 {:new       {:secret-type "virkailija-create"
+                              :lang        lang}
+                  :id        id
+                  :session   session
+                  :operation audit-log/operation-new}))
+
+(defn- audit-log-application-secret
+  "Auditlokimerkintä hakemuskohtaisen virkailijasalaisuuden luonnista (update/rewrite).
+   Kuten yllä, salaisuutta ei kirjata."
+  [audit-logger session application-key secret-type]
+  (audit-log/log audit-logger
+                 {:new       {:secret-type secret-type}
+                  :id        {:applicationOid application-key}
+                  :session   session
+                  :operation audit-log/operation-new}))
+
+(defn- audit-log-modify-link-sent
+  "Auditlokimerkintä muokkauslinkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
+   (application_store/add-new-secret-to-application), joten kyseessä on hakemuksen muutos eikä
+   pelkkä luku — ilman tätä merkintää lokiin jää vain oikeustarkistuksen 'luku'-merkintä.
+   Uutta salaisuutta ei kirjata."
+  [audit-logger session application-key link-type]
+  (audit-log/log audit-logger
+                 {:new       {:link-type       link-type
+                              :secret-rotated  true}
+                  :id        {:applicationOid application-key}
+                  :session   session
+                  :operation audit-log/operation-modify}))
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
@@ -395,22 +430,26 @@
         :path-params [haku-oid :- s/Str]
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
-          (response/temporary-redirect
-            (str (-> config :public-config :applicant :service_url)
-                 "/hakemus/haku/" haku-oid
-                 "?virkailija-secret=" secret
-                 "&lang=" lang))
+          (do
+            (audit-log-create-secret audit-logger session {:hakuOid haku-oid} lang)
+            (response/temporary-redirect
+              (str (-> config :public-config :applicant :service_url)
+                   "/hakemus/haku/" haku-oid
+                   "?virkailija-secret=" secret
+                   "&lang=" lang)))
           (response/internal-server-error)))
 
       (api/GET "/form/:key" {session :session}
         :path-params [key :- s/Str]
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
-          (response/temporary-redirect
-            (str (-> config :public-config :applicant :service_url)
-                 "/hakemus/" key
-                 "?virkailija-secret=" secret
-                 "&lang=" lang))
+          (do
+            (audit-log-create-secret audit-logger session {:formKey key} lang)
+            (response/temporary-redirect
+              (str (-> config :public-config :applicant :service_url)
+                   "/hakemus/" key
+                   "?virkailija-secret=" secret
+                   "&lang=" lang)))
           (response/internal-server-error))))
 
     (api/context "/background-jobs" []
@@ -671,6 +710,7 @@
                   modify-url               (str (-> config :public-config :applicant :service_url)
                                                 "/hakemus?virkailija-secret="
                                                 virkailija-update-secret)]
+              (audit-log-application-secret audit-logger session application-key "virkailija-update")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -690,6 +730,7 @@
                   modify-url                (str (-> config :public-config :applicant :service_url)
                                                  "/hakemus?virkailija-secret="
                                                  virkailija-rewrite-secret)]
+              (audit-log-application-secret audit-logger session application-key "virkailija-rewrite")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -703,7 +744,9 @@
                                 application-key
                                 nil
                                 session)]
-          (response/ok resend-event)
+          (do
+            (audit-log-modify-link-sent audit-logger session application-key "modify")
+            (response/ok resend-event))
           (response/bad-request)))
 
       (api/GET "/:application-key/field-deadline" {session :session}
@@ -1158,7 +1201,9 @@
                                    application-key
                                    payment-url
                                    session)]
-              (response/ok resend-event)
+              (do
+                (audit-log-modify-link-sent audit-logger session application-key "maksu")
+                (response/ok resend-event))
               (response/bad-request))
             (response/not-found
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
@@ -1300,6 +1345,12 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]
         :query-params [{rights :- [user-rights/Right] nil}]
+        ;; Organisaation valinta vain kaventaa toimivaltaa, ei laajenna sitä.
+        ;; rights-parametri huomioidaan ainoastaan pääkäyttäjän haarassa
+        ;; (organization_selection.clj:54-56), ja pääkäyttäjällä on jo kaikki oikeudet; muille
+        ;; palautetaan organisaatio suoraan istunnon omista organisaatioista. Lisäksi
+        ;; session-organizations/filter-orgs-for-rights tarkistaa muiden kuin pääkäyttäjien
+        ;; organisaatiot uudelleen istuntoa vasten.
         (if-let [selected-organization (organization-selection/select-organization organization-service session oid rights)]
           (-> (ok selected-organization)
               (assoc :session (assoc session :selected-organization selected-organization)))
