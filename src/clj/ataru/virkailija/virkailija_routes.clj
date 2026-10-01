@@ -238,6 +238,21 @@
                   :session   session
                   :operation audit-log/operation-new}))
 
+(defn- audit-log-valinta-attempt
+  "Auditlokimerkintä valinta-tulos-serviceen kohdistuvasta muutosyrityksestä.
+
+   Varsinaisen muutoksen lokittaa valinta-tulos-service itse, eikä tässä tarkisteta sen vastausta:
+   merkinnän tehtävä on kertoa kuka muutosta yritti. Ataru kutsuu VTS:ää palvelutunnuksella
+   (virkailija_system.clj:125) eikä välitä loppukäyttäjän identiteettiä, joten VTS:n omasta
+   merkinnästä tekijä ei selviä. Merkintä kirjoitetaan ennen kutsua, jotta yritys jää lokiin
+   myös jos kutsu epäonnistuu."
+  [audit-logger session id operation new-value]
+  (audit-log/log audit-logger
+                 {:new       new-value
+                  :id        id
+                  :session   session
+                  :operation operation}))
+
 (defn- audit-log-modify-link-sent
   "Auditlokimerkintä muokkauslinkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
    (application_store/add-new-secret-to-application), joten kyseessä on hakemuksen muutos eikä
@@ -2087,8 +2102,19 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        [:edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/change-kevyt-valinta-property
-                  valinta-tulos-service valintatapajono-oid body if-unmodified-since))))
+                (let [hakemus-oids (mapv #(get-in % [:hakemusOid :s]) body)]
+                  ;; Hakemus-oidit menevät :new-kenttään eivätkä :id:hen: lista on rajaamaton ja
+                  ;; yhdistettynä yhdeksi Target-kentäksi se ylittäisi kentän kokorajan isossa
+                  ;; massa-ajossa. :new:ssä unnest levittää ne omiksi poluikseen.
+                  (audit-log-valinta-attempt audit-logger
+                                             session
+                                             {:valintatapajonoOid valintatapajono-oid}
+                                             audit-log/operation-modify
+                                             {:attempted-operation "change-kevyt-valinta-property"
+                                              :hakemus-oids        hakemus-oids
+                                              :hakemus-count       (count hakemus-oids)})
+                  (vts/change-kevyt-valinta-property
+                    valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
 
       (api/context "/hyvaksynnan-ehto" []
         (api/GET "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
@@ -2116,8 +2142,20 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
-                  valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since)))
+                (do
+                  ;; Ilman if-unmodified-sinceä asiakas lähettää If-None-Match: *
+                  ;; (valintatulosservice_client.clj:74-76) eli kyseessä on luonti.
+                  (audit-log-valinta-attempt audit-logger
+                                             session
+                                             {:hakukohdeOid   hakukohde-oid
+                                              :applicationOid application-key}
+                                             (if (some? if-unmodified-since)
+                                               audit-log/operation-modify
+                                               audit-log/operation-new)
+                                             {:attempted-operation "add-hyvaksynnan-ehto"
+                                              :ehto                ehto})
+                  (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since))))
 
         (api/DELETE "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Delete hyvaksynnan-ehto hakukohteessa"
@@ -2130,8 +2168,17 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
-                  valinta-tulos-service hakukohde-oid application-key if-unmodified-since)))
+                (do
+                  ;; Poistettavaa arvoa ei haeta erikseen VTS:stä :old-kenttää varten — yritys
+                  ;; riittää, ja ylimääräinen etäkutsu per poisto ei ole sen arvoinen.
+                  (audit-log-valinta-attempt audit-logger
+                                             session
+                                             {:hakukohdeOid   hakukohde-oid
+                                              :applicationOid application-key}
+                                             audit-log/operation-delete
+                                             {:attempted-operation "delete-hyvaksynnan-ehto"})
+                  (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since))))
 
         (api/GET "/valintatapajonoissa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto valintatapajonoissa"

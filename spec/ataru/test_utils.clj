@@ -8,6 +8,7 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
+            [ataru.valinta-tulos-service.valintatulosservice-protocol :refer [ValintaTulosService]]
             [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.time.coerce :as coerce]
@@ -60,6 +61,41 @@
                  :operation (.name operation)
                  :target    (->clj (.asJson target))
                  :changes   (->clj (.asJsonArray changes))})))]))
+
+(defrecord FakeValintaTulosService [calls response]
+  ValintaTulosService
+  (hakukohteen-ehdolliset [_ _] #{})
+  (valinnan-tulos-hakemukselle [_ _ _] @response)
+  (valinnantulos-hakemukselle-tilahistorialla [_ _] @response)
+  (valinnantulos-monelle-tilahistorialla [_ _] @response)
+  (change-kevyt-valinta-property [_ valintatapajono-oid body _]
+    (swap! calls conj {:op :change-kevyt-valinta-property
+                       :valintatapajono-oid valintatapajono-oid
+                       :body body})
+    @response)
+  (hyvaksynnan-ehto-hakukohteessa-hakemus [_ _ _] @response)
+  (add-hyvaksynnan-ehto-hakukohteessa-hakemus [_ ehto hakukohde-oid application-key _]
+    (swap! calls conj {:op :add-hyvaksynnan-ehto
+                       :ehto ehto
+                       :hakukohde-oid hakukohde-oid
+                       :application-key application-key})
+    @response)
+  (delete-hyvaksynnan-ehto-hakukohteessa-hakemus [_ hakukohde-oid application-key _]
+    (swap! calls conj {:op :delete-hyvaksynnan-ehto
+                       :hakukohde-oid hakukohde-oid
+                       :application-key application-key})
+    @response)
+  (hyvaksynnan-ehto-valintatapajonoissa-hakemus [_ _ _] @response)
+  (hyvaksynnan-ehto-hakemukselle [_ _] @response)
+  (hyvaksynnan-ehto-hakukohteessa-muutoshistoria [_ _ _] @response))
+
+(defn new-fake-valinta-tulos-service
+  "Palauttaa [calls response service]. calls kerää tehdyt muutoskutsut, responseen voi asettaa
+   VTS:n vastauksen (reitit palauttavat sen sellaisenaan)."
+  []
+  (let [calls    (atom [])
+        response (atom {:status 200 :headers {} :body "{}"})]
+    [calls response (->FakeValintaTulosService calls response)]))
 
 (defn audit-entries-for
   "Suodattaa merkinnät operaation ja valinnaisen target-kentän perusteella.

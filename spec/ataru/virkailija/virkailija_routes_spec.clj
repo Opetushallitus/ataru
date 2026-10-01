@@ -22,7 +22,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
-                                      should-have-header]]
+                                      new-fake-valinta-tulos-service should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
@@ -74,6 +74,9 @@
 (def audit-log-capture (new-capturing-audit-logger))
 (def audit-entries (first audit-log-capture))
 
+(def vts-capture (new-fake-valinta-tulos-service))
+(def vts-calls (first vts-capture))
+
 (def virkailija-routes
   (delay
     (-> (component/system-map
@@ -95,6 +98,7 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (second audit-log-capture)
+          :valinta-tulos-service (nth vts-capture 2)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
@@ -117,6 +121,7 @@
                                 :ohjausparametrit-service
                                 :form-by-id-cache
                                 :koodisto-cache
+                                :valinta-tulos-service
                                 :job-runner]))
       component/start
       :virkailija-routes
@@ -1031,6 +1036,115 @@
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
                 (should-contain "secret-rotated" (pr-str (:changes (first entries)))))))
+
+(defn- patch-valinnan-tulos [valintatapajono-oid body]
+  (-> (mock/request :patch (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/"
+                                valintatapajono-oid)
+                    (json/generate-string body))
+      (update-in [:headers] assoc
+                 "cookie" (login @virkailija-routes nil)
+                 "if-unmodified-since" "Mon, 1 Jan 2026 00:00:00 GMT")
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- put-hyvaksynnan-ehto [hakukohde-oid application-key ehto if-unmodified-since]
+  (-> (mock/request :put (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto"
+                              "/hakukohteessa/" hakukohde-oid "/hakemus/" application-key)
+                    (json/generate-string ehto))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      (cond-> if-unmodified-since
+              (update-in [:headers] assoc "if-unmodified-since" if-unmodified-since))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- delete-hyvaksynnan-ehto [hakukohde-oid application-key]
+  (-> (mock/request :delete (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto"
+                                 "/hakukohteessa/" hakukohde-oid "/hakemus/" application-key))
+      (update-in [:headers] assoc
+                 "cookie" (login @virkailija-routes nil)
+                 "if-unmodified-since" "Mon, 1 Jan 2026 00:00:00 GMT")
+      ((deref virkailija-routes))
+      parse-body))
+
+;; Varsinaisen muutoksen lokittaa valinta-tulos-service itse. Nämä merkinnät kertovat kuka
+;; muutosta yritti: Ataru kutsuu VTS:ää palvelutunnuksella eikä välitä loppukäyttäjän
+;; identiteettiä, joten VTS:n omasta merkinnästä tekijä ei selviä. Vastausta ei tarkisteta.
+(describe "Valinta-tulos-service change audit logging"
+          (tags :unit :valinta-audit)
+
+          (before (reset! audit-entries [])
+                  (reset! vts-calls []))
+
+          (it "Should write a muutos entry for a kevyt valinta patch"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (patch-valinnan-tulos
+                                      "1.2.246.562.20.1"
+                                      [{:hakemusOid {:s application-key}}])
+                    entries         (audit-entries-for audit-entries "muutos")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.20.1"
+                         (get-in (first entries) [:target :valintatapajonoOid]))
+                (should-contain application-key (pr-str (:changes (first entries))))
+                ;; Kutsu meni myös perille.
+                (should= 1 (count @vts-calls))))
+
+          ;; Hakemus-oidit eivät saa päätyä Target-kenttään: rajaamaton lista ylittäisi kentän
+          ;; kokorajan ja merkintä katoaisi lokin vastaanotossa.
+          (it "Should keep a large kevyt valinta patch out of the target fields"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    body            (vec (repeat 2000 {:hakemusOid {:s application-key}}))
+                    _               (patch-valinnan-tulos "1.2.246.562.20.1" body)
+                    entry           (first (audit-entries-for audit-entries "muutos"))]
+                (should= 1 (count (audit-entries-for audit-entries "muutos")))
+                (doseq [[_ v] (:target entry)]
+                  (should (< (count (.getBytes (str v) "UTF-8")) 32766)))))
+
+          (it "Should write a lisäys entry when a hyvaksynnan ehto is created"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (put-hyvaksynnan-ehto "1.2.246.562.20.1" application-key
+                                                          {:ehto "Ehdollinen"} nil)
+                    entries         (audit-entries-for audit-entries "lisäys")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                (should= "1.2.246.562.20.1" (get-in (first entries) [:target :hakukohdeOid]))))
+
+          ;; if-unmodified-since erottaa muokkauksen luonnista, kuten VTS-asiakaskin tekee.
+          (it "Should write a muutos entry when a hyvaksynnan ehto is updated"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (put-hyvaksynnan-ehto "1.2.246.562.20.1" application-key
+                                                          {:ehto "Ehdollinen"}
+                                                          "Mon, 1 Jan 2026 00:00:00 GMT")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "muutos")))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          (it "Should write a poisto entry when a hyvaksynnan ehto is deleted"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (delete-hyvaksynnan-ehto "1.2.246.562.20.1" application-key)
+                    entries         (audit-entries-for audit-entries "poisto")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))))
+
+          ;; Yritys kirjataan vastauksesta riippumatta — merkintä kertoo kuka yritti, ei mitä
+          ;; VTS:ssä lopulta tapahtui.
+          (it "Should write the entry even when valinta-tulos-service refuses the change"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! (second vts-capture) {:status 409 :headers {} :body "{}"})
+                    _               (reset! audit-entries [])
+                    resp            (delete-hyvaksynnan-ehto "1.2.246.562.20.1" application-key)]
+                (reset! (second vts-capture) {:status 200 :headers {} :body "{}"})
+                (should= 409 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto"))))))
 
 ;; Organisaation valinta ei ole auditlokitettu, koska se vain kaventaa toimivaltaa (pääkäyttäjä valitsee itselleen
 ;; pääkäyttäjän oikeuksia kapeammat oikeudet johonkin organisaatioon).
