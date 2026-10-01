@@ -62,6 +62,7 @@
                          [{:haku "payment-info-test-kk-haku"}
                           {:haku "payment-info-test-kk-haku-2030"}
                           {:haku "payment-info-test-kk-haku-no-end"}
+                          {:haku "payment-info-test-kk-haku-jatkuva-with-end"}
                           {:haku "payment-info-test-kk-haku-daylight-savings"}
                           {:haku "payment-info-test-kk-haku-past"}
                           {:haku "payment-info-test-kk-haku-custom-grace"}
@@ -135,6 +136,9 @@
                        first
                        :submitted)]
     (time/set-fixed-now! (time/plus submitted (time/days days)))))
+
+(defn- create-jatkuva-with-end-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-jatkuva-with-end"}))
 
 (defn- create-daylight-savings-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
@@ -762,6 +766,42 @@
                     (it "should set payment status as required if an exemption attachment is missing after per-application deadline in jatkuva haku"
                         (let [application-key   (create-no-hakuaika-end-payment-exempt-by-application)
                               _                 (set-fixed-days-after-submission application-key 15)
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should use hakuaika based deadline in jatkuva haku with hakuaika end"
+                        (let [fixed-date-str-in-finland "2030-06-10T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-jatkuva-with-end-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as required if an exemption attachment is missing after hakuaika based deadline in jatkuva haku with hakuaika end"
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-jatkuva-with-end-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
                               _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
                                                                                     :attachment_key "brexit-permit-attachment"
                                                                                     :hakukohde "payment-info-test-kk-hakukohde"

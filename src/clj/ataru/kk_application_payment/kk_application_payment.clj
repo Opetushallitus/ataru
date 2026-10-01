@@ -24,8 +24,7 @@
             [ataru.time.format :as time-format]
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
-            [ataru.component-data.kk-application-payment-module :as payment-module]
-            [ataru.constants :as constants]))
+            [ataru.component-data.kk-application-payment-module :as payment-module]))
 
 (def default-time-format (time-format/with-zone (time-format/formatter "yyyy-MM-dd") (time/time-zone-for-id "Europe/Helsinki")))
 
@@ -280,24 +279,18 @@
 (defn- is-finnish-citizen? [person]
   (some #(contains? codes/finland-equivalent-country-codes (:kansalaisuusKoodi %)) (:kansalaisuus person)))
 
-(defn- jatkuva-haku? [haku]
-  (some-> (:hakutapa-uri haku) (str/starts-with? constants/hakutapa-jatkuva-haku)))
-
 (defn- time-is-before-some-attachment-deadlines?
   [attachment-deadline-service application-submitted haku now]
   (let [hakuajat             (if-let [hakuajat (:hakuajat haku)]
                                hakuajat
                                [{:end (coerce/from-long (get-in haku [:hakuaika :end]))}])
-        per-application-deadline #(attachment-deadline/per-application-attachment-deadline attachment-deadline-service application-submitted haku)
-        ; Jatkuva haku and hakuaika without an end time have no common deadline for all applications,
-        ; so the attachment deadline is always calculated from application submission time.
-        attachment-deadlines (if (jatkuva-haku? haku)
-                               [(per-application-deadline)]
-                               (map
-                                 #(if (some? (:end %))
-                                    (attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
-                                    (per-application-deadline))
-                                 hakuajat))]
+        ; Hakuaika without an end time (jatkuva haku) has no common deadline for all applications,
+        ; so the attachment deadline is calculated from application submission time regardless of haku settings.
+        attachment-deadlines (map
+                               #(if (some? (:end %))
+                                  (attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
+                                  (attachment-deadline/per-application-attachment-deadline attachment-deadline-service application-submitted haku))
+                               hakuajat)]
     (boolean
       (some #(not (time/before? % now)) attachment-deadlines))))
 
