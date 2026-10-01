@@ -2,6 +2,7 @@
   (:require [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.email.application-email-jobs :as application-email]
+            [ataru.files.file-store :as file-store]
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :as tutkintojen-tunnustaminen-store]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -11,6 +12,8 @@
 (def edited-cannot-edit-questions #'hakija-application-service/edited-cannot-edit-questions)
 (def start-hakija-edit-jobs #'hakija-application-service/start-hakija-edit-jobs)
 (def start-virkailija-edit-jobs #'hakija-application-service/start-virkailija-edit-jobs)
+(def remove-orphan-attachments-when-stored #'hakija-application-service/remove-orphan-attachments-when-stored)
+
 (def form-with-followup {:content [{:id      "id"
                                     :options [{:value 0 :followups [{:id          "followup-id"
                                                                      :cannot-view true
@@ -269,3 +272,65 @@
                                   {:person-oid nil})
       (should-have-invoked :start-person-creation-job {:with [:job-runner "application-id"]})
       (should-not-have-invoked :start-update-kk-payment-status-for-application-id-job))))
+
+(def ^:private application-with-attachments
+  {:key     "application-key"
+   :answers [{:key       "attachment-id"
+              :fieldType "attachment"
+              :value     ["kept-key" "orphan-key"]}]})
+
+(def ^:private application-with-orphaned-attachment
+  {:key     "application-key"
+   :answers [{:key       "attachment-id"
+              :fieldType "attachment"
+              :value     ["kept-key"]}]})
+
+(defn- with-recorded-deletions
+  [delete-file-fn body-fn]
+  (let [deleted-keys (atom [])]
+    (with-redefs [file-store/delete-file (fn [_ attachment-key]
+                                           (swap! deleted-keys conj attachment-key)
+                                           (delete-file-fn attachment-key))]
+      {:result (body-fn)
+       :deleted @deleted-keys})))
+
+(describe "remove-orphan-attachments-when-stored"
+  (it "does not remove attachments when storing the application failed"
+    (let [store-result {:passed?  false
+                        :failures ["Selection limit reached"]
+                        :key      "application-key"
+                        :code     :selection-limit-reached}
+          {:keys [result deleted]} (with-recorded-deletions
+                                     (constantly nil)
+                                     #(remove-orphan-attachments-when-stored
+                                       nil
+                                       application-with-orphaned-attachment
+                                       application-with-attachments
+                                       store-result))]
+      (should= [] deleted)
+      (should= store-result result)))
+
+  (it "removes orphan attachments when the application was stored"
+    (let [store-result {:passed? true :id 1 :key "application-key"}
+          {:keys [result deleted]} (with-recorded-deletions
+                                     (constantly nil)
+                                     #(remove-orphan-attachments-when-stored
+                                       nil
+                                       application-with-orphaned-attachment
+                                       application-with-attachments
+                                       store-result))]
+      (should= ["orphan-key"] deleted)
+      (should= store-result result)))
+
+  (it "returns the store result and does not throw when deletion fails"
+    (let [store-result {:passed? true :id 1 :key "application-key"}
+          {:keys [result deleted]} (with-recorded-deletions
+                                     (fn [attachment-key]
+                                       (throw (RuntimeException. (str "Liiteri unavailable for " attachment-key))))
+                                     #(remove-orphan-attachments-when-stored
+                                       nil
+                                       application-with-orphaned-attachment
+                                       application-with-attachments
+                                       store-result))]
+      (should= ["orphan-key"] deleted)
+      (should= store-result result))))
