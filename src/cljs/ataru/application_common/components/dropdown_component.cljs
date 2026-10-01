@@ -86,7 +86,7 @@
      :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref input-ref mobile?)
 
      ;; Tapahtumakäsittelijä ikkunan koon muutokselle.
-     :resize-listener               (listeners/make-resize-listener dropdown-id mobile? sync-popup-geometry!)
+     :resize-listener               (listeners/make-resize-listener mobile? sync-popup-geometry!)
 
      ;; Tapahtumakäsittelijä kokoruutuvalikon taustavierityksen
      ;; estämiselle mobiilissa.
@@ -103,7 +103,6 @@
 (defn- unmount-dropdown! [{:keys [portal-container] :as context}]
   ;; Poistetaan globaalit kuuntelijat varmuuden vuoksi myös tässä
   (listeners/detach-global-listeners! context)
-  (viewport/unlock-body-scroll!)
   (when-let [el @portal-container]
     (.removeChild (.-body js/document) el)))
 
