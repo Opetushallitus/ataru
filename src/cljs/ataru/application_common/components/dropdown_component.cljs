@@ -11,6 +11,45 @@
   {:value s/Str
    :label s/Str})
 
+;; Pidettävä samana kuin @mobile-width component-layout.less:ssä.
+(def ^:private mobile-max-width 593)
+
+(def ^:private banner-height-mobile 90)
+
+(defn- mobile-viewport? []
+  (<= (.-innerWidth js/window) mobile-max-width))
+
+;; Kun kenttä fokusoidaan mobiilissa, vieritetään sivu heti niin, että kentän
+;; oma <label> (ei itse syötekenttä/select) asettuu ylätunnisteen alapuolelle
+;; — näin sekä otsikko että kenttä pysyvät näkyvissä, eikä pelkkä selaimen
+;; oma "scroll into view" -käytös (esim. virtuaalinäppäimistön avautuessa)
+;; jätä niitä johonkin muuhun, vaikeammin ennustettavaan kohtaan. Itse kenttää
+;; tai labelia ei muuteta millään tavalla — ainoastaan sivun vieritys.
+(defn- scroll-field-to-top! [label-id]
+  (when (and label-id (mobile-viewport?))
+    (when-let [label-el (.getElementById js/document label-id)]
+      (let [top (.-top (.getBoundingClientRect label-el))]
+        (.scrollBy js/window #js {:top (- top banner-height-mobile)
+                                   :left 0
+                                   :behavior "instant"})))))
+
+;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään kokoruutuna (ks.
+;; render-dropdownin loppu ja a-dropdown--fullscreen dropdown-component.less:
+;; ssä) — taustan vieritys lukitaan samaksi ajaksi, ettei sivu vieritykin
+;; samanaikaisesti listan sisäisen vierityksen kanssa. Luokka lisätään sekä
+;; <html>:iin että <body>:iin, koska standards-modessa (tämän sovelluksen
+;; tila) sivun todellinen vierittyvä elementti on <html>, ei <body> — pelkkä
+;; body.overflow:hidden ei siis riitä lukitsemaan mitään, vaikka se on
+;; historiallisesti totuttu tapa kirjoittaa tämä.
+(defn- lock-body-scroll! []
+  (when (mobile-viewport?)
+    (.add (.-classList (.-documentElement js/document)) "a-dropdown-fullscreen-open")
+    (.add (.-classList (.-body js/document)) "a-dropdown-fullscreen-open")))
+
+(defn- unlock-body-scroll! []
+  (.remove (.-classList (.-documentElement js/document)) "a-dropdown-fullscreen-open")
+  (.remove (.-classList (.-body js/document)) "a-dropdown-fullscreen-open"))
+
 (s/defn dropdown-caret
   [{:keys [expanded?]} :- {:expanded? s/Bool}]
   [:span.a-dropdown-caret
@@ -21,12 +60,20 @@
   [{:keys [on-click lang]} :- {:on-click s/Any
                                 :lang     s/Keyword}]
   [:button.a-dropdown-clear-button
-   {:type       "button"
-    :tab-index  "-1"
-    :aria-label (translations/get-hakija-translation :clear lang)
-    :on-click   (fn dropdown-clear-button-on-click [e]
-                  (.stopPropagation e)
-                  (on-click))}
+   {:type          "button"
+    :tab-index     "-1"
+    :aria-label    (translations/get-hakija-translation :clear lang)
+    ;; Ilman tätä hiiren/kosketuksen painallus siirtää fokuksen napista
+    ;; syötekentästä nappiin ennen kuin click ehtii tapahtua. Koska nappi
+    ;; poistuu DOM:sta heti valinnan tyhjennyttyä (renderöidään vain kun
+    ;; arvo on valittu), fokusoidun napin poistaminen laukaisee selaimen
+    ;; oman blur-tapahtuman (relatedTarget null), jonka juuritason
+    ;; on-dropdown-blur tulkitsee fokuksen poistumisena koko komponentista
+    ;; ja sulkee kokoruutuvalikon (ja vapauttaa vieritys-lukon) hetkeksi.
+    :on-mouse-down (fn [e] (.preventDefault e))
+    :on-click      (fn dropdown-clear-button-on-click [e]
+                     (.stopPropagation e)
+                     (on-click))}
    [:i.zmdi.zmdi-close {:aria-hidden true}]])
 
 (s/defn dropdown-select-option
@@ -34,10 +81,6 @@
            label]} :- SelectOptionProps]
   [:option {:value value} label])
 
-;; Mobiililaitteilla (ks. components.less .a-native-component) käytetään
-;; natiivia <select>-elementtiä, jotta valinta tapahtuu käyttöjärjestelmän
-;; omalla, kosketuskäytössä paremmin toimivalla valitsimella. Työpöytäkoossa
-;; tämä elementti on piilossa ja tilalla on dropdown-field.
 (s/defn dropdown-select
   [{:keys [expanded?
            options
@@ -58,7 +101,7 @@
                            (s/optional-key :id)           (s/maybe s/Str)
                            (s/optional-key :data-test-id) (s/maybe s/Str)
                            :on-change                     s/Any}]
-  [:div.a-native-component.a-dropdown-select-container
+  [:div.a-dropdown-select-container
    [:select.a-dropdown-select
     {:aria-hidden  true
      :disabled     (boolean disabled?)
@@ -111,13 +154,10 @@
       :aria-selected (when selected?
                        true)
       :data-test-id  data-test-id
-      ;; Ei oma sarkainpysähdys: valinta tehdään syötekentän nuolinäppäimillä
-      ;; (aria-activedescendant), ei Tab-järjestyksellä.
       :tab-index     "-1"}
      [:span.a-dropdown-list__option-label label]]))
 
-;; Vastaa base-ui.com/react/components/autocomplete -rakennetta: yksi Popup,
-;; jonka sisällä joko List (Item per vaihtoehto) tai Empty-tila.
+;; Yksi Popup, jonka sisällä joko List (Item per vaihtoehto) tai Empty-tila.
 ;;
 ;; aria-activedescendant EI ole tässä listboxissa, vaan syötekentässä (ks.
 ;; render-dropdown) — ARIA-yhdistelmäruutumallissa se kuuluu sille elementille,
@@ -169,10 +209,12 @@
 
 (s/defn collapse-dropdown
   [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
+  (unlock-body-scroll!)
   (re-frame/dispatch [:application-components/collapse-dropdown {:dropdown-id dropdown-id}]))
 
 (s/defn expand-dropdown
   [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
+  (lock-body-scroll!)
   (re-frame/dispatch [:application-components/expand-dropdown {:dropdown-id dropdown-id}]))
 
 (defn dropdown []
@@ -193,11 +235,31 @@
                                        (swap! option-refs assoc option-id el)
                                        (swap! option-refs dissoc option-id))))
         outside-click-listener  (atom nil)
+        ;; Reaktiivinen, jotta suunnan vaihto (esim. puhelimen kääntäminen)
+        ;; auki olevan listan aikana päivittää heti, käytetäänkö kokoruutu-
+        ;; esitystä vai ei.
+        mobile?                 (reagent/atom (mobile-viewport?))
+        resize-listener         (atom nil)
         focus-input             (fn []
                                    (reagent/after-render
                                      (fn []
                                        (when-let [el @input-ref]
-                                         (.focus el)))))]
+                                         (.focus el)))))
+        ;; Kun virtuaalinäppäimistö on auki, mobiiliselaimet voivat "panoroida"
+        ;; visuaalista viewportia pitääkseen fokusoidun kentän näkyvissä — tämä
+        ;; ei ole minkään elementin CSS-overflow-vieritystä (html/body
+        ;; overflow: hidden ei siis auta) eikä touch-action-hallittu ele, vaan
+        ;; selaimen oma reaktio kosketusliikkeeseen fokusoidulla kentällä.
+        ;; Ainoa luotettava tapa estää se on preventDefault() touchmove-
+        ;; tapahtumasta, paitsi silloin kun kosketus on itse listan (popup)
+        ;; sisällä, jonka oma sisäinen vieritys pitää säilyttää.
+        fullscreen-touchmove-listener
+        (fn [e]
+          (when-let [root @root-ref]
+            (when (and (.contains (.-classList root) "a-dropdown--fullscreen")
+                       (.contains root (.-target e))
+                       (not (some-> (.-target e) (.closest ".a-dropdown-popup"))))
+              (.preventDefault e))))]
     (reagent/create-class
       {:component-did-mount
        (fn [_this]
@@ -210,11 +272,26 @@
          ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita
          ;; ennen kuin kohde-elementin oma click-käsittelijä (esim. toisen
          ;; kentän avausklikkaus) ehtii reagoida.
-         (.addEventListener js/document "mousedown" @outside-click-listener true))
+         (.addEventListener js/document "mousedown" @outside-click-listener true)
+
+         (reset! resize-listener
+                 (fn [] (reset! mobile? (mobile-viewport?))))
+         (.addEventListener js/window "resize" @resize-listener)
+
+         ;; passive: false, jotta preventDefault todella estää selaimen oman
+         ;; kosketuskäsittelyn eikä vain kirjaudu ohitetuksi (selaimet
+         ;; olettavat oletuksena touchmove-kuuntelijat passiivisiksi
+         ;; suorituskykysyistä).
+         (.addEventListener js/document "touchmove" fullscreen-touchmove-listener
+                             #js {:passive false}))
 
        :component-will-unmount
        (fn [_this]
-         (.removeEventListener js/document "mousedown" @outside-click-listener true))
+         (.removeEventListener js/document "mousedown" @outside-click-listener true)
+         (.removeEventListener js/window "resize" @resize-listener)
+         (.removeEventListener js/document "touchmove" fullscreen-touchmove-listener
+                                #js {:passive false})
+         (unlock-body-scroll!))
 
        :reagent-render
        (s/fn render-dropdown
@@ -371,12 +448,14 @@
                ;; kenttä näyttää kirjoitetun haun.
                input-value        (if (and expanded? (some? query))
                                     query
-                                    (or button-label ""))]
+                                    (or button-label ""))
+               fullscreen?        (and expanded? @mobile?)]
            [:div.a-dropdown
-            {:ref     #(reset! root-ref %)
-             :class   (when disabled? "a-dropdown--disabled")
-             :on-blur on-dropdown-blur}
-            [:div.a-dropdown-field.a-component
+              {:ref     #(reset! root-ref %)
+               :class   (str (when disabled? "a-dropdown--disabled ")
+                              (when fullscreen? "a-dropdown--fullscreen"))
+               :on-blur on-dropdown-blur}
+              [:div.a-dropdown-field.a-component
              (when (seq unselected-label-icon)
                [:span.a-dropdown-field__icon unselected-label-icon])
              [:input.a-dropdown-input
@@ -398,7 +477,8 @@
                :aria-activedescendant (:option-id active-option)
                :on-click             on-input-click
                :on-change            on-input-change
-               :on-key-down          on-input-key-down}]
+               :on-key-down          on-input-key-down
+               :on-focus             (fn [_e] (scroll-field-to-top! (or aria-labelledby label-id)))}]
              (when (and (not disabled?) (not (string/blank? selected-value)))
                [dropdown-clear-button
                 {:lang     lang
