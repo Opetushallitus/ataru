@@ -578,6 +578,12 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
     'Toistuva vastaus 3'
   )
 
+  const addMoreInput = repeatable.getByPlaceholder('Lisää...')
+  await addMoreInput.focus()
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Shift+Tab')
+
   const removeRepeatableAnswerButtons = repeatable.getByRole('button', {
     name: 'Poista rivi',
   })

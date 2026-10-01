@@ -777,6 +777,18 @@ textarea.application__form-text-input {
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled:enabled::-webkit-input-placeholder {
   color: #4194bf;
 }
+body.ataru-app__hakija .application__form-repeatable-text-wrap input.application__form-text-input--disabled:enabled {
+  &::placeholder,
+  &::-webkit-input-placeholder {
+    color: @primary-green-700;
+    opacity: 1;
+  }
+
+  &:focus::placeholder,
+  &:focus::-webkit-input-placeholder {
+    color: #fff;
+  }
+}
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled:focus {
   background: #fff;
   border: 1px solid #AEAEAE;
