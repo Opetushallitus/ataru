@@ -19,6 +19,16 @@
 (defn- mobile-viewport? []
   (<= (.-innerWidth js/window) mobile-max-width))
 
+;; window.visualViewport kutistuu virtuaalinäppäimistön auki ollessa niillä
+;; selaimilla, jotka tukevat sitä — window.innerHeight ja vh-yksiköt eivät
+;; reagoi näppäimistöön ollenkaan millään selaimella, koska CSS:n
+;; spesifikaatio jättää näppäimistön tarkoituksella pois viewport-mittojen
+;; laskennasta.
+(defn- viewport-height []
+  (if-let [vv (.-visualViewport js/window)]
+    (.-height vv)
+    (.-innerHeight js/window)))
+
 ;; Kun kenttä fokusoidaan mobiilissa, vieritetään sivu heti niin, että kentän
 ;; oma <label> (ei itse syötekenttä/select) asettuu ylätunnisteen alapuolelle
 ;; — näin sekä otsikko että kenttä pysyvät näkyvissä, eikä pelkkä selaimen
@@ -171,6 +181,8 @@
            selected-value
            active-option-id
            register-ref
+           popup-ref
+           max-height
            lang
            data-test-id]} :- {:expanded?                            s/Bool
                               :options-with-id                      [(st/assoc SelectOptionProps :option-id s/Str)]
@@ -180,12 +192,22 @@
                               :selected-value                       (s/maybe s/Str)
                               (s/optional-key :active-option-id)    (s/maybe s/Str)
                               :register-ref                         s/Any
+                              (s/optional-key :popup-ref)           s/Any
+                              ;; visualViewportista laskettu, jäljellä olevaan
+                              ;; tilaan mukautuva korkeus ylikirjoittaa CSS:n
+                              ;; staattisen max-heightin (ks. render-dropdown/
+                              ;; sync-popup-height!), ettei lista mene
+                              ;; virtuaalinäppäimistön alle.
+                              (s/optional-key :max-height)          (s/maybe s/Int)
                               :lang                                 s/Keyword
                               :data-test-id                         (s/maybe s/Str)}]
   (let [listbox-id (str dropdown-id "-listbox")]
     [:div.a-component.a-dropdown-popup
-     {:data-test-id (str data-test-id "-list")
+     {:ref          popup-ref
+      :data-test-id (str data-test-id "-list")
       :tab-index    "-1"
+      :style        (when max-height
+                      {:max-height max-height})
       :class        (when-not expanded?
                       "a-dropdown-popup--collapsed")}
      (if (empty? options-with-id)
@@ -240,6 +262,25 @@
         ;; esitystä vai ei.
         mobile?                 (reagent/atom (mobile-viewport?))
         resize-listener         (atom nil)
+        ;; Kokoruutuvalikon listan korkeus lasketaan jäljellä olevaan tilaan
+        ;; (ks. sync-popup-height! ja viewport-resize-listener) sen sijaan
+        ;; että se olisi kiinteä — kutistuu virtuaalinäppäimistön auki
+        ;; ollessa ja kasvaa takaisin täyteen kokoon sen sulkeutuessa,
+        ;; niillä selaimilla jotka ilmoittavat siitä window.visualViewportin
+        ;; kautta.
+        popup-ref               (atom nil)
+        popup-max-height        (reagent/atom nil)
+        viewport-resize-listener (atom nil)
+        sync-popup-height!      (fn sync-popup-height! []
+                                   (when-let [el @popup-ref]
+                                     (let [available (- (viewport-height)
+                                                        (.-top (.getBoundingClientRect el))
+                                                        8)
+                                           available (-> available
+                                                        (max 100)
+                                                        js/Math.round)]
+                                       (when (not= available @popup-max-height)
+                                         (reset! popup-max-height available)))))
         focus-input             (fn []
                                    (reagent/after-render
                                      (fn []
@@ -278,6 +319,12 @@
                  (fn [] (reset! mobile? (mobile-viewport?))))
          (.addEventListener js/window "resize" @resize-listener)
 
+         (reset! viewport-resize-listener sync-popup-height!)
+         (.addEventListener js/window "resize" @viewport-resize-listener)
+         (when-let [vv (.-visualViewport js/window)]
+           (.addEventListener vv "resize" @viewport-resize-listener)
+           (.addEventListener vv "scroll" @viewport-resize-listener))
+
          ;; passive: false, jotta preventDefault todella estää selaimen oman
          ;; kosketuskäsittelyn eikä vain kirjaudu ohitetuksi (selaimet
          ;; olettavat oletuksena touchmove-kuuntelijat passiivisiksi
@@ -289,6 +336,10 @@
        (fn [_this]
          (.removeEventListener js/document "mousedown" @outside-click-listener true)
          (.removeEventListener js/window "resize" @resize-listener)
+         (.removeEventListener js/window "resize" @viewport-resize-listener)
+         (when-let [vv (.-visualViewport js/window)]
+           (.removeEventListener vv "resize" @viewport-resize-listener)
+           (.removeEventListener vv "scroll" @viewport-resize-listener))
          (.removeEventListener js/document "touchmove" fullscreen-touchmove-listener
                                 #js {:passive false})
          (unlock-body-scroll!))
@@ -449,7 +500,12 @@
                input-value        (if (and expanded? (some? query))
                                     query
                                     (or button-label ""))
-               fullscreen?        (and expanded? @mobile?)]
+               fullscreen?        (and expanded? @mobile?)
+               ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-
+               ;; kuuntelijat (ks. component-did-mount) pitävät sen ajan
+               ;; tasalla myös näppäimistön sulkeutuessa.
+               _                  (when fullscreen?
+                                    (reagent/after-render sync-popup-height!))]
            [:div.a-dropdown
               {:ref     #(reset! root-ref %)
                :class   (str (when disabled? "a-dropdown--disabled ")
@@ -518,5 +574,7 @@
               :selected-value   selected-value
               :active-option-id (:option-id active-option)
               :register-ref     register-option-ref
+              :popup-ref        #(reset! popup-ref %)
+              :max-height       (when fullscreen? @popup-max-height)
               :lang             lang
               :data-test-id     data-test-id}]]))})))
