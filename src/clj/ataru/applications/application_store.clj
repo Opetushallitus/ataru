@@ -399,19 +399,16 @@
                   :operation audit-log/operation-modify}))
 
 (defn- attachment-file-ids
-  [answer]
-  (->> (flatten [answer])
-       (filter string?)
-       set))
+  [attachment-key answers]
+  (set (get-in answers [(keyword attachment-key) :value])))
 
 (defn- kk-application-payment-exempt-attachment-delivered?
   "True when some kk application payment exemption attachment answer contains a file that was not there before.
    Removing files only does not count as delivering an attachment."
   [old-answers new-answers]
   (some (fn [attachment-key]
-          (let [value-of (fn [answers] (get-in answers [(keyword attachment-key) :value]))]
-            (seq (clojure.set/difference (attachment-file-ids (value-of new-answers))
-                                         (attachment-file-ids (value-of old-answers))))))
+          (seq (clojure.set/difference (attachment-file-ids attachment-key new-answers)
+                                       (attachment-file-ids attachment-key old-answers))))
         payment-module/kk-application-payment-exempt-attachment-keys))
 
 (defn- reset-exemption-not-verified-reviews
