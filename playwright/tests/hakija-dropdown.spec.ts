@@ -551,6 +551,17 @@ test.describe('Työpöytänäkymä', () => {
     await expect(getCombobox(page)).toHaveValue('')
   })
 
+  test('klikkaus "Ei hakutuloksia" -riviin ei sulje valikkoa', async ({
+    page,
+  }) => {
+    await getCombobox(page).fill('ei osumaa xyz')
+    const listbox = await getListbox(page)
+    await expect(listbox).toContainText('Ei hakutuloksia')
+    await listbox.getByText('Ei hakutuloksia').click()
+    await expect(listbox).toBeVisible()
+    await expect(getCombobox(page)).toHaveValue('ei osumaa xyz')
+  })
+
   test('Backspace tyhjässä kentässä tyhjentää valinnan', async ({ page }) => {
     const listbox = await getListbox(page)
     await getCombobox(page).click()
