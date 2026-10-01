@@ -1022,20 +1022,16 @@
           ;; Linkin uudelleenlähetys kierrättää hakijan salaisuuden, joten se on muutos.
           ;; Ennen tätä lokiin jäi vain oikeustarkistuksen "luku"-merkintä.
           ;;
-          ;; PENDING: reitti ei ole ajettavissa tässä harnessissa. Sähköpostin lähetys
-          ;; (application_email_jobs/start-email-submit-confirmation-job) kaatuu NPE:hen
-          ;; tarjonta_parser/parse-hakukohde:ssa, koska mock-tarjonnasta puuttuu tämän
-          ;; fixtuurin haulta :kohdejoukko-uri. Kaatuminen tapahtuu ennen auditlokikutsua,
-          ;; eli kyse on jaetun testifixtuurin puutteesta, ei tämän muutoksen. Poista xit
-          ;; kun mock-tarjonta kattaa fixtuurin haun.
-          (xit "Should write a muutos entry when a modify link is resent"
-              (let [application-key (first (init-application-keys 1))
-                    _               (reset! audit-entries [])
-                    resp            (resend-modify-link application-key)
-                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
-                (should= 200 (:status resp))
-                (should= 1 (count entries))
-                (should-contain "secret-rotated" (pr-str (:changes (first entries)))))))
+          ;; Sähköpostin lähetys ohitetaan, tässä testataan vain auditlokitusta.
+          (it "Should write a muutos entry when a modify link is resent"
+              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
+                (let [application-key (first (init-application-keys 1))
+                      _               (reset! audit-entries [])
+                      resp            (resend-modify-link application-key)
+                      entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
+                  (should= 200 (:status resp))
+                  (should= 1 (count entries))
+                  (should-contain "secret-rotated" (pr-str (:changes (first entries))))))))
 
 (defn- patch-valinnan-tulos [valintatapajono-oid body]
   (-> (mock/request :patch (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/"
