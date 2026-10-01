@@ -96,7 +96,6 @@ test.describe('hakemus haulla, jolla on yksi hakukohde', () => {
   let page: Page
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -129,7 +128,6 @@ test.describe('hakemus KK-haulla, jolla on yksi hakukohde', () => {
   let page: Page
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -158,7 +156,6 @@ test.describe('hakemus KK-haulla, jolla on useita hakukohteita', () => {
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -207,7 +204,6 @@ test.describe('hakemus haulla, jolla on useita hakukohteita', () => {
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)

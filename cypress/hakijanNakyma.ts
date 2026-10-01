@@ -158,7 +158,6 @@ export const henkilotiedot = {
   katusoite: () => cy.get('[data-test-id=address-input]'),
   postinumero: () => cy.get('[data-test-id=postal-code-input]'),
   postitoimipaikka: () => cy.get('[data-test-id=postal-office-input]'),
-  kotikunta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {
     return tekstinSyotto
@@ -170,7 +169,7 @@ export const henkilotiedot = {
       .then(syota(henkilotiedot.matkapuhelin(), '0401234567'))
       .then(syota(henkilotiedot.katusoite(), 'Yliopistonkatu 4'))
       .then(syota(henkilotiedot.postinumero(), '00100'))
-      .then(() => henkilotiedot.kotikunta().select('Forssa'))
+      .then(() => dropdown.setDropdownValue('home-town-input', '061')) // Forssa
   },
 }
 

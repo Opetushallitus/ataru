@@ -414,14 +414,18 @@
              :hakija-cypress        {:env {:dev? "true"}
                                      :target-path "target/target-cypess-hakija"}
 
-             :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"
-                                                            "-Dclojure.main.report=stderr"]}]
+             :virkailija-dev-opts {:target-path "target-virkailija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"
+                                                           "-Dclojure.main.report=stderr"]}
 
-             :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
+             :hakija-dev-opts     {:target-path "target-hakija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"]}
+
+             :virkailija-dev [:dev :virkailija-dev-opts]
+
+             :hakija-dev     [:dev :hakija-dev-opts]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
@@ -448,7 +452,8 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
+            "start-figwheel-dev"     ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev"]
+            "start-figwheel-cypress" ["with-profile" "figwheel" "figwheel" "virkailija-cypress" "hakija-cypress"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]
