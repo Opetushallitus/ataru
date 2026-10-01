@@ -677,6 +677,7 @@
    :payment-info-test-kk-haku-no-end (merge
                                        base-kouta-haku
                                        {:oid                         "payment-info-test-kk-haku-no-end"
+                                        :hakutapaKoodiUri            "hakutapa_03#1"
                                         :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                         :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
                                         :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
@@ -722,6 +723,7 @@
     :payment-info-test-kk-haku-custom-form-no-end (merge
                                                     base-kouta-haku
                                                     {:oid                         "payment-info-test-kk-haku-custom-form-no-end"
+                                                     :hakutapaKoodiUri            "hakutapa_03#1"
                                                      :hakulomakeAtaruId           custom-form-key
                                                      :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
                                                      :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"

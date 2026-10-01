@@ -88,4 +88,22 @@
                              (t/plus (t/days 20))
                              (t/with-time (t/local-time 15 14)))
                          (attachment-deadline/attachment-deadline-for-hakuaika
-                           attachment-deadline-service nil {:oid "hakukohtainen-raja-käytössä"} hakuajat)))))
+                           attachment-deadline-service nil {:oid "hakukohtainen-raja-käytössä"} hakuajat))))
+
+          (it "Returns per-application attachment end time calculated from application submit time"
+              (let [application-submitted (t/now)]
+                (should= (-> application-submitted
+                             (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+                             (t/plus (t/days 15))
+                             (t/with-time (t/local-time 16 15)))
+                         (attachment-deadline/per-application-attachment-deadline
+                           attachment-deadline-service application-submitted {:oid "hakemuskohtainen-raja-käytössä"}))))
+
+          (it "Returns per-application attachment end time with default settings even if haku uses hakukohtainen deadline"
+              (let [application-submitted (t/now)]
+                (should= (-> application-submitted
+                             (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+                             (t/plus (t/days 14))
+                             (t/with-time (t/local-time 15 0)))
+                         (attachment-deadline/per-application-attachment-deadline
+                           attachment-deadline-service application-submitted {:oid "hakukohtainen-raja-käytössä"})))))
