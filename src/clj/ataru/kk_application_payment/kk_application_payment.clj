@@ -287,8 +287,9 @@
         attachment-deadlines (map
                                #(attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
                                hakuajat)]
+    ; Hakuaika without an end time has no attachment deadline either, so the deadline can't have passed.
     (boolean
-      (some #(not (time/before? % now)) attachment-deadlines))))
+      (some #(or (nil? %) (not (time/before? % now))) attachment-deadlines))))
 
 (defn kk-application-payment-obligation-reviewed?
   [application hakukohde]

@@ -674,6 +674,14 @@
                                         :hakuajat                    [{:alkaa "2030-01-01T08:00:00",
                                                                        :paattyy "2030-06-01T15:00:00"}]
                                         :maksullinenKkHaku           true})
+   :payment-info-test-kk-haku-no-end (merge
+                                       base-kouta-haku
+                                       {:oid                         "payment-info-test-kk-haku-no-end"
+                                        :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                        :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                        :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                        :hakuajat                    [{:alkaa "2030-01-01T08:00:00"}]
+                                        :maksullinenKkHaku           true})
    :payment-info-test-kk-haku-daylight-savings (merge
                                                 base-kouta-haku
                                                 {:oid                         "payment-info-test-kk-haku-daylight-savings"
@@ -711,6 +719,15 @@
                                               :hakuajat                    [{:alkaa   "2025-01-01T08:00:00",
                                                                              :paattyy "2025-01-01T15:00:00"}]
                                               :maksullinenKkHaku           true})
+    :payment-info-test-kk-haku-custom-form-no-end (merge
+                                                    base-kouta-haku
+                                                    {:oid                         "payment-info-test-kk-haku-custom-form-no-end"
+                                                     :hakulomakeAtaruId           custom-form-key
+                                                     :kohdejoukkoKoodiUri         "haunkohdejoukko_12#1"
+                                                     :kohdejoukonTarkenneKoodiUri "haunkohdejoukontarkenne_1#1"
+                                                     :hakukohdeOids               ["payment-info-test-kk-hakukohde"]
+                                                     :hakuajat                    [{:alkaa "2025-01-01T08:00:00"}]
+                                                     :maksullinenKkHaku           true})
     :payment-info-test-kk-no-tutkinto-haku (merge
                                              base-kouta-haku
                                              {:oid                         "payment-info-test-kk-haku"

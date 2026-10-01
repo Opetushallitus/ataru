@@ -61,6 +61,7 @@
                        (get-from [_ _]
                          [{:haku "payment-info-test-kk-haku"}
                           {:haku "payment-info-test-kk-haku-2030"}
+                          {:haku "payment-info-test-kk-haku-no-end"}
                           {:haku "payment-info-test-kk-haku-daylight-savings"}
                           {:haku "payment-info-test-kk-haku-past"}
                           {:haku "payment-info-test-kk-haku-custom-grace"}
@@ -122,6 +123,9 @@
 
 (defn- create-2030-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-2030"}))
+
+(defn- create-no-hakuaika-end-payment-exempt-by-application []
+  (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-no-end"}))
 
 (defn- create-daylight-savings-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
@@ -235,7 +239,16 @@
                                             (-> (+ payment-utils/haku-update-grace-days 1) time/days time/ago)
                                             (time/hours 1)))])]
                 (let [haut (payment/get-haut-for-update fake-haku-cache fake-tarjonta-service)]
-                  (should= 0 (count haut))))))
+                  (should= 0 (count haut)))))
+
+          (it "should return haku without hakuaika end date"
+              (with-redefs [payment-utils/first-application-payment-hakuaika-start (time/date-time 2023 1 1)
+                            payment/get-haut-with-tarjonta-data
+                            (constantly [(fixtures/haku-with-hakuajat
+                                           (-> (* payment-utils/haku-update-grace-days 2) time/days time/ago)
+                                           nil)])]
+                (let [haut (payment/get-haut-for-update fake-haku-cache fake-tarjonta-service)]
+                  (should= 1 (count haut))))))
 
 (describe "mark-reminder-sent"
           (tags :unit :kk-application-payment)
@@ -714,6 +727,24 @@
                                                                                     :attachment_key "brexit-passport-attachment"
                                                                                     :hakukohde "payment-info-test-kk-hakukohde"
                                                                                     :state "attachment-missing"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as not required if an exemption attachment is missing and hakuaika has no end"
+                        (let [fixed-date-str-in-finland "2031-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-no-hakuaika-end-payment-exempt-by-application)
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "attachment-missing"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
                               [changed payment] (update-payment application-key)]
                           (should= 1 (count changed))
                           (should= payment (first changed))

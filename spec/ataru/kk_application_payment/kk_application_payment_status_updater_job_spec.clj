@@ -194,8 +194,14 @@
           (it "should not fail when nothing to update"
               (should-not-throw (updater-job/update-kk-payment-status-for-all-handler {} runner)))
 
-          (it "should be able ton handle hakuaikas without any endtimes"
-              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end nil}]} 180 (time/date-time 2025 10 15))))
+          (it "should treat haku with hakuaika without endtime as active"
+              (should= true (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end nil}]} 180 (time/date-time 2025 10 15))))
+
+          (it "should treat haku with hakuaika without endtime as active even when other hakuaikas ended before grace days"
+              (should= true (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat [{:start (time/date-time 2024 1 1) :end (time/date-time 2024 1 30)} {:start (time/date-time 2024 2 1) :end nil}]} 180 (time/date-time 2025 10 15))))
+
+          (it "should not treat haku without any hakuaikas as active"
+              (should= false (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku-oid" :hakuajat []} 180 (time/date-time 2025 10 15))))
 
           (it "should be able ton handle hakuaikas with some endtimes"
               (should= true (utils/time-is-before-some-hakuaika-grace-period? {:oid "test-haku2-oid" :hakuajat [{:start (time/date-time 2025 10 1) :end (time/date-time 2025 10 30)} {:start (time/date-time 2025 11 1) :end nil}]} 180 (time/date-time 2025 10 15))))
