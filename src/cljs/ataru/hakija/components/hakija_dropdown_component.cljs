@@ -1,5 +1,6 @@
 (ns ataru.hakija.components.hakija-dropdown-component
-  (:require [ataru.hakija.application-view-icons :as icons]
+  (:require [clojure.string :as string]
+            [ataru.hakija.application-view-icons :as icons]
             [ataru.util :as util]
             [ataru.hakija.components.form-field-label-component :as form-field-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
@@ -27,23 +28,19 @@
         options         @(re-frame/subscribe [:application/visible-options field-descriptor])
         blank-answer-supported? (and (nil? (:koodisto-source field-descriptor))
                                      (not (:no-blank-option field-descriptor)))
-        blank-option?   (and blank-answer-supported?
-                             (not= "" (:value (first options))))
-        all-options     (concat
-                          (when blank-option?
-                            [{:value "" :label {:fi "" :sv "" :en ""}}])
-                          (cond->> options
-                                   (and (some? (:koodisto-source field-descriptor))
-                                        (not (:koodisto-ordered-by-user field-descriptor)))
-                                   (sort-by #(util/non-blank-option-label % languages))))
+        all-options     (cond->> options
+                          (and (some? (:koodisto-source field-descriptor))
+                               (not (:koodisto-ordered-by-user field-descriptor)))
+                          (sort-by #(util/non-blank-option-label % languages)))
         blank-entry      (first (filter #(= "" (:value %)) all-options))
         unselected-label (or (some-> blank-entry (util/non-blank-option-label languages))
                              "")
         select-options   (->> all-options
-                              (remove #(= "" (:value %)))
+                              (remove #(and (= "" (:value %))
+                                            (string/blank? unselected-label)))
                               (map (fn [option]
-                                    {:value (:value option)
-                                     :label (or (util/non-blank-option-label option languages) "")})))
+                                     {:value (:value option)
+                                      :label (or (util/non-blank-option-label option languages) "")})))
         followups       (->> options
                              (filter #(= (:value answer) (:value %)))
                              first
@@ -96,8 +93,8 @@
   [{:keys [field-descriptor
            idx
            on-change]} :- (st/assoc
-                            render-field-schema/RenderFieldArgs
-                            (s/optional-key :on-change) s/Any)]
+                           render-field-schema/RenderFieldArgs
+                           (s/optional-key :on-change) s/Any)]
   (let [lang             @(re-frame/subscribe [:application/form-language])
         answer           @(re-frame/subscribe [:application/answer
                                                (:id field-descriptor)
@@ -107,8 +104,8 @@
                                          {:label (-> option :label lang)
                                           :value (:value option)})
                                        (:options field-descriptor))
-                                  (:sort-by-label field-descriptor)
-                                  (sort-by :label))
+                           (:sort-by-label field-descriptor)
+                           (sort-by :label))
         data-test-id     (:data-test-id field-descriptor)
         unselected-label-icon           (:unselected-label-icon field-descriptor)]
     [dropdown-component/dropdown
@@ -128,8 +125,8 @@
                                        (when on-change
                                          (on-change value)))}
 
-             data-test-id
-             (assoc :data-test-id data-test-id)
+       data-test-id
+       (assoc :data-test-id data-test-id)
 
-             unselected-label-icon
-             (assoc :unselected-label-icon unselected-label-icon))]))
+       unselected-label-icon
+       (assoc :unselected-label-icon unselected-label-icon))]))
