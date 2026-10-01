@@ -66,7 +66,6 @@
                                 :lang     s/Keyword}]
   [:button.a-dropdown-clear-button
    {:type          "button"
-    :tab-index     "-1"
     :aria-label    (translations/get-hakija-translation :clear lang)
     ;; Ilman tätä hiiren/kosketuksen painallus siirtää fokuksen
     ;; syötekentästä nappiin ennen kuin click ehtii tapahtua.
@@ -102,8 +101,7 @@
       :on-click      (fn dropdown-list-option-on-click []
                        (on-click value))
       :role          "option"
-      :aria-selected (when selected?
-                       true)
+      :aria-selected selected?
       ;; Testien (ks. playwright-utils.ts/resolveOptionLabel) ja muun
       ;; ulkopuolisen tarkastelun koti raa'alle arvolle — vrt.
       ;; dropdown-field/data-selected-option-value.
@@ -161,6 +159,7 @@
        :role            "listbox"}
       (if (empty? options-with-id)
         [:li.a-dropdown-empty
+         {:role "status"}
          (translations/get-hakija-translation :no-dropdown-search-hits lang)]
         (map (fn [option-props]
                ^{:key (:option-id option-props)}
