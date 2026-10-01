@@ -11,7 +11,8 @@
             [ataru.application-common.components.dropdown-view :as view]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-actions :as actions]
-            [ataru.application-common.components.dropdown-keyboard :as keyboard]))
+            [ataru.application-common.components.dropdown-keyboard :as keyboard]
+            [ataru.application-common.components.dropdown-listeners :as listeners]))
 
 ;; ---------------------------------------------------------------------
 ;; Propseista ja re-frame-tilasta johdettu tila
@@ -220,11 +221,11 @@
                                                     :query        query
                                                     :button-label button-label})
         fullscreen?    (and expanded? @(:mobile? context))
-        ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-kuuntelijat
-        ;; (ks. dropdown-listeners/attach-listeners!) pitävät sen ajan
-        ;; tasalla myös näppäimistön sulkeutuessa. Tarvitaan aina kun auki
-        ;; (ei vain kokoruututilassa), koska popup on nyt portaali eikä saa
-        ;; sijaintiaan enää ilmaiseksi CSS:llä.
+        ;; Pudotusvalikon globaalit tapahtumakäsittelijät toteuttavat vain auki olevan valikon logiikkaa. Ilman tätä ehtoa tapahtumakäsittelijöitä ajettaisiin lomakkeella turhaan jatkuvasti jokaiselle lomakkeella olevalle pudotusvalikolle, mikä voi aiheuttaa suorituskykyongelmia. Funktiot addEventListener ja removeEventListener ovat idempotentteja samalle funktioviitteelle, joten tämän voi turvallisesti kutsua joka renderillä.
+        _              (if expanded?
+                         (listeners/attach-global-listeners! context)
+                         (listeners/detach-global-listeners! context))
+        ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-kuuntelijat pitävät sen ajan tasalla myös näppäimistön sulkeutuessa. Tarvitaan aina kun auki (ei vain kokoruututilassa), koska popup on nyt portaali eikä saa sijaintiaan enää ilmaiseksi CSS:llä.
         _              (when expanded?
                          (reagent/after-render (:sync-popup-geometry! context)))]
     [:div.a-dropdown
