@@ -33,7 +33,7 @@
                                    :left 0
                                    :behavior "instant"})))))
 
-;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään kokoruutuna, jolloin koko sivun vieritys disabloidaan.
+;; Kapealla näytöllä auki oleva pudotusvalikko renderöidään venytettynä, jolloin koko sivun vieritys disabloidaan.
 (defn- lock-body-scroll! []
   (when (mobile-viewport?)
     (.add (.-classList (.-body js/document)) "a-dropdown-fullscreen-open")))
@@ -68,29 +68,20 @@
 ;; tapahtumien kuuntelijoiden tehdasfunktiot
 ;; ---------------------------------------------------------------------
 
-(defn- make-outside-click-listener [dropdown-id root-ref input-ref]
+(defn- make-outside-click-listener [dropdown-id root-ref input-ref mobile?]
   (fn outside-click-listener [e]
-    (when (and @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
-               @root-ref
-               (not (.contains @root-ref (.-target e)))
-               ;; Kentän oma <label> on DOM:ssa .a-dropdownin ulkopuolella
-               ;; (ks. render-dropdown/label-id), vaikka se näyttää
-               ;; mobiilissa kokoruutuesityksen osalta kuuluvan siihen.
-               ;; Ilman tätä tarkistusta labelin näpäytys tulkittaisiin
-               ;; ulkopuoliseksi klikkaukseksi ja sulkisi juuri avatun
-               ;; listan.
-               (not= @input-ref (some-> (.-target e) (.closest "label") .-control)))
-      (collapse-dropdown {:dropdown-id dropdown-id}))))
+    (let [;; Mobiilissa label näytetään kentän kanssa venytettynä, eikä sen näpäyttämisen haluta piilottavan pudotusvalikkoa
+          mobile-own-label-click? (and @mobile?
+                                 (= @input-ref (some-> (.-target e) (.closest "label") .-control)))]
+      (when (and (not mobile-own-label-click?)
+                 @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+                 @root-ref
+                 (not (.contains @root-ref (.-target e))))
+        (collapse-dropdown {:dropdown-id dropdown-id})))))
 
 (defn- make-resize-listener [dropdown-id mobile? sync-popup-height!]
   (fn resize-listener []
     (reset! mobile? (mobile-viewport?))
-    ;; lock/unlock-body-scroll! ajetaan muuten vain avattaessa/suljettaessa
-    ;; (ks. expand-dropdown/collapse-dropdown) — jos näyttö kääntyy tai
-    ;; ikkunaa venytetään auki olevan listan aikana yli/ali mobiili-rajan,
-    ;; fullscreen? vaihtuu ilman että kumpikaan niistä ajaa, jolloin
-    ;; vieritys-lukko jää joko päälle vaikka kokoruutuesitys on jo
-    ;; poistunut, tai puuttuu vaikka kokoruutuesitys on juuri ilmestynyt.
     (when @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
       (if @mobile?
         (lock-body-scroll!)
@@ -165,21 +156,7 @@
   (let [dropdown-id             (util/component-id)
         input-ref               (atom nil)
         root-ref                (atom nil)
-        ;; Vaihtoehdon poistaminen fokusoidusta tyhjennysnapista (ks.
-        ;; dropdown-clear-button-clicked) laukaisee selaimen oman blur-
-        ;; tapahtuman (relatedTarget null), koska fokusoitu elementti
-        ;; katoaa DOM:sta ennen kuin kenttä ehditään fokusoida takaisin —
-        ;; ilman tätä lippua juuritason on-dropdown-blur tulkitsisi sen
-        ;; fokuksen poistumisena koko komponentista ja sulkisi valikon
-        ;; hetkeksi.
-        suppress-blur-close?    (atom false)
         ;; option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten.
-        ;; Käytetään React:in itsensä ylläpitämiä :ref-kutsuja document-tason
-        ;; getElementById-haun sijaan, koska React 18:n createRoot-juuren
-        ;; kanssa automaattinen batching voi ajaa reagent/after-renderin
-        ;; suhteessa eri committiin kuin mihin getElementById-haku osuisi —
-        ;; :ref sen sijaan osoittaa aina siihen DOM-solmuun, jonka React
-        ;; viimeksi todella committasi tälle tietylle elementille.
         option-refs             (atom {})
         register-option-ref     (fn register-option-ref [option-id]
                                    (fn [el]
@@ -192,12 +169,8 @@
         ;; esitystä vai ei.
         mobile?                 (reagent/atom (mobile-viewport?))
         resize-listener         (atom nil)
-        ;; Kokoruutuvalikon listan korkeus lasketaan jäljellä olevaan tilaan
-        ;; (ks. sync-popup-height! ja viewport-resize-listener) sen sijaan
-        ;; että se olisi kiinteä — kutistuu virtuaalinäppäimistön auki
-        ;; ollessa ja kasvaa takaisin täyteen kokoon sen sulkeutuessa,
-        ;; niillä selaimilla jotka ilmoittavat siitä window.visualViewportin
-        ;; kautta.
+        ;; Kokoruutuvalikon listan korkeus lasketaan jäljellä olevaan tilaan:
+        ;; kutistuu virtuaalinäppäimistön auki ollessa ja kasvaa takaisin täyteen kokoon sen sulkeutuessa niillä selaimilla jotka ilmoittavat siitä window.visualViewportin kautta.
         popup-ref               (atom nil)
         popup-max-height        (reagent/atom nil)
         viewport-resize-listener (atom nil)
@@ -219,7 +192,7 @@
     (reagent/create-class
       {:component-did-mount
        (fn [_this]
-         (reset! outside-click-listener (make-outside-click-listener dropdown-id root-ref input-ref))
+         (reset! outside-click-listener (make-outside-click-listener dropdown-id root-ref input-ref mobile?))
          ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita
          ;; ennen kuin kohde-elementin oma click-käsittelijä (esim. toisen
          ;; kentän avausklikkaus) ehtii reagoida.
@@ -339,17 +312,13 @@
                on-input-change    (fn on-input-change [e]
                                     (open-popup)
                                     (on-query-change (.. e -target -value)))
-               ;; :on-blur juuritasolla (ei pelkässä syötekentässä), jotta
-               ;; sarkaimella siirtyminen syötekentän ja tyhjennysnapin välillä
-               ;; ei sulje listaa — vain fokuksen siirtyminen kokonaan
-               ;; komponentin ulkopuolelle sulkee sen.
+               ;; :on-blur juuritasolla (ei pelkässä syötekentässä), jotta vain fokuksen siirtyminen kokonaan komponentin ulkopuolelle sulkee sen.
                on-dropdown-blur   (fn on-dropdown-blur [e]
-                                    (when-not @suppress-blur-close?
-                                      (let [related-target (.-relatedTarget e)]
-                                        (when (or (nil? related-target)
-                                                  (and @root-ref
-                                                       (not (.contains @root-ref related-target))))
-                                          (collapse-dropdown {:dropdown-id dropdown-id})))))
+                                    (let [related-target (.-relatedTarget e)]
+                                      (when (or (nil? related-target)
+                                                (and @root-ref
+                                                     (not (.contains @root-ref related-target))))
+                                        (collapse-dropdown {:dropdown-id dropdown-id}))))
                on-option-click    (fn on-option-click [value]
                                     (collapse-dropdown {:dropdown-id dropdown-id})
                                     (on-change value))
@@ -384,13 +353,7 @@
                                     (when @mobile?
                                       (open-popup)))
                on-clear-click     (fn dropdown-clear-button-clicked []
-                                    (reset! suppress-blur-close? true)
-                                    (on-change "")
-                                    (reagent/after-render
-                                      (fn []
-                                        (when-let [el @input-ref]
-                                          (.focus el))
-                                        (reset! suppress-blur-close? false))))
+                                    (on-change ""))
                resolved-aria-labelledby (or aria-labelledby
                                             (when-not aria-label label-id))
                selected-label     (get value->label selected-value)

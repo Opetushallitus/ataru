@@ -313,16 +313,17 @@ test.describe('Työpöytänäkymä', () => {
     await expect(getListbox(page)).toBeHidden()
   })
 
-  test('kentän oman labelin klikkaus ei sulje auki olevaa valikkoa', async ({
+  test('kentän oman labelin klikkaus sulkee auki olevan valikon työpöydällä', async ({
     page,
   }) => {
-    // Kentän <label> on DOM:ssa .a-dropdownin ulkopuolella, joten se
-    // tulkittaisiin ilman erillistä poikkeusta ulkopuoliseksi klikkaukseksi
-    // (ks. make-outside-click-listener dropdown_component.cljs:ssä).
+    // Työpöydällä label ja kenttä ovat selvästi erilliset elementit, joten
+    // labelin klikkaus käyttäytyy kuten mikä tahansa muu ulkopuolinen
+    // klikkaus (ks. make-outside-click-listener dropdown_component.cljs:ssä
+    // — poikkeus labelille on käytössä vain mobiilissa).
     await getCombobox(page).click()
     await expect(getListbox(page)).toBeVisible()
     await getField(page).locator('label').click()
-    await expect(getListbox(page)).toBeVisible()
+    await expect(getListbox(page)).toBeHidden()
   })
 
   test('ei-tyhjennettävä kenttä ei näytä tyhjennysnappia valinnan jälkeenkään', async ({
@@ -405,6 +406,15 @@ test.describe('Mobiilinäkymä', () => {
     await getCombobox(page).tap()
     await expect(getListbox(page)).toBeVisible()
     await expect(getOptions(page)).toHaveCount(OPTION_COUNT)
+  })
+
+  test('kentän oman labelin napautus ei sulje auki olevaa valikkoa mobiilissa', async ({
+    page,
+  }) => {
+    await getCombobox(page).tap()
+    await expect(getListbox(page)).toBeVisible()
+    await getField(page).locator('label').tap()
+    await expect(getListbox(page)).toBeVisible()
   })
 
   test('pitkätkin vaihtoehdot pysyvät kokoruutunäkymän leveyden sisällä', async ({
