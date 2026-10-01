@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/prepare-clojure-env
 
       - name: Check dependencies
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
       
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
       
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
       - name: Prepare tests
@@ -72,14 +72,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/prepare-clojure-env
       - uses: ./.github/actions/setup-node-env
 
       - name: Build
         run: make ci-create-uberjars
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         id: restore-build
         with:
           path: target
@@ -87,7 +87,7 @@ jobs:
 
   build-and-deploy-ataru-hakija:
     needs: [test-cypress, test-playwright, test-spec, build]
-    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@2f06269d5ac067ef17a76d2d5742db0b325e9a2e # main
     with:
       application: ataru-hakija
       base-image: baseimage-fatjar-openjdk17:master
@@ -98,7 +98,7 @@ jobs:
 
   build-and-deploy-ataru-editori:
     needs: [test-cypress, test-playwright, test-spec, build]
-    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@2f06269d5ac067ef17a76d2d5742db0b325e9a2e # main
     with:
       application: ataru-editori
       base-image: baseimage-fatjar-openjdk17:master
@@ -109,7 +109,7 @@ jobs:
 
   build-and-deploy-ovara-ataru:
     needs: [test-cypress, test-playwright, test-spec, build]
-    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@2f06269d5ac067ef17a76d2d5742db0b325e9a2e # main
     with:
       application: ovara-ataru
       base-image: baseimage-fatjar-openjdk17:master
