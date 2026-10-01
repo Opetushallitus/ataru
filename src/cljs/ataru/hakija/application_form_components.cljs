@@ -368,20 +368,24 @@
                                                       question-group-idx
                                                       repeatable-idx]))
             on-blur                      (fn [evt]
-                                           (let [value (-> evt .-target .-value)]
+                                           (let [value (-> evt .-target .-value)
+                                                 trimmed-value (trimmed-or-empty-value value)]
                                              (swap! local-state assoc
                                                     :focused? false
-                                                    :value (trimmed-or-empty-value value))
-                                             (if (and (empty? value) (not last?))
+                                                    :value trimmed-value)
+                                             (cond
+                                               (and (string/blank? trimmed-value) (not last?))
                                                (dispatch [:application/remove-repeatable-application-field-value
                                                           field-descriptor
                                                           question-group-idx
                                                           repeatable-idx])
+
+                                               (not (string/blank? trimmed-value))
                                                (dispatch [:application/set-repeatable-application-field
                                                           field-descriptor
                                                           question-group-idx
                                                           repeatable-idx
-                                                          (trimmed-or-empty-value value)]))))
+                                                          trimmed-value]))))
             on-change                    (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
