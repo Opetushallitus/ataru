@@ -16,23 +16,15 @@ module.exports = {
   apps: [
     {
       name: 'ataru-css-compilation',
-      script: 'bin/compile-less.sh',
+      script: 'bin/compile-less-watch.js',
       instances: 1,
       cwd: __dirname,
       log_file: 'logs/pm2/less.log',
       pid_file: '.less.pid',
       combine_logs: true,
-      watch: ['resources/less'],
-      autorestart: false,
+      watch: false,
+      autorestart: true,
       exec_mode: 'fork',
-      min_uptime: 0,
-      exec_interpreter: 'none',
-      watch_options: {
-        persistent: true,
-        ignoreInitial: false,
-        usePolling: true,
-        interval: 200,
-      },
     },
     {
       name: 'ataru-hakija-backend-8351',
