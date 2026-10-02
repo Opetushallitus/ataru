@@ -1229,6 +1229,11 @@
         (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
           (do
             (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid session)
+            (audit-log/log audit-logger
+                           {:new       {:email-type "hakemusmaksu"}
+                            :id        {:applicationOid hakemus-oid}
+                            :session   session
+                            :operation audit-log/operation-new})
             (response/ok {:events (application-service/get-application-events organization-service hakemus-oid)}))
           (response/unauthorized)))
 
@@ -1236,41 +1241,64 @@
         :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [reference locale message origin metadata]} input
-              lasku-input  (-> input
-                               (dissoc :message)
-                               (dissoc :locale))
-              invoice      (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
-              secret       (:secret invoice)
-              lang         (or locale "fi")
-              payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
-              amount       (bigdec (:amount invoice))
-              vat          (when (:vat invoice) (bigdec (:vat invoice)))
-              total-amount (if vat
-                             (+ amount (* amount (/ vat 100)))
-                             amount)]
+        ;; Maksupyynnön on aina liityttävä johonkin hakemukseen. Tarkistetaan hakemuksen olemassaolo
+        ;; erikseen, koska muuten käyttöoikeustarkistuksen every? menee läpi tyhjänä ja maksupyyntö
+        ;; luodaan maksut-palveluun.
+        (cond
+          (empty? (application-store/applications-authorization-data [(:reference input)]))
+          (response/not-found {:error (str "Hakemusta " (:reference input) " ei löytynyt")})
 
-          (if-let [result (application-service/payment-triggered-processing-state-change
-                            application-service
-                            session
-                            reference
-                            "decision-fee-outstanding"
-                            {:origin origin
-                             :message message
-                             :lang lang
-                             :form-name (get-in metadata [:form-name (keyword lang)])
-                             :payment-url payment-url
-                             :amount total-amount
-                             :vat vat
-                             :due-date (:due_date invoice)
-                             :order-id-prefix (:order-id-prefix metadata)
-                             :order-id (:order_id invoice)})]
-            (do
+          (not (access-controlled-application/applications-access-authorized?
+                 organization-service tarjonta-service session
+                 [(:reference input)] [:edit-applications]))
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:reference input)
+                                              " käsittely ei ole sallittu")})
+
+          :else
+          (let [{:keys [reference locale message origin metadata]} input
+                lasku-input  (-> input
+                                 (dissoc :message)
+                                 (dissoc :locale))
+                invoice      (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
+                secret       (:secret invoice)
+                lang         (or locale "fi")
+                payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
+                amount       (bigdec (:amount invoice))
+                vat          (when (:vat invoice) (bigdec (:vat invoice)))
+                total-amount (if vat
+                               (+ amount (* amount (/ vat 100)))
+                               amount)]
+
+            (audit-log/log audit-logger
+                           {:new       {:origin   origin
+                                        :amount   (str total-amount)
+                                        :vat      (some-> vat str)
+                                        :due-date (:due_date invoice)
+                                        :lang     lang}
+                            ;; Target-kentät ovat merkkijonoja
+                            :id        {:applicationOid reference
+                                        :orderId        (some-> (:order_id invoice) str)}
+                            :session   session
+                            :operation audit-log/operation-new})
+
+            (let [result (application-service/payment-triggered-processing-state-change
+                           application-service
+                           session
+                           reference
+                           "decision-fee-outstanding"
+                           {:origin origin
+                            :message message
+                            :lang lang
+                            :form-name (get-in metadata [:form-name (keyword lang)])
+                            :payment-url payment-url
+                            :amount total-amount
+                            :vat vat
+                            :due-date (:due_date invoice)
+                            :order-id-prefix (:order-id-prefix metadata)
+                            :order-id (:order_id invoice)})]
               (log/warn "Review result" result)
-              (response/ok result))
-            (response/unauthorized {:error (str "Hakemuksen "
-                                                reference
-                                                " käsittely ei ole sallittu")}))))
+              (response/ok result)))))
 
       (api/POST "/hakemusmaksu/bulk-state-change" {session :session}
         :body [input maksut-schema/BulkPaymentStateChange]
