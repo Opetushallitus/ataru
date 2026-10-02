@@ -959,6 +959,15 @@
        :rights
        set))
 
+(defn- resend-maksu-link [application-key]
+  (-> (mock/request :post "/lomake-editori/api/maksut/resend-maksu-link"
+                    (json/generate-string {:application-key application-key
+                                           :locale          "fi"}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
 (defn- resend-modify-link [application-key]
   (-> (mock/request :post (str "/lomake-editori/api/applications/" application-key "/resend-modify-link"))
       (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
@@ -1038,7 +1047,38 @@
                       entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
                   (should= 200 (:status resp))
                   (should= 1 (count entries))
-                  (should-contain "secret-rotated" (pr-str (:changes (first entries))))))))
+                  (should-contain "secret-rotated" (pr-str (:changes (first entries)))))))
+
+          ;; Maksu-linkin uudelleenlähetys kierrättää salaisuuden samalla tavalla kuin
+          ;; muokkauslinkki. Sama sähköpostityön ohitus kuin yllä.
+          (it "Should write a muutos entry when a maksu link is resent"
+              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
+                (let [application-key (first (init-application-keys 1))
+                      _               (reset! audit-entries [])
+                      resp            (resend-maksu-link application-key)
+                      entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)
+                      entry           (pr-str (first entries))]
+                  (should= 200 (:status resp))
+                  (should= 1 (count entries))
+                  (should-contain "secret-rotated" entry)
+                  (should-contain "maksu" entry)
+                  ;; Maksu-url rakennetaan laskun salaisuudesta, joten salaisuus ei saa vuotaa
+                  ;; merkintään sitäkään kautta.
+                  (should-not-contain "lasku-secret-1" entry))))
+
+          ;; Ilman aktiivista laskua linkkiä ei lähetetä eikä salaisuutta kierrätetä.
+          (it "Should not write an entry when the application has no active lasku"
+              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
+                (let [application-key (first (init-application-keys 1))
+                      laskut          (second maksut-capture)
+                      previous        @laskut
+                      _               (reset! laskut [])
+                      _               (reset! audit-entries [])
+                      resp            (resend-maksu-link application-key)]
+                  (reset! laskut previous)
+                  (should= 404 (:status resp))
+                  (should= 0 (count (audit-entries-for audit-entries "muutos"
+                                                       :applicationOid application-key)))))))
 
 (defn- patch-valinnan-tulos [valintatapajono-oid body]
   (-> (mock/request :patch (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/"
