@@ -119,7 +119,7 @@ stop-watch:
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	$(DOCKER_COMPOSE) kill
+	$(DOCKER_COMPOSE) stop
 
 stop-hakija:
 	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
