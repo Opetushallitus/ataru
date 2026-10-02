@@ -613,6 +613,7 @@
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
+  ;; Ei tarkista oikeuksia: kutsujan on varmistettava :edit-applications-oikeus hakemukseen.
   (payment-triggered-processing-state-change [this session application-key state params])
   (payment-poller-processing-state-change [this application-key state])
   (send-modify-application-link-email [this attachment-deadline-service application-key payment-url session])
@@ -820,45 +821,39 @@
                :needs-refresh (or needs-refresh? attachment-reviews-synced?)})
             :forbidden)))))
 
+  ;; Ei tarkista oikeuksia, kutsujan on tarkistettava oikeus muokata hakemusta ja sen tiloja.
   (payment-triggered-processing-state-change
     [_ session application-key state email-params]
     (let [hakukohde   "form"
           requirement "processing-state"]
-      (when (aac/applications-access-authorized?
-             organization-service
-             tarjonta-service
-             session
-             [application-key]
-             [:edit-applications])
-        (log/info "Changing form application" application-key " processing-state to" state)
-        (application-store/save-application-hakukohde-review
-               application-key
-               hakukohde
-               requirement
-               state
-               session
-               audit-logger)
-        (log/info "Before email sending")
-        (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
-          (email/start-decision-email-job
-            job-runner
-            (assoc email-params :application-id application-id
-                                :application-oid application-key))
-          (maksut-store/add-payment-reminder
-            {:application-key application-key
-             :application-id application-id
-             :order-id (:order-id email-params)
-             :message (:message email-params)
-             :lang (:lang email-params)
-             :send-reminder-time
-             (time/minus
-               (apply time/date-time
-                      (map parse-long (str/split (:due-date email-params) #"-")))
-               (time/days 7))}))
-        (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
-              events (future (get-application-events organization-service application-key))]
-          (util/remove-nil-values {:events            @events
-                                   :hakukohde-reviews @hakukohde-reviews})))))
+      (log/info "Changing form application" application-key " processing-state to" state)
+      (application-store/save-application-hakukohde-review
+        application-key
+        hakukohde
+        requirement
+        state
+        session
+        audit-logger)
+      (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
+        (email/start-decision-email-job
+          job-runner
+          (assoc email-params :application-id application-id
+                              :application-oid application-key))
+        (maksut-store/add-payment-reminder
+          {:application-key application-key
+           :application-id application-id
+           :order-id (:order-id email-params)
+           :message (:message email-params)
+           :lang (:lang email-params)
+           :send-reminder-time
+           (time/minus
+             (apply time/date-time
+                    (map parse-long (str/split (:due-date email-params) #"-")))
+             (time/days 7))}))
+      (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
+            events (future (get-application-events organization-service application-key))]
+        (util/remove-nil-values {:events            @events
+                                 :hakukohde-reviews @hakukohde-reviews}))))
 
   (payment-poller-processing-state-change
     [_ application-key state]

@@ -14,6 +14,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
@@ -22,7 +23,8 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
-                                      new-fake-valinta-tulos-service should-have-header]]
+                                      new-fake-maksut-service new-fake-valinta-tulos-service
+                                      should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
@@ -77,6 +79,9 @@
 (def vts-capture (new-fake-valinta-tulos-service))
 (def vts-calls (first vts-capture))
 
+(def maksut-capture (new-fake-maksut-service))
+(def maksut-calls (first maksut-capture))
+
 (def virkailija-routes
   (delay
     (-> (component/system-map
@@ -99,6 +104,7 @@
           :person-service (person-service/->FakePersonService)
           :audit-logger (second audit-log-capture)
           :valinta-tulos-service (nth vts-capture 2)
+          :maksut-service (nth maksut-capture 3)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
@@ -122,6 +128,7 @@
                                 :form-by-id-cache
                                 :koodisto-cache
                                 :valinta-tulos-service
+                                :maksut-service
                                 :job-runner]))
       component/start
       :virkailija-routes
@@ -1063,6 +1070,105 @@
                  "if-unmodified-since" "Mon, 1 Jan 2026 00:00:00 GMT")
       ((deref virkailija-routes))
       parse-body))
+
+(defn- post-maksupyynto [lasku user]
+  (-> (mock/request :post "/lomake-editori/api/maksut/maksupyynto"
+                    (json/generate-string lasku))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- resend-hakemusmaksu-email [hakemus-oid user]
+  (-> (mock/request :post (str "/lomake-editori/api/maksut/hakemusmaksu/email/laheta/" hakemus-oid))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- lasku-for [application-key]
+  {:first-name "Aku"
+   :last-name  "Ankka"
+   :email      "aku@ankkalinna.com"
+   :amount     "100"
+   :due-date   "2026-12-31"
+   :origin     "tutu"
+   :reference  application-key
+   :locale     "fi"
+   :message    "Maksupyyntö"})
+
+(describe "Maksut audit logging"
+          (tags :unit :maksut-audit)
+
+          (before (reset! audit-entries [])
+                  (reset! maksut-calls []))
+
+          (it "Should write a lisäys entry when an invoice is created"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (post-maksupyynto (lasku-for application-key) nil)
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "ORDER-1" (get-in (first entries) [:target :orderId]))
+                (should-contain "tutu" (pr-str (:changes (first entries))))))
+
+          ;; Laskua (tai ylipäänsä kutsua maksut-palveluun) ei saa syntyä oikeudettomasta kutsusta.
+          (it "Should not create an invoice when the caller is not authorized"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    _               (reset! maksut-calls [])
+                    resp            (post-maksupyynto (lasku-for application-key) "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (filter #(= :create-paatos-lasku (:op %)) @maksut-calls)))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key)))))
+
+          ;; Maksupyynnölle on aina löydyttävä hakemus johon se liittyy. Jos ei löydy, tarkistetaan
+          ;; että rajapinta vastaa 404 ja että kutsua maksut-palveluun ei tehdä.
+          (it "Should not create an invoice for a reference that matches no application"
+              (let [_    (reset! audit-entries [])
+                    _    (reset! maksut-calls [])
+                    resp (post-maksupyynto (lasku-for "ei-olemassa-olevaa-hakemusta") nil)]
+                (should= 404 (:status resp))
+                (should= 0 (count (filter #(= :create-paatos-lasku (:op %)) @maksut-calls)))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          ;; Salaisuus ja sen sisältävä maksu-url eivät kuulu lokille, kuten eivät myöskään hakijan
+          ;; henkilötiedot. Hakemus yksilöidään target-kentässä.
+          (it "Should not write the invoice secret or the applicant's personal data"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    _               (post-maksupyynto (lasku-for application-key) nil)
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)
+                    entry           (pr-str (first entries))]
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                (should-not-contain "lasku-secret-1" entry)
+                (should-not-contain "virkailija-secret" entry)
+                (should-not-contain "aku@ankkalinna.com" entry)
+                (should-not-contain "Ankka" entry)))
+
+          ;; Sähköpostijobi ohitetaan: start-payment-email-job tarvitsee tarjonta-servicen
+          ;; job-runnerin riippuvuutena, eikä testin job-runnerilla ole riippuvuuksia. Testin
+          ;; kohde on merkintä, ei sähköpostikoneisto — sama ohitus kuin muokkauslinkkitestissä.
+          (it "Should write a lisäys entry when a hakemusmaksu email is resent"
+              (with-redefs [kk-application-payment-status-updater-job/resend-payment-email
+                            (constantly nil)]
+                (let [application-key (first (init-application-keys 1))
+                      _               (reset! audit-entries [])
+                      resp            (resend-hakemusmaksu-email application-key nil)
+                      entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                  (should= 200 (:status resp))
+                  (should= 1 (count entries))
+                  (should-contain "hakemusmaksu" (pr-str (:changes (first entries)))))))
+
+          ;; Tämä reitti tarkistaa oikeudet ennen toimintaa, joten estetystä kutsusta ei synny
+          ;; merkintää eikä sivuvaikutuksia.
+          (it "Should not write an entry when the email resend is unauthorized"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (resend-hakemusmaksu-email application-key "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key))))))
 
 ;; Varsinaisen muutoksen lokittaa valinta-tulos-service itse. Nämä merkinnät kertovat kuka
 ;; muutosta yritti: Ataru kutsuu VTS:ää palvelutunnuksella eikä välitä loppukäyttäjän
