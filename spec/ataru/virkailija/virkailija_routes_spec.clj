@@ -16,7 +16,6 @@
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.koodisto.koodisto :as koodisto]
-            [ataru.log.audit-log :as audit-log]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.organization-service.organization-service :as org-service]
             [ataru.person-service.person-service :as person-service]
@@ -24,7 +23,7 @@
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
                                       new-fake-maksut-service new-fake-valinta-tulos-service
-                                      should-have-header]]
+                                      fake-lasku fake-vts-response should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
@@ -36,7 +35,7 @@
             [clojure.string :as clj-string]
             [speclj.core :refer [after-all around before before-all describe
                                  it run-specs should should-be-nil should-contain
-                                 should-not-be-nil should-not-contain should= should-not= tags with xit]]
+                                 should-not-be-nil should-not-contain should= tags with]]
             [ataru.time :as time]
             [yesql.core :as sql]))
 
@@ -77,10 +76,19 @@
 (def audit-entries (first audit-log-capture))
 
 (def vts-capture (new-fake-valinta-tulos-service))
-(def vts-calls (first vts-capture))
+(def vts-calls (:calls vts-capture))
 
 (def maksut-capture (new-fake-maksut-service))
-(def maksut-calls (first maksut-capture))
+(def maksut-calls (:calls maksut-capture))
+
+(defn- reset-fakes!
+  "Palauttaa kaikki jaetut keruuatomit ja fake-vastaukset lähtötilaan."
+  []
+  (reset! audit-entries [])
+  (reset! vts-calls [])
+  (reset! maksut-calls [])
+  (reset! (:response vts-capture) fake-vts-response)
+  (reset! (:laskut maksut-capture) [fake-lasku]))
 
 (def virkailija-routes
   (delay
@@ -103,8 +111,8 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (second audit-log-capture)
-          :valinta-tulos-service (nth vts-capture 2)
-          :maksut-service (nth maksut-capture 3)
+          :valinta-tulos-service (:service vts-capture)
+          :maksut-service (:service maksut-capture)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
@@ -742,7 +750,7 @@
 (describe "Review note audit logging"
           (tags :unit :review-note-audit)
 
-          (before (reset! audit-entries []))
+          (before (reset-fakes!))
 
           (it "Should write one audit entry when a review note is added"
               (let [application-key (first (init-application-keys 1))
@@ -977,7 +985,12 @@
 (describe "Secret minting audit logging"
           (tags :unit :secret-audit)
 
-          (before (reset! audit-entries []))
+          (before (reset-fakes!))
+
+          ;; Ohitetaan sähköpostijobi, koska testien kohde on auditlokitus.
+          (around [spec]
+                  (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
+                    (spec)))
 
           (it "Should write a lisäys entry when a create secret is minted for a haku"
               (let [resp    (raw-get "/lomake-editori/api/preview/haku/1.2.246.562.29.1?lang=fi")
@@ -1038,47 +1051,38 @@
           ;; Linkin uudelleenlähetys kierrättää hakijan salaisuuden, joten se on muutos.
           ;; Ennen tätä lokiin jäi vain oikeustarkistuksen "luku"-merkintä.
           ;;
-          ;; Sähköpostin lähetys ohitetaan, tässä testataan vain auditlokitusta.
           (it "Should write a muutos entry when a modify link is resent"
-              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
-                (let [application-key (first (init-application-keys 1))
-                      _               (reset! audit-entries [])
-                      resp            (resend-modify-link application-key)
-                      entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
-                  (should= 200 (:status resp))
-                  (should= 1 (count entries))
-                  (should-contain "secret-rotated" (pr-str (:changes (first entries)))))))
-
-          ;; Maksu-linkin uudelleenlähetys kierrättää salaisuuden samalla tavalla kuin
-          ;; muokkauslinkki. Sama sähköpostityön ohitus kuin yllä.
-          (it "Should write a muutos entry when a maksu link is resent"
-              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
-                (let [application-key (first (init-application-keys 1))
-                      _               (reset! audit-entries [])
-                      resp            (resend-maksu-link application-key)
-                      entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)
-                      entry           (pr-str (first entries))]
-                  (should= 200 (:status resp))
-                  (should= 1 (count entries))
-                  (should-contain "secret-rotated" entry)
-                  (should-contain "maksu" entry)
-                  ;; Maksu-url rakennetaan laskun salaisuudesta, joten salaisuus ei saa vuotaa
-                  ;; merkintään sitäkään kautta.
-                  (should-not-contain "lasku-secret-1" entry))))
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (resend-modify-link application-key)
+                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "secret-rotated" (pr-str (:changes (first entries))))))
 
           ;; Ilman aktiivista laskua linkkiä ei lähetetä eikä salaisuutta kierrätetä.
           (it "Should not write an entry when the application has no active lasku"
-              (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
-                (let [application-key (first (init-application-keys 1))
-                      laskut          (second maksut-capture)
-                      previous        @laskut
-                      _               (reset! laskut [])
-                      _               (reset! audit-entries [])
-                      resp            (resend-maksu-link application-key)]
-                  (reset! laskut previous)
-                  (should= 404 (:status resp))
-                  (should= 0 (count (audit-entries-for audit-entries "muutos"
-                                                       :applicationOid application-key)))))))
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! (:laskut maksut-capture) [])
+                    resp            (resend-maksu-link application-key)]
+                (should= 404 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos"
+                                                     :applicationOid application-key)))))
+
+          ;; Maksu-linkin uudelleenlähetys kierrättää salaisuuden samalla tavalla kuin
+          ;; muokkauslinkki.
+          (it "Should write a muutos entry when a maksu link is resent"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (resend-maksu-link application-key)
+                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)
+                    entry           (pr-str (first entries))]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "secret-rotated" entry)
+                (should-contain "maksu" entry)
+                ;; Maksu-url rakennetaan laskun salaisuudesta, joten salaisuus ei saa vuotaa
+                ;; merkintään sitäkään kautta.
+                (should-not-contain "lasku-secret-1" entry))))
 
 (defn- patch-valinnan-tulos [valintatapajono-oid body]
   (-> (mock/request :patch (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/"
@@ -1139,8 +1143,7 @@
 (describe "Maksut audit logging"
           (tags :unit :maksut-audit)
 
-          (before (reset! audit-entries [])
-                  (reset! maksut-calls []))
+          (before (reset-fakes!))
 
           (it "Should write a lisäys entry when an invoice is created"
               (let [application-key (first (init-application-keys 1))
@@ -1216,8 +1219,7 @@
 (describe "Valinta-tulos-service change audit logging"
           (tags :unit :valinta-audit)
 
-          (before (reset! audit-entries [])
-                  (reset! vts-calls []))
+          (before (reset-fakes!))
 
           (it "Should write a muutos entry for a kevyt valinta patch"
               (let [application-key (first (init-application-keys 1))
@@ -1275,16 +1277,17 @@
                     entries         (audit-entries-for audit-entries "poisto")]
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
-                (should= application-key (get-in (first entries) [:target :applicationOid]))))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                ;; Poiston arvo kuuluu :old-kenttään kuten muissakin poistoissa, jotta
+                ;; operaatiosuodatus poimii sen. :old päätyy changes-taulukkoon oldValue-kenttänä.
+                (should-contain :oldValue (first (:changes (first entries))))))
 
           ;; Yritys kirjataan vastauksesta riippumatta — merkintä kertoo kuka yritti, ei mitä
           ;; VTS:ssä lopulta tapahtui.
           (it "Should write the entry even when valinta-tulos-service refuses the change"
               (let [application-key (first (init-application-keys 1))
-                    _               (reset! (second vts-capture) {:status 409 :headers {} :body "{}"})
-                    _               (reset! audit-entries [])
+                    _               (reset! (:response vts-capture) {:status 409 :headers {} :body "{}"})
                     resp            (delete-hyvaksynnan-ehto "1.2.246.562.20.1" application-key)]
-                (reset! (second vts-capture) {:status 200 :headers {} :body "{}"})
                 (should= 409 (:status resp))
                 (should= 1 (count (audit-entries-for audit-entries "poisto"))))))
 
