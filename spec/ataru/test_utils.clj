@@ -109,27 +109,40 @@
   (delete-laskut [_ _] nil)
   (update-laskut-due-date [_ _ _] nil))
 
+;; Fake-palveluiden oletusarvot. Nimettyinä, jotta testit voivat palauttaa atomit näihin
+;; before-lohkossa sen sijaan että jokainen muuttaja huolehtisi palautuksesta itse.
+(def fake-lasku {:order_id "ORDER-1" :status :active :secret "lasku-secret-1"})
+
+(def fake-invoice {:order_id "ORDER-1"
+                   :secret   "lasku-secret-1"
+                   :amount   "100"
+                   :vat      "24"
+                   :due_date "2026-12-31"
+                   :status   :active})
+
+(def fake-vts-response {:status 200 :headers {} :body "{}"})
+
 (defn new-fake-maksut-service
-  "Palauttaa [calls laskut invoice service]. calls kerää luontikutsut, laskut on
-   list-laskut-by-application-key:n vastaus ja invoice create-*-lasku:n palauttama lasku."
+  "Palauttaa {:calls :laskut :invoice :service}. :calls kerää luontikutsut, :laskut on
+   list-laskut-by-application-key:n vastaus ja :invoice create-*-lasku:n palauttama lasku."
   []
   (let [calls   (atom [])
-        laskut  (atom [{:order_id "ORDER-1" :status :active :secret "lasku-secret-1"}])
-        invoice (atom {:order_id  "ORDER-1"
-                       :secret    "lasku-secret-1"
-                       :amount    "100"
-                       :vat       "24"
-                       :due_date  "2026-12-31"
-                       :status    :active})]
-    [calls laskut invoice (->FakeMaksutService calls laskut invoice)]))
+        laskut  (atom [fake-lasku])
+        invoice (atom fake-invoice)]
+    {:calls   calls
+     :laskut  laskut
+     :invoice invoice
+     :service (->FakeMaksutService calls laskut invoice)}))
 
 (defn new-fake-valinta-tulos-service
-  "Palauttaa [calls response service]. calls kerää tehdyt muutoskutsut, responseen voi asettaa
-   VTS:n vastauksen (reitit palauttavat sen sellaisenaan)."
+  "Palauttaa {:calls :response :service}. :calls kerää tehdyt muutoskutsut, :response on VTS:n
+   vastaus, jonka reitit palauttavat sellaisenaan."
   []
   (let [calls    (atom [])
-        response (atom {:status 200 :headers {} :body "{}"})]
-    [calls response (->FakeValintaTulosService calls response)]))
+        response (atom fake-vts-response)]
+    {:calls    calls
+     :response response
+     :service  (->FakeValintaTulosService calls response)}))
 
 (defn audit-entries-for
   "Suodattaa merkinnät operaation ja valinnaisen target-kentän perusteella.
