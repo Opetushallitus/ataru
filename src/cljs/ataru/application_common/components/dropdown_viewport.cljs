@@ -47,6 +47,25 @@
     (.-offsetTop vv)
     0))
 
+;; iOS:n selaimet (Safari ja kaikki muut iOS:llä WebKitin päällä toimivat,
+;; myös Chrome, Firefox ja sovellusten sisäiset selaimet) eivät pienennä
+;; layout viewportia virtuaalinäppäimistön noustessa (interactive-widget=
+;; resizes-content ei ole niillä tuettu), vaan panoroivat visuaalista
+;; viewportia fokusoidun kentän näkyville. position: fixed; top: 0 -elementti
+;; on kiinnitetty layout viewportiin, joten panoroinnin jälkeen sen yläosa
+;; (label ja hakukenttä) jää ruudun yläpuolelle piiloon. Panoroinnin määrä
+;; riippuu selaimen palkkien korkeudesta ja siitä, kuinka alhaalla kenttä
+;; oli ennen avaamista, joten oire vaihtelee selaimen ja avaustavan mukaan.
+;; Siksi kokoruutuwrapperi (ks. hakija.less .application__dropdown-
+;; fullscreen-wrapper) asemoidaan näiden muuttujien avulla aina täsmälleen
+;; visuaalisen viewportin päälle. Muuttujia ei tarvitse poistaa sulkiessa:
+;; niitä käytetään vain kokoruututilassa, ja ne päivitetään aina ennen
+;; ensimmäistä piirtoa avattaessa (ks. dropdown-geometry).
+(defn sync-viewport-css-vars! []
+  (let [style (.. js/document -documentElement -style)]
+    (.setProperty style "--a-dropdown-viewport-top" (str (viewport-top-offset) "px"))
+    (.setProperty style "--a-dropdown-viewport-height" (str (viewport-height) "px"))))
+
 ;; Kun kenttä fokusoidaan mobiilissa, vieritetään sivu heti niin, että kentän
 ;; oma <label> (ei itse syötekenttä/select) asettuu ruudun ylälaitaan
 (defn scroll-field-to-top! [label-id]

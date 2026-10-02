@@ -689,12 +689,17 @@ body {
 @media only screen and (max-width: @mobile-width) {
   .application__dropdown-fullscreen-wrapper:has(.a-dropdown--fullscreen) {
     background-color: white;
-    bottom: 0;
+    box-sizing: border-box;
+    // Visuaalisen viewportin mukaan (ks. dropdown-viewport/sync-viewport-
+    // css-vars!), jottei iOS:n näppäimistön noustessa tekemä panorointi
+    // vieritä labelia ja hakukenttää ruudun yläpuolelle. Oletusarvot
+    // vastaavat top: 0; bottom: 0 ennen ensimmäistä synkronointia.
+    height: var(--a-dropdown-viewport-height, 100%);
     left: 0;
     padding: 8px;
     position: fixed;
     right: 0;
-    top: 0;
+    top: var(--a-dropdown-viewport-top, 0px);
     z-index: 9999;
 
     // .application__form-select-wrapper .a-dropdown (ks. yllä tässä
