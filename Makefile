@@ -241,7 +241,8 @@ install-cypress:
 # ----------------
 
 test-clojurescript: $(NODE_MODULES)
-	lein with-profile test doo chrome test once
+	lein with-profile test cljsbuild once test
+	node bin/run-cljs-unit-tests.mjs
 
 test-clojure: $(NODE_MODULES) clear-test-db init-test-db
 	lein with-profile test spec
