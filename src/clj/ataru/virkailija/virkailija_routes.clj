@@ -217,51 +217,27 @@
             (ok {}))
         (route/not-found "Not found")))))
 
-(defn- audit-log-create-secret
-  "Auditlokimerkintä virkailijan create-secretin luonnista. Salaisuutta itseään ei kirjata:
-   merkinnästä käy ilmi mihin ja millainen tunniste luotiin, ei tunnistetta."
-  [audit-logger session id lang]
-  (audit-log/log audit-logger
-                 {:new       {:secret-type "virkailija-create"
-                              :lang        lang}
-                  :id        id
-                  :session   session
-                  :operation audit-log/operation-new}))
+(defn- log-secret-minted
+  "Auditlokimerkintä virkailijasalaisuuden luonnista (create/update/rewrite). Salaisuutta itseään
+   ei kirjata: merkinnästä käy ilmi mihin ja millainen tunniste luotiin, ei tunnistetta."
+  ([audit-logger session id secret-type]
+   (log-secret-minted audit-logger session id secret-type nil))
+  ([audit-logger session id secret-type extra]
+   (audit-log/log audit-logger
+                  {:new       (merge {:secret-type secret-type} extra)
+                   :id        id
+                   :session   session
+                   :operation audit-log/operation-new})))
 
-(defn- audit-log-application-secret
-  "Auditlokimerkintä hakemuskohtaisen virkailijasalaisuuden luonnista (update/rewrite).
-   Kuten yllä, salaisuutta ei kirjata."
-  [audit-logger session application-key secret-type]
-  (audit-log/log audit-logger
-                 {:new       {:secret-type secret-type}
-                  :id        {:applicationOid application-key}
-                  :session   session
-                  :operation audit-log/operation-new}))
-
-(defn- audit-log-valinta-attempt
-  "Auditlokimerkintä valinta-tulos-serviceen kohdistuvasta muutosyrityksestä.
-
-   Varsinaisen muutoksen lokittaa valinta-tulos-service itse, eikä tässä tarkisteta sen vastausta:
-   merkinnän tehtävä on kertoa kuka muutosta yritti. Ataru kutsuu VTS:ää palvelutunnuksella
-   (virkailija_system.clj:125) eikä välitä loppukäyttäjän identiteettiä, joten VTS:n omasta
-   merkinnästä tekijä ei selviä. Merkintä kirjoitetaan ennen kutsua, jotta yritys jää lokiin
-   myös jos kutsu epäonnistuu."
-  [audit-logger session id operation new-value]
-  (audit-log/log audit-logger
-                 {:new       new-value
-                  :id        id
-                  :session   session
-                  :operation operation}))
-
-(defn- audit-log-modify-link-sent
-  "Auditlokimerkintä muokkauslinkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
+(defn- log-link-resent
+  "Auditlokimerkintä linkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
    (application_store/add-new-secret-to-application), joten kyseessä on hakemuksen muutos eikä
    pelkkä luku — ilman tätä merkintää lokiin jää vain oikeustarkistuksen 'luku'-merkintä.
    Uutta salaisuutta ei kirjata."
   [audit-logger session application-key link-type]
   (audit-log/log audit-logger
-                 {:new       {:link-type       link-type
-                              :secret-rotated  true}
+                 {:new       {:link-type      link-type
+                              :secret-rotated true}
                   :id        {:applicationOid application-key}
                   :session   session
                   :operation audit-log/operation-modify}))
@@ -446,7 +422,7 @@
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
           (do
-            (audit-log-create-secret audit-logger session {:hakuOid haku-oid} lang)
+            (log-secret-minted audit-logger session {:hakuOid haku-oid} "virkailija-create" {:lang lang})
             (response/temporary-redirect
               (str (-> config :public-config :applicant :service_url)
                    "/hakemus/haku/" haku-oid
@@ -459,7 +435,7 @@
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
           (do
-            (audit-log-create-secret audit-logger session {:formKey key} lang)
+            (log-secret-minted audit-logger session {:formKey key} "virkailija-create" {:lang lang})
             (response/temporary-redirect
               (str (-> config :public-config :applicant :service_url)
                    "/hakemus/" key
@@ -725,7 +701,7 @@
                   modify-url               (str (-> config :public-config :applicant :service_url)
                                                 "/hakemus?virkailija-secret="
                                                 virkailija-update-secret)]
-              (audit-log-application-secret audit-logger session application-key "virkailija-update")
+              (log-secret-minted audit-logger session {:applicationOid application-key} "virkailija-update")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -745,7 +721,7 @@
                   modify-url                (str (-> config :public-config :applicant :service_url)
                                                  "/hakemus?virkailija-secret="
                                                  virkailija-rewrite-secret)]
-              (audit-log-application-secret audit-logger session application-key "virkailija-rewrite")
+              (log-secret-minted audit-logger session {:applicationOid application-key} "virkailija-rewrite")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -760,7 +736,7 @@
                                 nil
                                 session)]
           (do
-            (audit-log-modify-link-sent audit-logger session application-key "modify")
+            (log-link-resent audit-logger session application-key "modify")
             (response/ok resend-event))
           (response/bad-request)))
 
@@ -1217,7 +1193,7 @@
                                    payment-url
                                    session)]
               (do
-                (audit-log-modify-link-sent audit-logger session application-key "maksu")
+                (log-link-resent audit-logger session application-key "maksu")
                 (response/ok resend-event))
               (response/bad-request))
             (response/not-found
@@ -2087,6 +2063,11 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
       )
     )
 
+    ;; Tiloja muuttavat VTS-reitit kirjaavat auditlokiin *yrityksen*, eivät lopputulosta:
+    ;; varsinaisen muutoksen lokittaa VTS itse. Ataru kutsuu VTS:ää palvelutunnuksella
+    ;; (virkailija_system.clj:125) eikä välitä loppukäyttäjän identiteettiä, joten VTS:n omasta
+    ;; merkinnästä ei selviä kuka muutosta pyysi. Merkintä kirjoitetaan ennen kutsua, joten yritys
+    ;; jää lokiin myös jos kutsu epäonnistuu, eikä VTS:n vastausta tarkisteta.
     (api/context "/valinta-tulos-service"  []
       :tags ["valinta-tulos-service-api"]
       (api/context "/valinnan-tulos" []
@@ -2134,13 +2115,13 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                   ;; Hakemus-oidit menevät :new-kenttään eivätkä :id:hen: lista on rajaamaton ja
                   ;; yhdistettynä yhdeksi Target-kentäksi se ylittäisi kentän kokorajan isossa
                   ;; massa-ajossa. :new:ssä unnest levittää ne omiksi poluikseen.
-                  (audit-log-valinta-attempt audit-logger
-                                             session
-                                             {:valintatapajonoOid valintatapajono-oid}
-                                             audit-log/operation-modify
-                                             {:attempted-operation "change-kevyt-valinta-property"
+                  (audit-log/log audit-logger
+                                 {:new       {:attempted-operation "change-kevyt-valinta-property"
                                               :hakemus-oids        hakemus-oids
-                                              :hakemus-count       (count hakemus-oids)})
+                                              :hakemus-count       (count hakemus-oids)}
+                                  :id        {:valintatapajonoOid valintatapajono-oid}
+                                  :session   session
+                                  :operation audit-log/operation-modify})
                   (vts/change-kevyt-valinta-property
                     valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
 
@@ -2173,15 +2154,15 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                 (do
                   ;; Ilman if-unmodified-sinceä asiakas lähettää If-None-Match: *
                   ;; (valintatulosservice_client.clj:74-76) eli kyseessä on luonti.
-                  (audit-log-valinta-attempt audit-logger
-                                             session
-                                             {:hakukohdeOid   hakukohde-oid
+                  (audit-log/log audit-logger
+                                 {:new       {:attempted-operation "add-hyvaksynnan-ehto"
+                                              :ehto                ehto}
+                                  :id        {:hakukohdeOid   hakukohde-oid
                                               :applicationOid application-key}
-                                             (if (some? if-unmodified-since)
+                                  :session   session
+                                  :operation (if (some? if-unmodified-since)
                                                audit-log/operation-modify
-                                               audit-log/operation-new)
-                                             {:attempted-operation "add-hyvaksynnan-ehto"
-                                              :ehto                ehto})
+                                               audit-log/operation-new)})
                   (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
                     valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since))))
 
@@ -2197,14 +2178,16 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (do
-                  ;; Poistettavaa arvoa ei haeta erikseen VTS:stä :old-kenttää varten — yritys
-                  ;; riittää, ja ylimääräinen etäkutsu per poisto ei ole sen arvoinen.
-                  (audit-log-valinta-attempt audit-logger
-                                             session
-                                             {:hakukohdeOid   hakukohde-oid
+                  ;; Poiston arvo menee :old-kenttään kuten muissakin poistoissa (vrt.
+                  ;; application_store/auditlog-review-note), jotta operaatiosuodatus toimii.
+                  ;; Poistettavaa arvoa ei haeta erikseen VTS:stä: yritys riittää, eikä
+                  ;; ylimääräinen etäkutsu per poisto ole sen arvoinen.
+                  (audit-log/log audit-logger
+                                 {:old       {:attempted-operation "delete-hyvaksynnan-ehto"}
+                                  :id        {:hakukohdeOid   hakukohde-oid
                                               :applicationOid application-key}
-                                             audit-log/operation-delete
-                                             {:attempted-operation "delete-hyvaksynnan-ehto"})
+                                  :session   session
+                                  :operation audit-log/operation-delete})
                   (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
                     valinta-tulos-service hakukohde-oid application-key if-unmodified-since))))
 
