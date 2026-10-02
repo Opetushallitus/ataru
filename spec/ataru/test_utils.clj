@@ -4,6 +4,7 @@
             [ataru.cache.cache-service :as cache-service]
             [ataru.db.db :as db]
             [ataru.fixtures.excel-fixtures :as fixtures]
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -88,6 +89,39 @@
   (hyvaksynnan-ehto-valintatapajonoissa-hakemus [_ _ _] @response)
   (hyvaksynnan-ehto-hakemukselle [_ _] @response)
   (hyvaksynnan-ehto-hakukohteessa-muutoshistoria [_ _ _] @response))
+
+(defrecord FakeMaksutService [calls laskut invoice]
+  MaksutServiceProtocol
+  (create-kk-application-payment-lasku [_ lasku]
+    (swap! calls conj {:op :create-kk-application-payment-lasku :lasku lasku})
+    @invoice)
+  (create-kasittely-lasku [_ lasku]
+    (swap! calls conj {:op :create-kasittely-lasku :lasku lasku})
+    @invoice)
+  (create-paatos-lasku [_ lasku]
+    (swap! calls conj {:op :create-paatos-lasku :lasku lasku})
+    @invoice)
+  (list-lasku-statuses [_ _] [])
+  (list-laskut-by-application-key [_ _] @laskut)
+  (download-receipt [_ _] {:status 200 :body ""})
+  (invalidate-laskut [_ _] nil)
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
+
+(defn new-fake-maksut-service
+  "Palauttaa [calls laskut invoice service]. calls kerää luontikutsut, laskut on
+   list-laskut-by-application-key:n vastaus ja invoice create-*-lasku:n palauttama lasku."
+  []
+  (let [calls   (atom [])
+        laskut  (atom [{:order_id "ORDER-1" :status :active :secret "lasku-secret-1"}])
+        invoice (atom {:order_id  "ORDER-1"
+                       :secret    "lasku-secret-1"
+                       :amount    "100"
+                       :vat       "24"
+                       :due_date  "2026-12-31"
+                       :status    :active})]
+    [calls laskut invoice (->FakeMaksutService calls laskut invoice)]))
 
 (defn new-fake-valinta-tulos-service
   "Palauttaa [calls response service]. calls kerää tehdyt muutoskutsut, responseen voi asettaa
