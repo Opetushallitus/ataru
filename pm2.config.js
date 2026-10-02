@@ -30,8 +30,9 @@ module.exports = {
       name: 'ataru-hakija-backend-8351',
       script: 'lein',
       interpreter: '/bin/sh',
-      args: ['hakija-dev'],
+      args: ['trampoline', 'hakija-dev'],
       env: {
+        LEIN_FAST_TRAMPOLINE: 'y',
         'dev?': 'true',
         APP: 'ataru-hakija',
         CONFIG: hakijaConfig,
@@ -53,8 +54,9 @@ module.exports = {
       name: 'ataru-virkailija-backend-8350',
       script: 'lein',
       interpreter: '/bin/sh',
-      args: ['virkailija-dev'],
+      args: ['trampoline', 'virkailija-dev'],
       env: {
+        LEIN_FAST_TRAMPOLINE: 'y',
         'dev?': 'true',
         APP: 'ataru-editori',
         CONFIG: virkailijaConfig,
@@ -76,7 +78,10 @@ module.exports = {
       name: 'ataru-figwheel',
       script: 'lein',
       interpreter: '/bin/sh',
-      args: ['start-figwheel-dev'],
+      args: ['trampoline', 'start-figwheel-dev'],
+      env: {
+        LEIN_FAST_TRAMPOLINE: 'y',
+      },
       cwd: __dirname,
       log_file: 'logs/pm2/figwheel.log',
       pid_file: '.figwheel.pid',
