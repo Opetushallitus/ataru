@@ -1,5 +1,5 @@
 (ns ataru.unit-runner
-  (:require [doo.runner :refer-macros [doo-tests]]
+  (:require [cljs.test :as test :refer-macros [run-tests]]
             [ataru.application-common.option-visibility-test]
             [ataru.hakija.oppija-session-test]
             [ataru.cljs-util-test]
@@ -28,7 +28,14 @@
             [ataru.virkailija.application.excel-download.excel-utils-test] 
             [ataru.hakija.application-hakukohde-util-test]))
 
-(doo-tests 'ataru.application-common.option-visibility-test
+(enable-console-print!)
+
+; bin/run-cljs-unit-tests.mjs odottaa tätä tulosta
+(defmethod test/report [::test/default :end-run-tests] [m]
+  (set! (.-cljsTestResult js/window)
+        #js {:success (test/successful? m)}))
+
+(run-tests 'ataru.application-common.option-visibility-test
            'ataru.hakija.oppija-session-test
            'ataru.cljs-util-test
            'ataru.dob-test

@@ -277,24 +277,56 @@
         [:i.zmdi.zmdi-alert-circle.application__editing-notification-icon]
         (translations/get-hakija-translation :preview-notification-text lang)]])))
 
+;; Piilottaa/näyttää ylätunnisteen mobiilissa vierityssuunnan mukaan (ks.
+;; hakija.less .application__banner-container--hidden).
+(def ^:private scroll-hide-threshold 50)
+
+(defn- make-banner-scroll-listener [banner-ref]
+  (let [last-scroll-top (atom 0)
+        set-hidden!     (fn [hidden?]
+                           (when-let [el @banner-ref]
+                             (.toggle (.-classList el)
+                                      "application__banner-container--hidden"
+                                      hidden?)))]
+    (fn banner-scroll-listener []
+      (let [current-scroll (or (.-pageYOffset js/window)
+                                (.. js/document -documentElement -scrollTop))]
+        (set-hidden! (and (> current-scroll @last-scroll-top)
+                           (> current-scroll scroll-hide-threshold)))
+        (reset! last-scroll-top (max current-scroll 0))))))
+
 (defn banner []
-  (let [form?             @(subscribe [:application/form])
-        ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
-        ht-error? @(subscribe [:state-query [:application :has-applied]]);todo add other potential errors here
-        control-active?   (and form? (not (or ht-lander-active? ht-error?)))]
-    [:div.application__banner-container
-     {:aria-live "polite"}
-     [virkailija-fill-ribbon]
-     [:div.application__top-banner-container
-      [:div.application-top-banner
-       [logo]
-       [hakuaika-left]
-       (when control-active?
-         [:div.application__preview-control
-          [preview-toggle]])
-       (when control-active?
-         [status-controls])
-       [logged-in-indicator-or-placeholder]]]
-     [demo-notification-banner]
-     [editing-notification-banner]
-     [preview-notification-banner]]))
+  (let [banner-ref (atom nil)
+        on-scroll  (make-banner-scroll-listener banner-ref)]
+    (r/create-class
+      {:component-did-mount
+       (fn [_this]
+         (.addEventListener js/window "scroll" on-scroll #js {:passive true}))
+
+       :component-will-unmount
+       (fn [_this]
+         (.removeEventListener js/window "scroll" on-scroll))
+
+       :reagent-render
+       (fn []
+         (let [form?             @(subscribe [:application/form])
+               ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
+               ht-error? @(subscribe [:state-query [:application :has-applied]]);todo add other potential errors here
+               control-active?   (and form? (not (or ht-lander-active? ht-error?)))]
+           [:div.application__banner-container
+            {:ref       #(reset! banner-ref %)
+             :aria-live "polite"}
+            [virkailija-fill-ribbon]
+            [:div.application__top-banner-container
+             [:div.application-top-banner
+              [logo]
+              [hakuaika-left]
+              (when control-active?
+                [:div.application__preview-control
+                 [preview-toggle]])
+              (when control-active?
+                [status-controls])
+              [logged-in-indicator-or-placeholder]]]
+            [demo-notification-banner]
+            [editing-notification-banner]
+            [preview-notification-banner]]))})))

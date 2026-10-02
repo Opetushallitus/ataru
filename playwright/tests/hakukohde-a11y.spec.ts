@@ -101,7 +101,6 @@ const ensureTwoHakukohteetSelected = async () => {
 }
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await Promise.all([
