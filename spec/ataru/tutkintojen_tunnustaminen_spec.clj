@@ -15,9 +15,9 @@
                                                                                        tutkintojen-tunnustaminen-review-state-changed-job-step
                                                                                        tutkintojen-tunnustaminen-submit-job-handler]]
             [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-store :refer [start-tutkintojen-tunnustaminen-send-job]]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-information-request-notify-job :refer [tutkintojen-tunnustaminen-information-request-handler]]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-notify-job :refer [tutkintojen-tunnustaminen-state-change-handler]]
-            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-notify-job :refer [tutkintojen-tunnustaminen-edit-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-information-request-job :refer [tutkintojen-tunnustaminen-information-request-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-job :refer [tutkintojen-tunnustaminen-state-change-handler]]
+            [ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-job :refer [tutkintojen-tunnustaminen-edit-handler]]
             [ataru.time :as t]
             [ataru.time.format :as f]
             [clojure.data.xml :as xml]
@@ -104,7 +104,7 @@
   (mass-delete-application-data [_ _ _ _ _] nil)
   (mass-inactivate-applications [_ _ _ _] nil)
   (mass-reactivate-applications [_ _ _ _] nil)
-  (valinta-tulos-service-applications [_ _ _ _ _] [])
+  (valinta-tulos-service-applications [_ _ _ _ _ _] [])
   (valinta-ui-applications [_ _ _] [])
   (get-tutu-application [_ _] nil)
   (get-tutu-applications [_ _] [])
@@ -573,14 +573,14 @@
                                                          (.decode decoder)
                                                          (String.))))))))
 
-  (it "should send information request notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-information-request-notification {:return {:status 200}})]
+  (it "should send information request message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-put (stub :send-information-request {:return {:status 200}})]
         (tutkintojen-tunnustaminen-information-request-handler
           {:information-request {:application-key *application-key*
                                  :message-type    "information-request"}}
            {:form-by-id-cache form-by-id-cache-mock
             :koodisto-cache   koodisto-cache-mock})
-        (should-have-invoked :send-information-request-notification {:times 1})))
+        (should-have-invoked :send-information-request {:times 1})))
 
   (it "should send submit message to ASHA SFTP server"
       (let [r (tutkintojen-tunnustaminen-submit-job-handler
@@ -666,13 +666,13 @@
               (should-contain filename (set (map (comp :filename second) attachment-metadata)))
               (should= "fi" lang))))))
 
-  (it "should send tutu application edit notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-edit-notification {:return {:status 200}})]
+  (it "should send tutu application edit message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-put (stub :send-edit {:return {:status 200}})]
         (tutkintojen-tunnustaminen-edit-handler
-          {:application-id *application-id*}
+          {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
            :koodisto-cache   koodisto-cache-mock})
-        (should-have-invoked :send-edit-notification {:times 1})))
+        (should-have-invoked :send-edit {:times 1})))
 
   (it "should send inactivated message to ASHA SFTP server"
       (let [r (tutkintojen-tunnustaminen-review-state-changed-job-step
@@ -694,13 +694,13 @@
         (let [attachments (by-tag :createDocument (:content message))]
           (should-be empty? attachments))))
 
-  (it "should send state change notification message to tutu-backend"
-      (with-redefs [cas/cas-authenticated-get (stub :send-state-change-notification {:return {:status 200}})]
+  (it "should send state change message to tutu-backend"
+      (with-redefs [cas/cas-authenticated-put (stub :send-state-change {:return {:status 200}})]
         (tutkintojen-tunnustaminen-state-change-handler
           {:application-key *application-key*}
           {:form-by-id-cache form-by-id-cache-mock
            :koodisto-cache   koodisto-cache-mock})
-        (should-have-invoked :send-state-change-notification {:times 1})))
+        (should-have-invoked :send-state-change {:times 1})))
 
   (it "should not do anything if hakemus in wrong form"
       (should= {:transition {:id :final}}

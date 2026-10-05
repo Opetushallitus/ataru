@@ -596,7 +596,7 @@
   (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete])
   (mass-inactivate-applications [this session application-keys reason-of-inactivation])
   (mass-reactivate-applications [this session application-keys reason-of-reactivation])
-  (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset])
+  (valinta-tulos-service-applications [this haku-oid hakukohde-oid hakemus-oids offset include-yhteystiedot?])
   (valinta-ui-applications [this session query])
   (get-tutu-application [this application-key])
   (get-tutu-applications [this application-keys])
@@ -775,7 +775,7 @@
                (keys (:hakukohde-reviews review))
                [:edit-applications])
             (let [needs-refresh? (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)]
-              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
+              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-job
                job-runner
                application-key)
               {:events (get-application-events organization-service application-key)
@@ -1041,12 +1041,13 @@
         haun-hakukohteet)))
 
   (valinta-tulos-service-applications
-    [_ haku-oid hakukohde-oid hakemus-oids offset]
+    [_ haku-oid hakukohde-oid hakemus-oids offset include-yhteystiedot?]
     (let [applications (application-store/valinta-tulos-service-applications
                          haku-oid
                          hakukohde-oid
                          hakemus-oids
-                         offset)
+                         offset
+                         include-yhteystiedot?)
           update-fn kk-application-payment/remove-kk-applications-with-unapproved-payments]
       (update applications :applications update-fn :oid)))
 
