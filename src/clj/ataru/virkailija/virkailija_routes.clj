@@ -229,6 +229,21 @@
                    :session   session
                    :operation audit-log/operation-new})))
 
+(defn- log-hakukohderyhma-config
+  "Auditlokimerkintä hakukohderyhmän asetuksen muutoksesta. Kutsutaan vasta onnistuneen
+   tallennuksen jälkeen: 409 tarkoittaa ettei mikään muuttunut.
+
+   Poistossa arvo menee :old-kenttään kuten muissakin poistoissa, vaikka poistettua arvoa ei
+   haetakaan erikseen kantaa vasten."
+  [audit-logger session haku-oid hakukohderyhma-oid operation value]
+  (audit-log/log audit-logger
+                 (cond-> {:id        {:hakuOid            haku-oid
+                                      :hakukohderyhmaOid  hakukohderyhma-oid}
+                          :session   session
+                          :operation operation}
+                   (= operation audit-log/operation-delete) (assoc :old value)
+                   (not= operation audit-log/operation-delete) (assoc :new value))))
+
 (defn- log-link-resent
   "Auditlokimerkintä linkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
    (application_store/add-new-secret-to-application), joten kyseessä on hakemuksen muutos eikä
@@ -409,7 +424,14 @@
       :path-params [form-key :- s/Str]
       :query-params [{form-allows-ht :- s/Bool false}]
       :body [body {:contents [ataru-schema/EmailTemplate]}]
-      (ok (email/store-email-templates form-key session (:contents body) form-allows-ht)))
+      ;; Sähköpostipohjat ovat lomakkeen konfiguraatiota, joten muokkaus vaatii saman
+      ;; :form-edit-oikeuden kuin lomake itse.
+      (ok (access-controlled-form/check-form-edit-authorized-by-key
+            form-key
+            session
+            tarjonta-service
+            organization-service
+            (fn [] (email/store-email-templates form-key session (:contents body) form-allows-ht audit-logger)))))
 
     (api/GET "/email-templates/:form-key" []
       :path-params [form-key :- s/Str]
@@ -1489,8 +1511,19 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                                                    if-unmodified-since)
                                                  (hakukohderyhmat/insert-rajaava-hakukohderyhma
                                                    ryhma))]
-                                        (response/header (response/ok ryhma)
-                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (do
+                                          ;; Kohde otetaan tallennetulta riviltä, ei polkuparametreista:
+                                          ;; kysely kohdistuu rungon haku-oid/hakukohderyhma-oid-kenttiin,
+                                          ;; eikä reitti vaadi niiden vastaavan polkua.
+                                          (log-hakukohderyhma-config
+                                            audit-logger session
+                                            (:haku-oid ryhma) (:hakukohderyhma-oid ryhma)
+                                            (if (some? if-unmodified-since)
+                                              audit-log/operation-modify
+                                              audit-log/operation-new)
+                                            {:raja (:raja ryhma)})
+                                          (response/header (response/ok ryhma)
+                                                           "Last-Modified" (format-last-modified last-modified)))
                                         (response/conflict {:error (if (some? if-unmodified-since)
                                                                      (str "Hakukohderyhma modified since " if-unmodified-since)
                                                                      "Hakukohderyhma exists")})))]
@@ -1509,9 +1542,15 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :return ataru-schema/RajaavaHakukohderyhma
         (let [delete (fn []
-                       (hakukohderyhmat/delete-rajaava-hakukohderyhma
-                         haku-oid
-                         hakukohderyhma-oid)
+                       ;; Poistokysely palauttaa muuttuneiden rivien määrän, joten merkintä
+                       ;; syntyy vain kun jotain oikeasti poistettiin.
+                       (when (pos? (hakukohderyhmat/delete-rajaava-hakukohderyhma
+                                     haku-oid
+                                     hakukohderyhma-oid))
+                         (log-hakukohderyhma-config
+                           audit-logger session haku-oid hakukohderyhma-oid
+                           audit-log/operation-delete
+                           {:deleted true}))
                        (response/no-content))]
           (session-orgs/run-org-authorized
             session
@@ -1554,8 +1593,21 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                                                    if-unmodified-since)
                                                  (hakukohderyhmat/insert-priorisoiva-hakukohderyhma
                                                    ryhma))]
-                                        (response/header (response/ok ryhma)
-                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (do
+                                          ;; Prioriteettilista voi olla pitkä, joten merkintään
+                                          ;; kirjataan vain sen koko, ei koko järjestystä.
+                                          ;; Kohde otetaan tallennetulta riviltä, ei polkuparametreista:
+                                          ;; kysely kohdistuu rungon haku-oid/hakukohderyhma-oid-kenttiin,
+                                          ;; eikä reitti vaadi niiden vastaavan polkua.
+                                          (log-hakukohderyhma-config
+                                            audit-logger session
+                                            (:haku-oid ryhma) (:hakukohderyhma-oid ryhma)
+                                            (if (some? if-unmodified-since)
+                                              audit-log/operation-modify
+                                              audit-log/operation-new)
+                                            {:prioriteetti-count (count (:prioriteetit ryhma))})
+                                          (response/header (response/ok ryhma)
+                                                           "Last-Modified" (format-last-modified last-modified)))
                                         (response/conflict {:error (if (some? if-unmodified-since)
                                                                      (str "Hakukohderyhma modified since " if-unmodified-since)
                                                                      "Hakukohderyhma exists")})))]
@@ -1574,9 +1626,13 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (let [delete (fn []
-                       (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
-                         haku-oid
-                         hakukohderyhma-oid)
+                       (when (pos? (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
+                                     haku-oid
+                                     hakukohderyhma-oid))
+                         (log-hakukohderyhma-config
+                           audit-logger session haku-oid hakukohderyhma-oid
+                           audit-log/operation-delete
+                           {:deleted true}))
                        (response/no-content))]
           (session-orgs/run-org-authorized
             session

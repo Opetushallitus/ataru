@@ -74,6 +74,7 @@
      :last-modified (:last-modified ryhma)}))
 
 (defn delete-rajaava-hakukohderyhma
+  "Palauttaa poistettujen rivien määrän, jotta kutsuja erottaa todellisen poiston tyhjäkäynnistä."
   [haku-oid hakukohderyhma-oid]
   (db-exec yesql-delete-rajaava-hakukohderyhma!
            {:haku_oid           haku-oid
@@ -116,6 +117,7 @@
      :last-modified (:last-modified ryhma)}))
 
 (defn delete-priorisoiva-hakukohderyhma
+  "Palauttaa poistettujen rivien määrän, jotta kutsuja erottaa todellisen poiston tyhjäkäynnistä."
   [haku-oid hakukohderyhma-oid]
   (db-exec yesql-delete-priorisoiva-hakukohderyhma!
            {:haku_oid           haku-oid

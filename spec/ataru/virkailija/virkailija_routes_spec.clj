@@ -11,6 +11,7 @@
             [ataru.fixtures.form :as fixtures]
             [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
             [ataru.forms.form-store :as form-store]
+            [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.applications.application-store :as application-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
@@ -1139,6 +1140,147 @@
    :reference  application-key
    :locale     "fi"
    :message    "Maksupyyntö"})
+
+(defn- put-rajaava-hakukohderyhma
+  [haku-oid hakukohderyhma-oid raja if-unmodified-since user]
+  (-> (mock/request :put (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                              haku-oid "/ryhma/" hakukohderyhma-oid)
+                    (json/generate-string {:haku-oid           haku-oid
+                                           :hakukohderyhma-oid hakukohderyhma-oid
+                                           :raja               raja}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (cond-> if-unmodified-since
+              (update-in [:headers] assoc "if-unmodified-since" if-unmodified-since))
+      (cond-> (nil? if-unmodified-since)
+              (update-in [:headers] assoc "if-none-match" "*"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- delete-rajaava-hakukohderyhma [haku-oid hakukohderyhma-oid user]
+  (-> (mock/request :delete (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                                 haku-oid "/ryhma/" hakukohderyhma-oid))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-email-templates [form-key templates user]
+  (-> (mock/request :post (str "/lomake-editori/api/email-templates/" form-key)
+                    (json/generate-string {:contents templates}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(def ^:private email-template
+  {:lang           "fi"
+   :subject        "Kiitos hakemuksestasi"
+   :content        "Hakemuksesi on vastaanotettu."
+   :content-ending "Ystävällisin terveisin"
+   :signature      "Opintopolku"})
+
+;; Hakukohderyhmärivit eivät kuulu hakemus-/lomakefixtuureihin, joten testien käyttämät rivit
+;; siivotaan itse — muuten toinen ajo törmäisi edellisen jättämään riviin (409).
+(def ^:private config-haku-oids
+  ["1.2.246.562.29.config-1" "1.2.246.562.29.config-2" "1.2.246.562.29.config-3"
+   "1.2.246.562.29.config-4"])
+
+(describe "Configuration audit logging"
+          (tags :unit :config-audit)
+
+          (before (reset-fakes!)
+                  (doseq [haku-oid config-haku-oids]
+                    (hakukohderyhmat/delete-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1")
+                    (hakukohderyhmat/delete-priorisoiva-hakukohderyhma haku-oid "1.2.246.562.28.1")))
+
+          (it "Should write a lisäys entry when a rajaava hakukohderyhmä is created"
+              (let [haku-oid "1.2.246.562.29.config-1"
+                    resp     (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    entries  (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.28.1"
+                         (get-in (first entries) [:target :hakukohderyhmaOid]))))
+
+          ;; 409 tarkoittaa ettei mikään muuttunut, joten merkintää ei saa syntyä.
+          (it "Should not write an entry when the create conflicts with an existing row"
+              (let [haku-oid "1.2.246.562.29.config-2"
+                    _        (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    _        (reset-fakes!)
+                    resp     (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 5 nil nil)]
+                (should= 409 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid)))))
+
+          (it "Should write a poisto entry when a rajaava hakukohderyhmä is deleted"
+              (let [haku-oid "1.2.246.562.29.config-3"
+                    _        (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    _        (reset-fakes!)
+                    resp     (delete-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" nil)
+                    entries  (audit-entries-for audit-entries "poisto" :hakuOid haku-oid)]
+                (should= 204 (:status resp))
+                (should= 1 (count entries))
+                ;; Poiston arvo kuuluu :old-kenttään, kuten muissakin poistoissa.
+                (should-contain :oldValue (first (:changes (first entries))))))
+
+          ;; Olematon rivi: poisto onnistuu mutta mitään ei poistettu, joten merkintää ei synny.
+          (it "Should not write a poisto entry when nothing was deleted"
+              (let [resp (delete-rajaava-hakukohderyhma "1.2.246.562.29.config-none"
+                                                        "1.2.246.562.28.1" nil)]
+                (should= 204 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          ;; Kysely kohdistuu rungon kenttiin, eikä reitti vaadi niiden vastaavan polkuparametreja.
+          ;; Merkinnän on siksi nimettävä rivi joka todella kirjoitettiin — muuten loki osoittaisi
+          ;; kutsujan valitsemaan, muuttumattomaan hakuun.
+          (it "Should name the row that was actually written, not the path parameters"
+              (let [path-haku "1.2.246.562.29.config-1"
+                    body-haku "1.2.246.562.29.config-2"
+                    ryhma-oid "1.2.246.562.28.1"
+                    resp      (-> (mock/request :put (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                                                          path-haku "/ryhma/" "1.2.246.562.28.9")
+                                                (json/generate-string {:haku-oid           body-haku
+                                                                       :hakukohderyhma-oid ryhma-oid
+                                                                       :raja               3}))
+                                  (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+                                  (update-in [:headers] assoc "if-none-match" "*")
+                                  (mock/content-type "application/json")
+                                  ((deref virkailija-routes))
+                                  parse-body)
+                    entry     (first (audit-entries-for audit-entries "lisäys" :hakuOid body-haku))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= ryhma-oid (:hakukohderyhmaOid (:target entry)))
+                ;; Polun haku ei saa esiintyä merkinnässä lainkaan: sinne ei kirjoitettu mitään.
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :hakuOid path-haku)))))
+
+          (it "Should write a muutos entry when email templates are stored"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    _        (reset-fakes!)
+                    resp     (post-email-templates form-key [email-template] nil)
+                    entries  (audit-entries-for audit-entries "muutos" :formKey form-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "Kiitos hakemuksestasi" (pr-str (:changes (first entries))))))
+
+          ;; Pohjien sisältö on vapaata tekstiä eikä kuulu lokiin — vain pituus.
+          (it "Should not write email template bodies into the entry"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    body     (apply str (repeat 500 "salainen-sisalto "))
+                    _        (reset-fakes!)
+                    _        (post-email-templates form-key
+                                                   [(assoc email-template :content body)]
+                                                   nil)
+                    entry    (pr-str (first (audit-entries-for audit-entries "muutos" :formKey form-key)))]
+                (should-not-contain "salainen-sisalto" entry)
+                (should-contain "content-length" entry)))
+
+          ;; Uusi oikeustarkistus: ilman :form-edit-oikeutta pohjia ei saa tallentaa.
+          (it "Should reject email template storing without form-edit rights"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    _        (reset-fakes!)
+                    resp     (post-email-templates form-key [email-template] "VIEW-ONLY-USER")]
+                (should= 400 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos" :formKey form-key))))))
 
 (describe "Maksut audit logging"
           (tags :unit :maksut-audit)
