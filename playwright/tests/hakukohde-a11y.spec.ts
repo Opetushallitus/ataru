@@ -462,11 +462,14 @@ test('Focus ring on the attachment-remove confirm button meets the WCAG 1.4.11 n
 })
 
 test('Priorization warning is announced from active priority controls', async () => {
-  await openSearch()
-  await fillSearchAndWaitForResults('Te', 2)
-
+  // An earlier test may already have selected both hakukohteet, in which case
+  // the form is full and the open-search button is no longer rendered.
   const selectedRows = page.locator('.application__selected-hakukohde-row')
-  await ensureTwoHakukohteetSelected()
+  if ((await selectedRows.count()) < 2) {
+    await openSearch()
+    await fillSearchAndWaitForResults('Te', 2)
+    await ensureTwoHakukohteetSelected()
+  }
 
   const firstSelectedRow = selectedRows.nth(0)
   const secondSelectedRow = selectedRows.nth(1)
