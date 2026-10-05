@@ -58,6 +58,10 @@
   (fn sync-popup-geometry! []
     (when-let [popup-el @popup-ref]
       (when-let [anchor-el @field-ref]
+        ;; Ennen kentän mittaamista, koska kokoruutuwrapperin sijainti
+        ;; (ja siis kentän) riippuu näistä.
+        (when @mobile?
+          (viewport/sync-viewport-css-vars!))
         (let [rect        (.getBoundingClientRect anchor-el)
               style       (.-style popup-el)
               vh          (viewport/viewport-height)

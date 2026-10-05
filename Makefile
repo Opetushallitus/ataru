@@ -1,7 +1,7 @@
 # Project-specific configuration
 EXECUTABLES = lein docker pnpm lftp
 PORTS=15432 16379 15433 1221 16380 16381 8350 8351 8352 8353
-TOOL_VERSIONS := node:20 pnpm:9 lein:2.9
+TOOL_VERSIONS := node:24 pnpm:12 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
@@ -119,7 +119,7 @@ stop-watch:
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	$(DOCKER_COMPOSE) kill
+	$(DOCKER_COMPOSE) stop
 
 stop-hakija:
 	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
@@ -241,7 +241,8 @@ install-cypress:
 # ----------------
 
 test-clojurescript: $(NODE_MODULES)
-	lein with-profile test doo chrome test once
+	lein with-profile test cljsbuild once test
+	node bin/run-cljs-unit-tests.mjs
 
 test-clojure: $(NODE_MODULES) clear-test-db init-test-db
 	lein with-profile test spec

@@ -105,8 +105,7 @@
       ;; Testien (ks. playwright-utils.ts/resolveOptionLabel) ja muun
       ;; ulkopuolisen tarkastelun koti raa'alle arvolle — vrt.
       ;; dropdown-field/data-selected-option-value.
-      :data-value    value
-      :tab-index     "-1"}
+      :data-value    value}
      [:span.a-dropdown-list__option-label label]]))
 
 ;; Yksi Popup, jonka sisällä joko List (Item per vaihtoehto) tai Empty-tila.
