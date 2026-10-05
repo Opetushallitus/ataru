@@ -11,16 +11,19 @@
            aria-attrs
            data-test-id
            on-blur
+           disabled?
            id]} :- {:label                         s/Any
                     :on-click                      s/Any
                     (s/optional-key :aria-attrs)   AriaAttributes
                     (s/optional-key :data-test-id) s/Str
                     (s/optional-key :on-blur)      s/Any
+                    (s/optional-key :disabled?)    s/Bool
                     (s/optional-key :id)           s/Str}
    & children]
   [:button.a-button
    (cond-> {:type         "button"
             :on-click     on-click
+            :disabled     (boolean disabled?)
             :data-test-id data-test-id}
 
            (seq aria-attrs)
