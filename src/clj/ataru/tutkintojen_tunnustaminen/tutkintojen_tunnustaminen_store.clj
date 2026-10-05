@@ -57,14 +57,14 @@
                                                        "tutkintojen-tunnustaminen-edit-job"
                                                        {:application-id application-id})))))
 
-(defn start-tutu-application-edit-notification-job
+(defn start-tutu-application-edit-job
   [job-runner application-key]
   (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
-    (log/info "Started tutu application edit notification (to tutu-application) job with job id"
+    (log/info "Started tutu application edit job (to tutu-application) with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
                                                        connection
-                                                       "tutu-application-edit-notification-job"
+                                                       "tutu-application-edit-job"
                                                        {:application-key application-key})))))
 
 (defn start-tutkintojen-tunnustaminen-review-state-changed-job
@@ -77,14 +77,14 @@
                                                        "tutkintojen-tunnustaminen-review-state-changed-job"
                                                        {:event-id event-id})))))
 
-(defn start-tutkintojen-tunnustaminen-state-change-notification-job
+(defn start-tutkintojen-tunnustaminen-state-change-job
   [job-runner application-key]
   (when (get-in config [:tutkintojen-tunnustaminen :tutu-send-enabled?])
-    (log/info "Started tutkintojen tunnustaminen state change notification (to tutu-application) job with job id"
+    (log/info "Started tutkintojen tunnustaminen state change job (to tutu-application) with job id"
               (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                         (job/start-job job-runner
                                                        connection
-                                                       "tutkintojen-tunnustaminen-state-change-notify-job"
+                                                       "tutkintojen-tunnustaminen-state-change-job"
                                                        {:application-key application-key})))))
 
 (defn start-tutkintojen-tunnustaminen-information-request-jobs
@@ -100,10 +100,10 @@
                                                              "tutkintojen-tunnustaminen-information-request-sent-job"
                                                              {:information-request information-request}))))
         (when tutu-send-enabled?
-          (log/info "Started tutkintojen tunnustaminen information request notify (to tutu-application) job with job id"
+          (log/info "Started tutkintojen tunnustaminen information request job (to tutu-application) with job id"
                     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                               (job/start-job job-runner connection
-                                                             "tutkintojen-tunnustaminen-information-request-notify-job"
+                                                             "tutkintojen-tunnustaminen-information-request-job"
                                                              {:information-request information-request}))))))
 
 (defn- get-tutu-application [application-key]
