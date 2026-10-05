@@ -4,7 +4,7 @@
             [clojure.string :as string]
             [ataru.feature-config :refer [feature-enabled?]]))
 
-(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A-F|U-Y])(\d{3})([0-9a-zA-Z])$")
+(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-]|[A-F]|[U-Y])(\d{3})([0-9a-zA-Z])$")
 
 (def ^:private check-chars {0  "0"
                             1  "1"
@@ -41,6 +41,8 @@
 (def last-century #{"-" "U" "V" "W" "X" "Y"})
 (def this-century #{"A" "B" "C" "D" "E" "F"})
 
+(def ^:private unissued-individual-numbers #{"000" "001"})
+
 (defn- ->int [thestr]
   #?(:clj  (Integer/parseInt thestr)
      :cljs (js/parseInt thestr 10)))
@@ -58,6 +60,10 @@
   (and (feature-enabled? :disallow-temporary-ssn)
        (= \9 (first individual))))
 
+; 000 and 001 are never issued, the real range is 002-899
+(defn- unissued-individual-number? [individual]
+  (contains? unissued-individual-numbers individual))
+
 (defn ssn?
   [value]
   (when-not (nil? value)
@@ -68,6 +74,7 @@
             check-char (get check-chars check-mod)]
         (and
           (valid-year? (+ 2000 (->int year)) century)
+          (not (unissued-individual-number? individual))
           (not (temporary-ssn-in-prod? individual))
           (= (clojure.string/upper-case check) check-char))))))
 
