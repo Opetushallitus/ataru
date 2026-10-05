@@ -186,8 +186,8 @@
                   tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
                   (stub :start-tutkintojen-tunnustaminen-edit-job)
 
-                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
-                  (stub :start-tutu-application-edit-notification-job)
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-job
+                  (stub :start-tutu-application-edit-job)
 
                   hakija-application-service/start-attachment-finalizer-job
                   (stub :start-attachment-finalizer-job)
@@ -210,8 +210,8 @@
                   tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
                   (stub :start-tutkintojen-tunnustaminen-edit-job)
 
-                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
-                  (stub :start-tutu-application-edit-notification-job)
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-job
+                  (stub :start-tutu-application-edit-job)
 
                   hakija-application-service/start-attachment-finalizer-job
                   (stub :start-attachment-finalizer-job)
