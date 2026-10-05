@@ -1,6 +1,7 @@
 (ns ataru.email.application-email-jobs
   "Application-specific email confirmation init logic"
   (:require [ataru.background-job.email-job :as email-job]
+            [ataru.log.audit-log :as audit-log]
             [ataru.background-job.job :as job]
             [ataru.db.db :as db]
             [ataru.email.email-store :as email-store]
@@ -71,7 +72,13 @@
         (start-email-job job-runner email)))))
 
 (defn store-email-templates
-  [form-key session templates form-allows-ht?]
+  "Auditlokin merkintä kirjataan yhtenä tapahtumana lomaketta kohti: operaatio on 'lomakkeen
+   pohjat korvattiin'. create-or-update-email-template on upsert eikä kerro kumpi tapahtui,
+   joten operaatio on aina muutos.
+
+   Pohjien sisältöä ei kirjata, vain tunnistetiedot ja pituus: :content, :content-ending ja
+   :signature ovat vapaata tekstiä, ja pitkä HTML-pohja lähestyisi yksin kentän kokorajaa."
+  [form-key session templates form-allows-ht? audit-logger]
   (let [stored-templates (mapv #(email-store/create-or-update-email-template
                                   form-key
                                   (:lang %)
@@ -81,4 +88,13 @@
                                   (:content-ending %)
                                   (:signature %))
                            templates)]
+    (audit-log/log audit-logger
+                   {:new       {:templates (mapv (fn [t]
+                                                   {:lang           (:lang t)
+                                                    :subject        (:subject t)
+                                                    :content-length (count (or (:content t) ""))})
+                                                 templates)}
+                    :id        {:formKey form-key}
+                    :session   session
+                    :operation audit-log/operation-modify})
     (map #(application-email/preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %) (:signature %) form-allows-ht?) stored-templates)))
