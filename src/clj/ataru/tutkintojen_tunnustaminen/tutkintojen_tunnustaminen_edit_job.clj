@@ -1,4 +1,4 @@
-(ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-notify-job
+(ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-edit-job
   (:require
     [ataru.applications.application-store :as application-store]
     [ataru.cas.client :as cas]
@@ -17,5 +17,5 @@
             req (select-keys tutu-application forwarded-application-fields)
             response (cas/cas-authenticated-put tutu-cas-client url req)]
         (when (not (<= 200 (:status response) 299))
-          (throw (Exception. (str "Sending edit notification for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
-        (log/info (str "Sending edit notification for application " application-key " successfully sent to Tutu"))))))
+          (throw (Exception. (str "Sending edit message for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
+        (log/info (str "Sending edit message for application " application-key " successfully sent to Tutu"))))))
