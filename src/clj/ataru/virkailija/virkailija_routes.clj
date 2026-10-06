@@ -266,11 +266,10 @@
   [session audit-logger id operation value f]
   (if (get-in session [:identity :superuser])
     (do (audit-log/log audit-logger
-                       (cond-> {:id        id
-                                :session   session
-                                :operation operation}
-                         (= operation audit-log/operation-delete)    (assoc :old value)
-                         (not= operation audit-log/operation-delete) (assoc :new value)))
+                       {:new       value
+                        :id        id
+                        :session   session
+                        :operation operation})
         (f))
     (response/unauthorized {})))
 
@@ -950,7 +949,8 @@
         :path-params [note-id :- s/Int]
         (case (application-service/remove-review-note application-service session note-id)
           :not-found    (response/not-found {:error (str "Muistiinpanoa " note-id " ei löytynyt")})
-          :unauthorized (response/unauthorized {:error (str "Muistiinpanon " note-id " poisto ei ole sallittu")})
+          ;; 403 eikä 401: käyttöliittymä näyttää 403:n virheviestin, 401 tulkitaan istunnon päättymiseksi
+          :unauthorized (response/forbidden {:error (str "Muistiinpanon " note-id " poisto ei ole sallittu")})
           ;; Muut tapaukset: poisto onnistui, tai nil eli muistiinpano oli jo poistettu
           ;; kirjoitushetkellä. Poisto on idempotentti, joten molemmissa lopputulos on
           ;; kutsujan haluama eikä virhettä ole syytä näyttää.
