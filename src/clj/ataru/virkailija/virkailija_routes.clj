@@ -274,6 +274,17 @@
         (f))
     (response/unauthorized {})))
 
+(defn- job-types->audit-value
+  "update-job-statuses ottaa rungon muodossa s/Any, joten merkintä kirjataan varovasti: audit-kutsu
+   on ennen suoritusta eikä se saa kaatua väärän muotoiseen runkoon (siihen kaatuu vasta kysely)."
+  [body]
+  {:jobTypes (if (sequential? body)
+               (mapv #(if (map? %)
+                        (select-keys % [:job_type :enabled])
+                        (str %))
+                     body)
+               (str body))})
+
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
                           valintalaskentakoostepalvelu-service
@@ -488,115 +499,142 @@
       (api/POST "/start-kk-application-payment-maksut-poller-job" {session :session}
         :path-params []
         :summary "Triggers a job for updating maksut status for all open higher education application payments"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
-                job-runner)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger nil audit-log/operation-new
+          {:job "kk-application-payment-maksut-poller"}
+          (fn []
+            (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
+              job-runner)
+            (response/ok {}))))
 
       (api/POST "/start-kk-application-payment-status-updater-job-for-all" {session :session}
         :path-params []
         :summary "Triggers a job for updating internal payment status for all open higher education application payments"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
-                job-runner)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger nil audit-log/operation-new
+          {:job "kk-payment-status-for-all"}
+          (fn []
+            (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
+              job-runner)
+            (response/ok {}))))
 
       (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
         :path-params [person-oid :- s/Str
                       term :- s/Str
                       year :- s/Int]
         :summary "Triggers a job for updating internal payment status for single higher education application payment"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
-                job-runner
-                person-oid
-                term
-                year)
-              (response/ok {}))
-          (response/unauthorized {})))
+        ;; year on s/Int, joten se on str:ttava: Target-kentät menevät setField(String, String):iin.
+        (superuser-only
+          session audit-logger {:personOid person-oid :term term :year (str year)}
+          audit-log/operation-new
+          {:job "kk-payment-status-for-person"}
+          (fn []
+            (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
+              job-runner
+              person-oid
+              term
+              year)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-submit"}
+          (fn []
+            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-edit"}
+          (fn []
+            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-information-request-jobs/:information-request-id" {session :session}
         :path-params [information-request-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
-            (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
-                  job-runner
-                  information-request)
-                (response/ok {}))
-            (response/not-found {:error (str "Information request not found with id " information-request-id)}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:informationRequestId (str information-request-id)}
+          audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-information-request"}
+          (fn []
+            (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
+              (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
+                    job-runner
+                    information-request)
+                  (response/ok {}))
+              (response/not-found {:error (str "Information request not found with id " information-request-id)})))))
 
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "automatic-eligibility-if-ylioppilas"}
+          (fn []
+            (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (application-service/start-automatic-eligibility-if-ylioppilas-job-for-haku
-                job-runner
-                haku-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-new
+          {:job "automatic-eligibility-if-ylioppilas-for-haku"}
+          (fn []
+            (application-service/start-automatic-eligibility-if-ylioppilas-job-for-haku
+              job-runner
+              haku-oid)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-payment-obligation-job/:person-oid" {session :session}
         :path-params [person-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-payment-obligation/start-automatic-payment-obligation-job
-                job-runner
-                person-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:personOid person-oid} audit-log/operation-new
+          {:job "automatic-payment-obligation"}
+          (fn []
+            (automatic-payment-obligation/start-automatic-payment-obligation-job
+              job-runner
+              person-oid)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-payment-obligation-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-payment-obligation/start-automatic-payment-obligation-job-for-haku
-                job-runner
-                haku-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-new
+          {:job "automatic-payment-obligation-for-haku"}
+          (fn []
+            (automatic-payment-obligation/start-automatic-payment-obligation-job-for-haku
+              job-runner
+              haku-oid)
+            (response/ok {}))))
 
       (api/POST "/start-submit-jobs/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (hakija-application-service/start-submit-jobs
-                attachment-deadline-service
-                koodisto-cache
-                tarjonta-service
-                organization-service
-                ohjausparametrit-service
-                job-runner
-                application-id
-                nil)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "submit-jobs"}
+          (fn []
+            (hakija-application-service/start-submit-jobs
+              attachment-deadline-service
+              koodisto-cache
+              tarjonta-service
+              organization-service
+              ohjausparametrit-service
+              job-runner
+              application-id
+              nil)
+            (response/ok {}))))
 
+      ;; Ei auditlokitusta: tämä on rekisterinpitäjille rajattu luku taustatöiden asetuksista,
+      ;; ei henkilötietoa eikä muutos.
       (api/GET "/list-job-statuses" {session :session}
         (if (get-in session [:identity :superuser])
           (response/ok (job/get-job-types job-runner))
@@ -604,9 +642,14 @@
 
       (api/POST "/update-job-statuses" {session :session}
         :body [body s/Any]
-        (if (get-in session [:identity :superuser])
-          (response/ok (job/update-job-types job-runner body))
-          (response/unauthorized {}))))
+        ;; Tämä kytkee ajastettuja taustatöitä päälle ja pois (UPDATE job_types SET enabled).
+        ;; Pois kytketty työ epäonnistuu hiljaa toistaiseksi, joten merkintä kertoo mitkä työt
+        ;; ja mihin tilaan.
+        (superuser-only
+          session audit-logger nil audit-log/operation-modify
+          (job-types->audit-value body)
+          (fn []
+            (response/ok (job/update-job-types job-runner body))))))
 
     (api/context "/post-process" []
       :tags ["post-process-api"]
