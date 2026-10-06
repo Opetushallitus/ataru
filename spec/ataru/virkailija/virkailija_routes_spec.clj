@@ -937,7 +937,7 @@
                                             [:body :id])
                     _               (reset! audit-entries [])
                     resp            (delete-review-note note-id "USER-WITH-HAKUKOHDE-ORGANIZATION")]
-                (should= 401 (:status resp))
+                (should= 403 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "poisto")))
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
@@ -965,7 +965,7 @@
                                             [:body :id])
                     _               (reset! audit-entries [])
                     resp            (delete-review-note note-id "VIEW-ONLY-USER")]
-                (should= 401 (:status resp))
+                (should= 403 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "poisto")))
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
@@ -980,7 +980,7 @@
                     _               (set-review-note-author! note-id nil)
                     _               (reset! audit-entries [])
                     resp            (delete-review-note note-id "VIEW-ONLY-USER")]
-                (should= 401 (:status resp))
+                (should= 403 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "poisto")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
 
@@ -995,7 +995,7 @@
                     _               (set-review-note-author! note-id view-only-user-oid)
                     _               (reset! audit-entries [])
                     resp            (delete-review-note note-id "VIEW-ONLY-USER")]
-                (should= 401 (:status resp))
+                (should= 403 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "poisto")))
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
@@ -1449,7 +1449,7 @@
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
                  (should= "all" (get-in (first entries) [:target :cache]))
-                (should-contain :oldValue (first (:changes (first entries))))
+                (should-contain :newValue (first (:changes (first entries))))
                 (should-contain "clear-all-caches" (pr-str (:changes (first entries))))
                 (should-contain [:clear-all] @koodisto-cache-calls)))
 
