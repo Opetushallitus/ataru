@@ -1295,6 +1295,26 @@
       ((deref virkailija-routes))
       parse-body))
 
+(defn- post-background-job [path user]
+  (-> (mock/request :post (str "/lomake-editori/api/background-jobs" path))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- get-job-statuses [user]
+  (-> (mock/request :get "/lomake-editori/api/background-jobs/list-job-statuses")
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-update-job-statuses [job-types user]
+  (-> (mock/request :post "/lomake-editori/api/background-jobs/update-job-statuses"
+                    (json/generate-string job-types))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
 (describe "Cache route authorization and audit logging"
           (tags :unit :operational-audit)
 
@@ -1360,6 +1380,120 @@
                 (should= 401 (:status resp))
                 (should= [] @form-by-haku-cache-calls)
                 (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
+
+(describe "Background job route audit logging"
+          (tags :unit :operational-audit)
+
+          (before (reset-fakes!))
+
+          ;; Reitit olivat jo superuser-rajattuja, joten tässä vaiheessa lisätään vain merkinnät.
+          (it "Should write a lisäys entry when a parameterless job is triggered"
+              (let [resp    (post-background-job "/start-kk-application-payment-maksut-poller-job"
+                                                 "SUPERUSER")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "kk-application-payment-maksut-poller"
+                                (pr-str (:changes (first entries))))))
+
+          (it "Should not trigger a job for a non-superuser and write no entry"
+              (let [resp (post-background-job "/start-kk-application-payment-maksut-poller-job" nil)]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          ;; Target-arvot menevät setField(String, String):iin, joten Int-parametrit on ajettava str-muunnoksen läpi.
+          ;; Ilman muunnosta kutsu heittää poikkeuksen eikä merkintää synny lainkaan.
+          (it "Should record an s/Int year and person oid as strings"
+              (let [resp  (post-background-job
+                            "/start-kk-application-payment-status-updater-job/1.2.246.562.24.1/kausi_s/2025"
+                            "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "2025" (get-in entry [:target :year]))
+                (should= "1.2.246.562.24.1" (get-in entry [:target :personOid]))
+                (should= "kausi_s" (get-in entry [:target :term]))))
+
+          (it "Should record an s/Int application id as a string"
+              (let [resp  (post-background-job "/start-tutkintojen-tunnustaminen-submit-job/12345"
+                                               "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "12345" (get-in entry [:target :applicationId]))))
+
+          ;; 404-haara on superuser-haaran sisällä, joten merkintä syntyy silti: pyyntö ja yritys tehtiin.
+          (it "Should record the attempt even when the information request is not found"
+              (let [resp  (post-background-job
+                            "/start-tutkintojen-tunnustaminen-information-request-jobs/999999"
+                            "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 404 (:status resp))
+                (should-not-be-nil entry)
+                (should= "999999" (get-in entry [:target :informationRequestId]))))
+
+          (it "Should record a haku oid target for a haku-wide job"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-background-job
+                               (str "/start-automatic-payment-obligation-job-for-haku/" haku-oid)
+                               "SUPERUSER")
+                    entry    (first (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)))
+
+          ;; Tämä kytkee ajastettuja töitä päälle ja pois, joten merkinnästä on käytävä ilmi mitkä.
+          (it "Should write a muutos entry naming the job types when job statuses are updated"
+              (let [resp    (post-update-job-statuses
+                              [{:job_type "test-job" :enabled false}]
+                              "SUPERUSER")
+                    entries (audit-entries-for audit-entries "muutos")
+                    changes (pr-str (:changes (first entries)))]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "test-job" changes)
+                (should-contain "false" changes)))
+
+          (it "Should not update job statuses for a non-superuser and write no entry"
+              (let [resp (post-update-job-statuses [{:job_type "test-job" :enabled false}] nil)]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos")))))
+
+          ;; Luku taustatöiden asetuksista on rajattu mutta ei auditlokitettu: ei henkilötietoa
+          ;; eikä muutosta. Testi pitää päätöksen näkyvissä.
+          (it "Should gate but not audit reading job statuses"
+              (let [resp (get-job-statuses "SUPERUSER")]
+                (should= 200 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "luku")))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          (it "Should refuse every background job route for a logged-in non-superuser"
+              ;; Varmistetaan ensin että käytetty identiteetti on oikeasti kirjautunut virkailija
+              ;; jolta puuttuu vain superuser-lippu. Ilman tätä 401 voisi johtua kirjautumisen
+              ;; puutteesta eikä portista, eikä testi kertoisi portista mitään.
+              (let [info (user-info (login @virkailija-routes nil))]
+                (should= 200 (:status info))
+                (should-not-be-nil (-> info :body :oid))
+                (should= false (-> info :body :superuser?))
+                (should-not-be-nil (seq (-> info :body :organizations))))
+              (doseq [path ["/start-kk-application-payment-maksut-poller-job"
+                            "/start-kk-application-payment-status-updater-job-for-all"
+                            "/start-kk-application-payment-status-updater-job/1.2.246.562.24.1/kausi_s/2025"
+                            "/start-tutkintojen-tunnustaminen-submit-job/12345"
+                            "/start-tutkintojen-tunnustaminen-edit-job/12345"
+                            "/start-tutkintojen-tunnustaminen-information-request-jobs/12345"
+                            "/start-automatic-eligibility-if-ylioppilas-job/12345"
+                            "/start-automatic-eligibility-if-ylioppilas-job-for-haku/1.2.246.562.29.65950024185"
+                            "/start-automatic-payment-obligation-job/1.2.246.562.24.1"
+                            "/start-automatic-payment-obligation-job-for-haku/1.2.246.562.29.65950024185"
+                            "/start-submit-jobs/12345"]]
+                (reset-fakes!)
+                (let [resp (post-background-job path nil)]
+                  (should= 401 (:status resp))
+                  (should= 0 (count (audit-entries-for audit-entries "lisäys"))))))
+
+          (it "Should not let a non-superuser read job statuses"
+              (let [resp (get-job-statuses nil)]
+                (should= 401 (:status resp)))))
 
 (describe "Maksut audit logging"
           (tags :unit :maksut-audit)
