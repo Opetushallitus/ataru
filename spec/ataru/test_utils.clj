@@ -144,6 +144,18 @@
      :response response
      :service  (->FakeValintaTulosService calls response)}))
 
+(defn new-counting-cache
+  "Palauttaa {:calls :cache}. :calls kerää tyhjennykset, jotta testi voi varmistaa myös sen
+   ettei välimuistia kosketettu — luvattoman kutsun olennaisin väite."
+  []
+  (let [calls (atom [])]
+    {:calls calls
+     :cache (reify cache-service/Cache
+              (get-from [_ _])
+              (get-many-from [_ _])
+              (remove-from [_ key] (swap! calls conj [:remove-from key]))
+              (clear-all [_] (swap! calls conj [:clear-all])))}))
+
 (defn audit-entries-for
   "Suodattaa merkinnät operaation ja valinnaisen target-kentän perusteella.
    Operaatiot ovat audit_log.clj:n suomenkielisiä nimiä, esim. \"lisäys\", \"poisto\"."

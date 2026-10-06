@@ -23,7 +23,8 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
-                                      new-fake-maksut-service new-fake-valinta-tulos-service
+                                      new-counting-cache new-fake-maksut-service
+                                      new-fake-valinta-tulos-service
                                       fake-lasku fake-vts-response should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
@@ -82,12 +83,20 @@
 (def maksut-capture (new-fake-maksut-service))
 (def maksut-calls (:calls maksut-capture))
 
+(def koodisto-cache-capture (new-counting-cache))
+(def koodisto-cache-calls (:calls koodisto-cache-capture))
+
+(def form-by-haku-cache-capture (new-counting-cache))
+(def form-by-haku-cache-calls (:calls form-by-haku-cache-capture))
+
 (defn- reset-fakes!
   "Palauttaa kaikki jaetut keruuatomit ja fake-vastaukset lähtötilaan."
   []
   (reset! audit-entries [])
   (reset! vts-calls [])
   (reset! maksut-calls [])
+  (reset! koodisto-cache-calls [])
+  (reset! form-by-haku-cache-calls [])
   (reset! (:response vts-capture) fake-vts-response)
   (reset! (:laskut maksut-capture) [fake-lasku]))
 
@@ -100,11 +109,8 @@
                              (get-many-from [_ _])
                              (remove-from [_ _])
                              (clear-all [_]))
-          :koodisto-cache     (reify cache-service/Cache
-                               (get-from [_ _])
-                               (get-many-from [_ _])
-                               (remove-from [_ _])
-                               (clear-all [_]))
+          :koodisto-cache     (:cache koodisto-cache-capture)
+          :form-by-haku-oid-str-cache (:cache form-by-haku-cache-capture)
           :organization-service (org-service/->FakeOrganizationService)
           :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service)
           :tarjonta-service (tarjonta-service/->MockTarjontaKoutaService)
@@ -136,6 +142,7 @@
                                 :ohjausparametrit-service
                                 :form-by-id-cache
                                 :koodisto-cache
+                                :form-by-haku-oid-str-cache
                                 :valinta-tulos-service
                                 :maksut-service
                                 :job-runner]))
@@ -1281,6 +1288,78 @@
                     resp     (post-email-templates form-key [email-template] "VIEW-ONLY-USER")]
                 (should= 400 (:status resp))
                 (should= 0 (count (audit-entries-for audit-entries "muutos" :formKey form-key))))))
+
+(defn- post-cache [path user]
+  (-> (mock/request :post (str "/lomake-editori/api/cache" path))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(describe "Cache route authorization and audit logging"
+          (tags :unit :operational-audit)
+
+          (before (reset-fakes!))
+
+          (it "Should clear all caches for a superuser and write a poisto entry"
+              (let [resp    (post-cache "/clear" "SUPERUSER")
+                    entries (audit-entries-for audit-entries "poisto")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain :oldValue (first (:changes (first entries))))
+                (should-contain "clear-all-caches" (pr-str (:changes (first entries))))
+                (should-contain [:clear-all] @koodisto-cache-calls)))
+
+          (it "Should not clear caches for a non-superuser"
+              (let [resp (post-cache "/clear" nil)]
+                (should= 401 (:status resp))
+                (should= [] @koodisto-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          (it "Should clear a named cache for a superuser and name it in the entry"
+              (let [resp  (post-cache "/clear/koodisto" "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "poisto" :cache "koodisto"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should-contain [:clear-all] @koodisto-cache-calls)))
+
+          (it "Should not clear a named cache for a non-superuser"
+              (let [resp (post-cache "/clear/koodisto" nil)]
+                (should= 401 (:status resp))
+                (should= [] @koodisto-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          (it "Should answer 404 for an unknown cache name"
+              (let [resp (post-cache "/clear/ei-olemassa" "SUPERUSER")]
+                (should= 404 (:status resp))
+                (should= [] @koodisto-cache-calls)))
+
+          (it "Should answer 401 rather than 404 for a non-superuser with an unknown cache name"
+              (let [resp (post-cache "/clear/ei-olemassa" nil)]
+                (should= 401 (:status resp))))
+
+          (it "Should remove a single cache entry and name the key in the entry"
+              (let [resp  (post-cache "/remove/koodisto/avain-1" "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "poisto" :cacheKey "avain-1"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "koodisto" (get-in entry [:target :cache]))
+                (should-contain [:remove-from "avain-1"] @koodisto-cache-calls)))
+
+          (it "Should clear haku caches for a superuser and name the haku in the entry"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-cache (str "/haku/" haku-oid "/clear") "SUPERUSER")
+                    entry    (first (audit-entries-for audit-entries "poisto" :hakuOid haku-oid))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                ;; Lomakevälimuisti tyhjennetään sekä hakijan että virkailijan rooleille.
+                (should= 2 (count @form-by-haku-cache-calls))))
+
+          (it "Should not clear haku caches for a non-superuser"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-cache (str "/haku/" haku-oid "/clear") nil)]
+                (should= 401 (:status resp))
+                (should= [] @form-by-haku-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
 
 (describe "Maksut audit logging"
           (tags :unit :maksut-audit)

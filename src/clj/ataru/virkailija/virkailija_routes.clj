@@ -257,6 +257,23 @@
                   :session   session
                   :operation audit-log/operation-modify}))
 
+(defn- superuser-only
+  "Rekisterinpitäjille rajattu operaatio, josta syntyy auditlokimerkintä. Luvattomasta yrityksestä ei
+   kirjata merkintää: 401 ei muuta mitään. Merkintä kirjataan ennen suoritusta, jotta se säilyy myös
+   jos f heittää poikkeuksen.
+
+   Operaatio tulee kutsujalta: välimuistin tyhjennys on poisto, taustatyön käynnistys lisäys."
+  [session audit-logger id operation value f]
+  (if (get-in session [:identity :superuser])
+    (do (audit-log/log audit-logger
+                       (cond-> {:id        id
+                                :session   session
+                                :operation operation}
+                         (= operation audit-log/operation-delete)    (assoc :old value)
+                         (not= operation audit-log/operation-delete) (assoc :new value)))
+        (f))
+    (response/unauthorized {})))
+
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
                           valintalaskentakoostepalvelu-service
@@ -1060,43 +1077,61 @@
                                              " aktivointi ei ole sallittu")}))))
 
 
+    ;; Välimuistien tyhjennys hidastaa sekä virkailija- että hakijapuolta (samat välimuistit palvelevat molempia),
+    ;; joten se on rajattu rekisterinpitäjille.
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
         :summary "Clear all caches"
-        {:status 200
-         :body   (do
-                   (doseq [[key dep] dependencies
-                           :when (clojure.string/ends-with? (name key) "-cache")]
-                     (cache/clear-all dep))
-                   {})})
+        (superuser-only
+          session audit-logger nil audit-log/operation-delete
+          {:attempted-operation "clear-all-caches"}
+          (fn []
+            (doseq [[key dep] dependencies
+                    :when (clojure.string/ends-with? (name key) "-cache")]
+              (cache/clear-all dep))
+            (response/ok {}))))
       (api/POST "/clear/:cache" {session :session}
         :path-params [cache :- s/Str]
         :summary "Clear an entire cache map of its entries"
-        {:status 200
-         :body   (do (cache/clear-all (get dependencies (keyword (str cache "-cache"))))
-                     {})})
+        (superuser-only
+          session audit-logger {:cache cache} audit-log/operation-delete
+          {:attempted-operation "clear-cache"}
+          (fn []
+            ;; Tuntematon nimi antoi ennen nil:n protokollakutsuun eli 500:n. Oikeustarkistus
+            ;; on tätä ennen, jotta olemassa olevia välimuistinimiä ei voi kartoittaa 404:llä.
+            (if-let [dep (get dependencies (keyword (str cache "-cache")))]
+              (do (cache/clear-all dep)
+                  (response/ok {}))
+              (response/not-found {:error (str "Tuntematon välimuisti " cache)})))))
       (api/POST "/remove/:cache/:key" {session :session}
         :path-params [cache :- s/Str
                       key :- s/Str]
         :summary "Remove an entry from cache map"
-        {:status 200
-         :body   (do (cache/remove-from (get dependencies (keyword (str cache "-cache"))) key)
-                     {})})
+        (superuser-only
+          session audit-logger {:cache cache :cacheKey key} audit-log/operation-delete
+          {:attempted-operation "remove-cache-entry"}
+          (fn []
+            (if-let [dep (get dependencies (keyword (str cache "-cache")))]
+              (do (cache/remove-from dep key)
+                  (response/ok {}))
+              (response/not-found {:error (str "Tuntematon välimuisti " cache)})))))
       (api/POST "/haku/:haku-oid/clear" {session :session}
         :path-params [haku-oid :- s/Str]
         :summary "Remove haku, hakukohde and form cache entries related to haku"
-        {:status 200
-         :body   (do
-                   (tarjonta/clear-haku-caches tarjonta-service haku-oid)
-                   (hakija-form-service/clear-form-by-haku-oid-str-cache
-                     (:form-by-haku-oid-str-cache dependencies)
-                     haku-oid
-                     [:hakija])
-                   (hakija-form-service/clear-form-by-haku-oid-str-cache
-                     (:form-by-haku-oid-str-cache dependencies)
-                     haku-oid
-                     [:virkailija])
-                   {})}))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-delete
+          {:attempted-operation "clear-haku-caches"}
+          (fn []
+            (tarjonta/clear-haku-caches tarjonta-service haku-oid)
+            (hakija-form-service/clear-form-by-haku-oid-str-cache
+              (:form-by-haku-oid-str-cache dependencies)
+              haku-oid
+              [:hakija])
+            (hakija-form-service/clear-form-by-haku-oid-str-cache
+              (:form-by-haku-oid-str-cache dependencies)
+              haku-oid
+              [:virkailija])
+            (response/ok {})))))
 
     (api/GET "/haut" {session :session}
       :query-params [{show-hakukierros-paattynyt :- s/Bool false}]
