@@ -1169,7 +1169,18 @@
                   {:db   db
                    :http {:method              :delete
                           :path                (str "/lomake-editori/api/applications/notes/" note-id)
-                          :handler-or-dispatch :application/handle-remove-review-note-response}})))
+                          :handler-or-dispatch :application/handle-remove-review-note-response
+                          :override-args       {:error-handler #(dispatch [:application/handle-remove-review-note-error note-id])}}})))
+
+(reg-event-db :application/handle-remove-review-note-error
+              (fn [db [_ note-id]]
+                (if (some? (get-in db [:application :review-notes]))
+                  (update-in db [:application :review-notes]
+                             (partial mapv #(if (and (= note-id (:id %))
+                                                     (= :removing (:state %)))
+                                              (dissoc % :state)
+                                              %)))
+                  db)))
 
 (reg-event-db :application/handle-remove-review-note-response
               (fn [db [_ resp]]
