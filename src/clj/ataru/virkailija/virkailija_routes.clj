@@ -500,7 +500,8 @@
         :path-params []
         :summary "Triggers a job for updating maksut status for all open higher education application payments"
         (superuser-only
-          session audit-logger nil audit-log/operation-new
+          session audit-logger {:job "kk-application-payment-maksut-poller"}
+          audit-log/operation-new
           {:job "kk-application-payment-maksut-poller"}
           (fn []
             (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
@@ -511,7 +512,8 @@
         :path-params []
         :summary "Triggers a job for updating internal payment status for all open higher education application payments"
         (superuser-only
-          session audit-logger nil audit-log/operation-new
+          session audit-logger {:job "kk-payment-status-for-all"}
+          audit-log/operation-new
           {:job "kk-payment-status-for-all"}
           (fn []
             (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
@@ -646,7 +648,7 @@
         ;; Pois kytketty työ epäonnistuu hiljaa toistaiseksi, joten merkintä kertoo mitkä työt
         ;; ja mihin tilaan.
         (superuser-only
-          session audit-logger nil audit-log/operation-modify
+          session audit-logger {:job "job-types"} audit-log/operation-modify
           (job-types->audit-value body)
           (fn []
             (response/ok (job/update-job-types job-runner body))))))
@@ -1126,7 +1128,7 @@
       (api/POST "/clear" {session :session}
         :summary "Clear all caches"
         (superuser-only
-          session audit-logger nil audit-log/operation-delete
+          session audit-logger {:cache "all"} audit-log/operation-delete
           {:attempted-operation "clear-all-caches"}
           (fn []
             (doseq [[key dep] dependencies

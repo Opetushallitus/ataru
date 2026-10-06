@@ -1325,6 +1325,7 @@
                     entries (audit-entries-for audit-entries "poisto")]
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
+                 (should= "all" (get-in (first entries) [:target :cache]))
                 (should-contain :oldValue (first (:changes (first entries))))
                 (should-contain "clear-all-caches" (pr-str (:changes (first entries))))
                 (should-contain [:clear-all] @koodisto-cache-calls)))
@@ -1393,6 +1394,8 @@
                     entries (audit-entries-for audit-entries "lisäys")]
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
+                (should= "kk-application-payment-maksut-poller"
+                         (get-in (first entries) [:target :job]))
                 (should-contain "kk-application-payment-maksut-poller"
                                 (pr-str (:changes (first entries))))))
 
@@ -1450,6 +1453,7 @@
                     changes (pr-str (:changes (first entries)))]
                 (should= 200 (:status resp))
                 (should= 1 (count entries))
+                (should= "job-types" (get-in (first entries) [:target :job]))
                 (should-contain "test-job" changes)
                 (should-contain "false" changes)))
 
