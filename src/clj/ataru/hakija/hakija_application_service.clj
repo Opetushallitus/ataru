@@ -528,16 +528,16 @@
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id application]
+(defn- start-hakija-edit-jobs [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id application-key application]
   (application-email/start-email-edit-confirmation-job attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
                                                        application-id)
   (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
    job-runner
    application-id)
-  (tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
+  (tutkintojen-tunnustaminen-store/start-tutu-application-edit-job
     job-runner
-    application-id)
+    application-key)
   (start-attachment-finalizer-job job-runner application-id)
   (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
    job-runner
@@ -706,7 +706,7 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id application))
+        (start-hakija-edit-jobs attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id key application))
       (do
         (audit-log/log audit-logger
                        {:new       application-empty-answers-removed
