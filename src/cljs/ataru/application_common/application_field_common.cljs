@@ -59,9 +59,6 @@
            (assoc state :in-application-identifier-block true))
          [text state])))))
 
-(defn- add-link-target-prop
-  [text state]
-  [(string/replace text #"<a href=([^>]+)>" "<a target=\"_blank\" href=$1>") state])
 
 (defn- set-markdown-height
   [component scroll-height]
@@ -105,8 +102,7 @@
          (let [sanitized-html (as-> md-text v
                                 (md->html v
                                           :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
-                                                                            transformer-vector
-                                                                            [add-link-target-prop]))
+                                                                            transformer-vector))
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
