@@ -172,6 +172,41 @@
         (dissoc :secret))
     nil form-fixtures/payment-exemption-test-form {:identity {:oid "1.2.246.562.24.00000001213"}} audit-logger nil))
 
+(defn- edit-application-as-applicant [application update-answers-fn]
+  (application-store/update-application
+    (update application :answers update-answers-fn)
+    nil form-fixtures/payment-exemption-test-form {} audit-logger nil))
+
+(defn- set-attachment-answer [attachment-key file-ids]
+  (fn [answers]
+    (conj (vec (remove #(= attachment-key (:key %)) answers))
+          {:key       attachment-key
+           :value     file-ids
+           :fieldType "attachment"})))
+
+(defn- add-attachment-answer [attachment-key]
+  (set-attachment-answer attachment-key [(str attachment-key "-id")]))
+
+(defn- latest-application [application-key]
+  (application-store/get-application (:id (application-store/get-latest-application-by-key application-key))))
+
+(defn- init-application-with-attachment-and-obligation-state
+  [attachment-key file-ids obligation-state]
+  (let [application (application-store/get-application
+                      (unit-test-db/init-db-fixture
+                        form-fixtures/payment-exemption-test-form
+                        application-fixtures/application-with-hakemusmaksu-exemption
+                        nil))
+        application-key (:key application)]
+    (edit-application-as-applicant application (set-attachment-answer attachment-key file-ids))
+    (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                :review-requirement "kk-application-payment-obligation"
+                                                                :review-state obligation-state} application-key)
+    application-key))
+
+(defn- kk-application-payment-obligation-state [application-key]
+  (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+
 (describe "kk-application-payment-status-updater-job"
           (tags :unit)
           (with-stubs)
@@ -949,6 +984,127 @@
                 (should= {:application-key application-key
                           :state (:not-required payment/all-states)}
                          (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))))
+
+          (it "should reset 'exemption-not-verified' kk application payment obligation state to 'unreviewed' when applicant delivers exemption attachment"
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "exemption-not-verified"} application-key)
+                (edit-application-as-applicant application (add-attachment-answer "passport-attachment"))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "unreviewed"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
+
+          (it "should not reset 'exemption-not-verified' kk application payment obligation state when applicant delivers other than exemption attachment"
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "exemption-not-verified"} application-key)
+                (edit-application-as-applicant application (add-attachment-answer "eu-passport-attachment"))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "exemption-not-verified"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
+
+          (it "should reset 'exemption-not-verified' kk application payment obligation state of all hakukohteet when applicant delivers exemption attachment"
+              (let [hakukohteet ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"]
+                    application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    (assoc application-fixtures/application-with-hakemusmaksu-exemption :hakukohde hakukohteet)
+                                    nil))
+                    application-key (:key application)]
+                (doseq [hakukohde hakukohteet]
+                  (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde hakukohde
+                                                                              :review-requirement "kk-application-payment-obligation"
+                                                                              :review-state "exemption-not-verified"} application-key))
+                (edit-application-as-applicant application (add-attachment-answer "passport-attachment"))
+                (should= #{{:hakukohde "payment-info-test-kk-hakukohde" :state "unreviewed"}
+                           {:hakukohde "payment-info-test-kk-hakukohde-2" :state "unreviewed"}}
+                         (set (map #(select-keys % [:hakukohde :state])
+                                   (payment/get-kk-application-payment-obligation-reviews application-key))))))
+
+          (it "should not reset 'exemption-not-verified' kk application payment obligation state when applicant only removes exemption attachment files"
+              (let [application-key (init-application-with-attachment-and-obligation-state
+                                      "passport-attachment" ["passport-1" "passport-2"] "exemption-not-verified")]
+                (edit-application-as-applicant (latest-application application-key)
+                                               (set-attachment-answer "passport-attachment" ["passport-1"]))
+                (should= "exemption-not-verified" (kk-application-payment-obligation-state application-key))))
+
+          (it "should reset 'exemption-not-verified' kk application payment obligation state when applicant adds a new exemption attachment file alongside existing ones"
+              (let [application-key (init-application-with-attachment-and-obligation-state
+                                      "passport-attachment" ["passport-1"] "exemption-not-verified")]
+                (edit-application-as-applicant (latest-application application-key)
+                                               (set-attachment-answer "passport-attachment" ["passport-1" "passport-2"]))
+                (should= "unreviewed" (kk-application-payment-obligation-state application-key))))
+
+          (it "should not reset 'exemption-not-verified' kk application payment obligation state when applicant edits other than attachments"
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "exemption-not-verified"} application-key)
+                (edit-application-as-applicant application
+                                                #(map (fn [answer]
+                                                        (if (= "nationality" (:key answer))
+                                                          (assoc answer :value [["004"]])
+                                                          answer)) %))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "exemption-not-verified"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
+
+          (it "should not reset 'exemption-not-verified' kk application payment obligation state when virkailija adds exemption attachment"
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "exemption-not-verified"} application-key)
+                (edit-application-as-virkailija application (add-attachment-answer "passport-attachment"))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "exemption-not-verified"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
+
+          (it "should not reset other kk application payment obligation states when applicant delivers exemption attachment"
+              (let [application (application-store/get-application
+                                  (unit-test-db/init-db-fixture
+                                    form-fixtures/payment-exemption-test-form
+                                    application-fixtures/application-with-hakemusmaksu-exemption
+                                    nil))
+                    application-key (:key application)]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "in-migri-review"} application-key)
+                (edit-application-as-applicant application (add-attachment-answer "passport-attachment"))
+                (should= {:requirement "kk-application-payment-obligation"
+                          :state "in-migri-review"
+                          :hakukohde "payment-info-test-kk-hakukohde"
+                          :application-key application-key}
+                         (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))))
 
           (it "should automatically set kk-application-payment-obligation to 'reviewed' for VTJ-verified EU citizen"
               (let [application-id (unit-test-db/init-db-fixture
