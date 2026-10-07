@@ -95,10 +95,10 @@
             (tu/get-hakija-translation :confirm-remove lang)])]))))
 
 (defn- cancel-attachment-upload-button
-  [_ _ _]
+  [_ _]
   (let [confirm? (r/atom false)
         lang     (subscribe [:application/form-language])]
-    (fn [field-descriptor question-group-idx attachment-idx]
+    (fn [field-descriptor upload-id]
       [:div.application__form-attachment-remove-button-container
        [:button.application__form-attachment-remove-button
         {:on-click #(swap! confirm? not)}
@@ -111,8 +111,7 @@
                        (reset! confirm? false)
                        (dispatch [:application/cancel-attachment-upload
                                   field-descriptor
-                                  question-group-idx
-                                  attachment-idx]))}
+                                  upload-id]))}
           (tu/get-hakija-translation :confirm-cancel-upload @lang)])])))
 
 (defn- attachment-view-file [field-descriptor component-id question-group-idx attachment-idx]
@@ -170,7 +169,7 @@
                   "/"
                   (util/size-bytes->str size) ")")]]
      [:div.application__form-attachment-list-item-sub-container
-      [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
+      [cancel-attachment-upload-button field-descriptor (:upload-id attachment)]]]))
 
 (defn- attachment-row [field-descriptor component-id attachment-idx question-group-idx status]
   [:li.application__attachment-filename-list-item
