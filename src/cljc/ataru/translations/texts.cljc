@@ -710,7 +710,7 @@
    :ht-has-applied-lander-paragraph1            {:fi "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta."
                                                  :sv "I den här ansökan kan du skicka bara en (1) ansökan. Du har redan skickat en ansökan och därför kan du inte skicka flera ansökningar."
                                                  :en "You can only send one (1) application form in this application round. You have already sent an application and therefore cannot send another."}
-   :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun."
+   :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku -palveluun."
                                                  :sv "Om du vill ändra din ansökan, ska du logga in i tjänsten Min Studieinfo."
                                                  :en "If you want to modify your application, log in to My Studyinfo."}
    :ht-has-applied-lander-paragraph2-eidas      {:fi "Jos haluat muuttaa hakemustasi, niin löydät muokkauslinkin sähköpostiviestistä, jonka sait jättäessäsi edellisen hakemuksen."
@@ -719,7 +719,7 @@
    :ht-has-applied-lander-paragraph3            {:fi "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."
                                                  :sv "Vid problem kan du kontakta den läroanstalt som du har sökt till."
                                                  :en "If you have any issues, please contact the educational institution you are applying to."}
-   :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolku-palvelussa"
+   :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolku -palvelussa"
                                                  :sv "Se din ansökan i tjänsten Min Studieinfo"
                                                  :en "View your application on My Studyinfo"}
    :ht-jatka-palvelun-kayttoa                   {:fi "Jatka palvelun käyttöä"
@@ -746,7 +746,7 @@
    :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har mottagits!"
                                                  :en "Your application has been saved!"}
-   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
+   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku -palvelussa."
                                                  :sv "Du får en bekräftelse i din e-post. Du kan granska din ansökan eller logga ut. Du kan senare granska och ändra din ansökan via tjänsten Min Studieinfo."
                                                  :en "You will receive a confirmation to your email. You can view your application or log out. You can view or modify your application later on My Studyinfo."}
    :ht-application-confirmation-eidas           {:fi "Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."
