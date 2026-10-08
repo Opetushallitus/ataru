@@ -67,8 +67,14 @@
        first
        :value))
 
+(defn- open-ended-hakuaika?
+  [hakuaika]
+  (and (some? (:start hakuaika))
+       (nil? (:end hakuaika))))
+
 (defn time-is-before-some-hakuaika-grace-period?
-  "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku"
+  "Returns true if time 'now' is before specified grace days for one or more hakuaikas, for given haku.
+   A hakuaika without an end time never ends, so a haku with such a hakuaika always returns true."
   [haku grace-days now]
   (log/info (str "time-is-before-some-hakuaika-grace-period? Haku: " haku))
   (log/info (str "time-is-before-some-hakuaika-grace-period? grace-days: " grace-days))
@@ -80,15 +86,14 @@
         end-times-with-grace-period             (map
                                                   #(time/plus % (time/days grace-days))
                                                   hakuajat-end)]
-    (if (empty? end-times-with-grace-period)
-      (do (log/warn (str "Kk-haku (" (:oid haku) ") has no hakuaikas with end period: Haku: " haku))
-          false)
-      (boolean
-        (some #(not (time/before? % now)) end-times-with-grace-period)))))
+    (boolean
+      (or (some open-ended-hakuaika? (:hakuajat haku))
+          (some #(not (time/before? % now)) end-times-with-grace-period)))))
 
 (defn haku-active-for-updating
   "Check whether valid haku is recent enough that payments related to its applications may still need updating.
-   Returns all hakus that have their last application end date max grace days before today."
+   Returns all hakus that have their last application end date max grace days before today,
+   or that have a hakuaika without an end date."
   [haku]
   (time-is-before-some-hakuaika-grace-period?
     haku (+ haku-update-grace-days 1) (time/now)))

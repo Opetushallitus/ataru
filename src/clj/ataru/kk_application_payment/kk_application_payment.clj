@@ -284,8 +284,12 @@
   (let [hakuajat             (if-let [hakuajat (:hakuajat haku)]
                                hakuajat
                                [{:end (coerce/from-long (get-in haku [:hakuaika :end]))}])
+        ; Hakuaika without an end time (jatkuva haku) has no common deadline for all applications,
+        ; so the attachment deadline is calculated from application submission time regardless of haku settings.
         attachment-deadlines (map
-                               #(attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
+                               #(if (some? (:end %))
+                                  (attachment-deadline/attachment-deadline-for-hakuaika attachment-deadline-service application-submitted haku %)
+                                  (attachment-deadline/per-application-attachment-deadline attachment-deadline-service application-submitted haku))
                                hakuajat)]
     (boolean
       (some #(not (time/before? % now)) attachment-deadlines))))

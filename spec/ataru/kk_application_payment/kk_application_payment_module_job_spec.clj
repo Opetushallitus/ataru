@@ -12,6 +12,7 @@
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]))
 
 (def haku-key "payment-info-test-kk-haku-custom-form")
+(def haku-without-hakuaika-end-key "payment-info-test-kk-haku-custom-form-no-end")
 (def non-kk-haku-key "payment-info-test-non-kk-haku-custom-form")
 (def form-key tarjonta-service/custom-form-key)
 
@@ -51,6 +52,17 @@
                                  :content
                                  (some #(= (:id %) kk-application-payment-wrapper-key))
                                  boolean))))
+
+          (it "inserts payment module to form for applicable haku without hakuaika end date"
+              (init)
+              (set-fixed-time "2026-01-15T14:59:59")
+              (payment-module-job/check-and-update ts [haku-without-hakuaika-end-key])
+              (let [form  (form-store/fetch-by-key form-key)]
+                (should= 6 (count (:content form)))
+                (should= true (->> form
+                                   :content
+                                   (some #(= (:id %) kk-application-payment-wrapper-key))
+                                   boolean))))
 
           (it "does not insert payment module to form as haku does not need it"
               (init)
