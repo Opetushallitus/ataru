@@ -10,11 +10,13 @@
 
 (defn tutkintojen-tunnustaminen-edit-handler [{:keys [application-key]} {:keys [form-by-id-cache koodisto-cache attachment-deadline-service tutu-cas-client]}]
   (let [tutu-application (application-store/get-tutu-application application-key)]
-    (when (and (some? tutu-application) (tutu-form? (get-form form-by-id-cache koodisto-cache attachment-deadline-service
-                                                              (assoc tutu-application :form-id (:form_id tutu-application)))))
-      (let [url (resolve-url :tutu-service.hakemus-update application-key)
-            req (select-keys tutu-application forwarded-application-fields)
-            response (cas/cas-authenticated-put tutu-cas-client url req)]
-        (when (not (<= 200 (:status response) 299))
-          (throw (Exception. (str "Sending edit message for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
-        (log/info (str "Sending edit message for application " application-key " successfully sent to Tutu"))))))
+    (if (some? tutu-application))
+      (when (tutu-form? (get-form form-by-id-cache koodisto-cache attachment-deadline-service
+                                                                (assoc tutu-application :form-id (:form_id tutu-application))))
+        (let [url (resolve-url :tutu-service.hakemus-update application-key)
+              req (select-keys tutu-application forwarded-application-fields)
+              response (cas/cas-authenticated-put tutu-cas-client url req)]
+          (when (not (<= 200 (:status response) 299))
+            (throw (Exception. (str "Sending edit message for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
+          (log/info (str "Sending edit message for application " application-key " successfully sent to Tutu"))))
+      (log/warn (str "No tutu application found for application key " application-key))))
