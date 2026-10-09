@@ -775,7 +775,7 @@
                (keys (:hakukohde-reviews review))
                [:edit-applications])
             (let [needs-refresh? (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)]
-              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-notification-job
+              (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-state-change-job
                job-runner
                application-key)
               {:events (get-application-events organization-service application-key)

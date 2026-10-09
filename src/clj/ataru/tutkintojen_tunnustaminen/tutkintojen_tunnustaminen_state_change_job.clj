@@ -1,4 +1,4 @@
-(ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-notify-job
+(ns ataru.tutkintojen-tunnustaminen.tutkintojen-tunnustaminen-state-change-job
   (:require
     [ataru.cas.client :as cas]
     [ataru.applications.application-store :as application-store]
@@ -13,8 +13,11 @@
         new-state (:state (first (filter #(= "processing-state" (:requirement %)) (:application-hakukohde-reviews tutu-application))))]
     (when (and (tutu-form? form)
                 new-state)
-      (let [url (resolve-url :tutu-service.state-change-notification application-key new-state)
-            response (cas/cas-authenticated-get tutu-cas-client url)]
+      (let [url (resolve-url :tutu-service.state-change application-key)
+            req {:tila new-state
+                 :submitted (:submitted tutu-application)
+                 :latestVersionCreated (:created tutu-application)}
+            response (cas/cas-authenticated-put tutu-cas-client url req)]
         (when (not (<= 200 (:status response) 299))
-          (throw (Exception. (str "Sending notification of state change to " new-state " for application " application-key " to Tutu failed"))))
-        (log/info (str "Sending notification of state change to " new-state "for application " application-key " successfully sent to Tutu"))))))
+          (throw (Exception. (str "Sending state change to " new-state " for application " application-key " to Tutu failed, status: " (:status response) ", body: " (:body response)))))
+        (log/info (str "Sending state change to " new-state "for application " application-key " successfully sent to Tutu"))))))
