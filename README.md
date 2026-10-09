@@ -16,6 +16,68 @@ Stop all Ataru processes and docker containers using command
 
 See `make help` for details
 
+## Running locally
+
+When running locally, it is **highly** recommended to utilize the cloud instance in any of the test environments. In order to run locally against the test environments (qa, hahtuva, or untuva), you need to clone the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets) repository. It is recommended to clone it to a folder parallel to Ataru.
+
+Before running Ataru locally, you need to setup ssh tunneling connection to the corresponding bastion server, and be connected with SSO to the bastion server. For setting this up, please refer to the README in the `dev-local-config`-directory in the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config) repo. It will guide you on how to set up the SSO tunneling using the `cloud-base` repository, and adding the necessary changes to work with Ataru.
+
+After this is set up, in one terminal, connect to the bastion server as instructed in the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config) repository.
+
+Finally, in another terminal, run Ataru locally from the root of this project like so (assuming `ataru-secrets` is parallel to the `ataru` directory):
+
+```
+make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-qa.edn HAKIJA_CONFIG=../ataru-secrets/hakija-qa.edn
+```
+
+### Leiningen installation and possible issues (Mac OS X)
+
+[leiningen](https://formulae.brew.sh/formula/leiningen) - `brew install leiningen`
+
+Preferred version of Java for leiningen is Java17. Before project run check that Leiningen tool points to correct Java Open JDK version: `lein -v`
+
+```
+Leiningen 2.10.0 on Java 17 OpenJDK 64-Bit Server VM
+```
+
+and this is the same version that system uses as default e.g.: `java --version` and `java -version`
+
+```
+openjdk 17 2021-09-14
+OpenJDK Runtime Environment Temurin-17+35 (build 17+35)
+OpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode)
+```
+
+Test `lein` tool by running the following command to print the available profiles
+
+```
+lein show-profiles
+```
+
+Output should be like this:
+
+```
+base
+debug
+default
+dev
+figwheel
+hakija-cypress
+hakija-dev
+leiningen/default
+leiningen/test
+offline
+opintopolku-local
+opintopolku-local-hakija
+opintopolku-local-virkailija
+test
+uberjar
+update
+virkailija-cypress
+```
+
+More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/).
+
 ## Running custom configurations
 
 If you need to run your custom configuration, you may configure the
@@ -68,6 +130,7 @@ make ci-test-playwright-and-cypress
 ```
 
 This command:
+
 1. Builds ClojureScript with `:advanced` optimizations (same as CI)
 2. Starts all required services and Docker containers
 3. Runs Playwright tests inside a Docker container (using the official `mcr.microsoft.com/playwright` image matching the project's Playwright version)
@@ -100,7 +163,7 @@ When app is started, run all Playwright tests:
 
     pnpm exec playwright test
 
-See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
+See more Playwright CLI-tips at <https://playwright.dev/docs/test-cli>
 
 You can also use the Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
 
@@ -138,8 +201,8 @@ e.g.
 lein with-profile test spec spec/ataru/applications/applications.application_access_control_spec.clj
 ```
 
-Hint: you can also run only individual tests in a file by 
-temporarily naming them with `focus-it` instead of `it`, see: 
+Hint: you can also run only individual tests in a file by
+temporarily naming them with `focus-it` instead of `it`, see:
 [http://micahmartin.com/speclj/speclj.core.html#var-focus-it](http://micahmartin.com/speclj/speclj.core.html#var-focus-it)
 
 ### ClojureScript unit tests
@@ -151,6 +214,7 @@ make test-clojurescript
 ## Static checks (Linting and type checking)
 
 To run all static checks for code in repo:
+
 ```
 make lint
 ```
@@ -228,68 +292,6 @@ docker compose up -d
 
 If everything starts, run `make stop` and now `make start` should work as expected. Why? Who knows...
 
-## Running locally (Mac OS X)
-
-In order to run locally against qa, hahtuva or untuva, another cloned repo is needed: https://github.com/Opetushallitus/ataru-secrets, cloned e.g. in parallel folder with _ataru_
-
-Before running ataru locally, you need to setup ssh tunneling connection to the corresponding bastion server.
-You can use configurations on the ataru-secrets repo to set up ssh port forwardings, see readme in dev-local-config folder: https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config
-
-then local run whould be launched e.q. as follows:
-
-```
-make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-qa.edn HAKIJA_CONFIG=../ataru-secrets/hakija-qa.edn
-```
-
-### Leiningen installation and possible issues
-
-[leiningen](https://formulae.brew.sh/formula/leiningen) - `brew install leiningen`
-
-Preferred version of Java for leiningen is Java17. Before project run check that Leiningen tool points to correct Java Open JDK version: `lein -v`
-
-```
-Leiningen 2.10.0 on Java 17 OpenJDK 64-Bit Server VM
-```
-
-and this is the same version that system uses as default e.g.: `java --version` and `java -version`
-
-```
-openjdk 17 2021-09-14
-OpenJDK Runtime Environment Temurin-17+35 (build 17+35)
-OpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode)
-```
-
-Test `lein` tool by running the following command to print the available profiles
-
-```
-lein show-profiles
-```
-
-Output should be like this:
-```
-base
-debug
-default
-dev
-figwheel
-hakija-cypress
-hakija-dev
-leiningen/default
-leiningen/test
-offline
-opintopolku-local
-opintopolku-local-hakija
-opintopolku-local-virkailija
-test
-uberjar
-update
-virkailija-cypress
-```
-
-More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/).
-
-## Logs
-
 Application logs are in logs folder.
 
 Build/compilation logs are in logs/pm2 folder.
@@ -300,14 +302,14 @@ Ataru backends use Component to wire up the system. User.clj also has reloaded.r
 the reloaded pattern to restart backends in about one second (first start takes longer) using the following workflow:
 
 1. Run the application with and/or backend specific environment variables (HAKIJARELOADED, VIRKAILIJARELOADED) set to true,
-e.g. to run hakija with the reloaded functionality run:
+   e.g. to run hakija with the reloaded functionality run:
 
 ```
 make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-local-dev.edn HAKIJA_CONFIG=../ataru-secrets/hakija-local-dev.edn HAKIJARELOADED=true
 ```
 
-2. Run (in IntelliJ) a "Clojure REPL -> Remote" run configuration (port 3333 for lomake-editori, port 3335 for hakija).
-3. To start and subsequently restart the backend, run in REPL:
+1. Run (in IntelliJ) a "Clojure REPL -> Remote" run configuration (port 3333 for lomake-editori, port 3335 for hakija).
+2. To start and subsequently restart the backend, run in REPL:
 
 ```
 (reset)
@@ -324,25 +326,30 @@ Backend breakpoints (using debug-repl library) can be used with the following st
 (in-ns 'ataru.valinta-tulos-service.valintatulosservice-client)
 ```
 
-3. Import the required tooling in the REPL command line:
+1. Import the required tooling in the REPL command line:
 
 ```
 (require '[com.gfredericks.debug-repl.async :refer [break! wait-for-breaks]])
 (require '[com.gfredericks.debug-repl :refer [unbreak!]])
 ```
 
-4. Insert (break!) macro invocation in the code to places where you want execution to break
-5. Wait for breaks in the REPL command line (120 is timeout in seconds)
+1. Insert (break!) macro invocation in the code to places where you want execution to break
+2. Wait for breaks in the REPL command line (120 is timeout in seconds)
 
 ```
 (wait-for-breaks 120)
 ```
 
-6. Use browser to invoke the code
-7. REPL window should display something like
+1. Use browser to invoke the code
+2. REPL window should display something like
 
 ```
 Hijacking repl for breakpoint: ...
 ```
-8. Examine the context, run code, etc.
-9. Continue execution by invoking the (unbreak!) macro in the REPL command line
+
+```
+Hijacking repl for breakpoint: ...
+```
+
+1. Examine the context, run code, etc.
+2. Continue execution by invoking the (unbreak!) macro in the REPL command line
