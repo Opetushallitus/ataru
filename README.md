@@ -18,7 +18,7 @@ See `make help` for details
 
 ## Running locally
 
-When running locally, it is **highly** recommended to utilize the databases in any of the test environments. In order to run locally against the test environments (qa, hahtuva, or untuva), you need to clone the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets) repository. It is recommended to clone it to a folder parallel to Ataru.
+When running locally, it is **highly** recommended to utilize the cloud instance in any of the test environments. In order to run locally against the test environments (qa, hahtuva, or untuva), you need to clone the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets) repository. It is recommended to clone it to a folder parallel to Ataru.
 
 Before running Ataru locally, you need to setup ssh tunneling connection to the corresponding bastion server, and be connected with SSO to the bastion server. For setting this up, please refer to the README in the `dev-local-config`-directory in the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config) repo. It will guide you on how to set up the SSO tunneling using the `cloud-base` repository, and adding the necessary changes to work with Ataru.
 
