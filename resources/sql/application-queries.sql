@@ -349,6 +349,10 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
 
+-- name: yesql-delete-kk-application-payment-permit-checks-by-application-key!
+DELETE FROM kk_application_payment_permit_checks
+WHERE application_key = :key;
+
 -- name: yesql-get-latest-application-by-key
 SELECT
   a.id,
