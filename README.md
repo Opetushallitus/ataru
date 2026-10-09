@@ -22,13 +22,9 @@ When running locally, it is **highly** recommended to utilize the databases in a
 
 Before running Ataru locally, you need to setup ssh tunneling connection to the corresponding bastion server, and be connected with SSO to the bastion server. For setting this up, please refer to the README in the `dev-local-config`-directory in the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config) repo. It will guide you on how to set up the SSO tunneling using the `cloud-base` repository, and adding the necessary changes to work with Ataru.
 
-After this is set up, in one terminal, connect to the bastion server (QA in this example) like so:
+After this is set up, in one terminal, connect to the bastion server as instructed in the [ataru-secrets](https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config) repository.
 
-```
-ssh -F ~/.opintopolku/pallero.ssh.config bastion.pallero
-```
-
-Finally, run Ataru locally from the root of this project like so (assuming `ataru-secrets` is parallel to the `ataru` directory):
+Finally, in another terminal, run Ataru locally from the root of this project like so (assuming `ataru-secrets` is parallel to the `ataru` directory):
 
 ```
 make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-qa.edn HAKIJA_CONFIG=../ataru-secrets/hakija-qa.edn
