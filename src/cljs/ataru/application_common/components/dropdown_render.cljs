@@ -11,6 +11,7 @@
             [ataru.application-common.components.dropdown-aria :as aria]
             [ataru.application-common.components.dropdown-view :as view]
             [ataru.application-common.components.dropdown-viewport :as viewport]
+            [ataru.application-common.components.dropdown-geometry :as geometry]
             [ataru.application-common.components.dropdown-actions :as actions]
             [ataru.application-common.components.dropdown-keyboard :as keyboard]
             [ataru.application-common.components.dropdown-listeners :as listeners]))
@@ -20,8 +21,9 @@
 ;; ---------------------------------------------------------------------
 
 (defn- compute-dropdown-state
-  [{:keys [dropdown-id]} {:keys [options selected-value disabled?]}]
-  (let [expanded?          (and (not disabled?)
+  [{:keys [dropdown-id]} {:keys [options selected-value disabled? aria-labelledby aria-label]}]
+  (let [label-id           (str dropdown-id "-label")
+        expanded?          (and (not disabled?)
                                  @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false]))
         query              @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :query] nil])
         active-index       @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :active-index] nil])
@@ -39,7 +41,12 @@
      :active-option     active-option
      :selected-index    selected-index
      :last-option-index last-option-index
-     :label-id          (str dropdown-id "-label")
+     :label-id          label-id
+     ;; Kentän näkyvän labelin id: kutsujan antama, tai oletus-label-id
+     ;; silloin kun kutsuja ei ole antanut myöskään aria-labeliä. nil, kun
+     ;; kentällä on vain aria-label eikä näkyvää labelia.
+     :field-label-id    (or aria-labelledby
+                            (when-not aria-label label-id))
      :listbox-id        (str dropdown-id "-listbox")}))
 
 ;; ---------------------------------------------------------------------
@@ -47,10 +54,10 @@
 ;; ---------------------------------------------------------------------
 
 (defn- make-dropdown-handlers
-  [{:keys [dropdown-id root-ref popup-ref option-refs focus-input mobile?]}
-   {:keys [on-change disabled? aria-labelledby clearable? selected-value]}
+  [{:keys [dropdown-id root-ref popup-ref input-ref option-refs focus-input mobile?]}
+   {:keys [on-change disabled? clearable? selected-value]}
    {:keys [expanded? active-index selected-index last-option-index
-           active-option options-with-id label-id]}]
+           active-option options-with-id]}]
   ;; dispatch-sync eikä dispatch näissä kahdessa: syötekentän arvo ja
   ;; korostettu vaihtoehto ovat molemmat re-frame-tilan varassa, jota
   ;; näppäimistökäsittelijä (ks. dropdown-keyboard) lukee SYNKRONISESTI
@@ -88,7 +95,6 @@
                              (when-not disabled?
                                (when-not expanded?
                                  (on-query-change nil)
-                                 (viewport/scroll-field-to-top! (or aria-labelledby label-id))
                                  (actions/expand-dropdown {:dropdown-id dropdown-id}))))
         ;; Pelkkä näppäimistöfokus (esim. Tab kenttään) ei avaa listaa —
         ;; vain klikkaus, nuolinäppäimet tai kirjoittaminen avaavat sen.
@@ -115,9 +121,23 @@
                                               (not (inside? root-ref))
                                               (not (inside? popup-ref))))
                                  (actions/collapse-dropdown {:dropdown-id dropdown-id}))))
+        ;; Fokus pidetään valinnan jälkeen aina kentässä, jotta käyttäjä voi
+        ;; siirtyä seuraavaan kenttään (Tab, mobiilinäppäimistön seuraava-
+        ;; nuoli). Vaihtoehtojen mousedown-preventDefault (ks. dropdown-view)
+        ;; riittää hiirellä, mutta iOS päättää kosketuksella itse —
+        ;; vaihtelevasti — säilyttääkö se fokuksen, kun kenttä siirtyy
+        ;; kokoruututilasta takaisin sivulle. Siksi fokus palautetaan
+        ;; synkronisesti tässä klikkauskäsittelijässä: iOS sallii ohjelmallisen
+        ;; fokuksen (ja pitää näppäimistön auki) vain käyttäjän eleen omassa
+        ;; käsittelijässä. Jo fokusoidulle kentälle kutsu ei tee mitään; jos
+        ;; iOS ehti poistaa fokuksen, on-input-focus ei avaa listaa uudelleen,
+        ;; koska tämän renderöinnin expanded? on vielä tosi. Fokus ei saa
+        ;; vierittää sivua, koska suljettaessa palautetaan vierityskohta, jossa
+        ;; sivu oli avattaessa (ks. sync-open-state!).
         on-option-click   (fn on-option-click [value]
                              (actions/collapse-dropdown {:dropdown-id dropdown-id})
-                             (on-change value))
+                             (on-change value)
+                             (some-> @input-ref (.focus #js {:preventScroll true})))
         clear-value       (fn clear-value []
                              (on-change ""))
         on-input-key-down (keyboard/make-on-input-key-down
@@ -147,24 +167,59 @@
         ;; voi saada selaimen peruuttamaan sitä seuraavan synteettisen
         ;; click-tapahtuman kokonaan — jolloin on-input-click ei koskaan
         ;; ehtisi suorittua. Fokus sen sijaan tapahtuu aina, joten
-        ;; avataan valikko jo sen yhteydessä.
+        ;; avataan valikko jo sen yhteydessä. Sivua ei vieritetä avattaessa,
+        ;; koska kokoruututila kiinnittää labelin ja kentän ruudun ylälaitaan.
         on-input-focus    (fn on-input-focus [_e]
-                             (viewport/scroll-field-to-top! (or aria-labelledby label-id))
                              (when @mobile?
-                               (open-popup)))
-        on-clear-click    clear-value]
-    {:set-active-index  set-active-index
-     :move-active-to    move-active-to
-     :on-query-change   on-query-change
-     :open-popup        open-popup
-     :on-input-click    on-input-click
+                               (open-popup)))]
+    {:on-input-click    on-input-click
      :on-input-change   on-input-change
      :on-dropdown-blur  on-dropdown-blur
      :on-option-click   on-option-click
      :on-input-key-down on-input-key-down
      :on-trigger-click  on-trigger-click
      :on-input-focus    on-input-focus
-     :on-clear-click    on-clear-click}))
+     :on-clear-click    clear-value}))
+
+;; ---------------------------------------------------------------------
+;; Auki/kiinni- ja kokoruututilan sivuvaikutukset
+;; ---------------------------------------------------------------------
+
+(defn sync-open-state!
+  "Kytkee auki olevan valikon ja kokoruututilan sivuvaikutukset päälle tai
+  pois tilan mukaan. Kaikki vaiheet ovat idempotentteja (addEventListener/
+  removeEventListener samalle funktioviitteelle, sekä tilan atomeihin
+  kirjaavat apurit), joten tätä kutsutaan jokaisella renderöinnillä."
+  [context {:keys [expanded? fullscreen?]}]
+  ;; Globaalit kuuntelijat vain auki olevalle valikolle — muuten niitä
+  ;; ajettaisiin turhaan jokaiselle lomakkeen pudotusvalikolle. Taustan
+  ;; piilotus mahdollistaa ruudunlukijan pyyhkäisynavigoinnin syötekentästä
+  ;; suoraan portaalissa oleviin vaihtoehtoihin (ks. dropdown-aria).
+  (if expanded?
+    (do (listeners/attach-global-listeners! context)
+        (aria/hide-background! context))
+    (do (listeners/detach-global-listeners! context)
+        (aria/restore-background! context)))
+  (if fullscreen?
+    (do (listeners/attach-fullscreen-listeners!)
+        (viewport/lock-body-scroll! (:locked-scroll-y context))
+        (geometry/start-fullscreen-geometry-loop! (:geometry-raf-id context)
+                                                  (:sync-popup-geometry! context)))
+    (do (listeners/detach-fullscreen-listeners!)
+        (geometry/stop-fullscreen-geometry-loop! (:geometry-raf-id context))
+        ;; Palautetaan sivun vierityskohta, jossa se oli avattaessa, ja
+        ;; renderöinnin jälkeen (kun kokoruutuwrapper on palannut sivulle)
+        ;; vieritetään kenttä tarvittaessa näkyviin — fokus jää kenttään, joten
+        ;; näppäimistö voi muuten peittää sen.
+        (when (some? @(:locked-scroll-y context))
+          (viewport/unlock-body-scroll! (:locked-scroll-y context))
+          (reagent/after-render
+            #(viewport/scroll-into-visual-viewport! @(:field-ref context))))))
+  ;; Alkuarvo heti avattaessa, koska popup on portaali eikä saa sijaintiaan
+  ;; CSS:llä. Sen jälkeen ajan tasalla pitävät resize/scroll-kuuntelijat ja
+  ;; kokoruututilassa geometriasilmukka.
+  (when expanded?
+    (reagent/after-render (:sync-popup-geometry! context))))
 
 ;; ---------------------------------------------------------------------
 ;; Hiccupin muodostaminen
@@ -180,7 +235,6 @@
            clearable?
            invalid?
            id
-           aria-labelledby
            aria-label
            data-test-id]
     :as   props} :- {:options                                [view/SelectOptionProps]
@@ -195,8 +249,7 @@
                       ;; tyhjää/valitsematonta vaihtoehtoa (ks. hakija/components/
                       ;; dropdown_component.cljs:n no-blank-option) — niille tyhjennys-
                       ;; nappi olisi ainoa tapa saada kenttä tilaan, jota se ei koskaan
-                      ;; voi luonnostaan olla. Oletuksena (puuttuessaan) tyhjennettävissä,
-                      ;; kuten ennen tämän lipun lisäämistä.
+                      ;; voi luonnostaan olla. Puuttuessaan tyhjennettävissä.
                       (s/optional-key :clearable?)            s/Bool
                       (s/optional-key :invalid?)              s/Bool
                       (s/optional-key :id)                    (s/maybe s/Str)
@@ -208,39 +261,28 @@
   (let [disabled?      (boolean disabled?)
         required?      (boolean required?)
         invalid?       (boolean invalid?)
+        clearable?     (not (false? clearable?))
         lang           @(re-frame/subscribe [:application/form-language])
         props          (assoc props
                           :disabled?  disabled?
-                          :clearable? (not (false? clearable?)))
+                          :clearable? clearable?)
         _              (actions/maybe-collapse-when-disabled!
                          {:dropdown-id (:dropdown-id context)
                           :disabled?   disabled?})
         state          (compute-dropdown-state context props)
-        {:keys [expanded? query options-with-id active-option label-id listbox-id
-                value->label]} state
+        {:keys [expanded? query options-with-id active-option label-id field-label-id
+                listbox-id value->label]} state
         handlers       (make-dropdown-handlers context props state)
-        resolved-aria-labelledby (or aria-labelledby
-                                     (when-not aria-label label-id))
-        selected-label (get value->label selected-value)
-        button-label   (if-not (string/blank? selected-value)
-                         selected-label
-                         unselected-label)
-        input-value    (view/compute-input-value {:expanded?    expanded?
-                                                    :query        query
-                                                    :button-label button-label})
+        ;; Kentässä näytettävä teksti, kun käyttäjä ei ole kirjoittamassa hakua.
+        display-label  (if (string/blank? selected-value)
+                         unselected-label
+                         (get value->label selected-value))
+        input-value    (view/compute-input-value {:expanded?     expanded?
+                                                    :query         query
+                                                    :display-label display-label})
         fullscreen?    (and expanded? @(:mobile? context))
-        ;; Pudotusvalikon globaalit tapahtumakäsittelijät toteuttavat vain auki olevan valikon logiikkaa. Ilman tätä ehtoa tapahtumakäsittelijöitä ajettaisiin lomakkeella turhaan jatkuvasti jokaiselle lomakkeella olevalle pudotusvalikolle, mikä voi aiheuttaa suorituskykyongelmia. Funktiot addEventListener ja removeEventListener ovat idempotentteja samalle funktioviitteelle, joten tämän voi turvallisesti kutsua joka renderillä.
-        _              (if expanded?
-                         (listeners/attach-global-listeners! context)
-                         (listeners/detach-global-listeners! context))
-        ;; Ruudunlukijan pyyhkäisynavigointi syötekentästä suoraan portaalissa
-        ;; oleviin vaihtoehtoihin (ks. dropdown-aria). Idempotentti kuten yllä.
-        _              (if expanded?
-                         (aria/hide-background! context)
-                         (aria/restore-background! context))
-        ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-kuuntelijat pitävät sen ajan tasalla myös näppäimistön sulkeutuessa. Tarvitaan aina kun auki (ei vain kokoruututilassa), koska popup on nyt portaali eikä saa sijaintiaan enää ilmaiseksi CSS:llä.
-        _              (when expanded?
-                         (reagent/after-render (:sync-popup-geometry! context)))]
+        _              (sync-open-state! context {:expanded?   expanded?
+                                                  :fullscreen? fullscreen?})]
     [:div.a-dropdown
      {:ref     #(reset! (:root-ref context) %)
       :class   (str (when disabled? "a-dropdown--disabled ")
@@ -257,13 +299,13 @@
        :required?             required?
        :invalid?              invalid?
        :data-test-id          data-test-id
-       :aria-labelledby       resolved-aria-labelledby
+       :aria-labelledby       field-label-id
        :aria-label            aria-label
        :expanded?             expanded?
        :listbox-id            listbox-id
        :active-option-id      (:option-id active-option)
        :selected-value        selected-value
-       :clearable?            (not (false? clearable?))
+       :clearable?            clearable?
        :lang                  lang
        :on-input-click        (:on-input-click handlers)
        :on-input-change       (:on-input-change handlers)

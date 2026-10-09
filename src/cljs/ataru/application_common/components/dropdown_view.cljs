@@ -46,10 +46,10 @@
 ;; suodateta (blank query = ei suodatusta). Vasta kun käyttäjä kirjoittaa
 ;; jotain (myös tyhjäksi asti poistaen, jolloin query on "" eikä nil),
 ;; kenttä näyttää kirjoitetun haun.
-(defn compute-input-value [{:keys [expanded? query button-label]}]
+(defn compute-input-value [{:keys [expanded? query display-label]}]
   (if (and expanded? (some? query))
     query
-    (or button-label "")))
+    (or display-label "")))
 
 ;; ---------------------------------------------------------------------
 ;; Esityskomponentit
@@ -114,10 +114,9 @@
 ;; dropdown-field) — ARIA-yhdistelmäruutumallissa se kuuluu sille
 ;; elementille, jolla on todellinen näppäimistöfokus, ei sille jota se
 ;; osoittaa.
-;; Sijainti ja koko (ks. dropdown-geometry/make-sync-popup-geometry!) asetetaan
-;; suoraan DOM:iin popup-refin kautta, koska popup renderöidään Reactin
-;; portaalilla document.bodyyn eikä siis voi enää saada niitä ilmaiseksi
-;; CSS:llä kutsujansa suhteen — tämä komponentti ei siis ota niihin kantaa.
+;; Sijainnin ja koon asettaa dropdown-geometry suoraan DOM:iin popup-refin
+;; kautta (popup on portaalissa document.bodyssa), joten tämä komponentti ei
+;; ota niihin kantaa.
 (s/defn dropdown-popup
   [{:keys [expanded?
            fullscreen?
