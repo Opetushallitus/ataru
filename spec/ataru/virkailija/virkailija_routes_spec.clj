@@ -30,7 +30,8 @@
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
             [speclj.core :refer [after-all around before before-all describe
-                                 it run-specs should should-be-nil should-not-be-nil should=
+                                 it run-specs should should-be-nil should-contain should-not-be-nil
+                                 should-not-contain should=
                                  tags with]]
             [ataru.time :as time]
             [yesql.core :as sql]))
@@ -260,6 +261,18 @@
       (mock/content-type "application/json")
       ((deref virkailija-routes))
       parse-body))
+
+(defn- put-kk-payment-permit-check
+  ([application-key attachment-key body]
+   (put-kk-payment-permit-check application-key attachment-key body "SUPERUSER"))
+  ([application-key attachment-key body ticket]
+   (-> (mock/request :put (str "/lomake-editori/api/applications/" application-key
+                               "/kk-payment-permit-check/" attachment-key)
+                     (json/generate-string body))
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes ticket))
+       (mock/content-type "application/json")
+       ((deref virkailija-routes))
+       parse-body)))
 
 (defn- post-review-notes [query]
   (-> (mock/request :post "/lomake-editori/api/applications/mass-notes"
@@ -648,6 +661,88 @@
           (should= 200 (:status resp))
           (should= "d9017916-b9f4-440b-a083-0773fa960eea" (get-in resp [:body :field-id]))
           (should= "2026-05-07T09:00:00Z" (get-in resp [:body :deadline]))))))
+
+(def ^:private empty-permit-check
+  {:found-in-migri                  nil
+   :permit-valid-until              nil
+   :payment-obligation-basis        nil
+   :payment-obligation-other-reason nil})
+
+(defn- init-payment-exemption-application []
+  (-> (db/init-db-fixture fixtures/payment-exemption-test-form
+                          application-fixtures/application-with-hakemusmaksu-exemption
+                          nil)
+      (application-store/get-application)
+      :key))
+
+(def permit-valid-until (str (.plusYears (java.time.LocalDate/now) 1)))
+
+(describe "kk payment permit check"
+          (tags :unit :api-applications)
+
+  (it "should store virkailija's notes on a residence permit attachment"
+      (let [application-key (init-payment-exemption-application)
+            resp            (put-kk-payment-permit-check application-key
+                                                         "continuous-residence-permit-front"
+                                                         {:found-in-migri                  true
+                                                          :permit-valid-until              permit-valid-until
+                                                          :payment-obligation-basis        "obligated-family-member-studies"
+                                                          :payment-obligation-other-reason nil})]
+        (should= 200 (:status resp))
+        (should= {:attachment-key           "continuous-residence-permit-front"
+                  :found-in-migri           true
+                  :permit-valid-until       permit-valid-until
+                  :payment-obligation-basis "obligated-family-member-studies"}
+                 (select-keys (get-in resp [:body :check]) [:attachment-key :found-in-migri :permit-valid-until
+                                                            :payment-obligation-basis]))
+        (should-not-contain :virkailija-oid (get-in resp [:body :check]))
+        (should-contain "kk-payment-permit-check-updated" (map :event-type (get-in resp [:body :events])))))
+
+  (it "should refuse notes on an attachment that is not a residence permit"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "passport-attachment"
+                                              (assoc empty-permit-check :found-in-migri true))]
+        (should= 400 (:status resp))))
+
+  (it "should refuse notes without rights to edit the application"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :found-in-migri true)
+                                              "USER-WITH-HAKUKOHDE-ORGANIZATION")]
+        (should= 401 (:status resp))))
+
+  (it "should not store notes for a nonexistent application"
+      (let [resp (put-kk-payment-permit-check "1.2.246.562.11.00000000000000999999"
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :found-in-migri true))]
+        (should= 404 (:status resp))))
+
+  (it "should refuse an invalid permit validity date"
+      (let [resp (put-kk-payment-permit-check "1.2.246.562.11.00000000000000000001"
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :permit-valid-until "31.12.2029"))]
+        (should= 400 (:status resp))))
+
+  (it "should refuse a permit validity date outside the sanity limits"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check
+                                                     :permit-valid-until (str (.plusYears (java.time.LocalDate/now) 10))))]
+        (should= 400 (:status resp))))
+
+  (it "should refuse a too long other reason"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check
+                                                     :payment-obligation-basis "obligated-other"
+                                                     :payment-obligation-other-reason (apply str (repeat 501 "x"))))]
+        (should= 400 (:status resp))))
+
+  (it "should refuse a nonexistent permit validity date"
+      (let [resp (put-kk-payment-permit-check "1.2.246.562.11.00000000000000000001"
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :permit-valid-until "2029-02-30"))]
+        (should= 400 (:status resp)))))
 
 (describe "Submitting mass review notes"
           (tags :unit :mass-notes)
