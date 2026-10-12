@@ -46,7 +46,7 @@
 
 (defn- make-dropdown-handlers
   [{:keys [dropdown-id root-ref option-refs focus-input mobile?]}
-   {:keys [on-change disabled? aria-labelledby]}
+   {:keys [on-change disabled? aria-labelledby clearable? selected-value]}
    {:keys [expanded? active-index selected-index last-option-index
            active-option options-with-id label-id]}]
   (let [set-active-index  (fn set-active-index [idx]
@@ -94,6 +94,8 @@
         on-option-click   (fn on-option-click [value]
                              (actions/collapse-dropdown {:dropdown-id dropdown-id})
                              (on-change value))
+        clear-value       (fn clear-value []
+                             (on-change ""))
         on-input-key-down (keyboard/make-on-input-key-down
                              {:dropdown-id       dropdown-id
                               :expanded?         expanded?
@@ -104,7 +106,10 @@
                               :open-popup        open-popup
                               :move-active-to    move-active-to
                               :set-active-index  set-active-index
-                              :on-option-click   on-option-click})
+                              :on-option-click   on-option-click
+                              :clearable?        clearable?
+                              :selected-value    selected-value
+                              :clear-value       clear-value})
         on-trigger-click  (fn on-trigger-click [e]
                              (.preventDefault e)
                              (when-not disabled?
@@ -123,8 +128,7 @@
                              (viewport/scroll-field-to-top! (or aria-labelledby label-id))
                              (when @mobile?
                                (open-popup)))
-        on-clear-click    (fn dropdown-clear-button-clicked []
-                             (on-change ""))]
+        on-clear-click    clear-value]
     {:set-active-index  set-active-index
      :move-active-to    move-active-to
      :on-query-change   on-query-change
@@ -181,7 +185,9 @@
         required?      (boolean required?)
         invalid?       (boolean invalid?)
         lang           @(re-frame/subscribe [:application/form-language])
-        props          (assoc props :disabled? disabled?)
+        props          (assoc props
+                          :disabled?  disabled?
+                          :clearable? (not (false? clearable?)))
         state          (compute-dropdown-state context props)
         {:keys [expanded? query options-with-id active-option label-id listbox-id
                 value->label]} state
