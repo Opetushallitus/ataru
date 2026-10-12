@@ -9,10 +9,8 @@
 @total-banner-height: 97px;
 @total-banner-height-mobile: 82px;
 
-// overflow-y täällä (ei bodyssa), jotta <html> omistaa vierityksen suoraan
-// eikä propagoituna bodystä — muuten esim. vierityksen lukitseminen
-// <html>:lle katkaisisi propagoinnin ja rikkoisi position: sticky
-// -elementtien asemoinnin.
+// Vieritys html:llä eikä bodyssa, jotta html:n lukitseminen ei riko
+// sticky-elementtejä.
 html {
   overflow-y: scroll;
 }
@@ -55,26 +53,13 @@ body {
   position: sticky;
   width: 100%;
   top: 0;
-
-  // Mobiilissa ylätunniste piilotetaan (ks. banner.cljs) alaspäin
-  // vieritettäessä lisätilan saamiseksi ja tuodaan takaisin ylöspäin
-  // vieritettäessä, kuten mobiiliselainten osoiterivit. transform (ei
-  // display/visibility) mahdollistaa pehmeän liu'un.
-  @media only screen and (max-width: @mobile-width) {
-    transition: transform 0.3s ease-in-out;
-
-    &.application__banner-container--hidden {
-      transform: translateY(-100%);
-    }
-  }
 }
 
-// Kokoruutuvalikko peittää koko näytön, joten ylätunniste pakotetaan aina
-// piiloon :has()-valitsimella sen ollessa auki — ei riippuvainen siitä, mitä
-// JS:n vieritykseen sidottu piilotuslogiikka (banner.cljs) juuri päättäisi.
+// Piiloon kokoruutuvalikon ajaksi. visibility eikä transform, koska WebKit
+// piirtää transformoidun sticky-elementin hetkittäin väärään kohtaan.
 @media only screen and (max-width: @mobile-width) {
   body:has(.a-dropdown-popup--fullscreen) .application__banner-container {
-    transform: translateY(-100%);
+    visibility: hidden;
   }
 }
 /* Allows centering of top-banner which contains logo and send-button */
@@ -675,36 +660,21 @@ body {
   }
 }
 
-// application__form-field on display: flex; flex-direction: column (ks.
-// yllä), joka pakottaa sen suorat lapset (label, select-wrapper, ...)
-// pinoutumaan lohkotasoisina flex-itemeinä niiden omasta display-arvosta
-// riippumatta (label on itse asiassa display: inline, select-wrapper
-// inline-block). Tämä wrapperi on nyt niiden VÄLISSÄ, joten sen on
-// toistettava sama flex-asettelu AINA — muuten label ja kenttä palaisivat
-// normaaliin inline-virtaukseen kapealla näytöllä silloin kun kokoruutu-
-// tila ei ole päällä, jolloin label-kentän väli riippuisi rivitulkinnasta
-// eikä application__form-field-labelin margin-bottomista.
+// Toistaa application__form-fieldin flex-asettelun, jotta label ja kenttä
+// pinoutuvat kuten ilman tätä wrapperia.
 .application__dropdown-fullscreen-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-// Kapealla näytöllä (esim. puhelin) auki oleva pudotusvalikko laajenee koko
-// näytön kokoiseksi virtuaalinäppäimistön ajaksi (ks. a-dropdown--fullscreen
-// dropdown-component.less:ssä, joka itse vain venyy täyttämään tämän
-// säiliön). Tämä wrapperi ottaa vastuun koko näytön peittävästä kiinnittä-
-// misestä :has()-valitsimella, jotta sivun oma label (ja mahdollinen info-
-// teksti/hakukohdenimet) tulee mukaan kokoruutuesitykseen sen sijaan, että
-// ataru.application-common.components.dropdown-component joutuisi
-// toistamaan labelin tekstin itse.
+// Mobiilissa auki oleva pudotusvalikko peittää koko näytön. Wrapper
+// kiinnitetään eikä pelkkä valikko, jotta label ja infoteksti näkyvät mukana.
 @media only screen and (max-width: @mobile-width) {
   .application__dropdown-fullscreen-wrapper:has(.a-dropdown--fullscreen) {
     background-color: white;
     box-sizing: border-box;
-    // Visuaalisen viewportin mukaan (ks. dropdown-viewport/sync-viewport-
-    // css-vars!), jottei iOS:n näppäimistön noustessa tekemä panorointi
-    // vieritä labelia ja hakukenttää ruudun yläpuolelle. Oletusarvot
-    // vastaavat top: 0; bottom: 0 ennen ensimmäistä synkronointia.
+    // Visuaalisen viewportin mukaan (ks. dropdown-geometry), jottei iOS:n
+    // näppäimistöpanorointi vie labelia ja kenttää ruudun yläpuolelle.
     height: var(--a-dropdown-viewport-height, 100%);
     left: 0;
     padding: 8px;
@@ -713,29 +683,14 @@ body {
     top: var(--a-dropdown-viewport-top, 0px);
     z-index: 9999;
 
-    // .application__form-select-wrapper .a-dropdown (ks. yllä tässä
-    // tiedostossa) asettaa kentälle kiinteän @form-select-width-leveyden
-    // korkeammalla spesifisyydellä — nostetaan spesifisyyttä, jotta
-    // kokoruutuvalikko täyttää koko näytön leveyden.
+    // Ohittaa kiinteän @form-select-width-leveyden.
     .a-dropdown {
       width: auto;
     }
 
-    // a-dropdown--fullscreenin "flex: 1" (dropdown-component.less) toimii
-    // vain jos se on suora flex-lapsi tälle kiinnitetylle wrapperille —
-    // todellisuudessa sen ja tämän välissä on kaksi tasoa (form-select-
-    // wrapper, joka on normaalisti display: inline-block, ja input-
-    // container). Ilman flex/min-height-ketjua koko välissä a-dropdown
-    // (ja siis myös sen popup) jää korkeudeltaan "auto":ksi eli venyy
-    // sisältönsä (esim. 25 vaihtoehtoa) mukaiseksi sen sijaan, että sillä
-    // olisi todellinen, ruudulle rajattu korkeus — jolloin popupin oma
-    // overflow-y: auto ei koskaan aktivoidu eikä listaa voi vierittää
-    // ollenkaan. Muutetaan siis myös nämä flex-kolonneiksi/riveiksi jotka
-    // venyvät (flex: 1) ja voivat kutistua (min-height: 0, min-width: 0)
-    // VAIN silloin kun kokoruutuvalikko on auki, jottei työpöytäasettelu
-    // (display: inline-block) muutu miksikään. min-width: 0 estää pitkää
-    // (katkeamatonta) vaihtoehtotekstiä pakottamasta koko ketjua leveämmäksi
-    // kuin 100 % (flex-itemin oletus min-width on muuten "auto").
+    // Flex-ketju wrapperista .a-dropdowniin asti, jotta valikko venyy
+    // wrapperin levyiseksi ja korkuiseksi. Vain kokoruututilassa, jottei
+    // työpöytäasettelu muutu.
     .application__form-select-wrapper {
       display: flex;
       flex: 1;

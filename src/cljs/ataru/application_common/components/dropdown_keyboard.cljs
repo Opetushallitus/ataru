@@ -8,45 +8,46 @@
            active-option open-popup move-active-to set-active-index on-option-click
            clearable? selected-value clear-value]}]
   (fn on-input-key-down [e]
-    (cond
-      (= "Escape" (.-key e))
-      (do (.preventDefault e)
-          (actions/collapse-dropdown {:dropdown-id dropdown-id}))
+    (let [pressed-key (.-key e)]
+      (cond
+        (= "Escape" pressed-key)
+        (do (.preventDefault e)
+            (actions/collapse-dropdown {:dropdown-id dropdown-id}))
 
-      (not expanded?)
-      (when (#{"ArrowDown" "ArrowUp"} (.-key e))
-        (.preventDefault e)
-        (open-popup)
-        (move-active-to (or selected-index 0)))
-      
-      (and (= "Backspace" (.-key e))
-           clearable?
-           (not (string/blank? selected-value))
-           (string/blank? (.. e -target -value)))
-      (do (.preventDefault e)
-          (clear-value))
+        (not expanded?)
+        (when (#{"ArrowDown" "ArrowUp"} pressed-key)
+          (.preventDefault e)
+          (open-popup)
+          (move-active-to (or selected-index 0)))
 
-      (< last-option-index 0)
-      nil
+        (and (= "Backspace" pressed-key)
+             clearable?
+             (not (string/blank? selected-value))
+             (string/blank? (.. e -target -value)))
+        (do (.preventDefault e)
+            (clear-value))
 
-      (= "ArrowDown" (.-key e))
-      (do (.preventDefault e)
-          (move-active-to (min last-option-index (inc (or active-index -1)))))
+        (< last-option-index 0)
+        nil
 
-      (= "ArrowUp" (.-key e))
-      (do (.preventDefault e)
-          (if (or (nil? active-index) (zero? active-index))
-            (set-active-index nil)
-            (move-active-to (dec active-index))))
+        (= "ArrowDown" pressed-key)
+        (do (.preventDefault e)
+            (move-active-to (min last-option-index (inc (or active-index -1)))))
 
-      (= "Home" (.-key e))
-      (do (.preventDefault e)
-          (move-active-to 0))
+        (= "ArrowUp" pressed-key)
+        (do (.preventDefault e)
+            (if (or (nil? active-index) (zero? active-index))
+              (set-active-index nil)
+              (move-active-to (dec active-index))))
 
-      (= "End" (.-key e))
-      (do (.preventDefault e)
-          (move-active-to last-option-index))
+        (= "Home" pressed-key)
+        (do (.preventDefault e)
+            (move-active-to 0))
 
-      (and (= "Enter" (.-key e)) active-option)
-      (do (.preventDefault e)
-          (on-option-click (:value active-option))))))
+        (= "End" pressed-key)
+        (do (.preventDefault e)
+            (move-active-to last-option-index))
+
+        (and (= "Enter" pressed-key) active-option)
+        (do (.preventDefault e)
+            (on-option-click (:value active-option)))))))
