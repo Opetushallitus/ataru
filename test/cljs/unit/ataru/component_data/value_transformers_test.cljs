@@ -1,6 +1,6 @@
 (ns ataru.component-data.value-transformers-test
-  (:require [ataru.component-data.value-transformers :as t])
-  (:require-macros [cljs.test :refer [deftest is]]))
+  (:require [cljs.test :refer-macros [deftest is]]
+            [ataru.component-data.value-transformers :as t]))
 
 (deftest transforms-dob-string
   (doall
