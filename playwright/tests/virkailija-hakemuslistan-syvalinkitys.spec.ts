@@ -96,7 +96,6 @@ const includedFilterRows = () =>
   filterPanel().locator('.application-handling__filter-state-selected-row')
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page)
