@@ -328,6 +328,7 @@
                   on-change
                   disabled?
                   required?
+                  clearable?
                   invalid?
                   id
                   aria-labelledby
@@ -340,6 +341,13 @@
                                      :on-change                              s/Any
                                      (s/optional-key :disabled?)             s/Bool
                                      (s/optional-key :required?)             s/Bool
+                                     ;; false vain kentille, joiden vaihtoehtolistassa ei koskaan ole
+                                     ;; tyhjää/valitsematonta vaihtoehtoa (ks. hakija/components/
+                                     ;; dropdown_component.cljs:n no-blank-option) — niille tyhjennys-
+                                     ;; nappi olisi ainoa tapa saada kenttä tilaan, jota se ei koskaan
+                                     ;; voi luonnostaan olla. Oletuksena (puuttuessaan) tyhjennettävissä,
+                                     ;; kuten ennen tämän lipun lisäämistä.
+                                     (s/optional-key :clearable?)            s/Bool
                                      (s/optional-key :invalid?)              s/Bool
                                      (s/optional-key :id)                    (s/maybe s/Str)
                                      (s/optional-key :aria-labelledby)       (s/maybe s/Str)
@@ -587,7 +595,7 @@
                :on-change            on-input-change
                :on-key-down          on-input-key-down
                :on-focus             (fn [_e] (scroll-field-to-top! (or aria-labelledby label-id)))}]
-             (when (and (not disabled?) (not (string/blank? selected-value)))
+             (when (and (not disabled?) (not (false? clearable?)) (not (string/blank? selected-value)))
                [dropdown-clear-button
                 {:lang     lang
                  ;; Nappi katoaa DOM:sta heti tyhjennyksen jälkeen (renderöidään
