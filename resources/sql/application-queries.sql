@@ -1031,8 +1031,18 @@ ORDER BY a.created_time DESC;
 INSERT INTO application_review_notes (application_key, notes, virkailija_oid, hakukohde, state_name, virkailija_organizations)
 VALUES (:application_key, :notes, :virkailija_oid, :hakukohde, :state_name, :virkailija_organizations::jsonb);
 
+-- name: yesql-get-review-note-by-id
+-- Rivi haetaan ennen poistoa oikeustarkistusta ja auditlokin vanhaa tilaa varten.
+-- Removed-saraketta ei suodateta, joten myös jo poistettu muistiinpano löytyy: näin kutsuja
+-- erottaa tuntemattoman id:n (404) jo poistetusta, jolloin poisto voi olla idempotentti.
+SELECT rn.id, rn.created_time, rn.application_key, rn.notes, rn.hakukohde, rn.state_name,
+       rn.virkailija_oid, rn.virkailija_organizations, rn.removed, v.first_name, v.last_name
+FROM application_review_notes rn
+  LEFT JOIN virkailija v ON rn.virkailija_oid = v.oid
+WHERE rn.id = :id;
+
 -- name: yesql-remove-review-note!
-UPDATE application_review_notes SET removed = NOW() WHERE id = :id;
+UPDATE application_review_notes SET removed = NOW() WHERE id = :id AND removed IS NULL;
 
 
 --name: yesql-valintapiste-applications

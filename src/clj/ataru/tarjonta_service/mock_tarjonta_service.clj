@@ -839,5 +839,9 @@
   (get-koulutukset [_ koulutus-oids]
     (into {} (keep #(when-let [v (get kouta-koulutukset (keyword %))]
                       [% v])
-                   koulutus-oids))))
+                   koulutus-oids)))
+
+  ;; Mockilla ei ole omia välimuisteja, mutta metodi tarvitaan jotta sitä kutsuvat reitit
+  ;; (POST /api/cache/haku/:haku-oid/clear) ovat testattavissa.
+  (clear-haku-caches [_ _]))
 
