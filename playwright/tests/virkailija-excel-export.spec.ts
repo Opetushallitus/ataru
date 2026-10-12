@@ -122,7 +122,7 @@ test('Excel-latauksen rajainten valinta toimii ja lataus onnistuu', async () => 
     lataaExcelButton.click(),
   ])
 
-  await expect(download.suggestedFilename()).toMatch(
+  expect(download.suggestedFilename()).toMatch(
     /^Loytyi-2-hakemusta_\d{4}-\d\d-\d\d_\d{4}\.xlsx$/
   )
 
@@ -136,7 +136,7 @@ test('Excel-latauksen rajainten valinta toimii ja lataus onnistuu', async () => 
     lataaExcelButton.click(),
   ])
 
-  await expect(download2.suggestedFilename()).toMatch(
+  expect(download2.suggestedFilename()).toMatch(
     /^Loytyi-2-hakemusta_\d{4}-\d\d-\d\d_\d{4}\.xlsx$/
   )
 })
