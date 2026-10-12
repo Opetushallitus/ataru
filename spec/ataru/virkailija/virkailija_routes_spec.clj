@@ -11,27 +11,33 @@
             [ataru.fixtures.form :as fixtures]
             [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
             [ataru.forms.form-store :as form-store]
+            [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.applications.application-store :as application-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.kk-application-payment.kk-application-payment-status-updater-job :as kk-application-payment-status-updater-job]
             [ataru.koodisto.koodisto :as koodisto]
-            [ataru.log.audit-log :as audit-log]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.organization-service.organization-service :as org-service]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
-            [ataru.test-utils :refer [login should-have-header]]
+            [ataru.test-utils :refer [audit-entries-for login new-capturing-audit-logger
+                                      new-counting-cache new-fake-maksut-service
+                                      new-fake-valinta-tulos-service
+                                      fake-lasku fake-vts-response should-have-header]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
             [cheshire.core :as json]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
+            [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
+            [clojure.string :as clj-string]
             [speclj.core :refer [after-all around before before-all describe
-                                 it run-specs should should-be-nil should-not-be-nil should=
-                                 tags with]]
+                                 it run-specs should should-be-nil should-contain
+                                 should-not-be-nil should-not-contain should= tags with]]
             [ataru.time :as time]
             [yesql.core :as sql]))
 
@@ -66,6 +72,34 @@
                                  :jatkuva-or-joustava-haku?           false
                                  :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
+;; Auditlokimerkinnät kerätään testien tarkastettaviksi. Järjestelmä rakennetaan delayn takana
+;; kerran, joten atomi tyhjennetään testikohtaisesti (before).
+(def audit-log-capture (new-capturing-audit-logger))
+(def audit-entries (first audit-log-capture))
+
+(def vts-capture (new-fake-valinta-tulos-service))
+(def vts-calls (:calls vts-capture))
+
+(def maksut-capture (new-fake-maksut-service))
+(def maksut-calls (:calls maksut-capture))
+
+(def koodisto-cache-capture (new-counting-cache))
+(def koodisto-cache-calls (:calls koodisto-cache-capture))
+
+(def form-by-haku-cache-capture (new-counting-cache))
+(def form-by-haku-cache-calls (:calls form-by-haku-cache-capture))
+
+(defn- reset-fakes!
+  "Palauttaa kaikki jaetut keruuatomit ja fake-vastaukset lähtötilaan."
+  []
+  (reset! audit-entries [])
+  (reset! vts-calls [])
+  (reset! maksut-calls [])
+  (reset! koodisto-cache-calls [])
+  (reset! form-by-haku-cache-calls [])
+  (reset! (:response vts-capture) fake-vts-response)
+  (reset! (:laskut maksut-capture) [fake-lasku]))
+
 (def virkailija-routes
   (delay
     (-> (component/system-map
@@ -75,18 +109,17 @@
                              (get-many-from [_ _])
                              (remove-from [_ _])
                              (clear-all [_]))
-          :koodisto-cache     (reify cache-service/Cache
-                               (get-from [_ _])
-                               (get-many-from [_ _])
-                               (remove-from [_ _])
-                               (clear-all [_]))
+          :koodisto-cache     (:cache koodisto-cache-capture)
+          :form-by-haku-oid-str-cache (:cache form-by-haku-cache-capture)
           :organization-service (org-service/->FakeOrganizationService)
           :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service)
           :tarjonta-service (tarjonta-service/->MockTarjontaKoutaService)
           :session-store (create-session-store (ataru-db/get-datasource :db))
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
-          :audit-logger (audit-log/new-dummy-audit-logger)
+          :audit-logger (second audit-log-capture)
+          :valinta-tulos-service (:service vts-capture)
+          :maksut-service (:service maksut-capture)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
@@ -109,6 +142,9 @@
                                 :ohjausparametrit-service
                                 :form-by-id-cache
                                 :koodisto-cache
+                                :form-by-haku-oid-str-cache
+                                :valinta-tulos-service
+                                :maksut-service
                                 :job-runner]))
       component/start
       :virkailija-routes
@@ -267,6 +303,24 @@
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
+
+(defn- post-review-note
+  ([note] (post-review-note note nil))
+  ([note user]
+   (-> (mock/request :post (str "/lomake-editori/api/applications/notes/" (:application-key note))
+                     (json/generate-string note))
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       (mock/content-type "application/json")
+       ((deref virkailija-routes))
+       parse-body)))
+
+(defn- delete-review-note
+  ([note-id] (delete-review-note note-id nil))
+  ([note-id user]
+   (-> (mock/request :delete (str "/lomake-editori/api/applications/notes/" note-id))
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       ((deref virkailija-routes))
+       parse-body)))
 
 (defn- update-payment-info [key payment-info]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/update-payment-info")
@@ -676,6 +730,985 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(defn- set-review-note-author!
+  "Asettaa muistiinpanon tekijän suoraan kantaan. Reitin kautta tekijäksi tulee aina kirjautunut
+   käyttäjä, joten omistajuutta koskevia tapauksia (tekijätön rivi, toisen käyttäjän omistama
+   hakukohteellinen muistiinpano) ei voi muuten rakentaa."
+  [note-id virkailija-oid]
+  (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
+    (jdbc/execute! conn ["UPDATE application_review_notes SET virkailija_oid = ? WHERE id = ?"
+                         virkailija-oid note-id])))
+
+;; auth_routes.clj:n fake-kirjautumisen henkiloOid, josta tulee istunnon :oid
+(def ^:private view-only-user-oid "1.2.246.562.11.11111111015")
+
+;; application-review-notes-with-hakukohde-fixtuurin hakukohde, johon oletuskäyttäjällä on oikeus
+(def ^:private authorized-hakukohde "1.2.246.562.29.93102260101")
+
+(defn- init-application-keys
+  "Luo annetun määrän hakemuksia samalla lomakkeella ja palauttaa niiden avaimet."
+  [n]
+  (->> (db/init-db-fixture
+         fixtures/minimal-form
+         (repeat n (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))))
+       (map get-application-by-id)
+       (map :key)))
+
+(describe "Review note audit logging"
+          (tags :unit :review-note-audit)
+
+          (before (reset-fakes!))
+
+          (it "Should write one audit entry when a review note is added"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (post-review-note {:application-key application-key
+                                                       :notes           "Muistiinpano hakijasta"})
+                    note-id         (get-in resp [:body :id])
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should-not-be-nil note-id)
+                (should= 1 (count entries))
+                (should= (str note-id) (get-in (first entries) [:target :noteId]))
+                (should-contain "Muistiinpano hakijasta" (pr-str (:changes (first entries))))))
+
+          (it "Should record state-name as requirement in the audit target"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (post-review-note {:application-key application-key
+                                                       :notes           "Käsittelymerkintä"
+                                                       :state-name      "processing-state"})
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "processing-state" (get-in (first entries) [:target :requirement]))))
+
+          ;; Tämä testi kiinnittää mapv-korjauksen: laiskalla map:llä tallennus ja lokitus
+          ;; tapahtuisivat vasta vastausta serialisoitaessa, jolloin merkintöjä olisi nolla.
+          (it "Should write one audit entry per application for mass review notes"
+              (let [application-keys (init-application-keys 3)
+                    resp             (post-review-notes {:application-keys application-keys
+                                                         :notes            "Massamuistiinpano"})]
+                (should= 200 (:status resp))
+                (should= 3 (count (audit-entries-for audit-entries "lisäys")))
+                (doseq [application-key application-keys]
+                  (should= 1 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key))))))
+
+          (it "Should write a delete audit entry containing the removed note text"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Poistettava muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id)
+                    entries         (audit-entries-for audit-entries "poisto" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= note-id (get-in resp [:body :id]))
+                (should= 1 (count entries))
+                (should-contain "Poistettava muistiinpano" (pr-str (:changes (first entries))))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
+          (it "Should not remove the note or write a delete entry for an unauthorized user"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Toisen organisaation muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "USER-WITH-HAKUKOHDE-ORGANIZATION")]
+                (should= 403 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Katseluoikeus riittää oman muistiinpanon poistoon: samalla oikeudella se on voitu
+          ;; lisätäkin, joten lisäys ilman poistomahdollisuutta olisi epäsymmetrinen.
+          (it "Should allow a view-only user to delete their own note"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Oma muistiinpano"}
+                                                              "VIEW-ONLY-USER")
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto" :applicationOid application-key)))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Muistiinpanolla ei ole hakukohdetta, jolloin oikeustarkistus kohdistuu hakemukseen.
+          ;; Toisen tekemän muistiinpanon poisto on käsittelytoimenpide, johon katseluoikeus ei riitä.
+          (it "Should not allow a view-only user to delete another user's note"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Toisen muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 403 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Tekijätön muistiinpano ei ole kenenkään oma, joten siihen vaaditaan muokkausoikeus.
+          (it "Should not treat a note with no author as the view-only user's own note"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Tekijätön muistiinpano"}
+                                                              "VIEW-ONLY-USER")
+                                            [:body :id])
+                    _               (set-review-note-author! note-id nil)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 403 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Hakukohteellinen muistiinpano on osa hakukohteen käsittelyä, joten omistajuus ei
+          ;; kevennä vaatimusta: poistoon tarvitaan muokkausoikeus vaikka muistiinpano olisi oma.
+          (it "Should require edit rights to delete an own note that has a hakukohde"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :hakukohde       authorized-hakukohde
+                                                               :notes           "Oma hakukohteellinen muistiinpano"})
+                                            [:body :id])
+                    _               (set-review-note-author! note-id view-only-user-oid)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "VIEW-ONLY-USER")]
+                (should= 403 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
+                (should= 1 (count (application-store/get-application-review-notes application-key)))))
+
+          ;; Massapassivointi ja -palautus luovat muistiinpanon store-kerroksessa suoraan
+          ;; (application_store.clj inactivate-application / reactivate-application), eivät
+          ;; muistiinpanoreitin kautta. Varmistetaan että myös nämä auditlokitetaan.
+          (it "Should write a lisäys entry for the note created by mass inactivate"
+              (let [message          "Hakemuksilta puuttuu pakollisia tietoja"
+                    application-keys (init-application-keys 2)
+                    _                (reset! audit-entries [])
+                    resp             (post-mass-inactivate-applications application-keys message)]
+                (should= 200 (:status resp))
+                (doseq [application-key application-keys]
+                  (let [entries (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                    (should= 1 (count entries))
+                    (should-contain message (pr-str (:changes (first entries))))))))
+
+          (it "Should write a lisäys entry for the note created by mass reactivate"
+              (let [application-keys (init-application-keys 2)
+                    _                (post-mass-inactivate-applications application-keys "Passivoidaan")
+                    _                (reset! audit-entries [])
+                    resp             (post-mass-reactivate-applications application-keys "Palautetaan käsittelyyn")]
+                (should= 200 (:status resp))
+                (doseq [application-key application-keys]
+                  (let [entries (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                    (should= 1 (count entries))
+                    (should-contain "Palautetaan käsittelyyn" (pr-str (:changes (first entries))))))))
+
+          ;; Huom: kirjautuminen tuottaa oman "kirjautuminen"-merkintänsä, joten tarkastellaan
+          ;; vain muistiinpanoon liittyviä operaatioita.
+          (it "Should return 404 and write no note audit entry for an unknown note"
+              (let [resp (delete-review-note 999999)]
+                (should= 404 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))
+                (should= 0 (count (audit-entries-for audit-entries "epäonnistunut")))))
+
+          ;; Poisto on idempotentti: toinen kutsu onnistuu, mutta ei tuota uutta merkintää.
+          (it "Should not write a second delete entry when a note is removed twice"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Kahdesti poistettava"})
+                                            [:body :id])
+                    _               (delete-review-note note-id)
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id)]
+                (should= 200 (:status resp))
+                (should= note-id (get-in resp [:body :id]))
+                (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
+
+(defn- raw-get
+  "GET ilman body-parsintaa: nämä reitit vastaavat 307-uudelleenohjauksella."
+  ([path] (raw-get path nil))
+  ([path user]
+   (-> (mock/request :get path)
+       (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+       ((deref virkailija-routes)))))
+
+(defn- secret-from-redirect
+  "Poimii virkailija-secretin Location-otsakkeesta."
+  [resp]
+  (some-> (get-in resp [:headers "Location"])
+          (clj-string/split #"virkailija-secret=")
+          second
+          (clj-string/split #"&")
+          first))
+
+(defn- select-organization
+  "Valitsee organisaation annetuilla oikeuksilla. Samaa evästettä käyttämällä valinta säilyy
+   istunnossa seuraaviin pyyntöihin."
+  [oid rights cookie]
+  (-> (mock/request :post (str "/lomake-editori/api/organization/user-organization/" oid
+                               "?rights=" (clj-string/join "&rights=" rights)))
+      (update-in [:headers] assoc "cookie" cookie)
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-form-with-cookie [form cookie]
+  (-> (mock/request :post "/lomake-editori/api/forms" (json/generate-string form))
+      (update-in [:headers] assoc "cookie" cookie)
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+;; Oletuskäyttäjällä ja VIEW-ONLY-USERilla on sama organisaatio mutta eri oikeustaso
+;; (auth_routes.clj: EDITORI_CRUD vs HAKEMUS_READ). Kun lomake kiinnitetään tähän
+;; organisaatioon, testissä eroaa vain oikeus, ei organisaatiojäsenyys.
+(def ^:private shared-organization "1.2.246.562.10.0439845")
+
+(defn- user-info [cookie]
+  (-> (mock/request :get "/lomake-editori/api/user-info")
+      (update-in [:headers] assoc "cookie" cookie)
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- rights-for-organization [cookie oid]
+  (->> (get-in (user-info cookie) [:body :organizations])
+       (filter #(= oid (:oid %)))
+       first
+       :rights
+       set))
+
+(defn- resend-maksu-link [application-key]
+  (-> (mock/request :post "/lomake-editori/api/maksut/resend-maksu-link"
+                    (json/generate-string {:application-key application-key
+                                           :locale          "fi"}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- resend-modify-link [application-key]
+  (-> (mock/request :post (str "/lomake-editori/api/applications/" application-key "/resend-modify-link"))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      ((deref virkailija-routes))
+      parse-body))
+
+(describe "Secret minting audit logging"
+          (tags :unit :secret-audit)
+
+          (before (reset-fakes!))
+
+          ;; Ohitetaan sähköpostijobi, koska testien kohde on auditlokitus.
+          (around [spec]
+                  (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)]
+                    (spec)))
+
+          (it "Should write a lisäys entry when a create secret is minted for a haku"
+              (let [resp    (raw-get "/lomake-editori/api/preview/haku/1.2.246.562.29.1?lang=fi")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.29.1" (get-in (first entries) [:target :hakuOid]))
+                (should-contain "virkailija-create" (pr-str (:changes (first entries))))))
+
+          (it "Should write a lisäys entry when a create secret is minted for a form"
+              (let [resp    (raw-get "/lomake-editori/api/preview/form/some-form-key?lang=sv")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should= "some-form-key" (get-in (first entries) [:target :formKey]))
+                (should-contain "sv" (pr-str (:changes (first entries))))))
+
+          ;; Itse salaisuus ei saa päätyä auditlokille. Merkinnästä käy ilmi vain mihin ja millainen tunniste luotiin.
+          (it "Should never write the minted secret into the audit entry"
+              (let [resp   (raw-get "/lomake-editori/api/preview/haku/1.2.246.562.29.1?lang=fi")
+                    secret (secret-from-redirect resp)
+                    entry  (first (audit-entries-for audit-entries "lisäys"))]
+                (should-not-be-nil secret)
+                (should-not-contain secret (pr-str entry))))
+
+          (it "Should write a lisäys entry when an update secret is minted for an application"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/modify"))
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "virkailija-update" (pr-str (:changes (first entries))))
+                (should-not-be-nil (secret-from-redirect resp))
+                (should-not-contain (secret-from-redirect resp) (pr-str (first entries)))))
+
+          (it "Should write a lisäys entry when a rewrite secret is minted for an application"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/rewrite-modify")
+                                             "SUPERUSER")
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 307 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "virkailija-rewrite" (pr-str (:changes (first entries))))
+                (should-not-be-nil (secret-from-redirect resp))
+                (should-not-contain (secret-from-redirect resp) (pr-str (first entries)))))
+
+          ;; Rewrite-secret vaatii pääkäyttäjäoikeudet; ilman niitä salaisuutta ei luoda eikä
+          ;; merkintää synny.
+          (it "Should not mint a rewrite secret or write an entry for a non-superuser"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (raw-get (str "/lomake-editori/api/applications/" application-key "/rewrite-modify"))]
+                (should= 400 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key)))))
+
+          ;; Linkin uudelleenlähetys kierrättää hakijan salaisuuden, joten se on muutos.
+          ;; Ennen tätä lokiin jäi vain oikeustarkistuksen "luku"-merkintä.
+          ;;
+          (it "Should write a muutos entry when a modify link is resent"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (resend-modify-link application-key)
+                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "secret-rotated" (pr-str (:changes (first entries))))))
+
+          ;; Ilman aktiivista laskua linkkiä ei lähetetä eikä salaisuutta kierrätetä.
+          (it "Should not write an entry when the application has no active lasku"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! (:laskut maksut-capture) [])
+                    resp            (resend-maksu-link application-key)]
+                (should= 404 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos"
+                                                     :applicationOid application-key)))))
+
+          ;; Maksu-linkin uudelleenlähetys kierrättää salaisuuden samalla tavalla kuin
+          ;; muokkauslinkki.
+          (it "Should write a muutos entry when a maksu link is resent"
+              (let [application-key (first (init-application-keys 1))
+                    resp            (resend-maksu-link application-key)
+                    entries         (audit-entries-for audit-entries "muutos" :applicationOid application-key)
+                    entry           (pr-str (first entries))]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "secret-rotated" entry)
+                (should-contain "maksu" entry)
+                ;; Maksu-url rakennetaan laskun salaisuudesta, joten salaisuus ei saa vuotaa
+                ;; merkintään sitäkään kautta.
+                (should-not-contain "lasku-secret-1" entry))))
+
+(defn- patch-valinnan-tulos [valintatapajono-oid body]
+  (-> (mock/request :patch (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/"
+                                valintatapajono-oid)
+                    (json/generate-string body))
+      (update-in [:headers] assoc
+                 "cookie" (login @virkailija-routes nil)
+                 "if-unmodified-since" "Mon, 1 Jan 2026 00:00:00 GMT")
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- put-hyvaksynnan-ehto [hakukohde-oid application-key ehto if-unmodified-since]
+  (-> (mock/request :put (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto"
+                              "/hakukohteessa/" hakukohde-oid "/hakemus/" application-key)
+                    (json/generate-string ehto))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+      (cond-> if-unmodified-since
+              (update-in [:headers] assoc "if-unmodified-since" if-unmodified-since))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- delete-hyvaksynnan-ehto [hakukohde-oid application-key]
+  (-> (mock/request :delete (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto"
+                                 "/hakukohteessa/" hakukohde-oid "/hakemus/" application-key))
+      (update-in [:headers] assoc
+                 "cookie" (login @virkailija-routes nil)
+                 "if-unmodified-since" "Mon, 1 Jan 2026 00:00:00 GMT")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-maksupyynto [lasku user]
+  (-> (mock/request :post "/lomake-editori/api/maksut/maksupyynto"
+                    (json/generate-string lasku))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- resend-hakemusmaksu-email [hakemus-oid user]
+  (-> (mock/request :post (str "/lomake-editori/api/maksut/hakemusmaksu/email/laheta/" hakemus-oid))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- lasku-for [application-key]
+  {:first-name "Aku"
+   :last-name  "Ankka"
+   :email      "aku@ankkalinna.com"
+   :amount     "100"
+   :due-date   "2026-12-31"
+   :origin     "tutu"
+   :reference  application-key
+   :locale     "fi"
+   :message    "Maksupyyntö"})
+
+(defn- put-rajaava-hakukohderyhma
+  [haku-oid hakukohderyhma-oid raja if-unmodified-since user]
+  (-> (mock/request :put (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                              haku-oid "/ryhma/" hakukohderyhma-oid)
+                    (json/generate-string {:haku-oid           haku-oid
+                                           :hakukohderyhma-oid hakukohderyhma-oid
+                                           :raja               raja}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (cond-> if-unmodified-since
+              (update-in [:headers] assoc "if-unmodified-since" if-unmodified-since))
+      (cond-> (nil? if-unmodified-since)
+              (update-in [:headers] assoc "if-none-match" "*"))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- delete-rajaava-hakukohderyhma [haku-oid hakukohderyhma-oid user]
+  (-> (mock/request :delete (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                                 haku-oid "/ryhma/" hakukohderyhma-oid))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-email-templates [form-key templates user]
+  (-> (mock/request :post (str "/lomake-editori/api/email-templates/" form-key)
+                    (json/generate-string {:contents templates}))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(def ^:private email-template
+  {:lang           "fi"
+   :subject        "Kiitos hakemuksestasi"
+   :content        "Hakemuksesi on vastaanotettu."
+   :content-ending "Ystävällisin terveisin"
+   :signature      "Opintopolku"})
+
+;; Hakukohderyhmärivit eivät kuulu hakemus-/lomakefixtuureihin, joten testien käyttämät rivit
+;; siivotaan itse — muuten toinen ajo törmäisi edellisen jättämään riviin (409).
+(def ^:private config-haku-oids
+  ["1.2.246.562.29.config-1" "1.2.246.562.29.config-2" "1.2.246.562.29.config-3"
+   "1.2.246.562.29.config-4"])
+
+(describe "Configuration audit logging"
+          (tags :unit :config-audit)
+
+          (before (reset-fakes!)
+                  (doseq [haku-oid config-haku-oids]
+                    (hakukohderyhmat/delete-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1")
+                    (hakukohderyhmat/delete-priorisoiva-hakukohderyhma haku-oid "1.2.246.562.28.1")))
+
+          (it "Should write a lisäys entry when a rajaava hakukohderyhmä is created"
+              (let [haku-oid "1.2.246.562.29.config-1"
+                    resp     (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    entries  (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.28.1"
+                         (get-in (first entries) [:target :hakukohderyhmaOid]))))
+
+          ;; 409 tarkoittaa ettei mikään muuttunut, joten merkintää ei saa syntyä.
+          (it "Should not write an entry when the create conflicts with an existing row"
+              (let [haku-oid "1.2.246.562.29.config-2"
+                    _        (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    _        (reset-fakes!)
+                    resp     (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 5 nil nil)]
+                (should= 409 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid)))))
+
+          (it "Should write a poisto entry when a rajaava hakukohderyhmä is deleted"
+              (let [haku-oid "1.2.246.562.29.config-3"
+                    _        (put-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" 3 nil nil)
+                    _        (reset-fakes!)
+                    resp     (delete-rajaava-hakukohderyhma haku-oid "1.2.246.562.28.1" nil)
+                    entries  (audit-entries-for audit-entries "poisto" :hakuOid haku-oid)]
+                (should= 204 (:status resp))
+                (should= 1 (count entries))
+                ;; Poiston arvo kuuluu :old-kenttään, kuten muissakin poistoissa.
+                (should-contain :oldValue (first (:changes (first entries))))))
+
+          ;; Olematon rivi: poisto onnistuu mutta mitään ei poistettu, joten merkintää ei synny.
+          (it "Should not write a poisto entry when nothing was deleted"
+              (let [resp (delete-rajaava-hakukohderyhma "1.2.246.562.29.config-none"
+                                                        "1.2.246.562.28.1" nil)]
+                (should= 204 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          ;; Kysely kohdistuu rungon kenttiin, eikä reitti vaadi niiden vastaavan polkuparametreja.
+          ;; Merkinnän on siksi nimettävä rivi joka todella kirjoitettiin — muuten loki osoittaisi
+          ;; kutsujan valitsemaan, muuttumattomaan hakuun.
+          (it "Should name the row that was actually written, not the path parameters"
+              (let [path-haku "1.2.246.562.29.config-1"
+                    body-haku "1.2.246.562.29.config-2"
+                    ryhma-oid "1.2.246.562.28.1"
+                    resp      (-> (mock/request :put (str "/lomake-editori/api/rajaavat-hakukohderyhmat/"
+                                                          path-haku "/ryhma/" "1.2.246.562.28.9")
+                                                (json/generate-string {:haku-oid           body-haku
+                                                                       :hakukohderyhma-oid ryhma-oid
+                                                                       :raja               3}))
+                                  (update-in [:headers] assoc "cookie" (login @virkailija-routes nil))
+                                  (update-in [:headers] assoc "if-none-match" "*")
+                                  (mock/content-type "application/json")
+                                  ((deref virkailija-routes))
+                                  parse-body)
+                    entry     (first (audit-entries-for audit-entries "lisäys" :hakuOid body-haku))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= ryhma-oid (:hakukohderyhmaOid (:target entry)))
+                ;; Polun haku ei saa esiintyä merkinnässä lainkaan: sinne ei kirjoitettu mitään.
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :hakuOid path-haku)))))
+
+          (it "Should write a muutos entry when email templates are stored"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    _        (reset-fakes!)
+                    resp     (post-email-templates form-key [email-template] nil)
+                    entries  (audit-entries-for audit-entries "muutos" :formKey form-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should-contain "Kiitos hakemuksestasi" (pr-str (:changes (first entries))))))
+
+          ;; Pohjien sisältö on vapaata tekstiä eikä kuulu lokiin — vain pituus.
+          (it "Should not write email template bodies into the entry"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    body     (apply str (repeat 500 "salainen-sisalto "))
+                    _        (reset-fakes!)
+                    _        (post-email-templates form-key
+                                                   [(assoc email-template :content body)]
+                                                   nil)
+                    entry    (pr-str (first (audit-entries-for audit-entries "muutos" :formKey form-key)))]
+                (should-not-contain "salainen-sisalto" entry)
+                (should-contain "content-length" entry)))
+
+          ;; Uusi oikeustarkistus: ilman :form-edit-oikeutta pohjia ei saa tallentaa.
+          (it "Should reject email template storing without form-edit rights"
+              (let [form-key (:key (:body (post-form fixtures/form-with-content)))
+                    _        (reset-fakes!)
+                    resp     (post-email-templates form-key [email-template] "VIEW-ONLY-USER")]
+                (should= 400 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos" :formKey form-key))))))
+
+(defn- post-cache [path user]
+  (-> (mock/request :post (str "/lomake-editori/api/cache" path))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-background-job [path user]
+  (-> (mock/request :post (str "/lomake-editori/api/background-jobs" path))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- get-job-statuses [user]
+  (-> (mock/request :get "/lomake-editori/api/background-jobs/list-job-statuses")
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- post-update-job-statuses [job-types user]
+  (-> (mock/request :post "/lomake-editori/api/background-jobs/update-job-statuses"
+                    (json/generate-string job-types))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes user))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(describe "Cache route authorization and audit logging"
+          (tags :unit :operational-audit)
+
+          (before (reset-fakes!))
+
+          (it "Should clear all caches for a superuser and write a poisto entry"
+              (let [resp    (post-cache "/clear" "SUPERUSER")
+                    entries (audit-entries-for audit-entries "poisto")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                 (should= "all" (get-in (first entries) [:target :cache]))
+                (should-contain :newValue (first (:changes (first entries))))
+                (should-contain "clear-all-caches" (pr-str (:changes (first entries))))
+                (should-contain [:clear-all] @koodisto-cache-calls)))
+
+          (it "Should not clear caches for a non-superuser"
+              (let [resp (post-cache "/clear" nil)]
+                (should= 401 (:status resp))
+                (should= [] @koodisto-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          (it "Should clear a named cache for a superuser and name it in the entry"
+              (let [resp  (post-cache "/clear/koodisto" "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "poisto" :cache "koodisto"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should-contain [:clear-all] @koodisto-cache-calls)))
+
+          (it "Should not clear a named cache for a non-superuser"
+              (let [resp (post-cache "/clear/koodisto" nil)]
+                (should= 401 (:status resp))
+                (should= [] @koodisto-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto")))))
+
+          (it "Should answer 404 for an unknown cache name"
+              (let [resp (post-cache "/clear/ei-olemassa" "SUPERUSER")]
+                (should= 404 (:status resp))
+                (should= [] @koodisto-cache-calls)))
+
+          (it "Should answer 401 rather than 404 for a non-superuser with an unknown cache name"
+              (let [resp (post-cache "/clear/ei-olemassa" nil)]
+                (should= 401 (:status resp))))
+
+          (it "Should remove a single cache entry and name the key in the entry"
+              (let [resp  (post-cache "/remove/koodisto/avain-1" "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "poisto" :cacheKey "avain-1"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "koodisto" (get-in entry [:target :cache]))
+                (should-contain [:remove-from "avain-1"] @koodisto-cache-calls)))
+
+          (it "Should clear haku caches for a superuser and name the haku in the entry"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-cache (str "/haku/" haku-oid "/clear") "SUPERUSER")
+                    entry    (first (audit-entries-for audit-entries "poisto" :hakuOid haku-oid))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                ;; Lomakevälimuisti tyhjennetään sekä hakijan että virkailijan rooleille.
+                (should= 2 (count @form-by-haku-cache-calls))))
+
+          (it "Should not clear haku caches for a non-superuser"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-cache (str "/haku/" haku-oid "/clear") nil)]
+                (should= 401 (:status resp))
+                (should= [] @form-by-haku-cache-calls)
+                (should= 0 (count (audit-entries-for audit-entries "poisto"))))))
+
+(describe "Background job route audit logging"
+          (tags :unit :operational-audit)
+
+          (before (reset-fakes!))
+
+          ;; Reitit olivat jo superuser-rajattuja, joten tässä vaiheessa lisätään vain merkinnät.
+          (it "Should write a lisäys entry when a parameterless job is triggered"
+              (let [resp    (post-background-job "/start-kk-application-payment-maksut-poller-job"
+                                                 "SUPERUSER")
+                    entries (audit-entries-for audit-entries "lisäys")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "kk-application-payment-maksut-poller"
+                         (get-in (first entries) [:target :job]))
+                (should-contain "kk-application-payment-maksut-poller"
+                                (pr-str (:changes (first entries))))))
+
+          (it "Should not trigger a job for a non-superuser and write no entry"
+              (let [resp (post-background-job "/start-kk-application-payment-maksut-poller-job" nil)]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          ;; Target-arvot menevät setField(String, String):iin, joten Int-parametrit on ajettava str-muunnoksen läpi.
+          ;; Ilman muunnosta kutsu heittää poikkeuksen eikä merkintää synny lainkaan.
+          (it "Should record an s/Int year and person oid as strings"
+              (let [resp  (post-background-job
+                            "/start-kk-application-payment-status-updater-job/1.2.246.562.24.1/kausi_s/2025"
+                            "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "2025" (get-in entry [:target :year]))
+                (should= "1.2.246.562.24.1" (get-in entry [:target :personOid]))
+                (should= "kausi_s" (get-in entry [:target :term]))))
+
+          (it "Should record an s/Int application id as a string"
+              (let [resp  (post-background-job "/start-tutkintojen-tunnustaminen-submit-job/12345"
+                                               "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)
+                (should= "12345" (get-in entry [:target :applicationId]))))
+
+          ;; 404-haara on superuser-haaran sisällä, joten merkintä syntyy silti: pyyntö ja yritys tehtiin.
+          (it "Should record the attempt even when the information request is not found"
+              (let [resp  (post-background-job
+                            "/start-tutkintojen-tunnustaminen-information-request-jobs/999999"
+                            "SUPERUSER")
+                    entry (first (audit-entries-for audit-entries "lisäys"))]
+                (should= 404 (:status resp))
+                (should-not-be-nil entry)
+                (should= "999999" (get-in entry [:target :informationRequestId]))))
+
+          (it "Should record a haku oid target for a haku-wide job"
+              (let [haku-oid "1.2.246.562.29.65950024185"
+                    resp     (post-background-job
+                               (str "/start-automatic-payment-obligation-job-for-haku/" haku-oid)
+                               "SUPERUSER")
+                    entry    (first (audit-entries-for audit-entries "lisäys" :hakuOid haku-oid))]
+                (should= 200 (:status resp))
+                (should-not-be-nil entry)))
+
+          ;; Tämä kytkee ajastettuja töitä päälle ja pois, joten merkinnästä on käytävä ilmi mitkä.
+          (it "Should write a muutos entry naming the job types when job statuses are updated"
+              (let [resp    (post-update-job-statuses
+                              [{:job_type "test-job" :enabled false}]
+                              "SUPERUSER")
+                    entries (audit-entries-for audit-entries "muutos")
+                    changes (pr-str (:changes (first entries)))]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "job-types" (get-in (first entries) [:target :job]))
+                (should-contain "test-job" changes)
+                (should-contain "false" changes)))
+
+          (it "Should not update job statuses for a non-superuser and write no entry"
+              (let [resp (post-update-job-statuses [{:job_type "test-job" :enabled false}] nil)]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "muutos")))))
+
+          ;; Luku taustatöiden asetuksista on rajattu mutta ei auditlokitettu: ei henkilötietoa
+          ;; eikä muutosta. Testi pitää päätöksen näkyvissä.
+          (it "Should gate but not audit reading job statuses"
+              (let [resp (get-job-statuses "SUPERUSER")]
+                (should= 200 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "luku")))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          (it "Should refuse every background job route for a logged-in non-superuser"
+              ;; Varmistetaan ensin että käytetty identiteetti on oikeasti kirjautunut virkailija
+              ;; jolta puuttuu vain superuser-lippu. Ilman tätä 401 voisi johtua kirjautumisen
+              ;; puutteesta eikä portista, eikä testi kertoisi portista mitään.
+              (let [info (user-info (login @virkailija-routes nil))]
+                (should= 200 (:status info))
+                (should-not-be-nil (-> info :body :oid))
+                (should= false (-> info :body :superuser?))
+                (should-not-be-nil (seq (-> info :body :organizations))))
+              (doseq [path ["/start-kk-application-payment-maksut-poller-job"
+                            "/start-kk-application-payment-status-updater-job-for-all"
+                            "/start-kk-application-payment-status-updater-job/1.2.246.562.24.1/kausi_s/2025"
+                            "/start-tutkintojen-tunnustaminen-submit-job/12345"
+                            "/start-tutkintojen-tunnustaminen-edit-job/12345"
+                            "/start-tutkintojen-tunnustaminen-information-request-jobs/12345"
+                            "/start-automatic-eligibility-if-ylioppilas-job/12345"
+                            "/start-automatic-eligibility-if-ylioppilas-job-for-haku/1.2.246.562.29.65950024185"
+                            "/start-automatic-payment-obligation-job/1.2.246.562.24.1"
+                            "/start-automatic-payment-obligation-job-for-haku/1.2.246.562.29.65950024185"
+                            "/start-submit-jobs/12345"]]
+                (reset-fakes!)
+                (let [resp (post-background-job path nil)]
+                  (should= 401 (:status resp))
+                  (should= 0 (count (audit-entries-for audit-entries "lisäys"))))))
+
+          (it "Should not let a non-superuser read job statuses"
+              (let [resp (get-job-statuses nil)]
+                (should= 401 (:status resp)))))
+
+(describe "Maksut audit logging"
+          (tags :unit :maksut-audit)
+
+          (before (reset-fakes!))
+
+          (it "Should write a lisäys entry when an invoice is created"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (post-maksupyynto (lasku-for application-key) nil)
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "ORDER-1" (get-in (first entries) [:target :orderId]))
+                (should-contain "tutu" (pr-str (:changes (first entries))))))
+
+          ;; Laskua (tai ylipäänsä kutsua maksut-palveluun) ei saa syntyä oikeudettomasta kutsusta.
+          (it "Should not create an invoice when the caller is not authorized"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    _               (reset! maksut-calls [])
+                    resp            (post-maksupyynto (lasku-for application-key) "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (filter #(= :create-paatos-lasku (:op %)) @maksut-calls)))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key)))))
+
+          ;; Maksupyynnölle on aina löydyttävä hakemus johon se liittyy. Jos ei löydy, tarkistetaan
+          ;; että rajapinta vastaa 404 ja että kutsua maksut-palveluun ei tehdä.
+          (it "Should not create an invoice for a reference that matches no application"
+              (let [_    (reset! audit-entries [])
+                    _    (reset! maksut-calls [])
+                    resp (post-maksupyynto (lasku-for "ei-olemassa-olevaa-hakemusta") nil)]
+                (should= 404 (:status resp))
+                (should= 0 (count (filter #(= :create-paatos-lasku (:op %)) @maksut-calls)))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          ;; Salaisuus ja sen sisältävä maksu-url eivät kuulu lokille, kuten eivät myöskään hakijan
+          ;; henkilötiedot. Hakemus yksilöidään target-kentässä.
+          (it "Should not write the invoice secret or the applicant's personal data"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    _               (post-maksupyynto (lasku-for application-key) nil)
+                    entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)
+                    entry           (pr-str (first entries))]
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                (should-not-contain "lasku-secret-1" entry)
+                (should-not-contain "virkailija-secret" entry)
+                (should-not-contain "aku@ankkalinna.com" entry)
+                (should-not-contain "Ankka" entry)))
+
+          ;; Sähköpostijobi ohitetaan: start-payment-email-job tarvitsee tarjonta-servicen
+          ;; job-runnerin riippuvuutena, eikä testin job-runnerilla ole riippuvuuksia. Testin
+          ;; kohde on merkintä, ei sähköpostikoneisto — sama ohitus kuin muokkauslinkkitestissä.
+          (it "Should write a lisäys entry when a hakemusmaksu email is resent"
+              (with-redefs [kk-application-payment-status-updater-job/resend-payment-email
+                            (constantly nil)]
+                (let [application-key (first (init-application-keys 1))
+                      _               (reset! audit-entries [])
+                      resp            (resend-hakemusmaksu-email application-key nil)
+                      entries         (audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+                  (should= 200 (:status resp))
+                  (should= 1 (count entries))
+                  (should-contain "hakemusmaksu" (pr-str (:changes (first entries)))))))
+
+          ;; Tämä reitti tarkistaa oikeudet ennen toimintaa, joten estetystä kutsusta ei synny
+          ;; merkintää eikä sivuvaikutuksia.
+          (it "Should not write an entry when the email resend is unauthorized"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (resend-hakemusmaksu-email application-key "VIEW-ONLY-USER")]
+                (should= 401 (:status resp))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys" :applicationOid application-key))))))
+
+;; Varsinaisen muutoksen lokittaa valinta-tulos-service itse. Nämä merkinnät kertovat kuka
+;; muutosta yritti: Ataru kutsuu VTS:ää palvelutunnuksella eikä välitä loppukäyttäjän
+;; identiteettiä, joten VTS:n omasta merkinnästä tekijä ei selviä. Vastausta ei tarkisteta.
+(describe "Valinta-tulos-service change audit logging"
+          (tags :unit :valinta-audit)
+
+          (before (reset-fakes!))
+
+          (it "Should write a muutos entry for a kevyt valinta patch"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (patch-valinnan-tulos
+                                      "1.2.246.562.20.1"
+                                      [{:hakemusOid {:s application-key}}])
+                    entries         (audit-entries-for audit-entries "muutos")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= "1.2.246.562.20.1"
+                         (get-in (first entries) [:target :valintatapajonoOid]))
+                (should-contain application-key (pr-str (:changes (first entries))))
+                ;; Kutsu meni myös perille.
+                (should= 1 (count @vts-calls))))
+
+          ;; Hakemus-oidit eivät saa päätyä Target-kenttään: rajaamaton lista ylittäisi kentän
+          ;; kokorajan ja merkintä katoaisi lokin vastaanotossa.
+          (it "Should keep a large kevyt valinta patch out of the target fields"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    body            (vec (repeat 2000 {:hakemusOid {:s application-key}}))
+                    _               (patch-valinnan-tulos "1.2.246.562.20.1" body)
+                    entry           (first (audit-entries-for audit-entries "muutos"))]
+                (should= 1 (count (audit-entries-for audit-entries "muutos")))
+                (doseq [[_ v] (:target entry)]
+                  (should (< (count (.getBytes (str v) "UTF-8")) 32766)))))
+
+          (it "Should write a lisäys entry when a hyvaksynnan ehto is created"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (put-hyvaksynnan-ehto "1.2.246.562.20.1" application-key
+                                                          {:ehto "Ehdollinen"} nil)
+                    entries         (audit-entries-for audit-entries "lisäys")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                (should= "1.2.246.562.20.1" (get-in (first entries) [:target :hakukohdeOid]))))
+
+          ;; if-unmodified-since erottaa muokkauksen luonnista, kuten VTS-asiakaskin tekee.
+          (it "Should write a muutos entry when a hyvaksynnan ehto is updated"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (put-hyvaksynnan-ehto "1.2.246.562.20.1" application-key
+                                                          {:ehto "Ehdollinen"}
+                                                          "Mon, 1 Jan 2026 00:00:00 GMT")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "muutos")))
+                (should= 0 (count (audit-entries-for audit-entries "lisäys")))))
+
+          (it "Should write a poisto entry when a hyvaksynnan ehto is deleted"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! audit-entries [])
+                    resp            (delete-hyvaksynnan-ehto "1.2.246.562.20.1" application-key)
+                    entries         (audit-entries-for audit-entries "poisto")]
+                (should= 200 (:status resp))
+                (should= 1 (count entries))
+                (should= application-key (get-in (first entries) [:target :applicationOid]))
+                ;; Poiston arvo kuuluu :old-kenttään kuten muissakin poistoissa, jotta
+                ;; operaatiosuodatus poimii sen. :old päätyy changes-taulukkoon oldValue-kenttänä.
+                (should-contain :oldValue (first (:changes (first entries))))))
+
+          ;; Yritys kirjataan vastauksesta riippumatta — merkintä kertoo kuka yritti, ei mitä
+          ;; VTS:ssä lopulta tapahtui.
+          (it "Should write the entry even when valinta-tulos-service refuses the change"
+              (let [application-key (first (init-application-keys 1))
+                    _               (reset! (:response vts-capture) {:status 409 :headers {} :body "{}"})
+                    resp            (delete-hyvaksynnan-ehto "1.2.246.562.20.1" application-key)]
+                (should= 409 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto"))))))
+
+;; Organisaation valinta ei ole auditlokitettu, koska se vain kaventaa toimivaltaa (pääkäyttäjä valitsee itselleen
+;; pääkäyttäjän oikeuksia kapeammat oikeudet johonkin organisaatioon).
+(describe "Organization selection rights"
+          (tags :unit :organization-selection)
+
+          (it "Should not attach requested rights to a non-superuser's selected organization"
+              (let [cookie (login @virkailija-routes "VIEW-ONLY-USER")
+                    resp   (select-organization shared-organization
+                                                ["form-edit" "edit-applications"]
+                                                cookie)
+                    rights (set (get-in resp [:body :rights]))]
+                (should= 200 (:status resp))
+                ;; VIEW-ONLY-USERilla on vain ATARU_HAKEMUS_READ, eikä pyydettyjä oikeuksia
+                ;; kirjoiteta istuntoon.
+                (should-contain "view-applications" rights)
+                (should-not-contain "form-edit" rights)
+                (should-not-contain "edit-applications" rights)))
+
+          (it "Should deny a form edit on the user's own organization when the right is missing"
+              (let [cookie (login @virkailija-routes "VIEW-ONLY-USER")
+                    form   (assoc fixtures/form-with-content :organization-oid shared-organization)
+                    rights (rights-for-organization cookie shared-organization)
+                    resp   (post-form-with-cookie form cookie)]
+                ;; Käyttäjä kuuluu organisaatioon, mutta vain katseluoikeudella.
+                (should-contain "view-applications" rights)
+                (should-not-contain "form-edit" rights)
+                (should= 400 (:status resp))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> resp :body :error))))
+
+          ;; Varsinainen vuototesti. Ei-pääkäyttäjä ei saa asettaa itselleen laajempia oikeuksia omaan organisaatioon.
+          (it "Should not let requested rights enable a form edit for a non-superuser"
+              (let [cookie      (login @virkailija-routes "VIEW-ONLY-USER")
+                    form        (assoc fixtures/form-with-content :organization-oid shared-organization)
+                    before      (post-form-with-cookie form cookie)
+                    _           (select-organization shared-organization ["form-edit"] cookie)
+                    after       (post-form-with-cookie form cookie)
+                    ;; Verrokki: samaan organisaatioon form-edit-oikeuden omaava käyttäjä pääsee
+                    ;; samasta pyynnöstä läpi, joten esto johtuu oikeudesta eikä lomakkeesta.
+                    with-rights (post-form-with-cookie form (login @virkailija-routes nil))]
+                (should= 200 (:status with-rights))
+                (should= 400 (:status before))
+                (should= 400 (:status after))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> before :body :error))
+                (should= "Käyttäjällä ei lomakkeen muokkausoikeutta" (-> after :body :error))))
+
+          ;; Muu kuin pääkäyttäjä ei pääse käsiksi koko organisaatiolistaan, joten vierasta
+          ;; organisaatiota ei voi valita lainkaan.
+          (it "Should not let a non-superuser select an organization they do not belong to"
+              (let [cookie       (login @virkailija-routes "VIEW-ONLY-USER")
+                    foreign-org  "1.2.246.562.10.22"
+                    own-rights   (rights-for-organization cookie foreign-org)
+                    resp         (select-organization foreign-org ["view-applications"] cookie)]
+                ;; Organisaatio on olemassa (fake-org-by-oid: "Omnia") mutta ei käyttäjän omissa.
+                (should= #{} own-rights)
+                (should= 400 (:status resp))
+                ;; Reitti palauttaa oman (bad-request {}) -haaransa, eli select-organization
+                ;; palautti nil. Tyhjä body erottaa tämän user-feedback-exceptionista, joka
+                ;; tuottaisi {:error ...} — eli esto ei tule poikkeuksesta vaan haun tuloksesta.
+                (should= {} (:body resp)))))
 
 (describe "Mass inactivate applications"
           (tags :unit :api-applications)

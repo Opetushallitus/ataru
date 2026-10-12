@@ -14,6 +14,7 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
+    [ataru.log.audit-log :as audit-log]
     [ataru.maksut.maksut-store :as maksut-store]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
@@ -528,6 +529,42 @@
      application-keys
      [:view-applications :edit-applications])))
 
+(defn- own-review-note?
+  "Muistiinpano on käyttäjän oma, kun sen tekijän oid vastaa istunnon oidia. Tuntematon tekijä
+   (nil) ei ole koskaan 'oma', jottei oiditonta riviä voi poistaa pelkällä katseluoikeudella."
+  [note session]
+  (let [note-oid (:virkailija-oid note)]
+    (and (some? note-oid)
+         (= note-oid (-> session :identity :oid)))))
+
+(defn- check-review-note-delete-rights
+  "Hakukohteelliseen muistiinpanoon vaaditaan aina :edit-applications-oikeus, myös omaan:
+   hakukohteelle kirjattu muistiinpano on osa hakukohteen käsittelyä.
+
+   Hakukohteettomaan muistiinpanoon riittää oman muistiinpanon kohdalla hakemuksen
+   katseluoikeus — sama oikeus jolla se on voitu lisätäkin (ks. check-review-rights).
+   Toisen tekemän poistoon vaaditaan muokkausoikeus.
+
+   Oikeustaso joustaa, organisaatiorajaus ei: molemmissa haaroissa vaaditaan yhä oikeus juuri
+   tähän hakukohteeseen tai hakemukseen. Oikeuslista tarkoittaa 'jompikumpi', ks.
+   session-organizations/select-organizations-for-rights."
+  [note organization-service tarjonta-service session]
+  (if (not (clojure.string/blank? (:hakukohde note)))
+    (aac/applications-review-authorized?
+     organization-service
+     tarjonta-service
+     session
+     [(keyword (:hakukohde note))] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
+     [:edit-applications])
+    (aac/applications-access-authorized?
+     organization-service
+     tarjonta-service
+     session
+     [(:application-key note)]
+     (if (own-review-note? note session)
+       [:view-applications :edit-applications]
+       [:edit-applications]))))
+
 (defn- remove-uneligibility-reasons-when-not-uneligible
   [applications]
   (map (fn [application]
@@ -576,11 +613,13 @@
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? sort-by-field sort-order session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
+  ;; Ei tarkista oikeuksia: kutsujan on varmistettava :edit-applications-oikeus hakemukseen.
   (payment-triggered-processing-state-change [this session application-key state params])
   (payment-poller-processing-state-change [this application-key state])
   (send-modify-application-link-email [this attachment-deadline-service application-key payment-url session])
   (add-review-note [this session note])
   (add-review-notes [this session review-notes])
+  (remove-review-note [this session note-id])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid with-haku-aika])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
@@ -782,45 +821,39 @@
                :needs-refresh (or needs-refresh? attachment-reviews-synced?)})
             :forbidden)))))
 
+  ;; Ei tarkista oikeuksia, kutsujan on tarkistettava oikeus muokata hakemusta ja sen tiloja.
   (payment-triggered-processing-state-change
     [_ session application-key state email-params]
     (let [hakukohde   "form"
           requirement "processing-state"]
-      (when (aac/applications-access-authorized?
-             organization-service
-             tarjonta-service
-             session
-             [application-key]
-             [:edit-applications])
-        (log/info "Changing form application" application-key " processing-state to" state)
-        (application-store/save-application-hakukohde-review
-               application-key
-               hakukohde
-               requirement
-               state
-               session
-               audit-logger)
-        (log/info "Before email sending")
-        (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
-          (email/start-decision-email-job
-            job-runner
-            (assoc email-params :application-id application-id
-                                :application-oid application-key))
-          (maksut-store/add-payment-reminder
-            {:application-key application-key
-             :application-id application-id
-             :order-id (:order-id email-params)
-             :message (:message email-params)
-             :lang (:lang email-params)
-             :send-reminder-time
-             (time/minus
-               (apply time/date-time
-                      (map parse-long (str/split (:due-date email-params) #"-")))
-               (time/days 7))}))
-        (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
-              events (future (get-application-events organization-service application-key))]
-          (util/remove-nil-values {:events            @events
-                                   :hakukohde-reviews @hakukohde-reviews})))))
+      (log/info "Changing form application" application-key " processing-state to" state)
+      (application-store/save-application-hakukohde-review
+        application-key
+        hakukohde
+        requirement
+        state
+        session
+        audit-logger)
+      (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
+        (email/start-decision-email-job
+          job-runner
+          (assoc email-params :application-id application-id
+                              :application-oid application-key))
+        (maksut-store/add-payment-reminder
+          {:application-key application-key
+           :application-id application-id
+           :order-id (:order-id email-params)
+           :message (:message email-params)
+           :lang (:lang email-params)
+           :send-reminder-time
+           (time/minus
+             (apply time/date-time
+                    (map parse-long (str/split (:due-date email-params) #"-")))
+             (time/days 7))}))
+      (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
+            events (future (get-application-events organization-service application-key))]
+        (util/remove-nil-values {:events            @events
+                                 :hakukohde-reviews @hakukohde-reviews}))))
 
   (payment-poller-processing-state-change
     [_ application-key state]
@@ -874,7 +907,7 @@
       (when review-note-rights
         (enrich-virkailija-organizations
          organization-service
-         (application-store/add-review-note note session)))))
+         (application-store/add-review-note note session audit-logger)))))
 
   (add-review-notes [_ session review-notes]
     (let [hakukohde (:hakukohde review-notes) ;; jos on hakukohderajaus, on vaan yksi valittu hakukohde
@@ -886,9 +919,31 @@
                         :hakukohde                (:hakukohde review-notes)
                         :state-name               (:state-name review-notes))
                       (:application-keys review-notes))]
-          (map
-           #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
+          ;; mapv, jotta tallennus ja auditlokitus tapahtuvat pyynnön käsittelyn aikana
+          ;; eivätkä vasta vastausta serialisoitaessa
+          (mapv
+           #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session audit-logger))
            notes)))))
+
+  (remove-review-note [_ session note-id]
+    (if-let [note (application-store/get-review-note-by-id note-id)]
+      (if (check-review-note-delete-rights note
+                                           organization-service
+                                           tarjonta-service
+                                           session)
+        (application-store/remove-review-note note session audit-logger)
+        (do
+          (audit-log/log audit-logger
+                         ;; own-note erottaa "toisen muistiinpano" -epäonnistumisen siitä, ettei
+                         ;; käyttäjällä ole lainkaan oikeutta hakemukseen tai hakukohteeseen
+                         {:new       {:attempted "remove-review-note"
+                                      :own-note  (own-review-note? note session)}
+                          :id        {:applicationOid (:application-key note)
+                                      :noteId         (str note-id)}
+                          :session   session
+                          :operation audit-log/operation-failed})
+          :unauthorized))
+      :not-found))
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
@@ -1271,9 +1326,6 @@
    session
    params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
   (get-applications-paged application-service session params))
-
-(defn remove-review-note [note-id]
-  (application-store/remove-review-note note-id))
 
 (defn- init-cipher
   [nonce mode]
