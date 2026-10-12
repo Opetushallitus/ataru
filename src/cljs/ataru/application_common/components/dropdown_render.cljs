@@ -49,10 +49,24 @@
    {:keys [on-change disabled? aria-labelledby clearable? selected-value]}
    {:keys [expanded? active-index selected-index last-option-index
            active-option options-with-id label-id]}]
+  ;; dispatch-sync eikä dispatch näissä kahdessa: syötekentän arvo ja
+  ;; korostettu vaihtoehto ovat molemmat re-frame-tilan varassa, jota
+  ;; näppäimistökäsittelijä (ks. dropdown-keyboard) lukee SYNKRONISESTI
+  ;; heti seuraavan näppäinpainalluksen yhteydessä (esim. ArrowUp tarkistaa
+  ;; active-indexin, jonka edellinen ArrowDown juuri asetti). Tavallinen
+  ;; dispatch on asynkroninen (jonossa seuraavaan animaatiokehykseen asti),
+  ;; joten nopea näppäinsarja voisi lukea vielä vanhaa, ei-vielä-käsiteltyä
+  ;; tilaa. Reagentin oma <input>-kääre (ks. reagent.impl.input) tekee
+  ;; asian pahemmaksi syötekentän kohdalla: se ei luota Reactiin kontrol-
+  ;; loidun arvon ylläpitäjänä vaan asettaa DOM-arvon itse jokaisen
+  ;; renderöinnin jälkeen — jos tuo renderöinti tapahtuu ehjän dispatchin
+  ;; JÄLKEEN mutta asynkronisen dispatchin jonossa olevan päivityksen
+  ;; EDELLÄ, se pakottaa DOM:n takaisin vanhaan arvoon. Sama kuvio kuin
+  ;; editorin tekstikenttien :editor/set-component-value -dispatchit.
   (let [set-active-index  (fn set-active-index [idx]
-                             (re-frame/dispatch [:application-components/set-dropdown-active-index
-                                                  {:dropdown-id  dropdown-id
-                                                   :active-index idx}]))
+                             (re-frame/dispatch-sync [:application-components/set-dropdown-active-index
+                                                       {:dropdown-id  dropdown-id
+                                                        :active-index idx}]))
         ;; Popupin sisältö on vierittyvä, joten pitkässä listassa (esim. maat) korostettu vaihtoehto 
         ;; pitää vierittää näkyviin.
         move-active-to    (fn move-active-to [idx]
@@ -62,10 +76,11 @@
                                  (fn []
                                    (when-let [el (get @option-refs option-id)]
                                      (.scrollIntoView el #js {:block "nearest"}))))))
+        ;; dispatch-sync tässäkin, ks. selitys yllä.
         on-query-change   (fn on-query-change [value]
-                             (re-frame/dispatch [:application-components/set-dropdown-query
-                                                  {:dropdown-id dropdown-id
-                                                   :query       value}])
+                             (re-frame/dispatch-sync [:application-components/set-dropdown-query
+                                                       {:dropdown-id dropdown-id
+                                                        :query       value}])
                              (set-active-index nil))
         open-popup        (fn open-popup []
                              (when-not disabled?
