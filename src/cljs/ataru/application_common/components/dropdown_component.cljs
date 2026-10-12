@@ -1,7 +1,6 @@
 (ns ataru.application-common.components.dropdown-component
   (:require [reagent.core :as reagent]
             [ataru.util :as util]
-            [ataru.application-common.components.dropdown-aria :as aria]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-geometry :as geometry]
             [ataru.application-common.components.dropdown-listeners :as listeners]
@@ -31,15 +30,8 @@
      ;; Viittaus komponentin juurielementtiin (.a-dropdown).
      :root-ref                      root-ref
 
-     ;; Popupin sijoitusankkuri (ks. dropdown-geometry) — erikseen
-     ;; root-refistä, koska mobiilin kokoruututilassa hakija.less venyttää
-     ;; koko root-refin (.a-dropdown) täyttämään koko jäljellä olevan
-     ;; ruudun (ks. application__dropdown-fullscreen-wrapper), mikä oli
-     ;; ennen portaalia tarkoituksellista: se antoi TILAN popupille, joka
-     ;; oli silloin sen oma flex-lapsi. Nyt popup ei enää ole sen DOM-
-     ;; jälkeläinen, joten root-refin reunat eivät enää vastaa kentän
-     ;; todellista, näkyvää sijaintia — sen käyttäminen ankkurina asettaisi
-     ;; popupin lähelle ruudun alareunaa aina kokoruututilassa.
+     ;; Viittaus kentän näkyvään osaan (.a-dropdown-field), joka on popupin
+     ;; sijoitusankkuri (ks. dropdown-geometry/make-sync-popup-geometry!).
      :field-ref                     field-ref
 
      ;; Viittaukset option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten,
@@ -62,11 +54,31 @@
      ;; mitään ei ole piilotettu.
      :hidden-background             (atom nil)
 
+     ;; Sivun vierityskohta, johon body on lukittu kokoruutuvalikon ajaksi
+     ;; (ks. dropdown-viewport/lock-body-scroll!), nil kun ei lukittu.
+     :locked-scroll-y               (atom nil)
+
+     ;; Kokoruututilan geometriasilmukan seuraavan animaatiokehyksen id
+     ;; (ks. dropdown-geometry/start-fullscreen-geometry-loop!), nil kun
+     ;; silmukka ei ole käynnissä.
+     :geometry-raf-id               (atom nil)
+
      ;; Reaktiivinen atomi: onko näkymä tällä hetkellä mobiilileveydellä.
      ;; Reaktiivisuus varmistaa, että suunnan vaihto (esim. puhelimen
      ;; kääntäminen) auki olevan listan aikana päivittää heti, käytetäänkö
      ;; kokoruutuesitystä vai ei.
      :mobile?                       mobile?
+
+     ;; MediaQueryList, jonka change-kuuntelija pitää mobile?:n ajan tasalla
+     ;; koko komponentin eliniän ajan (ks. mount-dropdown!) — myös listan
+     ;; ollessa kiinni, jolloin globaalit kuuntelijat eivät ole kytkettyinä.
+     ;; Muuten suljettuna tehty leveyden muutos jättäisi mobile?:n vanhaksi,
+     ;; jolloin on-input-focus ei avaisi listaa mobiilissa ja lista avautuisi
+     ;; työpöytätilaan kokoruututilan sijaan.
+     :mobile-media-query            (atom nil)
+
+     :mobile-change-listener        (fn mobile-change-listener [_e]
+                                      (reset! mobile? (viewport/mobile-viewport?)))
 
      ;; Funktio, joka synkronoi popupin sijainnin ja koon DOM:iin
      ;; (ks. dropdown-geometry).
@@ -89,27 +101,28 @@
                                            (.focus el)))))
 
      ;; Tapahtumakäsittelijä komponentin ulkopuolelle klikkaamiselle
-     :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref input-ref mobile?)
-
-     ;; Tapahtumakäsittelijä ikkunan koon muutokselle.
-     :resize-listener               (listeners/make-resize-listener mobile? sync-popup-geometry!)
-
-     ;; Tapahtumakäsittelijä kokoruutuvalikon taustavierityksen
-     ;; estämiselle mobiilissa.
-     :fullscreen-touchmove-listener (listeners/make-fullscreen-touchmove-listener root-ref)}))
+     :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref)}))
 
 ;; ---------------------------------------------------------------------
 ;; Elinkaarimetodit
 ;; ---------------------------------------------------------------------
 
-(defn- mount-dropdown! [{:keys [portal-container]}]
+(defn- mount-dropdown! [{:keys [portal-container mobile? mobile-media-query
+                                mobile-change-listener]}]
   (reset! portal-container (.createElement js/document "div"))
-  (.appendChild (.-body js/document) @portal-container))
+  (.appendChild (.-body js/document) @portal-container)
+  (reset! mobile-media-query (viewport/mobile-media-query))
+  (.addEventListener @mobile-media-query "change" mobile-change-listener)
+  ;; Leveys voi muuttua luonnin ja mountin välillä.
+  (reset! mobile? (viewport/mobile-viewport?)))
 
-(defn- unmount-dropdown! [{:keys [portal-container] :as context}]
-  ;; Poistetaan globaalit kuuntelijat varmuuden vuoksi myös tässä
-  (listeners/detach-global-listeners! context)
-  (aria/restore-background! context)
+(defn- unmount-dropdown! [{:keys [portal-container mobile-media-query
+                                  mobile-change-listener] :as context}]
+  ;; Puretaan auki olevan valikon sivuvaikutukset varmuuden vuoksi myös tässä.
+  (render/sync-open-state! context {:expanded?   false
+                                    :fullscreen? false})
+  (when-let [mql @mobile-media-query]
+    (.removeEventListener mql "change" mobile-change-listener))
   (when-let [el @portal-container]
     (.removeChild (.-body js/document) el)))
 

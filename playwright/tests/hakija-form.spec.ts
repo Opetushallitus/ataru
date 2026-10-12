@@ -242,7 +242,13 @@ const testilomakeFixture: FormNode[] = [
         id: 'tl-section-2-q',
         label: { fi: 'Lyhyen listan kysymys' },
         metadata,
-        params: {},
+        params: {
+          'info-text': {
+            label: {
+              fi: 'Sinun tulee osoittaa kielitaitosi.',
+            },
+          },
+        },
         validators: ['required'],
         options: [
           {
@@ -517,6 +523,21 @@ test('lomake latautuu täydellisenä', async () => {
   ).toHaveText('0 / 2000')
 })
 
+test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
+  const radioGroup = page.getByRole('radiogroup', {
+    name: 'Lyhyen listan kysymys',
+  })
+
+  await expect(radioGroup).toHaveAttribute('aria-describedby')
+
+  const infoTextId = await radioGroup.getAttribute('aria-describedby')
+  expect(infoTextId).not.toBeNull()
+
+  await expect(page.locator(`#${infoTextId}`)).toContainText(
+    'Sinun tulee osoittaa kielitaitosi.'
+  )
+})
+
 test('henkilötietomoduulin täyttäminen', async () => {
   await taytaHenkilotietomoduuli(page, {
     'first-name': 'Etunimi Tokanimi',
@@ -557,11 +578,37 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
     'Toistuva vastaus 3'
   )
 
+  const addMoreInput = repeatable.getByPlaceholder('Lisää...')
+  await addMoreInput.focus()
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Shift+Tab')
+
+  const removeRepeatableAnswerButtons = repeatable.getByRole('button', {
+    name: 'Poista rivi',
+  })
+  await expect(removeRepeatableAnswerButtons).toHaveCount(3)
+  await removeRepeatableAnswerButtons.first().focus()
+  await expect(removeRepeatableAnswerButtons.first()).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(removeRepeatableAnswerButtons).toHaveCount(2)
+  for (const button of await removeRepeatableAnswerButtons.all()) {
+    await expect(button).toHaveAttribute('aria-label', 'Poista rivi')
+  }
+
   await fillField(
     page,
     getFormFields().nth(16).locator('textarea'),
     'Pakollisen tekstialueen vastaus'
   )
+
+  const dropdown = getFormFields().nth(17).getByRole('combobox')
+  const nextDropdown = getFormFields().nth(18).getByRole('combobox')
+
+  await dropdown.focus()
+  await dropdown.press('ArrowDown')
+  await dropdown.press('Tab')
+  await expect(nextDropdown).toBeFocused()
 
   await selectOption(page, getFormFields().nth(17), '2')
   await fillField(
@@ -673,7 +720,6 @@ test('käyttäjän määrittelemien kenttien täyttäminen ja lähettäminen', a
     'Jyväskylä',
     'suomi',
     'Tekstikentän vastaus',
-    'Toistuva vastaus 1',
     'Toistuva vastaus 2',
     'Toistuva vastaus 3',
     'Pakollisen tekstialueen vastaus',

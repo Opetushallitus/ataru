@@ -23,12 +23,11 @@
     (fn []
       (when (seq (:invalid-fields @valid-status))
         [:div.application__invalid-field-status
-         {:aria-hidden "true"}
-         [:span.application__invalid-field-status-title
-          {;:role "status"
-           ;:aria-atomic "true"
-           :aria-hidden "true"
-           :on-click toggle-show-details}
+         [:button.application__invalid-field-status-title
+          {:type          "button"
+           :aria-expanded (boolean @show-details)
+           :aria-controls "invalid-fields-list"
+           :on-click      toggle-show-details}
           (first (translations/get-hakija-translation :check-answers @lang))
           [:b (count (:invalid-fields @valid-status))]
           (last (translations/get-hakija-translation :check-answers @lang))]
@@ -36,8 +35,11 @@
            [:div
             [:div.application__invalid-fields-arrow-up]
             (into [:div.application__invalid-fields
-                   [:span.application__close-invalid-fields
-                    {:on-click toggle-show-details}
+                   {:id "invalid-fields-list"}
+                   [:button.application__close-invalid-fields
+                    {:type       "button"
+                     :aria-label (translations/get-hakija-translation :close @lang)
+                     :on-click   toggle-show-details}
                     "x"]]
                   (map (fn [field]
                          (let [label (util/non-blank-val (:label field) @languages)

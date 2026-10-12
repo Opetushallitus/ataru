@@ -9,10 +9,8 @@
 @total-banner-height: 97px;
 @total-banner-height-mobile: 82px;
 
-// overflow-y täällä (ei bodyssa), jotta <html> omistaa vierityksen suoraan
-// eikä propagoituna bodystä — muuten esim. vierityksen lukitseminen
-// <html>:lle katkaisisi propagoinnin ja rikkoisi position: sticky
-// -elementtien asemoinnin.
+// Vieritys html:llä eikä bodyssa, jotta html:n lukitseminen ei riko
+// sticky-elementtejä.
 html {
   overflow-y: scroll;
 }
@@ -75,6 +73,14 @@ body {
 @media only screen and (max-width: @mobile-width) {
   body:has(.a-dropdown-popup--fullscreen) .application__banner-container {
     transform: translateY(-100%);
+  }
+}
+
+// Piiloon kokoruutuvalikon ajaksi. visibility eikä transform, koska WebKit
+// piirtää transformoidun sticky-elementin hetkittäin väärään kohtaan.
+@media only screen and (max-width: @mobile-width) {
+  body:has(.a-dropdown-popup--fullscreen) .application__banner-container {
+    visibility: hidden;
   }
 }
 /* Allows centering of top-banner which contains logo and send-button */
@@ -362,8 +368,8 @@ body {
 .application__scroll-to-anchor {
   position: relative;
   top: -@total-banner-height;
-  visibility: hidden;
   height: 0px;
+  outline: none;
 }
 .application__invalid-field-status {
   font-size: 14px;
@@ -374,6 +380,12 @@ body {
 }
 .application__invalid-field-status-title {
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
 }
 .application__invalid-fields {
   z-index: 1; /* On mobile (narrow screen) section line is above this container without this */
@@ -399,6 +411,11 @@ body {
   font-size: 15px;
   color: @gray-of-the-beast;
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
 }
 .application__invalid-fields-arrow-up {
   position: absolute;
@@ -664,36 +681,21 @@ body {
   }
 }
 
-// application__form-field on display: flex; flex-direction: column (ks.
-// yllä), joka pakottaa sen suorat lapset (label, select-wrapper, ...)
-// pinoutumaan lohkotasoisina flex-itemeinä niiden omasta display-arvosta
-// riippumatta (label on itse asiassa display: inline, select-wrapper
-// inline-block). Tämä wrapperi on nyt niiden VÄLISSÄ, joten sen on
-// toistettava sama flex-asettelu AINA — muuten label ja kenttä palaisivat
-// normaaliin inline-virtaukseen kapealla näytöllä silloin kun kokoruutu-
-// tila ei ole päällä, jolloin label-kentän väli riippuisi rivitulkinnasta
-// eikä application__form-field-labelin margin-bottomista.
+// Toistaa application__form-fieldin flex-asettelun, jotta label ja kenttä
+// pinoutuvat kuten ilman tätä wrapperia.
 .application__dropdown-fullscreen-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-// Kapealla näytöllä (esim. puhelin) auki oleva pudotusvalikko laajenee koko
-// näytön kokoiseksi virtuaalinäppäimistön ajaksi (ks. a-dropdown--fullscreen
-// dropdown-component.less:ssä, joka itse vain venyy täyttämään tämän
-// säiliön). Tämä wrapperi ottaa vastuun koko näytön peittävästä kiinnittä-
-// misestä :has()-valitsimella, jotta sivun oma label (ja mahdollinen info-
-// teksti/hakukohdenimet) tulee mukaan kokoruutuesitykseen sen sijaan, että
-// ataru.application-common.components.dropdown-component joutuisi
-// toistamaan labelin tekstin itse.
+// Mobiilissa auki oleva pudotusvalikko peittää koko näytön. Wrapper
+// kiinnitetään eikä pelkkä valikko, jotta label ja infoteksti näkyvät mukana.
 @media only screen and (max-width: @mobile-width) {
   .application__dropdown-fullscreen-wrapper:has(.a-dropdown--fullscreen) {
     background-color: white;
     box-sizing: border-box;
-    // Visuaalisen viewportin mukaan (ks. dropdown-viewport/sync-viewport-
-    // css-vars!), jottei iOS:n näppäimistön noustessa tekemä panorointi
-    // vieritä labelia ja hakukenttää ruudun yläpuolelle. Oletusarvot
-    // vastaavat top: 0; bottom: 0 ennen ensimmäistä synkronointia.
+    // Visuaalisen viewportin mukaan (ks. dropdown-geometry), jottei iOS:n
+    // näppäimistöpanorointi vie labelia ja kenttää ruudun yläpuolelle.
     height: var(--a-dropdown-viewport-height, 100%);
     left: 0;
     padding: 8px;
@@ -702,29 +704,14 @@ body {
     top: var(--a-dropdown-viewport-top, 0px);
     z-index: 9999;
 
-    // .application__form-select-wrapper .a-dropdown (ks. yllä tässä
-    // tiedostossa) asettaa kentälle kiinteän @form-select-width-leveyden
-    // korkeammalla spesifisyydellä — nostetaan spesifisyyttä, jotta
-    // kokoruutuvalikko täyttää koko näytön leveyden.
+    // Ohittaa kiinteän @form-select-width-leveyden.
     .a-dropdown {
       width: auto;
     }
 
-    // a-dropdown--fullscreenin "flex: 1" (dropdown-component.less) toimii
-    // vain jos se on suora flex-lapsi tälle kiinnitetylle wrapperille —
-    // todellisuudessa sen ja tämän välissä on kaksi tasoa (form-select-
-    // wrapper, joka on normaalisti display: inline-block, ja input-
-    // container). Ilman flex/min-height-ketjua koko välissä a-dropdown
-    // (ja siis myös sen popup) jää korkeudeltaan "auto":ksi eli venyy
-    // sisältönsä (esim. 25 vaihtoehtoa) mukaiseksi sen sijaan, että sillä
-    // olisi todellinen, ruudulle rajattu korkeus — jolloin popupin oma
-    // overflow-y: auto ei koskaan aktivoidu eikä listaa voi vierittää
-    // ollenkaan. Muutetaan siis myös nämä flex-kolonneiksi/riveiksi jotka
-    // venyvät (flex: 1) ja voivat kutistua (min-height: 0, min-width: 0)
-    // VAIN silloin kun kokoruutuvalikko on auki, jottei työpöytäasettelu
-    // (display: inline-block) muutu miksikään. min-width: 0 estää pitkää
-    // (katkeamatonta) vaihtoehtotekstiä pakottamasta koko ketjua leveämmäksi
-    // kuin 100 % (flex-itemin oletus min-width on muuten "auto").
+    // Flex-ketju wrapperista .a-dropdowniin asti, jotta valikko venyy
+    // wrapperin levyiseksi ja korkuiseksi. Vain kokoruututilassa, jottei
+    // työpöytäasettelu muutu.
     .application__form-select-wrapper {
       display: flex;
       flex: 1;
@@ -813,7 +800,8 @@ body {
   width: 5%;
   text-align: right;
   > i { font-weight: bold; }
-  > a {
+  > a,
+  > button {
     position: absolute;
     right: 10px;
     bottom: 10px;
@@ -839,6 +827,11 @@ textarea.application__form-text-input {
 }
 .application__form-repeatable-text--addremove {
   margin-left: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: @sg-color-green;
+  cursor: pointer;
 }
 .application__form-repeatable-text-wrap {
   margin-top: 10px;
@@ -858,6 +851,18 @@ textarea.application__form-text-input {
 }
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled:enabled::-webkit-input-placeholder {
   color: #4194bf;
+}
+body.ataru-app__hakija .application__form-repeatable-text-wrap input.application__form-text-input--disabled:enabled {
+  &::placeholder,
+  &::-webkit-input-placeholder {
+    color: @primary-green-700;
+    opacity: 1;
+  }
+
+  &:focus::placeholder,
+  &:focus::-webkit-input-placeholder {
+    color: #fff;
+  }
 }
 .application__form-repeatable-text-wrap input.application__form-text-input--disabled:focus {
   background: #fff;
@@ -1010,8 +1015,7 @@ textarea.application__form-text-area__size-large {
       background-color: darken(@sg-color-red, 20%);
     }
     &:focus {
-      box-shadow: 0px 0px 0px 3px darken(@sg-color-red, 20%);
-      outline: none;
+      .accessible-focus-ring(darken(@sg-color-red, 20%));
     }
   }
 }
@@ -1032,8 +1036,7 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-upload-input:focus + label {
-  box-shadow: 0px 0px 0px 3px @primary-green-900;
-  outline: none;
+  .accessible-focus-ring();
 }
 
 .application__form-upload-label {
@@ -1766,8 +1769,7 @@ th.application__readonly-adjacent--header {
 
   button:focus,
   #koulutustyyppi-btn:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
-    outline: none;
+    .accessible-focus-ring();
   }
 
   #koulutustyyppi-close-btn {
@@ -1777,7 +1779,7 @@ th.application__readonly-adjacent--header {
     font-weight: 600;
 
     :focus {
-      box-shadow: 0px 0px 0px 3px @primary-green-900;
+      .accessible-focus-ring();
     }
   }
 }
@@ -1825,14 +1827,22 @@ th.application__readonly-adjacent--header {
   border-image-repeat: round;
   padding: 25px 0px 25px 0px;
   .application__hakukohde-selection-open-search:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
-    outline: none;
+    .accessible-focus-ring();
   }
 }
 
 .application__hakukohde-selection-open-search {
-  color: @pale-blue;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: @primary-green-700;
+  font-size: 16px;
   margin-left: 40px;
+  text-decoration: underline;
+
+  &:hover {
+    color: @primary-green-900;
+  }
 
   &--disabled {
     color: @sg-gray-lighten-3;
@@ -1884,8 +1894,7 @@ th.application__readonly-adjacent--header {
   position: relative;
   .application__hakukohde-selection-search-close-button {
     a:focus {
-      box-shadow: 0px 0px 0px 3px @primary-green-900;
-      outline: none;
+      .accessible-focus-ring();
     }
   }
 }
@@ -1977,7 +1986,7 @@ th.application__readonly-adjacent--header {
   border-bottom: 12px solid @primary-green-700;
 
   &:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
   }
 
   &:hover {
@@ -2005,7 +2014,7 @@ th.application__readonly-adjacent--header {
   border-top: 12px solid @primary-green-700;
 
   &:focus {
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
   }
 
   &:hover {
@@ -2119,15 +2128,8 @@ th.application__readonly-adjacent--header {
   }
 
   &[aria-selected="true"]:focus {
-    outline: none;
-    box-shadow: 0px 0px 0px 3px @primary-green-900;
+    .accessible-focus-ring();
     border-radius: 3px;
-
-    // box-shadow is invisible in Windows High Contrast mode; outline is used instead
-    @media (forced-colors: active) {
-      outline: 3px solid ButtonText;
-      box-shadow: none;
-    }
   }
 }
 

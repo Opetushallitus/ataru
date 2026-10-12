@@ -125,3 +125,20 @@
 @icon-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgb(255, 255, 255)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
 @checkbox-color: @link-color;
 @checkbox-hover-color: @editor-control-button-hover-blue;
+
+// A visible-focus indicator built from a light gap plus a dark ring, so the
+// ring's edges always meet a fixed, high-contrast color (@white) instead of
+// the focused element's own background. Needed because several buttons in
+// the application form switch to a dark green background (@primary-green-700)
+// on hover/active, against which a plain @primary-green-900 ring (as used
+// elsewhere) falls below the WCAG 1.4.11 3:1 non-text contrast minimum.
+.accessible-focus-ring(@ring-color: @primary-green-900) {
+  outline: none;
+  box-shadow: 0 0 0 2px @white, 0 0 0 4px @ring-color;
+
+  // box-shadow is invisible in Windows High Contrast mode; outline is used instead
+  @media (forced-colors: active) {
+    outline: 3px solid ButtonText;
+    box-shadow: none;
+  }
+}

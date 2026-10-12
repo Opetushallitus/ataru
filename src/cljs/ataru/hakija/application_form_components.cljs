@@ -76,7 +76,7 @@
   (let [languages @(subscribe [:application/default-languages])]
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
-       {:id (validation-error-id form-field-id)}
+       {:id (validation-error-id form-field-id) :role "alert"}
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
@@ -368,20 +368,24 @@
                                                       question-group-idx
                                                       repeatable-idx]))
             on-blur                      (fn [evt]
-                                           (let [value (-> evt .-target .-value)]
+                                           (let [value (-> evt .-target .-value)
+                                                 trimmed-value (trimmed-or-empty-value value)]
                                              (swap! local-state assoc
                                                     :focused? false
-                                                    :value (trimmed-or-empty-value value))
-                                             (if (and (empty? value) (not last?))
+                                                    :value trimmed-value)
+                                             (cond
+                                               (and (string/blank? trimmed-value) (not last?))
                                                (dispatch [:application/remove-repeatable-application-field-value
                                                           field-descriptor
                                                           question-group-idx
                                                           repeatable-idx])
+
+                                               (not (string/blank? trimmed-value))
                                                (dispatch [:application/set-repeatable-application-field
                                                           field-descriptor
                                                           question-group-idx
                                                           repeatable-idx
-                                                          (trimmed-or-empty-value value)]))))
+                                                          trimmed-value]))))
             on-change                    (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
@@ -419,9 +423,12 @@
            :on-blur         on-blur
            :on-change       on-change}]
          (when (and (not cannot-edit?) (not last?))
-           [:a.application__form-repeatable-text--addremove
+           [:button.application__form-repeatable-text--addremove
+            {:type       "button"
+             :aria-label (tu/get-hakija-translation :remove-row lang)
+             :on-click   remove-field}
             [:i.zmdi.zmdi-close.zmdi-hc-lg
-             {:on-click remove-field}]])]))))
+             {:aria-hidden true}]])]))))
 
 (defn repeatable-text-field
   [field-descriptor idx]
@@ -783,15 +790,21 @@
     (fn [field-descriptor idx]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
-            followups (get-visible-followups field-descriptor (:value answer) options)]
+            followups (get-visible-followups field-descriptor (:value answer) options)
+            info-text (util/non-blank-val
+                       (-> field-descriptor :params :info-text :label) @languages)
+            info-text-id (str (application-field/form-field-id field-descriptor idx) "-info")]
         [:div.application__form-field.application__form-single-choice-button-container
          [generic-label-component/generic-label field-descriptor idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
-         [:div.application__form-text-input-info-text
-          [info-text-component/info-text field-descriptor]]
+         (when info-text
+           [:div.application__form-text-input-info-text
+            {:id info-text-id}
+            [info-text-component/info-text field-descriptor]])
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
+           :aria-describedby (when info-text info-text-id)
            :aria-invalid    (not (:valid answer))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
@@ -810,7 +823,7 @@
 (defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (fn [{:keys [field-descriptor labelledby question-group-idx row-idx]}]
+    (fn [{:keys [field-descriptor labelledby question-group-idx row-idx error-field-id]}]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
@@ -847,16 +860,17 @@
           :on-change       on-change
           :disabled        cannot-edit?
           :aria-invalid    (not valid)
+          :aria-describedby (when (not valid) (validation-error-id error-field-id))
           :aria-labelledby labelledby
           :tab-index       "0"
           :autoComplete    autocomplete-off}]))))
 
-(defn- validation-error-for-validator [{:keys [field-descriptor]} validator-keyword]
-  (let [id          (keyword (:id field-descriptor))
+(defn- validation-error-for-validator [{:keys [field-descriptor error-field-id]} validator-keyword]
+  (let [id             (keyword (:id field-descriptor))
         validator-name validator-keyword]
     (fn []
       (let [{:keys [errors]} @(subscribe [:application/answer id])]
-        [validation-error (name id)
+        [validation-error error-field-id
          (some-> errors
                  first
                  validator-name)]))))
@@ -893,7 +907,8 @@
                        (map-indexed (fn adjacent-text-fields-column [col-idx child]
                                       (let [key            (str "adjacent-field-" row-idx "-" col-idx)
                                             field-label-id (generic-label-component/id-for-label child
-                                                                                                 question-group-idx)]
+                                                                                                 question-group-idx)
+                                            error-field-id (str (:id child) "-" row-idx "-email-simple")]
                                         ^{:key key}
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
@@ -903,20 +918,28 @@
                                           {:field-descriptor   child
                                            :labelledby         (str header-label-id " " field-label-id)
                                            :question-group-idx question-group-idx
-                                           :row-idx            row-idx}]
-                                         [validation-error-for-validator {:field-descriptor child} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
+                                           :row-idx            row-idx
+                                           :error-field-id     error-field-id}]
+                                         [validation-error-for-validator {:field-descriptor child :error-field-id error-field-id} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
-                         [:a {:data-row-idx row-idx
-                              :on-click     remove-on-click}
+                         [:button.a-button
+                          {:type        "button"
+                           :data-row-idx row-idx
+                           :aria-label (tu/get-hakija-translation :remove-row lang)
+                           :on-click     remove-on-click}
                           [:span.application__form-adjacent-row--mobile-only (tu/get-hakija-translation :remove-row lang)]
-                          [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg]])]))
+                          [:i.application__form-adjacent-row--desktop-only.i.zmdi.zmdi-close.zmdi-hc-lg
+                           {:aria-hidden true}]])]))
                doall)]
          (when (and (get-in field-descriptor [:params :repeatable])
                     (not (some deref cannot-edits?)))
-           [:a.application__form-add-new-row
-            {:on-click add-on-click}
-            [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
+           [:button.a-button.application__form-add-new-row
+            {:type     "button"
+             :on-click add-on-click}
+            [:i.zmdi.zmdi-plus-square
+             {:aria-hidden true}]
+            (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
 (defn- render-component [{:keys [field-descriptor
                                  idx]}]
