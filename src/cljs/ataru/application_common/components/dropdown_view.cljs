@@ -2,8 +2,8 @@
   "dropdown-component/dropdown-komponentin puhtaat, esitykselliset osat: ei
   re-frame-dispatchia, ei DOM-kuuntelijoita, ei viewport-tilaa — kaikki
   tarvittava tulee propseina/argumentteina. ataru.application-common.
-  components.dropdown-component (tilallinen pääkomponentti) on tämän
-  namespacen ainoa käyttäjä."
+  components.dropdown-render (dropdown-componentin renderöintilogiikka) on
+  tämän namespacen ainoa käyttäjä."
   (:require [clojure.string :as string]
             [schema.core :as s]
             [schema-tools.core :as st]
@@ -117,7 +117,7 @@
 ;; dropdown-field) — ARIA-yhdistelmäruutumallissa se kuuluu sille
 ;; elementille, jolla on todellinen näppäimistöfokus, ei sille jota se
 ;; osoittaa.
-;; Sijainti ja koko (ks. dropdown-component/sync-popup-geometry!) asetetaan
+;; Sijainti ja koko (ks. dropdown-geometry/make-sync-popup-geometry!) asetetaan
 ;; suoraan DOM:iin popup-refin kautta, koska popup renderöidään Reactin
 ;; portaalilla document.bodyyn eikä siis voi enää saada niitä ilmaiseksi
 ;; CSS:llä kutsujansa suhteen — tämä komponentti ei siis ota niihin kantaa.
@@ -173,7 +173,7 @@
 
 ;; Kentän oma osa (syötekenttä + tyhjennysnappi + avausnappi) — erillään
 ;; dropdown-popupista samasta syystä kuin popup on omansa: kutsujan
-;; (dropdown-component/render-dropdown) oma hiccup pysyy lyhyenä ja tämän
+;; (dropdown-render/render-dropdown) oma hiccup pysyy lyhyenä ja tämän
 ;; osan omat propsit selkeästi nimettyinä.
 (s/defn dropdown-field
   [{:keys [input-ref
@@ -246,7 +246,7 @@
      ;; varten, ei ARIA:a eikä käyttöliittymälogiikkaa.
      :data-selected-option-value selected-value
      :role                  "combobox"
-     ;; label-id on kutsujan (dropdown-component/render-dropdown) keksimä
+     ;; label-id on kutsujan (dropdown-render/render-dropdown) keksimä
      ;; id, johon ei ole olemassa vastaavaa DOM-elementtiä ellei kutsuja
      ;; anna omaa aria-labelledbytä (ks. hakija/dropdown_component.cljs/
      ;; dropdown). Osoittaminen olemattomaan id:hen jättäisi kentän ilman
