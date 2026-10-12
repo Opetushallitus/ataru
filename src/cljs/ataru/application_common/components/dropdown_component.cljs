@@ -39,20 +39,15 @@
      ;; vaihtoehdon vierittämiseen näkyviin.
      :option-refs                   option-refs
 
-     ;; Viittaus popupin elementtiin (portaalin sisällä), jota
-     ;; sync-popup-geometry! käyttää sijainnin/koon asettamiseen.
+     ;; Viittaus popupin elementtiin, jota sync-popup-geometry! käyttää
+     ;; sijainnin/koon asettamiseen.
      :popup-ref                     popup-ref
 
-     ;; Erillinen DOM-solmu popupin portaalikohteeksi (ks. mount-dropdown!
+     ;; Erillinen DOM-solmu popupin portaalikohteeksi työpöydällä (ks. mount-dropdown!
      ;; alempana) — luodaan kerran mountissa ja poistetaan unmountissa,
      ;; jotta useampi tämän komponentin instanssi ei koskaan jaa samaa
      ;; säiliötä.
      :portal-container              portal-container
-
-     ;; Auki olevan valikon ajaksi aria-hiddenillä piilotetut taustan
-     ;; elementit alkuperäisine arvoineen (ks. dropdown-aria), nil kun
-     ;; mitään ei ole piilotettu.
-     :hidden-background             (atom nil)
 
      ;; Sivun vierityskohta, johon body on lukittu kokoruutuvalikon ajaksi
      ;; (ks. dropdown-viewport/lock-body-scroll!), nil kun ei lukittu.
@@ -62,6 +57,11 @@
      ;; (ks. dropdown-geometry/start-fullscreen-geometry-loop!), nil kun
      ;; silmukka ei ole käynnissä.
      :geometry-raf-id               (atom nil)
+
+     ;; Tosi ohjelmallisen fokuksen palautuksen ajan (valinnan jälkeen tai
+     ;; listasta suljettaessa, ks. dropdown-render), jotta sen blur ei sulje
+     ;; valikkoa.
+     :refocusing?                   (atom false)
 
      ;; Reaktiivinen atomi: onko näkymä tällä hetkellä mobiilileveydellä.
      ;; Reaktiivisuus varmistaa, että suunnan vaihto (esim. puhelimen
@@ -73,8 +73,7 @@
      ;; koko komponentin eliniän ajan (ks. mount-dropdown!) — myös listan
      ;; ollessa kiinni, jolloin globaalit kuuntelijat eivät ole kytkettyinä.
      ;; Muuten suljettuna tehty leveyden muutos jättäisi mobile?:n vanhaksi,
-     ;; jolloin on-input-focus ei avaisi listaa mobiilissa ja lista avautuisi
-     ;; työpöytätilaan kokoruututilan sijaan.
+     ;; jolloin lista avautuisi työpöytätilaan kokoruututilan sijaan.
      :mobile-media-query            (atom nil)
 
      :mobile-change-listener        (fn mobile-change-listener [_e]
@@ -92,16 +91,11 @@
                                           (swap! option-refs assoc option-id el)
                                           (swap! option-refs dissoc option-id))))
 
-     ;; Funktio, joka fokusoi syötekentän renderöinnin jälkeen (ks.
-     ;; on-trigger-click dropdown-renderissä).
-     :focus-input                   (fn focus-input []
-                                      (reagent/after-render
-                                       (fn []
-                                         (when-let [el @input-ref]
-                                           (.focus el)))))
-
      ;; Tapahtumakäsittelijä komponentin ulkopuolelle klikkaamiselle
-     :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref)}))
+     :outside-click-listener        (listeners/make-outside-click-listener dropdown-id root-ref popup-ref)
+
+     ;; Tapahtumakäsittelijä sivun vieritykselle (ei popupin omalle).
+     :scroll-listener               (listeners/make-scroll-listener popup-ref sync-popup-geometry!)}))
 
 ;; ---------------------------------------------------------------------
 ;; Elinkaarimetodit

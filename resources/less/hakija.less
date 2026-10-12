@@ -55,13 +55,32 @@ body {
   top: 0;
 }
 
-// Piiloon kokoruutuvalikon ajaksi. visibility eikä transform, koska WebKit
-// piirtää transformoidun sticky-elementin hetkittäin väärään kohtaan.
+// Kokoruutuvalikon ajaksi piiloon: wrapperin z-index ei aina riitä sen
+// eteen, jos jokin wrapperin esi-isä (esim. animate.css-animaatio) luo oman
+// stacking contextin. opacity eikä visibility, jotta ylätunniste pysyy
+// ruudunlukijan elementtilistassa eikä sen palaaminen sulkiessa siirrä
+// ruudunlukijaa sivun alkuun (navigointi on rajattu dialogiin aria-modalilla).
 @media only screen and (max-width: @mobile-width) {
-  body:has(.a-dropdown-popup--fullscreen) .application__banner-container {
-    visibility: hidden;
+  body:has(.a-dropdown--fullscreen) .application__banner-container {
+    opacity: 0;
+    pointer-events: none;
   }
 }
+
+// Kokoruutuvalikon ajaksi muu sivu sumennetaan, ettei se näy iOS:n
+// läpikuultavien palkkien (selaimen alapalkki, näppäimistön yläpalkki) läpi.
+// Sumennus vain elementteihin, jotka eivät sisällä avointa valikkoa mutta
+// joiden vanhempi sisältää (eli valikon esi-isäpolun sivuhaarat): filter
+// esi-isässä sumentaisi myös kokoruutuwrapperin ja tekisi siitä position:
+// fixedin sijoittelualustan. Avoimen wrapperin sisältö (label, kenttä, lista)
+// jätetään pois. Pelkästään visuaalinen: elementit pysyvät ruudunlukijan
+// elementtilistassa.
+@media only screen and (max-width: @mobile-width) {
+  body:has(.a-dropdown--fullscreen) :has(.a-dropdown--fullscreen) > :not(:has(.a-dropdown--fullscreen)):not(.application__dropdown-fullscreen-wrapper *) {
+    filter: blur(6px);
+  }
+}
+
 /* Allows centering of top-banner which contains logo and send-button */
 .application__top-banner-container {
   display: flex;

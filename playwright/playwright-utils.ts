@@ -64,9 +64,10 @@ const resolveOptionLabel = async (
 
   // Koodistopohjaiset (esim. maa/kansalaisuus/kotikunta) listat ladataan
   // asynkronisesti eivätkä siis välttämättä ole vielä renderöityneet heti
-  // popupin avautuessa
+  // popupin avautuessa. "Ei hakutuloksia" on valitsematon (aria-disabled)
+  // vaihtoehto, joten se ei kelpaa merkiksi latautumisesta.
   await listbox
-    .getByRole('option')
+    .locator('[role="option"]:not([aria-disabled="true"])')
     .first()
     .waitFor({ state: 'attached', timeout: 5000 })
 

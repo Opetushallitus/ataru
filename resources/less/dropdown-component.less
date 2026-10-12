@@ -115,10 +115,14 @@ html:has(.a-dropdown-popup--fullscreen) {
   // estää dropdown-listeners.
   touch-action: none;
 
-  // Kesken oleva animate.css-animaatio loisi stacking contextin, joka
-  // vangitsisi kokoruutuwrapperin z-indexin.
+  // animate.css-animaatio (esim. koko lomakkeen fadeIn) on fill-mode: bothin
+  // vuoksi voimassa vielä päättymisensä jälkeen ja voi tehdä elementistä
+  // stacking contextin, joka vangitsisi kokoruutuwrapperin z-indexin — jolloin
+  // lomakkeen ulkopuoliset elementit (esim. ylätunniste) voisivat peittää
+  // listan. Pelkkä opacityn ohitus ei poista animaatiota, joten se poistetaan
+  // kokonaan; näkyvä vaikutus on jo ohi.
   .animated {
-    opacity: 1 !important;
+    animation: none !important;
   }
 }
 
@@ -157,7 +161,8 @@ html:has(.a-dropdown-popup--fullscreen) {
   }
 }
 
-// Portaalissa document.bodyssa; sijainti tulee JS:stä (ks. dropdown-geometry).
+// Työpöydällä portaalissa, kokoruututilassa kentän perässä; sijainti tulee
+// JS:stä (ks. dropdown-geometry).
 .a-dropdown-popup {
   background-color: white;
   border-radius: 4px;
@@ -191,6 +196,19 @@ html:has(.a-dropdown-popup--fullscreen) {
 
 .a-dropdown-popup--collapsed {
   display: none;
+}
+
+// Hakutulosten määrä vain ruudunlukijalle (ks. dropdown-view/dropdown-status).
+.a-dropdown-status {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .a-dropdown-list {

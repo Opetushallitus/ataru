@@ -1,8 +1,8 @@
 (ns ataru.application-common.components.dropdown-geometry
-  "Popupin sijainnin ja koon synkronointi DOM:iin. Popup renderöidään Reactin
-  portaalilla suoraan document.bodyyn (ks. dropdown-component), jotta mikään
-  esi-isän stacking context ei voi mennä sen päälle — siksi sen sijainti
-  kentän suhteen asetetaan täältä eikä tule CSS:n asettelusta.
+  "Popupin sijainnin ja koon synkronointi DOM:iin. Popup on position: fixed
+  (työpöydällä portaalissa document.bodyssa, kokoruututilassa kentän perässä,
+  ks. dropdown-render), joten sen sijainti kentän suhteen asetetaan täältä
+  eikä tule CSS:n asettelusta.
 
   Kaksi tilaa:
   - Työpöytä: popup asemoidaan inline-tyyleillä kentän alle (tai yläpuolelle,
@@ -31,7 +31,7 @@
 
 ;; Kutsujan (hakija.less) kokoruututilassa kiinnitetty wrapper, jonka suhteen
 ;; popup asemoidaan kokoruututilassa.
-(def ^:private fullscreen-wrapper-selector ".application__dropdown-fullscreen-wrapper")
+(def fullscreen-wrapper-selector ".application__dropdown-fullscreen-wrapper")
 
 (def ^:private desktop-style-props
   ["left" "width" "minWidth" "maxWidth" "top" "bottom" "height" "maxHeight"])
@@ -39,12 +39,20 @@
 (defn- px [value]
   (str value "px"))
 
-(defn- set-px! [style prop value]
-  (aset style prop (px (js/Math.round value))))
+(defn- round-px [value]
+  (px (js/Math.round value)))
+
+;; Asettaa työpöytätilan inline-tyylit values-mapin mukaan (puuttuvat
+;; tyhjennetään) ja kirjoittaa vain muuttuneet arvot: turha tyhjennys ja
+;; uudelleenasetus palauttaisi popupin vierityskohdan.
+(defn- apply-desktop-style! [style values]
+  (doseq [prop desktop-style-props]
+    (let [value (get values prop "")]
+      (when (not= (aget style prop) value)
+        (aset style prop value)))))
 
 (defn- clear-desktop-style! [style]
-  (doseq [prop desktop-style-props]
-    (aset style prop "")))
+  (apply-desktop-style! style {}))
 
 ;; Kirjoitetaan vain muuttunut arvo, koska kokoruututilan synkronointi ajetaan
 ;; joka animaatiokehyksellä (ks. start-fullscreen-geometry-loop!).
@@ -114,20 +122,55 @@
         top-offset  (viewport/viewport-top-offset)
         space-below (- (+ top-offset vh) (.-bottom rect) popup-margin-top)
         space-above (- (.-top rect) top-offset popup-margin-top)]
-    (.removeProperty style "--a-dropdown-field-offset")
-    (clear-desktop-style! style)
-    (set-px! style "left" (.-left rect))
-    (set-px! style "minWidth" (.-width rect))
-    (set-px! style "maxWidth" (min desktop-popup-max-width
-                                   (- (viewport/viewport-width) (.-left rect))))
-    (if (and (< space-below min-usable-popup-height)
-             (> space-above space-below))
-      (do (set-px! style "bottom" (+ (- vh (.-top rect)) popup-margin-top))
-          (set-px! style "maxHeight" (min (max space-above 0) desktop-popup-default-max-height)))
-      (do (set-px! style "top" (.-bottom rect))
-          (set-px! style "maxHeight" (min (max space-below 0) desktop-popup-default-max-height))))))
+    (when (.getPropertyValue style "--a-dropdown-field-offset")
+      (.removeProperty style "--a-dropdown-field-offset"))
+    (apply-desktop-style!
+      style
+      (merge {"left"     (round-px (.-left rect))
+              "minWidth" (round-px (.-width rect))
+              "maxWidth" (round-px (min desktop-popup-max-width
+                                        (- (viewport/viewport-width) (.-left rect))))}
+             (if (and (< space-below min-usable-popup-height)
+                      (> space-above space-below))
+               {"bottom"    (round-px (+ (- vh (.-top rect)) popup-margin-top))
+                "maxHeight" (round-px (min (max space-above 0) desktop-popup-default-max-height))}
+               {"top"       (round-px (.-bottom rect))
+                "maxHeight" (round-px (min (max space-below 0) desktop-popup-default-max-height))})))))
 
 ;; ---------------------------------------------------------------------
+
+;; Väli popupin yläreunaan, jotta näkyy, että lista jatkuu myös ylöspäin.
+(def ^:private option-scroll-top-margin 8)
+
+;; Vierittävät popupia asettamalla sen scrollTopin. Ei scrollIntoViewia, koska
+;; se vierittäisi myös esi-isiä, työpöydällä koko sivua. Kohta lasketaan
+;; vaihtoehdon offsetTopista (suhteessa popupiin, joka on position: fixed eli
+;; vaihtoehdon offsetParent), joten se ei riipu nykyisestä vierityskohdasta.
+;; Selain rajaa arvon itse listan alkuun ja loppuun.
+
+;; Avattaessa: valittu vaihtoehto lähelle popupin yläreunaa, ilman valintaa
+;; listan alkuun. Yläreunaan eikä keskelle, koska mobiilissa näppäimistö nousee
+;; vasta avaamisen jälkeen ja kutistaa popupia alhaalta päin — keskelle
+;; vieritetty vaihtoehto jäisi näppäimistön alle.
+(defn scroll-selected-option-to-popup-top! [popup-el]
+  (when popup-el
+    (let [option-el (.querySelector popup-el "[role=\"option\"][aria-selected=\"true\"]")]
+      (set! (.-scrollTop popup-el)
+            (if option-el
+              (max 0 (- (.-offsetTop option-el) option-scroll-top-margin))
+              0)))))
+
+;; Nuolinäppäimillä korostettaessa: vain sen verran, että vaihtoehto näkyy
+;; kokonaan.
+(defn scroll-option-into-popup-view! [popup-el option-el]
+  (when (and popup-el option-el)
+    (let [top        (.-offsetTop option-el)
+          bottom     (+ top (.-offsetHeight option-el))
+          scroll-top (.-scrollTop popup-el)
+          height     (.-clientHeight popup-el)]
+      (cond
+        (< top scroll-top)               (set! (.-scrollTop popup-el) top)
+        (> bottom (+ scroll-top height)) (set! (.-scrollTop popup-el) (- bottom height))))))
 
 (defn make-sync-popup-geometry!
   "popup-ref ja field-ref ovat atomeja DOM-solmuihin, mobile? reagent-atom.

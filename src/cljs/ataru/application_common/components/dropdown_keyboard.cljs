@@ -3,12 +3,14 @@
   (:require [clojure.string :as string]
             [ataru.application-common.components.dropdown-actions :as actions]))
 
+;; current-state palauttaa tilan tapahtumahetkellä (ks. dropdown-render/
+;; make-dropdown-handlers), ei edellisen renderöinnin arvoja.
 (defn make-on-input-key-down
-  [{:keys [dropdown-id expanded? active-index selected-index last-option-index
-           active-option open-popup move-active-to set-active-index on-option-click
-           clearable? selected-value clear-value]}]
+  [{:keys [dropdown-id current-state open-popup move-active-to set-active-index
+           on-option-click clearable? selected-value clear-value]}]
   (fn on-input-key-down [e]
-    (let [pressed-key (.-key e)]
+    (let [pressed-key (.-key e)
+          {:keys [expanded? active-index last-option-index active-option]} (current-state)]
       (cond
         (= "Escape" pressed-key)
         (do (.preventDefault e)
@@ -18,7 +20,9 @@
         (when (#{"ArrowDown" "ArrowUp"} pressed-key)
           (.preventDefault e)
           (open-popup)
-          (move-active-to (or selected-index 0)))
+          ;; Avaaminen tyhjentää haun, joten valitun indeksi luetaan vasta sen
+          ;; jälkeen.
+          (move-active-to (or (:selected-index (current-state)) 0)))
 
         (and (= "Backspace" pressed-key)
              clearable?
