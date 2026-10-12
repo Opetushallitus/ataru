@@ -53,18 +53,10 @@
                                 :lang     s/Keyword}]
   [:button.a-dropdown-clear-button
    {:type          "button"
+    :tab-index     "-1"
     :aria-label    (translations/get-hakija-translation :clear lang)
     ;; Ilman tätä hiiren/kosketuksen painallus siirtää fokuksen
-    ;; syötekentästä nappiin ennen kuin click ehtii tapahtua. Koska nappi
-    ;; poistuu DOM:sta heti valinnan tyhjennyttyä (renderöidään vain kun
-    ;; arvo on valittu), fokusoidun napin poistaminen laukaisee selaimen
-    ;; oman blur-tapahtuman (relatedTarget null), jonka juuritason
-    ;; on-dropdown-blur tulkitsee fokuksen poistumisena koko komponentista
-    ;; ja sulkee kokoruutuvalikon (ja vapauttaa vieritys-lukon) hetkeksi.
-    ;; Näppäimistöllä nappi täytyy kuitenkin voida fokusoida (jotta arvon
-    ;; voi tyhjentää ilman hiirtä), joten sama poistumis-blur syntyy silloin
-    ;; Enter/Space-aktivoinnista — on-click suojaa sen suppress-blur-close?
-    ;; -lipulla samaan tapaan kuin mobiilin uudelleenfokusointi.
+    ;; syötekentästä nappiin ennen kuin click ehtii tapahtua.
     :on-mouse-down (fn [e] (.preventDefault e))
     :on-click      (fn dropdown-clear-button-on-click [e]
                      (.stopPropagation e)
@@ -190,15 +182,13 @@
   (let [dropdown-id             (util/component-id)
         input-ref               (atom nil)
         root-ref                (atom nil)
-        ;; Kun kenttää kosketetaan uudestaan listan ollessa jo auki (ks.
-        ;; on-input-click), kenttä sumennetaan ja fokusoidaan heti uudestaan
-        ;; pakottaaksemme aidon fokusoitumistapahtuman, jotta virtuaali-
-        ;; näppäimistö nousee esiin (pelkkä jo-fokusoidun kentän fokusointi
-        ;; uudestaan ei riitä). Tämä sumennus kuitenkin kuplii juuritason
-        ;; on-dropdown-bluriin asti, joka muuten tulkitsisi sen "fokus
-        ;; poistui koko komponentista" -signaaliksi ja sulkisi listan —
-        ;; tämä lippu ohittaa sen väliaikaisesti sumennuksen ja uudelleen-
-        ;; fokusoinnin ajaksi.
+        ;; Vaihtoehdon poistaminen fokusoidusta tyhjennysnapista (ks.
+        ;; dropdown-clear-button-clicked) laukaisee selaimen oman blur-
+        ;; tapahtuman (relatedTarget null), koska fokusoitu elementti
+        ;; katoaa DOM:sta ennen kuin kenttä ehditään fokusoida takaisin —
+        ;; ilman tätä lippua juuritason on-dropdown-blur tulkitsisi sen
+        ;; fokuksen poistumisena koko komponentista ja sulkisi valikon
+        ;; hetkeksi.
         suppress-blur-close?    (atom false)
         ;; option-id -> DOM-node kutakin renderöityä vaihtoehtoa varten.
         ;; Käytetään React:in itsensä ylläpitämiä :ref-kutsuja document-tason
@@ -403,44 +393,15 @@
                                     (when-not disabled?
                                       (when-not expanded?
                                         (on-query-change nil)
-                                        (expand-dropdown {:dropdown-id dropdown-id})
-                                        ;; :on-focus (alempana) ei riitä yksin:
-                                        ;; valinnan tekeminen ei koskaan
-                                        ;; sumenna kenttää (ks. dropdown-list-
-                                        ;; option/dropdown-clear-button), joten
-                                        ;; kentän avaaminen uudestaan saman
-                                        ;; valinnan jälkeen ei enää laukaise
-                                        ;; aitoa focus-tapahtumaa — sivu jäisi
-                                        ;; silloin vierittämättä, vaikka
-                                        ;; käyttäjä olisi sillä välin
-                                        ;; vierittänyt sivua itse.
-                                        (scroll-field-to-top! (or aria-labelledby (str dropdown-id "-label"))))))
+                                        (scroll-field-to-top! (or aria-labelledby (str dropdown-id "-label")))
+                                        (expand-dropdown {:dropdown-id dropdown-id}))))
                ;; Pelkkä näppäimistöfokus (esim. Tab kenttään) ei avaa listaa —
                ;; vain klikkaus, nuolinäppäimet tai kirjoittaminen avaavat sen.
-               ;;
-               ;; Mobiilissa ensimmäinen kosketus (expanded? on vielä false
-               ;; tässä, koska se on tämän renderin, siis ENNEN klikkausta,
-               ;; arvo) avaa vain listan: kenttä on silloin read-only (ks.
-               ;; :read-only alempana), joten kosketus fokusoi sen ilman että
-               ;; virtuaalinäppäimistö nousee esiin. Kun lista on JO auki,
-               ;; kosketus kentän päällä tulkitaan haluksi kirjoittaa/hakea —
-               ;; kenttä ei ole silloin enää read-only, mutta koska se on jo
-               ;; fokusoitu, pelkkä sen fokusointi uudestaan ei toisi näppäi-
-               ;; mistöä esiin (selain päättää sen näkyvyyden vain aidosta,
-               ;; uudesta fokusoitumisesta) — sumennetaan siis ensin ja
-               ;; fokusoidaan sitten uudestaan.
+               ;; Klikkaus fokusoi kentän selaimen oletustoiminnolla, joten
+               ;; myös virtuaalinäppäimistö nousee esiin normaalisti heti
+               ;; ensimmäisestä kosketuksesta mobiilissa.
                on-input-click     (fn on-input-click [_e]
-                                    (let [was-expanded? expanded?]
-                                      (open-popup)
-                                      (when (and @mobile? was-expanded?)
-                                        (reset! suppress-blur-close? true)
-                                        (when-let [el @input-ref]
-                                          (.blur el))
-                                        (reagent/after-render
-                                          (fn []
-                                            (when-let [el @input-ref]
-                                              (.focus el))
-                                            (reset! suppress-blur-close? false))))))
+                                    (open-popup))
                on-input-change    (fn on-input-change [e]
                                     (open-popup)
                                     (on-query-change (.. e -target -value)))
@@ -501,30 +462,7 @@
                                       (if expanded?
                                         (collapse-dropdown {:dropdown-id dropdown-id})
                                         (do (open-popup)
-                                            (if @mobile?
-                                              ;; React on tässä vaiheessa jo
-                                              ;; poistanut :read-only-attri-
-                                              ;; buutin (expanded? on nyt
-                                              ;; totta), joten pelkkä .focus()
-                                              ;; toisi virtuaalinäppäimistön
-                                              ;; esiin heti ensimmäisestä
-                                              ;; avauksesta (ks. on-input-click).
-                                              ;; DOM-fokus pitää silti saada
-                                              ;; kenttään (esim. Escapea ja
-                                              ;; nuolinäppäimiä varten) —
-                                              ;; asetetaan readOnly hetkeksi
-                                              ;; suoraan DOM:iin fokusoinnin
-                                              ;; ajaksi ja palautetaan heti
-                                              ;; perään, jotta React ei jää
-                                              ;; luulemaan sen olevan yhä
-                                              ;; totta.
-                                              (reagent/after-render
-                                                (fn []
-                                                  (when-let [el @input-ref]
-                                                    (set! (.-readOnly el) true)
-                                                    (.focus el)
-                                                    (set! (.-readOnly el) false))))
-                                              (focus-input))))))
+                                            (focus-input)))))
                label-id           (str dropdown-id "-label")
                listbox-id         (str dropdown-id "-listbox")
                selected-label     (get value->label selected-value)
@@ -561,16 +499,6 @@
                :value                input-value
                :placeholder          unselected-label
                :disabled             disabled?
-               ;; Estävät virtuaalinäppäimistön avautumisen kentän
-               ;; ensimmäisestä kosketuksesta mobiilissa (ks. on-input-click)
-               ;; — vain listan avaaminen, ei kirjoittaminen, on ensimmäisen
-               ;; kosketuksen tarkoitus. Molemmat poistuvat heti kun lista on
-               ;; auki. read-only ei riitä yksin: esim. Firefox Androidilla
-               ;; se ei estä näppäimistön avautumista, joten myös
-               ;; input-mode "none" tarvitaan (selainten dokumentoitu tapa
-               ;; sanoa "tämä kenttä ei tarvitse virtuaalinäppäimistöä").
-               :read-only            (boolean (and @mobile? (not expanded?)))
-               :inputMode            (when (and @mobile? (not expanded?)) "none")
                :required             (boolean required?)
                :aria-invalid         (boolean invalid?)
                :autoComplete         "off"
@@ -594,18 +522,16 @@
                :on-click             on-input-click
                :on-change            on-input-change
                :on-key-down          on-input-key-down
-               :on-focus             (fn [_e] (scroll-field-to-top! (or aria-labelledby label-id)))}]
+               :on-focus             (fn [_e]
+                                       (scroll-field-to-top! (or aria-labelledby label-id))
+                                       (when @mobile?
+                                         (open-popup)))}]
              (when (and (not disabled?) (not (false? clearable?)) (not (string/blank? selected-value)))
                [dropdown-clear-button
                 {:lang     lang
                  ;; Nappi katoaa DOM:sta heti tyhjennyksen jälkeen (renderöidään
                  ;; vain kun arvo on valittu), jolloin fokus katoaisi kokonaan
                  ;; ellei sitä siirretä eksplisiittisesti takaisin kenttään.
-                 ;; Näppäimistöllä nappi on tässä vaiheessa myös itse
-                 ;; fokusoitu, joten sen poistuminen laukaisisi juuritason
-                 ;; blurin (ks. dropdown-clear-button) ja sulkisi listan
-                 ;; ellei sitä suojattaisi samalla suppress-blur-close?
-                 ;; -lipulla kuin mobiilin uudelleenfokusointia.
                  :on-click (fn dropdown-clear-button-clicked []
                              (reset! suppress-blur-close? true)
                              (on-change "")
