@@ -283,6 +283,9 @@
          (reset! resize-listener (make-resize-listener dropdown-id mobile? sync-popup-geometry!))
          (.addEventListener js/window "resize" @resize-listener)
 
+         (.addEventListener js/document "scroll" sync-popup-geometry!
+                             #js {:passive true :capture true})
+
          (reset! viewport-resize-listener sync-popup-geometry!)
          (when-let [vv (.-visualViewport js/window)]
            (.addEventListener vv "resize" @viewport-resize-listener)
@@ -299,6 +302,8 @@
        (fn [_this]
          (.removeEventListener js/document "mousedown" @outside-click-listener true)
          (.removeEventListener js/window "resize" @resize-listener)
+         (.removeEventListener js/document "scroll" sync-popup-geometry!
+                                #js {:passive true :capture true})
          (when-let [vv (.-visualViewport js/window)]
            (.removeEventListener vv "resize" @viewport-resize-listener)
            (.removeEventListener vv "scroll" @viewport-resize-listener))
