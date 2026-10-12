@@ -109,9 +109,8 @@
   }
 }
 
-// Lisätään/poistetaan lock-body-scroll!/unlock-body-scroll! (dropdown-viewport)
-// mukana document.scrollingElementiin kokoruutuvalikon ollessa auki.
-.a-dropdown-fullscreen-open {
+// html, ei body: <html> omistaa oman overflow-y: scroll -arvonsa suoraan (ks. hakija.less), joten se on elementti jonka overflow oikeasti pitää lukita.
+html:has(.a-dropdown-popup--fullscreen) {
   overflow: hidden;
 
   // Kesken oleva opacity-animaatio (animate.css .animated) luo esi-isälle
@@ -180,6 +179,13 @@
   z-index: 9;
 }
 
+.a-dropdown-popup--fullscreen {
+  max-height: none;
+  left: 8px;
+  right: 8px;
+  width: auto;
+}
+
 .a-dropdown-popup--collapsed {
   display: none;
 }
@@ -226,12 +232,11 @@
 }
 
 .a-dropdown-list__option-label {
-  // min-width: 0, jotta ellipsis pääsee leikkaamaan tekstin — muuten
-  // flex-itemin oletus min-width: auto pitäisi sen tekstin levyisenä.
+  // min-width: 0, jotta rivi voi kutistua ja teksti rivittyä —
+  // muuten flex-itemin oletus min-width: auto pitäisi sen tekstin levyisenä.
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .a-dropdown-empty {

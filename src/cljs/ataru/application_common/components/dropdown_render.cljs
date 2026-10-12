@@ -263,6 +263,7 @@
          (reagent/as-element
            [view/dropdown-popup
             {:expanded?        expanded?
+             :fullscreen?      fullscreen?
              :options-with-id  options-with-id
              :on-click         (:on-option-click handlers)
              :label-id         label-id
