@@ -1,4 +1,4 @@
-(ns ataru.hakija.components.dropdown-component
+(ns ataru.hakija.components.hakija-dropdown-component
   (:require [ataru.hakija.application-view-icons :as icons]
             [ataru.util :as util]
             [ataru.hakija.components.form-field-label-component :as form-field-label-component]
