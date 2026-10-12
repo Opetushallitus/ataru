@@ -1,7 +1,7 @@
 # Project-specific configuration
 EXECUTABLES = lein docker pnpm lftp
 PORTS=15432 16379 15433 1221 16380 16381 8350 8351 8352 8353
-TOOL_VERSIONS := node:20 pnpm:9 lein:2.9
+TOOL_VERSIONS := node:24 pnpm:12 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
 HAKIJA_CONFIG ?= ../ataru-secrets/hakija-local-dev.edn
