@@ -1,6 +1,7 @@
 (ns ataru.hakija.arvosanat.components.valinnainen-kieli-dropdown
   (:require [ataru.hakija.components.hakija-dropdown-component :as dropdown-component]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
+            [clojure.string :as string]
             [re-frame.core :as re-frame]
             [schema.core :as s]
             [schema-tools.core :as st]))
@@ -17,5 +18,10 @@
          {:field-descriptor valinnainen-kieli-field-descriptor
           :render-field     render-field
           :idx              idx
-          :on-change        (fn []
-                              (re-frame/dispatch [:application/add-question-group-row valinnaiset-kielet-field-descriptor]))}])
+          ;; hakija-dropdown kutsuu tätä myös kentän tyhjennyksellä (esim.
+          ;; tyhjennysnappi, Backspace tyhjässä kentässä) — vain oikea kielen
+          ;; valinta saa lisätä uuden rivin, muuten tyhjennys kasaisi tyhjiä
+          ;; valinnaiset-kielet-rivejä.
+          :on-change        (fn [value]
+                              (when-not (string/blank? value)
+                                (re-frame/dispatch [:application/add-question-group-row valinnaiset-kielet-field-descriptor])))}])
