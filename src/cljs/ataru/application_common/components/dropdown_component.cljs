@@ -1,6 +1,7 @@
 (ns ataru.application-common.components.dropdown-component
   (:require [reagent.core :as reagent]
             [ataru.util :as util]
+            [ataru.application-common.components.dropdown-aria :as aria]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-geometry :as geometry]
             [ataru.application-common.components.dropdown-listeners :as listeners]
@@ -56,6 +57,11 @@
      ;; säiliötä.
      :portal-container              portal-container
 
+     ;; Auki olevan valikon ajaksi aria-hiddenillä piilotetut taustan
+     ;; elementit alkuperäisine arvoineen (ks. dropdown-aria), nil kun
+     ;; mitään ei ole piilotettu.
+     :hidden-background             (atom nil)
+
      ;; Reaktiivinen atomi: onko näkymä tällä hetkellä mobiilileveydellä.
      ;; Reaktiivisuus varmistaa, että suunnan vaihto (esim. puhelimen
      ;; kääntäminen) auki olevan listan aikana päivittää heti, käytetäänkö
@@ -103,6 +109,7 @@
 (defn- unmount-dropdown! [{:keys [portal-container] :as context}]
   ;; Poistetaan globaalit kuuntelijat varmuuden vuoksi myös tässä
   (listeners/detach-global-listeners! context)
+  (aria/restore-background! context)
   (when-let [el @portal-container]
     (.removeChild (.-body js/document) el)))
 
