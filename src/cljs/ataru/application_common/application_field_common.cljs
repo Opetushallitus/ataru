@@ -91,6 +91,9 @@
 
        :component-will-unmount
        (fn [_]
+         ;; Without this a pending resize would call set-markdown-height after
+         ;; the component is gone, and reagent-dom/dom-node would throw.
+         (js/clearTimeout @timeout)
          (.removeEventListener js/window "resize" @listener))
 
        :component-did-update
