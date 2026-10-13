@@ -40,14 +40,18 @@
           :stack         bundle-frame}
          overrides))
 
-(defn- logged [error-details]
-  (let [messages (atom [])]
+(defn- log-events [error-details]
+  (let [events (atom [])]
     (log/with-merged-config
       {:appenders {:println {:enabled? false}
                    :test    {:enabled? true
-                             :fn       #(swap! messages conj (force (:msg_ %)))}}}
+                             :fn       #(swap! events conj {:level   (:level %)
+                                                            :message (force (:msg_ %))})}}}
       (client-error/log-client-error error-details source-maps))
-    (apply str @messages)))
+    @events))
+
+(defn- logged [error-details]
+  (apply str (map :message (log-events error-details))))
 
 (describe "mapping client error stack traces"
   (tags :unit)
@@ -94,6 +98,18 @@
         (should-contain "RangeError: Maximum call stack size exceeded." message)
         (should-contain "line: 225 column: 25" message)
         (should-contain (str "stack trace: " bundle-frame) message)))
+
+  (it "logs an error thrown by our own bundle as an error"
+      (should= [:error] (map :level (log-events (error-details {:build-id build-id})))))
+
+  (it "logs an error thrown by a script the browser injected as a warning"
+      (let [events (log-events (error-details {:stack page-frame}))]
+        (should= [:warn] (map :level events))
+        (should-contain "most likely a script injected by the browser"
+                        (:message (first events)))))
+
+  (it "keeps an error that has no stack trace to attribute at error level"
+      (should= [:error] (map :level (log-events (error-details {:stack ""})))))
 
   (it "logs the error even when mapping fails"
       (should-not-throw

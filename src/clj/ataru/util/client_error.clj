@@ -27,6 +27,19 @@
   ;; The format stacktrace-js produces: functionName(args)@fileName:line:column
   #"^(.*)@(\S+?):(\d+):(\d+)$")
 
+(def ^:private compiled-bundle-pattern #"/js/compiled/[^/\s]+\.js")
+
+(defn- from-our-code?
+  "Whether anything in the error points at one of our compiled bundles. In-app
+   browsers inject scripts of their own into the page, and the errors those
+   throw end up in our global error handler attributed to the page itself. They
+   are not ours to fix, so they are not logged as errors. An error without a
+   stack trace cannot be attributed either way and is kept as ours."
+  [{:keys [url stack]}]
+  (boolean (or (string/blank? stack)
+               (re-find compiled-bundle-pattern (or url ""))
+               (re-find compiled-bundle-pattern stack))))
+
 (defn- bundle-name
   "The compiled bundle a stack frame points at, e.g.
    'https://opintopolku.fi/hakemus/js/compiled/hakija-app.js?fingerprint=1' ->
@@ -105,16 +118,22 @@
   ([error-details]
    (log-client-error error-details default-source-maps))
   ([error-details source-maps]
-   (let [mapped (mapped-details error-details source-maps)]
-     (log/error (str "Error from client browser:\n"
-                     (:description error-details) "\n"
-                     (:error-message error-details) "\n"
-                     (:url error-details) "\n"
-                     "line: " (:line error-details) " column: " (:col error-details) "\n"
-                     (when-let [position (:position mapped)]
-                       (str "source: " position "\n"))
-                     (build-description (:build-id error-details) (:mismatches mapped)) "\n"
-                     "user-agent: " (:user-agent error-details) "\n"
-                     "stack trace: " (:stack error-details)
-                     (when-let [stack (:stack mapped)]
-                       (str "\nmapped stack trace:\n" stack)))))))
+   (let [mapped  (mapped-details error-details source-maps)
+         ours?   (from-our-code? error-details)
+         message (str "Error from client browser:\n"
+                      (:description error-details) "\n"
+                      (:error-message error-details) "\n"
+                      (:url error-details) "\n"
+                      "line: " (:line error-details) " column: " (:col error-details) "\n"
+                      (when-let [position (:position mapped)]
+                        (str "source: " position "\n"))
+                      (build-description (:build-id error-details) (:mismatches mapped)) "\n"
+                      (when-not ours?
+                        "no frame points at our bundle, so this is most likely a script injected by the browser\n")
+                      "user-agent: " (:user-agent error-details) "\n"
+                      "stack trace: " (:stack error-details)
+                      (when-let [stack (:stack mapped)]
+                        (str "\nmapped stack trace:\n" stack)))]
+     (if ours?
+       (log/error message)
+       (log/warn message)))))
