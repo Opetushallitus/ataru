@@ -70,6 +70,16 @@
         #(dispatch [:state-update dispatcher])
         200))))
 
+(defn- build-id
+  "Identifies the build of the bundle this page is running, set by the server in
+   the page template. Missing when the page itself comes from a cache that
+   predates it."
+  []
+  ;; Read by name so that the advanced compilation does not rename it.
+  (let [id (aget js/window "ataruBuildId")]
+    (when (and (string? id) (not (string/blank? id)))
+      id)))
+
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
    error"
@@ -77,12 +87,14 @@
   (set! (.-onerror js/window)
         (fn [error-msg url line col error-obj]
           (let [user-agent (-> js/window .-navigator .-userAgent)
-                error-details {:error-message error-msg
-                               :url url
-                               :line line
-                               :description (description-fn)
-                               :col col
-                               :user-agent user-agent}]
+                error-details (cond-> {:error-message error-msg
+                                       :url url
+                                       :line line
+                                       :description (description-fn)
+                                       :col col
+                                       :user-agent user-agent}
+                                      (build-id)
+                                      (assoc :build-id (build-id)))]
             (-> ((.-fromError js/StackTrace) error-obj)
                 (.then (fn [frames]
                          (->> (for [frame frames]
