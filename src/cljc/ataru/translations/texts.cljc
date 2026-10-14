@@ -482,6 +482,18 @@
    :no-dropdown-search-hits                     {:fi "Ei hakutuloksia"
                                                  :sv "Inga sökresultat"
                                                  :en "No search results found"}
+   :dropdown-one-option                         {:fi "1 vaihtoehto"
+                                                 :sv "1 alternativ"
+                                                 :en "1 option"}
+   :dropdown-option-count                       {:fi "%d vaihtoehtoa"
+                                                 :sv "%d alternativ"
+                                                 :en "%d options"}
+   :dropdown-show-options                       {:fi "Näytä vaihtoehdot"
+                                                 :sv "Visa alternativ"
+                                                 :en "Show options"}
+   :dropdown-hide-options                       {:fi "Sulje vaihtoehdot"
+                                                 :sv "Stäng alternativ"
+                                                 :en "Close options"}
    :close-application-options                   {:fi "Sulje koulutusten haku"
                                                  :sv "Dölj hämta ansökningsmål"
                                                  :en "Close study program search"}
