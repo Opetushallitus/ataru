@@ -20,7 +20,7 @@
             [clojure.string :as string]
             [ataru.translations.translation-util :as tu]
             [ataru.hakija.components.form-field-label-component :as form-field-label-component]
-            [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.components.hakija-dropdown-component :as dropdown-component]
             [ataru.hakija.components.generic-label-component :as generic-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]

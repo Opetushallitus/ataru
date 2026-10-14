@@ -54,7 +54,6 @@ const getSelectedHakukohdeText = async (page: Page) =>
 let page: Page
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page)
@@ -120,10 +119,9 @@ test('hakukohteen hakutermien syöttäminen palauttaa oikeat hakutulokset', asyn
   await fillField(page, getSearchInput(page), 'haku')
   await expect(getSearchHits(page)).toHaveCount(3)
 
-  const results = await page
-    .locator('.application__search-hit-hakukohde-row--content')
-    .allTextContents()
-  expect(results).toEqual([
+  await expect(
+    page.locator('.application__search-hit-hakukohde-row--content')
+  ).toHaveText([
     'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne A',
     'Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B',
     'Testihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi C | Tutkintonimike C | Tarkenne C',

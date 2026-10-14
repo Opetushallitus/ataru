@@ -52,6 +52,7 @@ test.afterAll(async ({ request }) => {
   })
   await page.close()
 })
+
 const haeTogglePayment = (page: Page) =>
   page.getByTestId('toggle-maksutoiminto')
 const haeTutuPaymentRadio = (page: Page) =>
