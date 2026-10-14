@@ -141,7 +141,7 @@
   (let [lang @(subscribe [:application/form-language])
         url @(subscribe [:application/hakukohde-konfo-url-by-oid hakukohde-oid])]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
-       [:a {:href url :target :blank}
+       [:a {:href url :target "_blank" :rel "noopener noreferrer"}
         [:i.zmdi.zmdi-open-in-new]
         (translations/get-hakija-translation :read-more lang)]]))
 

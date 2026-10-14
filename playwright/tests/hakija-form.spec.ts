@@ -245,7 +245,7 @@ const testilomakeFixture: FormNode[] = [
         params: {
           'info-text': {
             label: {
-              fi: 'Sinun tulee osoittaa kielitaitosi.',
+              fi: 'Sinun tulee osoittaa kielitaitosi. Lue lisää [Opintopolusta](https://opintopolku.fi).',
             },
           },
         },
@@ -536,6 +536,14 @@ test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
   await expect(page.locator(`#${infoTextId}`)).toContainText(
     'Sinun tulee osoittaa kielitaitosi.'
   )
+})
+
+test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'Opintopolusta' })
+
+  await expect(link).toHaveAttribute('href', 'https://opintopolku.fi')
+  await expect(link).toHaveAttribute('target', '_blank')
+  await expect(link).toHaveAttribute('rel', /noopener/)
 })
 
 test('henkilötietomoduulin täyttäminen', async () => {
