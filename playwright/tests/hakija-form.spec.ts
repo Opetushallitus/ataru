@@ -544,6 +544,23 @@ test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
   await expect(link).toHaveAttribute('href', 'https://opintopolku.fi')
   await expect(link).toHaveAttribute('target', '_blank')
   await expect(link).toHaveAttribute('rel', /noopener/)
+  await expect(link).toHaveAccessibleName(
+    'Opintopolusta (avautuu uuteen välilehteen)'
+  )
+})
+
+test('uuden välilehden vihje ei näy visuaalisesti', async () => {
+  const link = page.getByRole('link', { name: 'Opintopolusta' })
+  const hint = link.getByText('(avautuu uuteen välilehteen)')
+
+  await expect(hint).toHaveCSS('position', 'absolute')
+  await expect(hint).toHaveCSS('overflow', 'hidden')
+  await expect(hint).toHaveCSS('clip', 'rect(0px, 0px, 0px, 0px)')
+
+  const box = await hint.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.width).toBeLessThanOrEqual(1)
+  expect(box!.height).toBeLessThanOrEqual(1)
 })
 
 test('henkilötietomoduulin täyttäminen', async () => {
