@@ -147,18 +147,23 @@
                                            :state "not-obligated"})))
 
 
+(def ^:private permit-check-virkailija-oid "1.2.246.562.24.00000001213")
+
 (defn- store-permit-check
   ([application-key]
    (store-permit-check application-key "not-obligated"))
   ([application-key payment-obligation-basis]
    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                             (jdbc/execute! conn ["INSERT INTO virkailija (oid, first_name, last_name) VALUES (?, ?, ?)
+                                                   ON CONFLICT (oid) DO NOTHING"
+                                                  permit-check-virkailija-oid "Hemuli" "Hemuli?"])
                              (jdbc/insert! conn "kk_application_payment_permit_checks"
                                            {:application_key          application-key
                                             :attachment_key           "continuous-residence-permit-front"
                                             :found_in_migri           true
                                             :payment_obligation_basis payment-obligation-basis
                                             :permit_valid_until       (java.sql.Date/valueOf (.plusYears (time/today) 1))
-                                            :virkailija_oid           "1.2.246.562.24.00000001213"
+                                            :virkailija_oid           permit-check-virkailija-oid
                                             :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))))
 
 (defn- application-payment [application-key state]
