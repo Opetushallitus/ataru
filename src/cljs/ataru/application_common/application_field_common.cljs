@@ -64,9 +64,13 @@
 
 (defn- add-link-target-prop
   [new-tab-hint text state]
-  [(-> text
-       (string/replace #"<a href=([^>]+)>" "<a target=\"_blank\" rel=\"noopener noreferrer\" href=$1>")
-       (string/replace "</a>" (str "<span class=\"visually-hidden\"> " (s/htmlEscape new-tab-hint) "</span></a>")))
+  ; Only external http(s) links open in a new tab, mailto: and in-page links are left as is
+  [(string/replace text
+                   #"<a href=(['\"]https?://[^>]*)>(.*?)</a>"
+                   (fn [[_ href-and-attrs link-text]]
+                     (str "<a target=\"_blank\" rel=\"noopener noreferrer\" href=" href-and-attrs ">"
+                          link-text
+                          "<span class=\"visually-hidden\"> " (s/htmlEscape new-tab-hint) "</span></a>")))
    state])
 
 (defn- set-markdown-height

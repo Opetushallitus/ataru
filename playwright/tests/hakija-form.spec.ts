@@ -245,7 +245,7 @@ const testilomakeFixture: FormNode[] = [
         params: {
           'info-text': {
             label: {
-              fi: 'Sinun tulee osoittaa kielitaitosi. Lue lisää [Opintopolusta](https://opintopolku.fi).',
+              fi: 'Sinun tulee osoittaa kielitaitosi. Lue lisää [Opintopolusta](https://opintopolku.fi) tai ota yhteyttä [kirjaamoon](mailto:kirjaamo@oph.fi).',
             },
           },
         },
@@ -547,6 +547,14 @@ test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
   await expect(link).toHaveAccessibleName(
     'Opintopolusta (avautuu uuteen välilehteen)'
   )
+})
+
+test('ohjetekstin sähköpostilinkki ei avaudu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'kirjaamoon', exact: true })
+
+  await expect(link).toHaveAttribute('href', 'mailto:kirjaamo@oph.fi')
+  await expect(link).not.toHaveAttribute('target')
+  await expect(link).toHaveAccessibleName('kirjaamoon')
 })
 
 test('uuden välilehden vihje ei näy visuaalisesti', async () => {
