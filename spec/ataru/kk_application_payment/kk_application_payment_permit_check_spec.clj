@@ -183,25 +183,28 @@
                                    "eu-blue-card-attachment" check-body))
       (should= [] (permit-check/get-permit-checks application-key))))
 
-  (it "resets the checks of the application checked at the latest at the given time"
+  (it "resets the checks of the application saved at the latest at the given time"
     (let [application-key (init-application)
           _               (save superuser-session application-key "eu-blue-card-attachment" check-body)
           _               (save superuser-session application-key "continuous-residence-permit-front" check-body)
-          checked-until   (:checked-time (stored-check application-key "continuous-residence-permit-front"))
+          ; A new check is saved at the same moment as it is checked
+          modified-until  (:checked-time (stored-check application-key "continuous-residence-permit-front"))
           _               (Thread/sleep 10)
           _               (save superuser-session application-key "brexit-permit-attachment" check-body)
           removed         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                            (permit-check/reset-permit-checks connection application-key checked-until))]
+                            (permit-check/reset-permit-checks connection application-key modified-until))]
       (should= #{"eu-blue-card-attachment" "continuous-residence-permit-front"} (set (map :attachment-key removed)))
       (should= ["brexit-permit-attachment"] (map :attachment-key (permit-check/get-permit-checks application-key)))
       (should= 2 (count (events application-key "kk-payment-permit-check-reset")))))
 
-  (it "does not reset checks when there were none when the reset was decided"
+  (it "does not reset checks saved after the given time"
     (let [application-key (init-application)
-          _               (save superuser-session application-key "eu-blue-card-attachment" check-body)]
-      (should-be-nil (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                       (permit-check/reset-permit-checks connection application-key nil)))
-      (should= 1 (count (permit-check/get-permit-checks application-key)))))
+          _               (save superuser-session application-key "eu-blue-card-attachment" check-body)
+          modified-until  (.minusSeconds (:checked-time (stored-check application-key "eu-blue-card-attachment")) 1)]
+      (should= [] (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                    (permit-check/reset-permit-checks connection application-key modified-until)))
+      (should= 1 (count (permit-check/get-permit-checks application-key)))
+      (should= 0 (count (events application-key "kk-payment-permit-check-reset")))))
 
   (it "removes the checks when the application is deleted"
     (let [application-key (init-application)
