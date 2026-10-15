@@ -55,10 +55,10 @@ RETURNING attachment_key                                AS "attachment-key",
           inherited_time                                AS "inherited-time";
 
 -- name: yesql-delete-kk-application-payment-permit-checks
--- Checks saved after :checked_until are kept, as the decision to remove the checks was made without them
+-- Checks saved after :modified_until are kept, as the decision to remove the checks was made without them
 DELETE FROM kk_application_payment_permit_checks
 WHERE application_key = :application_key
-  AND checked_time <= :checked_until
+  AND modified_time <= :modified_until
 RETURNING attachment_key                                AS "attachment-key",
           found_in_migri                                AS "found-in-migri",
           to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
