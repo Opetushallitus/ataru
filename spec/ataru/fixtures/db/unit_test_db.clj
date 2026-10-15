@@ -10,6 +10,7 @@
             [ataru.log.audit-log :as audit-log]))
 
 ; Make linter happy again
+(declare yesql-delete-fixture-kk-application-payment-permit-checks!)
 (declare yesql-delete-fixture-application-review!)
 (declare yesql-delete-fixture-application-events!)
 (declare yesql-delete-fixture-application-secrets!)
@@ -26,6 +27,7 @@
 (defqueries "sql/dev-form-queries.sql")
 
 (defn- nuke-old-fixture-data [form-id]
+  (ataru-db/exec :db yesql-delete-fixture-kk-application-payment-permit-checks! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-review! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-events! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-secrets! {:form_id form-id})
