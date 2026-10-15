@@ -162,7 +162,8 @@
 (def kk-application-payment-obligation-states
   [["unreviewed" (:unreviewed state-translations)]
    ["reviewed" (:reviewed state-translations)]
-   ["in-migri-review" (:in-migri-review state-translations)]])
+   ["in-migri-review" (:in-migri-review state-translations)]
+   ["exemption-not-verified" (:exemption-not-verified state-translations)]])
 
 (def kk-application-payment-states
   [["not-required" (:not-required state-translations)]
