@@ -145,20 +145,19 @@
       (->public new))))
 
 (defn reset-permit-checks
-  "Removes the permit checks of the application checked at the latest at checked-until, e.g. when an obligated
+  "Removes the permit checks of the application saved at the latest at modified-until, e.g. when an obligated
    applicant delivers a new exemption attachment and the payment obligation needs to be reviewed again. Returns the
    removed checks to be audit logged once the transaction has been committed."
-  [connection application-key checked-until]
-  (when checked-until
-    (let [removed (yesql-delete-kk-application-payment-permit-checks
-                    {:application_key application-key
-                     :checked_until   checked-until}
-                    {:connection connection})]
-      (doseq [check removed]
-        (log/info "Removing kk application payment permit check for application" application-key
-                  ", attachment" (:attachment-key check))
-        (add-event! connection "kk-payment-permit-check-reset" application-key (:attachment-key check) nil))
-      removed)))
+  [connection application-key modified-until]
+  (let [removed (yesql-delete-kk-application-payment-permit-checks
+                  {:application_key application-key
+                   :modified_until  modified-until}
+                  {:connection connection})]
+    (doseq [check removed]
+      (log/info "Removing kk application payment permit check for application" application-key
+                ", attachment" (:attachment-key check))
+      (add-event! connection "kk-payment-permit-check-reset" application-key (:attachment-key check) nil))
+    removed))
 
 (defn audit-log-reset
   [audit-logger application-key removed]

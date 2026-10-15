@@ -17,7 +17,8 @@
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
             [ataru.util :as u]
             [ataru.kk-application-payment.utils :as utils])
-  (:import java.util.Locale))
+  (:import java.sql.Timestamp
+           java.util.Locale))
 
 (def tz (time/time-zone-for-id "Europe/Helsinki"))
 
@@ -261,31 +262,26 @@
               :let [application-key (:key application)]
               :when (and (some? application-key)
                          (not (contains? not-required-keys application-key)))
-              :let [hakukohteet-to-reset (payment/hakukohteet-with-obligation-review-to-reset job-runner application)]
-              :when (seq hakukohteet-to-reset)
-              ; Only the checks existing when the reset is decided are removed
-              :let [checked-until (->> (permit-check/get-permit-checks application-key)
-                                       (map :checked-time)
-                                       sort
-                                       last)]]
+              ; Only the checks existing when the reset is decided are removed. The time is compared to the
+              ; modified time set by the database, so it is taken from the system clock instead of ataru.time.
+              :let [decided-at           (Timestamp. (System/currentTimeMillis))
+                    hakukohteet-to-reset (payment/hakukohteet-with-obligation-review-to-reset job-runner application)]
+              :when (seq hakukohteet-to-reset)]
         (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-               (doseq [hakukohde       hakukohteet-to-reset
-                       existing-review (filter #(and (= "kk-application-payment-obligation" (:requirement %))
-                                                     (= hakukohde (:hakukohde %))
-                                                     (= "reviewed" (:state %)))
-                                               (payment/get-kk-application-payment-obligation-reviews application-key))]
+               ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
+               (doseq [hakukohde hakukohteet-to-reset]
                  (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
                            application-key ", hakukohde" hakukohde)
                  (application-store/save-application-hakukohde-review-in-tx
                    connection
                    application-key
-                   (:hakukohde existing-review)
-                   (:requirement existing-review)
+                   hakukohde
+                   "kk-application-payment-obligation"
                    "unreviewed"
                    (time/now)
                    {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
                    audit-logger))
-               (permit-check/reset-permit-checks connection application-key checked-until))
+               (permit-check/reset-permit-checks connection application-key decided-at))
              (permit-check/audit-log-reset audit-logger application-key))))))
 
 (def keys-affecting-kk-application-payment
