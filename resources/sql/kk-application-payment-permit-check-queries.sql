@@ -55,7 +55,7 @@ RETURNING attachment_key                                AS "attachment-key",
           inherited_time                                AS "inherited-time";
 
 -- name: yesql-delete-kk-application-payment-permit-checks
--- Checks saved after :modified_until are kept, as the decision to remove the checks was made without them
+-- Checks saved after :modified_until are kept, as they may already take the reason for the removal into account
 DELETE FROM kk_application_payment_permit_checks
 WHERE application_key = :application_key
   AND modified_time <= :modified_until
