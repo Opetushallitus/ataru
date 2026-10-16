@@ -27,7 +27,12 @@
             [ataru.test-utils :as test-utils :refer [set-fixed-time reset-fixed-time!]]
             [ataru.log.audit-log :as audit-log]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline]
-            [ataru.kk-application-payment.kk-application-payment-store :as payment-store]))
+            [ataru.kk-application-payment.kk-application-payment-store :as payment-store]
+            [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
+            [yesql.core :as sql]))
+
+(sql/defqueries "sql/virkailija-queries.sql")
+(declare yesql-upsert-virkailija<!)
 
 (def test-person-oid
   (:person-oid application-fixtures/application-without-hakemusmaksu-exemption))
@@ -146,8 +151,35 @@
                                            :state "not-obligated"})))
 
 
+(def ^:private permit-check-virkailija-oid "1.2.246.562.24.00000001213")
+
+(defn- store-permit-check
+  ([application-key]
+   (store-permit-check application-key "not-obligated"))
+  ([application-key payment-obligation-basis]
+   (store-permit-check application-key payment-obligation-basis "continuous-residence-permit-front"))
+  ([application-key payment-obligation-basis attachment-key]
+   (db/exec :db yesql-upsert-virkailija<! {:oid        permit-check-virkailija-oid
+                                           :first_name "Hemuli"
+                                           :last_name  "Hemuli?"})
+   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                             (jdbc/insert! conn "kk_application_payment_permit_checks"
+                                           {:application_key          application-key
+                                            :attachment_key           attachment-key
+                                            :found_in_migri           true
+                                            :payment_obligation_basis payment-obligation-basis
+                                            :permit_valid_until       (java.sql.Date/valueOf (.plusYears (time/today) 1))
+                                            :virkailija_oid           permit-check-virkailija-oid
+                                            :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))))
+
+(defn- application-payment [application-key state]
+  {:application (application-store/get-latest-application-by-key application-key)
+   :payment     {:application-key application-key :state state}})
+
 (defn- clear! []
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (jdbc/delete! conn :kk_application_payment_permit_checks [])
+                            (jdbc/delete! conn :field_deadlines [])
                             (jdbc/delete! conn :applications [])
                             (jdbc/delete! conn :kk_application_payments [])
                             (jdbc/delete! conn :kk_application_payments_history [])))
@@ -889,6 +921,7 @@
                 (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
                                                                             :review-requirement "kk-application-payment-obligation"
                                                                             :review-state "reviewed"} application-key)
+                (store-permit-check application-key "obligated-own-studies")
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= {:application-key application-key
                           :state (:awaiting payment/all-states)
@@ -911,7 +944,87 @@
                          (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))
                 (should= {:application-key application-key
                           :state (:not-required payment/all-states)}
-                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))))
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))
+                (should= [] (permit-check/get-permit-checks application-key))))
+
+          (it "should keep the residence permit checks saved after the reset was decided"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))
+                    hakukohteet-to-reset payment/hakukohteet-with-obligation-review-to-reset]
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "attachment-missing"
+                                                    :modified_time (time/now)}])
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (store-permit-check application-key "obligated-own-studies")
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                ; virkailija saves a check while the reset is being decided
+                (with-redefs [payment/hakukohteet-with-obligation-review-to-reset
+                              (fn [job-runner application]
+                                (let [hakukohteet (hakukohteet-to-reset job-runner application)]
+                                  (when (seq hakukohteet)
+                                    ; margin for the database clock compared to the system clock of the job
+                                    (Thread/sleep 10)
+                                    (store-permit-check application-key "obligated-own-studies" "eu-blue-card-attachment"))
+                                  hakukohteet))]
+                  (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner))
+                (should= "unreviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+                (should= ["eu-blue-card-attachment"]
+                         (map :attachment-key (permit-check/get-permit-checks application-key)))))
+
+          (it "should not reset kk application payment obligation state when new attachments are added after the attachment deadline"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "attachment-missing"
+                                                    :modified_time (time/now)}])
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (store-permit-check application-key "obligated-own-studies")
+                (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
+                (should= (:awaiting payment/all-states)
+                         (:state (first (payment/get-raw-payments [application-key]))))
+
+                ; application specific attachment deadline, passed before the new attachment
+                (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                  (jdbc/insert! conn "field_deadlines" {:application_key application-key
+                                                         :field_id        "passport-attachment"
+                                                         :deadline        (time/minus (time/now) (time/days 1))}))
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (#'updater-job/reset-kk-application-payment-obligation-states-if-needed
+                  runner
+                  [(application-payment application-key (:awaiting payment/all-states))]
+                  [{:application-key application-key :state (:awaiting payment/all-states)}])
+                (should= "reviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+                (should= 1 (count (permit-check/get-permit-checks application-key)))))
 
           (it "should not reset kk application payment obligation state when new attachments are added after review and payment is not required"
               (let [application-id (unit-test-db/init-db-fixture
@@ -928,6 +1041,7 @@
                 (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
                                                                             :review-requirement "kk-application-payment-obligation"
                                                                             :review-state "reviewed"} application-key)
+                (store-permit-check application-key)
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= {:application-key application-key
                           :state (:not-required payment/all-states)}
@@ -948,7 +1062,120 @@
                          (select-keys (first (payment/get-kk-application-payment-obligation-reviews application-key)) [:requirement :state :hakukohde :application-key]))
                 (should= {:application-key application-key
                           :state (:not-required payment/all-states)}
-                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))))
+                         (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))
+                (should= [{:attachment-key "continuous-residence-permit-front"
+                           :found-in-migri true
+                           :payment-obligation-basis "not-obligated"}]
+                         (map #(select-keys % [:attachment-key :found-in-migri :payment-obligation-basis])
+                              (permit-check/get-permit-checks application-key)))))
+
+          (it "should keep payment obligation state and permit checks of an exempted application when the person's other payments are modified"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (store-permit-check application-key)
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (#'updater-job/reset-kk-application-payment-obligation-states-if-needed
+                  runner
+                  [(application-payment application-key (:not-required payment/all-states))]
+                  [{:application-key "1.2.246.562.11.00000000000000000002" :state (:awaiting payment/all-states)}])
+                (should= "reviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+
+          (it "should reset only the obligated application of the person when new attachments are added to several applications"
+              (let [[obligated-key exempted-key] (->> (unit-test-db/init-db-fixture
+                                                         form-fixtures/payment-exemption-test-form
+                                                         (repeat 2 application-fixtures/application-with-hakemusmaksu-exemption))
+                                                       (map #(:key (application-store/get-application %))))]
+                (doseq [application-key [obligated-key exempted-key]]
+                  (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                              :review-requirement "kk-application-payment-obligation"
+                                                                              :review-state "reviewed"} application-key))
+                (store-permit-check obligated-key "obligated-own-studies")
+                (store-permit-check exempted-key)
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! (for [application-key [obligated-key exempted-key]]
+                                                    {:application_key application-key
+                                                     :attachment_key "passport-attachment"
+                                                     :hakukohde "payment-info-test-kk-hakukohde"
+                                                     :state "not-checked"
+                                                     :modified_time (time/now)
+                                                     :updated? true}))
+                (#'updater-job/reset-kk-application-payment-obligation-states-if-needed
+                  runner
+                  [(application-payment obligated-key (:awaiting payment/all-states))
+                   (application-payment exempted-key (:not-required payment/all-states))]
+                  [{:application-key obligated-key :state (:not-required payment/all-states)}])
+                (should= "unreviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews obligated-key))))
+                (should= [] (permit-check/get-permit-checks obligated-key))
+                (should= "reviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews exempted-key))))
+                (should= 1 (count (permit-check/get-permit-checks exempted-key)))))
+
+          (it "should keep permit checks when resetting the payment obligation state fails"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "reviewed"} application-key)
+                (store-permit-check application-key "obligated-own-studies")
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (with-redefs [application-store/save-application-hakukohde-review-in-tx
+                              (fn [& _] (throw (ex-info "Failed to save review" {})))]
+                  (should-throw (#'updater-job/reset-kk-application-payment-obligation-states-if-needed
+                                  runner
+                                  [(application-payment application-key (:awaiting payment/all-states))]
+                                  [{:application-key application-key :state (:not-required payment/all-states)}])))
+                (should= "reviewed"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+
+          (it "should keep permit checks when new attachments are added while payment obligation is in Migri review"
+              (let [application-id (unit-test-db/init-db-fixture
+                                     form-fixtures/payment-exemption-test-form
+                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     nil)
+                    application-key (:key (application-store/get-application application-id))]
+                (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde "payment-info-test-kk-hakukohde"
+                                                                            :review-requirement "kk-application-payment-obligation"
+                                                                            :review-state "in-migri-review"} application-key)
+                (store-permit-check application-key "obligated-own-studies")
+                (set-fixed-time "2025-01-15T14:55:00")
+                (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                    :attachment_key "passport-attachment"
+                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                    :state "not-checked"
+                                                    :modified_time (time/now)
+                                                    :updated? true}])
+                (#'updater-job/reset-kk-application-payment-obligation-states-if-needed
+                  runner
+                  [(application-payment application-key (:awaiting payment/all-states))]
+                  [{:application-key application-key :state (:not-required payment/all-states)}])
+                (should= "in-migri-review"
+                         (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
+                (should= 1 (count (permit-check/get-permit-checks application-key)))))
 
           (it "should automatically set kk-application-payment-obligation to 'reviewed' for VTJ-verified EU citizen"
               (let [application-id (unit-test-db/init-db-fixture
