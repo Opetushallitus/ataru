@@ -17,7 +17,7 @@
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
             [ataru.util :as u]
             [ataru.kk-application-payment.utils :as utils])
-  (:import java.sql.Timestamp
+  (:import java.time.Instant
            java.util.Locale))
 
 (def tz (time/time-zone-for-id "Europe/Helsinki"))
@@ -257,15 +257,16 @@
    reset even if a new attachment is delivered."
   [{:keys [audit-logger] :as job-runner} applications-payments modified-payments]
   (when (seq modified-payments)
-    (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))]
+    (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))
+          ; Checks saved after the resets started to be decided are kept, as they may already take the new
+          ; attachment into account. The time is compared to the modified time set by the database, so it is taken
+          ; from the system clock instead of ataru.time.
+          decided-at        (Instant/now)]
       (doseq [{:keys [application]} applications-payments
               :let [application-key (:key application)]
               :when (and (some? application-key)
                          (not (contains? not-required-keys application-key)))
-              ; Only the checks existing when the reset is decided are removed. The time is compared to the
-              ; modified time set by the database, so it is taken from the system clock instead of ataru.time.
-              :let [decided-at           (Timestamp. (System/currentTimeMillis))
-                    hakukohteet-to-reset (payment/hakukohteet-with-obligation-review-to-reset job-runner application)]
+              :let [hakukohteet-to-reset (payment/hakukohteet-with-obligation-review-to-reset job-runner application)]
               :when (seq hakukohteet-to-reset)]
         (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
