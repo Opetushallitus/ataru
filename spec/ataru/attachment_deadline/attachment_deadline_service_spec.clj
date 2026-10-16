@@ -2,11 +2,28 @@
   (:require [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.time.coerce :as coerce]
             [ataru.time :as t]
             [speclj.core :refer :all]))
 
 (def attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
+
+(defn- per-application-deadline-with-ohjausparametrit
+  [ohjausparametrit application-submitted]
+  (attachment-deadline/per-application-attachment-deadline
+    (attachment-deadline-service/->AttachmentDeadlineService
+      (reify OhjausparametritService
+        (get-parametri [_ _] ohjausparametrit)))
+    application-submitted
+    {:oid "haku-oid"}))
+
+(defn- expected-deadline
+  [application-submitted days hour minute]
+  (-> application-submitted
+      (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+      (t/plus (t/days days))
+      (t/with-time (t/local-time hour minute))))
 
 (defn- in-helsinki-date-time
   [year month day hour]
@@ -88,4 +105,52 @@
                              (t/plus (t/days 20))
                              (t/with-time (t/local-time 15 14)))
                          (attachment-deadline/attachment-deadline-for-hakuaika
-                           attachment-deadline-service nil {:oid "hakukohtainen-raja-käytössä"} hakuajat)))))
+                           attachment-deadline-service nil {:oid "hakukohtainen-raja-käytössä"} hakuajat))))
+
+          (it "Returns per-application attachment end time calculated from application submit time"
+              (let [application-submitted (t/now)]
+                (should= (-> application-submitted
+                             (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+                             (t/plus (t/days 15))
+                             (t/with-time (t/local-time 16 15)))
+                         (attachment-deadline/per-application-attachment-deadline
+                           attachment-deadline-service application-submitted {:oid "hakemuskohtainen-raja-käytössä"}))))
+
+          (it "Returns per-application attachment end time with default settings even if haku uses hakukohtainen deadline"
+              (let [application-submitted (t/now)]
+                (should= (-> application-submitted
+                             (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
+                             (t/plus (t/days 14))
+                             (t/with-time (t/local-time 15 0)))
+                         (attachment-deadline/per-application-attachment-deadline
+                           attachment-deadline-service application-submitted {:oid "hakukohtainen-raja-käytössä"}))))
+
+          (it "Returns per-application attachment end time with default settings if haku has no attachment deadline settings"
+              (let [application-submitted (t/now)]
+                (should= (expected-deadline application-submitted 14 15 0)
+                         (per-application-deadline-with-ohjausparametrit {} application-submitted))))
+
+          (it "Returns per-application attachment end time with default settings if per-application deadline is used without days and time"
+              (let [application-submitted (t/now)]
+                (should= (expected-deadline application-submitted 14 15 0)
+                         (per-application-deadline-with-ohjausparametrit
+                           {:liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa true}
+                           application-submitted))))
+
+          (it "Returns per-application attachment end time ignoring hakukohtainen deadline days and time"
+              (let [application-submitted (t/now)]
+                (should= (expected-deadline application-submitted 14 15 0)
+                         (per-application-deadline-with-ohjausparametrit
+                           {:PH_LMT                                              {:value 30}
+                            :liitteidenMuokkauksenHakukohtainenTakarajaKellonaika "12:00"}
+                           application-submitted))))
+
+          (it "Returns per-application attachment end time with per-application days and time left over when haku uses hakukohtainen deadline"
+              (let [application-submitted (t/now)]
+                (should= (expected-deadline application-submitted 20 10 30)
+                         (per-application-deadline-with-ohjausparametrit
+                           {:liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa  false
+                            :liitteidenMuokkauksenHakemuskohtainenTakarajaPaivaa    20
+                            :liitteidenMuokkauksenHakemuskohtainenTakarajaKellonaika "10:30"
+                            :PH_LMT                                                 {:value 30}}
+                           application-submitted)))))
