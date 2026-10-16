@@ -630,6 +630,24 @@
                           (should-be-matching-state {:application-key application-key, :state state-not-required
                                                      :reason reason-exemption} payment)))
 
+                    (it "should set payment status as not required if an exemption attachment is non-exempting before deadline"
+                        (let [fixed-date-str-in-finland "2030-01-15T14:59:59"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "non-exempting-attachment"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
                     (it "should set payment status as not required if an exemption attachments are ok after deadline"
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
                               _ (set-fixed-time fixed-date-str-in-finland)
@@ -674,6 +692,24 @@
                                                                                     :attachment_key "brexit-permit-attachment"
                                                                                     :hakukohde "payment-info-test-kk-hakukohde"
                                                                                     :state "incomplete-attachment"}
+                                                                                   {:application_key application-key
+                                                                                    :attachment_key "brexit-passport-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "not-checked"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should= payment (first changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status as required if an exemption attachment is non-exempting after deadline"
+                        (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
+                              _ (set-fixed-time fixed-date-str-in-finland)
+                              application-key   (create-2030-payment-exempt-by-application) ; Hakuaika ends 2030-06-01
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key "brexit-permit-attachment"
+                                                                                    :hakukohde "payment-info-test-kk-hakukohde"
+                                                                                    :state "non-exempting-attachment"}
                                                                                    {:application_key application-key
                                                                                     :attachment_key "brexit-passport-attachment"
                                                                                     :hakukohde "payment-info-test-kk-hakukohde"
