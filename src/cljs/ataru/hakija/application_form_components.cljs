@@ -28,6 +28,7 @@
             [ataru.hakija.render-generic-component :as generic-component]
             [ataru.hakija.components.attachment :as attachment]
             [ataru.application-common.accessibility-util :as a11y]
+            [ataru.application-common.components.link-component :as link-component]
             [ataru.constants :as constants]))
 
 (defonce autocomplete-off "new-password")
@@ -534,8 +535,10 @@
                       [:p.application__person-info-module-ht-info-text
                        (tu/get-hakija-translation :ht-person-info-module-top-text lang)
                        [:a {:href (tu/get-hakija-translation :ht-person-info-module-top-text-link-url lang)
-                            :target "_blank"}
-                        (tu/get-hakija-translation :ht-person-info-module-top-text-link-text lang)]]
+                            :target "_blank"
+                            :rel    "noopener noreferrer"}
+                        (tu/get-hakija-translation :ht-person-info-module-top-text-link-text lang)
+                        [link-component/new-tab-hint lang]]]
                       (= auth-type constants/auth-type-eidas)
                       [:p.application__person-info-module-ht-info-text
                        (tu/get-hakija-translation :ht-person-info-module-top-text-eidas lang)])]])]
