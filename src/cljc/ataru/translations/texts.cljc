@@ -368,6 +368,9 @@
    :not-within-application-period               {:fi "hakuaika ei ole käynnissä"
                                                  :sv "ingen pågående ansökningstid"
                                                  :en "application period currently not ongoing"}
+   :opens-in-new-tab                            {:fi "(avautuu uuteen välilehteen)"
+                                                 :sv "(öppnas i en ny flik)"
+                                                 :en "(opens in a new tab)"}
    :oppiaine                                    {:fi "Oppiaine"
                                                  :sv "Läroämne"
                                                  :en "Subject"}
