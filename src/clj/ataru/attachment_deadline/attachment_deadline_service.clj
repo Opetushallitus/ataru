@@ -99,10 +99,12 @@
     (t/with-time datetime (parse-local-time haku-settings-based-grace-period-time))
     datetime))
 
-(defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
-  (let [ohjausparametrit   (when (and haku ohjausparametrit-service)
-                             (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku)))
-        haku-settings-based-grace-period (get-attachment-deadline-days ohjausparametrit)
+(defn- get-ohjausparametrit [ohjausparametrit-service haku]
+  (when (and haku ohjausparametrit-service)
+    (ohjausparametrit/get-parametri ohjausparametrit-service (:oid haku))))
+
+(defn- attachment-deadline [ohjausparametrit application-submitted hakuaika]
+  (let [haku-settings-based-grace-period (get-attachment-deadline-days ohjausparametrit)
         haku-settings-based-grace-period-time (get-attachment-deadline-time ohjausparametrit)
         modify-grace-period (if (uses-per-application-deadline? ohjausparametrit)
                               haku-settings-based-grace-period
@@ -121,6 +123,17 @@
             (t/to-time-zone (t/time-zone-for-id "Europe/Helsinki"))
             (set-local-time haku-settings-based-grace-period-time))))
 
+(defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
+  (attachment-deadline (get-ohjausparametrit ohjausparametrit-service haku) application-submitted hakuaika))
+
+(defn- per-application-attachment-deadline
+  "Attachment deadline calculated from application submission time, regardless of whether haku uses per-application deadline."
+  [ohjausparametrit-service application-submitted haku]
+  (attachment-deadline (assoc (get-ohjausparametrit ohjausparametrit-service haku)
+                              :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa true)
+                       application-submitted
+                       nil))
+
 (defrecord AttachmentDeadlineService [ohjausparametrit-service]
   component/Lifecycle
   (start [this] this)
@@ -132,4 +145,6 @@
   (get-field-deadlines [_ application-key]
     (get-field-deadlines application-key))
   (attachment-deadline-for-hakuaika [_ application-submitted haku hakuaika]
-    (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika)))
+    (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika))
+  (per-application-attachment-deadline [_ application-submitted haku]
+    (per-application-attachment-deadline ohjausparametrit-service application-submitted haku)))
