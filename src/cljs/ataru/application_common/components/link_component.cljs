@@ -1,5 +1,9 @@
 (ns ataru.application-common.components.link-component
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s]
+            [ataru.translations.translation-util :as translations]))
+
+(defn new-tab-hint [lang]
+  [:span.visually-hidden (str " " (translations/get-hakija-translation :opens-in-new-tab lang))])
 
 (s/defn link
         [{:keys [on-click

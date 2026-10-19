@@ -245,7 +245,7 @@ const testilomakeFixture: FormNode[] = [
         params: {
           'info-text': {
             label: {
-              fi: 'Sinun tulee osoittaa kielitaitosi.',
+              fi: 'Sinun tulee osoittaa kielitaitosi. Lue lisää [Opintopolusta](https://opintopolku.fi) tai ota yhteyttä [kirjaamoon](mailto:kirjaamo@oph.fi). Katso myös [hakuohje](https://opintopolku.fi/ohje "Hakuohje") ja palaa [alkuun](#alku).',
             },
           },
         },
@@ -536,6 +536,58 @@ test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
   await expect(page.locator(`#${infoTextId}`)).toContainText(
     'Sinun tulee osoittaa kielitaitosi.'
   )
+})
+
+test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'Opintopolusta' })
+
+  await expect(link).toHaveAttribute('href', 'https://opintopolku.fi')
+  await expect(link).toHaveAttribute('target', '_blank')
+  await expect(link).toHaveAttribute('rel', /noopener/)
+  await expect(link).toHaveAccessibleName(
+    'Opintopolusta (avautuu uuteen välilehteen)'
+  )
+})
+
+test('ohjetekstin sähköpostilinkki ei avaudu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'kirjaamoon', exact: true })
+
+  await expect(link).toHaveAttribute('href', 'mailto:kirjaamo@oph.fi')
+  await expect(link).not.toHaveAttribute('target')
+  await expect(link).toHaveAccessibleName('kirjaamoon')
+})
+
+test('ohjetekstin otsikollinen linkki avautuu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'hakuohje' })
+
+  await expect(link).toHaveAttribute('href', 'https://opintopolku.fi/ohje')
+  await expect(link).toHaveAttribute('title', 'Hakuohje')
+  await expect(link).toHaveAttribute('target', '_blank')
+  await expect(link).toHaveAccessibleName(
+    'hakuohje (avautuu uuteen välilehteen)'
+  )
+})
+
+test('ohjetekstin sivunsisäinen linkki ei avaudu uuteen ikkunaan', async () => {
+  const link = page.getByRole('link', { name: 'alkuun', exact: true })
+
+  await expect(link).toHaveAttribute('href', '#alku')
+  await expect(link).not.toHaveAttribute('target')
+  await expect(link).toHaveAccessibleName('alkuun')
+})
+
+test('uuden välilehden vihje ei näy visuaalisesti', async () => {
+  const link = page.getByRole('link', { name: 'Opintopolusta' })
+  const hint = link.getByText('(avautuu uuteen välilehteen)')
+
+  await expect(hint).toHaveCSS('position', 'absolute')
+  await expect(hint).toHaveCSS('overflow', 'hidden')
+  await expect(hint).toHaveCSS('clip', 'rect(0px, 0px, 0px, 0px)')
+
+  const box = await hint.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.width).toBeLessThanOrEqual(1)
+  expect(box!.height).toBeLessThanOrEqual(1)
 })
 
 test('henkilötietomoduulin täyttäminen', async () => {

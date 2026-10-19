@@ -502,6 +502,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
         .getByTestId('form-name-input')
         .fill('Vahvasti tunnistautuneen testilomake')
     })
+    await allowHakeminenTunnistautuneena(page, lomakkeenId)
   })
 
   test.afterAll(async ({ request }) => {
@@ -511,11 +512,27 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await page.close()
   })
 
+  test('henkilötietomoduulin Suomi.fi-linkki avautuu uuteen ikkunaan', async () => {
+    const formKey = requireValue(lomakkeenAvain, 'Missing form key')
+
+    await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
+
+    const link = page.getByRole('link', { name: 'Suomi.fi:ssä.' })
+
+    await expect(link).toHaveAttribute(
+      'href',
+      'https://www.suomi.fi/omat-tiedot/henkilotiedot'
+    )
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link).toHaveAttribute('rel', /noopener/)
+    await expect(link).toHaveAccessibleName(
+      'Suomi.fi:ssä. (avautuu uuteen välilehteen)'
+    )
+  })
+
   test('lukitsee kotikunnan hakijan muokkausnäkymässä kun haetaan vahvasti tunnistautuneena', async () => {
     const formKey = requireValue(lomakkeenAvain, 'Missing form key')
-    const formId = requireValue(lomakkeenId, 'Missing form id')
 
-    await allowHakeminenTunnistautuneena(page, formId)
     await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
 
     await fillField(
