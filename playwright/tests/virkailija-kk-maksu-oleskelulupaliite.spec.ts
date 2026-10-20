@@ -183,7 +183,7 @@ test('ohjaa puuttuvan liitteen tiedot Migrin lupatietopalvelusta', async () => {
   await expect(
     row.locator('.kk-payment-permit-check__notification').first()
   ).toHaveText(
-    'Liite puuttuu. Tarkista tiedot Migrin lupatietopalvelusta ja merkitse tiedot alle.'
+    'Liite puuttuu. Tarkista tiedot Migrin lupatietopalvelusta (avautuu uuteen välilehteen) ja merkitse tiedot alle.'
   )
   await expect(
     row.locator(
@@ -191,7 +191,8 @@ test('ohjaa puuttuvan liitteen tiedot Migrin lupatietopalvelusta', async () => {
     )
   ).toBeVisible()
   const migriLink = row.getByRole('link', {
-    name: 'Migrin lupatietopalvelusta',
+    name: 'Migrin lupatietopalvelusta (avautuu uuteen välilehteen)',
+    exact: true,
   })
   await expect(migriLink).toHaveAttribute(
     'href',
