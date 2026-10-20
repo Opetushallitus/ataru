@@ -827,6 +827,19 @@ and (max-width: 1000px) {
 @kk-payment-permit-check-notification-border-width: 2px;
 @kk-payment-permit-check-icon-width: 34px;
 
+// Read by screen readers only
+.kk-payment-permit-check__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .kk-payment-permit-check__columns {
   display: flex;
   align-items: flex-start;

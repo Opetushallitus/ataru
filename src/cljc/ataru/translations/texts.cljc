@@ -2309,6 +2309,9 @@
    :kk-payment-permit-check-migri-service                    {:fi "Migrin lupatietopalvelusta"
                                                               :sv "Migrationsverkets tjänst för tillståndsuppgifter"
                                                               :en "Migri's permit information service"}
+   :kk-payment-permit-check-opens-in-new-tab                 {:fi "(avautuu uuteen välilehteen)"
+                                                              :sv "(öppnas i en ny flik)"
+                                                              :en "(opens in a new tab)"}
    :kk-payment-permit-check-found-in-migri                   {:fi "Tiedot löytyvät Migrin lupatietopalvelusta"
                                                               :sv "Uppgifterna finns i Migrationsverkets tjänst för tillståndsuppgifter"
                                                               :en "Information found in Migri's permit information service"}

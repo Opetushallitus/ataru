@@ -20,7 +20,9 @@
   [:a {:href   migri-permit-service-url
        :target "_blank"
        :rel    "noopener noreferrer"}
-   (translation :kk-payment-permit-check-migri-service)])
+   (translation :kk-payment-permit-check-migri-service)
+   [:span.kk-payment-permit-check__visually-hidden
+    (str " " (translation :kk-payment-permit-check-opens-in-new-tab))]])
 
 ; Same as the notifications of the application heading
 (defn- notification [content]
