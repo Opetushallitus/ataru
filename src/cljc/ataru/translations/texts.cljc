@@ -2879,6 +2879,9 @@
    :incomplete-attachment        {:fi "Puutteellinen liite"
                                   :sv "Bristfällig bilaga"
                                   :en "Insufficient attachment"}
+   :non-exempting-attachment     {:fi "Ei-vapauttava liite"
+                                  :sv "Icke-befriande bilaga"
+                                  :en "Non-exempting attachment"}
    :attachment-missing           {:fi "Liite puuttuu"
                                   :sv "Bilaga fattas"
                                   :en "Attachment missing"}
