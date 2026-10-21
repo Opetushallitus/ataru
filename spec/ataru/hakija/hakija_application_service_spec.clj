@@ -186,8 +186,8 @@
                   tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
                   (stub :start-tutkintojen-tunnustaminen-edit-job)
 
-                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
-                  (stub :start-tutu-application-edit-notification-job)
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-job
+                  (stub :start-tutu-application-edit-job)
 
                   hakija-application-service/start-attachment-finalizer-job
                   (stub :start-attachment-finalizer-job)
@@ -199,7 +199,7 @@
                   (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
                               :organization-service :ohjausparametrit-service :job-runner
-                              "application-id" {:person-oid "1.2.246.562.24.00000000001"})
+                              "application-id" "application-key" {:person-oid "1.2.246.562.24.00000000001"})
       (should-have-invoked :start-update-kk-payment-status-for-application-id-job
                            {:with [:job-runner "application-id"]})))
 
@@ -210,8 +210,8 @@
                   tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
                   (stub :start-tutkintojen-tunnustaminen-edit-job)
 
-                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-notification-job
-                  (stub :start-tutu-application-edit-notification-job)
+                  tutkintojen-tunnustaminen-store/start-tutu-application-edit-job
+                  (stub :start-tutu-application-edit-job)
 
                   hakija-application-service/start-attachment-finalizer-job
                   (stub :start-attachment-finalizer-job)
@@ -223,7 +223,7 @@
                   (stub :start-update-kk-payment-status-for-application-id-job)]
       (start-hakija-edit-jobs :attachment-deadline-service :koodisto-cache :tarjonta-service
                               :organization-service :ohjausparametrit-service :job-runner
-                              "application-id" {:person-oid nil})
+                              "application-id" "application-key" {:person-oid nil})
       (should-not-have-invoked :start-update-kk-payment-status-for-application-id-job))))
 
 (describe "start-virkailija-edit-jobs"
