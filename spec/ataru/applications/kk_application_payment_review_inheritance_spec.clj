@@ -11,7 +11,7 @@
             [ataru.test-utils :as test-utils]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [describe it should= should-be-nil tags before]]
+            [speclj.core :refer [after-all describe it should= should-be-nil tags before]]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
@@ -97,6 +97,10 @@
       (jdbc/delete! conn :kk_application_payment_permit_checks [])
       (jdbc/delete! conn :application_hakukohde_reviews [])
       (jdbc/delete! conn :application_hakukohde_attachment_reviews [])))
+
+  ; The applications of the form share hakukohteet with other specs
+  (after-all
+    (unit-test-db/init-db-fixture form))
 
   (it "inherits the payment module attachment reviews and the payment obligation review with their modified times"
     (let [application     (init-application [hakukohde-1])
