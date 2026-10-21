@@ -2819,6 +2819,9 @@
    :in-migri-review              {:fi "Migrin tarkastuksessa"
                                   :sv "Under granskning av Migrationsverket"
                                   :en "Under review by Finnish Immigration Service"}
+   :exemption-not-verified       {:fi "Vapautusta ei ole voitu todentaa"
+                                  :sv "Befrielsen har inte kunnat verifieras"
+                                  :en "Exemption could not be verified"}
    :fulfilled                    {:fi "Täyttyy"
                                   :sv "Fylls"
                                   :en "Meets requirement"}
