@@ -686,6 +686,17 @@ SELECT
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-application-hakukohde-reviews-by-requirement
+SELECT
+  id,
+  modified_time,
+  requirement,
+  state,
+  hakukohde,
+  application_key
+FROM application_hakukohde_reviews
+WHERE application_key = :application_key AND requirement = :requirement;
+
 -- name: yesql-get-application-attachment-reviews
 SELECT
   attachment_key,
