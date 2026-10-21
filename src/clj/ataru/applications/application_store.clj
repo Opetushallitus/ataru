@@ -439,9 +439,10 @@
    applied to is replaced, and only its modified time is updated when the state is the same."
   [conn application-key {:keys [added-hakukohde-oids previous-hakukohde-oids]} audit-logger]
   (let [previous-oids      (set previous-hakukohde-oids)
-        obligation-reviews (->> (queries/yesql-get-application-hakukohde-reviews {:application_key application-key}
-                                                                                 {:connection conn})
-                                (filter #(= "kk-application-payment-obligation" (:requirement %))))
+        obligation-reviews (queries/yesql-get-application-hakukohde-reviews-by-requirement
+                             {:application_key application-key
+                              :requirement     "kk-application-payment-obligation"}
+                             {:connection conn})
         reviews-by-oid     (into {} (map (juxt :hakukohde identity) obligation-reviews))]
     (when-let [inherited (->> obligation-reviews
                               (filter #(contains? previous-oids (:hakukohde %)))
