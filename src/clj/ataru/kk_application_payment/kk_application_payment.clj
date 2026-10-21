@@ -420,6 +420,27 @@
                     "attachements-invalid-and-dl-passed?" attachements-invalid-and-dl-passed?))
         exempt?))))
 
+(defn hakukohteet-with-obligation-review-to-reset
+  "Hakukohteet whose reviewed payment obligation has to be reviewed again, as the applicant has delivered a new
+   payment related attachment after the review and before the attachment deadline."
+  [job-runner application]
+  (let [application-key       (:key application)
+        not-checked-reviews   (group-by :hakukohde (get-not-checked-attachment-reviews application-key))
+        obligation-reviews    (group-by :hakukohde (get-kk-application-payment-obligation-reviews application-key))
+        deadline-passed?      (delay (attachment-deadline-passed?
+                                       job-runner
+                                       (dissoc application :application-hakukohde-reviews)
+                                       (seq (get-invalid-or-not-checked-attachment-reviews application-key))))]
+    (filterv (fn [hakukohde]
+               (let [reviews            (get obligation-reviews hakukohde)
+                     latest-review-time (->> reviews (map :modified-time) sort last)]
+                 (and (kk-application-payment-obligation-reviewed? {:application-hakukohde-reviews reviews} hakukohde)
+                      (some? latest-review-time)
+                      (some #(.isAfter % latest-review-time)
+                            (map :modified-time (get not-checked-reviews hakukohde)))
+                      (not @deadline-passed?))))
+             (keys not-checked-reviews))))
+
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
   (->> (cache/get-from get-haut-cache :haut)

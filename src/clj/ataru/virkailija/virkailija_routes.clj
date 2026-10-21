@@ -9,6 +9,7 @@
             [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
+            [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
             [ataru.attachment-deadline.attachment-deadline-protocol :as attachment-deadline]
             [ataru.applications.excel-export :as excel]
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
@@ -757,6 +758,7 @@
                  :information-requests         [ataru-schema/InformationRequest]
                  (s/optional-key :master-oid)  (s/maybe s/Str)
                  (s/optional-key :kk-payment) (s/maybe ataru-schema/KkPaymentState)
+                 (s/optional-key :kk-payment-permit-checks) [ataru-schema/KkPaymentPermitCheck]
                  (s/optional-key :koski-tutkinnot) (s/maybe [koski-schema/AtaruKoskiTutkinto])}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
@@ -913,6 +915,29 @@
             :unauthorized (response/unauthorized {:error "Unauthorized"})
             nil (response/conflict {:error (str "Field deadline modified since " if-unmodified-since)})
             (response/no-content))))
+
+      (api/PUT "/:application-key/kk-payment-permit-check/:attachment-key" {session :session}
+        :path-params [application-key :- s/Str
+                      attachment-key :- s/Str]
+        :body [body ataru-schema/KkPaymentPermitCheckBody]
+        :summary "Store virkailija's notes on a kk application payment residence permit attachment"
+        :return {:check  ataru-schema/KkPaymentPermitCheck
+                 :events [ataru-schema/Event]}
+        (let [response (permit-check/save-permit-check
+                         organization-service
+                         tarjonta-service
+                         audit-logger
+                         session
+                         application-key
+                         attachment-key
+                         body)]
+          (case response
+            :not-found (response/not-found {:error (str "Application " application-key " not found")})
+            :unauthorized (response/unauthorized {:error "Unauthorized"})
+            :bad-request (response/bad-request {:error (str "Attachment " attachment-key " is not a residence permit attachment")})
+            :invalid-permit-valid-until (response/bad-request {:error (str "Permit card validity date " (:permit-valid-until body) " is out of range")})
+            (response/ok {:check  response
+                          :events (application-service/get-application-events organization-service application-key)}))))
 
       (api/POST "/notes/:application-key" {session :session}
         :summary "Add new review note for the application"

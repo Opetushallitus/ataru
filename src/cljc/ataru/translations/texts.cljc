@@ -2297,6 +2297,69 @@
    :liitepyynto-deadline-unset                               {:fi "Hakijakohtainen aikaraja poistettu"
                                                               :sv "En tidsgräns enligt sökande har raderats"
                                                               :en "EN: Hakijakohtainen aikaraja poistettu"}
+   :kk-payment-permit-check-attachment-delivered             {:fi "Tarkista liitteet tai tarkista tiedot"
+                                                              :sv "Kontrollera bilagorna eller kontrollera uppgifterna i"
+                                                              :en "Check the attachments or check the information in"}
+   :kk-payment-permit-check-attachment-missing               {:fi "Liite puuttuu. Tarkista tiedot"
+                                                              :sv "Bilagan saknas. Kontrollera uppgifterna i"
+                                                              :en "Attachment missing. Check the information in"}
+   :kk-payment-permit-check-attachment-missing-suffix        {:fi "ja merkitse tiedot alle."
+                                                              :sv "och anteckna uppgifterna nedan."
+                                                              :en "and mark the information below."}
+   :kk-payment-permit-check-migri-service                    {:fi "Migrin lupatietopalvelusta"
+                                                              :sv "Migrationsverkets tjänst för tillståndsuppgifter"
+                                                              :en "Migri's permit information service"}
+   :kk-payment-permit-check-opens-in-new-tab                 {:fi "(avautuu uuteen välilehteen)"
+                                                              :sv "(öppnas i en ny flik)"
+                                                              :en "(opens in a new tab)"}
+   :kk-payment-permit-check-found-in-migri                   {:fi "Tiedot löytyvät Migrin lupatietopalvelusta"
+                                                              :sv "Uppgifterna finns i Migrationsverkets tjänst för tillståndsuppgifter"
+                                                              :en "Information found in Migri's permit information service"}
+   :kk-payment-permit-check-yes                              {:fi "Kyllä"
+                                                              :sv "Ja"
+                                                              :en "Yes"}
+   :kk-payment-permit-check-no                               {:fi "Ei"
+                                                              :sv "Nej"
+                                                              :en "No"}
+   :kk-payment-permit-check-add-info                         {:fi "Lisää oleskelulupakortin voimassaolo ja tieto hakijan maksuvelvollisuudesta."
+                                                              :sv "Lägg till uppehållstillståndskortets giltighetstid och uppgift om sökandens avgiftsskyldighet."
+                                                              :en "Add the residence permit card's validity date and the applicant's payment obligation."}
+   :kk-payment-permit-check-valid-until                      {:fi "Lupakortti voimassa"
+                                                              :sv "Tillståndskortet giltigt till"
+                                                              :en "Permit card valid until"}
+   :kk-payment-permit-check-valid-until-out-of-range         {:fi "Päivämäärää ei tallennettu. Sallittu väli on %s–%s."
+                                                              :sv "Datumet sparades inte. Tillåtet intervall är %s–%s."
+                                                              :en "The date was not saved. The allowed range is %s–%s."}
+   :kk-payment-permit-check-obligation                       {:fi "Maksuvelvollisuus"
+                                                              :sv "Betalningsskyldighet"
+                                                              :en "Payment obligation"}
+   :kk-payment-permit-check-not-obligated                    {:fi "Ei maksuvelvollinen"
+                                                              :sv "Inte betalningsskyldig"
+                                                              :en "Not obligated to pay"}
+   :kk-payment-permit-check-obligated-own-studies            {:fi "Maksuvelvollinen, oma opiskelu"
+                                                              :sv "Betalningsskyldig, egna studier"
+                                                              :en "Obligated to pay, own studies"}
+   :kk-payment-permit-check-obligated-family-member-studies  {:fi "Maksuvelvollinen, perheenjäsenen opiskelu"
+                                                              :sv "Betalningsskyldig, familjemedlemmens studier"
+                                                              :en "Obligated to pay, family member's studies"}
+   :kk-payment-permit-check-obligated-other                  {:fi "Maksuvelvollinen, muu syy"
+                                                              :sv "Betalningsskyldig, annat skäl"
+                                                              :en "Obligated to pay, other reason"}
+   :kk-payment-permit-check-other-reason                     {:fi "Tarkenne"
+                                                              :sv "Precisering"
+                                                              :en "Details"}
+   :kk-payment-permit-check-save-error                       {:fi "Merkintöjen tallennus epäonnistui"
+                                                              :sv "Anteckningarna kunde inte sparas"
+                                                              :en "The notes could not be saved"}
+   :kk-payment-permit-check-retry                            {:fi "Yritä uudelleen"
+                                                              :sv "Försök igen"
+                                                              :en "Try again"}
+   :kk-payment-permit-check-updated                          {:fi "Oleskelulupaliitteen käsittelymerkinnät päivitetty"
+                                                              :sv "Anteckningarna om uppehållstillståndsbilagan har uppdaterats"
+                                                              :en "Residence permit attachment notes updated"}
+   :kk-payment-permit-check-reset                            {:fi "Oleskelulupaliitteen käsittelymerkinnät poistettu uuden liitteen vuoksi"
+                                                              :sv "Anteckningarna om uppehållstillståndsbilagan har tagits bort på grund av en ny bilaga"
+                                                              :en "Residence permit attachment notes removed due to a new attachment"}
    :selected-hakukohde-no-rights                             {:fi "Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
                                                               :sv "SV: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
                                                               :en "EN: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"}
