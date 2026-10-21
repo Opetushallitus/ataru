@@ -226,22 +226,58 @@
      (assoc (dissoc review :updated?)
             :modified_time (or (:modified_time review) (time/now))) connection)))
 
+(defn- with-inherited-kk-application-payment-attachment-states
+  "Hakukohteet added to the application inherit the latest state of each kk application payment module attachment
+   reviewed for the previous hakukohteet of the application, unless the attachment itself was changed. A review left
+   from an earlier time the hakukohde was applied to is replaced. The modified time is inherited as well, so that the
+   inherited review is not taken for a newly delivered attachment."
+  [reviews existing-reviews {:keys [added-hakukohde-oids previous-hakukohde-oids]}]
+  (let [added-oids           (set added-hakukohde-oids)
+        previous-oids        (set previous-hakukohde-oids)
+        latest-by-attachment (->> existing-reviews
+                                  (filter #(contains? previous-oids (:hakukohde %)))
+                                  (group-by :attachment_key)
+                                  (map (fn [[attachment-key attachment-reviews]]
+                                         [attachment-key (last (sort-by :modified_time attachment-reviews))]))
+                                  (into {}))]
+    (map (fn [review]
+           (if-let [inherited (and (not (:updated? review))
+                                   (contains? added-oids (:hakukohde review))
+                                   (contains? payment-module/sync-triggering-kk-application-payment-attachment-keys
+                                              (:attachment_key review))
+                                   (get latest-by-attachment (:attachment_key review)))]
+             (do (log/info "Inheriting attachment review" (:state inherited) "for application" (:application_key review)
+                           ", attachment" (:attachment_key review) ", hakukohde" (:hakukohde review))
+                 (assoc review
+                        :state (:state inherited)
+                        :modified_time (:modified_time inherited)
+                        ; Stored over a review possibly left from an earlier time the hakukohde was applied to
+                        :updated? true))
+             review))
+         reviews)))
+
 (defn- create-attachment-hakukohde-reviews-for-application
-  [application applied-hakukohteet old-answers form update? connection]
+  [application applied-hakukohteet old-answers form update? inheritance connection]
   (let [flat-form-content                         (-> form :content util/flatten-form-fields)
         fields-by-id                              (util/form-fields-by-id form)
         excluded-attachment-ids-when-yo-and-jyemp (higher-module/non-yo-attachment-ids form)
         answers-by-key                            (-> application :content :answers util/answers-by-key)
         visible-attachments                       (filter-visible-attachments answers-by-key flat-form-content fields-by-id)
-        reviews                                   (create-application-attachment-reviews
-                             (:key application)
-                             visible-attachments
-                             answers-by-key
-                             old-answers
-                             applied-hakukohteet
-                             update?
-                             fields-by-id
-                             excluded-attachment-ids-when-yo-and-jyemp)]
+        reviews                                   (cond-> (create-application-attachment-reviews
+                                                            (:key application)
+                                                            visible-attachments
+                                                            answers-by-key
+                                                            old-answers
+                                                            applied-hakukohteet
+                                                            update?
+                                                            fields-by-id
+                                                            excluded-attachment-ids-when-yo-and-jyemp)
+                                                    (seq (:added-hakukohde-oids inheritance))
+                                                    (with-inherited-kk-application-payment-attachment-states
+                                                      (queries/yesql-get-application-attachment-reviews
+                                                        {:application_key (:key application)}
+                                                        connection)
+                                                      inheritance))]
     (store-reviews reviews connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)
@@ -250,7 +286,7 @@
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? applied-hakukohteet old-answers form update? conn oppija-session]
+  [application create-new-secret? applied-hakukohteet old-answers form update? inheritance conn oppija-session]
   (let [connection           {:connection conn}
         answers              (:answers application)
         application-to-store {:form_id          (:form application)
@@ -279,7 +315,7 @@
     (queries/yesql-add-application-group-answers! add-answers-args connection)
     (queries/yesql-add-application-group-answer-groups! add-answers-args connection)
     (queries/yesql-add-application-group-answer-values! add-answers-args connection)
-    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
+    (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? inheritance {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))
     (unwrap-application new-application)))
@@ -353,6 +389,7 @@
                                                 nil
                                                 form
                                                 false
+                                                nil
                                                 conn
                                                 oppija-session)
           connection                           {:connection conn}]
@@ -444,6 +481,42 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
+(declare save-application-hakukohde-review-in-tx)
+
+(defn- inherit-kk-application-payment-obligation-reviews
+  "Hakukohteet added to the application inherit the latest kk application payment obligation review of the previous
+   hakukohteet of the application, with its modified time. A review left from an earlier time the hakukohde was
+   applied to is replaced, and only its modified time is updated when the state is the same."
+  [conn application-key {:keys [added-hakukohde-oids previous-hakukohde-oids]} audit-logger]
+  (let [previous-oids      (set previous-hakukohde-oids)
+        obligation-reviews (queries/yesql-get-application-hakukohde-reviews-by-requirement
+                             {:application_key application-key
+                              :requirement     "kk-application-payment-obligation"}
+                             {:connection conn})
+        reviews-by-oid     (into {} (map (juxt :hakukohde identity) obligation-reviews))]
+    (when-let [inherited (->> obligation-reviews
+                              (filter #(contains? previous-oids (:hakukohde %)))
+                              (sort-by :modified_time)
+                              last)]
+      (doseq [hakukohde-oid added-hakukohde-oids]
+        (log/info "Inheriting kk-application-payment-obligation review" (:state inherited) "for application"
+                  application-key ", hakukohde" hakukohde-oid)
+        (if (= (:state inherited) (:state (get reviews-by-oid hakukohde-oid)))
+          (queries/yesql-upsert-application-hakukohde-review! {:application_key application-key
+                                                               :requirement     "kk-application-payment-obligation"
+                                                               :state           (:state inherited)
+                                                               :hakukohde       hakukohde-oid
+                                                               :modified_time   (:modified_time inherited)}
+                                                              {:connection conn})
+          (save-application-hakukohde-review-in-tx conn
+                                                   application-key
+                                                   hakukohde-oid
+                                                   "kk-application-payment-obligation"
+                                                   (:state inherited)
+                                                   (:modified_time inherited)
+                                                   {:user-agent "kk-application-payment-review-inheritance"}
+                                                   audit-logger))))))
+
 (defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger oppija-session]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
@@ -465,6 +538,10 @@
                                              (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
           old-answers                      (-> old-application :answers util/answers-by-key)
           new-answers                      (-> new-application :answers util/answers-by-key)
+          ; kk application payment reviews of the hakukohteet added to the application are inherited
+          inheritance                      {:added-hakukohde-oids    (remove (set (:hakukohde old-application))
+                                                                             (:hakukohde new-application))
+                                            :previous-hakukohde-oids (:hakukohde old-application)}
           {:keys [id key] :as new-application} (add-new-application-version
                                                 (merge-applications new-application old-application)
                                                 updated-by-applicant?
@@ -472,8 +549,10 @@
                                                 old-answers
                                                 form
                                                 true
+                                                inheritance
                                                 conn
                                                 oppija-session)]
+      (inherit-kk-application-payment-obligation-reviews conn key inheritance audit-logger)
       (log/info (str "Updating application with key "
                      (:key old-application)
                      " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
@@ -756,7 +835,7 @@
                       :session   session
                       :id        {:email (util/extract-email application)}})
       (create-attachment-hakukohde-reviews-for-application
-        application-to-store applied-hakukohteet old-answers form update? {:connection conn}))))
+        application-to-store applied-hakukohteet old-answers form update? nil {:connection conn}))))
 
 (defn get-application-hakukohde-reviews
   [application-key]
