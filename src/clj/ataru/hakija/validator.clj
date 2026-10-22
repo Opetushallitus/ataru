@@ -328,6 +328,16 @@
     (nil? (:duplikoitu-kysymys-hakukohde-oid answer))
     (nil? (:duplikoitu-followup-hakukohde-oid answer))))
 
+(defn- finnish-citizenship-validation-error
+  "A Finnish citizen by strong authentication has to state the Finnish citizenship, and may state other citizenships
+   as well. Only Finland is accepted, not Åland, as it is the citizenship locked for the applicant. A missing
+   nationality answer is left to the validation of required answers."
+  [answers-by-key oppija-session]
+  (when (true? (get-in oppija-session [:data :finnish-citizen]))
+    (when-let [{:keys [value]} (:nationality answers-by-key)]
+      (when-not (nationalities-value-contains-finland? value)
+        "Hakemus-answer for key :nationality does not include the Finnish citizenship of the strongly authenticated applicant"))))
+
 (defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session]
   (when oppija-session
     (let [validation-result (for [[key answer] answers-by-key]
@@ -339,7 +349,8 @@
                                            (not= oppija-session-value hakemus-value))
                                   (format "Hakemus-answer '%s' does not equal session-answer '%s' for key %s"
                                           hakemus-value oppija-session-value key))))]
-      (filter #(some? %) validation-result))))
+      (filter #(some? %) (conj (vec validation-result)
+                               (finnish-citizenship-validation-error answers-by-key oppija-session))))))
 
 ; Hakukohteet (ja niiden järjestys) on hakemuksessa tallennettu kahteen paikkaan (miksi oi miksi?).
 ; Näiden pitää aina olla synkassa.
