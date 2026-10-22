@@ -195,6 +195,7 @@
   {:person-oid "1.2.246.562.24.73833272757"
    :eidas-id nil
    :auth-type :strong
+   :finnish-citizen true
    :display-name "Vahvasti Tunnistautunut"
    :fields {:address {:value nil :locked false}
             :have-finnish-ssn {:value "true" :locked true}
@@ -274,6 +275,7 @@
             trimmed-session {:fields       (get-in session [:data :fields])
                              :display-name (get-in session [:data :display-name])
                              :auth-type    (get-in session [:data :auth-type])
+                             :finnish-citizen (get-in session [:data :finnish-citizen])
                              :logged-in    (boolean (:logged-in session))
                              :eidas-id     (get-in session [:data :eidas-id])
                              :person-oid   (get-in session [:data :person-oid])
