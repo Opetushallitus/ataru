@@ -2330,9 +2330,12 @@
    :kk-payment-permit-check-valid-until-out-of-range         {:fi "Päivämäärää ei tallennettu. Sallittu väli on %s–%s."
                                                               :sv "Datumet sparades inte. Tillåtet intervall är %s–%s."
                                                               :en "The date was not saved. The allowed range is %s–%s."}
-   :kk-payment-permit-check-obligation                       {:fi "Maksuvelvollisuus"
-                                                              :sv "Betalningsskyldighet"
-                                                              :en "Payment obligation"}
+   :kk-payment-permit-check-obligation                       {:fi "Hakemusmaksuvelvollisuus"
+                                                              :sv "Skyldighet att betala ansökningsavgift"
+                                                              :en "Application fee obligation"}
+   :kk-payment-permit-check-clear                            {:fi "Tyhjennä valinta: %s"
+                                                              :sv "Töm valet: %s"
+                                                              :en "Clear the selection: %s"}
    :kk-payment-permit-check-not-obligated                    {:fi "Ei maksuvelvollinen"
                                                               :sv "Inte betalningsskyldig"
                                                               :en "Not obligated to pay"}

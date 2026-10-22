@@ -41,10 +41,23 @@
             :on-change on-change}]
    [:label {:for id} label]])
 
+; Shown after the label of a set field, as a selection of radio buttons cannot be removed otherwise
+(defn- clear-button [application-key attachment-key check disabled? field label-key]
+  (when (and (not disabled?) (some? (get check field)))
+    [:button.kk-payment-permit-check__clear
+     {:type       "button"
+      :aria-label @(re-frame/subscribe [:editor/virkailija-translation :kk-payment-permit-check-clear
+                                        (translation label-key)])
+      :on-click   #(set-field application-key attachment-key field nil :immediate)}
+     [:i.material-icons-outlined {:aria-hidden true} "edit_off"]]))
+
 (defn- found-in-migri [application-key attachment-key check disabled?]
   (let [name (field-id application-key attachment-key :found-in-migri)]
     [:fieldset.kk-payment-permit-check__field
-     [:legend.kk-payment-permit-check__label (translation :kk-payment-permit-check-found-in-migri)]
+     [:legend.kk-payment-permit-check__label
+      (translation :kk-payment-permit-check-found-in-migri)
+      [clear-button application-key attachment-key check disabled? :found-in-migri
+       :kk-payment-permit-check-found-in-migri]]
      [:div.kk-payment-permit-check__radios--inline
       (for [[value label-key] [[true :kk-payment-permit-check-yes] [false :kk-payment-permit-check-no]]]
         ^{:key (str value)}
@@ -88,7 +101,10 @@
 (defn- payment-obligation-basis [application-key attachment-key check disabled? required?]
   (let [name (field-id application-key attachment-key :payment-obligation-basis)]
     [:fieldset.kk-payment-permit-check__field
-     [:legend.kk-payment-permit-check__label (label-text :kk-payment-permit-check-obligation required?)]
+     [:legend.kk-payment-permit-check__label
+      (label-text :kk-payment-permit-check-obligation required?)
+      [clear-button application-key attachment-key check disabled? :payment-obligation-basis
+       :kk-payment-permit-check-obligation]]
      (for [value payment-module/kk-payment-obligation-bases]
        ^{:key value}
        [radio {:id        (str name "-" value)
@@ -130,10 +146,12 @@
   [application-key attachment-key attachment-checked? can-edit?]
   (let [check       @(re-frame/subscribe [:kk-payment-permit-check/check application-key attachment-key])
         disabled?   (not can-edit?)
-        add-info?   (or (true? (:found-in-migri check)) attachment-checked?)]
+        add-info?   (or (true? (:found-in-migri check)) attachment-checked?)
+        info-added? (and (some? (:permit-valid-until check))
+                         (some? (:payment-obligation-basis check)))]
     [:div.kk-payment-permit-check
      [found-in-migri application-key attachment-key check disabled?]
-     (when add-info?
+     (when (and add-info? (not info-added?))
        [notification [(translation :kk-payment-permit-check-add-info)]])
      [permit-valid-until application-key attachment-key check disabled? add-info?]
      [payment-obligation-basis application-key attachment-key check disabled? add-info?]
