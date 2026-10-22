@@ -118,6 +118,14 @@ const attachmentRow = (label: string) =>
 const permitCheck = () =>
   attachmentRow(PERMIT_ATTACHMENT_LABEL).locator('.kk-payment-permit-check')
 
+const addInfo = () =>
+  permitCheck().getByText(
+    'Lisää oleskelulupakortin voimassaolo ja tieto hakijan maksuvelvollisuudesta.'
+  )
+
+const clearButton = (label: string) =>
+  permitCheck().getByRole('button', { name: `Tyhjennä valinta: ${label}` })
+
 const permitCheckUpdatedEvents = () =>
   page.locator('.application-handling__event-row-header > span', {
     hasText: 'Oleskelulupaliitteen käsittelymerkinnät päivitetty',
@@ -202,10 +210,7 @@ test('ohjaa puuttuvan liitteen tiedot Migrin lupatietopalvelusta', async () => {
 })
 
 test('tallentaa Migri-tarkistuksen ja näyttää lisäysohjeen', async () => {
-  const addInfo = permitCheck().getByText(
-    'Lisää oleskelulupakortin voimassaolo ja tieto hakijan maksuvelvollisuudesta.'
-  )
-  await expect(addInfo).toHaveCount(0)
+  await expect(addInfo()).toHaveCount(0)
 
   const [request] = await Promise.all([
     page.waitForRequest(isPermitCheckPut),
@@ -219,7 +224,7 @@ test('tallentaa Migri-tarkistuksen ja näyttää lisäysohjeen', async () => {
     'payment-obligation-basis': null,
     'payment-obligation-other-reason': null,
   })
-  await expect(addInfo).toBeVisible()
+  await expect(addInfo()).toBeVisible()
   await expect(permitCheckUpdatedEvents()).toHaveCount(1)
 })
 
@@ -248,6 +253,8 @@ test('tallentaa lupakortin voimassaolon ja maksuvelvollisuuden perusteen', async
     'payment-obligation-other-reason': 'Työnantajan maksama koulutus',
   })
   expect((await request.response())?.status()).toBe(200)
+  // The guidance is hidden once both of the fields it asks for are filled
+  await expect(addInfo()).toHaveCount(0)
 })
 
 test('merkinnät säilyvät hakemuksen uudelleenavauksessa', async () => {
@@ -276,4 +283,35 @@ test('ei tallenna lupakortin voimassaoloa sallitun välin ulkopuolelta', async (
 
   await openApplicationAttachments()
   await expect(validUntil).toHaveValue(permitValidUntil)
+})
+
+test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', async () => {
+  const obligation = permitCheck().getByLabel('Maksuvelvollinen, muu syy')
+  await expect(obligation).toBeChecked()
+
+  const [obligationRequest] = await Promise.all([
+    page.waitForRequest(isPermitCheckPut),
+    clearButton('Hakemusmaksuvelvollisuus').click(),
+  ])
+  expect(obligationRequest.postDataJSON()).toEqual({
+    'found-in-migri': true,
+    'permit-valid-until': permitValidUntil,
+    'payment-obligation-basis': null,
+    'payment-obligation-other-reason': null,
+  })
+  await expect(obligation).not.toBeChecked()
+  await expect(clearButton('Hakemusmaksuvelvollisuus')).toHaveCount(0)
+  await expect(addInfo()).toBeVisible()
+
+  const [foundInMigriRequest] = await Promise.all([
+    page.waitForRequest(isPermitCheckPut),
+    clearButton('Tiedot löytyvät Migrin lupatietopalvelusta').click(),
+  ])
+  expect(foundInMigriRequest.postDataJSON()).toMatchObject({
+    'found-in-migri': null,
+  })
+  await expect(permitCheck().getByLabel('Kyllä')).not.toBeChecked()
+  await expect(
+    permitCheck().getByLabel('Ei', { exact: true })
+  ).not.toBeChecked()
 })
