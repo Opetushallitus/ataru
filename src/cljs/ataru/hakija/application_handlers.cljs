@@ -30,7 +30,8 @@
             [cljs-time.format :as f]
             [cljs-time.coerce :refer [to-long]]
             [ataru.hakija.demo :as demo]
-            [ataru.hakija.validation-error :as validation-error]))
+            [ataru.hakija.validation-error :as validation-error]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -750,6 +751,22 @@
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
+(declare set-repeatable-field-values set-repeatable-field-value set-repeatable-application-field-top-level-valid)
+
+(defn- prefill-and-lock-finnish-citizenship
+  "The Finnish citizenship of a Finnish citizen by strong authentication is prefilled and locked on the first row of
+   the nationality question group. Other citizenships can still be added on other rows."
+  [db]
+  (if (and (get-in db [:oppija-session :logged-in])
+           (true? (get-in db [:oppija-session :finnish-citizen]))
+           (contains? (get-in db [:application :answers]) :nationality))
+    (-> db
+        (set-repeatable-field-values :nationality 0 0 finland-country-code)
+        (update-in [:application :answers :nationality :values 0 0] assoc :valid true :locked true)
+        (set-repeatable-field-value :nationality)
+        (set-repeatable-application-field-top-level-valid :nationality true))
+    db))
+
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :fields])]
@@ -798,6 +815,7 @@
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
                (set-tutkinto-fetch-status-as-needed tutkinto-fetch-needed)
+               (prefill-and-lock-finnish-citizenship)
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil

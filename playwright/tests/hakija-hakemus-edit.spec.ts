@@ -535,7 +535,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     )
   })
 
-  test('lukitsee kotikunnan hakijan muokkausnäkymässä kun haetaan vahvasti tunnistautuneena', async () => {
+  test('lukitsee kotikunnan ja Suomen kansalaisuuden kun haetaan vahvasti tunnistautuneena', async () => {
     const formKey = requireValue(lomakkeenAvain, 'Missing form key')
 
     await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
@@ -555,12 +555,26 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
-    await selectOption(page, await getFieldByLabel(page, /Kansalaisuus/i), {
-      label: 'Suomi',
-    })
-    await selectOption(page, page.getByTestId('language-input'), {
-      label: 'suomi',
-    })
+    // The Finnish citizenship by strong authentication is prefilled and locked,
+    // and another citizenship can be added on a row of its own
+    const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
+    await expect(nationalities.first()).toBeDisabled()
+    await expect(nationalities.first()).toHaveClass(
+      /application__form-select--locked/
+    )
+    await expect(nationalities.first()).toHaveValue('246')
+    const nationalityGroup = page
+      .locator('.application__question-group')
+      .filter({ has: nationalities.first() })
+    await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
+    await expect(nationalities).toHaveCount(2)
+    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
+    await expect(
+      nationalityGroup.getByRole('button', {
+        name: 'Poista vastausvaihtoehto',
+      })
+    ).toHaveCount(1)
+    await page.getByTestId('language-input').selectOption({ label: 'suomi' })
 
     await expect(getSubmitButton(page)).toBeEnabled()
 
@@ -587,5 +601,12 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
     expect(await getDropdownOptionValue(homeTownInput)).toBe('853') // Jyväskylä
+
+    // The nationality is uneditable for the applicant in an edit
+    const editedNationality = page
+      .getByRole('combobox', { name: /Kansalaisuus/i })
+      .first()
+    await expect(editedNationality).toBeDisabled()
+    await expect(editedNationality).toHaveValue('246')
   })
 })
