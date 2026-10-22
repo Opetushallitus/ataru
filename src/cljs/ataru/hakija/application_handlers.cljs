@@ -178,18 +178,27 @@
           long-time-since-last-poll? (> now (+ last-poll polling-interval 30000))]
       (if (and logged-in? long-time-since-last-poll?)
         {:db   (assoc-in db [:oppija-session :last-refresh] now)
-         :http {:method  :get
-                :url     (str "/hakemus/auth/session")
-                :handler [:application/handle-oppija-session-login-refresh]}}
+         :http {:method        :get
+                :url           (str "/hakemus/auth/session")
+                :handler       [:application/handle-oppija-session-login-refresh]
+                :error-handler [:application/handle-oppija-session-login-refresh-error]}}
         {:db db}))))
 
 (reg-event-fx
   :application/oppija-session-login-refresh
   (fn [{:keys [db]} [_]]
     {:db   db
-     :http {:method  :get
-            :url     (str "/hakemus/auth/session")
-            :handler [:application/handle-oppija-session-login-refresh]}}))
+     :http {:method        :get
+            :url           (str "/hakemus/auth/session")
+            :handler       [:application/handle-oppija-session-login-refresh]
+            :error-handler [:application/handle-oppija-session-login-refresh-error]}}))
+
+; A failed refresh is not shown to the applicant, as the session is refreshed again on the next poll
+(reg-event-db
+  :application/handle-oppija-session-login-refresh-error
+  (fn [db _]
+    (js/console.log "Oppija session refresh failed")
+    db))
 
 (reg-event-db
   :application/show-session-expiry-warning-dialog
@@ -822,9 +831,9 @@
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
                     (when (:logged-in session-data)
-                      [:application/start-oppija-session-polling]
-                      (when tutkinto-fetch-needed
-                        [:application/fetch-tutkinnot (string/join "," requested-koski-levels)]))]})))
+                      [:application/start-oppija-session-polling])
+                    (when (and (:logged-in session-data) tutkinto-fetch-needed)
+                      [:application/fetch-tutkinnot (string/join "," requested-koski-levels)])]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session

@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test'
+import { Browser, expect, Page, Request, test } from '@playwright/test'
 import {
   fillField,
   unsafeFoldOption,
@@ -603,5 +603,53 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
       .first()
     await expect(editedNationality).toBeDisabled()
     await expect(editedNationality).toHaveValue('246')
+  })
+
+  // The session is polled every 5 minutes (oppija-session-polling-interval),
+  // which the fake clock of a page of its own fast forwards
+  const openFormWithPolledSession = async (browser: Browser): Promise<Page> => {
+    const formKey = requireValue(lomakkeenAvain, 'Missing form key')
+    const pollingPage = await browser.newPage()
+    await pollingPage.clock.install()
+    await loginWithStrongAuth(pollingPage, getHakijanNakymanOsoite(formKey))
+    // The nationality is locked once the session has been fetched
+    await expect(
+      pollingPage.getByRole('combobox', { name: /Kansalaisuus/i }).first()
+    ).toBeDisabled()
+    return pollingPage
+  }
+
+  const isSessionRequest = (request: Request) =>
+    request.method() === 'GET' &&
+    request.url().includes('/hakemus/auth/session')
+
+  test('pollaa tunnistautuneen hakijan session', async ({ browser }) => {
+    const pollingPage = await openFormWithPolledSession(browser)
+
+    const pollRequest = pollingPage.waitForRequest(isSessionRequest)
+    await pollingPage.clock.fastForward('05:00')
+    await pollRequest
+
+    await pollingPage.close()
+  })
+
+  test('ei näytä hakijalle virhettä epäonnistuneesta session pollauksesta', async ({
+    browser,
+  }) => {
+    const pollingPage = await openFormWithPolledSession(browser)
+    await pollingPage.route('**/hakemus/auth/session', (route) =>
+      route.fulfill({ status: 500, body: '' })
+    )
+
+    const handledFailure = pollingPage.waitForEvent('console', (message) =>
+      message.text().includes('Oppija session refresh failed')
+    )
+    await pollingPage.clock.fastForward('05:00')
+    await handledFailure
+
+    await expect(pollingPage.getByTestId('error-display')).toHaveCount(0)
+    await expect(getSubmitButton(pollingPage)).toBeVisible()
+
+    await pollingPage.close()
   })
 })
