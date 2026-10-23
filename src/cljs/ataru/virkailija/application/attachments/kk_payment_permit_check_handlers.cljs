@@ -73,6 +73,17 @@
                                                       attachment-key
                                                       (if (= :debounced save) 1000 0))))))
 
+; The other reason of the payment obligation is cleared with the basis, so that it does not return with the basis
+(re-frame/reg-event-fx
+  :kk-payment-permit-check/clear-field
+  (fn [{db :db} [_ application-key attachment-key field]]
+    {:db                 (update-in db
+                                    (conj (check-path application-key attachment-key) :check)
+                                    #(cond-> (assoc % field nil)
+                                             (= :payment-obligation-basis field)
+                                             (assoc :payment-obligation-other-reason nil)))
+     :dispatch-debounced (save-dispatch application-key attachment-key 0)}))
+
 (re-frame/reg-event-fx
   :kk-payment-permit-check/save-now
   (fn [_ [_ application-key attachment-key]]

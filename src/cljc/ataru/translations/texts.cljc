@@ -2321,9 +2321,9 @@
    :kk-payment-permit-check-no                               {:fi "Ei"
                                                               :sv "Nej"
                                                               :en "No"}
-   :kk-payment-permit-check-add-info                         {:fi "Lisää oleskelulupakortin voimassaolo ja tieto hakijan maksuvelvollisuudesta."
-                                                              :sv "Lägg till uppehållstillståndskortets giltighetstid och uppgift om sökandens avgiftsskyldighet."
-                                                              :en "Add the residence permit card's validity date and the applicant's payment obligation."}
+   :kk-payment-permit-check-add-info                         {:fi "Lisää oleskelulupakortin voimassaolo ja tieto hakijan hakemusmaksuvelvollisuudesta."
+                                                              :sv "Lägg till uppehållstillståndskortets giltighetstid och uppgift om sökandens skyldighet att betala ansökningsavgift."
+                                                              :en "Add the residence permit card's validity date and the applicant's application fee obligation."}
    :kk-payment-permit-check-valid-until                      {:fi "Lupakortti voimassa"
                                                               :sv "Tillståndskortet giltigt till"
                                                               :en "Permit card valid until"}

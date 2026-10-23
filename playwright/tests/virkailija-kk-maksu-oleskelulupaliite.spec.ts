@@ -120,7 +120,7 @@ const permitCheck = () =>
 
 const addInfo = () =>
   permitCheck().getByText(
-    'Lisää oleskelulupakortin voimassaolo ja tieto hakijan maksuvelvollisuudesta.'
+    'Lisää oleskelulupakortin voimassaolo ja tieto hakijan hakemusmaksuvelvollisuudesta.'
   )
 
 const clearButton = (label: string) =>
@@ -253,7 +253,7 @@ test('tallentaa lupakortin voimassaolon ja maksuvelvollisuuden perusteen', async
     'payment-obligation-other-reason': 'Työnantajan maksama koulutus',
   })
   expect((await request.response())?.status()).toBe(200)
-  // The guidance is hidden once both of the fields it asks for are filled
+  // Ohje piilotetaan, kun molemmat sen pyytämät tiedot on täytetty
   await expect(addInfo()).toHaveCount(0)
 })
 
@@ -288,6 +288,12 @@ test('ei tallenna lupakortin voimassaoloa sallitun välin ulkopuolelta', async (
 test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', async () => {
   const obligation = permitCheck().getByLabel('Maksuvelvollinen, muu syy')
   await expect(obligation).toBeChecked()
+  // Tyhjennysnappi ei kuulu kenttäryhmän nimeen
+  await expect(
+    permitCheck().getByRole('group', {
+      name: /^Hakemusmaksuvelvollisuus( \*)?$/,
+    })
+  ).toBeVisible()
 
   const [obligationRequest] = await Promise.all([
     page.waitForRequest(isPermitCheckPut),
@@ -299,9 +305,19 @@ test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', as
     'payment-obligation-basis': null,
     'payment-obligation-other-reason': null,
   })
+  expect((await obligationRequest.response())?.status()).toBe(200)
   await expect(obligation).not.toBeChecked()
   await expect(clearButton('Hakemusmaksuvelvollisuus')).toHaveCount(0)
+  await expect(permitCheck().getByLabel('Ei maksuvelvollinen')).toBeFocused()
   await expect(addInfo()).toBeVisible()
+
+  // Tarkenne tyhjennetään perusteen mukana
+  await Promise.all([page.waitForRequest(isPermitCheckPut), obligation.click()])
+  await expect(permitCheck().getByLabel('Tarkenne')).toHaveValue('')
+  await Promise.all([
+    page.waitForRequest(isPermitCheckPut),
+    clearButton('Hakemusmaksuvelvollisuus').click(),
+  ])
 
   const [foundInMigriRequest] = await Promise.all([
     page.waitForRequest(isPermitCheckPut),
@@ -310,8 +326,16 @@ test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', as
   expect(foundInMigriRequest.postDataJSON()).toMatchObject({
     'found-in-migri': null,
   })
+  expect((await foundInMigriRequest.response())?.status()).toBe(200)
+  await expect(permitCheck().getByLabel('Kyllä')).toBeFocused()
+
+  await openApplicationAttachments()
   await expect(permitCheck().getByLabel('Kyllä')).not.toBeChecked()
   await expect(
     permitCheck().getByLabel('Ei', { exact: true })
   ).not.toBeChecked()
+  await expect(obligation).not.toBeChecked()
+  await expect(permitCheck().getByLabel('Lupakortti voimassa')).toHaveValue(
+    permitValidUntil
+  )
 })

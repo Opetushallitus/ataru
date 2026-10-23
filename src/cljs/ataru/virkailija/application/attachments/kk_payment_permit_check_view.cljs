@@ -41,23 +41,32 @@
             :on-change on-change}]
    [:label {:for id} label]])
 
-; Shown after the label of a set field, as a selection of radio buttons cannot be removed otherwise
-(defn- clear-button [application-key attachment-key check disabled? field label-key]
+; Shown after the label of a set field, as a selection of radio buttons cannot be removed otherwise. As the button
+; disappears, the focus is moved to the first radio button of the field.
+(defn- clear-button [application-key attachment-key check disabled? field label-key focus-id]
   (when (and (not disabled?) (some? (get check field)))
     [:button.kk-payment-permit-check__clear
      {:type       "button"
       :aria-label @(re-frame/subscribe [:editor/virkailija-translation :kk-payment-permit-check-clear
                                         (translation label-key)])
-      :on-click   #(set-field application-key attachment-key field nil :immediate)}
+      :on-click   (fn []
+                    (re-frame/dispatch [:kk-payment-permit-check/clear-field application-key attachment-key field])
+                    (some-> (.getElementById js/document focus-id) .focus))}
      [:i.material-icons-outlined {:aria-hidden true} "edit_off"]]))
+
+; The legend contains the clear button, so the field is named by the label text alone
+(defn- legend [name label clear-button]
+  [:legend.kk-payment-permit-check__label
+   [:span {:id (str name "-label")} label]
+   clear-button])
 
 (defn- found-in-migri [application-key attachment-key check disabled?]
   (let [name (field-id application-key attachment-key :found-in-migri)]
-    [:fieldset.kk-payment-permit-check__field
-     [:legend.kk-payment-permit-check__label
+    [:fieldset.kk-payment-permit-check__field {:aria-labelledby (str name "-label")}
+     [legend name
       (translation :kk-payment-permit-check-found-in-migri)
       [clear-button application-key attachment-key check disabled? :found-in-migri
-       :kk-payment-permit-check-found-in-migri]]
+       :kk-payment-permit-check-found-in-migri (str name "-" true)]]
      [:div.kk-payment-permit-check__radios--inline
       (for [[value label-key] [[true :kk-payment-permit-check-yes] [false :kk-payment-permit-check-no]]]
         ^{:key (str value)}
@@ -100,11 +109,11 @@
 
 (defn- payment-obligation-basis [application-key attachment-key check disabled? required?]
   (let [name (field-id application-key attachment-key :payment-obligation-basis)]
-    [:fieldset.kk-payment-permit-check__field
-     [:legend.kk-payment-permit-check__label
+    [:fieldset.kk-payment-permit-check__field {:aria-labelledby (str name "-label")}
+     [legend name
       (label-text :kk-payment-permit-check-obligation required?)
       [clear-button application-key attachment-key check disabled? :payment-obligation-basis
-       :kk-payment-permit-check-obligation]]
+       :kk-payment-permit-check-obligation (str name "-" (first payment-module/kk-payment-obligation-bases))]]
      (for [value payment-module/kk-payment-obligation-bases]
        ^{:key value}
        [radio {:id        (str name "-" value)
@@ -148,6 +157,8 @@
         disabled?   (not can-edit?)
         add-info?   (or (true? (:found-in-migri check)) attachment-checked?)
         info-added? (and (some? (:permit-valid-until check))
+                         @(re-frame/subscribe [:kk-payment-permit-check/permit-valid-until-valid?
+                                               application-key attachment-key])
                          (some? (:payment-obligation-basis check)))]
     [:div.kk-payment-permit-check
      [found-in-migri application-key attachment-key check disabled?]
