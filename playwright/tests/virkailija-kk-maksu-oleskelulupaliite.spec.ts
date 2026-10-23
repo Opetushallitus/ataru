@@ -285,6 +285,15 @@ test('ei tallenna lupakortin voimassaoloa sallitun välin ulkopuolelta', async (
   await expect(validUntil).toHaveValue(permitValidUntil)
 })
 
+test('siirtää näppäimistön fokuksen näkyvästi radiopainikkeisiin', async () => {
+  await clearButton('Tiedot löytyvät Migrin lupatietopalvelusta').focus()
+  await page.keyboard.press('Tab')
+
+  const foundInMigri = permitCheck().getByLabel('Kyllä')
+  await expect(foundInMigri).toBeFocused()
+  await expect(foundInMigri).toHaveCSS('outline-style', 'auto')
+})
+
 test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', async () => {
   const obligation = permitCheck().getByLabel('Maksuvelvollinen, muu syy')
   await expect(obligation).toBeChecked()
