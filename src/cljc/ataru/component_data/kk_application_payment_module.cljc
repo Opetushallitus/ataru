@@ -41,15 +41,19 @@
 (def kk-payment-permit-valid-until-years-ahead 6)
 
 ; Residence permit attachments on which virkailija can note the Migri check, permit card validity and payment
-; obligation basis. Of the type A permit's front and back sides only the front side gets the notes.
+; obligation basis, by the document option they are shown for. Of the type A permit's front and back sides only the
+; front side gets the notes.
+(def kk-application-payment-residence-permit-attachment-key-by-option
+  {(:eu-blue-option-value kk-application-payment-document-options)              "eu-blue-card-attachment"
+   (:eu-family-member-option-value kk-application-payment-document-options)     "eu-family-member-permit"
+   (:continuous-residence-option-value kk-application-payment-document-options) "continuous-residence-permit-front"
+   (:longterm-residence-option-value kk-application-payment-document-options)   "longterm-permit-attachment"
+   (:brexit-option-value kk-application-payment-document-options)               "brexit-permit-attachment"
+   (:permanent-residence-option-value kk-application-payment-document-options)  "permanent-residence-permit"
+   (:temporary-protection-option-value kk-application-payment-document-options) "temporary-protection-permit"})
+
 (def kk-application-payment-residence-permit-attachment-keys
-  #{"eu-blue-card-attachment"
-    "eu-family-member-permit"
-    "continuous-residence-permit-front"
-    "longterm-permit-attachment"
-    "brexit-permit-attachment"
-    "permanent-residence-permit"
-    "temporary-protection-permit"})
+  (set (vals kk-application-payment-residence-permit-attachment-key-by-option)))
 
 (defn residence-permit-attachment?
   [attachment-key]
