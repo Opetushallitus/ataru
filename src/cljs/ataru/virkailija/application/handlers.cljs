@@ -9,6 +9,7 @@
             [ataru.util :as util]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
+            [ataru.virkailija.application.attachments.kk-payment-permit-check-handlers :as permit-check-handlers]
             [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
                                                                         tutu-form?
                                                                         astu-form?
@@ -533,6 +534,7 @@
                                               information-requests
                                               review-notes
                                               kk-payment
+                                              kk-payment-permit-checks
                                               master-oid
                                               koski-tutkinnot]}]
   (-> db
@@ -551,6 +553,7 @@
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
       (assoc-in [:application :kk-payment] kk-payment)
+      (permit-check-handlers/set-checks (:key application) kk-payment-permit-checks)
       (assoc-in [:application :selected-application-and-form :application :person :master-oid] master-oid)
       (assoc-in [:application :selected-application-and-form :application :koski-tutkinnot]
                 (tutkinto-util/sort-koski-tutkinnot koski-tutkinnot))
