@@ -24,7 +24,9 @@
             [ataru.time.format :as time-format]
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
-            [ataru.component-data.kk-application-payment-module :as payment-module]))
+            [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store])
+  (:import java.time.Instant))
 
 (def default-time-format (time-format/with-zone (time-format/formatter "yyyy-MM-dd") (time/time-zone-for-id "Europe/Helsinki")))
 
@@ -440,6 +442,70 @@
                       (not @deadline-passed?))))
              (keys not-checked-reviews))))
 
+(defn- permit-check-payment-obligation
+  "Payment obligation determined by virkailija's check on the residence permit attachment of the applicant's document
+   option: :not-obligated, :obligated or nil when the check does not override the attachment reviews. The check
+   overrides them when the permit was found in Migri, the basis of the payment obligation has been noted and the
+   payment obligation has been reviewed."
+  [application]
+  (when (kk-application-payment-obligation-reviewed? application nil)
+    (when-let [attachment-key (->> (util/application-answers-by-key application)
+                                   exemption-form-field-name
+                                   :value
+                                   (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option))]
+      (let [{:keys [found-in-migri payment-obligation-basis]}
+            (permit-check-store/get-permit-check (:key application) attachment-key)]
+        (when (and (true? found-in-migri) (some? payment-obligation-basis))
+          (if (= "not-obligated" payment-obligation-basis)
+            :not-obligated
+            :obligated))))))
+
+(defn- with-obligation-reviews-reset
+  [application hakukohteet]
+  (let [hakukohteet (set hakukohteet)]
+    (update application :application-hakukohde-reviews
+            (partial map #(cond-> %
+                            (and (= "kk-application-payment-obligation" (:requirement %))
+                                 (contains? hakukohteet (:hakukohde %)))
+                            (assoc :state "unreviewed"))))))
+
+(defn- permit-check-state
+  "Payment obligation determined by virkailija's residence permit check (see permit-check-payment-obligation) and,
+   for an obligation, the hakukohteet whose review a new attachment resets. Payments that can no longer change, as
+   they are paid, overdue or not required due to citizenship, are not reviewed again."
+  [job-runner application payment]
+  (let [obligation (permit-check-payment-obligation application)]
+    {:obligation           obligation
+     :hakukohteet-to-reset (when (and (= :obligated obligation)
+                                      (not (contains? #{(:paid all-states) (:overdue all-states)} (:state payment)))
+                                      (not (and (= (:not-required all-states) (:state payment))
+                                                (= (:eu-citizen all-reasons) (:reason payment)))))
+                             (seq (hakukohteet-with-obligation-review-to-reset job-runner application)))}))
+
+(defn- exempt?
+  "The payment obligation determined by virkailija's residence permit check overrides the exemption stated in the
+   application and the state of its attachments. When a new attachment resets an obligating review later in the same
+   run, the exemption is determined as if the review was already reset, so that no invoice is sent before the reset."
+  [job-runner {:keys [application permit-check-state]}]
+  (let [log-exempt (fn [result]
+                     (log/info "Application key" (:key application) "(person oid)" (:person-oid application)
+                               "exempt?" result "by virkailija's residence permit check")
+                     result)]
+    (case (:obligation permit-check-state)
+      :not-obligated
+      (log-exempt true)
+
+      :obligated
+      (if-let [hakukohteet-to-reset (:hakukohteet-to-reset permit-check-state)]
+        (do
+          (log/info "Application key" (:key application) "(person oid)" (:person-oid application)
+                    "exemption determined as if the payment obligation review was reset for hakukohteet"
+                    hakukohteet-to-reset)
+          (exemption-in-application? job-runner (with-obligation-reviews-reset application hakukohteet-to-reset)))
+        (log-exempt false))
+
+      (exemption-in-application? job-runner application))))
+
 (defn- get-haut-with-tarjonta-data
   [get-haut-cache tarjonta-service]
   (->> (cache/get-from get-haut-cache :haut)
@@ -542,7 +608,10 @@
      according to their personal data, possible OID linkings and their applications.
    - Does not poll payments, they should be updated separately.
    - Does not send notification e-mails.
-   Returns a vector of changed states of all applications for possible further processing."
+   Returns the person, the applications with their payments before the update (:existing-payments), the changed
+   payments (:modified-payments) and the time the payment obligation review resets were decided at
+   (:resets-decided-at) for further processing. Empty when the person has no applications and nil when kk
+   application payments are disabled."
   [{:keys [person-service tarjonta-service koodisto-cache get-haut-cache] :as job-runner} person-oid term year]
   (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
         linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
@@ -563,13 +632,19 @@
           (let [payment-by-application (into {}
                                              (map (fn [payment] [(:application-key payment) payment]))
                                              (get-raw-payments (map :key applications)))
-                applications-payments  (map (fn [application]
-                                              {:application application
-                                               :payment     (get payment-by-application (:key application))})
-                                            applications)
+                ; Checks saved after the resets started to be decided are kept, as they may already take the new
+                ; attachment into account. The time is compared to the modified time set by the database, so it is
+                ; taken from the system clock instead of ataru.time.
+                resets-decided-at      (Instant/now)
+                applications-payments  (mapv (fn [application]
+                                               (let [payment (get payment-by-application (:key application))]
+                                                 {:application        application
+                                                  :payment            payment
+                                                  :permit-check-state (permit-check-state job-runner application payment)}))
+                                             applications)
                 payment-state-set      (->> (vals payment-by-application) (map :state) set)
-                exempt-keys            (set (map :key (filter (partial exemption-in-application? job-runner)
-                                                              applications)))
+                exempt-keys            (set (map (comp :key :application)
+                                                 (filter (partial exempt? job-runner) applications-payments)))
                 is-finnish-citizen?    (is-finnish-citizen? person)
                 is-eta-citizen?        (is-eta-equivalent-citizen? koodisto-cache person)
                 has-existing-payment?  (contains? payment-state-set (:paid all-states))]
@@ -579,6 +654,7 @@
                       "has-existing-payment?" (boolean has-existing-payment?))
             {:person            person
              :existing-payments applications-payments
+             :resets-decided-at resets-decided-at
              :modified-payments (update-payments-for-applications
                                   applications-payments exempt-keys (or is-finnish-citizen? is-eta-citizen?) has-existing-payment?)}))))))
 
