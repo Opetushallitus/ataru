@@ -35,6 +35,34 @@
     "permanent-residence-permit"
     "temporary-protection-permit"})
 
+; Sanity limits for the permit card validity date relative to the current date: permit cards are valid for at most
+; 5 years, and an expired card may still be noted
+(def kk-payment-permit-valid-until-years-back 5)
+(def kk-payment-permit-valid-until-years-ahead 6)
+
+; Residence permit attachments on which virkailija can note the Migri check, permit card validity and payment
+; obligation basis. Of the type A permit's front and back sides only the front side gets the notes.
+(def kk-application-payment-residence-permit-attachment-keys
+  #{"eu-blue-card-attachment"
+    "eu-family-member-permit"
+    "continuous-residence-permit-front"
+    "longterm-permit-attachment"
+    "brexit-permit-attachment"
+    "permanent-residence-permit"
+    "temporary-protection-permit"})
+
+(defn residence-permit-attachment?
+  [attachment-key]
+  (contains? kk-application-payment-residence-permit-attachment-keys (name attachment-key)))
+
+(def kk-payment-obligation-bases
+  ["not-obligated"
+   "obligated-own-studies"
+   "obligated-family-member-studies"
+   "obligated-other"])
+
+(def kk-payment-permit-check-other-reason-max-length 500)
+
 (def sync-triggering-kk-application-payment-attachment-keys
   (cs/union kk-application-payment-exempt-attachment-keys
             #{"eu-passport-attachment"

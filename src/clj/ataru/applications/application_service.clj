@@ -46,6 +46,7 @@
     [clojure.string :as str]
     [ataru.person-service.person-util :as person-util]
     [ataru.kk-application-payment.kk-application-payment :as kk-application-payment]
+    [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
     [ataru.koski.koski-service :as koski]
     [ataru.tarjonta-service.hakuaika :as hakuaika]
     [ataru.koski.koski-json-parser :refer [parse-koski-tutkinnot]]
@@ -715,6 +716,7 @@
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
             information-requests  (future (information-request-store/get-information-requests application-key))
+            permit-checks         (future (permit-check/get-permit-checks application-key))
             master-oid            (future
                                     (some->> application
                                              :person-oid
@@ -740,6 +742,7 @@
                                  :review-notes          @review-notes
                                  :kk-payment            @kk-payment-state
                                  :information-requests  @information-requests
+                                 :kk-payment-permit-checks @permit-checks
                                  :master-oid            @master-oid
                                  :koski-tutkinnot       @koski-tutkinnot}))))
 
