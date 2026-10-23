@@ -88,6 +88,15 @@
    (fn []
      (do-fn))))
 
+(defn check-form-edit-authorized-by-key
+  "check-edit-authorization lomakkeen avaimella. Käytetään reiteillä joilla on avain muttei
+   lomaketta — esim. sähköpostipohjat, jotka ovat lomakkeen konfiguraatiota ja vaativat siksi
+   saman :form-edit-oikeuden kuin lomakkeen muokkaus."
+  [form-key session tarjonta-service organization-service do-fn]
+  (if-let [form (form-store/fetch-by-key form-key)]
+    (check-edit-authorization form session tarjonta-service organization-service do-fn)
+    (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt")))))
+
 (defn- check-form-field-id-duplicates
   [form]
   (let [form-element-ids (atom [])]
