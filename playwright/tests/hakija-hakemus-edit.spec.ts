@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test'
+import { Browser, expect, Page, Request, test } from '@playwright/test'
 import {
   fillField,
   unsafeFoldOption,
@@ -530,7 +530,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     )
   })
 
-  test('lukitsee kotikunnan hakijan muokkausnäkymässä kun haetaan vahvasti tunnistautuneena', async () => {
+  test('lukitsee kotikunnan ja Suomen kansalaisuuden kun haetaan vahvasti tunnistautuneena', async () => {
     const formKey = requireValue(lomakkeenAvain, 'Missing form key')
 
     await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
@@ -550,9 +550,25 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
-    await page
-      .getByRole('combobox', { name: /Kansalaisuus/i })
-      .selectOption({ label: 'Suomi' })
+    // The Finnish citizenship by strong authentication is prefilled and locked,
+    // and another citizenship can be added on a row of its own
+    const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
+    await expect(nationalities.first()).toBeDisabled()
+    await expect(nationalities.first()).toHaveClass(
+      /application__form-select--locked/
+    )
+    await expect(nationalities.first()).toHaveValue('246')
+    const nationalityGroup = page
+      .locator('.application__question-group')
+      .filter({ has: nationalities.first() })
+    await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
+    await expect(nationalities).toHaveCount(2)
+    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
+    await expect(
+      nationalityGroup.getByRole('button', {
+        name: 'Poista vastausvaihtoehto',
+      })
+    ).toHaveCount(1)
     await page.getByTestId('language-input').selectOption({ label: 'suomi' })
 
     await expect(getSubmitButton(page)).toBeEnabled()
@@ -580,5 +596,60 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
     await expect(homeTownInput).toHaveValue('853')
+
+    // The nationality is uneditable for the applicant in an edit
+    const editedNationality = page
+      .getByRole('combobox', { name: /Kansalaisuus/i })
+      .first()
+    await expect(editedNationality).toBeDisabled()
+    await expect(editedNationality).toHaveValue('246')
+  })
+
+  // The session is polled every 5 minutes (oppija-session-polling-interval),
+  // which the fake clock of a page of its own fast forwards
+  const openFormWithPolledSession = async (browser: Browser): Promise<Page> => {
+    const formKey = requireValue(lomakkeenAvain, 'Missing form key')
+    const pollingPage = await browser.newPage()
+    await pollingPage.clock.install()
+    await loginWithStrongAuth(pollingPage, getHakijanNakymanOsoite(formKey))
+    // The nationality is locked once the session has been fetched
+    await expect(
+      pollingPage.getByRole('combobox', { name: /Kansalaisuus/i }).first()
+    ).toBeDisabled()
+    return pollingPage
+  }
+
+  const isSessionRequest = (request: Request) =>
+    request.method() === 'GET' &&
+    request.url().includes('/hakemus/auth/session')
+
+  test('pollaa tunnistautuneen hakijan session', async ({ browser }) => {
+    const pollingPage = await openFormWithPolledSession(browser)
+
+    const pollRequest = pollingPage.waitForRequest(isSessionRequest)
+    await pollingPage.clock.fastForward('05:00')
+    await pollRequest
+
+    await pollingPage.close()
+  })
+
+  test('ei näytä hakijalle virhettä epäonnistuneesta session pollauksesta', async ({
+    browser,
+  }) => {
+    const pollingPage = await openFormWithPolledSession(browser)
+    await pollingPage.route('**/hakemus/auth/session', (route) =>
+      route.fulfill({ status: 500, body: '' })
+    )
+
+    const handledFailure = pollingPage.waitForEvent('console', (message) =>
+      message.text().includes('Oppija session refresh failed')
+    )
+    await pollingPage.clock.fastForward('05:00')
+    await handledFailure
+
+    await expect(pollingPage.getByTestId('error-display')).toHaveCount(0)
+    await expect(getSubmitButton(pollingPage)).toBeVisible()
+
+    await pollingPage.close()
   })
 })

@@ -26,6 +26,11 @@
                                           :email       {:value  nil
                                                         :locked false}}}})
 
+(def finnish-citizen-oppija-session
+  (-> base-oppija-session
+      (assoc-in [:data :fields :first-name :value] (get-in answers-by-key [:first-name :value]))
+      (assoc-in [:data :fields :ssn :value] (get-in answers-by-key [:ssn :value]))))
+
 (def hakukohde-specific-question {:id "d2a26771-de96-4f34-867e-d112c09cbd6b"
                                   :label {:fi "Kerro lyhyesti masennuksestasi"
                                           :sv ""}
@@ -579,6 +584,34 @@
                                                                     (-> base-oppija-session
                                                                         (assoc-in [:data :fields :first-name] (get-in answers-by-key [:first-name :value]))
                                                                         (assoc-in [:data :fields :ssn] (get-in answers-by-key [:ssn :value]))))))
+
+  (it "fails validation when the nationality of a Finnish citizen by strong authentication does not include Finland"
+      (should= '("Hakemus-answer for key :nationality does not include the Finnish citizenship of the strongly authenticated applicant")
+               (validator/validate-tunnistautunut-oppija-fields
+                 (assoc-in answers-by-key [:nationality :value] [["752"]])
+                 (assoc-in finnish-citizen-oppija-session [:data :finnish-citizen] true))))
+
+  (it "passes validation when a Finnish citizen by strong authentication states another citizenship as well"
+      (should= '() (validator/validate-tunnistautunut-oppija-fields
+                     (assoc-in answers-by-key [:nationality :value] [["752"] ["246"]])
+                     (assoc-in finnish-citizen-oppija-session [:data :finnish-citizen] true))))
+
+  (it "passes validation of the nationality when the oppija-session does not state Finnish citizenship"
+      (doseq [finnish-citizen [false nil]]
+        (should= '() (validator/validate-tunnistautunut-oppija-fields
+                       (assoc-in answers-by-key [:nationality :value] [["752"]])
+                       (assoc-in finnish-citizen-oppija-session [:data :finnish-citizen] finnish-citizen)))))
+
+  (it "leaves a missing nationality answer of a Finnish citizen by strong authentication to the validation of required answers"
+      (should= '() (validator/validate-tunnistautunut-oppija-fields
+                     (dissoc answers-by-key :nationality)
+                     (assoc-in finnish-citizen-oppija-session [:data :finnish-citizen] true))))
+
+  (it "does not accept Åland as the Finnish citizenship of a Finnish citizen by strong authentication"
+      (should= '("Hakemus-answer for key :nationality does not include the Finnish citizenship of the strongly authenticated applicant")
+               (validator/validate-tunnistautunut-oppija-fields
+                 (assoc-in answers-by-key [:nationality :value] [["248"]])
+                 (assoc-in finnish-citizen-oppija-session [:data :finnish-citizen] true))))
 
   (it "passes validation when valid koski tutkinnot"
       (should= {}

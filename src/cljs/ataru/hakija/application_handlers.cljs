@@ -30,7 +30,8 @@
             [cljs-time.format :as f]
             [cljs-time.coerce :refer [to-long]]
             [ataru.hakija.demo :as demo]
-            [ataru.hakija.validation-error :as validation-error]))
+            [ataru.hakija.validation-error :as validation-error]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -177,18 +178,27 @@
           long-time-since-last-poll? (> now (+ last-poll polling-interval 30000))]
       (if (and logged-in? long-time-since-last-poll?)
         {:db   (assoc-in db [:oppija-session :last-refresh] now)
-         :http {:method  :get
-                :url     (str "/hakemus/auth/session")
-                :handler [:application/handle-oppija-session-login-refresh]}}
+         :http {:method        :get
+                :url           (str "/hakemus/auth/session")
+                :handler       [:application/handle-oppija-session-login-refresh]
+                :error-handler [:application/handle-oppija-session-login-refresh-error]}}
         {:db db}))))
 
 (reg-event-fx
   :application/oppija-session-login-refresh
   (fn [{:keys [db]} [_]]
     {:db   db
-     :http {:method  :get
-            :url     (str "/hakemus/auth/session")
-            :handler [:application/handle-oppija-session-login-refresh]}}))
+     :http {:method        :get
+            :url           (str "/hakemus/auth/session")
+            :handler       [:application/handle-oppija-session-login-refresh]
+            :error-handler [:application/handle-oppija-session-login-refresh-error]}}))
+
+; A failed refresh is not shown to the applicant, as the session is refreshed again on the next poll
+(reg-event-db
+  :application/handle-oppija-session-login-refresh-error
+  (fn [db _]
+    (js/console.log "Oppija session refresh failed")
+    db))
 
 (reg-event-db
   :application/show-session-expiry-warning-dialog
@@ -750,6 +760,22 @@
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
+(declare set-repeatable-field-values set-repeatable-field-value set-repeatable-application-field-top-level-valid)
+
+(defn- prefill-and-lock-finnish-citizenship
+  "The Finnish citizenship of a Finnish citizen by strong authentication is prefilled and locked on the first row of
+   the nationality question group. Other citizenships can still be added on other rows."
+  [db]
+  (if (and (get-in db [:oppija-session :logged-in])
+           (true? (get-in db [:oppija-session :finnish-citizen]))
+           (contains? (get-in db [:application :answers]) :nationality))
+    (-> db
+        (set-repeatable-field-values :nationality 0 0 finland-country-code)
+        (update-in [:application :answers :nationality :values 0 0] assoc :valid true :locked true)
+        (set-repeatable-field-value :nationality)
+        (set-repeatable-application-field-top-level-valid :nationality true))
+    db))
+
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :fields])]
@@ -798,15 +824,16 @@
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
                (set-tutkinto-fetch-status-as-needed tutkinto-fetch-needed)
+               (prefill-and-lock-finnish-citizenship)
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
                     (when (:logged-in session-data)
-                      [:application/start-oppija-session-polling]
-                      (when tutkinto-fetch-needed
-                        [:application/fetch-tutkinnot (string/join "," requested-koski-levels)]))]})))
+                      [:application/start-oppija-session-polling])
+                    (when (and (:logged-in session-data) tutkinto-fetch-needed)
+                      [:application/fetch-tutkinnot (string/join "," requested-koski-levels)])]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
