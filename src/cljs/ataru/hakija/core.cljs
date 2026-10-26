@@ -1,5 +1,5 @@
 (ns ataru.hakija.core
-  (:require [reagent.dom :as reagent-dom]
+  (:require [reagent.dom.client :as reagent-dom-client]
             [re-frame.core :as re-frame]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :as ajax]
@@ -18,6 +18,8 @@
             [ataru.schema-validation :as schema-validation]))
 
 (enable-console-print!)
+
+(defonce root (atom nil))
 
 (defn- path-match
   [path re]
@@ -59,8 +61,10 @@
 (defn mount-root []
   (schema-validation/enable-schema-fn-validation)
   (re-frame/clear-subscription-cache!)
-  (reagent-dom/render [form-view]
-                  (.getElementById js/document "app")))
+  (let [container (.getElementById js/document "app")]
+    (when-not @root
+      (reset! root (reagent-dom-client/create-root container)))
+    (reagent-dom-client/render @root [form-view])))
 
 (defn network-listener []
   (.addEventListener js/window "online" (fn [] (re-frame/dispatch [:application/network-online])))

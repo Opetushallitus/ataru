@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.view
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
-            [reagent.dom :as r-dom]
             [ataru.util :as util]
             ataru.virkailija.application.hyvaksynnan-ehto.subs
             clojure.string))
@@ -92,17 +91,19 @@
 
 (defn- text-language
   [_ _ selected? _ _ _]
-  (let [focus? (r/atom selected?)]
+  (let [focus?   (r/atom selected?)
+        tab-node (r/atom nil)]
     (r/create-class
      {:component-did-update
-      (fn [component]
+      (fn [_]
         (when @focus?
-          (.focus (r-dom/dom-node component))))
+          (.focus @tab-node)))
       :reagent-render
       (fn [application-key lang selected? lang-to lang-left lang-right]
         (reset! focus? selected?)
         [:button.hyvaksynnan-ehto-texts__text-language
-         {:id            (str "hyvaksynnan-ehto-texts__text-language-"
+         {:ref           #(reset! tab-node %)
+          :id            (str "hyvaksynnan-ehto-texts__text-language-"
                               application-key
                               "-language-" (name lang))
           :class         (when selected?
@@ -126,16 +127,17 @@
 (defn- ehto-text-textarea
   [_ _ _]
   (let [enabled?        (r/atom nil)
+        textarea-node   (r/atom nil)
         previous-states (r/atom [[false false] [false false]])]
     (r/create-class
      {:component-did-update
-      (fn [component]
+      (fn [_]
         (let [current-state [@enabled?
-                             (= (r-dom/dom-node component)
+                             (= @textarea-node
                                 (.-activeElement js/document))]]
           (if (and (= [[false false] [true true]] @previous-states)
                    (= [true false] current-state))
-            (do (.focus (r-dom/dom-node component))
+            (do (.focus @textarea-node)
                 (reset! previous-states [[true true] (first @previous-states)]))
             (reset! previous-states [current-state (first @previous-states)]))))
       :reagent-render
@@ -143,7 +145,8 @@
         (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])]
           (reset! enabled? (not disabled?))
           [:textarea.hyvaksynnan-ehto-texts__textarea
-           {:id              (str "hyvaksynnan-ehto-texts__text-language-"
+           {:ref             #(reset! textarea-node %)
+            :id              (str "hyvaksynnan-ehto-texts__text-language-"
                                   application-key
                                   "-text-" (name selected-lang))
             :role            "tabpanel"
