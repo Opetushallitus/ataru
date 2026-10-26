@@ -916,31 +916,37 @@
                      :review_key               nil}]
           (:id (queries/yesql-add-application-event<! event connection)))))))
 
+(defn save-application-hakukohde-review-in-tx
+  [conn application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state modified-time session
+   audit-logger]
+  (let [connection                  {:connection conn}
+        review-to-store             {:application_key application-key
+                                     :requirement     hakukohde-review-requirement
+                                     :state           hakukohde-review-state
+                                     :hakukohde       hakukohde-oid
+                                     :modified_time   modified-time}
+        existing-duplicate-review   (queries/yesql-get-existing-application-hakukohde-review review-to-store connection)
+        existing-requirement-review (queries/yesql-get-existing-requirement-review review-to-store connection)]
+    (when (empty? existing-duplicate-review)
+      (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
+      (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
+      (let [event {:application_key          application-key
+                   :event_type               "hakukohde-review-state-change"
+                   :new_review_state         (:state review-to-store)
+                   :review_key               hakukohde-review-requirement
+                   :hakukohde                (:hakukohde review-to-store)
+                   :virkailija_oid           (-> session :identity :oid)
+                   :virkailija_organizations (edit-application-right-organizations->json session)}]
+        (queries/yesql-add-application-event<! event connection)))))
+
 (defn save-application-hakukohde-review
   ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session audit-logger]
    (save-application-hakukohde-review application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state
                                       (time/now) session audit-logger))
   ([application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state modified-time session audit-logger]
    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-     (let [connection                  {:connection conn}
-           review-to-store             {:application_key application-key
-                                        :requirement     hakukohde-review-requirement
-                                        :state           hakukohde-review-state
-                                        :hakukohde       hakukohde-oid
-                                        :modified_time   modified-time}
-           existing-duplicate-review   (queries/yesql-get-existing-application-hakukohde-review review-to-store connection)
-           existing-requirement-review (queries/yesql-get-existing-requirement-review review-to-store connection)]
-       (when (empty? existing-duplicate-review)
-         (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
-         (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
-         (let [event {:application_key          application-key
-                      :event_type               "hakukohde-review-state-change"
-                      :new_review_state         (:state review-to-store)
-                      :review_key               hakukohde-review-requirement
-                      :hakukohde                (:hakukohde review-to-store)
-                      :virkailija_oid           (-> session :identity :oid)
-                      :virkailija_organizations (edit-application-right-organizations->json session)}]
-           (queries/yesql-add-application-event<! event connection)))))))
+     (save-application-hakukohde-review-in-tx conn application-key hakukohde-oid hakukohde-review-requirement
+                                              hakukohde-review-state modified-time session audit-logger))))
 
 (defn save-payment-obligation-automatically-changed
   "Only used by automatic tuition fee obligation logic. Sets new obligation state if previous one was not set by
