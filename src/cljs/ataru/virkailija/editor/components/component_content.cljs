@@ -1,13 +1,12 @@
 (ns ataru.virkailija.editor.components.component-content
   (:require [re-frame.core :refer [subscribe]]
-            [reagent.core :as r]
-            [reagent.dom :as r-dom]))
+            [reagent.core :as r]))
 
 (defn- component-fold-transition
-  [component folded? state height]
+  [node folded? state height]
   (cond (= [true :unfolded] [@folded? @state])
         ;; folding, calculate and set height
-        (do (reset! height (.-scrollHeight (r-dom/dom-node component)))
+        (do (reset! height (.-scrollHeight node))
             (reset! state :set-height))
         (= [true :set-height] [@folded? @state])
         ;; folding, render folded
@@ -29,32 +28,37 @@
         state    (r/atom (if @folded?
                            :folded :unfolded))
         height   (r/atom nil)
+        content-node (r/atom nil)
+        content-ref  #(reset! content-node %)
         listener (unfold-ended-listener folded? state)]
     (r/create-class
       {:component-did-mount
-       (fn [component]
-         (.addEventListener (r-dom/dom-node component)
+       (fn [_]
+         (.addEventListener @content-node
                             "transitionend"
                             listener)
-         (component-fold-transition component folded? state height))
+         (component-fold-transition @content-node folded? state height))
        :component-will-unmount
-       (fn [component]
-         (.removeEventListener (r-dom/dom-node component)
+       (fn [_]
+         (.removeEventListener @content-node
                                "transitionend"
                                listener))
        :component-did-update
-       (fn [component]
-         (component-fold-transition component folded? state height))
+       (fn [_]
+         (component-fold-transition @content-node folded? state height))
        :reagent-render
        (fn [_ content-component]
          (let [_ @folded?]
            (case @state
              :unfolded
              [:div.editor-form__component-content-wrapper
+              {:ref content-ref}
               content-component]
              :set-height
              [:div.editor-form__component-content-wrapper
-              {:style {:height @height}}
+              {:ref content-ref
+               :style {:height @height}}
               content-component]
              :folded
-             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
+             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
+              {:ref content-ref}])))})))

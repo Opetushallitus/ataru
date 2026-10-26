@@ -1,7 +1,6 @@
 (ns ataru.virkailija.date-time-picker
   (:require [cljs-time.format :as f]
             [reagent.core :as reagent]
-            [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]))
 
 (defn- iso-date-string->finnish-date-string [date-s]
@@ -53,24 +52,25 @@
 (defn date-picker
   [_id _class _value invalid _on-change _options]
   (let [supports-date?           (reagent/atom nil)
+        input-node               (reagent/atom nil)
         input-value              (reagent/atom "")
         valid?                   (reagent/atom true)
         invalid-text             (reagent/atom invalid)
         invalid-date-format-i18n (re-frame/subscribe [:editor/virkailija-translation :invalid-date-format])]
     (reagent/create-class
       {:component-did-mount
-       (fn [component]
-         (let [dom-node (reagent-dom/dom-node component)]
+       (fn [_]
+         (let [node @input-node]
            (.setCustomValidity
-             dom-node
+             node
              (if (not @valid?)
                @invalid-date-format-i18n
                @invalid-text))
-           (reset! supports-date? (= "date" (.-type dom-node)))))
+           (reset! supports-date? (= "date" (.-type node)))))
        :component-did-update
-       (fn [component]
+       (fn [_]
          (.setCustomValidity
-           (reagent-dom/dom-node component)
+           @input-node
            (if (not @valid?)
              @invalid-date-format-i18n
              @invalid-text)))
@@ -84,6 +84,7 @@
             (if data-test-id {:data-test-id data-test-id} {})
             (if disabled? {:disabled disabled?} {})
             {:id          id
+             :ref         #(reset! input-node %)
              :class       class
              :type        "date"
              :placeholder "p.k.vvvv"
@@ -104,24 +105,25 @@
 (defn time-picker
   [_id _class _value invalid _on-change]
   (let [supports-time?           (reagent/atom nil)
+        input-node               (reagent/atom nil)
         input-value              (reagent/atom "")
         valid?                   (reagent/atom true)
         invalid-text             (reagent/atom invalid)
         invalid-date-format-i18n (re-frame/subscribe [:editor/virkailija-translation :invalid-date-format])]
     (reagent/create-class
      {:component-did-mount
-      (fn [component]
-        (let [dom-node (reagent-dom/dom-node component)]
+      (fn [_]
+        (let [node @input-node]
           (.setCustomValidity
-           dom-node
+           node
            (if (not @valid?)
              @invalid-date-format-i18n
              @invalid-text))
-          (reset! supports-time? (= "time" (.-type dom-node)))))
+          (reset! supports-time? (= "time" (.-type node)))))
       :component-did-update
-      (fn [component]
+      (fn [_]
         (.setCustomValidity
-         (reagent-dom/dom-node component)
+         @input-node
          (if (not @valid?)
            @invalid-date-format-i18n
            @invalid-text)))
@@ -130,6 +132,7 @@
         (reset! invalid-text invalid)
         [:input
          {:id          id
+          :ref         #(reset! input-node %)
           :class       class
           :type        "time"
           :placeholder "h.mm"

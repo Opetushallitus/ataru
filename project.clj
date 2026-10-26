@@ -64,8 +64,8 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.11.121" :exclusions [com.cognitect/transit-java]]
-                 [reagent "1.2.0"]
-                 [re-frame "1.4.3" :exclusions [org.clojure/tools.logging]]
+                 [reagent "2.0.1"]
+                 [re-frame "1.4.7" :exclusions [org.clojure/tools.logging]]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
