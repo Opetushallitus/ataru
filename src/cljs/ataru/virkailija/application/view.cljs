@@ -142,10 +142,12 @@
    (dispatch [:application/select-application application-key selected-hakukohde-oid with-newest-form?])))
 
 (def end-of-list-tolerance-px 2)
+(defonce end-of-list-node (r/atom nil))
+
 (defn create-application-paging-scroll-handler
   []
   (fn [_]
-    (when-let [end-of-list-element (.getElementById js/document "application-handling__end-of-list-element")]
+    (when-let [end-of-list-element @end-of-list-node]
       (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
             viewport-offset (.-innerHeight js/window)]
         ; Sometimes element is fraction of a pixel below the viewport even if page is scrolled to the bottom.
@@ -222,11 +224,11 @@
                    @(subscribe [:editor/virkailija-translation :show-results])]]))
              (when (and @expanded (or @has-more? (< (count @applications) @loaded-count)))
                [:div#application-handling__end-of-list-element
-                {:on-click #(dispatch [:application/show-more-applications (count @applications)])}
+                {:ref #(reset! end-of-list-node %)
+                 :on-click #(dispatch [:application/show-more-applications (count @applications)])}
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]]))])]
        (when (and (not @search-control-all-page) (not @expanded))
          [:div.application-handling__review-area-container
           [:div.application-handling__detail-container
            [application-heading]
            [application-tab]]])])))
-

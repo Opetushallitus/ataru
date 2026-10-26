@@ -206,11 +206,34 @@
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor)) :tab-index -1} ""])
 
+(defonce copy-container-node (reagent/atom nil))
+
 (defn copy [id]
-  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
-    (set! (.-value copy-container) id)
-    (.select copy-container)
-    (.execCommand js/document "copy")))
+  (if-let [copy-container @copy-container-node]
+    (do
+      (set! (.-value copy-container) id)
+      (.select copy-container)
+      (.execCommand js/document "copy"))
+    (throw (js/Error. "Question ID copy input is not mounted"))))
+
+(defonce application-field-nodes (atom {}))
+
+(defn application-field-ref [field-id]
+  (let [registered-node (atom nil)]
+    (fn [node]
+      (if node
+        (do
+          (swap! application-field-nodes update field-id (fnil conj []) node)
+          (reset! registered-node node))
+        (let [previous-node @registered-node]
+          (swap! application-field-nodes
+                 (fn [nodes]
+                   (let [remaining (into [] (remove #(identical? % previous-node)
+                                                    (get nodes field-id)))]
+                     (if (seq remaining)
+                       (assoc nodes field-id remaining)
+                       (dissoc nodes field-id)))))
+          (reset! registered-node nil))))))
 
 (defn copy-link [id & {:keys [shared-use-warning? answer? include?]}]
   (let [id (cond-> id

@@ -3,6 +3,7 @@
             [ataru.application.filtering :as application-filtering]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
+            [ataru.application-common.application-field-common :as application-field]
             [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.tarjonta.haku :as haku]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]
@@ -1220,7 +1221,8 @@
 (reg-event-fx
  :application/highlight-field
  (fn [{:keys [db]} [_ field-id]]
-   (.scrollIntoView (.getElementById js/document (name field-id)) (js-obj "behavior" "smooth"))
+   (when-let [field-node (first (get @application-field/application-field-nodes field-id))]
+     (.scrollIntoView field-node (js-obj "behavior" "smooth")))
    {:db (update-in db [:application :selected-application-and-form :highlighted-fields] conj field-id)
     :dispatch-later [{:ms 3000 :dispatch [:application/remove-field-highlight field-id]}]}))
 
