@@ -9,9 +9,6 @@
     [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
     [ataru.application-common.accessibility-util :as a11y]))
 
-(def ^:private nav-sel
-  ".application__search-hit-hakukohde-row--select-button, .application__search-hit-hakukohde-row[aria-selected='true']")
-
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
      :span.application__search-hit-hakukohde-row--hilight-span.application__search-hit-hakukohde-row--hilight-span__hilight
@@ -31,11 +28,12 @@
   (dispatch [:application/hakukohde-search-toggle]))
 
 (defn- selected-hakukohde-row-remove
-  [hakukohde-oid disabled?]
+  [hakukohde-oid disabled? ref]
   (let [lang           @(subscribe [:application/form-language])
         hakukohde-name @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:button.application__selected-hakukohde-row--remove
      {:data-hakukohde-oid hakukohde-oid
+      :ref                ref
       :disabled           disabled?
       :tab-index          (when (not disabled?) 0)
       :aria-label         (str (translations/get-hakija-translation :remove lang) " " hakukohde-name)
@@ -103,7 +101,7 @@
        [:span (str "\"" @(subscribe [:application/hakukohde-label should-be-lower]) "\"")]]]]))
 
 (defn- selected-hakukohde-row
-  [hakukohde-oid]
+  [hakukohde-oid remove-nodes]
   (let [deleting?                          @(subscribe [:application/hakukohde-deleting? hakukohde-oid])
         prioritize-hakukohteet?            @(subscribe [:application/prioritize-hakukohteet?])
         haku-editable?                     @(subscribe [:application/hakukohteet-editable?])
@@ -159,14 +157,16 @@
            (first should-be-lower))))]
      [:div.application__selected-hakukohde-row--buttons
       (cond (and haku-editable? hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid false]
+           [selected-hakukohde-row-remove hakukohde-oid false
+            #(swap! remove-nodes (if % assoc dissoc) hakukohde-oid %)]
             (not hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid true]
+            [selected-hakukohde-row-remove hakukohde-oid true nil]
             haku-editable?
-            [selected-hakukohde-row-remove hakukohde-oid false])]]))
+            [selected-hakukohde-row-remove hakukohde-oid false
+             #(swap! remove-nodes (if % assoc dissoc) hakukohde-oid %)])]]))
 
 (defn- search-hit-hakukohde-row
-  [hakukohde-oid]
+  [hakukohde-oid node-ref on-select]
   (let [hakukohde-selected?  @(subscribe [:application/hakukohde-selected? hakukohde-oid])
         hakukohde-label      @(subscribe [:application/hakukohde-label hakukohde-oid])
         search-term          @(subscribe [:application/hakukohde-query])
@@ -182,7 +182,8 @@
     [:div.application__search-hit-hakukohde-row
      {:role          "option"
       :aria-selected (if hakukohde-selected? "true" "false")
-      :tab-index (when hakukohde-selected? 0)}
+      :tab-index     (when hakukohde-selected? 0)
+      :ref            (when hakukohde-selected? node-ref)}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
@@ -211,22 +212,8 @@
          {:aria-hidden "true"}]
         [:button.application__search-hit-hakukohde-row--select-button
          {:data-hakukohde-oid hakukohde-oid
-          :on-click           (when-not disabled?
-                                (fn [e]
-                                  (let [btn     (.-currentTarget e)
-                                        results (.closest btn ".application__hakukohde-selection-search-results")
-                                        buttons (when results
-                                                  (array-seq (.querySelectorAll results nav-sel)))
-                                        idx     (when buttons
-                                                  (count (take-while #(not= % btn) buttons)))]
-                                    (dispatch-sync [:application/hakukohde-add-selection hakukohde-oid])
-                                    (when (and results buttons (pos? (count buttons)))
-                                      (r/after-render
-                                        (fn []
-                                          (let [new-buttons (array-seq (.querySelectorAll results nav-sel))
-                                                n           (count new-buttons)]
-                                            (when (pos? n)
-                                              (.focus (nth new-buttons (min idx (dec n))))))))))))
+          :ref                node-ref
+          :on-click           (when-not disabled? on-select)
           :aria-disabled      (str disabled?)
           :aria-label         (str
                                 (translations/get-hakija-translation :add-application-option lang)
@@ -237,46 +224,53 @@
                                 aria-description-id)}
          (translations/get-hakija-translation :add lang)])]]))
 
-(defn- find-button-idx [container]
-  (let [buttons (array-seq (.querySelectorAll container nav-sel))
-        active  (.-activeElement js/document)]
-    [buttons (count (take-while #(not= % active) buttons))]))
-
 (defn- hakukohde-selection-search
-  []
+  [open-search-node]
   (let [hakukohde-hits         (subscribe [:application/hakukohde-hits])
         prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
         search-input           (r/atom @(subscribe [:application/hakukohde-query]))
         lang                   (subscribe [:application/form-language])
-        container-ref          (atom nil)
+        input-node             (r/atom nil)
+        result-nodes           (r/atom {})
+        focus-result           (fn [hakukohde-oid]
+                                   (when-let [node (get @result-nodes hakukohde-oid)]
+                                     (.focus node)))
         focus-input            (fn []
-                                 (when-let [c @container-ref]
-                                   (when-let [inp (.querySelector c ".application__form-text-input-in-box")]
-                                     (.focus inp))))
+                                   (when-let [node @input-node]
+                                     (.focus node)))
+        select-hit             (fn [hakukohde-oid]
+                                   (let [hits (vec @hakukohde-hits)
+                                         idx  (count (take-while #(not= % hakukohde-oid) hits))]
+                                     (dispatch-sync [:application/hakukohde-add-selection hakukohde-oid])
+                                     (when (and (< idx (count hits)) (seq hits))
+                                       (r/after-render
+                                         (fn []
+                                           (let [new-hits (vec @hakukohde-hits)]
+                                             (when (seq new-hits)
+                                               (focus-result (nth new-hits
+                                                                  (min idx (dec (count new-hits))))))))))))
         on-escape              (fn []
-                                 (let [parent (some-> @container-ref .-parentElement)]
                                    (dispatch [:application/hakukohde-search-toggle])
                                    (r/after-render
                                      (fn []
-                                       (when parent
-                                         (when-let [btn (.querySelector parent ".application__hakukohde-selection-open-search")]
-                                           (.focus btn)))))))
+                                       (when-let [node @open-search-node]
+                                         (.focus node)))))
         on-input-keydown       (fn [e]
-                                 (case (.-key e)
+                                   (case (.-key e)
                                    "ArrowDown" (do (.preventDefault e)
-                                                   (when-let [c @container-ref]
-                                                     (when-let [btn (.querySelector c nav-sel)]
-                                                       (.focus btn))))
+                                                   (when-let [hakukohde-oid (first @hakukohde-hits)]
+                                                     (focus-result hakukohde-oid)))
                                    "Escape"    (on-escape)
                                    nil))
         on-results-keydown     (fn [e]
-                                 (let [key (.-key e)]
-                                   (cond
-                                     (#{"ArrowDown" "ArrowUp"} key)
-                                     (do (.preventDefault e)
-                                         (when-let [c @container-ref]
-                                           (let [[buttons idx] (find-button-idx c)
-                                                 n             (count buttons)]
+                                   (let [key (.-key e)]
+                                     (cond
+                                       (#{"ArrowDown" "ArrowUp"} key)
+                                       (do (.preventDefault e)
+                                           (let [buttons (vec (keep #(get @result-nodes %) @hakukohde-hits))
+                                                 active  (.-activeElement js/document)
+                                                 idx     (count (take-while #(not= % active) buttons))
+                                                 n (count buttons)]
                                              (cond
                                                (= key "ArrowDown")
                                                (if (< idx (dec n))
@@ -285,12 +279,11 @@
                                                (= key "ArrowUp")
                                                (if (pos? idx)
                                                  (.focus (nth buttons (dec idx)))
-                                                 (focus-input))))))
-                                     (= key "Escape")
-                                     (on-escape))))]
+                                                 (focus-input)))))
+                                       (= key "Escape")
+                                       (on-escape))))]
     (fn []
       [:div.application__hakukohde-selection
-       {:ref #(reset! container-ref %)}
        [:div.application__hakukohde-selection-search-arrow-up
         {:class (when @prioritize-hakukohteet
                   "application__hakukohde-selection-search-arrow-up--prioritized")}]
@@ -303,7 +296,8 @@
           [:i.zmdi.zmdi-close.zmdi-hc-lg {:aria-hidden "true"}]]]
         [:div.application__hakukohde-selection-search-input.application__form-text-input-box
          [:input.application__form-text-input-in-box
-          {:on-change        #(do (reset! search-input (.-value (.-target %)))
+          {:ref              #(reset! input-node %)
+           :on-change        #(do (reset! search-input (.-value (.-target %)))
                                   (dispatch [:application/hakukohde-query-change search-input]))
            :on-key-down      on-input-keydown
            :title            (translations/get-hakija-translation :search-application-options @lang)
@@ -341,7 +335,10 @@
             (translations/get-hakija-translation :no-hakukohde-search-hits @lang)]
            (for [hakukohde-oid @hakukohde-hits]
              ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
-             [search-hit-hakukohde-row hakukohde-oid]))]
+             [search-hit-hakukohde-row
+              hakukohde-oid
+              #(swap! result-nodes (if % assoc dissoc) hakukohde-oid %)
+              #(select-hit hakukohde-oid)]))]
         (when @(subscribe [:application/show-more-hakukohdes?])
           [:div.application__show_more_hakukohdes_container
            [:button.application__show_more_hakukohdes
@@ -355,7 +352,7 @@
    [:h2 @(subscribe [:application/hakukohteet-header])]
    [scroll-to-anchor field-descriptor]])
 
-(defn- select-new-hakukohde-row []
+(defn- select-new-hakukohde-row [open-search-node]
   (let [lang @(subscribe [:application/form-language])
         search-open? @(subscribe [:application/show-hakukohde-search])]
     (when @(subscribe [:application/hakukohteet-editable?])
@@ -365,39 +362,45 @@
            (translations/get-hakija-translation :applications_at_most lang max-hakukohteet)])
         [:div.application__hakukohde-selection-open-search-wrapper
          [:button.a-button.application__hakukohde-selection-open-search
-          {:type "button"
+          {:ref #(reset! open-search-node %)
+           :type "button"
            :aria-expanded (boolean search-open?)
            :aria-controls "hakukohde-search-listbox"
            :on-click hakukohde-search-toggle-event-handler}
           (translations/get-hakija-translation :add-application-option lang)]]))))
 
 (defn hakukohteet
-  [field-descriptor _]
-  [:div.application__wrapper-element
-   [hakukohde-selection-header field-descriptor]
-   [:div.application__wrapper-contents.application__hakukohde-contents-wrapper
-    [:div.application__form-field
-     [:div.application__hakukohde-selected-list
-      {:on-key-down (fn [e]
-                      (let [key (.-key e)]
-                        (when (#{"ArrowDown" "ArrowUp"} key)
-                          (.preventDefault e)
-                          (let [container (.-currentTarget e)
-                                buttons   (array-seq (.querySelectorAll container ".application__selected-hakukohde-row--remove:not([disabled])"))
-                                active    (.-activeElement js/document)
-                                idx       (count (take-while #(not= % active) buttons))
-                                n         (count buttons)]
-                            (cond
-                              (= key "ArrowDown") (when (< idx (dec n))
-                                                    (.focus (nth buttons (inc idx))))
-                              (= key "ArrowUp")   (when (pos? idx)
-                                                    (.focus (nth buttons (dec idx)))))))))}
-      (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
-        ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
-        [selected-hakukohde-row hakukohde-oid])]
-     [select-new-hakukohde-row]
-     (when @(subscribe [:application/show-hakukohde-search])
-       [hakukohde-selection-search])]]])
+  [_ _]
+  (let [open-search-node (r/atom nil)
+        remove-nodes     (r/atom {})
+        on-selected-key-down
+        (fn [e]
+          (let [key (.-key e)]
+            (when (#{"ArrowDown" "ArrowUp"} key)
+              (.preventDefault e)
+              (let [buttons  (vec (keep #(get @remove-nodes %)
+                                        @(subscribe [:application/selected-hakukohteet])))
+                    active   (.-activeElement js/document)
+                    idx      (count (take-while #(not= % active) buttons))
+                    n        (count buttons)
+                    next-idx (case key
+                               "ArrowDown" (when (< idx (dec n)) (inc idx))
+                               "ArrowUp"   (when (pos? idx) (dec idx)))]
+                (when (some? next-idx)
+                  (.focus (nth buttons next-idx)))))))]
+    (fn [field-descriptor _]
+      [:div.application__wrapper-element
+       [hakukohde-selection-header field-descriptor]
+       [:div.application__wrapper-contents.application__hakukohde-contents-wrapper
+        [:div.application__form-field
+         [:div.application__hakukohde-selected-list
+          {:on-key-down on-selected-key-down}
+          (for [hakukohde-oid @(subscribe [:application/selected-hakukohteet])]
+            ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
+            [selected-hakukohde-row hakukohde-oid remove-nodes])]
+         [select-new-hakukohde-row open-search-node]
+         (when @(subscribe [:application/show-hakukohde-search])
+           [hakukohde-selection-search open-search-node])]]])))
 
 (defn hakukohteet-picker
   [field-descriptor idx]

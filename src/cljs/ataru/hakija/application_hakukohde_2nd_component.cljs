@@ -8,6 +8,11 @@
             [ataru.translations.texts :refer [general-texts]]
             [ataru.application-common.accessibility-util :as a11y]))
 
+(defonce selected-hakukohteet-node (r/atom nil))
+
+(defn- focus-selected-hakukohteet []
+  (when-let [node @selected-hakukohteet-node]
+    (.focus node #js {:focusVisible true})))
 
 (defn- koulutustyyppi-filter-row [koulutustyyppi-name is-selected on-change-fn]
   [:div.application__koulutustyypit-filter-row
@@ -80,7 +85,7 @@
                      (dispatch [:application/set-active-hakukohde-search nil])
                      (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx])
                      (dispatch [:application/show-hakukohde-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
-                     (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
+                     (focus-selected-hakukohteet)
                      (start-toast-hide-timer))]
 
     [:div.application__search-hit-hakukohde-row-2nd
@@ -123,7 +128,7 @@
         on-click-fn #(when-not cannot-remove?
                        (dispatch [:application/show-hakukohde-poistettu-toast (str (translations/get-hakija-translation :application-study-program-removed lang))])
                        (start-poistettu-toast-hide-timer)
-                       (.focus (.getElementById js/document "valitut-hakukohteet") #js {:focusVisible true})
+                       (focus-selected-hakukohteet)
                        (dispatch [:application/hakukohde-remove-by-idx idx]))]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    label
@@ -297,7 +302,8 @@
       (toast-component poistettu-visible? poistettu-message)
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
-        {:id "valitut-hakukohteet"
+       {:ref #(reset! selected-hakukohteet-node %)
+        :id "valitut-hakukohteet"
          :tab-index 0
          :aria-label (str (translations/get-hakija-translation :application-selected-study-programms lang)  (str hakukohteet-count))}
         (for [idx (range (max hakukohteet-count 1))]
