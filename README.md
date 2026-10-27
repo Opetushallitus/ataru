@@ -139,6 +139,15 @@ This command:
 
 **Prerequisites:** Docker must be running. The command handles everything else (dependency installation, service startup, and teardown) automatically.
 
+If you have trouble connecting with Docker containers, you can check your host address with
+```
+hostname -I
+```
+and give it as a parameter to run the tests
+```
+make ci-test-playwright-and-cypress DOCKER_HOST_ADDRESS=<HOSTNAME_ADDRESS>
+```
+
 #### Running Playwright/Cypress tests locally with manual startup
 
 You can also start the app separately with cypress-configuration and then run the tests.
