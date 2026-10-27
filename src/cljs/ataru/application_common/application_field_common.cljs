@@ -124,11 +124,11 @@
             (if (and collapsable? @collapsed)
               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
                {:ref markdown-ref
-                :dangerouslySetInnerHTML {:__html sanitized-html}}]
+                :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}]
               [:div.application__form-info-text-inner
                {:ref markdown-ref
                 :style                   {:height "auto"}
-                :dangerouslySetInnerHTML {:__html sanitized-html}}])
+                :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}])
             (when collapsable?
               [:button.application__form-info-text-collapse-button
                {:on-click (fn [] (swap! collapsed not))}
