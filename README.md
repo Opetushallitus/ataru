@@ -139,7 +139,7 @@ This command:
 
 **Prerequisites:** Docker must be running. The command handles everything else (dependency installation, service startup, and teardown) automatically.
 
-If you have trouble connecting with Docker containers, you can check your host address with
+If you have trouble connecting with Docker containers, you can check your host address on Linux machine with
 ```
 hostname -I
 ```
