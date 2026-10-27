@@ -1069,8 +1069,8 @@
            @(subscribe [:editor/virkailija-translation :select-all])]
           [:div.application-handling__excel-request-row
            [:form#attachment-download-link
-            {:ref #(reset! download-form-node %)
-             :action "/lomake-editori/api/files/zip"
+            {:action "/lomake-editori/api/files/zip"
+             :ref #(reset! download-form-node %)
              :method "POST"}
             [:input {:type  "hidden"
                      :name  "keys"
@@ -1082,9 +1082,8 @@
            [:button.application-handling__download-attachments-button
             {:disabled (empty? selected-attachment-keys)
              :on-click (fn [_]
-                         (if-let [form @download-form-node]
-                           (.submit form)
-                           (throw (js/Error. "Attachment download form is not mounted"))))}
+                         (when-let [form @download-form-node]
+                           (.submit form)))}
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
                  ^{:key (:key (ffirst all-similar-attachments))}

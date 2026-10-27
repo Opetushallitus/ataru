@@ -52,8 +52,8 @@
         [:div.main-container
          [:div.modal-container
           [:input#editor-form__copy-question-id-container
-           {:ref #(reset! application-field/copy-container-node %)
-            :value ""
+           {:value "" 
+            :ref #(reset! application-field/copy-container-node %)
             :read-only true}]
           [snackbar]
           [application-version-changes]

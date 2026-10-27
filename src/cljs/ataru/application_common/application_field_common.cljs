@@ -87,7 +87,6 @@
          markdown-ref     #(reset! markdown-node %)
          timeout          (atom nil)
          debounced-resize (fn []
-                            (js/clearTimeout @timeout)
                             (reset!
                              timeout
                              (js/setTimeout #(set-markdown-height @markdown-node scroll-height) 200)))
@@ -100,7 +99,6 @@
 
        :component-will-unmount
        (fn [_]
-         (js/clearTimeout @timeout)
          (.removeEventListener js/window "resize" debounced-resize))
 
        :component-did-update
@@ -124,8 +122,8 @@
                {:ref markdown-ref
                 :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}]
               [:div.application__form-info-text-inner
-               {:ref markdown-ref
-                :style                   {:height "auto"}
+               {:style                   {:height "auto"}
+                :ref markdown-ref
                 :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}])
             (when collapsable?
               [:button.application__form-info-text-collapse-button
@@ -207,12 +205,10 @@
 (defonce copy-container-node (reagent/atom nil))
 
 (defn copy [id]
-  (if-let [copy-container @copy-container-node]
-    (do
-      (set! (.-value copy-container) id)
-      (.select copy-container)
-      (.execCommand js/document "copy"))
-    (throw (js/Error. "Question ID copy input is not mounted"))))
+  (when-let [copy-container @copy-container-node]
+    (set! (.-value copy-container) id)
+    (.select copy-container)
+    (.execCommand js/document "copy")))
 
 (defonce application-field-nodes (atom {}))
 

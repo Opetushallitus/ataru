@@ -250,8 +250,8 @@
         haku-name               (subscribe [:application/haku-name (:haku application)])
         haku-heading-data       (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__list-row
-     {:ref      (cljs-util/node-registry-ref app-fx/application-list-row-nodes (:key application))
-      :on-click #(select-application (:key application) @filtered-hakukohde false)
+     {:on-click #(select-application (:key application) @filtered-hakukohde false)
+      :ref      (cljs-util/node-registry-ref app-fx/application-list-row-nodes (:key application))
       :class    (string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))

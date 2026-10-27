@@ -1221,7 +1221,7 @@
 (reg-event-fx
  :application/highlight-field
  (fn [{:keys [db]} [_ field-id]]
-   (when-let [field-node (get @application-field/application-field-nodes field-id)]
+   (when-let [field-node (get @application-field/application-field-nodes (keyword field-id))]
      (.scrollIntoView field-node (js-obj "behavior" "smooth")))
    {:db (update-in db [:application :selected-application-and-form :highlighted-fields] conj field-id)
     :dispatch-later [{:ms 3000 :dispatch [:application/remove-field-highlight field-id]}]}))

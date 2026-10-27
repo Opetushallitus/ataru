@@ -14,8 +14,8 @@
 
 (defn form-row [key selected?]
   [:a.editor-form__row
-   {:ref      (when selected? wrap-scroll-to)
-    :class    (when selected? "editor-form__selected-row")
+   {:class    (when selected? "editor-form__selected-row")
+    :ref      (when selected? wrap-scroll-to)
     :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" key))}
    [:span.editor-form__list-form-name @(subscribe [:editor/form-name key])]
    [:span.editor-form__list-form-time (temporal/time->str @(subscribe [:editor/form-created-time key]))]
@@ -101,8 +101,8 @@
                                  (.select @input-node)))
        :reagent-render       (fn [lang _]
                                [:input.editor-form__form-name-input
-                                {:ref          #(reset! input-node %)
-                                 :data-test-id "form-name-input"
+                                {:data-test-id "form-name-input"
+                                 :ref          #(reset! input-node %)
                                  :type         "text"
                                  :value        (get-in @form [:name lang])
                                  :disabled     @form-locked?

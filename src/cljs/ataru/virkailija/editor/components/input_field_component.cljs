@@ -30,11 +30,12 @@
                               (when (cond-> @focus?
                                             (> (count @languages) 1)
                                             (and (= (first @languages) lang)))
-                                (.focus @input-node)))
+                                (let [dom-node @input-node]
+                                  (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
                               [tag
-                               {:ref          #(reset! input-node %)
-                                :class        (str "editor-form__text-field " (when-not (empty? class) class))
+                               {:class        (str "editor-form__text-field " (when-not (empty? class) class))
+                                :ref          #(reset! input-node %)
                                 :value        @value
                                 :placeholder  placeholder
                                 :on-change    dispatch-fn
