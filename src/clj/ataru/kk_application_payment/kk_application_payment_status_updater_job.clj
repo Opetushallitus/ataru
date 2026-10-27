@@ -17,8 +17,7 @@
             [ataru.kk-application-payment.kk-application-payment-email-job :as email-job]
             [ataru.util :as u]
             [ataru.kk-application-payment.utils :as utils])
-  (:import java.time.Instant
-           java.util.Locale))
+  (:import java.util.Locale))
 
 (def tz (time/time-zone-for-id "Europe/Helsinki"))
 
@@ -208,7 +207,7 @@
    Never overrides 'in-migri-review', 'exemption-not-verified' or already-'reviewed' virkailija decisions.
    Must be called BEFORE reset-kk-application-payment-obligation-states-if-needed so that the
    reset can still win when there are new unchecked attachments and the payment was set to not-required in this
-   job run. The reviews of payments already not-required before the job run are never reset."
+   job run. The reviews of payments already not required due to citizenship before the job run are never reset."
   [{:keys [audit-logger]} existing-payments modified-payments]
   (let [modified-keys       (->> modified-payments
                                  (filter eu-citizen-not-required-payment?)
@@ -253,37 +252,47 @@
 (defn- reset-kk-application-payment-obligation-states-if-needed
   "Resets the payment obligation review and removes the residence permit checks of an application to be reviewed
    again, when an applicant who was interpreted as obligated to pay delivers a new attachment before the attachment
-   deadline. Applications whose payment was not required already before the job run, for any reason, are not
-   reset even if a new attachment is delivered."
-  [{:keys [audit-logger] :as job-runner} applications-payments modified-payments]
-  (when (seq modified-payments)
-    (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))
-          ; Checks saved after the resets started to be decided are kept, as they may already take the new
-          ; attachment into account. The time is compared to the modified time set by the database, so it is taken
-          ; from the system clock instead of ataru.time.
-          decided-at        (Instant/now)]
-      (doseq [{:keys [application]} applications-payments
-              :let [application-key (:key application)]
-              :when (and (some? application-key)
-                         (not (contains? not-required-keys application-key)))
-              :let [hakukohteet-to-reset (payment/hakukohteet-with-obligation-review-to-reset job-runner application)]
-              :when (seq hakukohteet-to-reset)]
-        (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-               ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
-               (doseq [hakukohde hakukohteet-to-reset]
-                 (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
-                           application-key ", hakukohde" hakukohde)
-                 (application-store/save-application-hakukohde-review-in-tx
-                   connection
-                   application-key
-                   hakukohde
-                   "kk-application-payment-obligation"
-                   "unreviewed"
-                   (time/now)
-                   {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
-                   audit-logger))
-               (permit-check/reset-permit-checks connection application-key decided-at))
-             (permit-check/audit-log-reset audit-logger application-key))))))
+   deadline. Checks saved after resets-decided-at are kept.
+   - Without a decisive residence permit check, applications whose payment was not required already before the job
+     run, for any reason, are not reset.
+   - An obligation found in Migri is reset as decided when determining the payments, regardless of the payment state
+     before the job run and whether the payments changed in it, unless the payment is paid, overdue or not required
+     due to citizenship.
+   - An exemption found in Migri is never reset."
+  [{:keys [audit-logger] :as job-runner} applications-payments modified-payments resets-decided-at]
+  (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))]
+    (doseq [{:keys [application permit-check-state]} applications-payments
+            :let [application-key      (:key application)
+                  hakukohteet-to-reset (when (some? application-key)
+                                         (case (:obligation permit-check-state)
+                                           ; A review saved by virkailija after the reset was decided is kept
+                                           :obligated     (when-let [decided (seq (:hakukohteet-to-reset
+                                                                                    permit-check-state))]
+                                                            (filter (set (payment/hakukohteet-with-obligation-review-to-reset
+                                                                           job-runner application))
+                                                                    decided))
+                                           :not-obligated nil
+                                           (when (and (seq modified-payments)
+                                                      (not (contains? not-required-keys application-key)))
+                                             (payment/hakukohteet-with-obligation-review-to-reset
+                                               job-runner application))))]
+            :when (seq hakukohteet-to-reset)]
+      (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+             ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
+             (doseq [hakukohde hakukohteet-to-reset]
+               (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
+                         application-key ", hakukohde" hakukohde)
+               (application-store/save-application-hakukohde-review-in-tx
+                 connection
+                 application-key
+                 hakukohde
+                 "kk-application-payment-obligation"
+                 "unreviewed"
+                 (time/now)
+                 {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
+                 audit-logger))
+             (permit-check/reset-permit-checks connection application-key resets-decided-at))
+           (permit-check/audit-log-reset audit-logger application-key)))))
 
 (def keys-affecting-kk-application-payment
   #{payment/exemption-form-field-name :nationality})
@@ -330,7 +339,7 @@
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
-        (let [{:keys [modified-payments existing-payments]}
+        (let [{:keys [modified-payments existing-payments resets-decided-at]}
               (payment/update-payments-for-person-term-and-year job-runner person-oid application-term
                                                                 application-year)]
           (if (or (some? modified-payments) (some? existing-payments))
@@ -357,7 +366,8 @@
 
               (reset-kk-application-payment-obligation-states-if-needed job-runner
                                                                         existing-payments
-                                                                        modified-payments)
+                                                                        modified-payments
+                                                                        resets-decided-at)
 
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 

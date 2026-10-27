@@ -9,6 +9,7 @@
             [speclj.core :refer [describe tags it should-throw should= should-be-nil should-not-be-nil
                                  before around]]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
@@ -91,7 +92,21 @@
                             (jdbc/delete! conn :kk_application_payments_history [])
                             (jdbc/delete! conn :application_hakukohde_reviews [])
                             (jdbc/delete! conn :application_hakukohde_attachment_reviews [])
-                            (jdbc/delete! conn :field_deadlines [])))
+                            (jdbc/delete! conn :field_deadlines [])
+                            (jdbc/delete! conn :kk_application_payment_permit_checks [])))
+
+(defn- store-permit-check
+  [application-key attachment-key found-in-migri payment-obligation-basis]
+  (unit-test-db/save-permit-check-to-db! {:application-key          application-key
+                                          :attachment-key           attachment-key
+                                          :found-in-migri           found-in-migri
+                                          :payment-obligation-basis payment-obligation-basis}))
+
+(defn- review-payment-obligation [application-key]
+  (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde          "payment-info-test-kk-hakukohde"
+                                                              :review-requirement "kk-application-payment-obligation"
+                                                              :review-state       "reviewed"}
+                                                             application-key))
 
 (def term-fall "kausi_s")
 (def year-ok 2025)
@@ -139,6 +154,20 @@
 
 (defn- create-jatkuva-with-end-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-jatkuva-with-end"}))
+
+(defn- create-2030-payment-exempt-by-eu-blue-card []
+  (create-payment-exempt-by-application
+    (-> application-fixtures/application-with-hakemusmaksu-exemption
+        (application-fixtures/with-kk-application-payment-option
+          (:eu-blue-option-value payment-module/kk-application-payment-document-options))
+        (select-keys [:answers])
+        (assoc :haku "payment-info-test-kk-haku-2030"))))
+
+(defn- save-eu-blue-card-review [application-key state]
+  (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                      :attachment_key  "eu-blue-card-attachment"
+                                      :hakukohde       "payment-info-test-kk-hakukohde"
+                                      :state           state}]))
 
 (defn- create-daylight-savings-payment-exempt-by-application []
   (create-payment-exempt-by-application {:haku "payment-info-test-kk-haku-daylight-savings"}))
@@ -763,6 +792,111 @@
                           (should= payment (first changed))
                           (should-be-matching-state {:application-key application-key, :state state-awaiting
                                                      :reason nil} payment)))
+
+                    (it "should set payment status as not required when virkailija has found no payment obligation in Migri although the attachment is missing after deadline"
+                        (let [_                 (set-fixed-time "2030-06-15T15:00:01")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "attachment-missing")
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" true "not-obligated")
+                              _                 (review-payment-obligation application-key)
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should set payment status as required when virkailija has found a payment obligation in Migri although the attachment is checked"
+                        (let [_                 (set-fixed-time "2030-01-15T14:59:59")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "checked")
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" true "obligated-own-studies")
+                              _                 (review-payment-obligation application-key)
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should not use a payment obligation found in Migri before the payment obligation has been reviewed"
+                        (let [_                 (set-fixed-time "2030-01-15T14:59:59")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "checked")
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" true "obligated-own-studies")
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should use the attachment reviews when virkailija has not found the permit in Migri"
+                        (let [_                 (set-fixed-time "2030-06-15T15:00:01")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "attachment-missing")
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" false "not-obligated")
+                              _                 (review-payment-obligation application-key)
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should use the attachment reviews when virkailija has found the permit in Migri without noting the payment obligation"
+                        (let [_                 (set-fixed-time "2030-06-15T15:00:01")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "attachment-missing")
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" true nil)
+                              _                 (review-payment-obligation application-key)
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should only use virkailija's check on the attachment shown for the applicant's document option"
+                        (let [_                 (set-fixed-time "2030-01-15T14:59:59")
+                              application-key   (create-2030-payment-exempt-by-eu-blue-card) ; Hakuaika ends 2030-06-01
+                              _                 (save-eu-blue-card-review application-key "checked")
+                              _                 (store-permit-check application-key "brexit-permit-attachment" true "obligated-other")
+                              _                 (review-payment-obligation application-key)
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-not-required
+                                                     :reason reason-exemption} payment)))
+
+                    (it "should not exempt the applicant by virkailija's check on the attachment of a document option the applicant has not chosen"
+                        (let [_                 (set-fixed-time "2030-01-15T14:59:59")
+                              application-key   (create-payment-exempt-by-application ; the brexit option
+                                                  {:haku "payment-info-test-kk-haku-2030"
+                                                   :answers (:answers (application-fixtures/with-kk-application-payment-option
+                                                                        application-fixtures/application-with-hakemusmaksu-exemption
+                                                                        (:brexit-option-value payment-module/kk-application-payment-document-options)))})
+                              _                 (store-permit-check application-key "eu-blue-card-attachment" true "not-obligated")
+                              _                 (review-payment-obligation application-key)
+                              _                 (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                                                                    :attachment_key  "brexit-permit-attachment"
+                                                                                    :hakukohde       "payment-info-test-kk-hakukohde"
+                                                                                    :state           "attachment-missing"}])
+                              [changed payment] (update-payment application-key)]
+                          (should= 1 (count changed))
+                          (should-be-matching-state {:application-key application-key, :state state-awaiting
+                                                     :reason nil} payment)))
+
+                    (it "should set payment status as ok by proxy when virkailija has found a payment obligation in Migri and another application has been paid"
+                        (let [oid                     exempt-test-oid
+                              linked-oid              (str oid "2") ; See FakePersonService
+                              application-ids         (unit-test-db/init-db-fixture
+                                                        form-fixtures/payment-exemption-test-form
+                                                        [(merge (application-fixtures/with-kk-application-payment-option
+                                                                  application-fixtures/application-with-hakemusmaksu-exemption
+                                                                  (:eu-blue-option-value payment-module/kk-application-payment-document-options))
+                                                                {:person-oid oid})
+                                                         (merge application-fixtures/application-without-hakemusmaksu-exemption
+                                                                {:person-oid linked-oid})])
+                              primary-application-key (:key (application-store/get-application (first application-ids)))
+                              linked-application-key  (:key (application-store/get-application (second application-ids)))
+                              _                       (payment/set-application-fee-paid linked-application-key nil)
+                              _                       (store-permit-check primary-application-key "eu-blue-card-attachment" true "obligated-other")
+                              _                       (review-payment-obligation primary-application-key)
+                              _                       (payment/update-payments-for-person-term-and-year
+                                                        fake-job-runner oid term-fall year-ok)]
+                          (should-be-matching-state {:application-key primary-application-key, :state state-ok-by-proxy
+                                                     :reason nil}
+                                                    (first (payment/get-raw-payments [primary-application-key])))))
 
                     (it "should not set payment status as required if a passport attachment is missing after deadline"
                         (let [fixed-date-str-in-finland "2030-06-15T15:00:01"
