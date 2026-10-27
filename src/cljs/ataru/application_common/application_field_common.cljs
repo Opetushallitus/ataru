@@ -161,7 +161,7 @@
                        (if (clojure.string/blank? p)
                          [:br]
                          [:p.application__text-field-paragraph
-                          {:dangerouslySetInnerHTML {:__html p}}])]))))
+                          {:dangerouslySetInnerHTML (reagent/unsafe-html p)}])]))))
 
 (defn is-required-field?
   [field-descriptor]
