@@ -12,12 +12,13 @@
                                                                        render-paragraphs
                                                                        replace-with-option-label
                                                                        scroll-to-anchor
-                                                                       application-field-ref
+                                                                       application-field-nodes
                                                                        copy-link
                                                                        copy-link-selectable]]
             [ataru.application.option-visibility :as option-visibility]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
+            [ataru.cljs-util :as cljs-util]
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.set :as set]
             [clojure.string :as string]
@@ -133,7 +134,7 @@
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
-      :ref   (application-field-ref id)
+      :ref   (cljs-util/node-registry-ref application-field-nodes id)
       :id    id}
      [text-form-field-label id field-descriptor lang]
      [text-form-field-values id values]
@@ -369,7 +370,7 @@
      [:div.application__wrapper-contents
       {:class (when @(subscribe [:application/field-highlighted? :hakukohteet])
                 "highlighted")
-       :ref   (application-field-ref :hakukohteet)
+       :ref   (cljs-util/node-registry-ref application-field-nodes :hakukohteet)
        :id    "hakukohteet"}
       [haku-row @(subscribe [:state-query [:application :selected-application-and-form :application :haku]])]
       (for [hakukohde-oid hakukohteet]
@@ -442,7 +443,7 @@
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
-      :ref   (application-field-ref id)
+      :ref   (cljs-util/node-registry-ref application-field-nodes id)
       :id    id}
      [:label.application__form-field-label
       [:span (util/from-multi-lang (:label field) lang) (virkailija-required-hint field)]]
