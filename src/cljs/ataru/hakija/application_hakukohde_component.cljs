@@ -4,6 +4,7 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.util :as util]
+    [ataru.cljs-util :as cljs-util]
     [ataru.translations.translation-util :as translations]
     [reagent.core :as r]
     [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
@@ -158,12 +159,12 @@
      [:div.application__selected-hakukohde-row--buttons
       (cond (and haku-editable? hakukohde-editable?)
            [selected-hakukohde-row-remove hakukohde-oid false
-            #(swap! remove-nodes (if % assoc dissoc) hakukohde-oid %)]
+            (cljs-util/node-registry-ref remove-nodes hakukohde-oid)]
             (not hakukohde-editable?)
             [selected-hakukohde-row-remove hakukohde-oid true nil]
             haku-editable?
             [selected-hakukohde-row-remove hakukohde-oid false
-             #(swap! remove-nodes (if % assoc dissoc) hakukohde-oid %)])]]))
+             (cljs-util/node-registry-ref remove-nodes hakukohde-oid)])]]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid node-ref on-select]
@@ -337,7 +338,7 @@
              ^{:key (str "found-hakukohde-row-" hakukohde-oid)}
              [search-hit-hakukohde-row
               hakukohde-oid
-              #(swap! result-nodes (if % assoc dissoc) hakukohde-oid %)
+              (cljs-util/node-registry-ref result-nodes hakukohde-oid)
               #(select-hit hakukohde-oid)]))]
         (when @(subscribe [:application/show-more-hakukohdes?])
           [:div.application__show_more_hakukohdes_container

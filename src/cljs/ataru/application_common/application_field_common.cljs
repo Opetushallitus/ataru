@@ -85,7 +85,6 @@
          scroll-height    (reagent/atom nil)
          markdown-node    (reagent/atom nil)
          markdown-ref     #(reset! markdown-node %)
-         listener         (reagent/atom nil)
          timeout          (atom nil)
          debounced-resize (fn []
                             (js/clearTimeout @timeout)
@@ -97,13 +96,12 @@
       {:component-did-mount
        (fn [_]
          (set-markdown-height @markdown-node scroll-height)
-         (reset! listener debounced-resize)
-         (.addEventListener js/window "resize" @listener))
+         (.addEventListener js/window "resize" debounced-resize))
 
        :component-will-unmount
        (fn [_]
          (js/clearTimeout @timeout)
-         (.removeEventListener js/window "resize" @listener))
+         (.removeEventListener js/window "resize" debounced-resize))
 
        :component-did-update
        (fn [_]
@@ -217,23 +215,6 @@
     (throw (js/Error. "Question ID copy input is not mounted"))))
 
 (defonce application-field-nodes (atom {}))
-
-(defn application-field-ref [field-id]
-  (let [registered-node (atom nil)]
-    (fn [node]
-      (if node
-        (do
-          (swap! application-field-nodes update field-id (fnil conj []) node)
-          (reset! registered-node node))
-        (let [previous-node @registered-node]
-          (swap! application-field-nodes
-                 (fn [nodes]
-                   (let [remaining (into [] (remove #(identical? % previous-node)
-                                                    (get nodes field-id)))]
-                     (if (seq remaining)
-                       (assoc nodes field-id remaining)
-                       (dissoc nodes field-id)))))
-          (reset! registered-node nil))))))
 
 (defn copy-link [id & {:keys [shared-use-warning? answer? include?]}]
   (let [id (cond-> id

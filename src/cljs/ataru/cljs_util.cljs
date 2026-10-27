@@ -24,6 +24,11 @@
       (set! (.-returnValue event) warning-label)
       warning-label)))
 
+(defn node-registry-ref
+  "Ref callback that keeps the DOM node under key k in the registry atom."
+  [registry k]
+  #(swap! registry (if % assoc dissoc) k %))
+
 (defn wrap-scroll-to [node]
   (when node
     (if (.-scrollIntoViewIfNeeded node)
