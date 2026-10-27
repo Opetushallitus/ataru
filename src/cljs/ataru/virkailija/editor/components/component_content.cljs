@@ -29,7 +29,6 @@
                            :folded :unfolded))
         height   (r/atom nil)
         content-node (r/atom nil)
-        content-ref  #(reset! content-node %)
         listener (unfold-ended-listener folded? state)]
     (r/create-class
       {:component-did-mount
@@ -52,13 +51,13 @@
            (case @state
              :unfolded
              [:div.editor-form__component-content-wrapper
-              {:ref content-ref}
+              {:ref #(reset! content-node %)}
               content-component]
              :set-height
              [:div.editor-form__component-content-wrapper
-              {:ref content-ref
+              {:ref #(reset! content-node %)
                :style {:height @height}}
               content-component]
              :folded
              [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded
-              {:ref content-ref}])))})))
+              {:ref #(reset! content-node %)}])))})))

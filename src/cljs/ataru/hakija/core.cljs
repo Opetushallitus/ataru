@@ -1,6 +1,7 @@
 (ns ataru.hakija.core
   (:require [reagent.dom.client :as reagent-dom-client]
             [re-frame.core :as re-frame]
+            [re-frame.db :refer [app-db]]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-view :refer [form-view]]
@@ -79,7 +80,7 @@
                                                     :post-data %
                                                     :url       "/hakemus/api/client-error"
                                                     :handler   [:application/handle-client-error]})
-                                       #(let [form @(re-frame/subscribe [:application/form])]
+                                       #(let [form (:form @app-db)]
                                           (gstring/format "Hakija form=%s, id=%s, haku-oid=%s, lang=%s, application-key=%s"
                                                           (:key form)
                                                           (:id form)

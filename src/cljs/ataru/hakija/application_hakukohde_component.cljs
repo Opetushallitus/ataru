@@ -15,7 +15,7 @@
 (defonce ^:private remove-nodes (r/atom {}))
 
 (defn- result-buttons []
-  (keep #(get @result-nodes %) @(subscribe [:application/hakukohde-hits])))
+  (cljs-util/nodes-in-dom-order @result-nodes))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
@@ -186,13 +186,12 @@
         rajaavat-hakukohteet @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
         lang                 @(subscribe [:application/form-language])
         limit-reached?       (not-empty rajaavat-hakukohteet)
-        disabled?            (boolean (or hakukohteet-full? (not hakukohde-editable?) limit-reached?))
-        result-ref           (cljs-util/node-registry-ref result-nodes hakukohde-oid)]
+        disabled?            (boolean (or hakukohteet-full? (not hakukohde-editable?) limit-reached?))]
     [:div.application__search-hit-hakukohde-row
      {:role          "option"
       :aria-selected (if hakukohde-selected? "true" "false")
       :tab-index (when hakukohde-selected? 0)
-      :ref (when hakukohde-selected? result-ref)}
+      :ref (when hakukohde-selected? (cljs-util/node-registry-ref result-nodes hakukohde-oid))}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
@@ -221,7 +220,7 @@
          {:aria-hidden "true"}]
         [:button.application__search-hit-hakukohde-row--select-button
          {:data-hakukohde-oid hakukohde-oid
-          :ref                result-ref
+          :ref                (cljs-util/node-registry-ref result-nodes hakukohde-oid)
           :on-click           (when-not disabled?
                                 (fn [e]
                                   (let [btn     (.-currentTarget e)
@@ -387,7 +386,7 @@
                       (let [key (.-key e)]
                         (when (#{"ArrowDown" "ArrowUp"} key)
                           (.preventDefault e)
-                          (let [buttons   (keep #(get @remove-nodes %) @(subscribe [:application/selected-hakukohteet]))
+                          (let [buttons   (cljs-util/nodes-in-dom-order @remove-nodes)
                                 active    (.-activeElement js/document)
                                 idx       (count (take-while #(not= % active) buttons))
                                 n         (count buttons)]
