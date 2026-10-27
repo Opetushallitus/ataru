@@ -39,7 +39,8 @@
    (s/optional-key :last-progress) s/Any
    (s/optional-key :speed)         s/Num
    (s/optional-key :request)       s/Any
-   (s/optional-key :upload-id)     s/Str})
+   (s/optional-key :upload-id)     s/Str
+   (s/optional-key :locked)        s/Bool})
 
 (s/defschema Values
   (s/conditional question-group-inside-question-group?
