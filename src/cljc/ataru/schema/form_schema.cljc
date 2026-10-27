@@ -1,5 +1,6 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
@@ -803,6 +804,8 @@
                          "kk-application-payment-email-resent"
                          "field-deadline-set"
                          "field-deadline-unset"
+                         "kk-payment-permit-check-updated"
+                         "kk-payment-permit-check-reset"
                          "person-found-matching"
                          "person-dob-or-gender-conflict"
                          "information-request-reminder-sent"
@@ -839,6 +842,29 @@
 (s/defschema FieldDeadline
   {:field-id s/Str
    :deadline java.time.ZonedDateTime})
+
+(def LocalDateString
+  (s/constrained s/Str
+                 #(and (re-matches #"\d{4}-\d{2}-\d{2}" %)
+                       #?(:clj  (try (java.time.LocalDate/parse %) true
+                                     (catch java.time.format.DateTimeParseException _ false))
+                          :cljs true))
+                 'yyyy-MM-dd))
+
+(s/defschema KkPaymentPermitCheckBody
+  {:found-in-migri                  (s/maybe s/Bool)
+   :permit-valid-until              (s/maybe LocalDateString)
+   :payment-obligation-basis        (s/maybe (apply s/enum payment-module/kk-payment-obligation-bases))
+   :payment-obligation-other-reason (s/maybe (s/constrained s/Str
+                                                            #(<= (count %) payment-module/kk-payment-permit-check-other-reason-max-length)
+                                                            'max-length))})
+
+(s/defschema KkPaymentPermitCheck
+  (merge KkPaymentPermitCheckBody
+         {:attachment-key                 s/Str
+          :checked-time                   #?(:clj java.time.ZonedDateTime :cljs s/Str)
+          :inherited-from-application-key (s/maybe s/Str)
+          :inherited-time                 (s/maybe #?(:clj java.time.ZonedDateTime :cljs s/Str))}))
 
 (s/defschema FieldDeadlineBody
   {:deadline java.time.ZonedDateTime})
