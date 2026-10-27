@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">sv_Muutokset huollettavasi hakemukseen on tallennettu</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          sv_Hakemusnumero: {{application-oid}}
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          sv_Hakutoiveet:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          sv_Muutokset hakemukseen on tallennettu.
+        </td>        
+      </tr>
+      {% if signature|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{signature|safe}}
+        </td>
+      </tr>
+      {% endif %}
+    </table>
+  </body>
+</html>

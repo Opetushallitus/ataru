@@ -2,7 +2,7 @@
   (:require [ataru.email.email-util :as util]
             [ataru.constants :as constants]
             [ataru.config.core]
-            [speclj.core :refer [describe it should= should-not-be-nil should-be-nil with-stubs stub should-have-invoked]]))
+            [speclj.core :refer [describe it should= should-not-be-nil should-be-nil with-stubs stub should-have-invoked should-not-have-invoked]]))
 
 (describe "email util"
   (describe "make email data"
@@ -19,28 +19,33 @@
     (with-stubs)
     (it "renders email for applicant"
       (let [template-params {:application-url "https://linkki.fi" :content-ending "Viestin loppu"}
-            stub-render (stub :render)
+            applicant-render (stub :render-applicant)
+            guardian-render (stub :render-guardian)
             applicant-email-data (util/make-email-data ["teppo.testaa@testi.fi"] "Vahvistusviesti" template-params)
             guardian-email-data (util/make-email-data [] "Vahvistusviesti" template-params)
             emails (util/render-emails-for-applicant-and-guardian
                      applicant-email-data
                      guardian-email-data
-                     stub-render)]
-        (should-have-invoked :render {:with [template-params]})
+                     applicant-render
+                     guardian-render)]
+        (should-have-invoked :render-applicant {:with [template-params]})
+        (should-not-have-invoked :render-guardian)
         (should= 1 (count emails))
         (should= ["teppo.testaa@testi.fi"] (:recipients (first emails)))))
 
-    (it "renders email for applicant and guardian"
+    (it "renders email for applicant and guardian with separate renderers"
       (let [template-params {:application-url "https://linkki.fi" :content-ending "Viestin loppu"}
-            stub-render (stub :render)
+            applicant-render (stub :render-applicant)
+            guardian-render (stub :render-guardian)
             applicant-email-data (util/make-email-data ["teppo.testaa@testi.fi" "tiina.testaa@testi.fi"] "Vahvistusviesti" template-params)
             guardian-email-data (util/make-email-data ["huoltaja.testaa@testi.fi"] "Vahvistusviesti" template-params)
             emails (util/render-emails-for-applicant-and-guardian
                      applicant-email-data
                      guardian-email-data
-                     stub-render)]
-        (should-have-invoked :render {:with [template-params]})
-        (should-have-invoked :render {:with [{}]})
+                     applicant-render
+                     guardian-render)]
+        (should-have-invoked :render-applicant {:with [template-params]})
+        (should-have-invoked :render-guardian {:with [template-params]})
         (should= 2 (count emails))
         (should= ["teppo.testaa@testi.fi" "tiina.testaa@testi.fi"] (:recipients (first emails)))
         (should= ["huoltaja.testaa@testi.fi"] (:recipients (last emails))))))

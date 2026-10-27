@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">sv_Huollettavasi hakemus on vastaanotettu</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Hakemusnumero: {{application-oid}}
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Hakutoiveet:
+        </td>
+      </tr>
+      {% endif %}
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
+        <tr>
+          <td style="padding-left: 20px; padding-top: 20px;">
+            Hakijan saama liiteohje:
+          </td>
+        </tr>
+      {% endif %}
+      {% if any attachments-without-answer|not-empty %}
+        <tr>
+          <td>
+            <ul>
+              {% for attachment in attachments-without-answer %}
+                <li>
+                  {{attachment.label}}
+                  {% if attachment.deadline|not-empty %}
+                  <br> Palautettava viimeistään {{attachment.deadline}}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+        </tr>
+      {% endif %}
+      {% if any kouta-attachments-by-type|not-empty %}
+      <tr>
+        <td>
+          <ul>
+            {% for type,attachments in kouta-attachments-by-type|not-empty %}
+            <li>
+              {{type}}
+              <br><br>
+              {{attachments.0.info-text}}
+              <ul>
+                {% for attachment in attachments %}
+                  <li>
+                    {{attachment.label|safe}}
+                    {% if attachment.deadline|not-empty %}
+                    Palautettava viimeistään {{attachment.deadline}}
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+          </ul>
+          <ul></ul>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          Hakutoiveet ja myöhemmin myös opiskelijavalinnan tulokset ovat nähtävillä Valpas -palvelun huoltajanäkymässä. 
+        </td>
+      </tr>
+      {% if applicant-authenticated? %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Hakija voi katsella ja muokata hakemustaan 
+          <a style="color: #0093C4;" href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku -palvelussa</a>. 
+          Muutoksia voi tehdä hakuaikana. Oma Opintopolku -palvelussa hän voi lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Hakija voi katsella ja muokata hakemustaan saamansa linkin kautta. Jos hänellä on verkkopankkitunnukset, 
+          mobiilivarmenne tai sähköinen henkilökortti, hän voi vaihtoehtoisesti kirjautua sisään 
+          <a style="color: #0093C4;" href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku -palvelussa</a>, 
+          ja tehdä muutoksia hakemukseensa Oma Opintopolku -palvelussa hakuaikana. 
+          Oma Opintopolku -palvelussa hän voi lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan
+        </td>
+      </tr>
+      {% endif %}
+      {% if signature|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{signature|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>
