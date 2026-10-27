@@ -41,10 +41,14 @@
          ; SuomenKansalaisuusTietokoodi of strong authentication is "1" for a Finnish citizen and "0" for a citizen of
          ; another country
          :finnish-citizen (when (= :strong auth-type)
-                            (case (:SuomenKansalaisuusTietokoodi parsed-raw-map)
-                              "1" true
-                              "0" false
-                              nil))
+                            (let [citizenship-code (:SuomenKansalaisuusTietokoodi parsed-raw-map)]
+                              (case citizenship-code
+                                "1" true
+                                "0" false
+                                nil nil
+                                (do (log/warn "Unknown SuomenKansalaisuusTietokoodi of strong authentication:"
+                                              citizenship-code)
+                                    nil))))
          :display-name (or (:givenName parsed-raw-map)
                            (first first-names))
          :fields     {:first-name           {:value  (:firstName parsed-raw-map)
