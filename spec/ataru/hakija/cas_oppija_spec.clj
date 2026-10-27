@@ -136,6 +136,13 @@
                               parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful weak-response)]
                           (should= :weak (:auth-type parsed-attributes))
                           (should= nil (:finnish-citizen parsed-attributes))))
+                    (it "should not parse an unknown Finnish citizenship code of strong authentication"
+                        (let [unknown-code-response (str/replace successful-response-strong
+                                                                 "<cas:SuomenKansalaisuusTietokoodi>1</cas:SuomenKansalaisuusTietokoodi>"
+                                                                 "<cas:SuomenKansalaisuusTietokoodi>2</cas:SuomenKansalaisuusTietokoodi>")
+                              parsed-attributes     (cas-oppija-utils/parse-oppija-attributes-if-successful unknown-code-response)]
+                          (should= :strong (:auth-type parsed-attributes))
+                          (should= nil (:finnish-citizen parsed-attributes))))
                     (it "should not lock preferred-name field if attributes do not contain preferred name (givenName)"
                         (let [parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful successful-response-strong-no-kutsumanimi)]
                           (should= {:person-oid "1.2.246.562.24.73833272757",
