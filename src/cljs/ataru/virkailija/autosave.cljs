@@ -1,6 +1,7 @@
 (ns ataru.virkailija.autosave
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-  (:require [re-frame.core :refer [subscribe]]
+  (:require [re-frame.db :refer [app-db]]
+            [reagent.ratom :refer-macros [reaction]]
             [ataru.cljs-util :refer [debounce]]
             [cljs.core.async :as a :refer [chan <! >! close! timeout sliding-buffer]]
             [taoensso.timbre :as log]))
@@ -23,7 +24,7 @@
   {:pre [(integer? interval-ms)
          (integer? debounce-ms)
          (vector? subscribe-path)]}
-  (let [value-to-watch    (subscribe [:state-query subscribe-path])
+  (let [value-to-watch    (reaction (get-in @app-db subscribe-path))
         previous          (atom (or last-autosaved-form @value-to-watch))
         ; last-saved seuraa mitä oikeasti viimeksi tallennettiin, jotta silmukasta
         ; poistuttaessa ei lähetetä jo tallennettua arvoa uudelleen

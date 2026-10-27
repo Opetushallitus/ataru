@@ -29,8 +29,8 @@
             [cljs-time.core :as t]
             [clojure.set :as clj-set]
             [clojure.string :as clj-string]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
-                                   subscribe]]))
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [re-frame.db :refer [app-db]]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -585,7 +585,7 @@
    (autosave/interval-loop {:subscribe-path [:application :review]
                             :changed-predicate review-autosave-predicate
                             :handler (fn [current _]
-                                       (let [selected-review-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+                                       (let [selected-review-hakukohde-oids (get-in @app-db [:application :selected-review-hakukohde-oids])
                                              filtered-hakukohde-reviews (select-keys (current :hakukohde-reviews) (map keyword selected-review-hakukohde-oids))]
                                          (ajax/http
                                           :put

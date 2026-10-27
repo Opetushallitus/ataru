@@ -84,9 +84,9 @@
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
          markdown-node    (reagent/atom nil)
-         markdown-ref     #(reset! markdown-node %)
          timeout          (atom nil)
          debounced-resize (fn []
+                            (js/clearTimeout @timeout)
                             (reset!
                              timeout
                              (js/setTimeout #(set-markdown-height @markdown-node scroll-height) 200)))
@@ -119,11 +119,11 @@
            [:div.application__form-info-text
             (if (and collapsable? @collapsed)
               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
-               {:ref markdown-ref
+               {:ref #(reset! markdown-node %)
                 :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}]
               [:div.application__form-info-text-inner
                {:style                   {:height "auto"}
-                :ref markdown-ref
+                :ref #(reset! markdown-node %)
                 :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}])
             (when collapsable?
               [:button.application__form-info-text-collapse-button

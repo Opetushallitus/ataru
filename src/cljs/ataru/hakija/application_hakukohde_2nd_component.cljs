@@ -80,11 +80,12 @@
 (defn- search-hit-hakukohde-row
   [hakukohde-oid idx]
   (let [aria-header-id (str "hakukohde-search-hit-header-" hakukohde-oid)
+        hakukohde-label @(subscribe [:application/hakukohde-label hakukohde-oid])
         select-fn #(do
                      (dispatch [:application/hakukohde-query-process (atom "") idx])
                      (dispatch [:application/set-active-hakukohde-search nil])
                      (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx])
-                     (dispatch [:application/show-hakukohde-toast @(subscribe [:application/hakukohde-label hakukohde-oid])])
+                     (dispatch [:application/show-hakukohde-toast hakukohde-label])
                      (focus-selected-hakukohteet)
                      (start-toast-hide-timer))]
 
@@ -100,7 +101,7 @@
        {:id aria-header-id}
        [:span.application__search-hit-hakukohde-row-2nd-span
         ^{:key :i.zmdi.zmdi-chevron-right} [:i.zmdi.zmdi-chevron-right]]
-        @(subscribe [:application/hakukohde-label hakukohde-oid])]]]))
+        hakukohde-label]]]))
 (defn- hakukohde-selection [idx]
   (let [search-input (r/atom "")
         hakukohde-hits (subscribe [:application/koulutustyyppi-filtered-hakukohde-hits idx])

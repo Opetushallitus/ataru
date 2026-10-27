@@ -29,6 +29,11 @@
   [registry k]
   #(swap! registry (if % assoc dissoc) k %))
 
+(defn nodes-in-dom-order
+  "Nodes of a registry atom's value, in document order."
+  [registry]
+  (sort #(if (pos? (bit-and 4 (.compareDocumentPosition %1 %2))) -1 1) (vals registry)))
+
 (defn wrap-scroll-to [node]
   (when node
     (if (.-scrollIntoViewIfNeeded node)
