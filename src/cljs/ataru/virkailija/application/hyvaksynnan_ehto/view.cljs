@@ -102,12 +102,12 @@
       (fn [application-key lang selected? lang-to lang-left lang-right]
         (reset! focus? selected?)
         [:button.hyvaksynnan-ehto-texts__text-language
-         {:ref           #(reset! tab-node %)
-          :id            (str "hyvaksynnan-ehto-texts__text-language-"
+         {:id            (str "hyvaksynnan-ehto-texts__text-language-"
                               application-key
                               "-language-" (name lang))
           :class         (when selected?
                            " hyvaksynnan-ehto-texts__text-language--selected")
+          :ref           #(reset! tab-node %)
           :role          "tab"
           :aria-controls (str "hyvaksynnan-ehto-texts__text-language-"
                               application-key
@@ -145,10 +145,10 @@
         (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])]
           (reset! enabled? (not disabled?))
           [:textarea.hyvaksynnan-ehto-texts__textarea
-           {:ref             #(reset! textarea-node %)
-            :id              (str "hyvaksynnan-ehto-texts__text-language-"
+           {:id              (str "hyvaksynnan-ehto-texts__text-language-"
                                   application-key
                                   "-text-" (name selected-lang))
+            :ref             #(reset! textarea-node %)
             :role            "tabpanel"
             :aria-labelledby (str "hyvaksynnan-ehto-texts__text-language-"
                                   application-key

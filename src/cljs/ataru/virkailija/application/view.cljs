@@ -232,3 +232,4 @@
           [:div.application-handling__detail-container
            [application-heading]
            [application-tab]]])])))
+

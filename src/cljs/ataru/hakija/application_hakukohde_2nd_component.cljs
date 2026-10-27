@@ -302,8 +302,8 @@
       (toast-component poistettu-visible? poistettu-message)
       [:div.application__form-field
        [:div.application__hakukohde-selected-list
-       {:ref #(reset! selected-hakukohteet-node %)
-        :id "valitut-hakukohteet"
+        {:id "valitut-hakukohteet"
+         :ref #(reset! selected-hakukohteet-node %)
          :tab-index 0
          :aria-label (str (translations/get-hakija-translation :application-selected-study-programms lang)  (str hakukohteet-count))}
         (for [idx (range (max hakukohteet-count 1))]

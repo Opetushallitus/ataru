@@ -114,8 +114,8 @@
         default-hidden-section-name (-> hideable-form-sections first :id)
         section-visibility (merge condition {:section-name default-hidden-section-name})]
     (-> db
-        (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
-        (update-in (drop-last text-field-path) set-non-koodisto-option-values))))
+      (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
+      (update-in (drop-last text-field-path) set-non-koodisto-option-values))))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-osion-piilottamis-ehto
@@ -427,10 +427,10 @@
 
 (defn generate-component
   [{db :db} [_ generate-fn sub-path]]
-  (let [yhteishaku? (get-yhteishaku? db)
+  (let [yhteishaku?           (get-yhteishaku? db)
         parent-component-path (cond-> (db/current-form-content-path db)
-                                (not (number? sub-path))
-                                (concat (butlast sub-path)))
+                                      (not (number? sub-path))
+                                      (concat (butlast sub-path)))
         user-info             (-> db :editor :user-info)
         metadata-element      {:oid  (:oid user-info)
                                :name (:name user-info)
@@ -441,16 +441,16 @@
                                          (map #(apply % [metadata]) generate-fn)
                                          [(generate-fn metadata)])
 
-                                yhteishaku?
-                                (map #(cond-> %
-                                        (not (contains? #{"pohjakoulutusristiriita"
-                                                          "fieldset"
-                                                          "hakukohteet"}
-                                                        (:fieldType %)))
-                                        (assoc-in [:params :hidden] yhteishaku?))))
+                                       yhteishaku?
+                                       (map #(cond-> %
+                                                     (not (contains? #{"pohjakoulutusristiriita"
+                                                                       "fieldset"
+                                                                       "hakukohteet"}
+                                                                     (:fieldType %)))
+                                                     (assoc-in [:params :hidden] yhteishaku?))))
         first-component-idx   (cond-> sub-path
-                                (not (number? sub-path))
-                                (last))
+                                      (not (number? sub-path))
+                                      (last))
         get-koodisto-params-fn (fn [component]
                                  {:uri (get-in component [:koodisto-source :uri])
                                   :version (get-in component [:koodisto-source :version])

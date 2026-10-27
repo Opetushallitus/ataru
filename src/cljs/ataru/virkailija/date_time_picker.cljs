@@ -60,13 +60,13 @@
     (reagent/create-class
       {:component-did-mount
        (fn [_]
-         (let [node @input-node]
+         (let [dom-node @input-node]
            (.setCustomValidity
-             node
+             dom-node
              (if (not @valid?)
                @invalid-date-format-i18n
                @invalid-text))
-           (reset! supports-date? (= "date" (.-type node)))))
+           (reset! supports-date? (= "date" (.-type dom-node)))))
        :component-did-update
        (fn [_]
          (.setCustomValidity
@@ -113,13 +113,13 @@
     (reagent/create-class
      {:component-did-mount
       (fn [_]
-        (let [node @input-node]
+        (let [dom-node @input-node]
           (.setCustomValidity
-           node
+           dom-node
            (if (not @valid?)
              @invalid-date-format-i18n
              @invalid-text))
-          (reset! supports-time? (= "time" (.-type node)))))
+          (reset! supports-time? (= "time" (.-type dom-node)))))
       :component-did-update
       (fn [_]
         (.setCustomValidity
