@@ -153,7 +153,8 @@
                    (s/optional-key :usePriority) s/Bool
                    (s/optional-key :kohdejoukkoUri) s/Str
                    (s/optional-key :kohdejoukonTarkenne) s/Str
-                   (s/optional-key :hakutapaUri) s/Str}]
+                   (s/optional-key :hakutapaUri) s/Str
+                   (s/optional-key :maksullinenKkHaku) s/Bool}]
       (if (is-dev-env?)
         (do (register-test-haku! haku)
             (response/ok {}))

@@ -763,10 +763,12 @@
 (declare set-repeatable-field-values set-repeatable-field-value set-repeatable-application-field-top-level-valid)
 
 (defn- prefill-and-lock-finnish-citizenship
-  "The Finnish citizenship of a Finnish citizen by strong authentication is prefilled and locked on the first row of
-   the nationality question group. Other citizenships can still be added on other rows."
+  "In a haku with the kk application payment, the Finnish citizenship of a Finnish citizen by strong authentication is
+   prefilled and locked on the first row of the nationality question group. Other citizenships can still be added on
+   other rows."
   [db]
-  (if (and (get-in db [:oppija-session :logged-in])
+  (if (and (true? (get-in db [:form :tarjonta :maksullinen-kk-haku?]))
+           (get-in db [:oppija-session :logged-in])
            (true? (get-in db [:oppija-session :finnish-citizen]))
            (contains? (get-in db [:application :answers]) :nationality))
     (-> db

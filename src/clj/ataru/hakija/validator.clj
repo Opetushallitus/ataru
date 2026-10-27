@@ -329,16 +329,17 @@
     (nil? (:duplikoitu-followup-hakukohde-oid answer))))
 
 (defn- finnish-citizenship-validation-error
-  "A Finnish citizen by strong authentication has to state the Finnish citizenship, and may state other citizenships
-   as well. Only Finland is accepted, not Åland, as it is the citizenship locked for the applicant. A missing
-   nationality answer is left to the validation of required answers."
-  [answers-by-key oppija-session]
-  (when (true? (get-in oppija-session [:data :finnish-citizen]))
+  "In a haku with the kk application payment, a Finnish citizen by strong authentication has to state the Finnish
+   citizenship, and may state other citizenships as well. Only Finland is accepted, not Åland, as it is the
+   citizenship locked for the applicant. A missing nationality answer is left to the validation of required answers."
+  [answers-by-key oppija-session kk-application-payment-haku?]
+  (when (and kk-application-payment-haku?
+             (true? (get-in oppija-session [:data :finnish-citizen])))
     (when-let [{:keys [value]} (:nationality answers-by-key)]
       (when-not (nationalities-value-contains-finland? value)
         "Hakemus-answer for key :nationality does not include the Finnish citizenship of the strongly authenticated applicant"))))
 
-(defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session]
+(defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session kk-application-payment-haku?]
   (when oppija-session
     (let [validation-result (for [[key answer] answers-by-key]
                               (let [session-data (get-in oppija-session [:data :fields key])
@@ -350,7 +351,8 @@
                                   (format "Hakemus-answer '%s' does not equal session-answer '%s' for key %s"
                                           hakemus-value oppija-session-value key))))]
       (filter #(some? %) (conj (vec validation-result)
-                               (finnish-citizenship-validation-error answers-by-key oppija-session))))))
+                               (finnish-citizenship-validation-error answers-by-key oppija-session
+                                                                     kk-application-payment-haku?))))))
 
 ; Hakukohteet (ja niiden järjestys) on hakemuksessa tallennettu kahteen paikkaan (miksi oi miksi?).
 ; Näiden pitää aina olla synkassa.
