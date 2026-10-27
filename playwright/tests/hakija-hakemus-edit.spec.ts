@@ -605,8 +605,9 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await expect(editedNationality).toHaveValue('246')
   })
 
-  // The session is polled every 5 minutes (oppija-session-polling-interval),
-  // which the fake clock of a page of its own fast forwards
+  // The session is polled every 5 minutes (oppija-session-polling-interval).
+  // Each test opens its own page with a fake clock, so that the test can
+  // fast forward the clock to the next poll.
   const openFormWithPolledSession = async (browser: Browser): Promise<Page> => {
     const formKey = requireValue(lomakkeenAvain, 'Missing form key')
     const pollingPage = await browser.newPage()
