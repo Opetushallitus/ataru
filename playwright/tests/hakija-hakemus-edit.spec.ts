@@ -5,6 +5,8 @@ import {
   waitForResponse,
 } from '../playwright-utils'
 import {
+  asetaTestiHaku,
+  asetaTestiHakukohde,
   getApplicationIdFromSubmitResponse,
   getApplicationSecretById,
   getHakemuksenLahettamisenOsoite,
@@ -12,7 +14,10 @@ import {
   getLomakkeenHaunOsoite,
   kirjauduVirkailijanNakymaan,
   lisaaLomake,
+  luoTestiHaunOid,
   poistaLomake,
+  poistaTestiHaku,
+  poistaTestiHakukohde,
   taytaHenkilotietomoduuli,
   teeJaOdotaLomakkeenTallennusta,
 } from '../playwright-ataru-utils'
@@ -489,8 +494,16 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
   let page: Page
   let lomakkeenAvain: string | null = null
   let lomakkeenId: number | null = null
+  // The Finnish citizenship is locked only in a haku with the kk application
+  // payment. Such a haku requires the payment module on its form, which also
+  // changes the nationality question, so the haku has a form of its own.
+  let maksullisenHaunLomakkeenAvain: string | null = null
+  const maksullisenHaunOid = luoTestiHaunOid()
+  const maksullisenHaunHakukohdeOid = `1.2.246.562.20.${Date.now()}`
 
   test.beforeAll(async ({ browser }) => {
+    // Two forms are created and the payment module is added to one of them
+    test.setTimeout(120000)
     page = await browser.newPage()
     await kirjauduVirkailijanNakymaan(page)
     const lomake = await lisaaLomake(page)
@@ -503,9 +516,43 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
         .fill('Vahvasti tunnistautuneen testilomake')
     })
     await allowHakeminenTunnistautuneena(page, lomakkeenId)
+
+    const maksullisenHaunLomake = await lisaaLomake(page)
+    maksullisenHaunLomakkeenAvain = unsafeFoldOption(
+      maksullisenHaunLomake.lomakkeenAvain
+    )
+    const maksullisenHaunLomakkeenId = unsafeFoldOption(
+      maksullisenHaunLomake.lomakkeenId
+    )
+    await allowHakeminenTunnistautuneena(page, maksullisenHaunLomakkeenId)
+    // Adding the payment module requires a superuser
+    const superuserPage = await browser.newPage()
+    await kirjauduVirkailijanNakymaan(superuserPage, 'SUPERUSER')
+    const moduulinLisays = await superuserPage.request.put(
+      `/lomake-editori/api/forms/${maksullisenHaunLomakkeenAvain}/upsert-kk-application-payment-module`
+    )
+    expect(moduulinLisays.ok()).toBeTruthy()
+    await superuserPage.close()
+    await asetaTestiHaku(page, {
+      oid: maksullisenHaunOid,
+      ataruLomakeAvain: maksullisenHaunLomakkeenAvain,
+      hakukohdeOids: [maksullisenHaunHakukohdeOid],
+      kohdejoukkoUri: 'haunkohdejoukko_12#1',
+      maksullinenKkHaku: true,
+    })
+    await asetaTestiHakukohde(page, {
+      oid: maksullisenHaunHakukohdeOid,
+      hakuOid: maksullisenHaunOid,
+      hakukohteenNimet: { kieli_fi: 'Hakemusmaksullinen testihakukohde' },
+    })
   })
 
   test.afterAll(async ({ request }) => {
+    await poistaTestiHakukohde(request, maksullisenHaunHakukohdeOid)
+    await poistaTestiHaku(request, maksullisenHaunOid)
+    if (maksullisenHaunLomakkeenAvain) {
+      await poistaLomake(request, maksullisenHaunLomakkeenAvain)
+    }
     if (lomakkeenAvain) {
       await poistaLomake(request, lomakkeenAvain)
     }
@@ -530,7 +577,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     )
   })
 
-  test('lukitsee kotikunnan ja Suomen kansalaisuuden kun haetaan vahvasti tunnistautuneena', async () => {
+  test('lukitsee kotikunnan muttei kansalaisuutta haussa ilman hakemusmaksua kun haetaan vahvasti tunnistautuneena', async () => {
     const formKey = requireValue(lomakkeenAvain, 'Missing form key')
 
     await loginWithStrongAuth(page, getHakijanNakymanOsoite(formKey))
@@ -550,25 +597,16 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
-    // The Finnish citizenship by strong authentication is prefilled and locked,
-    // and another citizenship can be added on a row of its own
-    const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
-    await expect(nationalities.first()).toBeDisabled()
-    await expect(nationalities.first()).toHaveClass(
+    // The Finnish citizenship is not locked in a haku without the kk
+    // application payment
+    const nationality = page
+      .getByRole('combobox', { name: /Kansalaisuus/i })
+      .first()
+    await expect(nationality).toBeEnabled()
+    await expect(nationality).not.toHaveClass(
       /application__form-select--locked/
     )
-    await expect(nationalities.first()).toHaveValue('246')
-    const nationalityGroup = page
-      .locator('.application__question-group')
-      .filter({ has: nationalities.first() })
-    await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
-    await expect(nationalities).toHaveCount(2)
-    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
-    await expect(
-      nationalityGroup.getByRole('button', {
-        name: 'Poista vastausvaihtoehto',
-      })
-    ).toHaveCount(1)
+    await nationality.selectOption({ label: 'Suomi' })
     await page.getByTestId('language-input').selectOption({ label: 'suomi' })
 
     await expect(getSubmitButton(page)).toBeEnabled()
@@ -605,6 +643,30 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await expect(editedNationality).toHaveValue('246')
   })
 
+  test('lukitsee Suomen kansalaisuuden hakemusmaksullisessa haussa', async () => {
+    await loginWithStrongAuth(page, `/hakemus/haku/${maksullisenHaunOid}`)
+
+    // The Finnish citizenship by strong authentication is prefilled and locked,
+    // and another citizenship can be added on a row of its own
+    const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
+    await expect(nationalities.first()).toBeDisabled()
+    await expect(nationalities.first()).toHaveClass(
+      /application__form-select--locked/
+    )
+    await expect(nationalities.first()).toHaveValue('246')
+    const nationalityGroup = page
+      .locator('.application__question-group')
+      .filter({ has: nationalities.first() })
+    await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
+    await expect(nationalities).toHaveCount(2)
+    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
+    await expect(
+      nationalityGroup.getByRole('button', {
+        name: 'Poista vastausvaihtoehto',
+      })
+    ).toHaveCount(1)
+  })
+
   // The session is polled every 5 minutes (oppija-session-polling-interval).
   // Each test opens its own page with a fake clock, so that the test can
   // fast forward the clock to the next poll.
@@ -613,10 +675,8 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     const pollingPage = await browser.newPage()
     await pollingPage.clock.install()
     await loginWithStrongAuth(pollingPage, getHakijanNakymanOsoite(formKey))
-    // The nationality is locked once the session has been fetched
-    await expect(
-      pollingPage.getByRole('combobox', { name: /Kansalaisuus/i }).first()
-    ).toBeDisabled()
+    // The home town is locked once the session has been fetched
+    await expect(pollingPage.getByTestId('home-town-input')).toBeDisabled()
     return pollingPage
   }
 
