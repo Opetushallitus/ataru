@@ -2363,6 +2363,33 @@
    :kk-payment-permit-check-reset                            {:fi "Oleskelulupaliitteen käsittelymerkinnät poistettu uuden liitteen vuoksi"
                                                               :sv "Anteckningarna om uppehållstillståndsbilagan har tagits bort på grund av en ny bilaga"
                                                               :en "Residence permit attachment notes removed due to a new attachment"}
+   :kk-payment-permit-check-inherited                        {:fi "Oleskelulupaliitteen käsittelymerkinnät periytetty hakijan aiemmalta hakemukselta"
+                                                              :sv "Anteckningarna om uppehållstillståndsbilagan har ärvts från sökandens tidigare ansökan"
+                                                              :en "Residence permit attachment notes inherited from the applicant's earlier application"}
+   :kk-payment-permit-check-inherited-from                   {:fi "Luvan tarkistustiedot tuotu toisesta hakemuksesta."
+                                                              :sv "Uppgifterna om kontrollen av tillståndet har hämtats från en annan ansökan."
+                                                              :en "The permit check details were brought from another application."}
+   :kk-payment-permit-check-show-original-check              {:fi "Näytä tarkemmat tiedot."
+                                                              :sv "Visa närmare uppgifter."
+                                                              :en "Show details."}
+   :kk-payment-permit-check-hide-original-check              {:fi "Sulje tarkemmat tiedot."
+                                                              :sv "Stäng närmare uppgifter."
+                                                              :en "Hide details."}
+   :kk-payment-permit-check-original-application             {:fi "Hakemusnumero"
+                                                              :sv "Ansökningsnummer"
+                                                              :en "Application number"}
+   :kk-payment-permit-check-original-organization            {:fi "Korkeakoulu"
+                                                              :sv "Högskola"
+                                                              :en "Higher education institution"}
+   :kk-payment-permit-check-original-organization-unknown    {:fi "Ei tiedossa"
+                                                              :sv "Okänd"
+                                                              :en "Unknown"}
+   :kk-payment-permit-check-original-checked-time           {:fi "Käsittelypvm"
+                                                              :sv "Behandlingsdatum"
+                                                              :en "Date processed"}
+   :kk-payment-permit-check-original-virkailija              {:fi "Käsittelijä"
+                                                              :sv "Handläggare"
+                                                              :en "Processed by"}
    :selected-hakukohde-no-rights                             {:fi "Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
                                                               :sv "SV: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
                                                               :en "EN: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"}

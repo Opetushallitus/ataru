@@ -7,6 +7,7 @@
 
 (declare yesql-get-kk-application-payment-permit-checks)
 (declare yesql-upsert-kk-application-payment-permit-check)
+(declare yesql-insert-inherited-kk-application-payment-permit-check)
 (declare yesql-delete-kk-application-payment-permit-checks)
 (yesql/defqueries "sql/kk-application-payment-permit-check-queries.sql")
 
@@ -28,6 +29,11 @@
 (defn upsert-permit-check!
   [connection check]
   (first (yesql-upsert-kk-application-payment-permit-check check {:connection connection})))
+
+(defn insert-inherited-permit-check!
+  "Returns nil when the application already has a check of the attachment."
+  [connection check]
+  (first (yesql-insert-inherited-kk-application-payment-permit-check check {:connection connection})))
 
 (defn delete-permit-checks!
   [connection application-key modified-until]

@@ -52,6 +52,23 @@
    (:permanent-residence-option-value kk-application-payment-document-options)  "permanent-residence-permit"
    (:temporary-protection-option-value kk-application-payment-document-options) "temporary-protection-permit"})
 
+(def kk-application-payment-attachment-keys-by-option
+  {(:eu-blue-option-value kk-application-payment-document-options)              #{"eu-blue-card-attachment"
+                                                                                  "eu-passport-attachment"}
+   (:eu-family-member-option-value kk-application-payment-document-options)     #{"eu-family-member-permit"
+                                                                                  "eu-family-passport-attachment"}
+   (:continuous-residence-option-value kk-application-payment-document-options) #{"continuous-residence-permit-front"
+                                                                                  "continuous-residence-permit-back"
+                                                                                  "continuous-residence-passport-attachment"}
+   (:longterm-residence-option-value kk-application-payment-document-options)   #{"longterm-permit-attachment"
+                                                                                  "longterm-passport-attachment"}
+   (:brexit-option-value kk-application-payment-document-options)               #{"brexit-permit-attachment"
+                                                                                  "brexit-passport-attachment"}
+   (:permanent-residence-option-value kk-application-payment-document-options)  #{"permanent-residence-permit"
+                                                                                  "permanent-residence-passport-attachment"}
+   (:temporary-protection-option-value kk-application-payment-document-options) #{"temporary-protection-permit"
+                                                                                  "temporary-protection-passport-attachment"}})
+
 (def kk-application-payment-residence-permit-attachment-keys
   (set (vals kk-application-payment-residence-permit-attachment-key-by-option)))
 
