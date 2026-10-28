@@ -1,6 +1,10 @@
 (ns ataru.email.application-email-spec
   (:require [ataru.email.application-email :as email]
+            [ataru.constants :as constants]
+            [ataru.date :as date]
             [ataru.email.email-fixtures :as fixtures]
+            [ataru.time :as t]
+            [ataru.time.format :as time-format]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [speclj.core :refer [describe it should=]]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
@@ -8,7 +12,100 @@
 
 (def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
 
+(defn- minor-application [authentication-type]
+  (let [birth-date (time-format/unparse date/birthday-formatter
+                                       (t/minus (t/today) (t/months 12)))]
+    (-> fixtures/application
+      (update :answers (fn [answers]
+                         (mapv (fn [answer]
+                                 (if (= "birth-date" (:key answer))
+                                   (assoc answer :value birth-date)
+                                   answer))
+                               answers)))
+      (assoc :tunnistautuminen authentication-type)
+      (update :answers conj {:key "guardian-email"
+                             :value ["huoltaja@testaaja.fi"]
+                             :fieldType "textField"}))))
+
 (describe "application email"
+  (it "creates guardian confirmation email for an unauthenticated minor applicant"
+    (let [application (minor-application nil)
+          get-attachment-type (fn [attachment-type] {:fi attachment-type
+                                                     :sv attachment-type
+                                                     :en attachment-type})
+          emails (email/create-emails nil
+                                      (constantly "templates/email_submit_confirmation_template_fi.html")
+                                      application
+                                      fixtures/tarjonta-info
+                                      fixtures/form
+                                      []
+                                      fixtures/email-template
+                                      get-attachment-type
+                                      true
+                                      nil
+                                      test-attachment-deadline-service)
+          guardian-email (second emails)
+          body (:body guardian-email)]
+      (should= 2 (count emails))
+      (should= ["huoltaja@testaaja.fi"] (:recipients guardian-email))
+      (should= true (str/includes? body "Huollettavasi hakemus on vastaanotettu"))
+      (should= true (str/includes? body (str "Hakemusnumero: " (:key application))))
+      (should= true (str/includes? body "Hakutoiveet ja myöhemmin myös opiskelijavalinnan tulokset ovat nähtävillä Valpas -palvelun huoltajanäkymässä."))
+      (should= true (str/includes? body "Hakija voi katsella ja muokata hakemustaan"))
+      (should= true (str/includes? body "saamansa linkin kautta"))
+      (should= false (str/includes? body "Hakemuksesi on vastaanotettu"))))
+
+  (it "includes authentication and discretionary attachment guidance in guardian confirmation email"
+    (let [application (minor-application constants/auth-type-strong)
+          get-attachment-type (fn [attachment-type]
+                                (let [label (if (= attachment-type "liitetyypitamm_6")
+                                              "Harkintaan perustuvan valinnan liite"
+                                              attachment-type)]
+                                  {:fi label :sv label :en label}))
+          emails (email/create-emails nil
+                                      (constantly "templates/email_submit_confirmation_template_fi.html")
+                                      application
+                                      fixtures/tarjonta-info
+                                      fixtures/form
+                                      []
+                                      fixtures/email-template
+                                      get-attachment-type
+                                      true
+                                      nil
+                                      test-attachment-deadline-service)
+          guardian-email (second emails)
+          body (:body guardian-email)]
+      (should= 2 (count emails))
+      (should= ["huoltaja@testaaja.fi"] (:recipients guardian-email))
+      (should= true (str/includes? body "Huollettavasi hakemus on vastaanotettu"))
+      (should= true (str/includes? body "Hakijan saama liiteohje:"))
+      (should= true (str/includes? body "Harkintaan perustuvan valinnan liite"))
+      (should= false (str/includes? body "saamansa linkin kautta"))))
+
+  (it "creates guardian confirmation email after a minor applicant edits the application"
+    (let [application (minor-application nil)
+          get-attachment-type (fn [attachment-type] {:fi attachment-type
+                                                     :sv attachment-type
+                                                     :en attachment-type})
+          emails (email/create-emails email/edit-email-subjects
+                                      (constantly "templates/email_edit_confirmation_template_fi.html")
+                                      application
+                                      fixtures/tarjonta-info
+                                      fixtures/form
+                                      []
+                                      fixtures/email-template
+                                      get-attachment-type
+                                      true
+                                      nil
+                                      test-attachment-deadline-service)
+          guardian-email (second emails)
+          body (:body guardian-email)]
+      (should= 2 (count emails))
+      (should= ["huoltaja@testaaja.fi"] (:recipients guardian-email))
+      (should= true (str/includes? body "Muutokset huollettavasi hakemukseen on tallennettu"))
+      (should= true (str/includes? body "Muutokset hakemukseen on tallennettu."))
+      (should= false (str/includes? body "Huollettavasi hakemus on vastaanotettu"))))
+
   (it "creates email with hakutoiveet"
       (let [template-name-fn (constantly "templates/email_submit_confirmation_template_fi.html")
             application-attachment-reviews []

@@ -20,11 +20,6 @@
       (string/join " " [trimmed-prefix postfix]))
     prefix))
 
-(defn- filter-template-params
-  [template-params guardian?]
-  (cond-> template-params
-    guardian? (dissoc :application-url :content-ending)))
-
 (defn ->hakemus-privileges [organization-oids]
   (map (fn [organization-oid]
          {:privilege "APP_ATARU_HAKEMUS_CRUD"
@@ -43,9 +38,9 @@
                                                   :mask "https://maksulinkki-piilotettu.opintopolku.fi/"})))
 
 (defn- make-email-for-applicant-or-guardian
-  [email-data render-file-fn guardian?]
+  [email-data render-file-fn]
   (when (seq (:recipients email-data))
-    (let [template-params (filter-template-params (:template-params email-data) guardian?)
+    (let [template-params (:template-params email-data)
           body (render-file-fn template-params)]
       {:from (:from email-data)
        :recipients (:recipients email-data)
@@ -64,9 +59,9 @@
    :template-params template-params})
 
 (defn render-emails-for-applicant-and-guardian
-  [applicant-email-data guardian-email-data render-file-fn]
-  (let [email (make-email-for-applicant-or-guardian applicant-email-data render-file-fn false)
-        guardian-email (make-email-for-applicant-or-guardian guardian-email-data render-file-fn true)]
+  [applicant-email-data guardian-email-data render-file-fn render-guardian-file-fn]
+  (let [email (make-email-for-applicant-or-guardian applicant-email-data render-file-fn)
+        guardian-email (make-email-for-applicant-or-guardian guardian-email-data render-guardian-file-fn)]
     (filter (comp not nil?) [email guardian-email])))
 
 (defn- oma-opintopolku-link []
