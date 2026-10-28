@@ -1,7 +1,10 @@
 (ns ataru.email.application-email-spec
   (:require [ataru.email.application-email :as email]
             [ataru.constants :as constants]
+            [ataru.date :as date]
             [ataru.email.email-fixtures :as fixtures]
+            [ataru.time :as t]
+            [ataru.time.format :as time-format]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [speclj.core :refer [describe it should=]]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
@@ -10,12 +13,19 @@
 (def test-attachment-deadline-service (attachment-deadline-service/->AttachmentDeadlineService (->MockOhjausparametritService)))
 
 (defn- minor-application [authentication-type]
-  (-> fixtures/application
-      (assoc-in [:answers 1 :value] "01.01.2020")
+  (let [birth-date (time-format/unparse date/birthday-formatter
+                                       (t/minus (t/today) (t/months 12)))]
+    (-> fixtures/application
+      (update :answers (fn [answers]
+                         (mapv (fn [answer]
+                                 (if (= "birth-date" (:key answer))
+                                   (assoc answer :value birth-date)
+                                   answer))
+                               answers)))
       (assoc :tunnistautuminen authentication-type)
       (update :answers conj {:key "guardian-email"
                              :value ["huoltaja@testaaja.fi"]
-                             :fieldType "textField"})))
+                             :fieldType "textField"}))))
 
 (describe "application email"
   (it "creates guardian confirmation email for an unauthenticated minor applicant"
@@ -52,7 +62,7 @@
                                               "Harkintaan perustuvan valinnan liite"
                                               attachment-type)]
                                   {:fi label :sv label :en label}))
-          emails (email/create-emails email/edit-email-subjects
+          emails (email/create-emails nil
                                       (constantly "templates/email_submit_confirmation_template_fi.html")
                                       application
                                       fixtures/tarjonta-info

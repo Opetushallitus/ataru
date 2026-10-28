@@ -277,8 +277,7 @@
          guardian-subject-prefix         (if subject (edit-email-subjects-for-guardian lang) (submit-email-subjects-for-guardian lang))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
          guardian-subject                (email-util/enrich-subject-with-application-key-and-limit-length guardian-subject-prefix (:key application) lang)
-         applicant-authenticated?       (contains? #{constants/auth-type-strong constants/auth-type-eidas}
-                                                    (:tunnistautuminen application))
+         applicant-authenticated?        (= constants/auth-type-strong (:tunnistautuminen application))
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :organization-oids          (organization-oids tarjonta-info application)
@@ -287,7 +286,6 @@
                                           :application-url            application-url
                                           :application-url-text       (->safe-html application-url-text)
                                           :oma-opintopolku-link       oma-opintopolku-link
-                                          :applicant-authenticated?   applicant-authenticated?
                                           :payment-url                payment-url
                                           :content                    content
                                           :content-ending             content-ending
@@ -295,8 +293,18 @@
                                           :kouta-attachments-by-type  attachments-info-from-kouta
                                           :signature                  signature
                                           :no-hakuaika-mentions       (or (email-util/tutu-form? form) (email-util/astu-form? form))}
-         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
-         guardian-email-data             (email-util/make-email-data guardian-recipients guardian-subject template-params)
+         applicant-template-params       template-params
+         guardian-template-params        (assoc
+                                          (select-keys template-params [:hakukohteet
+                                                                        :organization-oids
+                                                                        :application-oid
+                                                                        :person-oid
+                                                                        :signature
+                                                                        :attachments-without-answer
+                                                                        :kouta-attachments-by-type])
+                                          :applicant-authenticated? applicant-authenticated?)
+         applicant-email-data            (email-util/make-email-data applier-recipients subject applicant-template-params)
+         guardian-email-data             (email-util/make-email-data guardian-recipients guardian-subject guardian-template-params)
          render-file-fn                  (fn [template-params]
                                            (selmer/render-file (template-name lang) template-params))
          render-guardian-file-fn         (fn [template-params]
