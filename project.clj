@@ -64,8 +64,8 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.11.121" :exclusions [com.cognitect/transit-java]]
-                 [reagent "1.2.0"]
-                 [re-frame "1.4.3" :exclusions [org.clojure/tools.logging]]
+                 [reagent "2.0.1"]
+                 [re-frame "1.4.7" :exclusions [org.clojure/tools.logging]]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
@@ -308,7 +308,8 @@
                                        :output-dir           "resources/public/js/compiled/virkailija-cypress-ci-out"
                                        :externs              ["resources/virkailija-externs.js"]
                                        :parallel-build       true
-                                       :optimizations        :advanced}}
+                                       :optimizations        :advanced
+                                       :infer-externs true}}
 
                        {:id           "hakija-cypress-ci"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -317,7 +318,8 @@
                                        :output-dir           "resources/public/js/compiled/hakija-cypress-ci-out"
                                        :externs              ["resources/hakija-externs.js"]
                                        :parallel-build       true
-                                       :optimizations        :advanced}}
+                                       :optimizations        :advanced
+                                       :infer-externs true}}
 
                        {:id           "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
@@ -339,7 +341,8 @@
                                        :closure-defines      {goog.DEBUG false}
                                        :source-map           "resources/public/js/compiled/virkailija-app.js.map"
                                        :source-map-timestamp true
-                                       :pretty-print         false}}
+                                       :pretty-print         false
+                                       :infer-externs true}}
 
                        {:id           "hakija-min"
                         :jar          true
@@ -353,7 +356,8 @@
                                        :closure-defines      {goog.DEBUG false}
                                        :source-map           "resources/public/js/compiled/hakija-app.js.map"
                                        :source-map-timestamp true
-                                       :pretty-print         false}}]}
+                                       :pretty-print         false
+                                       :infer-externs true}}]}
 
   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]
                  :init             (set! *print-length* 50)

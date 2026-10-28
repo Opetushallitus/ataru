@@ -10,12 +10,12 @@
             [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [reagent.dom :as r-dom]
             [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (defn form-row [key selected?]
   [:a.editor-form__row
    {:class    (when selected? "editor-form__selected-row")
+    :ref      (when selected? wrap-scroll-to)
     :on-click (partial routes/navigate-to-click-handler (str "/lomake-editori/editor/" key))}
    [:span.editor-form__list-form-name @(subscribe [:editor/form-name key])]
    [:span.editor-form__list-form-time (temporal/time->str @(subscribe [:editor/form-created-time key]))]
@@ -33,9 +33,7 @@
             (for [key  @form-keys
                   :let [selected? (= key @selected-form-key)]]
               ^{:key (str "form-list-item-" key)}
-              (if selected?
-                [wrap-scroll-to [form-row key selected?]]
-                [form-row key selected?]))))))
+              [form-row key selected?])))))
 
 (defn- add-form []
   [:button.editor-form__control-button.editor-form__control-button--enabled
@@ -93,16 +91,18 @@
 
 (defn- editor-name-input [_ focus?]
   (let [form              (subscribe [:editor/selected-form])
+        input-node        (r/atom nil)
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
         form-locked?      (subscribe [:editor/form-locked?])]
     (r/create-class
-      {:component-did-update (fn [this]
+      {:component-did-update (fn [_]
                                (when (and focus? @new-form-created?)
-                                 (.focus (r-dom/dom-node this))
-                                 (.select (r-dom/dom-node this))))
+                                 (.focus @input-node)
+                                 (.select @input-node)))
        :reagent-render       (fn [lang _]
                                [:input.editor-form__form-name-input
                                 {:data-test-id "form-name-input"
+                                 :ref          #(reset! input-node %)
                                  :type         "text"
                                  :value        (get-in @form [:name lang])
                                  :disabled     @form-locked?

@@ -7,7 +7,6 @@
             [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch] :as re-frame]
-            [reagent.dom :as r-dom]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
@@ -25,12 +24,21 @@
       (set! (.-returnValue event) warning-label)
       warning-label)))
 
-(def wrap-scroll-to
-  (with-meta identity {:component-did-mount #(let [node (r-dom/dom-node %)]
-                                              (if (.-scrollIntoViewIfNeeded node)
-                                                (.scrollIntoViewIfNeeded node)
-                                                (.scrollIntoView node)))}))
+(defn node-registry-ref
+  "Ref callback that keeps the DOM node under key k in the registry atom."
+  [registry k]
+  #(swap! registry (if % assoc dissoc) k %))
 
+(defn nodes-in-dom-order
+  "Nodes of a registry atom's value, in document order."
+  [registry]
+  (sort #(if (pos? (bit-and 4 (.compareDocumentPosition %1 %2))) -1 1) (vals registry)))
+
+(defn wrap-scroll-to [node]
+  (when node
+    (if (.-scrollIntoViewIfNeeded node)
+      (.scrollIntoViewIfNeeded node)
+      (.scrollIntoView node))))
 
 (defn debounce
   ([f] (debounce f 1000))

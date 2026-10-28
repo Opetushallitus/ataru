@@ -6,6 +6,7 @@
               [ataru.virkailija.application.attachments.virkailija-attachment-view :as attachments]
               [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.editor.view :refer [editor]]
+              [ataru.application-common.application-field-common :as application-field]
               [ataru.virkailija.error.view :refer [error]]))
 
 (def panel-components
@@ -52,6 +53,7 @@
          [:div.modal-container
           [:input#editor-form__copy-question-id-container
            {:value "" 
+            :ref #(reset! application-field/copy-container-node %)
             :read-only true}]
           [snackbar]
           [application-version-changes]

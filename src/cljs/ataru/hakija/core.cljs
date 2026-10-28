@@ -1,6 +1,7 @@
 (ns ataru.hakija.core
-  (:require [reagent.dom :as reagent-dom]
+  (:require [reagent.dom.client :as reagent-dom-client]
             [re-frame.core :as re-frame]
+            [re-frame.db :refer [app-db]]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-view :refer [form-view]]
@@ -18,6 +19,8 @@
             [ataru.schema-validation :as schema-validation]))
 
 (enable-console-print!)
+
+(defonce root (atom nil))
 
 (defn- path-match
   [path re]
@@ -59,8 +62,10 @@
 (defn mount-root []
   (schema-validation/enable-schema-fn-validation)
   (re-frame/clear-subscription-cache!)
-  (reagent-dom/render [form-view]
-                  (.getElementById js/document "app")))
+  (let [container (.getElementById js/document "app")]
+    (when-not @root
+      (reset! root (reagent-dom-client/create-root container)))
+    (reagent-dom-client/render @root [form-view])))
 
 (defn network-listener []
   (.addEventListener js/window "online" (fn [] (re-frame/dispatch [:application/network-online])))
@@ -75,7 +80,7 @@
                                                     :post-data %
                                                     :url       "/hakemus/api/client-error"
                                                     :handler   [:application/handle-client-error]})
-                                       #(let [form @(re-frame/subscribe [:application/form])]
+                                       #(let [form (:form @app-db)]
                                           (gstring/format "Hakija form=%s, id=%s, haku-oid=%s, lang=%s, application-key=%s"
                                                           (:key form)
                                                           (:id form)

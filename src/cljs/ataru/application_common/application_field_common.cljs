@@ -2,7 +2,6 @@
   (:require [markdown.core :refer [md->html]]
             [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
-            [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
             [clojure.string :as string]
             [goog.string :as s]
@@ -74,12 +73,9 @@
    state])
 
 (defn- set-markdown-height
-  [component scroll-height]
-  (reset! scroll-height (-> component
-                            reagent-dom/dom-node
-                            (.getElementsByClassName "application__form-info-text-inner")
-                            (aget 0)
-                            .-scrollHeight)))
+  [node scroll-height]
+  (when node
+    (reset! scroll-height (.-scrollHeight node))))
 
 (defn markdown-paragraph
   ([md-text]
@@ -87,28 +83,27 @@
   ([_ _ application-identifier]
    (let [collapsed        (reagent/atom true)
          scroll-height    (reagent/atom nil)
-         listener         (reagent/atom nil)
+         markdown-node    (reagent/atom nil)
          timeout          (atom nil)
-         debounced-resize (fn [component]
+         debounced-resize (fn []
                             (js/clearTimeout @timeout)
                             (reset!
                              timeout
-                             (js/setTimeout #(set-markdown-height component scroll-height) 200)))
+                             (js/setTimeout #(set-markdown-height @markdown-node scroll-height) 200)))
          lang             (re-frame/subscribe [:application/form-language])]
      (reagent/create-class
       {:component-did-mount
-       (fn [component]
-         (set-markdown-height component scroll-height)
-         (reset! listener #(debounced-resize component))
-         (.addEventListener js/window "resize" @listener))
+       (fn [_]
+         (set-markdown-height @markdown-node scroll-height)
+         (.addEventListener js/window "resize" debounced-resize))
 
        :component-will-unmount
        (fn [_]
-         (.removeEventListener js/window "resize" @listener))
+         (.removeEventListener js/window "resize" debounced-resize))
 
        :component-did-update
-       (fn [component]
-         (set-markdown-height component scroll-height))
+       (fn [_]
+         (set-markdown-height @markdown-node scroll-height))
 
        :reagent-render
        (fn [md-text collapse-enabled?]
@@ -124,10 +119,12 @@
            [:div.application__form-info-text
             (if (and collapsable? @collapsed)
               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
-               {:dangerouslySetInnerHTML {:__html sanitized-html}}]
+               {:ref #(reset! markdown-node %)
+                :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}]
               [:div.application__form-info-text-inner
                {:style                   {:height "auto"}
-                :dangerouslySetInnerHTML {:__html sanitized-html}}])
+                :ref #(reset! markdown-node %)
+                :dangerouslySetInnerHTML (reagent/unsafe-html sanitized-html)}])
             (when collapsable?
               [:button.application__form-info-text-collapse-button
                {:on-click (fn [] (swap! collapsed not))}
@@ -160,7 +157,7 @@
                        (if (clojure.string/blank? p)
                          [:br]
                          [:p.application__text-field-paragraph
-                          {:dangerouslySetInnerHTML {:__html p}}])]))))
+                          {:dangerouslySetInnerHTML (reagent/unsafe-html p)}])]))))
 
 (defn is-required-field?
   [field-descriptor]
@@ -205,11 +202,15 @@
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor)) :tab-index -1} ""])
 
+(defonce copy-container-node (reagent/atom nil))
+
 (defn copy [id]
-  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
+  (when-let [copy-container @copy-container-node]
     (set! (.-value copy-container) id)
     (.select copy-container)
     (.execCommand js/document "copy")))
+
+(defonce application-field-nodes (atom {}))
 
 (defn copy-link [id & {:keys [shared-use-warning? answer? include?]}]
   (let [id (cond-> id

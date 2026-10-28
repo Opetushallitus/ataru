@@ -9,7 +9,9 @@
             [re-frame.core :refer [subscribe dispatch]]
             [ataru.constants :as constants]
             [ataru.virkailija.application.application-list.hakukohde-filters-view :refer [hakukohde-state-filter-controls]]
-            [ataru.virkailija.application.application-list.filters-view :refer [application-filters]]))
+            [ataru.virkailija.application.application-list.filters-view :refer [application-filters]]
+            [ataru.application-common.fx :as app-fx]
+            [ataru.cljs-util :as cljs-util]))
 
 (defn- application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
@@ -249,6 +251,7 @@
         haku-heading-data       (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application) @filtered-hakukohde false)
+      :ref      (cljs-util/node-registry-ref app-fx/application-list-row-nodes (:key application))
       :class    (string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
