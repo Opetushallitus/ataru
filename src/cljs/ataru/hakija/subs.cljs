@@ -509,6 +509,14 @@
         row-amount))))
 
 (re-frame/reg-sub
+  :application/question-group-row-locked?
+  (fn [[_ field-descriptor idx] _]
+    (mapv #(re-frame/subscribe [:application/answer (:id %) idx nil])
+          (util/flatten-form-fields (:children field-descriptor))))
+  (fn [answers _]
+    (boolean (some :locked answers))))
+
+(re-frame/reg-sub
   :application/question-group-row-count
   (fn [[_ id] _]
     (re-frame/subscribe [:application/ui-of id]))

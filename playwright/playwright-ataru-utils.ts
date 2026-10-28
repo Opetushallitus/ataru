@@ -277,6 +277,7 @@ export interface TestiHaku {
   kohdejoukkoUri?: string
   kohdejoukonTarkenne?: string
   hakutapaUri?: string
+  maksullinenKkHaku?: boolean
 }
 
 // Rekisteröi ajonaikaisesti mock-tarjontapalveluun testikohtaisen haun

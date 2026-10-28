@@ -1,6 +1,7 @@
 (ns ataru.hakija.cas-oppija-spec
   (:require [speclj.core :refer [describe it should=]]
-            [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]))
+            [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
+            [clojure.string :as str]))
 
 (def successful-response-eidas "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
   <cas:authenticationSuccess>
@@ -41,6 +42,7 @@
   <cas:KotikuntaKuntaR>Åbo</cas:KotikuntaKuntaR>
   <cas:sn>Demo</cas:sn>
   <cas:nationalIdentificationNumber>210281-9988</cas:nationalIdentificationNumber>
+  <cas:SuomenKansalaisuusTietokoodi>1</cas:SuomenKansalaisuusTietokoodi>
   </cas:attributes>
   </cas:authenticationSuccess>
   </cas:serviceResponse>")
@@ -85,6 +87,7 @@
   <cas:vtjVerified>true</cas:vtjVerified>
   <cas:sn>Demo</cas:sn>
   <cas:nationalIdentificationNumber>210281-9988</cas:nationalIdentificationNumber>
+  <cas:SuomenKansalaisuusTietokoodi>0</cas:SuomenKansalaisuusTietokoodi>
   </cas:attributes>
   </cas:authenticationSuccess>
   </cas:serviceResponse>")
@@ -98,6 +101,7 @@
                           (should= {:person-oid "1.2.246.562.24.73833272757",
                                     :eidas-id nil,
                                     :auth-type :strong,
+                                    :finnish-citizen true,
                                     :display-name "Nordea",
                                     :fields {:address {:value "Mansikkatie 11", :locked false},
                                              :have-finnish-ssn {:value "true", :locked true},
@@ -115,16 +119,36 @@
                         (let [parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful successful-response-eidas)]
                           (should= "DE/FI/166193B0E55D436B494769486A9284D04E0A1XXXXXF8B9EDA63E5BF4C3CFE6F5" (:eidas-id parsed-attributes))
                           (should= :eidas (:auth-type parsed-attributes))
+                          (should= nil (:finnish-citizen parsed-attributes))
+                          (should= nil (:finnish-citizen (cas-oppija-utils/parse-oppija-attributes-if-successful
+                                                           (str/replace successful-response-eidas
+                                                                        "</cas:attributes>"
+                                                                        "<cas:SuomenKansalaisuusTietokoodi>1</cas:SuomenKansalaisuusTietokoodi></cas:attributes>"))))
                           (should= "Leon" (:display-name parsed-attributes))
                           (should= {:value "Leon Elias" :locked true} (get-in parsed-attributes [:fields :first-name]))
                           (should= {:value "Germany" :locked true} (get-in parsed-attributes [:fields :last-name]))
                           (should= {:value "06.02.1981" :locked true} (get-in parsed-attributes [:fields :birth-date]))
                           (should= {:value nil :locked false} (get-in parsed-attributes [:fields :have-finnish-ssn]))))
+                    (it "should not parse the Finnish citizenship of weak authentication"
+                        (let [weak-response     (str/replace successful-response-strong
+                                                             #"<cas:nationalIdentificationNumber>[^<]*</cas:nationalIdentificationNumber>"
+                                                             "")
+                              parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful weak-response)]
+                          (should= :weak (:auth-type parsed-attributes))
+                          (should= nil (:finnish-citizen parsed-attributes))))
+                    (it "should not parse an unknown Finnish citizenship code of strong authentication"
+                        (let [unknown-code-response (str/replace successful-response-strong
+                                                                 "<cas:SuomenKansalaisuusTietokoodi>1</cas:SuomenKansalaisuusTietokoodi>"
+                                                                 "<cas:SuomenKansalaisuusTietokoodi>2</cas:SuomenKansalaisuusTietokoodi>")
+                              parsed-attributes     (cas-oppija-utils/parse-oppija-attributes-if-successful unknown-code-response)]
+                          (should= :strong (:auth-type parsed-attributes))
+                          (should= nil (:finnish-citizen parsed-attributes))))
                     (it "should not lock preferred-name field if attributes do not contain preferred name (givenName)"
                         (let [parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful successful-response-strong-no-kutsumanimi)]
                           (should= {:person-oid "1.2.246.562.24.73833272757",
                                     :eidas-id nil,
                                     :auth-type :strong,
+                                    :finnish-citizen nil,
                                     :display-name "Nordea",
                                     :fields {:address {:value "Mansikkatie 11", :locked false},
                                              :have-finnish-ssn {:value "true", :locked true},
@@ -143,6 +167,7 @@
                           (should= {:person-oid nil,
                                     :eidas-id nil,
                                     :auth-type :strong,
+                                    :finnish-citizen false,
                                     :display-name "Hyperborea",
                                     :fields {:address {:value nil, :locked false}
                                              :have-finnish-ssn {:value "true", :locked true},
