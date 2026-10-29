@@ -35,6 +35,9 @@
     "permanent-residence-permit"
     "temporary-protection-permit"})
 
+(def kk-application-payment-invalid-attachment-states
+  #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment"})
+
 ; Sanity limits for the permit card validity date relative to the current date: permit cards are valid for at most
 ; 5 years, and an expired card may still be noted
 (def kk-payment-permit-valid-until-years-back 5)
