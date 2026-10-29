@@ -243,7 +243,6 @@
       (should= (:not-required payment/all-states) (payment-state target-key))))
 
   (it "inherits when the later application has other files as the attachments"
-    ; the applicant may take new pictures of the permit card for each application
     (let [other-files-application (update delivered-application :answers
                                           (partial map #(if (= "attachment" (:fieldType %))
                                                           (assoc % :value [(str (:key %) "-other-file")])
