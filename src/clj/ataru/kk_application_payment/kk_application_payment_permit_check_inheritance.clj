@@ -1,10 +1,23 @@
 (ns ataru.kk-application-payment.kk-application-payment-permit-check-inheritance
-  "Virkailija's residence permit check and the attachment reviews of a reviewed payment obligation are inherited by
-   the later applications of the applicant to the same starting term, when the applicant has delivered the residence
-   permit attachment of the same document option and the permit card is valid at the time the later application was
-   submitted. The files are not compared, as the applicant may take new pictures of the permit card for each
-   application. The inheritance happens once per attachment and is not affected by later changes in the original
-   application."
+  "Copies virkailija's residence permit check to the applicant's later applications for the same starting term.
+
+   A later application gets the check, the attachment reviews and the reviewed payment obligation of an application
+   whose payment obligation has been reviewed. The main conditions (see inherit-permit-checks! and inheritance-for
+   for all) are that the later application
+   - has the same document option,
+   - was submitted on a day the permit card is valid, and
+   - has the permit attachment. The files are not compared, as the applicant may take new pictures of the permit card
+     for each application.
+
+   If the check found the applicant not obligated to pay and the payment of the application it is copied from is not
+   required, the check is copied also when the attachment is missing (see missing-attachment-source-candidates). The
+   missing attachment then does not make the applicant obligated, as long as the inherited check is unchanged and the
+   payment obligation is reviewed (see kk-application-payment/attachments-invalid-and-deadline-passed?). If the permit
+   was found in Migri and the basis is noted, the check decides the reviewed payment obligation regardless of the
+   attachments (see kk-application-payment/permit-check-payment-obligation).
+
+   A check is copied only once, and later changes in the original application do not change the copy or its effect on
+   the payment."
   (:require [ataru.applications.application-store :as application-store]
             [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.db.db :as db]
@@ -24,7 +37,8 @@
   [answers attachment-key]
   (:value (get answers (keyword attachment-key))))
 
-(defn- delivered?
+(defn delivered?
+  "Whether the applicant has delivered the attachment."
   [answers attachment-key]
   (boolean (some #(and (string? %) (not (string/blank? %)))
                  (flatten [(answer-value answers attachment-key)]))))
@@ -41,6 +55,11 @@
 (defn- submitted-date
   [application]
   (.toLocalDate (time/to-time-zone (:submitted application) (time/time-zone-for-id "Europe/Helsinki"))))
+
+(defn not-obligated?
+  "A check that does not state that the applicant is obligated to pay."
+  [check]
+  (contains? #{nil "not-obligated"} (:payment-obligation-basis check)))
 
 (defn- valid-at-submission?
   [check application]
@@ -59,6 +78,26 @@
         :when (and (some? check) (valid-at-submission? check target))]
     {:application source
      :check       check}))
+
+(defn- invalid-attachments?
+  [application-key]
+  (some #(and (contains? payment-module/kk-application-payment-exempt-attachment-keys (:attachment-key %))
+              (contains? payment-module/kk-application-payment-invalid-attachment-states (:state %)))
+        (application-store/get-application-attachment-reviews application-key false)))
+
+(defn- missing-attachment-source-candidates
+  "Sources for an application without the residence permit attachment. The check of the source found the applicant
+   not obligated to pay, and the payment of the source is not required at the start of the run. The source must not
+   have attachments marked missing or invalid, as they may make it obligated later in the same run. The attachments
+   do not matter when the permit was found in Migri and the basis is noted (see
+   kk-application-payment/permit-check-payment-obligation)."
+  [applications not-required-application-keys target attachment-key]
+  (->> (source-candidates (filter (comp not-required-application-keys :key) applications) target attachment-key)
+       (filter (comp not-obligated? :check))
+       (remove (fn [{:keys [application check]}]
+                 (and (not (and (true? (:found-in-migri check))
+                                (= "not-obligated" (:payment-obligation-basis check))))
+                      (invalid-attachments? (:key application)))))))
 
 (defn- latest-source
   [candidates]
@@ -103,15 +142,19 @@
 
 (defn- inheritance-for
   "The inheritance to do for the target application or nil."
-  [applications target]
+  [applications not-required-application-keys target]
   (let [answers        (util/application-answers-by-key target)
         option         (:value (get answers (keyword payment-module/kk-application-payment-choice-key)))
         attachment-key (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option option)]
     (when (and (some? attachment-key)
-               (delivered? answers attachment-key)
                (nil? (store/get-permit-check (:key target) attachment-key))
                (not (handled-before? (:key target) attachment-key)))
-      (when-let [{:keys [application check]} (latest-source (source-candidates applications target attachment-key))]
+      (when-let [{:keys [application check]} (latest-source
+                                               (if (delivered? answers attachment-key)
+                                                 (source-candidates applications target attachment-key)
+                                                 (missing-attachment-source-candidates
+                                                   applications not-required-application-keys target
+                                                   attachment-key)))]
         (let [target-obligation-reviews (obligation-reviews (:key target))]
           (if (decided-after-check? target-obligation-reviews check)
             (log/info "Not inheriting kk application payment permit check of attachment" attachment-key
@@ -172,13 +215,15 @@
   "Inherits the checks for the given latest applications of the applicant to the same starting term. The
    applications are handled in submission order, so that a check inherited in the run can be inherited further.
    Applications whose payment can no longer change (final-application-keys) do not inherit, but their checks are
-   inherited. Returns the keys of the applications that inherited a check."
-  [audit-logger applications final-application-keys]
+   inherited. For a missing attachment, the source's payment must not be required at the start of the run
+   (not-required-application-keys), also when the source has inherited its check earlier in the same run. Returns the
+   keys of the applications that inherited a check."
+  [audit-logger applications final-application-keys not-required-application-keys]
   (let [applications (sort-by (comp time/to-instant :submitted) applications)]
     (->> applications
          (remove (comp final-application-keys :key))
          (keep (fn [target]
-                 (when-let [inheritance (inheritance-for applications target)]
+                 (when-let [inheritance (inheritance-for applications not-required-application-keys target)]
                    (when-let [inherited (inherit! inheritance audit-logger)]
                      (audit-log/log audit-logger
                                     {:new       inherited
