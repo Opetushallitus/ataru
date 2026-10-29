@@ -1,23 +1,23 @@
 (ns ataru.kk-application-payment.kk-application-payment-permit-check-inheritance
-  "Copies virkailija's residence permit check to the applicant's later applications for the same starting term.
+  "Kopioi virkailijan oleskelulupatarkistuksen hakijan myöhemmille saman alkamiskauden hakemuksille.
 
-   A later application gets the check, the attachment reviews and the reviewed payment obligation of an application
-   whose payment obligation has been reviewed. The main conditions (see inherit-permit-checks! and inheritance-for
-   for all) are that the later application
-   - has the same document option,
-   - was submitted on a day the permit card is valid, and
-   - has the permit attachment. The files are not compared, as the applicant may take new pictures of the permit card
-     for each application.
+   Myöhempi hakemus saa tarkistuksen, liitemerkinnät ja tarkastetun maksuvelvollisuuden hakemukselta, jonka
+   maksuvelvollisuus on tarkastettu. Pääehdot (kaikki ks. inherit-permit-checks! ja inheritance-for) ovat, että
+   myöhemmällä hakemuksella
+   - on sama dokumenttivaihtoehto,
+   - lupakortti on voimassa hakemuksen jättöpäivänä ja
+   - on oleskelulupaliite. Liitetiedostoja ei verrata, koska hakija voi ottaa lupakortista uudet kuvat jokaiseen
+     hakemukseen.
 
-   If the check found the applicant not obligated to pay and the payment of the application it is copied from is not
-   required, the check is copied also when the attachment is missing (see missing-attachment-source-candidates). The
-   missing attachment then does not make the applicant obligated, as long as the inherited check is unchanged and the
-   payment obligation is reviewed (see kk-application-payment/attachments-invalid-and-deadline-passed?). If the permit
-   was found in Migri and the basis is noted, the check decides the reviewed payment obligation regardless of the
-   attachments (see kk-application-payment/permit-check-payment-obligation).
+   Jos tarkistuksessa hakija on todettu ei-maksuvelvolliseksi eikä sen hakemuksen maksua, jolta tarkistus kopioidaan,
+   vaadita, tarkistus kopioidaan myös silloin, kun liite puuttuu (ks. missing-attachment-source-candidates).
+   Puuttuva liite ei silloin tee hakijasta maksuvelvollista niin kauan kuin peritty tarkistus on ennallaan ja
+   maksuvelvollisuus on tarkastettu (ks. kk-application-payment/attachments-invalid-and-deadline-passed?). Jos lupa on
+   löytynyt Migrin palvelusta ja peruste on merkitty, tarkistus ratkaisee tarkastetun maksuvelvollisuuden liitteistä
+   riippumatta (ks. kk-application-payment/permit-check-payment-obligation).
 
-   A check is copied only once, and later changes in the original application do not change the copy or its effect on
-   the payment."
+   Tarkistus kopioidaan vain kerran, eivätkä alkuperäisen hakemuksen myöhemmät muutokset muuta kopiota tai
+   sen vaikutusta maksuun."
   (:require [ataru.applications.application-store :as application-store]
             [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.db.db :as db]
@@ -38,7 +38,7 @@
   (:value (get answers (keyword attachment-key))))
 
 (defn delivered?
-  "Whether the applicant has delivered the attachment."
+  "Onko hakija toimittanut liitteen."
   [answers attachment-key]
   (boolean (some #(and (string? %) (not (string/blank? %)))
                  (flatten [(answer-value answers attachment-key)]))))
@@ -57,7 +57,7 @@
   (.toLocalDate (time/to-time-zone (:submitted application) (time/time-zone-for-id "Europe/Helsinki"))))
 
 (defn not-obligated?
-  "A check that does not state that the applicant is obligated to pay."
+  "Tarkistus, jossa hakijaa ei ole todettu maksuvelvolliseksi."
   [check]
   (contains? #{nil "not-obligated"} (:payment-obligation-basis check)))
 
@@ -67,12 +67,11 @@
     (not (.isBefore valid-until (submitted-date application)))))
 
 (defn- source-candidates
-  "Checks of the attachment in the applications submitted before the target application, whose payment obligation
-   has been reviewed."
+  "Liitteen tarkistukset ennen kohdehakemusta jätetyillä hakemuksilla, joiden maksuvelvollisuus on tarkastettu."
   [applications target attachment-key]
   (for [source applications
         :when (time/before? (:submitted source) (:submitted target))
-        ; Read from the database, as the source may have inherited a check earlier in the same run
+        ; Luetaan kannasta, koska lähde on voinut periä tarkistuksen aiemmin samassa ajossa
         :when (seq (reviewed-reviews (obligation-reviews (:key source))))
         :let [check (store/get-permit-check (:key source) attachment-key)]
         :when (and (some? check) (valid-at-submission? check target))]
@@ -86,10 +85,10 @@
         (application-store/get-application-attachment-reviews application-key false)))
 
 (defn- missing-attachment-source-candidates
-  "Sources for an application without the residence permit attachment. The check of the source found the applicant
-   not obligated to pay, and the payment of the source is not required at the start of the run. The source must not
-   have attachments marked missing or invalid, as they may make it obligated later in the same run. The attachments
-   do not matter when the permit was found in Migri and the basis is noted (see
+  "Lähteet hakemukselle, jolta oleskelulupaliite puuttuu. Lähteen tarkistuksessa hakija on todettu
+   ei-maksuvelvolliseksi, eikä lähteen maksua vaadita ajon alussa. Lähteellä ei saa olla puuttuviksi tai
+   virheellisiksi merkittyjä liitteitä, koska ne voivat tehdä siitä maksuvelvollisen vielä samassa ajossa.
+   Liitteillä ei ole merkitystä, jos lupa on löytynyt Migrin palvelusta ja peruste on merkitty (ks.
    kk-application-payment/permit-check-payment-obligation)."
   [applications not-required-application-keys target attachment-key]
   (->> (source-candidates (filter (comp not-required-application-keys :key) applications) target attachment-key)
@@ -103,8 +102,8 @@
   [candidates]
   (last (sort-by (comp time/to-instant :checked-time :check) candidates)))
 
-; A check is inherited only once, and not at all after the virkailija has checked the attachment in the application
-; or the check has been reset because of a new attachment, so that the new attachment gets reviewed
+; Tarkistus periytyy vain kerran. Se ei periydy lainkaan, jos virkailija on jo tarkistanut liitteen hakemuksella tai
+; tarkistus on nollattu uuden liitteen vuoksi, jotta uusi liite tarkastetaan
 (def ^:private handled-event-types
   #{inherited-event-type "kk-payment-permit-check-updated" "kk-payment-permit-check-reset"})
 
@@ -115,16 +114,15 @@
         (application-store/get-application-events application-key)))
 
 (defn- decided-after-check?
-  "A payment obligation the virkailija has decided on (e.g. reviewed or sent to Migri review) in the target
-   application after the original check is not overridden by the inheritance."
+  "Periytyminen ei ylikirjoita kohdehakemuksen maksuvelvollisuutta, josta virkailija on päättänyt (esim. merkinnyt
+   tarkastetuksi tai lähettänyt Migrin tarkastettavaksi) alkuperäisen tarkistuksen jälkeen."
   [target-obligation-reviews check]
   (some #(and (not= "unreviewed" (:state %))
               (time/after? (:modified-time %) (:checked-time check)))
         target-obligation-reviews))
 
 (defn- latest-attachment-reviews
-  "The latest review state of each attachment of the document option in the source application, when the attachment
-   has been reviewed."
+  "Lähdehakemuksen dokumenttivaihtoehdon kunkin liitteen viimeisin merkintä, kun liite on tarkastettu."
   [source-key attachment-keys]
   (->> (application-store/get-application-attachment-reviews source-key false)
        (filter #(contains? attachment-keys (:attachment-key %)))
@@ -135,13 +133,14 @@
        (into {})))
 
 (defn- reviewed-after-check?
-  "An attachment the virkailija has reviewed in the target application after the original check keeps its review."
+  "Liite, jonka virkailija on tarkastanut kohdehakemuksella alkuperäisen tarkistuksen jälkeen, säilyttää
+   merkintänsä."
   [attachment-review check]
   (and (not= "not-checked" (:state attachment-review))
        (time/after? (:modified-time attachment-review) (:checked-time check))))
 
 (defn- inheritance-for
-  "The inheritance to do for the target application or nil."
+  "Kohdehakemukselle tehtävä periytyminen tai nil."
   [applications not-required-application-keys target]
   (let [answers        (util/application-answers-by-key target)
         option         (:value (get answers (keyword payment-module/kk-application-payment-choice-key)))
@@ -170,8 +169,8 @@
                                      (latest-attachment-reviews (:key application)))}))))))
 
 (defn- inherit!
-  "Copies the check, the attachment reviews and the reviewed payment obligation in a transaction. Returns the
-   inherited check."
+  "Kopioi tarkistuksen, liitemerkinnät ja tarkastetun maksuvelvollisuuden yhdessä transaktiossa. Palauttaa perityn
+   tarkistuksen."
   [{:keys [target source check attachment-key attachment-states]} audit-logger]
   (let [target-key (:key target)
         now        (time/now)]
@@ -187,7 +186,7 @@
                               :virkailija_oid                  (:virkailija-oid check)
                               :organization_oid                (:organization-oid check)
                               :checked_time                    (:checked-time check)
-                              ; A check inherited further refers to the application it was originally made in
+                              ; Eteenpäin periytyvä tarkistus viittaa hakemukseen, jolla se alun perin tehtiin
                               :inherited_from_application_key  (or (:inherited-from-application-key check)
                                                                    (:key source))})]
         (log/info "Inheriting kk application payment permit check of attachment" attachment-key
@@ -212,12 +211,13 @@
         inherited))))
 
 (defn inherit-permit-checks!
-  "Inherits the checks for the given latest applications of the applicant to the same starting term. The
-   applications are handled in submission order, so that a check inherited in the run can be inherited further.
-   Applications whose payment can no longer change (final-application-keys) do not inherit, but their checks are
-   inherited. For a missing attachment, the source's payment must not be required at the start of the run
-   (not-required-application-keys), also when the source has inherited its check earlier in the same run. Returns the
-   keys of the applications that inherited a check."
+  "Periyttää tarkistukset hakijan saman alkamiskauden uusimmille hakemuksille.
+   - Hakemukset käsitellään jättöjärjestyksessä, jotta ajossa periytynyt tarkistus voi periytyä edelleen.
+   - Hakemukset, joiden maksu ei voi enää muuttua (final-application-keys), eivät peri, mutta niiden tarkistukset
+     periytyvät.
+   - Kun liite puuttuu, lähteen maksua ei saa vaatia ajon alussa (not-required-application-keys), vaikka lähde olisi
+     perinyt tarkistuksensa aiemmin samassa ajossa.
+   Palauttaa niiden hakemusten avaimet, jotka perivät tarkistuksen."
   [audit-logger applications final-application-keys not-required-application-keys]
   (let [applications (sort-by (comp time/to-instant :submitted) applications)]
     (->> applications

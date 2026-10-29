@@ -38,14 +38,14 @@
 (def kk-application-payment-invalid-attachment-states
   #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment"})
 
-; Sanity limits for the permit card validity date relative to the current date: permit cards are valid for at most
-; 5 years, and an expired card may still be noted
+; Lupakortin voimassaolopäivän sallitut rajat nykyhetkestä: lupakortit ovat voimassa enintään 5 vuotta, ja
+; vanhentuneenkin kortin voi merkitä
 (def kk-payment-permit-valid-until-years-back 5)
 (def kk-payment-permit-valid-until-years-ahead 6)
 
-; Residence permit attachments on which virkailija can note the Migri check, permit card validity and payment
-; obligation basis, by the document option they are shown for. Of the type A permit's front and back sides only the
-; front side gets the notes.
+; Oleskelulupaliitteet, joihin virkailija voi merkitä Migrin tarkistuksen, lupakortin voimassaolon ja
+; maksuvelvollisuuden perusteen, sen dokumenttivaihtoehdon mukaan, jolla ne näytetään. A-luvan etu- ja takapuolesta
+; merkinnät tehdään vain etupuoleen.
 (def kk-application-payment-residence-permit-attachment-key-by-option
   {(:eu-blue-option-value kk-application-payment-document-options)              "eu-blue-card-attachment"
    (:eu-family-member-option-value kk-application-payment-document-options)     "eu-family-member-permit"

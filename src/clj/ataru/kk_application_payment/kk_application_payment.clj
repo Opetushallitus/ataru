@@ -400,9 +400,9 @@
                  (= "kk-application-payment-obligation" (:requirement review))))))
 
 (defn- inherited-missing-attachment-keys
-  "The attachments of the document option the applicant has not delivered, when the application has inherited a check
-   without the residence permit attachment, the check found the applicant not obligated to pay and the payment
-   obligation is reviewed. Nil for other applications."
+  "Dokumenttivaihtoehdon liitteet, joita hakija ei ole toimittanut, kun hakemus on perinyt tarkistuksen ilman
+   oleskelulupaliitettä, tarkistuksessa hakija on todettu ei-maksuvelvolliseksi ja maksuvelvollisuus on tarkastettu.
+   Muille hakemuksille nil."
   [application]
   (let [answers (util/application-answers-by-key application)
         option  (:value (exemption-form-field-name answers))]
@@ -418,12 +418,11 @@
                  set)))))))
 
 (defn- attachments-invalid-and-deadline-passed?
-  "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
-   the applicant is not exempt by application even if the exemption question was answered as such.
+  "Jos hakemuksen maksuun liittyvät liitteet on merkitty puuttuviksi tai virheellisiksi ja liitteiden määräaika on
+   mennyt, hakija ei ole vapautettu hakemuksen perusteella, vaikka vapautuskysymykseen olisi vastattu niin.
 
-   For an application that has inherited a check without the residence permit attachment (see
-   inherited-missing-attachment-keys), the attachments the applicant has not delivered are not needed. The other
-   invalid attachments of the application are taken into account as before."
+   Hakemuksella, joka on perinyt tarkistuksen ilman oleskelulupaliitettä (ks. inherited-missing-attachment-keys),
+   toimittamatta jääneitä liitteitä ei tarvita. Hakemuksen muut virheelliset liitteet huomioidaan kuten ennenkin."
   [job-runner application]
   (if-let [reviews (seq (get-invalid-attachment-reviews (:key application)))]
     (let [attachment-keys (when (some #(= "attachment-missing" (:state %)) reviews)
@@ -455,8 +454,8 @@
         exempt?))))
 
 (defn hakukohteet-with-obligation-review-to-reset
-  "Hakukohteet whose reviewed payment obligation has to be reviewed again, as the applicant has delivered a new
-   payment related attachment after the review and before the attachment deadline."
+  "Hakukohteet, joiden tarkastettu maksuvelvollisuus pitää tarkastaa uudelleen, koska hakija on toimittanut uuden
+   maksuun liittyvän liitteen tarkastuksen jälkeen ja ennen liitteiden määräaikaa."
   [job-runner application]
   (let [application-key       (:key application)
         not-checked-reviews   (group-by :hakukohde (get-not-checked-attachment-reviews application-key))
@@ -476,10 +475,9 @@
              (keys not-checked-reviews))))
 
 (defn- permit-check-payment-obligation
-  "Payment obligation determined by virkailija's check on the residence permit attachment of the applicant's document
-   option: :not-obligated, :obligated or nil when the check does not override the attachment reviews. The check
-   overrides them when the permit was found in Migri, the basis of the payment obligation has been noted and the
-   payment obligation has been reviewed."
+  "Virkailijan hakijan dokumenttivaihtoehdon oleskelulupaliitteelle tekemän tarkistuksen mukainen maksuvelvollisuus:
+   :not-obligated, :obligated tai nil, kun tarkistus ei ohita liitemerkintöjä. Tarkistus ohittaa ne, kun lupa on
+   löytynyt Migrin palvelusta, maksuvelvollisuuden peruste on merkitty ja maksuvelvollisuus on tarkastettu."
   [application]
   (when (kk-application-payment-obligation-reviewed? application nil)
     (when-let [attachment-key (->> (util/application-answers-by-key application)
@@ -510,16 +508,17 @@
        set))
 
 (defn- payment-final?
-  "Payments that can no longer change, as they are paid, overdue or not required due to citizenship."
+  "Maksut, jotka eivät voi enää muuttua, koska ne on maksettu, ne ovat erääntyneet tai niitä ei vaadita
+   kansalaisuuden perusteella."
   [payment]
   (or (contains? #{(:paid all-states) (:overdue all-states)} (:state payment))
       (and (= (:not-required all-states) (:state payment))
            (= (:eu-citizen all-reasons) (:reason payment)))))
 
 (defn- permit-check-state
-  "Payment obligation determined by virkailija's residence permit check (see permit-check-payment-obligation) and,
-   for an obligation, the hakukohteet whose review a new attachment resets. Final payments (see payment-final?) are
-   not reviewed again."
+  "Virkailijan oleskelulupatarkistuksen mukainen maksuvelvollisuus (ks. permit-check-payment-obligation) ja
+   maksuvelvollisuuden ollessa kyseessä hakukohteet, joiden merkinnän uusi liite nollaa. Lopullisia maksuja (ks.
+   payment-final?) ei tarkasteta uudelleen."
   [job-runner application payment]
   (let [obligation (permit-check-payment-obligation application)]
     {:obligation           obligation
@@ -528,9 +527,9 @@
                              (seq (hakukohteet-with-obligation-review-to-reset job-runner application)))}))
 
 (defn- exempt?
-  "The payment obligation determined by virkailija's residence permit check overrides the exemption stated in the
-   application and the state of its attachments. When a new attachment resets an obligating review later in the same
-   run, the exemption is determined as if the review was already reset, so that no invoice is sent before the reset."
+  "Virkailijan oleskelulupatarkistuksen mukainen maksuvelvollisuus ohittaa hakemuksella ilmoitetun vapautuksen ja
+   liitteiden tilan. Kun uusi liite nollaa maksuvelvolliseksi toteavan merkinnän myöhemmin samassa ajossa, vapautus
+   määritetään kuin merkintä olisi jo nollattu, jotta laskua ei lähetetä ennen nollausta."
   [job-runner {:keys [application permit-check-state]}]
   (let [log-exempt (fn [result]
                      (log/info "Application key" (:key application) "(person oid)" (:person-oid application)
@@ -669,9 +668,9 @@
         [applications
          payments]         (when (get-in config [:kk-application-payments :enabled?])
                              (let [applications (fetch-applications)
-                                   ; The inheritance does not change the payments
+                                   ; Periytyminen ei muuta maksuja
                                    payments     (get-raw-payments (map :key applications))]
-                               ; The payments are determined by the inherited checks and reviews
+                               ; Maksut määritetään periytyneiden tarkistusten ja merkintöjen perusteella
                                [(if (seq (permit-check-inheritance/inherit-permit-checks!
                                            audit-logger
                                            applications
@@ -692,9 +691,9 @@
           (let [payment-by-application (into {}
                                              (map (fn [payment] [(:application-key payment) payment]))
                                              payments)
-                ; Checks saved after the resets started to be decided are kept, as they may already take the new
-                ; attachment into account. The time is compared to the modified time set by the database, so it is
-                ; taken from the system clock instead of ataru.time.
+                ; Nollauspäätösten aloittamisen jälkeen tallennetut tarkistukset säilytetään, koska niissä on voitu jo
+                ; huomioida uusi liite. Aikaa verrataan tietokannan asettamaan muokkausaikaan, joten se otetaan
+                ; järjestelmän kellosta eikä ataru.time-nimiavaruudesta.
                 resets-decided-at      (Instant/now)
                 applications-payments  (mapv (fn [application]
                                                (let [payment (get payment-by-application (:key application))]
