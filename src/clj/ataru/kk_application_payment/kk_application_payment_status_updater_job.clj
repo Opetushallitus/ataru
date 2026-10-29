@@ -242,13 +242,6 @@
         {:cronjob "automatic-vtj-verified-eu-citizen"}
         audit-logger))))
 
-(defn- not-required-application-keys
-  [payments]
-  (->> payments
-       (filter #(= (:not-required payment/all-states) (:state %)))
-       (map :application-key)
-       set))
-
 (defn- reset-kk-application-payment-obligation-states-if-needed
   "Resets the payment obligation review and removes the residence permit checks of an application to be reviewed
    again, when an applicant who was interpreted as obligated to pay delivers a new attachment before the attachment
@@ -260,7 +253,7 @@
      due to citizenship.
    - An exemption found in Migri is never reset."
   [{:keys [audit-logger] :as job-runner} applications-payments modified-payments resets-decided-at]
-  (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))]
+  (let [not-required-keys (payment/not-required-application-keys (keep :payment applications-payments))]
     (doseq [{:keys [application permit-check-state]} applications-payments
             :let [application-key      (:key application)
                   hakukohteet-to-reset (when (some? application-key)

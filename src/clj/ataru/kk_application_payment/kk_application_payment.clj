@@ -330,12 +330,13 @@
 (defn get-invalid-attachment-reviews
   "Returns (kk-application-payment related) attachment reviews for those fields that are (still) in missing or incomplete state."
   [application-key]
-  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment"}))
+  (get-payment-related-attachment-reviews application-key payment-module/kk-application-payment-invalid-attachment-states))
 
 (defn get-invalid-or-not-checked-attachment-reviews
   "Returns (kk-application-payment related) attachment reviews for those fields that are (still) in missing or incomplete state."
   [application-key]
-  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment" "not-checked"}))
+  (get-payment-related-attachment-reviews application-key
+                                          (conj payment-module/kk-application-payment-invalid-attachment-states "not-checked")))
 
 (defn get-not-checked-attachment-reviews
   "Returns not checked (kk-application-payment related) attachment reviews."
@@ -398,12 +399,42 @@
        (filter (fn [review]
                  (= "kk-application-payment-obligation" (:requirement review))))))
 
+(defn- inherited-missing-attachment-keys
+  "The attachments of the document option the applicant has not delivered, when the application has inherited a check
+   without the residence permit attachment, the check found the applicant not obligated to pay and the payment
+   obligation is reviewed. Nil for other applications."
+  [application]
+  (let [answers (util/application-answers-by-key application)
+        option  (:value (exemption-form-field-name answers))]
+    (when-let [attachment-key (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option
+                                   option)]
+      (when-not (permit-check-inheritance/delivered? answers attachment-key)
+        (let [check (permit-check-store/get-permit-check (:key application) attachment-key)]
+          (when (and (some? (:inherited-from-application-key check))
+                     (permit-check-inheritance/not-obligated? check)
+                     (kk-application-payment-obligation-reviewed? application nil))
+            (->> (get payment-module/kk-application-payment-attachment-keys-by-option option)
+                 (remove (partial permit-check-inheritance/delivered? answers))
+                 set)))))))
+
 (defn- attachments-invalid-and-deadline-passed?
   "If application's relevant attachments are marked missing or invalid and attachment deadline has passed,
-   the applicant is not exempt by application even if the exemption question was answered as such."
+   the applicant is not exempt by application even if the exemption question was answered as such.
+
+   For an application that has inherited a check without the residence permit attachment (see
+   inherited-missing-attachment-keys), the attachments the applicant has not delivered are not needed. The other
+   invalid attachments of the application are taken into account as before."
   [job-runner application]
-  (if-let [invalid-field-reviews (seq (get-invalid-attachment-reviews (:key application)))]
-    (includes-fields-with-passed-deadlines? job-runner application invalid-field-reviews)
+  (if-let [reviews (seq (get-invalid-attachment-reviews (:key application)))]
+    (let [attachment-keys (when (some #(= "attachment-missing" (:state %)) reviews)
+                            (inherited-missing-attachment-keys application))
+          other-reviews   (remove #(and (= "attachment-missing" (:state %))
+                                        (contains? attachment-keys (:attachment-key %)))
+                                  reviews)]
+      (if (seq other-reviews)
+        (includes-fields-with-passed-deadlines? job-runner application other-reviews)
+        (log/info "Missing attachments of application" (:key application)
+                  "are not needed due to the inherited check")))
     (log/info "No invalid attachment reviews found for application" (:key application))))
 
 (defn- exemption-in-application?
@@ -470,6 +501,13 @@
                             (and (= "kk-application-payment-obligation" (:requirement %))
                                  (contains? hakukohteet (:hakukohde %)))
                             (assoc :state "unreviewed"))))))
+
+(defn not-required-application-keys
+  [payments]
+  (->> payments
+       (filter #(= (:not-required all-states) (:state %)))
+       (map :application-key)
+       set))
 
 (defn- payment-final?
   "Payments that can no longer change, as they are paid, overdue or not required due to citizenship."
@@ -632,14 +670,13 @@
          payments]         (when (get-in config [:kk-application-payments :enabled?])
                              (let [applications (fetch-applications)
                                    ; The inheritance does not change the payments
-                                   payments     (get-raw-payments (map :key applications))
-                                   final-keys   (->> payments
-                                                     (filter payment-final?)
-                                                     (map :application-key)
-                                                     set)]
+                                   payments     (get-raw-payments (map :key applications))]
                                ; The payments are determined by the inherited checks and reviews
-                               [(if (seq (permit-check-inheritance/inherit-permit-checks! audit-logger applications
-                                                                                          final-keys))
+                               [(if (seq (permit-check-inheritance/inherit-permit-checks!
+                                           audit-logger
+                                           applications
+                                           (->> payments (filter payment-final?) (map :application-key) set)
+                                           (not-required-application-keys payments)))
                                   (fetch-applications)
                                   applications)
                                 payments]))]
