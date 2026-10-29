@@ -2606,6 +2606,14 @@ th.application__readonly-adjacent--header {
     top: -5px;
   }
 
+  @media only screen and (max-width: @desktop-content-width) {
+    .application__person-info-validation-error-dialog.past-date p {
+      position: static;
+      width: auto;
+      height: auto;
+    }
+  }
+
   .application__person-info-validation-error-dialog.postal-code p,
   .application__person-info-validation-error-dialog.postal-office-missing p,
   .application__person-info-validation-error-dialog.different-email p {
