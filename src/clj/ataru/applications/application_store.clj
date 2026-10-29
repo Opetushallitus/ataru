@@ -1060,6 +1060,36 @@
             (queries/yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
+(defn save-inherited-attachment-review-in-tx
+  "Saves an attachment review state inherited from another application of the applicant. The inheritance is
+   recorded as a single application event by the caller."
+  [conn application-key hakukohde-oid attachment-key hakukohde-review-state modified-time session audit-logger]
+  (let [connection      {:connection conn}
+        review-to-store {:application_key application-key
+                         :attachment_key  attachment-key
+                         :state           hakukohde-review-state
+                         :modified_time   modified-time
+                         :hakukohde       hakukohde-oid}
+        existing-review (first (queries/yesql-get-existing-attachment-review review-to-store connection))]
+    (when-not (= hakukohde-review-state (:state existing-review))
+      (auditlog-review-modify review-to-store existing-review session audit-logger)
+      (queries/yesql-update-attachment-hakukohde-review! review-to-store connection))))
+
+(defn save-inherited-application-hakukohde-review-in-tx
+  "Saves a hakukohde review state inherited from another application of the applicant. A review already in the
+   state gets the new modified time, so that it is not older than the attachments the inheritance covers."
+  [conn application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state modified-time session
+   audit-logger]
+  (let [review-to-store {:application_key application-key
+                         :requirement     hakukohde-review-requirement
+                         :state           hakukohde-review-state
+                         :hakukohde       hakukohde-oid
+                         :modified_time   modified-time}]
+    (if (seq (queries/yesql-get-existing-application-hakukohde-review review-to-store {:connection conn}))
+      (queries/yesql-upsert-application-hakukohde-review! review-to-store {:connection conn})
+      (save-application-hakukohde-review-in-tx conn application-key hakukohde-oid hakukohde-review-requirement
+                                               hakukohde-review-state modified-time session audit-logger))))
+
 (defn get-applications-by-keys
   [application-keys]
   (mapv unwrap-application

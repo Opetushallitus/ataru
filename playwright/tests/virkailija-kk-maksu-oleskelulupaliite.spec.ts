@@ -348,3 +348,120 @@ test('tyhjentää hakemusmaksuvelvollisuuden ja Migri-tarkistuksen valinnat', as
     permitValidUntil
   )
 })
+
+// Periytyminen tehdään maksuajossa, joten periytynyt merkintä lisätään
+// hakemuksen hakuvastaukseen.
+const isApplicationFetch = (url: URL) =>
+  /^\/lomake-editori\/api\/applications\/[0-9.]+$/.test(url.pathname)
+
+const inheritedCheck = {
+  'attachment-key': 'eu-blue-card-attachment',
+  'found-in-migri': true,
+  'permit-valid-until': permitValidUntil,
+  'payment-obligation-basis': 'not-obligated',
+  'payment-obligation-other-reason': null,
+  'checked-time': '2025-01-12T08:00:00.000Z',
+  'inherited-from-application-key': '1.2.246.562.11.00000000000000000099',
+  'inherited-time': '2025-01-14T08:00:00.000Z',
+  'original-check': {
+    'application-key': '1.2.246.562.11.00000000000000000099',
+    'checked-time': '2025-01-12T08:00:00.000Z',
+    'virkailija-name': 'Hemuli Hemuli?',
+    organization: {
+      oid: '1.2.246.562.10.2000000002',
+      name: { fi: 'Testikorkeakoulu' },
+    },
+  },
+}
+
+const inheritedNotification = () =>
+  attachmentRow(PERMIT_ATTACHMENT_LABEL).locator(
+    '.kk-payment-permit-check__inherited'
+  )
+
+test('näyttää periytyneiden merkintöjen alkuperäisen tarkastuksen, kunnes virkailija muuttaa merkintöjä', async () => {
+  await page.route(isApplicationFetch, async (route) => {
+    const response = await route.fetch()
+    const body = await response.json()
+    await route.fulfill({
+      response,
+      json: { ...body, 'kk-payment-permit-checks': [inheritedCheck] },
+    })
+  })
+  await openApplicationAttachments()
+  await page.unroute(isApplicationFetch)
+
+  await expect(inheritedNotification()).toContainText(
+    'Luvan tarkistustiedot tuotu toisesta hakemuksesta.'
+  )
+  // Ohje Migrin lupatietopalvelusta korvautuu periytymisen ilmoituksella
+  await expect(
+    attachmentRow(PERMIT_ATTACHMENT_LABEL).getByRole('link', {
+      name: 'Migrin lupatietopalvelusta (avautuu uuteen välilehteen)',
+    })
+  ).toHaveCount(0)
+  const details = inheritedNotification().locator('dl')
+  await expect(details).toHaveCount(0)
+
+  const toggle = inheritedNotification().getByRole('button', {
+    name: 'Näytä tarkemmat tiedot.',
+  })
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await toggle.click()
+  await expect(
+    inheritedNotification().getByRole('button', {
+      name: 'Sulje tarkemmat tiedot.',
+    })
+  ).toHaveAttribute('aria-expanded', 'true')
+  await expect(details.locator('dt')).toHaveText([
+    'Hakemusnumero',
+    'Korkeakoulu',
+    'Käsittelypvm',
+    'Käsittelijä',
+  ])
+  await expect(details.locator('dd')).toHaveText([
+    '1.2.246.562.11.00000000000000000099',
+    'Testikorkeakoulu',
+    '12.1.2025',
+    'Hemuli Hemuli?',
+  ])
+  await expect(permitCheck().getByLabel('Kyllä')).toBeChecked()
+
+  const [request] = await Promise.all([
+    page.waitForRequest(isPermitCheckPut),
+    permitCheck().getByLabel('Ei', { exact: true }).click(),
+  ])
+  expect((await request.response())?.status()).toBe(200)
+  await expect(inheritedNotification()).toHaveCount(0)
+})
+
+test('näyttää alkuperäisen tarkastuksen korkeakoulun tuntemattomana, kun sitä ei ole tiedossa', async () => {
+  await page.route(isApplicationFetch, async (route) => {
+    const response = await route.fetch()
+    const body = await response.json()
+    await route.fulfill({
+      response,
+      json: {
+        ...body,
+        'kk-payment-permit-checks': [
+          {
+            ...inheritedCheck,
+            'original-check': {
+              ...inheritedCheck['original-check'],
+              organization: null,
+            },
+          },
+        ],
+      },
+    })
+  })
+  await openApplicationAttachments()
+  await page.unroute(isApplicationFetch)
+
+  await inheritedNotification()
+    .getByRole('button', { name: 'Näytä tarkemmat tiedot.' })
+    .click()
+  await expect(
+    inheritedNotification().locator('dl').locator('dd').nth(1)
+  ).toHaveText('Ei tiedossa')
+})

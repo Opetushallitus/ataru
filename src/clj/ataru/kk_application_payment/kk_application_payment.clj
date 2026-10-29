@@ -25,6 +25,7 @@
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
             [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-inheritance :as permit-check-inheritance]
             [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store])
   (:import java.time.Instant))
 
@@ -470,17 +471,22 @@
                                  (contains? hakukohteet (:hakukohde %)))
                             (assoc :state "unreviewed"))))))
 
+(defn- payment-final?
+  "Payments that can no longer change, as they are paid, overdue or not required due to citizenship."
+  [payment]
+  (or (contains? #{(:paid all-states) (:overdue all-states)} (:state payment))
+      (and (= (:not-required all-states) (:state payment))
+           (= (:eu-citizen all-reasons) (:reason payment)))))
+
 (defn- permit-check-state
   "Payment obligation determined by virkailija's residence permit check (see permit-check-payment-obligation) and,
-   for an obligation, the hakukohteet whose review a new attachment resets. Payments that can no longer change, as
-   they are paid, overdue or not required due to citizenship, are not reviewed again."
+   for an obligation, the hakukohteet whose review a new attachment resets. Final payments (see payment-final?) are
+   not reviewed again."
   [job-runner application payment]
   (let [obligation (permit-check-payment-obligation application)]
     {:obligation           obligation
      :hakukohteet-to-reset (when (and (= :obligated obligation)
-                                      (not (contains? #{(:paid all-states) (:overdue all-states)} (:state payment)))
-                                      (not (and (= (:not-required all-states) (:state payment))
-                                                (= (:eu-citizen all-reasons) (:reason payment)))))
+                                      (not (payment-final? payment)))
                              (seq (hakukohteet-with-obligation-review-to-reset job-runner application)))}))
 
 (defn- exempt?
@@ -613,14 +619,30 @@
    payments (:modified-payments) and the time the payment obligation review resets were decided at
    (:resets-decided-at) for further processing. Empty when the person has no applications and nil when kk
    application payments are disabled."
-  [{:keys [person-service tarjonta-service koodisto-cache get-haut-cache] :as job-runner} person-oid term year]
-  (let [valid-haku-oids (get-valid-haku-oids get-haut-cache tarjonta-service term year)
-        linked-oids     (get (person-service/linked-oids person-service [person-oid]) person-oid)
-        master-oid      (:master-oid linked-oids)
-        person          (person-service/get-person person-service master-oid)
-        aliases         (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
-        applications    (when (and (not-empty aliases) (not-empty valid-haku-oids))
-                          (application-store/get-latest-applications-for-kk-payment-processing aliases valid-haku-oids))]
+  [{:keys [person-service tarjonta-service koodisto-cache get-haut-cache audit-logger] :as job-runner} person-oid term year]
+  (let [valid-haku-oids    (get-valid-haku-oids get-haut-cache tarjonta-service term year)
+        linked-oids        (get (person-service/linked-oids person-service [person-oid]) person-oid)
+        master-oid         (:master-oid linked-oids)
+        person             (person-service/get-person person-service master-oid)
+        aliases            (into [] (conj (:linked-oids linked-oids) (:master-oid linked-oids) person-oid))
+        fetch-applications #(when (and (not-empty aliases) (not-empty valid-haku-oids))
+                              (application-store/get-latest-applications-for-kk-payment-processing
+                                aliases valid-haku-oids))
+        [applications
+         payments]         (when (get-in config [:kk-application-payments :enabled?])
+                             (let [applications (fetch-applications)
+                                   ; The inheritance does not change the payments
+                                   payments     (get-raw-payments (map :key applications))
+                                   final-keys   (->> payments
+                                                     (filter payment-final?)
+                                                     (map :application-key)
+                                                     set)]
+                               ; The payments are determined by the inherited checks and reviews
+                               [(if (seq (permit-check-inheritance/inherit-permit-checks! audit-logger applications
+                                                                                          final-keys))
+                                  (fetch-applications)
+                                  applications)
+                                payments]))]
     (when (get-in config [:kk-application-payments :enabled?])
       (if (= 0 (count applications))
         (do
@@ -632,7 +654,7 @@
                     "with all person aliases" aliases "and application keys" (map :key applications))
           (let [payment-by-application (into {}
                                              (map (fn [payment] [(:application-key payment) payment]))
-                                             (get-raw-payments (map :key applications)))
+                                             payments)
                 ; Checks saved after the resets started to be decided are kept, as they may already take the new
                 ; attachment into account. The time is compared to the modified time set by the database, so it is
                 ; taken from the system clock instead of ataru.time.

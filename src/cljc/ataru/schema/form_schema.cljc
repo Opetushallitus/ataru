@@ -806,6 +806,7 @@
                          "field-deadline-unset"
                          "kk-payment-permit-check-updated"
                          "kk-payment-permit-check-reset"
+                         "kk-payment-permit-check-inherited"
                          "person-found-matching"
                          "person-dob-or-gender-conflict"
                          "information-request-reminder-sent"
@@ -864,7 +865,13 @@
          {:attachment-key                 s/Str
           :checked-time                   #?(:clj java.time.ZonedDateTime :cljs s/Str)
           :inherited-from-application-key (s/maybe s/Str)
-          :inherited-time                 (s/maybe #?(:clj java.time.ZonedDateTime :cljs s/Str))}))
+          :inherited-time                 (s/maybe #?(:clj java.time.ZonedDateTime :cljs s/Str))
+          ; The original check of an inherited check
+          (s/optional-key :original-check) {:application-key s/Str
+                                            :checked-time    #?(:clj java.time.ZonedDateTime :cljs s/Str)
+                                            :virkailija-name s/Str
+                                            :organization    (s/maybe {:oid  s/Str
+                                                                       :name {s/Keyword s/Str}})}}))
 
 (s/defschema FieldDeadlineBody
   {:deadline java.time.ZonedDateTime})
