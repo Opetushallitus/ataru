@@ -242,30 +242,23 @@
         {:cronjob "automatic-vtj-verified-eu-citizen"}
         audit-logger))))
 
-(defn- not-required-application-keys
-  [payments]
-  (->> payments
-       (filter #(= (:not-required payment/all-states) (:state %)))
-       (map :application-key)
-       set))
-
 (defn- reset-kk-application-payment-obligation-states-if-needed
-  "Resets the payment obligation review and removes the residence permit checks of an application to be reviewed
-   again, when an applicant who was interpreted as obligated to pay delivers a new attachment before the attachment
-   deadline. Checks saved after resets-decided-at are kept.
-   - Without a decisive residence permit check, applications whose payment was not required already before the job
-     run, for any reason, are not reset.
-   - An obligation found in Migri is reset as decided when determining the payments, regardless of the payment state
-     before the job run and whether the payments changed in it, unless the payment is paid, overdue or not required
-     due to citizenship.
-   - An exemption found in Migri is never reset."
+  "Nollaa maksuvelvollisuuden merkinnän ja poistaa oleskelulupatarkistukset hakemukselta, joka pitää tarkastaa
+   uudelleen, kun maksuvelvolliseksi tulkittu hakija toimittaa uuden liitteen ennen liitteiden määräaikaa.
+   Hetken resets-decided-at jälkeen tallennetut tarkistukset säilytetään.
+   - Ilman ratkaisevaa oleskelulupatarkistusta hakemuksia, joiden maksua ei vaadittu jo ennen ajoa mistä tahansa
+     syystä, ei nollata.
+   - Migrin palvelusta todettu maksuvelvollisuus nollataan maksuja määritettäessä tehdyn päätöksen mukaisesti
+     riippumatta maksun tilasta ennen ajoa ja siitä, muuttuivatko maksut ajossa, paitsi jos maksu on maksettu,
+     erääntynyt tai kansalaisuuden perusteella ei vaadittu.
+   - Migrin palvelusta todettua vapautusta ei koskaan nollata."
   [{:keys [audit-logger] :as job-runner} applications-payments modified-payments resets-decided-at]
-  (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))]
+  (let [not-required-keys (payment/not-required-application-keys (keep :payment applications-payments))]
     (doseq [{:keys [application permit-check-state]} applications-payments
             :let [application-key      (:key application)
                   hakukohteet-to-reset (when (some? application-key)
                                          (case (:obligation permit-check-state)
-                                           ; A review saved by virkailija after the reset was decided is kept
+                                           ; Virkailijan nollauspäätöksen jälkeen tallentama merkintä säilytetään
                                            :obligated     (when-let [decided (seq (:hakukohteet-to-reset
                                                                                     permit-check-state))]
                                                             (filter (set (payment/hakukohteet-with-obligation-review-to-reset
@@ -278,7 +271,7 @@
                                                job-runner application))))]
             :when (seq hakukohteet-to-reset)]
       (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-             ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
+             ; Nollattavilla hakukohteilla on tarkastettu maksuvelvollisuus, joka on hakukohteelle yksilöllinen
              (doseq [hakukohde hakukohteet-to-reset]
                (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
                          application-key ", hakukohde" hakukohde)

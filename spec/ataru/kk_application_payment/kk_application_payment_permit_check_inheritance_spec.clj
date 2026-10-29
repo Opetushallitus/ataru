@@ -31,6 +31,7 @@
 
 (def hakukohde "payment-info-test-kk-hakukohde")
 (def permit-attachment-key "continuous-residence-permit-front")
+(def permit-back-attachment-key "continuous-residence-permit-back")
 (def passport-attachment-key "continuous-residence-passport-attachment")
 (def koulutustoimija-oid "1.2.246.562.10.2000000001")
 (def oppilaitos-oid "1.2.246.562.10.2000000002")
@@ -100,6 +101,9 @@
 (def delivered-application
   (application-fixture continuous-residence-option [permit-attachment-key passport-attachment-key]))
 
+(def missing-application
+  (application-fixture continuous-residence-option [passport-attachment-key]))
+
 (defn- init-applications
   "Stores the applications of the applicant, submitted at the given times."
   [& fixtures-and-submitted]
@@ -140,6 +144,25 @@
                                        :state           state
                                        :modified_time   (time/now)
                                        :updated?        true})))
+
+(defn- review-missing-attachments! [application-key]
+  (unit-test-db/save-reviews-to-db! (for [[attachment-key state] [[permit-attachment-key "attachment-missing"]
+                                                                  [permit-back-attachment-key "attachment-missing"]
+                                                                  [passport-attachment-key "not-checked"]]]
+                                      {:application_key application-key
+                                       :attachment_key  attachment-key
+                                       :hakukohde       hakukohde
+                                       :state           state
+                                       :modified_time   (time/now)
+                                       :updated?        true})))
+
+(defn- review-back-side-missing! [application-key]
+  (unit-test-db/save-reviews-to-db! [{:application_key application-key
+                                      :attachment_key  permit-back-attachment-key
+                                      :hakukohde       hakukohde
+                                      :state           "attachment-missing"
+                                      :modified_time   (time/now)
+                                      :updated?        true}]))
 
 (defn- checked-source! [application-key & [check]]
   (check! application-key check)
@@ -220,7 +243,6 @@
       (should= (:not-required payment/all-states) (payment-state target-key))))
 
   (it "inherits when the later application has other files as the attachments"
-    ; the applicant may take new pictures of the permit card for each application
     (let [other-files-application (update delivered-application :answers
                                           (partial map #(if (= "attachment" (:fieldType %))
                                                           (assoc % :value [(str (:key %) "-other-file")])
@@ -264,15 +286,187 @@
       (checked-source! source-key)
       (should-be-nil (:original-check (first (checks source-key))))))
 
-  (it "does not inherit to an application without the residence permit attachment"
+  (it "inherits a check by which the applicant was found not obligated to an application without the residence permit attachment"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
-                                                     (application-fixture continuous-residence-option
-                                                                          [passport-attachment-key])
-                                                     "2025-01-14T10:00:00+02:00")]
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
       (checked-source! source-key)
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      ; the missing attachments have nothing to check
+      (should= {permit-attachment-key        "attachment-missing"
+                permit-back-attachment-key   "attachment-missing"
+                passport-attachment-key      "checked"}
+               (attachment-states target-key))
+      (should= "reviewed" (obligation-state target-key))
+      (should= 1 (count (inherited-events target-key)))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "does not make the applicant obligated by the attachments missing after the deadline when the check by which the applicant was found not obligated has been inherited"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= {:state (:not-required payment/all-states) :reason (:exemption-field payment/all-reasons)}
+               (select-keys (first (payment/get-raw-payments [target-key])) [:state :reason]))))
+
+  (it "makes the applicant obligated by the attachments missing after the deadline when virkailija changes the inherited check"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (permit-check/save-permit-check fake-organization-service (tarjonta-service/->MockTarjontaKoutaService)
+                                      audit-logger
+                                      {:identity {:oid       unit-test-db/permit-check-virkailija-oid
+                                                  :superuser true}}
+                                      target-key permit-attachment-key
+                                      {:found-in-migri false :permit-valid-until "2026-01-01"})
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "makes the applicant obligated by the attachments missing after the deadline when the payment obligation is no longer reviewed"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (review-obligation! target-key "unreviewed")
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "makes the applicant obligated after the deadline when virkailija marks a delivered attachment missing in spite of the inherited check"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (review-attachments! target-key "not-checked")
+      (run-job! target-key)
+      (review-attachments! target-key "attachment-missing")
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "does not make the applicant obligated by the attachments missing after the deadline when the payment of the original application becomes required"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (review-attachments! source-key "attachment-missing")
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= (:awaiting payment/all-states) (payment-state source-key))
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "inherits a check inherited further to an application without the residence permit attachment when the payment of the original application is required"
+    (let [[source-key middle-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                                missing-application "2025-01-12T10:00:00+02:00"
+                                                                missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (payment/set-application-fee-required source-key nil)
+      ; the middle application has inherited the check while the payment of the original application was not required
+      (check! middle-key {})
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (jdbc/execute! conn ["UPDATE kk_application_payment_permit_checks SET inherited_from_application_key = ? WHERE application_key = ?"
+                             source-key middle-key]))
+      (review-obligation! middle-key "reviewed")
+      (payment/set-application-fee-not-required-for-exemption middle-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit to an application without the residence permit attachment when the earlier application has missing attachments"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      ; the payment of the earlier application is required later in the same run
+      (review-attachments! source-key "attachment-missing")
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [] (checks target-key))
+      (should= (:awaiting payment/all-states) (payment-state source-key))))
+
+  (it "inherits to an application without the residence permit attachment when the earlier application has missing attachments but the permit has been confirmed in Migri"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-attachments! source-key "attachment-missing")
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:not-required payment/all-states) (payment-state source-key))))
+
+  (it "makes the applicant obligated after the deadline by a missing attachment the delivered inherited attachment does not cover"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      ; the back side of the permit card is missing in the later application
+      (checked-source! source-key {:payment-obligation-basis nil})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-attachments! target-key "not-checked")
+      (review-back-side-missing! target-key)
+      (run-job! target-key)
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit to an application without the residence permit attachment when the payment of the earlier application is required"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (payment/set-application-fee-required source-key nil)
+      (review-missing-attachments! target-key)
       (run-job! target-key)
       (should= [] (checks target-key))
       (should-be-nil (obligation-state target-key))))
+
+  (it "does not inherit a check stating a payment obligation to an application without the residence permit attachment"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis "obligated-own-studies"})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [] (checks target-key))))
+
+  (it "does not inherit to an application without the residence permit attachment when the permit card has expired before the application was submitted"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:permit-valid-until "2025-01-13"})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [] (checks target-key))))
+
+  (it "does not inherit to an application without the residence permit attachment of another document option"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     (application-fixture
+                                                       (:eu-blue-option-value
+                                                         payment-module/kk-application-payment-document-options)
+                                                       ["eu-passport-attachment"])
+                                                     "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (run-job! target-key)
+      (should= [] (checks target-key))))
 
   (it "does not inherit to an application with another document option"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"

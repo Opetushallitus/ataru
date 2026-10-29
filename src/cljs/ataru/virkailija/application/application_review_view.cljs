@@ -1055,8 +1055,6 @@
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (when-not permit-attachment?
             state-selector)]
-         ; As in the design, the residence permit notes start with a notification, below which the attachment state
-         ; is shown next to the notes
          (if permit-attachment?
            [:<>
             [permit-check/permit-check-notification

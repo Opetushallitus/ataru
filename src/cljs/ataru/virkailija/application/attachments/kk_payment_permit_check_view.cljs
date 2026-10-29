@@ -28,7 +28,6 @@
    [:span.kk-payment-permit-check__visually-hidden
     (str " " (translation :kk-payment-permit-check-opens-in-new-tab))]])
 
-; Same as the notifications of the application heading
 (defn- notification [content]
   [:div.application__message-display.application__message-display--notification.kk-payment-permit-check__notification
    [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle {:aria-hidden true}]]
@@ -45,8 +44,8 @@
             :on-change on-change}]
    [:label {:for id} label]])
 
-; Shown after the label of a set field, as a selection of radio buttons cannot be removed otherwise. As the button
-; disappears, the focus is moved to the first radio button of the field.
+; Näytetään täytetyn kentän otsikon perässä, koska radiopainikkeiden valintaa ei voi muuten poistaa. Kun painike
+; katoaa, fokus siirretään kentän ensimmäiseen radiopainikkeeseen.
 (defn- clear-button [application-key attachment-key check disabled? field label-key focus-id]
   (when (and (not disabled?) (some? (get check field)))
     [:button.kk-payment-permit-check__clear
@@ -58,7 +57,7 @@
                     (some-> (.getElementById js/document focus-id) .focus))}
      [:i.material-icons-outlined {:aria-hidden true} "edit_off"]]))
 
-; The legend contains the clear button, so the field is named by the label text alone
+; Legend sisältää tyhjennyspainikkeen, joten kenttä nimetään pelkällä otsikkotekstillä
 (defn- legend [name label clear-button]
   [:legend.kk-payment-permit-check__label
    [:span {:id (str name "-label")} label]
@@ -159,7 +158,6 @@
      [:dt (translation :kk-payment-permit-check-original-virkailija)]
      [:dd virkailija-name]]))
 
-; The details of the original check are hidden until the virkailija opens them
 (defn- inherited-notification [application-key attachment-key _original-check]
   (let [open? (r/atom false)
         id    (field-id application-key attachment-key :original-check)]
@@ -179,12 +177,12 @@
          [original-check-details id original-check])])))
 
 (defn permit-check-notification
-  "Guidance on checking a kk application payment residence permit, depending on whether the applicant has delivered
-   the attachment, or the original check of inherited notes."
+  "Ohje hakemusmaksun oleskeluluvan tarkistamiseen sen mukaan, onko hakija toimittanut liitteen, tai perittyjen
+   merkintöjen alkuperäinen tarkistus."
   [application-key attachment-key attachment-delivered?]
   (if-let [original-check @(re-frame/subscribe [:kk-payment-permit-check/original-check
                                                 application-key attachment-key])]
-    ; Keyed so that the details are not left open, and the ids are not left stale, when the application changes
+    ; Avain asetetaan, jotta tiedot eivät jää auki eivätkä id:t vanhene, kun hakemus vaihtuu
     ^{:key (str application-key "-" (name attachment-key))}
     [inherited-notification application-key attachment-key original-check]
     (if attachment-delivered?
@@ -196,7 +194,7 @@
                      (str " " (translation :kk-payment-permit-check-attachment-missing-suffix))]])))
 
 (defn permit-check
-  "Virkailija's notes on a kk application payment residence permit attachment."
+  "Virkailijan merkinnät hakemusmaksun oleskelulupaliitteeseen."
   [application-key attachment-key attachment-checked? can-edit?]
   (let [check       @(re-frame/subscribe [:kk-payment-permit-check/check application-key attachment-key])
         disabled?   (not can-edit?)

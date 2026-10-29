@@ -1061,8 +1061,8 @@
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
 (defn save-inherited-attachment-review-in-tx
-  "Saves an attachment review state inherited from another application of the applicant. The inheritance is
-   recorded as a single application event by the caller."
+  "Tallentaa hakijan toiselta hakemukselta perityn liitemerkinnän. Kutsuja kirjaa periytymisen yhtenä hakemuksen
+   tapahtumana."
   [conn application-key hakukohde-oid attachment-key hakukohde-review-state modified-time session audit-logger]
   (let [connection      {:connection conn}
         review-to-store {:application_key application-key
@@ -1076,8 +1076,8 @@
       (queries/yesql-update-attachment-hakukohde-review! review-to-store connection))))
 
 (defn save-inherited-application-hakukohde-review-in-tx
-  "Saves a hakukohde review state inherited from another application of the applicant. A review already in the
-   state gets the new modified time, so that it is not older than the attachments the inheritance covers."
+  "Tallentaa hakijan toiselta hakemukselta perityn hakukohteen merkinnän. Jos merkintä on jo samassa tilassa, sen
+   muokkausaika päivitetään, jotta se ei ole vanhempi kuin periytymisen kattamat liitteet."
   [conn application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state modified-time session
    audit-logger]
   (let [review-to-store {:application_key application-key
