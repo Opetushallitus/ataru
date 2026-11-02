@@ -202,15 +202,11 @@
   [field-descriptor]
   [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor)) :tab-index -1} ""])
 
-(defonce copy-container-node (reagent/atom nil))
-
 (defn copy [id]
-  (when-let [copy-container @copy-container-node]
+  (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
     (set! (.-value copy-container) id)
     (.select copy-container)
     (.execCommand js/document "copy")))
-
-(defonce application-field-nodes (atom {}))
 
 (defn copy-link [id & {:keys [shared-use-warning? answer? include?]}]
   (let [id (cond-> id
