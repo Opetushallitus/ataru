@@ -71,9 +71,10 @@
    :exemption-field "exemption-field"})
 
 (def kk-application-payment-obligation-states
-  {:unreviewed      "unreviewed"
-   :reviewed        "reviewed"
-   :in-migri-review "in-migri-review"})
+  {:unreviewed             "unreviewed"
+   :reviewed               "reviewed"
+   :in-migri-review        "in-migri-review"
+   :exemption-not-verified "exemption-not-verified"})
 
 (defn get-due-date-for-todays-payment []
   (let [time-now (time/now)
@@ -326,12 +327,12 @@
 (defn get-invalid-attachment-reviews
   "Returns (kk-application-payment related) attachment reviews for those fields that are (still) in missing or incomplete state."
   [application-key]
-  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment"}))
+  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment"}))
 
 (defn get-invalid-or-not-checked-attachment-reviews
   "Returns (kk-application-payment related) attachment reviews for those fields that are (still) in missing or incomplete state."
   [application-key]
-  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment" "not-checked"}))
+  (get-payment-related-attachment-reviews application-key #{"attachment-missing" "incomplete-attachment" "non-exempting-attachment" "not-checked"}))
 
 (defn get-not-checked-attachment-reviews
   "Returns not checked (kk-application-payment related) attachment reviews."
