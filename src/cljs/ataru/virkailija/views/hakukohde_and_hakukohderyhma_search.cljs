@@ -18,8 +18,20 @@
 (defn- hakukohde->hakukohde-name
   [lang hakukohde]
   (let [hakukohde-name (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
-        tarjoaja-name  (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])]
-    (str hakukohde-name " - " tarjoaja-name)))
+        tarjoaja-name  (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
+        state-key      (cond
+                         (:archived hakukohde) :archived
+                         (:can-be-applied-to? hakukohde) :julkaistu
+                         :else nil)
+        texts       @(re-frame/subscribe [:editor/virkailija-texts])
+        state-label (when state-key
+                      (util/non-blank-val
+                       (get texts state-key)
+                       [lang :fi :sv :en]))]
+    (str hakukohde-name " - " tarjoaja-name
+         (when state-label
+           (str " (" state-label ")"))
+         )))
 
 (defn- hakukohderyhma->hakukohderyhma-hit
   [lang search-terms hakukohderyhma]
