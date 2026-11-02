@@ -16,14 +16,14 @@
                       [lang :fi :sv :en]))
 
 (defn- hakukohde->hakukohde-name
-  [lang hakukohde texts]
+  [lang hakukohde texts show-state-text?]
   (let [hakukohde-name (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
         tarjoaja-name  (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
         state-key      (cond 
                          (:archived hakukohde) :archived
                          (:can-be-applied-to? hakukohde) :julkaistu
                          :else nil)
-        state-label (when state-key
+        state-label (when (and show-state-text? state-key)
                       (util/non-blank-val
                        (get texts state-key)
                        [lang :fi :sv :en]))]
@@ -43,8 +43,8 @@
                       (:hilight (first parts)))}))
 
 (defn- hakukohde->hakukohde-hit
-  [lang search-terms texts hakukohde]
-  (let [parts (util/match-text (hakukohde->hakukohde-name lang hakukohde texts)
+  [lang search-terms texts show-state-text? hakukohde]
+  (let [parts (util/match-text (hakukohde->hakukohde-name lang hakukohde texts show-state-text?)
                                search-terms
                                true)]
     {:id          (:oid hakukohde)
@@ -72,7 +72,7 @@
 
 (re-frame/reg-sub
   :hakukohde-and-hakukohderyhma/hakukohde-hits
-  (fn [db [_ id haku]]
+  (fn [db [_ id haku show-state-text?]]
     (let [lang         @(re-frame/subscribe [:editor/virkailija-lang])
           search-terms (search-input->search-terms
                         (get-in db [:hakukohde-and-hakukohderyhma id :search-input] ""))
@@ -82,12 +82,15 @@
         (map (partial hakukohde->hakukohde-hit
                       lang
                       search-terms
-                      texts)
+                      texts
+                      show-state-text?)
              (:hakukohteet haku))))))
 
 (re-frame/reg-event-db
   :hakukohde-and-hakukohderyhma/set-search-input
-  (fn [db [_ id haut hakukohderyhmat hakukohde-selected? hakukohderyhma-selected? search-input]]
+  (fn [db [_ id haut hakukohderyhmat
+           hakukohde-selected? hakukohderyhma-selected?
+           search-input show-state-text?]]
     (let [lang         (get-virkailija-lang db)
           search-terms (search-input->search-terms search-input)
           texts        (get-in db [:editor :virkailija-texts])
@@ -108,7 +111,8 @@
                                           (map (partial hakukohde->hakukohde-hit
                                                         lang
                                                         search-terms
-                                                        texts))
+                                                        texts
+                                                        show-state-text?))
                                           (filter #(or (hakukohde-selected? (:id %))
                                                        (and did-search? (:match? %)))))))
                             {}
@@ -158,7 +162,8 @@
            hakukohderyhmat
            hakukohde-selected?
            hakukohderyhma-selected?
-           only-hakukohteet?]}]
+           only-hakukohteet?
+           show-state-text?]}]
   (let [placeholder-translation-key (if only-hakukohteet?
                                       :search-hakukohde-placeholder
                                       :search-hakukohde-and-hakukohderyhma-placeholder)]
@@ -172,7 +177,8 @@
                        hakukohderyhmat
                        hakukohde-selected?
                        hakukohderyhma-selected?
-                       (.-value (.-target %))])
+                       (.-value (.-target %))
+                       show-state-text?])
       :placeholder @(re-frame/subscribe [:editor/virkailija-translation placeholder-translation-key])}]))
 
 (defn visibility-checkbox
@@ -203,7 +209,8 @@
            on-hakukohde-unselect
            on-hakukohderyhma-select
            on-hakukohderyhma-unselect
-           only-hakukohteet?]}]
+           only-hakukohteet?
+           show-state-text?]}]
   (let [lang                      @(re-frame/subscribe [:editor/virkailija-lang])]
     [:ul.hakukohde-and-hakukohderyhma-search-listing
      (when-let [hits (seq @(re-frame/subscribe
@@ -222,7 +229,8 @@
             :let  [hits @(re-frame/subscribe
                           [:hakukohde-and-hakukohderyhma/hakukohde-hits
                            id
-                           haku])]
+                           haku
+                           show-state-text?])]
             :when (seq hits)]
         ^{:key (str "category-" (:oid haku))}
         [category-listing
