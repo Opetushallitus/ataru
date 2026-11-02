@@ -16,14 +16,13 @@
                       [lang :fi :sv :en]))
 
 (defn- hakukohde->hakukohde-name
-  [lang hakukohde]
+  [lang hakukohde texts]
   (let [hakukohde-name (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
         tarjoaja-name  (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
         state-key      (cond 
                          (:archived hakukohde) :archived
                          (:can-be-applied-to? hakukohde) :julkaistu
                          :else nil)
-        texts       @(re-frame/subscribe [:editor/virkailija-texts])
         state-label (when state-key
                       (util/non-blank-val
                        (get texts state-key)
@@ -44,8 +43,8 @@
                       (:hilight (first parts)))}))
 
 (defn- hakukohde->hakukohde-hit
-  [lang search-terms hakukohde]
-  (let [parts (util/match-text (hakukohde->hakukohde-name lang hakukohde)
+  [lang search-terms texts hakukohde]
+  (let [parts (util/match-text (hakukohde->hakukohde-name lang hakukohde texts)
                                search-terms
                                true)]
     {:id          (:oid hakukohde)
@@ -76,12 +75,14 @@
   (fn [db [_ id haku]]
     (let [lang         @(re-frame/subscribe [:editor/virkailija-lang])
           search-terms (search-input->search-terms
-                        (get-in db [:hakukohde-and-hakukohderyhma id :search-input] ""))]
+                        (get-in db [:hakukohde-and-hakukohderyhma id :search-input] ""))
+          texts        (get-in db [:editor :virkailija-texts])]
       (if (some util/should-search? search-terms)
         (get-in db [:hakukohde-and-hakukohderyhma id :hakukohde-hits (:oid haku)])
         (map (partial hakukohde->hakukohde-hit
                       lang
-                      search-terms)
+                      search-terms
+                      texts)
              (:hakukohteet haku))))))
 
 (re-frame/reg-event-db
@@ -89,6 +90,7 @@
   (fn [db [_ id haut hakukohderyhmat hakukohde-selected? hakukohderyhma-selected? search-input]]
     (let [lang         (get-virkailija-lang db)
           search-terms (search-input->search-terms search-input)
+          texts        (get-in db [:editor :virkailija-texts])
           did-search?  (some util/should-search? search-terms)]
       (-> db
           (assoc-in [:hakukohde-and-hakukohderyhma id :search-input] search-input)
@@ -105,7 +107,8 @@
                                      (->> (:hakukohteet haku)
                                           (map (partial hakukohde->hakukohde-hit
                                                         lang
-                                                        search-terms))
+                                                        search-terms
+                                                        texts))
                                           (filter #(or (hakukohde-selected? (:id %))
                                                        (and did-search? (:match? %)))))))
                             {}
