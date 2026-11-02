@@ -4,18 +4,13 @@
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.util :as util]
-    [ataru.cljs-util :as cljs-util]
     [ataru.translations.translation-util :as translations]
     [reagent.core :as r]
     [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
     [ataru.application-common.accessibility-util :as a11y]))
 
-(defonce ^:private open-search-node (r/atom nil))
-(defonce ^:private result-nodes (r/atom {}))
-(defonce ^:private remove-nodes (r/atom {}))
-
-(defn- result-buttons []
-  (cljs-util/nodes-in-dom-order @result-nodes))
+(def ^:private nav-sel
+  ".application__search-hit-hakukohde-row--select-button, .application__search-hit-hakukohde-row[aria-selected='true']")
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
@@ -36,12 +31,11 @@
   (dispatch [:application/hakukohde-search-toggle]))
 
 (defn- selected-hakukohde-row-remove
-  [hakukohde-oid disabled? ref]
+  [hakukohde-oid disabled?]
   (let [lang           @(subscribe [:application/form-language])
         hakukohde-name @(subscribe [:application/hakukohde-label hakukohde-oid])]
     [:button.application__selected-hakukohde-row--remove
      {:data-hakukohde-oid hakukohde-oid
-      :ref                ref
       :disabled           disabled?
       :tab-index          (when (not disabled?) 0)
       :aria-label         (str (translations/get-hakija-translation :remove lang) " " hakukohde-name)
@@ -165,13 +159,11 @@
            (first should-be-lower))))]
      [:div.application__selected-hakukohde-row--buttons
       (cond (and haku-editable? hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid false
-             (cljs-util/node-registry-ref remove-nodes hakukohde-oid)]
+            [selected-hakukohde-row-remove hakukohde-oid false]
             (not hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid true nil]
+            [selected-hakukohde-row-remove hakukohde-oid true]
             haku-editable?
-            [selected-hakukohde-row-remove hakukohde-oid false
-             (cljs-util/node-registry-ref remove-nodes hakukohde-oid)])]]))
+            [selected-hakukohde-row-remove hakukohde-oid false])]]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
@@ -190,8 +182,7 @@
     [:div.application__search-hit-hakukohde-row
      {:role          "option"
       :aria-selected (if hakukohde-selected? "true" "false")
-      :tab-index (when hakukohde-selected? 0)
-      :ref (when hakukohde-selected? (cljs-util/node-registry-ref result-nodes hakukohde-oid))}
+      :tab-index (when hakukohde-selected? 0)}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
@@ -220,17 +211,19 @@
          {:aria-hidden "true"}]
         [:button.application__search-hit-hakukohde-row--select-button
          {:data-hakukohde-oid hakukohde-oid
-          :ref                (cljs-util/node-registry-ref result-nodes hakukohde-oid)
           :on-click           (when-not disabled?
                                 (fn [e]
                                   (let [btn     (.-currentTarget e)
-                                        buttons (result-buttons)
-                                        idx     (count (take-while #(not= % btn) buttons))]
+                                        results (.closest btn ".application__hakukohde-selection-search-results")
+                                        buttons (when results
+                                                  (array-seq (.querySelectorAll results nav-sel)))
+                                        idx     (when buttons
+                                                  (count (take-while #(not= % btn) buttons)))]
                                     (dispatch-sync [:application/hakukohde-add-selection hakukohde-oid])
-                                    (when (pos? (count buttons))
+                                    (when (and results buttons (pos? (count buttons)))
                                       (r/after-render
                                         (fn []
-                                          (let [new-buttons (result-buttons)
+                                          (let [new-buttons (array-seq (.querySelectorAll results nav-sel))
                                                 n           (count new-buttons)]
                                             (when (pos? n)
                                               (.focus (nth new-buttons (min idx (dec n))))))))))))
@@ -244,8 +237,8 @@
                                 aria-description-id)}
          (translations/get-hakija-translation :add lang)])]]))
 
-(defn- find-button-idx []
-  (let [buttons (result-buttons)
+(defn- find-button-idx [container]
+  (let [buttons (array-seq (.querySelectorAll container nav-sel))
         active  (.-activeElement js/document)]
     [buttons (count (take-while #(not= % active) buttons))]))
 
@@ -255,22 +248,25 @@
         prioritize-hakukohteet (subscribe [:application/prioritize-hakukohteet?])
         search-input           (r/atom @(subscribe [:application/hakukohde-query]))
         lang                   (subscribe [:application/form-language])
-        input-node             (r/atom nil)
+        container-ref          (atom nil)
         focus-input            (fn []
-                                 (when-let [inp @input-node]
-                                   (.focus inp)))
+                                 (when-let [c @container-ref]
+                                   (when-let [inp (.querySelector c ".application__form-text-input-in-box")]
+                                     (.focus inp))))
         on-escape              (fn []
-                                 (let [btn @open-search-node]
+                                 (let [parent (some-> @container-ref .-parentElement)]
                                    (dispatch [:application/hakukohde-search-toggle])
                                    (r/after-render
                                      (fn []
-                                       (when btn
-                                         (.focus btn))))))
+                                       (when parent
+                                         (when-let [btn (.querySelector parent ".application__hakukohde-selection-open-search")]
+                                           (.focus btn)))))))
         on-input-keydown       (fn [e]
                                  (case (.-key e)
                                    "ArrowDown" (do (.preventDefault e)
-                                                   (when-let [btn (first (result-buttons))]
-                                                     (.focus btn)))
+                                                   (when-let [c @container-ref]
+                                                     (when-let [btn (.querySelector c nav-sel)]
+                                                       (.focus btn))))
                                    "Escape"    (on-escape)
                                    nil))
         on-results-keydown     (fn [e]
@@ -278,21 +274,23 @@
                                    (cond
                                      (#{"ArrowDown" "ArrowUp"} key)
                                      (do (.preventDefault e)
-                                         (let [[buttons idx] (find-button-idx)
-                                               n             (count buttons)]
-                                           (cond
-                                             (= key "ArrowDown")
-                                             (if (< idx (dec n))
-                                               (.focus (nth buttons (inc idx)))
-                                               (focus-input))
-                                             (= key "ArrowUp")
-                                             (if (pos? idx)
-                                               (.focus (nth buttons (dec idx)))
-                                               (focus-input)))))
+                                         (when-let [c @container-ref]
+                                           (let [[buttons idx] (find-button-idx c)
+                                                 n             (count buttons)]
+                                             (cond
+                                               (= key "ArrowDown")
+                                               (if (< idx (dec n))
+                                                 (.focus (nth buttons (inc idx)))
+                                                 (focus-input))
+                                               (= key "ArrowUp")
+                                               (if (pos? idx)
+                                                 (.focus (nth buttons (dec idx)))
+                                                 (focus-input))))))
                                      (= key "Escape")
                                      (on-escape))))]
     (fn []
       [:div.application__hakukohde-selection
+       {:ref #(reset! container-ref %)}
        [:div.application__hakukohde-selection-search-arrow-up
         {:class (when @prioritize-hakukohteet
                   "application__hakukohde-selection-search-arrow-up--prioritized")}]
@@ -308,7 +306,6 @@
           {:on-change        #(do (reset! search-input (.-value (.-target %)))
                                   (dispatch [:application/hakukohde-query-change search-input]))
            :on-key-down      on-input-keydown
-           :ref              #(reset! input-node %)
            :title            (translations/get-hakija-translation :search-application-options @lang)
            :placeholder      (translations/get-hakija-translation :search-application-options @lang)
            :value            @search-input
@@ -369,7 +366,6 @@
         [:div.application__hakukohde-selection-open-search-wrapper
          [:button.a-button.application__hakukohde-selection-open-search
           {:type "button"
-           :ref #(reset! open-search-node %)
            :aria-expanded (boolean search-open?)
            :aria-controls "hakukohde-search-listbox"
            :on-click hakukohde-search-toggle-event-handler}
@@ -386,7 +382,8 @@
                       (let [key (.-key e)]
                         (when (#{"ArrowDown" "ArrowUp"} key)
                           (.preventDefault e)
-                          (let [buttons   (cljs-util/nodes-in-dom-order @remove-nodes)
+                          (let [container (.-currentTarget e)
+                                buttons   (array-seq (.querySelectorAll container ".application__selected-hakukohde-row--remove:not([disabled])"))
                                 active    (.-activeElement js/document)
                                 idx       (count (take-while #(not= % active) buttons))
                                 n         (count buttons)]

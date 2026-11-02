@@ -6,8 +6,6 @@
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]))
 
-(defonce application-list-row-nodes (atom {}))
-
 (defn http [caller-id
             {:keys [method
                     url
@@ -139,6 +137,6 @@
 (re-frame/reg-fx
   :scroll-to-application-in-list
   (fn [element-id]
-    (when-let [element (get @application-list-row-nodes element-id)]
+    (when-let [element (.getElementById js/document (str "application-list-row-" element-id))]
       (.scrollIntoView element)
       (.scrollBy js/window 0 -50))))
