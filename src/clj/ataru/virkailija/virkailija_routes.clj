@@ -39,6 +39,7 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.translations.texts :as texts]
             [ataru.util.client-error :as client-error]
+            [ataru.util.js-bundle :as js-bundle]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.organization-service.session-organizations :refer [organization-list] :as session-orgs]
@@ -152,14 +153,16 @@
 
 (defn render-virkailija-page
   [lang]
-  (let [public-config (json/generate-string (or (:public-config config) {}))]
+  (let [public-config  (json/generate-string (or (:public-config config) {}))
+        js-bundle-name (or (-> config :server :js-bundle-names :virkailija)
+                           "virkailija-app.js")]
     (-> (selmer/render-file "templates/virkailija.html"
                             {:cache-fingerprint cache-fingerprint
                              :config            public-config
                              :front-properties  (url-helper/front-json)
                              :lang              (or lang "fi")
-                             :js-bundle-name    (or (-> config :server :js-bundle-names :virkailija)
-                                                    "virkailija-app.js")})
+                             :build-id          (js-bundle/build-id js-bundle-name)
+                             :js-bundle-name    js-bundle-name})
         (ok)
         (content-type "text/html"))))
 (api/defroutes app-routes

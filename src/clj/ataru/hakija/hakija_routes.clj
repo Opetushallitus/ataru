@@ -11,6 +11,7 @@
             [ataru.schema.koski-tutkinnot-schema :as koski-schema]
             [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
+            [ataru.util.js-bundle :as js-bundle]
             [ataru.log.access-logging :as access-logging]
             [ataru.log.timbre-access-logging :as timbre-access-logging]
             [clojure.core.match :refer [match]]
@@ -554,12 +555,14 @@
             (selection-limit/query-available-selections form-key)))))))
 
 (defn- render-application [lang]
-  (let [public-config (json/generate-string (or (:public-config config) {}))]
+  (let [public-config  (json/generate-string (or (:public-config config) {}))
+        js-bundle-name (or (-> config :server :js-bundle-names :hakija)
+                           "hakija-app.js")]
     (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
                                                  :lang              (or lang "fi")
                                                  :config            public-config
-                                                 :js-bundle-name    (or (-> config :server :js-bundle-names :hakija)
-                                                                        "hakija-app.js")})))
+                                                 :build-id          (js-bundle/build-id js-bundle-name)
+                                                 :js-bundle-name    js-bundle-name})))
 
 (defn- wrap-referrer-policy
   [handler policy]

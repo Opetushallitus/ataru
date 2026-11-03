@@ -28,3 +28,16 @@
         non-empty-changes (u/keep-non-empty-changes changes)]
     (is (= non-empty-changes
            (select-keys changes [:2 :5 :6 :7])))))
+
+(deftest reports-each-distinct-client-error-once
+  (let [reported (atom #{})]
+    (is (true? (util/report-client-error? reported ["boom" "hakija-app.js" 1 2])))
+    (is (false? (util/report-client-error? reported ["boom" "hakija-app.js" 1 2])))
+    (is (true? (util/report-client-error? reported ["boom" "hakija-app.js" 1 3])))))
+
+(deftest stops-reporting-client-errors-from-a-page-stuck-in-a-loop
+  (let [reported (atom #{})
+        report!  (fn [column] (util/report-client-error? reported ["boom" "hakija-app.js" 1 column]))]
+    (is (every? true? (map report! (range 10))))
+    (is (false? (report! 10)))
+    (is (false? (report! 11)))))

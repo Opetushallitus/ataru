@@ -11,6 +11,8 @@
     <script src="/lomake-editori/vendor/js/oph_urls.js?fingerprint={{cache-fingerprint}}"></script>
     <script type="text/javascript">
       var config = {{config|safe}};
+      // Identifies the bundle build, reported along with client side errors.
+      var ataruBuildId = "{{build-id}}";
       window.urls.addProperties({{front-properties|safe}});
     </script>
   </head>
