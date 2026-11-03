@@ -21,6 +21,7 @@
      :PH_VTJH        {:dateStart nil, :dateEnd nil},
      :PH_IP          {:date nil},
      :PH_LMT         (cond
+                       (= haku-oid "payment-info-test-kk-haku-jatkuva-with-end") {:value 14}
                        (= haku-oid "payment-info-test-kk-haku-custom-grace") {:value 10000}
                        (= haku-oid "hakukohtainen-raja-käytössä") {:value 20})
      :synteettisetHakemukset (not (= haku-oid "1.2.246.562.29.12345678910"))
