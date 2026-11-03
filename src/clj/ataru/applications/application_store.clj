@@ -1825,6 +1825,7 @@
                                                 (exec-db :db queries/yesql-delete-group-answer-values-by-application-key! {:key %})
                                                 (exec-db :db queries/yesql-delete-group-answer-groups-by-application-key! {:key %})
                                                 (exec-db :db queries/yesql-delete-field-deadlines-by-application-key! {:key %})
+                                                (exec-db :db queries/yesql-delete-kk-application-payment-permit-checks-by-application-key! {:key %})
                                                 (exec-db :db queries/yesql-delete-application-secrets-by-application-key! {:key %})
                                                 (exec-db :db queries/yesql-delete-application-review-notes-by-application-key! {:key %})
                                                 (exec-db :db queries/yesql-delete-application-reviews-by-application-key! {:key %})
