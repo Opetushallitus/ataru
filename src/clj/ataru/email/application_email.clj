@@ -256,12 +256,17 @@
                                               (filter #(= "email" (:key %)))
                                               (filter #(not (string/blank? (:value %))))
                                               (map :value))
+         ; Vastauksen :value voi olla joko merkkijono, vektori tai vektori vektoreita, joten
+         ; litistetään arvot ennen suodatusta.
          guardian-recipients             (when (and minor? guardian?)
                                            (->> (:answers application)
                                                 (filter (fn [answer]
                                                           (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
-                                                (mapcat :value)
-                                                (filter (comp not clojure.string/blank?))))
+                                                (map :value)
+                                                flatten
+                                                (filter string?)
+                                                (remove string/blank?)
+                                                vec))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
