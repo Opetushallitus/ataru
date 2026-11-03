@@ -31,8 +31,8 @@
 
 (defn- obligation-reviews
   [application-key]
-  (filter #(= "kk-application-payment-obligation" (:requirement %))
-          (application-store/get-application-hakukohde-reviews application-key)))
+  (application-store/get-application-hakukohde-reviews-by-requirement application-key
+                                                                     "kk-application-payment-obligation"))
 
 (defn- reviewed-reviews
   [reviews]
@@ -65,15 +65,14 @@
   (last (sort-by (comp time/to-instant :checked-time :check) candidates)))
 
 ; A check is inherited only once, and not at all after the virkailija has checked the attachment in the application
-; or the check has been reset because of a new attachment, so that the new attachment gets reviewed
+; or the check has been reset because of a new attachment. The reset makes the payment obligation unreviewed, so that
+; the virkailija reviews the new attachment, and inheriting the earlier check again would undo the reset.
 (def ^:private handled-event-types
-  #{inherited-event-type "kk-payment-permit-check-updated" "kk-payment-permit-check-reset"})
+  [inherited-event-type "kk-payment-permit-check-updated" "kk-payment-permit-check-reset"])
 
 (defn- handled-before?
   [application-key attachment-key]
-  (some #(and (contains? handled-event-types (:event-type %))
-              (= attachment-key (:review-key %)))
-        (application-store/get-application-events application-key)))
+  (application-store/application-event-exists? application-key attachment-key handled-event-types))
 
 (defn- decided-after-check?
   "A payment obligation the virkailija has decided on (e.g. reviewed or sent to Migri review) in the target
@@ -133,6 +132,7 @@
   (let [target-key (:key target)
         now        (time/now)]
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+      ; Nil, when the virkailija has saved an own check after the inheritance was decided on
       (when-let [inherited (store/insert-inherited-permit-check!
                              connection
                              {:application_key                 target-key

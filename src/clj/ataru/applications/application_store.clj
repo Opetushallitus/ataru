@@ -843,6 +843,13 @@
        (mapv ->kebab-case-kw)
        (mapv util/remove-nil-values)))
 
+(defn get-application-hakukohde-reviews-by-requirement
+  [application-key requirement]
+  (->> (exec-db :db queries/yesql-get-application-hakukohde-reviews-by-requirement {:application_key application-key
+                                                                                    :requirement     requirement})
+       (mapv ->kebab-case-kw)
+       (mapv util/remove-nil-values)))
+
 (defn get-application-attachment-reviews
   ([application-key]
    (get-application-attachment-reviews application-key true))
@@ -924,6 +931,14 @@
                               (unwrap-application))]
       (add-new-secret-to-application-in-tx conn application-key)
       (:id application))))
+
+(defn application-event-exists?
+  [application-key review-key event-types]
+  (->> (exec-db :db queries/yesql-application-event-exists {:application_key application-key
+                                                           :review_key      review-key
+                                                           :event_types     event-types})
+       first
+       :exists))
 
 (defn get-application-events [application-key]
   (->> (exec-db :db queries/yesql-get-application-events {:application_key application-key})
