@@ -293,7 +293,9 @@
                                   (attachment-deadline/per-application-attachment-deadline attachment-deadline-service application-submitted haku))
                                hakuajat)]
     (boolean
-      (some #(not (time/before? % now)) attachment-deadlines))))
+   (some #(or (nil? %)
+              (not (time/before? % now)))
+         attachment-deadlines))))
 
 (defn kk-application-payment-obligation-reviewed?
   [application hakukohde]
