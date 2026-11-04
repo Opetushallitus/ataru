@@ -120,14 +120,19 @@
        (map (partial te/transform-keys t/->kebab-case-keyword))
        (first)))
 
-(defn set-review-setting [review-setting session]
+(defn set-review-setting
+  "Ei auditlokitusta: asetus on virkailijan oma käyttöliittymäasetus (hakemuslistan sarakkeiden
+   näkyvyys). Se luetaan ja kirjoitetaan vain istunnon omalla oid:llä eikä vaikuta muiden
+   näkymään, hakemusten tietoihin eikä oikeuksiin."
+  [review-setting session]
   {:pre [(-> review-setting :setting-kwd u/not-blank?)
          (-> review-setting :enabled some?)]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [virkailija (get-virkailija-for-update (-> session :identity :oid) conn)
           settings   (-> virkailija
                          :settings
-                         (assoc-in [:review (:setting-kwd review-setting)] (:enabled review-setting)))]
+                         (assoc-in [:review (:setting-kwd review-setting)]
+                                   (:enabled review-setting)))]
       (yesql-update-virkailija-settings! {:oid      (-> session :identity :oid)
                                           :settings settings}
         {:connection conn})
