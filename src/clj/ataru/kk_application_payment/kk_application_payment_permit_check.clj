@@ -1,26 +1,19 @@
 (ns ataru.kk-application-payment.kk-application-payment-permit-check
   "Virkailija's notes on kk application payment residence permit attachments: whether the permit was found in
    Migri's permit information service, permit card validity and the basis of the payment obligation."
-  ;; TODO OPHHAMA-29: the payment obligation basis noted for a permit found in Migri overrides the attachment reviews
-  ;; once the payment obligation has been reviewed
   ;; TODO OPHHAMA-17: the permit card validity determines whether the checks are inherited
   (:require [ataru.applications.application-access-control :as aac]
             [ataru.applications.application-store :as application-store]
             [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.db.db :as db]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as store]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.session-organizations :as session-orgs]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
-            [taoensso.timbre :as log]
-            [yesql.core :as yesql]))
-
-(declare yesql-get-kk-application-payment-permit-checks)
-(declare yesql-upsert-kk-application-payment-permit-check)
-(declare yesql-delete-kk-application-payment-permit-checks)
-(yesql/defqueries "sql/kk-application-payment-permit-check-queries.sql")
+            [taoensso.timbre :as log]))
 
 (defn- ->public
   "Who made the check is shown through application events, which do not expose virkailija oids either."
@@ -29,7 +22,7 @@
 
 (defn get-permit-checks
   [application-key]
-  (mapv ->public (db/exec :db yesql-get-kk-application-payment-permit-checks {:application_key application-key})))
+  (mapv ->public (store/get-permit-checks application-key)))
 
 (defn- authorized-organization-oid
   "Tarjoaja organization of the first applied hakukohde (in hakutoive order) that the virkailija has edit rights to.
@@ -106,10 +99,7 @@
     ; Only a changed date is checked, so that a stored date the limits have since passed does not prevent saving
     (not (or (permit-valid-until-in-range? (:permit-valid-until body))
              (= (:permit-valid-until body)
-                (->> (db/exec :db yesql-get-kk-application-payment-permit-checks {:application_key application-key})
-                     (filter #(= attachment-key (:attachment-key %)))
-                     first
-                     :permit-valid-until))))
+                (:permit-valid-until (store/get-permit-check application-key attachment-key)))))
     :invalid-permit-valid-until
 
     :else
@@ -117,21 +107,17 @@
           (normalize-body body)
           organization-oid (authorized-organization-oid organization-service tarjonta-service session application-key)
           [old new]        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (let [old (->> (yesql-get-kk-application-payment-permit-checks
-                                              {:application_key application-key}
-                                              {:connection connection})
-                                            (filter #(= attachment-key (:attachment-key %)))
-                                            first)
-                                   new (first (yesql-upsert-kk-application-payment-permit-check
-                                                {:application_key                 application-key
-                                                 :attachment_key                  attachment-key
-                                                 :found_in_migri                  found-in-migri
-                                                 :permit_valid_until              permit-valid-until
-                                                 :payment_obligation_basis        payment-obligation-basis
-                                                 :payment_obligation_other_reason payment-obligation-other-reason
-                                                 :virkailija_oid                  (-> session :identity :oid)
-                                                 :organization_oid                organization-oid}
-                                                {:connection connection}))]
+                             (let [old (store/get-permit-check connection application-key attachment-key)
+                                   new (store/upsert-permit-check!
+                                         connection
+                                         {:application_key                 application-key
+                                          :attachment_key                  attachment-key
+                                          :found_in_migri                  found-in-migri
+                                          :permit_valid_until              permit-valid-until
+                                          :payment_obligation_basis        payment-obligation-basis
+                                          :payment_obligation_other_reason payment-obligation-other-reason
+                                          :virkailija_oid                  (-> session :identity :oid)
+                                          :organization_oid                organization-oid})]
                                (add-event! connection "kk-payment-permit-check-updated" application-key attachment-key
                                            session)
                                [old new]))]
@@ -149,10 +135,7 @@
    applicant delivers a new exemption attachment and the payment obligation needs to be reviewed again. Returns the
    removed checks to be audit logged once the transaction has been committed."
   [connection application-key modified-until]
-  (let [removed (yesql-delete-kk-application-payment-permit-checks
-                  {:application_key application-key
-                   :modified_until  modified-until}
-                  {:connection connection})]
+  (let [removed (store/delete-permit-checks! connection application-key modified-until)]
     (doseq [check removed]
       (log/info "Removing kk application payment permit check for application" application-key
                 ", attachment" (:attachment-key check))
