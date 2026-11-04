@@ -4,6 +4,7 @@
             [ataru.background-job.job :as job]
             [ataru.cache.cache-service :as cache-service]
             [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
@@ -422,6 +423,27 @@
       (run-job! third-key)
       (should= [first-key first-key]
                (map (comp :inherited-from-application-key first checks) [second-key third-key]))))
+
+  (it "does not inherit when the inheritance has been turned off"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (with-redefs [config (assoc-in config [:kk-application-payments :permit-check-inheritance-enabled?] false)]
+        (run-job! target-key))
+      (should= [] (checks target-key))
+      (should= [] (inherited-events target-key))
+      (should-be-nil (obligation-state target-key))))
+
+  (it "keeps the inherited check when the inheritance has been turned off"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (run-job! target-key)
+      (with-redefs [config (assoc-in config [:kk-application-payments :permit-check-inheritance-enabled?] false)]
+        (run-job! target-key))
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
 
   (it "inherits only once"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"

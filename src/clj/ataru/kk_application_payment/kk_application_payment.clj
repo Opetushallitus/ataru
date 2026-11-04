@@ -637,9 +637,12 @@
                                                      (filter payment-final?)
                                                      (map :application-key)
                                                      set)]
-                               ; The payments are determined by the inherited checks and reviews
-                               [(if (seq (permit-check-inheritance/inherit-permit-checks! audit-logger applications
-                                                                                          final-keys))
+                               ; The payments are determined by the inherited checks and reviews. The inheritance
+                               ; can be turned off, the checks inherited before still affect the payments.
+                               [(if (and (get-in config [:kk-application-payments :permit-check-inheritance-enabled?])
+                                         (seq (permit-check-inheritance/inherit-permit-checks! audit-logger
+                                                                                               applications
+                                                                                               final-keys)))
                                   (fetch-applications)
                                   applications)
                                 payments]))]
