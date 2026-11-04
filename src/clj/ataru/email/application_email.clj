@@ -18,7 +18,8 @@
             [ataru.hakukohde.liitteet :as liitteet]
             [clojure.string :as string]
             [taoensso.timbre :as log]
-            [ataru.koodisto.koodisto :as koodisto])
+            [ataru.koodisto.koodisto :as koodisto]
+            [ataru.constants :as constants])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages-map {:fi nil :sv nil :en nil})
@@ -27,6 +28,16 @@
   {:fi "Opintopolku: Muutokset hakemukseesi on tallennettu"
    :sv "Studieinfo: Dina ändringar har lagrats i din ansökan"
    :en "Studyinfo: The changes to your application have been saved"})
+
+(def edit-email-subjects-for-guardian
+  {:fi "Opintopolku: Muutokset huollettavasi hakemukseen on tallennettu"
+   :sv "Studieinfo: TODO"
+   :en "Studyinfo: TODO"})
+
+(def submit-email-subjects-for-guardian
+  {:fi "Opintopolku: Huollettavasi hakemus on vastaanotettu"
+   :sv "Studieinfo: TODO"
+   :en "Studyinfo: TODO"})
 
 (def refresh-secret-email-subjects
   {:fi "Opintopolku: uusi hakemuslinkkisi"
@@ -263,7 +274,10 @@
                                                 (mapcat :value)
                                                 (filter (comp not clojure.string/blank?))))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
+         guardian-subject-prefix         (if subject (edit-email-subjects-for-guardian lang) (submit-email-subjects-for-guardian lang))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
+         guardian-subject                (email-util/enrich-subject-with-application-key-and-limit-length guardian-subject-prefix (:key application) lang)
+         applicant-authenticated?        (= constants/auth-type-strong (:tunnistautuminen application))
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :organization-oids          (organization-oids tarjonta-info application)
@@ -279,14 +293,31 @@
                                           :kouta-attachments-by-type  attachments-info-from-kouta
                                           :signature                  signature
                                           :no-hakuaika-mentions       (or (email-util/tutu-form? form) (email-util/astu-form? form))}
-         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
-         guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
+         applicant-template-params       template-params
+         guardian-template-params        (assoc
+                                          (select-keys template-params [:hakukohteet
+                                                                        :organization-oids
+                                                                        :application-oid
+                                                                        :person-oid
+                                                                        :signature
+                                                                        :attachments-without-answer
+                                                                        :kouta-attachments-by-type])
+                                          :applicant-authenticated? applicant-authenticated?)
+         applicant-email-data            (email-util/make-email-data applier-recipients subject applicant-template-params)
+         guardian-email-data             (email-util/make-email-data guardian-recipients guardian-subject guardian-template-params)
          render-file-fn                  (fn [template-params]
-                                           (selmer/render-file (template-name lang) template-params))]
+                                           (selmer/render-file (template-name lang) template-params))
+         render-guardian-file-fn         (fn [template-params]
+                                           (selmer/render-file
+                                             (string/replace (template-name lang)
+                                                             "confirmation_template"
+                                                             "confirmation_guardian_template")
+                                             template-params))]
      (email-util/render-emails-for-applicant-and-guardian
        applicant-email-data
        guardian-email-data
-       render-file-fn)))
+       render-file-fn
+       render-guardian-file-fn)))
 
 (defn- create-emails-by-gathering-data
   [attachment-deadline-service koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian? payment-url]
@@ -378,4 +409,4 @@
         applicant-email-data            (email-util/make-email-data applier-recipients subject-full template-params)
         render-file-fn                  (fn [template-params]
                                           (selmer/render-file (template-name lang) template-params))]
-    (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
+    (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn nil)))
