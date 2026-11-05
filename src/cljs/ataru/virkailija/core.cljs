@@ -1,5 +1,5 @@
 (ns ataru.virkailija.core
-  (:require [reagent.dom :as reagent-dom]
+  (:require [reagent.dom.client :as reagent-dom-client]
             [re-frame.core :as re-frame]
             ataru.virkailija.application.hyvaksynnan-ehto.handlers
             [ataru.virkailija.handlers]
@@ -17,11 +17,15 @@
 
 (enable-console-print!)
 
+(defonce root (atom nil))
+
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
   (re-frame/dispatch [:application/get-virkailija-texts-from-server])
-  (reagent-dom/render [views/main-panel]
-                  (.getElementById js/document "app")))
+  (let [container (.getElementById js/document "app")]
+    (when-not @root
+      (reset! root (reagent-dom-client/create-root container)))
+    (reagent-dom-client/render @root [views/main-panel])))
 
 (defn init-scroll-listeners []
   (let [debounces (atom {})

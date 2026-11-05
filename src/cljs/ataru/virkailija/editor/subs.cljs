@@ -5,8 +5,12 @@
             [ataru.util :as util :refer [collect-ids]]
             [ataru.virkailija.editor.editor-selectors :refer [get-all-organizations-have-only-opinto-ohjaaja-rights?
                                                               get-all-organizations-have-opinto-ohjaaja-and-hakemuspalvelun-paakayttaja-rights?
+                                                              get-current-form-content
+                                                              get-current-lomakeosiot
                                                               get-email-template
-                                                              get-virkailija-lang]]
+                                                              get-email-templates-altered
+                                                              get-virkailija-lang
+                                                              get-yhteishaku?]]
             [cljs-time.coerce :as time-coerce]
             [cljs.core.match :refer-macros [match]]
             [clojure.set :as cset]
@@ -328,10 +332,8 @@
 
 (re-frame/reg-sub
   :editor/yhteishaku?
-  (fn [_ _]
-    [(re-frame/subscribe [:editor/used-by-haut-haut])])
-  (fn [[haut] [_]]
-    (boolean (some :yhteishaku (vals haut)))))
+  (fn [db _]
+    (get-yhteishaku? db)))
 
 (re-frame/reg-sub
   :editor/toisen-asteen-yhteishaku?
@@ -516,34 +518,17 @@
 (re-frame/reg-sub
   :editor/email-templates-altered
   (fn [db _]
-    (let [form-key (get-in db [:editor :selected-form-key])
-          templates (get-in db [:editor :email-template form-key])]
-      (into
-        {}
-        (map
-          (fn [[lang template]]
-            (let [any-changes? (not= (dissoc template :stored-content) (get template :stored-content))]
-              [lang any-changes?]))
-          templates)))))
-
-(defn- get-selected-form-content [db]
-  (let [selected-form-key (-> db :editor :selected-form-key)]
-    (-> db
-        :editor
-        :forms
-        (get selected-form-key)
-        :content)))
+    (get-email-templates-altered db)))
 
 (re-frame/reg-sub
   :editor/current-lomakeosiot
   (fn [db _]
-    (let [content (get-selected-form-content db)]
-      (filter #(= "wrapperElement" (:fieldClass %)) content))))
+    (get-current-lomakeosiot db)))
 
 (re-frame/reg-sub
   :editor/base-education-module-exists?
   (fn [db _]
-    (let [content (get-selected-form-content db)]
+    (let [content (get-current-form-content db)]
       (some #{"completed-base-education" "higher-base-education-module" "pohjakoulutus-2nd-wrapper"}
             (->> content
                  (mapcat :children)
@@ -554,14 +539,14 @@
 (re-frame/reg-sub
   :editor/pohjakoulutusristiriita-exists?
   (fn [db _]
-    (->> (get-selected-form-content db)
+    (->> (get-current-form-content db)
          util/flatten-form-fields
          (some #(= "pohjakoulutusristiriita" (:id %))))))
 
 (re-frame/reg-sub
   :editor/tutkinnot-component-exists?
   (fn [db _]
-    (->> (get-selected-form-content db)
+    (->> (get-current-form-content db)
          util/flatten-form-fields
          (some #(= "koski-tutkinnot-wrapper" (:id %))))))
 

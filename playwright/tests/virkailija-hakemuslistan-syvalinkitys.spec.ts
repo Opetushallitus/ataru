@@ -39,6 +39,39 @@ const HAKIJAT = [
     'postal-code': '00100',
     'home-town': 'Forssa',
   },
+  {
+    'first-name': 'Hakija',
+    'last-name': 'Kolmas',
+    ssn: '030303A204P',
+    email: 'kolmas@example.com',
+    'verify-email': 'kolmas@example.com',
+    phone: '0400000003',
+    address: 'Katutie 3',
+    'postal-code': '00100',
+    'home-town': 'Forssa',
+  },
+  {
+    'first-name': 'Hakija',
+    'last-name': 'Neljäs',
+    ssn: '040404A206F',
+    email: 'neljas@example.com',
+    'verify-email': 'neljas@example.com',
+    phone: '0400000004',
+    address: 'Katutie 4',
+    'postal-code': '00100',
+    'home-town': 'Forssa',
+  },
+  {
+    'first-name': 'Hakija',
+    'last-name': 'Viides',
+    ssn: '050505A2088',
+    email: 'viides@example.com',
+    'verify-email': 'viides@example.com',
+    phone: '0400000005',
+    address: 'Katutie 5',
+    'postal-code': '00100',
+    'home-town': 'Forssa',
+  },
 ]
 
 // review_states.cljc:n normaalin (ei tutu/astu) lomakkeen 8 käsittelytilaa,
@@ -148,13 +181,37 @@ test('esivalitsee hakemuksen ja esitäyttää käsittelytilasuodattimen url-para
   )
   await clickAndWaitForListReload(page.getByTestId('show-results'))
 
-  // Sovelluksessa on kaksi hakemusta, joten esivalinta ei tapahtuisi
+  // Sovelluksessa on useita hakemuksia, joten esivalinta ei tapahtuisi
   // automaattisesti ilman application-key-parametria.
-  await expect(applicantRows()).toHaveCount(2)
+  await expect(applicantRows()).toHaveCount(HAKIJAT.length)
   await expect(mainHeading()).toContainText('Ensimmäinen')
 
   await processingStateColumn().click()
   await expect(filterPanel()).toBeVisible()
   await expect(includedFilterRows()).toHaveCount(1)
   await expect(includedFilterRows()).toContainText('Käsittelemättä')
+})
+
+test('hakemuksen sulkeminen vierittää listan suljetun hakemuksen riville', async () => {
+  const alkuperainenViewport = page.viewportSize()!
+  await page.setViewportSize({ width: 1280, height: 200 })
+  await page.goto(
+    `/lomake-editori/applications/${lomakkeenAvain}` +
+      `?ensisijaisesti=false&application-key=${ensimmaisenAvain}`
+  )
+  await clickAndWaitForListReload(page.getByTestId('show-results'))
+  await expect(mainHeading()).toContainText('Ensimmäinen')
+
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(applicantRow('Ensimmäinen')).not.toBeInViewport()
+
+  // Ei käytetä click()-funktiota, koska se vierittäisi painikkeen ja samalla
+  // rivin näkyviin, eikä testi enää osoittaisi sulkemisen aiheuttamaa vieritystä.
+  await page.locator('.close-details-button').dispatchEvent('click')
+
+  await expect(applicantRow('Ensimmäinen')).toBeInViewport()
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(0)
+  await page.setViewportSize(alkuperainenViewport)
 })
