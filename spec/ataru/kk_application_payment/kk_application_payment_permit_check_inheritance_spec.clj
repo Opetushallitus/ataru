@@ -105,6 +105,18 @@
 (def missing-application
   (application-fixture continuous-residence-option [passport-attachment-key]))
 
+(def p-permit-attachment-key "permanent-residence-permit")
+(def p-passport-attachment-key "permanent-residence-passport-attachment")
+
+(def permanent-residence-option
+  (:permanent-residence-option-value payment-module/kk-application-payment-document-options))
+
+(def p-delivered-application
+  (application-fixture permanent-residence-option [p-permit-attachment-key p-passport-attachment-key]))
+
+(def p-missing-application
+  (application-fixture permanent-residence-option [p-passport-attachment-key]))
+
 (defn- init-applications
   "Stores the applications of the applicant, submitted at the given times."
   [& fixtures-and-submitted]
@@ -118,18 +130,23 @@
     keys))
 
 (defn- check!
-  [application-key {:keys [permit-valid-until checked-time organization-oid payment-obligation-basis]
-                    :or   {permit-valid-until       "2026-01-01"
+  [application-key {:keys [attachment-key found-in-migri permit-valid-until checked-time organization-oid
+                           payment-obligation-basis payment-obligation-other-reason]
+                    :or   {attachment-key           permit-attachment-key
+                           found-in-migri           true
+                           permit-valid-until       "2026-01-01"
                            checked-time             "2025-01-12T10:00:00+02:00"
                            organization-oid         oppilaitos-oid
                            payment-obligation-basis "not-obligated"}}]
-  (unit-test-db/save-permit-check-to-db! {:application-key application-key :attachment-key permit-attachment-key})
+  (unit-test-db/save-permit-check-to-db! {:application-key application-key
+                                          :attachment-key  attachment-key
+                                          :found-in-migri  found-in-migri})
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (jdbc/execute! conn [(str "UPDATE kk_application_payment_permit_checks SET permit_valid_until = ?::date, "
-                              "checked_time = ?::timestamptz, organization_oid = ?, payment_obligation_basis = ? "
-                              "WHERE application_key = ?")
+                              "checked_time = ?::timestamptz, organization_oid = ?, payment_obligation_basis = ?, "
+                              "payment_obligation_other_reason = ? WHERE application_key = ?")
                          permit-valid-until checked-time organization-oid payment-obligation-basis
-                         application-key])))
+                         payment-obligation-other-reason application-key])))
 
 (defn- review-obligation! [application-key state]
   (unit-test-db/init-db-application-hakukohde-review-fixture {:hakukohde          hakukohde
@@ -137,8 +154,9 @@
                                                               :review-state       state}
                                                              application-key))
 
-(defn- review-attachments! [application-key state]
-  (unit-test-db/save-reviews-to-db! (for [attachment-key [permit-attachment-key passport-attachment-key]]
+(defn- review-attachments! [application-key state & [attachment-keys]]
+  (unit-test-db/save-reviews-to-db! (for [attachment-key (or attachment-keys
+                                                             [permit-attachment-key passport-attachment-key])]
                                       {:application_key application-key
                                        :attachment_key  attachment-key
                                        :hakukohde       hakukohde
@@ -168,6 +186,13 @@
 (defn- checked-source! [application-key & [check]]
   (check! application-key check)
   (review-attachments! application-key "checked")
+  (review-obligation! application-key "reviewed"))
+
+(defn- p-permit-source!
+  "P-luvan tarkistus ilman lupakortin voimassaoloa hakemukselle, jonka maksuvelvollisuus on tarkastettu."
+  [application-key attachment-state & [check]]
+  (check! application-key (merge {:attachment-key p-permit-attachment-key :permit-valid-until nil} check))
+  (review-attachments! application-key attachment-state [p-permit-attachment-key p-passport-attachment-key])
   (review-obligation! application-key "reviewed"))
 
 (defn- run-job! [application-key]
@@ -493,6 +518,128 @@
       (checked-source! source-key {:permit-valid-until "2025-01-14"})
       (run-job! target-key)
       (should= 1 (count (checks target-key)))))
+
+  (it "does not inherit the check of a permit needing the permit card validity without the validity"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:permit-valid-until nil})
+      (run-job! target-key)
+      (should= [] (checks target-key))))
+
+  (it "inherits the check of a permanent residence permit found in Migri without the permit card validity"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "not-checked")
+      (run-job! target-key)
+      (should= [{:attachment-key           p-permit-attachment-key
+                 :found-in-migri           true
+                 :permit-valid-until       nil
+                 :payment-obligation-basis "not-obligated"}]
+               (map #(select-keys % [:attachment-key :found-in-migri :permit-valid-until
+                                     :payment-obligation-basis])
+                    (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "inherits the check of a permanent residence permit found in Migri although the permit card has expired"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "not-checked" {:permit-valid-until "2025-01-13"})
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))))
+
+  (it "inherits the check of a permanent residence permit not found in Migri when the attachment has been checked"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:found-in-migri nil})
+      (review-attachments! target-key "not-checked" [p-permit-attachment-key p-passport-attachment-key])
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= {p-permit-attachment-key "checked" p-passport-attachment-key "checked"}
+               (attachment-states target-key))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "does not make the applicant obligated by the inherited payment obligation basis of a permanent residence permit not found in Migri"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:found-in-migri           false
+                                              :payment-obligation-basis "obligated-own-studies"})
+      (run-job! target-key)
+      (should= [["obligated-own-studies" false]]
+               (map (juxt :payment-obligation-basis :found-in-migri) (checks target-key)))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit the check of a permanent residence permit not found in Migri when the attachment has not been checked"
+    (doseq [attachment-state ["not-checked" "attachment-missing"]]
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (jdbc/delete! conn :kk_application_payment_permit_checks [])
+        (jdbc/delete! conn :applications [])
+        (jdbc/delete! conn :kk_application_payments [])
+        (jdbc/delete! conn :kk_application_payments_history []))
+      (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                       p-delivered-application "2025-01-14T10:00:00+02:00")]
+        (p-permit-source! source-key attachment-state {:found-in-migri false})
+        (run-job! target-key)
+        (should= [] (checks target-key))
+        (should-be-nil (obligation-state target-key)))))
+
+  (it "does not inherit the check of a permanent residence permit not found in Migri when the checked attachment has later been marked incomplete"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:found-in-migri nil})
+      (review-attachments! source-key "incomplete-attachment" [p-permit-attachment-key])
+      (run-job! target-key)
+      (should= [] (checks target-key))))
+
+  (it "does not inherit the check of a permanent residence permit without the payment obligation basis"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-delivered-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:payment-obligation-basis nil})
+      (run-job! target-key)
+      (should= [] (checks target-key))
+      (should-be-nil (obligation-state target-key))))
+
+  (it "inherits each payment obligation basis of a permanent residence permit"
+    (doseq [[basis other-reason] [["not-obligated" nil]
+                                  ["obligated-own-studies" nil]
+                                  ["obligated-family-member-studies" nil]
+                                  ["obligated-other" "Muu syy"]]]
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (jdbc/delete! conn :kk_application_payment_permit_checks [])
+        (jdbc/delete! conn :applications [])
+        (jdbc/delete! conn :kk_application_payments [])
+        (jdbc/delete! conn :kk_application_payments_history []))
+      (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                       p-delivered-application "2025-01-14T10:00:00+02:00")]
+        (p-permit-source! source-key "not-checked" {:payment-obligation-basis        basis
+                                                    :payment-obligation-other-reason other-reason})
+        (run-job! target-key)
+        (should= [[basis other-reason]]
+                 (map (juxt :payment-obligation-basis :payment-obligation-other-reason) (checks target-key)))
+        (should= "reviewed" (obligation-state target-key))
+        (should= (if (= "not-obligated" basis)
+                   (:not-required payment/all-states)
+                   (:awaiting payment/all-states))
+                 (payment-state target-key)))))
+
+  (it "inherits the check of a permanent residence permit to an application without the residence permit attachment"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-missing-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked")
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))))
+
+  (it "inherits the checked attachment of a permanent residence permit not found in Migri to an application without the residence permit attachment"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-missing-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:found-in-migri false})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))))
 
   (it "does not inherit to an earlier application"
     (let [[target-key source-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
