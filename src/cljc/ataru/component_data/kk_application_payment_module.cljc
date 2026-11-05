@@ -79,6 +79,15 @@
   [attachment-key]
   (contains? kk-application-payment-residence-permit-attachment-keys (name attachment-key)))
 
+; Oleskelulupaliitteet, joiden lupakortin voimassaoloa ei tarvita. Pysyvä lupa ei vanhene kortin mukana, eikä Migrin
+; lupatietopalvelu näytä kortin voimassaoloa.
+(def kk-payment-permit-validity-not-needed-attachment-keys
+  #{"permanent-residence-permit"})
+
+(defn permit-validity-needed?
+  [attachment-key]
+  (not (contains? kk-payment-permit-validity-not-needed-attachment-keys (name attachment-key))))
+
 (def kk-payment-obligation-bases
   ["not-obligated"
    "obligated-own-studies"

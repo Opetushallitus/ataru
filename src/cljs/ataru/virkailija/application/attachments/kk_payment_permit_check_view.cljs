@@ -196,18 +196,22 @@
 (defn permit-check
   "Virkailijan merkinnät hakemusmaksun oleskelulupaliitteeseen."
   [application-key attachment-key attachment-checked? can-edit?]
-  (let [check       @(re-frame/subscribe [:kk-payment-permit-check/check application-key attachment-key])
-        disabled?   (not can-edit?)
-        add-info?   (or (true? (:found-in-migri check)) attachment-checked?)
-        info-added? (and (some? (:permit-valid-until check))
-                         @(re-frame/subscribe [:kk-payment-permit-check/permit-valid-until-valid?
-                                               application-key attachment-key])
-                         (some? (:payment-obligation-basis check)))]
+  (let [check            @(re-frame/subscribe [:kk-payment-permit-check/check application-key attachment-key])
+        disabled?        (not can-edit?)
+        add-info?        (or (true? (:found-in-migri check)) attachment-checked?)
+        validity-needed? (payment-module/permit-validity-needed? attachment-key)
+        info-added?      (and (or (not validity-needed?)
+                                  (and (some? (:permit-valid-until check))
+                                       @(re-frame/subscribe [:kk-payment-permit-check/permit-valid-until-valid?
+                                                             application-key attachment-key])))
+                              (some? (:payment-obligation-basis check)))]
     [:div.kk-payment-permit-check
      [found-in-migri application-key attachment-key check disabled?]
      (when (and add-info? (not info-added?))
-       [notification [(translation :kk-payment-permit-check-add-info)]])
-     [permit-valid-until application-key attachment-key check disabled? add-info?]
+       [notification [(translation (if validity-needed?
+                                     :kk-payment-permit-check-add-info
+                                     :kk-payment-permit-check-add-obligation))]])
+     [permit-valid-until application-key attachment-key check disabled? (and add-info? validity-needed?)]
      [payment-obligation-basis application-key attachment-key check disabled? add-info?]
      (when @(re-frame/subscribe [:kk-payment-permit-check/save-error? application-key attachment-key])
        [:div.kk-payment-permit-check__error {:role "alert"}
