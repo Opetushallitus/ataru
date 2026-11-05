@@ -436,6 +436,7 @@ test.describe('Virkailijan hakemuksen muokkaus', () => {
   })
 
   test('muutoshistorian kentän klikkaus vierittää kenttään ja korostaa sen', async () => {
+    const alkuperainenViewport = page.viewportSize()!
     await page.setViewportSize({ width: 1280, height: 400 })
     await page.goto(
       `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`
@@ -454,14 +455,14 @@ test.describe('Virkailijan hakemuksen muokkaus', () => {
       .locator('.application-handling__event-row-update-list li a')
       .first()
     await muutos.scrollIntoViewIfNeeded()
-    const kentta = page.locator('[id="phone"]')
+    const kentta = page.locator('#phone')
     await expect(kentta).not.toBeInViewport()
 
     await muutos.click()
 
     await expect(kentta).toHaveClass(/highlighted/)
     await expect(kentta).toBeInViewport()
-    await page.setViewportSize({ width: 1280, height: 720 })
+    await page.setViewportSize(alkuperainenViewport)
   })
 
   test('näyttää virheen virheellisellä avaimella', async () => {
