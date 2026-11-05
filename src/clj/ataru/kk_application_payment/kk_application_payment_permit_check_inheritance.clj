@@ -5,7 +5,9 @@
    maksuvelvollisuus on tarkastettu. Pääehdot (kaikki ks. inherit-permit-checks! ja inheritance-for) ovat, että
    myöhemmällä hakemuksella
    - on sama dokumenttivaihtoehto,
-   - lupakortti on voimassa hakemuksen jättöpäivänä ja
+   - lupakortti on voimassa hakemuksen jättöpäivänä. Kun kortin voimassaoloa ei tarvita (P-lupa), tarkistukseen on
+     sen sijaan merkitty maksuvelvollisuuden peruste, ja lisäksi lupa on löytynyt Migrin palvelusta tai liite on
+     tarkastettu lähdehakemuksella (ks. inheritable?), ja
    - on oleskelulupaliite. Liitetiedostoja ei verrata, koska hakija voi ottaa lupakortista uudet kuvat jokaiseen
      hakemukseen.
 
@@ -66,6 +68,29 @@
   (when-let [valid-until (some-> (:permit-valid-until check) java.time.LocalDate/parse)]
     (not (.isBefore valid-until (submitted-date application)))))
 
+(defn- latest-attachment-reviews
+  "Lähdehakemuksen dokumenttivaihtoehdon kunkin liitteen viimeisin merkintä, kun liite on tarkastettu."
+  [source-key attachment-keys]
+  (->> (application-store/get-application-attachment-reviews source-key false)
+       (filter #(contains? attachment-keys (:attachment-key %)))
+       (group-by :attachment-key)
+       (map (fn [[attachment-key reviews]]
+              [attachment-key (:state (last (sort-by (comp time/to-instant :modified-time) reviews)))]))
+       (remove (comp #{"not-checked"} second))
+       (into {})))
+
+(defn- inheritable?
+  "Voiko lähdehakemuksen tarkistuksen periyttää kohdehakemukselle. Lupakortin on oltava voimassa kohdehakemuksen
+   jättöpäivänä. Jos kortin voimassaoloa ei tarvita (ks. payment-module/permit-validity-needed?), lupa on löydyttävä
+   Migrin palvelusta tai liitteen viimeisimmän merkinnän lähdehakemuksella on oltava tarkastettu, ja
+   maksuvelvollisuuden peruste on merkittävä."
+  [source check target attachment-key]
+  (if (payment-module/permit-validity-needed? attachment-key)
+    (valid-at-submission? check target)
+    (and (some? (:payment-obligation-basis check))
+         (or (true? (:found-in-migri check))
+             (= "checked" (get (latest-attachment-reviews (:key source) #{attachment-key}) attachment-key))))))
+
 (defn- source-candidates
   "Liitteen tarkistukset ennen kohdehakemusta jätetyillä hakemuksilla, joiden maksuvelvollisuus on tarkastettu."
   [applications target attachment-key]
@@ -74,7 +99,7 @@
         ; Luetaan kannasta, koska lähde on voinut periä tarkistuksen aiemmin samassa ajossa
         :when (seq (reviewed-reviews (obligation-reviews (:key source))))
         :let [check (store/get-permit-check (:key source) attachment-key)]
-        :when (and (some? check) (valid-at-submission? check target))]
+        :when (and (some? check) (inheritable? source check target attachment-key))]
     {:application source
      :check       check}))
 
@@ -119,17 +144,6 @@
   (some #(and (not= "unreviewed" (:state %))
               (time/after? (:modified-time %) (:checked-time check)))
         target-obligation-reviews))
-
-(defn- latest-attachment-reviews
-  "Lähdehakemuksen dokumenttivaihtoehdon kunkin liitteen viimeisin merkintä, kun liite on tarkastettu."
-  [source-key attachment-keys]
-  (->> (application-store/get-application-attachment-reviews source-key false)
-       (filter #(contains? attachment-keys (:attachment-key %)))
-       (group-by :attachment-key)
-       (map (fn [[attachment-key reviews]]
-              [attachment-key (:state (last (sort-by (comp time/to-instant :modified-time) reviews)))]))
-       (remove (comp #{"not-checked"} second))
-       (into {})))
 
 (defn- reviewed-after-check?
   "Liite, jonka virkailija on tarkastanut kohdehakemuksella alkuperäisen tarkistuksen jälkeen, säilyttää
