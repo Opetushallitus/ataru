@@ -193,6 +193,7 @@ test('esivalitsee hakemuksen ja esitäyttää käsittelytilasuodattimen url-para
 })
 
 test('hakemuksen sulkeminen vierittää listan suljetun hakemuksen riville', async () => {
+  const alkuperainenViewport = page.viewportSize()!
   await page.setViewportSize({ width: 1280, height: 200 })
   await page.goto(
     `/lomake-editori/applications/${lomakkeenAvain}` +
@@ -204,10 +205,13 @@ test('hakemuksen sulkeminen vierittää listan suljetun hakemuksen riville', asy
   await page.evaluate(() => window.scrollTo(0, 0))
   await expect(applicantRow('Ensimmäinen')).not.toBeInViewport()
 
+  // Ei käytetä click()-funktiota, koska se vierittäisi painikkeen ja samalla
+  // rivin näkyviin, eikä testi enää osoittaisi sulkemisen aiheuttamaa vieritystä.
   await page.locator('.close-details-button').dispatchEvent('click')
 
   await expect(applicantRow('Ensimmäinen')).toBeInViewport()
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeGreaterThan(0)
+  await page.setViewportSize(alkuperainenViewport)
 })
