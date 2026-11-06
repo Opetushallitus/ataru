@@ -197,6 +197,13 @@ LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
 WHERE ae.application_key = :application_key
 ORDER BY ae.id ASC;
 
+-- name: yesql-application-event-exists
+SELECT EXISTS (SELECT 1
+               FROM application_events
+               WHERE application_key = :application_key AND
+                     review_key = :review_key AND
+                     event_type IN (:event_types)) AS exists;
+
 -- name: yesql-get-application-review
 SELECT
   id,
