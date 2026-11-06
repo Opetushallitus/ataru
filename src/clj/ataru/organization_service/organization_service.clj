@@ -16,7 +16,7 @@
     "Gets all hakukohde groups")
   (get-organizations-for-oids [this organization-oids])
   (get-organization-with-parents [this organization-oid]
-    "Gets the organization and its parent organizations below OPH, starting from the topmost, with their types
+    "Hakee organisaation ja sen OPH:n alapuoliset yläorganisaatiot ylimmästä alkaen tyyppeineen
      (:koulutustoimija, :oppilaitos, :toimipiste)"))
 
 (def ^:private organization-types
@@ -73,7 +73,8 @@
 
   (get-organization-with-parents [_ organization-oid]
     (when-let [organization (org-client/get-single-organization-cached organization-oid)]
-      ; The path of a single organization lists the parents starting from the root, e.g. "|<OPH oid>|<parent oid>|"
+      ; Yksittäisen organisaation polku luettelee yläorganisaatiot juuresta alkaen,
+      ; esim. "|<OPH:n oid>|<yläorganisaation oid>|"
       (let [parent-oids (->> (s/split (or (:parentOidPath organization) "") #"\|")
                              (remove s/blank?)
                              (remove #{org-client/oph-organization organization-oid}))]
