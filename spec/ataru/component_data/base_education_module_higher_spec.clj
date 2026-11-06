@@ -1,7 +1,23 @@
 (ns ataru.component-data.base-education-module-higher-spec
   (:require [ataru.component-data.base-education-module-higher :as higher-module]
+            [ataru.component-data.value-transformers :as value-transformers]
             [ataru.fixtures.form :as form-fixtures]
+            [ataru.util :as util]
             [speclj.core :refer :all]))
+
+(def ^:private kktutkinnot-koodisto
+  [{:value "1" :label {:fi "Ammattikorkeakoulututkinto"}}
+   {:value "2" :label {:fi "Alempi yliopistotutkinto (kandidaatti)"}}
+   {:value "3" :label {:fi "Ylempi ammattikorkeakoulututkinto"}}
+   {:value "4" :label {:fi "Ylempi yliopistotutkinto (maisteri)"}}
+   {:value "5" :label {:fi "Lisensiaatti/tohtori"}}])
+
+(defn- koodisto-dropdowns [uri]
+  (->> (higher-module/base-education-module-higher {})
+       :children
+       util/flatten-form-fields
+       (filter #(and (= "dropdown" (:fieldType %))
+                     (= uri (get-in % [:koodisto-source :uri]))))))
 
 
 (describe "base-education-module-higher"
@@ -95,6 +111,26 @@
                                    "pohjakoulutus_yo_ammatillinen--vocational-completion-year"]]
                   (doseq [id keys-to-check]
                     (should-contain id keys-generated))))
+
+          (it "should not define placeholder options for koodisto backed dropdowns"
+              (let [dropdowns (->> (higher-module/base-education-module-higher {})
+                                   :children
+                                   util/flatten-form-fields
+                                   (filter #(and (= "dropdown" (:fieldType %))
+                                                 (some? (:koodisto-source %)))))]
+                (should (seq dropdowns))
+                (doseq [dropdown dropdowns]
+                  (should= [] (vec (:options dropdown))))))
+
+          (it "should end up with only koodisto options when koodisto is fetched in editor"
+              (let [dropdowns (koodisto-dropdowns "kktutkinnot")]
+                (should= 2 (count dropdowns))
+                (doseq [dropdown dropdowns]
+                  (let [merged (value-transformers/update-options-while-keeping-existing-followups
+                                 kktutkinnot-koodisto
+                                 (:options dropdown))]
+                    (should== (map :value kktutkinnot-koodisto) (map :value merged))
+                    (should-not-contain "" (map (comp :fi :label) merged))))))
 
           (it "should be possible to extract attachment ids from base education module"
               (should== #{"pohjakoulutus_kk_ulk--attachment"
