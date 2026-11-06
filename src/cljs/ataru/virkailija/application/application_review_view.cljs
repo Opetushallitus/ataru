@@ -566,6 +566,12 @@
            [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
            [:span @(subscribe [:application/field-label (:review-key event)])]]]
 
+         {:event-type "kk-payment-permit-check-inherited"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-inherited])]
+          [:div
+           [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
+           [:span @(subscribe [:application/field-label (:review-key event)])]]]
+
          {:event-type "ehto-hakukohteessa-set"}
          [[:span @(subscribe [:editor/virkailija-translation :ehdollisesti-hyvaksyttavissa])]
           [:div
@@ -1053,7 +1059,10 @@
          ; is shown next to the notes
          (if permit-attachment?
            [:<>
-            [permit-check/permit-check-notification (and (seq files) (not= "attachment-missing" selected-state))]
+            [permit-check/permit-check-notification
+             application-key
+             attachment-key
+             (and (seq files) (not= "attachment-missing" selected-state))]
             [:div.kk-payment-permit-check__columns
              [:div.kk-payment-permit-check__main
               attachment-files
