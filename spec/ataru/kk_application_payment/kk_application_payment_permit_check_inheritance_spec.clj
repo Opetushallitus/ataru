@@ -118,12 +118,15 @@
     keys))
 
 (defn- check!
-  [application-key {:keys [permit-valid-until checked-time organization-oid payment-obligation-basis]
-                    :or   {permit-valid-until       "2026-01-01"
+  [application-key {:keys [found-in-migri permit-valid-until checked-time organization-oid payment-obligation-basis]
+                    :or   {found-in-migri           true
+                           permit-valid-until       "2026-01-01"
                            checked-time             "2025-01-12T10:00:00+02:00"
                            organization-oid         oppilaitos-oid
                            payment-obligation-basis "not-obligated"}}]
-  (unit-test-db/save-permit-check-to-db! {:application-key application-key :attachment-key permit-attachment-key})
+  (unit-test-db/save-permit-check-to-db! {:application-key application-key
+                                          :attachment-key  permit-attachment-key
+                                          :found-in-migri  found-in-migri})
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (jdbc/execute! conn [(str "UPDATE kk_application_payment_permit_checks SET permit_valid_until = ?::date, "
                               "checked_time = ?::timestamptz, organization_oid = ?, payment_obligation_basis = ? "
@@ -439,10 +442,33 @@
       (should= [] (checks target-key))
       (should-be-nil (obligation-state target-key))))
 
-  (it "does not inherit a check stating a payment obligation to an application without the residence permit attachment"
+  (it "inherits a check stating a payment obligation by the permit found in Migri to an application without the residence permit attachment"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
                                                      missing-application "2025-01-14T10:00:00+02:00")]
       (checked-source! source-key {:payment-obligation-basis "obligated-own-studies"})
+      (payment/set-application-fee-required source-key nil)
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "inherits a check stating a payment obligation by the permit found in Migri to an application without the residence permit attachment when the payment of the earlier application is overdue"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis "obligated-other"})
+      (review-attachments! source-key "attachment-missing")
+      (payment/set-application-fee-required source-key nil)
+      (payment/set-application-fee-overdue source-key (first (payment/get-raw-payments [source-key])))
+      (review-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit a check stating a payment obligation to an application without the residence permit attachment when the permit was not found in Migri"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     missing-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:found-in-migri false :payment-obligation-basis "obligated-own-studies"})
       (payment/set-application-fee-not-required-for-exemption source-key nil)
       (review-missing-attachments! target-key)
       (run-job! target-key)

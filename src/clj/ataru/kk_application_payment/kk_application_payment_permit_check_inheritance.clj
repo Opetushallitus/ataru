@@ -14,7 +14,8 @@
    Puuttuva liite ei silloin tee hakijasta maksuvelvollista niin kauan kuin peritty tarkistus on ennallaan ja
    maksuvelvollisuus on tarkastettu (ks. kk-application-payment/attachments-invalid-and-deadline-passed?). Jos lupa on
    löytynyt Migrin palvelusta ja peruste on merkitty, tarkistus ratkaisee tarkastetun maksuvelvollisuuden liitteistä
-   riippumatta (ks. kk-application-payment/permit-check-payment-obligation).
+   riippumatta (ks. kk-application-payment/permit-check-payment-obligation). Siksi myös tarkistus, jossa hakija on
+   todettu maksuvelvolliseksi Migrin palvelusta löytyneen luvan perusteella, kopioidaan, kun liite puuttuu.
 
    Tarkistus kopioidaan vain kerran, eivätkä alkuperäisen hakemuksen myöhemmät muutokset muuta kopiota tai
    sen vaikutusta maksuun."
@@ -84,19 +85,35 @@
               (contains? payment-module/kk-application-payment-invalid-attachment-states (:state %)))
         (application-store/get-application-attachment-reviews application-key false)))
 
+(defn- obligated-in-migri?
+  "Tarkistus, jossa hakija on todettu maksuvelvolliseksi Migrin palvelusta löytyneen luvan perusteella."
+  [check]
+  (and (true? (:found-in-migri check))
+       (not (not-obligated? check))))
+
 (defn- missing-attachment-source-candidates
-  "Lähteet hakemukselle, jolta oleskelulupaliite puuttuu. Lähteen tarkistuksessa hakija on todettu
-   ei-maksuvelvolliseksi, eikä lähteen maksua vaadita ajon alussa. Lähteellä ei saa olla puuttuviksi tai
-   virheellisiksi merkittyjä liitteitä, koska ne voivat tehdä siitä maksuvelvollisen vielä samassa ajossa.
-   Liitteillä ei ole merkitystä, jos lupa on löytynyt Migrin palvelusta ja peruste on merkitty (ks.
-   kk-application-payment/permit-check-payment-obligation)."
+  "Lähteet hakemukselle, jolta oleskelulupaliite puuttuu.
+   - Jos lähteen tarkistuksessa hakija on todettu ei-maksuvelvolliseksi, lähteen maksua ei saa vaatia ajon alussa.
+     Lähteellä ei myöskään saa olla puuttuviksi tai virheellisiksi merkittyjä liitteitä, koska ne voivat tehdä siitä
+     maksuvelvollisen vielä samassa ajossa. Liitteillä ei ole merkitystä, jos lupa on löytynyt Migrin palvelusta ja
+     peruste on merkitty (ks. kk-application-payment/permit-check-payment-obligation).
+   - Jos hakija on todettu maksuvelvolliseksi Migrin palvelusta löytyneen luvan perusteella, tarkistus ratkaisee
+     maksuvelvollisuuden liitteistä riippumatta, joten lähteen maksulla ja liitteillä ei ole merkitystä."
   [applications not-required-application-keys target attachment-key]
-  (->> (source-candidates (filter (comp not-required-application-keys :key) applications) target attachment-key)
-       (filter (comp not-obligated? :check))
-       (remove (fn [{:keys [application check]}]
-                 (and (not (and (true? (:found-in-migri check))
-                                (= "not-obligated" (:payment-obligation-basis check))))
-                      (invalid-attachments? (:key application)))))))
+  (filter (fn [{:keys [application check]}]
+            (cond
+              (obligated-in-migri? check)
+              true
+
+              (not-obligated? check)
+              (and (contains? not-required-application-keys (:key application))
+                   (or (and (true? (:found-in-migri check))
+                            (= "not-obligated" (:payment-obligation-basis check)))
+                       (not (invalid-attachments? (:key application)))))
+
+              :else
+              false))
+          (source-candidates applications target attachment-key)))
 
 (defn- latest-source
   [candidates]
@@ -215,8 +232,8 @@
    - Hakemukset käsitellään jättöjärjestyksessä, jotta ajossa periytynyt tarkistus voi periytyä edelleen.
    - Hakemukset, joiden maksu ei voi enää muuttua (final-application-keys), eivät peri, mutta niiden tarkistukset
      periytyvät.
-   - Kun liite puuttuu, lähteen maksua ei saa vaatia ajon alussa (not-required-application-keys), vaikka lähde olisi
-     perinyt tarkistuksensa aiemmin samassa ajossa.
+   - Kun liite puuttuu ja lähteen tarkistuksessa hakija on todettu ei-maksuvelvolliseksi, lähteen maksua ei saa vaatia
+     ajon alussa (not-required-application-keys), vaikka lähde olisi perinyt tarkistuksensa aiemmin samassa ajossa.
    Palauttaa niiden hakemusten avaimet, jotka perivät tarkistuksen."
   [audit-logger applications final-application-keys not-required-application-keys]
   (let [applications (sort-by (comp time/to-instant :submitted) applications)]
