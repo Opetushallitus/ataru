@@ -57,6 +57,7 @@
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [ataru.log.access-logging :as access-logging]
+            [ataru.log.audit-log :as audit-log]
             [ataru.log.timbre-access-logging :as timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
@@ -215,6 +216,73 @@
         (do (unregister-test-hakukohde! oid)
             (ok {}))
         (route/not-found "Not found")))))
+
+(defn- log-secret-minted
+  "Auditlokimerkintä virkailijasalaisuuden luonnista (create/update/rewrite). Salaisuutta itseään
+   ei kirjata: merkinnästä käy ilmi mihin ja millainen tunniste luotiin, ei tunnistetta."
+  ([audit-logger session id secret-type]
+   (log-secret-minted audit-logger session id secret-type nil))
+  ([audit-logger session id secret-type extra]
+   (audit-log/log audit-logger
+                  {:new       (merge {:secret-type secret-type} extra)
+                   :id        id
+                   :session   session
+                   :operation audit-log/operation-new})))
+
+(defn- log-hakukohderyhma-config
+  "Auditlokimerkintä hakukohderyhmän asetuksen muutoksesta. Kutsutaan vasta onnistuneen
+   tallennuksen jälkeen: 409 tarkoittaa ettei mikään muuttunut.
+
+   Poistossa arvo menee :old-kenttään kuten muissakin poistoissa, vaikka poistettua arvoa ei
+   haetakaan erikseen kantaa vasten."
+  [audit-logger session haku-oid hakukohderyhma-oid operation value]
+  (audit-log/log audit-logger
+                 (cond-> {:id        {:hakuOid            haku-oid
+                                      :hakukohderyhmaOid  hakukohderyhma-oid}
+                          :session   session
+                          :operation operation}
+                   (= operation audit-log/operation-delete) (assoc :old value)
+                   (not= operation audit-log/operation-delete) (assoc :new value))))
+
+(defn- log-link-resent
+  "Auditlokimerkintä linkin uudelleenlähetyksestä. Lähetys kierrättää hakijan salaisuuden
+   (application_store/add-new-secret-to-application), joten kyseessä on hakemuksen muutos eikä
+   pelkkä luku — ilman tätä merkintää lokiin jää vain oikeustarkistuksen 'luku'-merkintä.
+   Uutta salaisuutta ei kirjata."
+  [audit-logger session application-key link-type]
+  (audit-log/log audit-logger
+                 {:new       {:link-type      link-type
+                              :secret-rotated true}
+                  :id        {:applicationOid application-key}
+                  :session   session
+                  :operation audit-log/operation-modify}))
+
+(defn- superuser-only
+  "Rekisterinpitäjille rajattu operaatio, josta syntyy auditlokimerkintä. Luvattomasta yrityksestä ei
+   kirjata merkintää: 401 ei muuta mitään. Merkintä kirjataan ennen suoritusta, jotta se säilyy myös
+   jos f heittää poikkeuksen.
+
+   Operaatio tulee kutsujalta: välimuistin tyhjennys on poisto, taustatyön käynnistys lisäys."
+  [session audit-logger id operation value f]
+  (if (get-in session [:identity :superuser])
+    (do (audit-log/log audit-logger
+                       {:new       value
+                        :id        id
+                        :session   session
+                        :operation operation})
+        (f))
+    (response/unauthorized {})))
+
+(defn- job-types->audit-value
+  "update-job-statuses ottaa rungon muodossa s/Any, joten merkintä kirjataan varovasti: audit-kutsu
+   on ennen suoritusta eikä se saa kaatua väärän muotoiseen runkoon (siihen kaatuu vasta kysely)."
+  [body]
+  {:jobTypes (if (sequential? body)
+               (mapv #(if (map? %)
+                        (select-keys % [:job_type :enabled])
+                        (str %))
+                     body)
+               (str body))})
 
 (defn api-routes [{:keys [organization-service
                           tarjonta-service
@@ -383,7 +451,14 @@
       :path-params [form-key :- s/Str]
       :query-params [{form-allows-ht :- s/Bool false}]
       :body [body {:contents [ataru-schema/EmailTemplate]}]
-      (ok (email/store-email-templates form-key session (:contents body) form-allows-ht)))
+      ;; Sähköpostipohjat ovat lomakkeen konfiguraatiota, joten muokkaus vaatii saman
+      ;; :form-edit-oikeuden kuin lomake itse.
+      (ok (access-controlled-form/check-form-edit-authorized-by-key
+            form-key
+            session
+            tarjonta-service
+            organization-service
+            (fn [] (email/store-email-templates form-key session (:contents body) form-allows-ht audit-logger)))))
 
     (api/GET "/email-templates/:form-key" []
       :path-params [form-key :- s/Str]
@@ -395,22 +470,26 @@
         :path-params [haku-oid :- s/Str]
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
-          (response/temporary-redirect
-            (str (-> config :public-config :applicant :service_url)
-                 "/hakemus/haku/" haku-oid
-                 "?virkailija-secret=" secret
-                 "&lang=" lang))
+          (do
+            (log-secret-minted audit-logger session {:hakuOid haku-oid} "virkailija-create" {:lang lang})
+            (response/temporary-redirect
+              (str (-> config :public-config :applicant :service_url)
+                   "/hakemus/haku/" haku-oid
+                   "?virkailija-secret=" secret
+                   "&lang=" lang)))
           (response/internal-server-error)))
 
       (api/GET "/form/:key" {session :session}
         :path-params [key :- s/Str]
         :query-params [lang :- s/Str]
         (if-let [secret (virkailija-edit/create-virkailija-create-secret session)]
-          (response/temporary-redirect
-            (str (-> config :public-config :applicant :service_url)
-                 "/hakemus/" key
-                 "?virkailija-secret=" secret
-                 "&lang=" lang))
+          (do
+            (log-secret-minted audit-logger session {:formKey key} "virkailija-create" {:lang lang})
+            (response/temporary-redirect
+              (str (-> config :public-config :applicant :service_url)
+                   "/hakemus/" key
+                   "?virkailija-secret=" secret
+                   "&lang=" lang)))
           (response/internal-server-error))))
 
     (api/context "/background-jobs" []
@@ -419,115 +498,144 @@
       (api/POST "/start-kk-application-payment-maksut-poller-job" {session :session}
         :path-params []
         :summary "Triggers a job for updating maksut status for all open higher education application payments"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
-                job-runner)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:job "kk-application-payment-maksut-poller"}
+          audit-log/operation-new
+          {:job "kk-application-payment-maksut-poller"}
+          (fn []
+            (kk-application-payment-maksut-poller-job/start-kk-application-payment-maksut-poller-job
+              job-runner)
+            (response/ok {}))))
 
       (api/POST "/start-kk-application-payment-status-updater-job-for-all" {session :session}
         :path-params []
         :summary "Triggers a job for updating internal payment status for all open higher education application payments"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
-                job-runner)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:job "kk-payment-status-for-all"}
+          audit-log/operation-new
+          {:job "kk-payment-status-for-all"}
+          (fn []
+            (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-all-job
+              job-runner)
+            (response/ok {}))))
 
       (api/POST "/start-kk-application-payment-status-updater-job/:person-oid/:term/:year" {session :session}
         :path-params [person-oid :- s/Str
                       term :- s/Str
                       year :- s/Int]
         :summary "Triggers a job for updating internal payment status for single higher education application payment"
-        (if (get-in session [:identity :superuser])
-          (do (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
-                job-runner
-                person-oid
-                term
-                year)
-              (response/ok {}))
-          (response/unauthorized {})))
+        ;; year on s/Int, joten se on str:ttava: Target-kentät menevät setField(String, String):iin.
+        (superuser-only
+          session audit-logger {:personOid person-oid :term term :year (str year)}
+          audit-log/operation-new
+          {:job "kk-payment-status-for-person"}
+          (fn []
+            (kk-application-payment-status-updater-job/start-update-kk-payment-status-for-person-job
+              job-runner
+              person-oid
+              term
+              year)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-submit"}
+          (fn []
+            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-submit-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-edit"}
+          (fn []
+            (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-edit-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-tutkintojen-tunnustaminen-information-request-jobs/:information-request-id" {session :session}
         :path-params [information-request-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
-            (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
-                  job-runner
-                  information-request)
-                (response/ok {}))
-            (response/not-found {:error (str "Information request not found with id " information-request-id)}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:informationRequestId (str information-request-id)}
+          audit-log/operation-new
+          {:job "tutkintojen-tunnustaminen-information-request"}
+          (fn []
+            (if-let [information-request (information-request/get-information-request-by-id information-request-id)]
+              (do (tutkintojen-tunnustaminen-store/start-tutkintojen-tunnustaminen-information-request-jobs
+                    job-runner
+                    information-request)
+                  (response/ok {}))
+              (response/not-found {:error (str "Information request not found with id " information-request-id)})))))
 
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
-                job-runner
-                application-id)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "automatic-eligibility-if-ylioppilas"}
+          (fn []
+            (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+              job-runner
+              application-id)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (application-service/start-automatic-eligibility-if-ylioppilas-job-for-haku
-                job-runner
-                haku-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-new
+          {:job "automatic-eligibility-if-ylioppilas-for-haku"}
+          (fn []
+            (application-service/start-automatic-eligibility-if-ylioppilas-job-for-haku
+              job-runner
+              haku-oid)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-payment-obligation-job/:person-oid" {session :session}
         :path-params [person-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-payment-obligation/start-automatic-payment-obligation-job
-                job-runner
-                person-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:personOid person-oid} audit-log/operation-new
+          {:job "automatic-payment-obligation"}
+          (fn []
+            (automatic-payment-obligation/start-automatic-payment-obligation-job
+              job-runner
+              person-oid)
+            (response/ok {}))))
 
       (api/POST "/start-automatic-payment-obligation-job-for-haku/:haku-oid" {session :session}
         :path-params [haku-oid :- s/Str]
-        (if (get-in session [:identity :superuser])
-          (do (automatic-payment-obligation/start-automatic-payment-obligation-job-for-haku
-                job-runner
-                haku-oid)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-new
+          {:job "automatic-payment-obligation-for-haku"}
+          (fn []
+            (automatic-payment-obligation/start-automatic-payment-obligation-job-for-haku
+              job-runner
+              haku-oid)
+            (response/ok {}))))
 
       (api/POST "/start-submit-jobs/:application-id" {session :session}
         :path-params [application-id :- s/Int]
-        (if (get-in session [:identity :superuser])
-          (do (hakija-application-service/start-submit-jobs
-                attachment-deadline-service
-                koodisto-cache
-                tarjonta-service
-                organization-service
-                ohjausparametrit-service
-                job-runner
-                application-id
-                nil)
-              (response/ok {}))
-          (response/unauthorized {})))
+        (superuser-only
+          session audit-logger {:applicationId (str application-id)} audit-log/operation-new
+          {:job "submit-jobs"}
+          (fn []
+            (hakija-application-service/start-submit-jobs
+              attachment-deadline-service
+              koodisto-cache
+              tarjonta-service
+              organization-service
+              ohjausparametrit-service
+              job-runner
+              application-id
+              nil)
+            (response/ok {}))))
 
+      ;; Ei auditlokitusta: tämä on rekisterinpitäjille rajattu luku taustatöiden asetuksista,
+      ;; ei henkilötietoa eikä muutos.
       (api/GET "/list-job-statuses" {session :session}
         (if (get-in session [:identity :superuser])
           (response/ok (job/get-job-types job-runner))
@@ -535,9 +643,14 @@
 
       (api/POST "/update-job-statuses" {session :session}
         :body [body s/Any]
-        (if (get-in session [:identity :superuser])
-          (response/ok (job/update-job-types job-runner body))
-          (response/unauthorized {}))))
+        ;; Tämä kytkee ajastettuja taustatöitä päälle ja pois (UPDATE job_types SET enabled).
+        ;; Pois kytketty työ epäonnistuu hiljaa toistaiseksi, joten merkintä kertoo mitkä työt
+        ;; ja mihin tilaan.
+        (superuser-only
+          session audit-logger {:job "job-types"} audit-log/operation-modify
+          (job-types->audit-value body)
+          (fn []
+            (response/ok (job/update-job-types job-runner body))))))
 
     (api/context "/post-process" []
       :tags ["post-process-api"]
@@ -671,6 +784,7 @@
                   modify-url               (str (-> config :public-config :applicant :service_url)
                                                 "/hakemus?virkailija-secret="
                                                 virkailija-update-secret)]
+              (log-secret-minted audit-logger session {:applicationOid application-key} "virkailija-update")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -690,6 +804,7 @@
                   modify-url                (str (-> config :public-config :applicant :service_url)
                                                  "/hakemus?virkailija-secret="
                                                  virkailija-rewrite-secret)]
+              (log-secret-minted audit-logger session {:applicationOid application-key} "virkailija-rewrite")
               (response/temporary-redirect modify-url))
             (response/bad-request))))
 
@@ -703,7 +818,9 @@
                                 application-key
                                 nil
                                 session)]
-          (response/ok resend-event)
+          (do
+            (log-link-resent audit-logger session application-key "modify")
+            (response/ok resend-event))
           (response/bad-request)))
 
       (api/GET "/:application-key/field-deadline" {session :session}
@@ -826,13 +943,18 @@
           (response/ok notes)
           (response/unauthorized {:error "Hakemuksien käsittely ei ole sallittu"})))
 
-      (api/DELETE "/notes/:note-id" []
+      (api/DELETE "/notes/:note-id" {session :session}
         :summary "Remove note"
         :return {:id s/Int}
         :path-params [note-id :- s/Int]
-        (if-let [note-id (application-service/remove-review-note note-id)]
-          (response/ok {:id note-id})
-          (response/bad-request)))
+        (case (application-service/remove-review-note application-service session note-id)
+          :not-found    (response/not-found {:error (str "Muistiinpanoa " note-id " ei löytynyt")})
+          ;; 403 eikä 401: käyttöliittymä näyttää 403:n virheviestin, 401 tulkitaan istunnon päättymiseksi
+          :unauthorized (response/forbidden {:error (str "Muistiinpanon " note-id " poisto ei ole sallittu")})
+          ;; Muut tapaukset: poisto onnistui, tai nil eli muistiinpano oli jo poistettu
+          ;; kirjoitushetkellä. Poisto on idempotentti, joten molemmissa lopputulos on
+          ;; kutsujan haluama eikä virhettä ole syytä näyttää.
+          (response/ok {:id note-id})))
 
       (api/PUT "/review" {session :session}
         :summary "Update existing application review"
@@ -1000,43 +1122,61 @@
                                              " aktivointi ei ole sallittu")}))))
 
 
+    ;; Välimuistien tyhjennys hidastaa sekä virkailija- että hakijapuolta (samat välimuistit palvelevat molempia),
+    ;; joten se on rajattu rekisterinpitäjille.
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
         :summary "Clear all caches"
-        {:status 200
-         :body   (do
-                   (doseq [[key dep] dependencies
-                           :when (clojure.string/ends-with? (name key) "-cache")]
-                     (cache/clear-all dep))
-                   {})})
+        (superuser-only
+          session audit-logger {:cache "all"} audit-log/operation-delete
+          {:attempted-operation "clear-all-caches"}
+          (fn []
+            (doseq [[key dep] dependencies
+                    :when (clojure.string/ends-with? (name key) "-cache")]
+              (cache/clear-all dep))
+            (response/ok {}))))
       (api/POST "/clear/:cache" {session :session}
         :path-params [cache :- s/Str]
         :summary "Clear an entire cache map of its entries"
-        {:status 200
-         :body   (do (cache/clear-all (get dependencies (keyword (str cache "-cache"))))
-                     {})})
+        (superuser-only
+          session audit-logger {:cache cache} audit-log/operation-delete
+          {:attempted-operation "clear-cache"}
+          (fn []
+            ;; Tuntematon nimi antoi ennen nil:n protokollakutsuun eli 500:n. Oikeustarkistus
+            ;; on tätä ennen, jotta olemassa olevia välimuistinimiä ei voi kartoittaa 404:llä.
+            (if-let [dep (get dependencies (keyword (str cache "-cache")))]
+              (do (cache/clear-all dep)
+                  (response/ok {}))
+              (response/not-found {:error (str "Tuntematon välimuisti " cache)})))))
       (api/POST "/remove/:cache/:key" {session :session}
         :path-params [cache :- s/Str
                       key :- s/Str]
         :summary "Remove an entry from cache map"
-        {:status 200
-         :body   (do (cache/remove-from (get dependencies (keyword (str cache "-cache"))) key)
-                     {})})
+        (superuser-only
+          session audit-logger {:cache cache :cacheKey key} audit-log/operation-delete
+          {:attempted-operation "remove-cache-entry"}
+          (fn []
+            (if-let [dep (get dependencies (keyword (str cache "-cache")))]
+              (do (cache/remove-from dep key)
+                  (response/ok {}))
+              (response/not-found {:error (str "Tuntematon välimuisti " cache)})))))
       (api/POST "/haku/:haku-oid/clear" {session :session}
         :path-params [haku-oid :- s/Str]
         :summary "Remove haku, hakukohde and form cache entries related to haku"
-        {:status 200
-         :body   (do
-                   (tarjonta/clear-haku-caches tarjonta-service haku-oid)
-                   (hakija-form-service/clear-form-by-haku-oid-str-cache
-                     (:form-by-haku-oid-str-cache dependencies)
-                     haku-oid
-                     [:hakija])
-                   (hakija-form-service/clear-form-by-haku-oid-str-cache
-                     (:form-by-haku-oid-str-cache dependencies)
-                     haku-oid
-                     [:virkailija])
-                   {})}))
+        (superuser-only
+          session audit-logger {:hakuOid haku-oid} audit-log/operation-delete
+          {:attempted-operation "clear-haku-caches"}
+          (fn []
+            (tarjonta/clear-haku-caches tarjonta-service haku-oid)
+            (hakija-form-service/clear-form-by-haku-oid-str-cache
+              (:form-by-haku-oid-str-cache dependencies)
+              haku-oid
+              [:hakija])
+            (hakija-form-service/clear-form-by-haku-oid-str-cache
+              (:form-by-haku-oid-str-cache dependencies)
+              haku-oid
+              [:virkailija])
+            (response/ok {})))))
 
     (api/GET "/haut" {session :session}
       :query-params [{show-hakukierros-paattynyt :- s/Bool false}]
@@ -1154,7 +1294,9 @@
                                    application-key
                                    payment-url
                                    session)]
-              (response/ok resend-event)
+              (do
+                (log-link-resent audit-logger session application-key "maksu")
+                (response/ok resend-event))
               (response/bad-request))
             (response/not-found
               {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
@@ -1165,6 +1307,11 @@
         (if (access-controlled-application/applications-access-authorized? organization-service tarjonta-service session [hakemus-oid] [:edit-applications])
           (do
             (kk-application-payment-status-updater-job/resend-payment-email job-runner hakemus-oid session)
+            (audit-log/log audit-logger
+                           {:new       {:email-type "hakemusmaksu"}
+                            :id        {:applicationOid hakemus-oid}
+                            :session   session
+                            :operation audit-log/operation-new})
             (response/ok {:events (application-service/get-application-events organization-service hakemus-oid)}))
           (response/unauthorized)))
 
@@ -1172,41 +1319,64 @@
         :body [input maksut-schema/LaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
 
-        (let [{:keys [reference locale message origin metadata]} input
-              lasku-input  (-> input
-                               (dissoc :message)
-                               (dissoc :locale))
-              invoice      (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
-              secret       (:secret invoice)
-              lang         (or locale "fi")
-              payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
-              amount       (bigdec (:amount invoice))
-              vat          (when (:vat invoice) (bigdec (:vat invoice)))
-              total-amount (if vat
-                             (+ amount (* amount (/ vat 100)))
-                             amount)]
+        ;; Maksupyynnön on aina liityttävä johonkin hakemukseen. Tarkistetaan hakemuksen olemassaolo
+        ;; erikseen, koska muuten käyttöoikeustarkistuksen every? menee läpi tyhjänä ja maksupyyntö
+        ;; luodaan maksut-palveluun.
+        (cond
+          (empty? (application-store/applications-authorization-data [(:reference input)]))
+          (response/not-found {:error (str "Hakemusta " (:reference input) " ei löytynyt")})
 
-          (if-let [result (application-service/payment-triggered-processing-state-change
-                            application-service
-                            session
-                            reference
-                            "decision-fee-outstanding"
-                            {:origin origin
-                             :message message
-                             :lang lang
-                             :form-name (get-in metadata [:form-name (keyword lang)])
-                             :payment-url payment-url
-                             :amount total-amount
-                             :vat vat
-                             :due-date (:due_date invoice)
-                             :order-id-prefix (:order-id-prefix metadata)
-                             :order-id (:order_id invoice)})]
-            (do
+          (not (access-controlled-application/applications-access-authorized?
+                 organization-service tarjonta-service session
+                 [(:reference input)] [:edit-applications]))
+          (response/unauthorized {:error (str "Hakemuksen "
+                                              (:reference input)
+                                              " käsittely ei ole sallittu")})
+
+          :else
+          (let [{:keys [reference locale message origin metadata]} input
+                lasku-input  (-> input
+                                 (dissoc :message)
+                                 (dissoc :locale))
+                invoice      (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
+                secret       (:secret invoice)
+                lang         (or locale "fi")
+                payment-url  (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)
+                amount       (bigdec (:amount invoice))
+                vat          (when (:vat invoice) (bigdec (:vat invoice)))
+                total-amount (if vat
+                               (+ amount (* amount (/ vat 100)))
+                               amount)]
+
+            (audit-log/log audit-logger
+                           {:new       {:origin   origin
+                                        :amount   (str total-amount)
+                                        :vat      (some-> vat str)
+                                        :due-date (:due_date invoice)
+                                        :lang     lang}
+                            ;; Target-kentät ovat merkkijonoja
+                            :id        {:applicationOid reference
+                                        :orderId        (some-> (:order_id invoice) str)}
+                            :session   session
+                            :operation audit-log/operation-new})
+
+            (let [result (application-service/payment-triggered-processing-state-change
+                           application-service
+                           session
+                           reference
+                           "decision-fee-outstanding"
+                           {:origin origin
+                            :message message
+                            :lang lang
+                            :form-name (get-in metadata [:form-name (keyword lang)])
+                            :payment-url payment-url
+                            :amount total-amount
+                            :vat vat
+                            :due-date (:due_date invoice)
+                            :order-id-prefix (:order-id-prefix metadata)
+                            :order-id (:order_id invoice)})]
               (log/warn "Review result" result)
-              (response/ok result))
-            (response/unauthorized {:error (str "Hakemuksen "
-                                                reference
-                                                " käsittely ei ole sallittu")}))))
+              (response/ok result)))))
 
       (api/POST "/hakemusmaksu/bulk-state-change" {session :session}
         :body [input maksut-schema/BulkPaymentStateChange]
@@ -1296,6 +1466,12 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
       (api/POST "/user-organization/:oid" {session :session}
         :path-params [oid :- s/Str]
         :query-params [{rights :- [user-rights/Right] nil}]
+        ;; Organisaation valinta vain kaventaa toimivaltaa, ei laajenna sitä.
+        ;; rights-parametri huomioidaan ainoastaan pääkäyttäjän haarassa
+        ;; (organization_selection.clj:54-56), ja pääkäyttäjällä on jo kaikki oikeudet; muille
+        ;; palautetaan organisaatio suoraan istunnon omista organisaatioista. Lisäksi
+        ;; session-organizations/filter-orgs-for-rights tarkistaa muiden kuin pääkäyttäjien
+        ;; organisaatiot uudelleen istuntoa vasten.
         (if-let [selected-organization (organization-selection/select-organization organization-service session oid rights)]
           (-> (ok selected-organization)
               (assoc :session (assoc session :selected-organization selected-organization)))
@@ -1415,8 +1591,19 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                                                    if-unmodified-since)
                                                  (hakukohderyhmat/insert-rajaava-hakukohderyhma
                                                    ryhma))]
-                                        (response/header (response/ok ryhma)
-                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (do
+                                          ;; Kohde otetaan tallennetulta riviltä, ei polkuparametreista:
+                                          ;; kysely kohdistuu rungon haku-oid/hakukohderyhma-oid-kenttiin,
+                                          ;; eikä reitti vaadi niiden vastaavan polkua.
+                                          (log-hakukohderyhma-config
+                                            audit-logger session
+                                            (:haku-oid ryhma) (:hakukohderyhma-oid ryhma)
+                                            (if (some? if-unmodified-since)
+                                              audit-log/operation-modify
+                                              audit-log/operation-new)
+                                            {:raja (:raja ryhma)})
+                                          (response/header (response/ok ryhma)
+                                                           "Last-Modified" (format-last-modified last-modified)))
                                         (response/conflict {:error (if (some? if-unmodified-since)
                                                                      (str "Hakukohderyhma modified since " if-unmodified-since)
                                                                      "Hakukohderyhma exists")})))]
@@ -1435,9 +1622,15 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :return ataru-schema/RajaavaHakukohderyhma
         (let [delete (fn []
-                       (hakukohderyhmat/delete-rajaava-hakukohderyhma
-                         haku-oid
-                         hakukohderyhma-oid)
+                       ;; Poistokysely palauttaa muuttuneiden rivien määrän, joten merkintä
+                       ;; syntyy vain kun jotain oikeasti poistettiin.
+                       (when (pos? (hakukohderyhmat/delete-rajaava-hakukohderyhma
+                                     haku-oid
+                                     hakukohderyhma-oid))
+                         (log-hakukohderyhma-config
+                           audit-logger session haku-oid hakukohderyhma-oid
+                           audit-log/operation-delete
+                           {:deleted true}))
                        (response/no-content))]
           (session-orgs/run-org-authorized
             session
@@ -1480,8 +1673,21 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                                                    if-unmodified-since)
                                                  (hakukohderyhmat/insert-priorisoiva-hakukohderyhma
                                                    ryhma))]
-                                        (response/header (response/ok ryhma)
-                                                         "Last-Modified" (format-last-modified last-modified))
+                                        (do
+                                          ;; Prioriteettilista voi olla pitkä, joten merkintään
+                                          ;; kirjataan vain sen koko, ei koko järjestystä.
+                                          ;; Kohde otetaan tallennetulta riviltä, ei polkuparametreista:
+                                          ;; kysely kohdistuu rungon haku-oid/hakukohderyhma-oid-kenttiin,
+                                          ;; eikä reitti vaadi niiden vastaavan polkua.
+                                          (log-hakukohderyhma-config
+                                            audit-logger session
+                                            (:haku-oid ryhma) (:hakukohderyhma-oid ryhma)
+                                            (if (some? if-unmodified-since)
+                                              audit-log/operation-modify
+                                              audit-log/operation-new)
+                                            {:prioriteetti-count (count (:prioriteetit ryhma))})
+                                          (response/header (response/ok ryhma)
+                                                           "Last-Modified" (format-last-modified last-modified)))
                                         (response/conflict {:error (if (some? if-unmodified-since)
                                                                      (str "Hakukohderyhma modified since " if-unmodified-since)
                                                                      "Hakukohderyhma exists")})))]
@@ -1500,9 +1706,13 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (let [delete (fn []
-                       (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
-                         haku-oid
-                         hakukohderyhma-oid)
+                       (when (pos? (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
+                                     haku-oid
+                                     hakukohderyhma-oid))
+                         (log-hakukohderyhma-config
+                           audit-logger session haku-oid hakukohderyhma-oid
+                           audit-log/operation-delete
+                           {:deleted true}))
                        (response/no-content))]
           (session-orgs/run-org-authorized
             session
@@ -1989,6 +2199,11 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
       )
     )
 
+    ;; Tiloja muuttavat VTS-reitit kirjaavat auditlokiin *yrityksen*, eivät lopputulosta:
+    ;; varsinaisen muutoksen lokittaa VTS itse. Ataru kutsuu VTS:ää palvelutunnuksella
+    ;; (virkailija_system.clj:125) eikä välitä loppukäyttäjän identiteettiä, joten VTS:n omasta
+    ;; merkinnästä ei selviä kuka muutosta pyysi. Merkintä kirjoitetaan ennen kutsua, joten yritys
+    ;; jää lokiin myös jos kutsu epäonnistuu, eikä VTS:n vastausta tarkisteta.
     (api/context "/valinta-tulos-service"  []
       :tags ["valinta-tulos-service-api"]
       (api/context "/valinnan-tulos" []
@@ -2032,8 +2247,19 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        [:edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/change-kevyt-valinta-property
-                  valinta-tulos-service valintatapajono-oid body if-unmodified-since))))
+                (let [hakemus-oids (mapv #(get-in % [:hakemusOid :s]) body)]
+                  ;; Hakemus-oidit menevät :new-kenttään eivätkä :id:hen: lista on rajaamaton ja
+                  ;; yhdistettynä yhdeksi Target-kentäksi se ylittäisi kentän kokorajan isossa
+                  ;; massa-ajossa. :new:ssä unnest levittää ne omiksi poluikseen.
+                  (audit-log/log audit-logger
+                                 {:new       {:attempted-operation "change-kevyt-valinta-property"
+                                              :hakemus-oids        hakemus-oids
+                                              :hakemus-count       (count hakemus-oids)}
+                                  :id        {:valintatapajonoOid valintatapajono-oid}
+                                  :session   session
+                                  :operation audit-log/operation-modify})
+                  (vts/change-kevyt-valinta-property
+                    valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
 
       (api/context "/hyvaksynnan-ehto" []
         (api/GET "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
@@ -2061,8 +2287,20 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
-                  valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since)))
+                (do
+                  ;; Ilman if-unmodified-sinceä asiakas lähettää If-None-Match: *
+                  ;; (valintatulosservice_client.clj:74-76) eli kyseessä on luonti.
+                  (audit-log/log audit-logger
+                                 {:new       {:attempted-operation "add-hyvaksynnan-ehto"
+                                              :ehto                ehto}
+                                  :id        {:hakukohdeOid   hakukohde-oid
+                                              :applicationOid application-key}
+                                  :session   session
+                                  :operation (if (some? if-unmodified-since)
+                                               audit-log/operation-modify
+                                               audit-log/operation-new)})
+                  (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since))))
 
         (api/DELETE "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Delete hyvaksynnan-ehto hakukohteessa"
@@ -2075,8 +2313,19 @@ Huom: Massakorjaus ei ole atominen. Jos kutsu maksut-palveluun epäonnistuu, hei
                        organization-service tarjonta-service suoritus-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
-                  valinta-tulos-service hakukohde-oid application-key if-unmodified-since)))
+                (do
+                  ;; Poiston arvo menee :old-kenttään kuten muissakin poistoissa (vrt.
+                  ;; application_store/auditlog-review-note), jotta operaatiosuodatus toimii.
+                  ;; Poistettavaa arvoa ei haeta erikseen VTS:stä: yritys riittää, eikä
+                  ;; ylimääräinen etäkutsu per poisto ole sen arvoinen.
+                  (audit-log/log audit-logger
+                                 {:old       {:attempted-operation "delete-hyvaksynnan-ehto"}
+                                  :id        {:hakukohdeOid   hakukohde-oid
+                                              :applicationOid application-key}
+                                  :session   session
+                                  :operation audit-log/operation-delete})
+                  (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since))))
 
         (api/GET "/valintatapajonoissa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto valintatapajonoissa"
