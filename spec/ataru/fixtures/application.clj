@@ -641,6 +641,12 @@
               (comp vec concat)
               [{:key "kk-application-payment-option" :value "0" :fieldType "dropdown"}])))
 
+(defn with-kk-application-payment-option
+  [application option]
+  (update application :answers (partial mapv #(cond-> %
+                                                 (= "kk-application-payment-option" (:key %))
+                                                 (assoc :value option)))))
+
 (def application-without-hakemusmaksu-exemption
   (-> person-info-form-application-without-kk-application-answer
       (merge {:form       909909,

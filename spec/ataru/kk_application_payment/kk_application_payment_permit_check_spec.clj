@@ -5,6 +5,7 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store]
             [ataru.log.audit-log :as audit-log]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -33,7 +34,7 @@
     (map (fn [oid] {:oid oid :tarjoaja-oids [(tarjoaja-by-hakukohde oid)]}) hakukohde-oids)))
 
 (def fake-tarjonta-service (->TarjoajaTarjontaService))
-(def virkailija-oid "1.2.246.562.24.00000001213")
+(def virkailija-oid unit-test-db/permit-check-virkailija-oid)
 
 (defn- session-with-edit-rights [& organization-oids]
   {:identity {:oid                      virkailija-oid
@@ -64,9 +65,7 @@
                                   application-key attachment-key body))
 
 (defn- stored-check [application-key attachment-key]
-  (->> (db/exec :db permit-check/yesql-get-kk-application-payment-permit-checks {:application_key application-key})
-       (filter #(= attachment-key (:attachment-key %)))
-       first))
+  (permit-check-store/get-permit-check application-key attachment-key))
 
 (defn- events [application-key event-type]
   (filter #(= event-type (:event-type %)) (application-store/get-application-events application-key)))
