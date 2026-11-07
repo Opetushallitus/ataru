@@ -130,6 +130,31 @@
             (should= "Lisätty maksumoduuli lomakkeelle" result))))))
 
 (describe
+  "form-visible-to-user?"
+  (tags :unit)
+
+  (it "is visible when user has edit rights to the form's organization"
+    (should= true (fac/form-visible-to-user? basic-form session (mts/->MockTarjontaService) (os/->FakeOrganizationService))))
+
+  (it "is visible when user has edit rights to a tarjoaja of a haku using the form"
+    (should= true (fac/form-visible-to-user? form-with-hakukohde session (mts/->MockTarjontaService) (os/->FakeOrganizationService))))
+
+  (it "is not visible through tarjoaja when the haku is toisen asteen yhteishaku"
+    (should= false (fac/form-visible-to-user? yhteishaku-form session (mts/->MockTarjontaService) (os/->FakeOrganizationService))))
+
+  (it "is not visible when user has no rights to the form's organization or its hakus"
+    (should= false (fac/form-visible-to-user? {:key "form-access-control-test-unknown-form" :organization-oid "no-access-to-this-org"}
+                                              session (mts/->MockTarjontaService) (os/->FakeOrganizationService))))
+
+  (it "is not visible when user has no form edit rights at all"
+    (should= false (fac/form-visible-to-user? basic-form {:identity {:user-right-organizations {}}}
+                                              (mts/->MockTarjontaService) (os/->FakeOrganizationService))))
+
+  (it "is visible to superuser"
+    (let [superuser-session (update session :identity assoc :superuser true)]
+      (should= true (fac/form-visible-to-user? yhteishaku-form superuser-session (mts/->MockTarjontaService) (os/->FakeOrganizationService))))))
+
+(describe
   "get-forms-for-editor"
   (tags :unit)
 

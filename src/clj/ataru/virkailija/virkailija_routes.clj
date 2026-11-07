@@ -309,11 +309,20 @@
           (response/not-found {:error (str "Form not found on haku " haku-oid)})))
         )
 
-    (api/GET "/forms/:id" []
+    (api/GET "/forms/:id" {session :session}
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
-      :summary "Get content for form"
-      (ok (form-store/fetch-form id)))
+      :summary "Get content for form. Requires form edit rights to the form."
+      (let [form (form-store/fetch-form id)]
+        (cond
+          (nil? form)
+          (response/not-found {:error (str "Lomaketta " id " ei löydy")})
+
+          (not (access-controlled-form/form-visible-to-user? form session tarjonta-service organization-service))
+          (response/forbidden {:error (str "Käyttäjällä ei oikeutta lomakkeeseen " id)})
+
+          :else
+          (ok form))))
 
     (api/PUT "/forms/:id" {session :session}
       :summary "Edit form content"
