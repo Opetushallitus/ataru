@@ -20,6 +20,7 @@
             [ataru.cypress :as cypress]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-access-control :as access-controlled-form]
+            [ataru.forms.form-feedback-service :as form-feedback-service]
             [ataru.forms.form-store :as form-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
             [ataru.haku.haku-service :as haku-service]
@@ -356,6 +357,25 @@
         (:decisionFee payment-info)
         session tarjonta-service organization-service audit-logger)
       (ok {}))
+
+    (api/GET "/forms/:form-key/feedback/excel" {session :session}
+      :summary "Download feedback given by applicants on the form as an Excel file. Requires form edit rights to the form."
+      :path-params [form-key :- s/Str]
+      :query-params [{lang :- (s/enum "fi" "sv" "en") "fi"}]
+      (let [{:keys [filename body error]} (form-feedback-service/get-feedback-excel
+                                            form-key
+                                            (keyword lang)
+                                            session
+                                            tarjonta-service
+                                            organization-service
+                                            audit-logger)]
+        (case error
+          :not-found (response/not-found {:error (str "Lomaketta " form-key " ei löydy")})
+          :forbidden (response/forbidden {:error (str "Käyttäjällä ei oikeutta lomakkeen " form-key " palautteisiin")})
+          {:status  200
+           :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                     "Content-Disposition" (str "attachment; filename=" filename)}
+           :body    body})))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
