@@ -1082,7 +1082,12 @@
 (defn add-application-feedback
   [feedback]
   (->kebab-case-kw
-   (exec-db :db queries/yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
+   (exec-db :db queries/yesql-add-application-feedback<! (transform-keys ->snake_case (merge {:haku-oid nil} feedback)))))
+
+(defn get-application-feedback-by-form-key
+  [form-key]
+  (mapv ->kebab-case-kw
+        (exec-db :db queries/yesql-get-application-feedback-by-form-key {:form_key form-key})))
 
 (defn- kk-base-educations-old-module [answers]
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
