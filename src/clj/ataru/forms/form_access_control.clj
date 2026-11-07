@@ -38,6 +38,21 @@
         (some #(authorized-by-tarjoaja? authorized-organization-oids %))
         boolean))))
 
+(defn form-visible-to-user?
+  "Lomake näkyy käyttäjälle editorissa, kun käyttäjällä on lomakkeen
+   muokkausoikeus joko lomakkeen omistavaan organisaatioon tai lomaketta
+   käyttävän haun hakukohteen tarjoajaan. Rekisterinpitäjä näkee kaikki lomakkeet."
+  [form session tarjonta-service organization-service]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:form-edit]
+    (fn [] false)
+    (fn [org-oids]
+      (or (contains? org-oids (:organization-oid form))
+          (form-allowed-by-haku? tarjonta-service org-oids (:key form))))
+    (fn [] true)))
+
 (defn get-organizations-with-edit-rights
   [session]
   (if (:selected-organization session)

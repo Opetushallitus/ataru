@@ -227,6 +227,13 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- get-form-as [id ticket]
+  (-> (mock/request :get (str "/lomake-editori/api/forms/" id))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes ticket))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
 (defn- post-form [form]
   (-> (mock/request :post "/lomake-editori/api/forms"
         (json/generate-string form))
@@ -367,6 +374,31 @@
 
   (it "Should have :content with it"
       (should= (:content fixtures/form-with-content) (-> @resp :body :content))))
+
+(describe "Fetching a form"
+          (tags :unit :route-get-form)
+
+  (it "Should return the form to a user with edit rights to the form's organization"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form (:id form))]
+        (should= 200 (:status resp))
+        (should= (:key form) (-> resp :body :key))))
+
+  (it "Should return the form to a superuser"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form-as (:id form) "SUPERUSER")]
+        (should= 200 (:status resp))
+        (should= (:key form) (-> resp :body :key))))
+
+  (it "Should not return the form to a user without rights to the form's organization"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form-as (:id form) "USER-WITH-HAKUKOHDE-ORGANIZATION")]
+        (should= 403 (:status resp))
+        (should-be-nil (-> resp :body :key))))
+
+  (it "Should return not found for a form that does not exist"
+      (let [resp (get-form-as 2147483647 "SUPERUSER")]
+        (should= 404 (:status resp)))))
 
 (defn- swap [v i1 i2]
   (assoc v i2 (v i1) i1 (v i2)))
