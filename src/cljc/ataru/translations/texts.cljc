@@ -1835,9 +1835,9 @@
    :link-to-form                                             {:fi "Linkki lomakkeeseen"
                                                               :sv "Länk till blanketten"
                                                               :en "Link to the form"}
-   :link-to-feedback                                         {:fi "Linkki palautteeseen"
-                                                              :sv "Länk till responsen"
-                                                              :en "Link to the feedback"}
+   :download-feedback-excel                                  {:fi "Lataa palautteet (Excel)"
+                                                              :sv "Ladda ner responsen (Excel)"
+                                                              :en "Download feedback (Excel)"}
    :link-to-applications                                     {:fi "Linkki hakemuksiin"
                                                               :sv "Länk till ansökningar"
                                                               :en "Link to applications"}
@@ -3020,6 +3020,26 @@
    :signature-name        {:fi "Opetushallitus"
                            :sv "Utbildningsstyrelsen"
                            :en "Finnish National Agency for Education"}})
+
+(def feedback-excel-texts
+  {:sheet-name {:fi "Palautteet"
+                :sv "Respons"
+                :en "Feedback"}
+   :timestamp  {:fi "Aikaleima"
+                :sv "Tidsstämpel"
+                :en "Timestamp"}
+   :rating     {:fi "Arvosana"
+                :sv "Vitsord"
+                :en "Rating"}
+   :feedback   {:fi "Palaute"
+                :sv "Respons"
+                :en "Feedback"}
+   :user-agent {:fi "Käyttäjäagentti"
+                :sv "Användaragent"
+                :en "User agent"}
+   :haku       {:fi "Haku"
+                :sv "Ansökan"
+                :en "Admission"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"
