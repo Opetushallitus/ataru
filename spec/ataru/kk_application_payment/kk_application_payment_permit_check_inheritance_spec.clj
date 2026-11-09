@@ -164,10 +164,11 @@
                                        :modified_time   (time/now)
                                        :updated?        true})))
 
-(defn- review-missing-attachments! [application-key]
-  (unit-test-db/save-reviews-to-db! (for [[attachment-key state] [[permit-attachment-key "attachment-missing"]
-                                                                  [permit-back-attachment-key "attachment-missing"]
-                                                                  [passport-attachment-key "not-checked"]]]
+(defn- review-missing-attachments! [application-key & [attachment-states]]
+  (unit-test-db/save-reviews-to-db! (for [[attachment-key state] (or attachment-states
+                                                                     [[permit-attachment-key "attachment-missing"]
+                                                                      [permit-back-attachment-key "attachment-missing"]
+                                                                      [passport-attachment-key "not-checked"]])]
                                       {:application_key application-key
                                        :attachment_key  attachment-key
                                        :hakukohde       hakukohde
@@ -187,6 +188,10 @@
   (check! application-key check)
   (review-attachments! application-key "checked")
   (review-obligation! application-key "reviewed"))
+
+(defn- review-p-missing-attachments! [application-key]
+  (review-missing-attachments! application-key [[p-permit-attachment-key "attachment-missing"]
+                                                [p-passport-attachment-key "not-checked"]]))
 
 (defn- p-permit-source!
   "P-luvan tarkistus ilman lupakortin voimassaoloa hakemukselle, jonka maksuvelvollisuus on tarkastettu."
@@ -651,9 +656,35 @@
                                                      p-missing-application "2025-01-14T10:00:00+02:00")]
       (p-permit-source! source-key "checked")
       (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-p-missing-attachments! target-key)
       (run-job! target-key)
       (should= [source-key] (map :inherited-from-application-key (checks target-key)))
-      (should= "reviewed" (obligation-state target-key))))
+      (should= "reviewed" (obligation-state target-key))
+      (set-fixed-time "2025-06-15T12:00:00") ; Hakuaika ends 2025-02-08
+      (run-job! target-key)
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "inherits a check of a permanent residence permit stating a payment obligation by the permit found in Migri to an application without the residence permit attachment"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-missing-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "not-checked" {:payment-obligation-basis "obligated-own-studies"})
+      (payment/set-application-fee-required source-key nil)
+      (review-p-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit a checked attachment of a permanent residence permit not found in Migri stating a payment obligation to an application without the residence permit attachment"
+    (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
+                                                     p-missing-application "2025-01-14T10:00:00+02:00")]
+      (p-permit-source! source-key "checked" {:found-in-migri           false
+                                              :payment-obligation-basis "obligated-own-studies"})
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-p-missing-attachments! target-key)
+      (run-job! target-key)
+      (should= [] (checks target-key))
+      (should-be-nil (obligation-state target-key))))
 
   (it "inherits the checked attachment of a permanent residence permit not found in Migri to an application without the residence permit attachment"
     (let [[source-key target-key] (init-applications p-delivered-application "2025-01-10T10:00:00+02:00"
