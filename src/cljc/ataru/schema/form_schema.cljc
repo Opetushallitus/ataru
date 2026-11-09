@@ -866,7 +866,6 @@
           :checked-time                   #?(:clj java.time.ZonedDateTime :cljs s/Str)
           :inherited-from-application-key (s/maybe s/Str)
           :inherited-time                 (s/maybe #?(:clj java.time.ZonedDateTime :cljs s/Str))
-          ; The original check of an inherited check
           (s/optional-key :original-check) {:application-key s/Str
                                             :checked-time    #?(:clj java.time.ZonedDateTime :cljs s/Str)
                                             :virkailija-name s/Str
