@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-system
   (:require [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.util.http-util :refer [backend-caller-id]]
             [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sqs :as sqs]
@@ -65,7 +66,7 @@
                                       (.withUsername (-> config :cas :username))
                                       (.withPassword (-> config :cas :password))
                                       (.withCasEndpoint (resolve-url :cas-client))
-                                      (.withCallerId (-> config :public-config :virkailija-caller-id))
+                                      (.withCallerId backend-caller-id)
                                       (.build))
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
