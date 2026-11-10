@@ -1,6 +1,7 @@
 (ns ataru.virkailija.virkailija-system
   (:require [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.util.http-util :refer [backend-caller-id]]
             [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sqs :as sqs]
@@ -65,13 +66,12 @@
                                       (.withUsername (-> config :cas :username))
                                       (.withPassword (-> config :cas :password))
                                       (.withCasEndpoint (resolve-url :cas-client))
-                                      (.withCallerId (-> config :public-config :virkailija-caller-id))
+                                      (.withCallerId backend-caller-id)
                                       (.build))
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
                                                       "/auth/cas"
-                                                      "ring-session"
-                                                      (-> config :public-config :virkailija-caller-id))
+                                                      "ring-session")
 
     :hakukohderyhmapalvelu-service (component/using
                                      (hakukohderyhma-service/new-hakukohderyhmapalvelu-service)
@@ -122,8 +122,7 @@
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
-                                                      "session" (-> config :public-config :virkailija-caller-id))
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login" "session")
 
     :valinta-tulos-service (component/using
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
@@ -131,8 +130,7 @@
 
     :valinta-laskenta-service-cas-client (cas/new-client "/valintalaskenta-laskenta-service"
                                                          "/j_spring_cas_security_check"
-                                                         "JSESSIONID"
-                                                         (-> config :public-config :virkailija-caller-id))
+                                                         "JSESSIONID")
 
     :valinta-laskenta-service (component/using
                                 (valinta-laskenta-service/map->RemoteValintaLaskentaService {})
@@ -141,8 +139,7 @@
 
     :valintalaskentakoostepalvelu-cas-client (cas/new-client "/valintalaskentakoostepalvelu"
                                                              "/j_spring_cas_security_check"
-                                                             "JSESSIONID"
-                                                             (-> config :public-config :virkailija-caller-id))
+                                                             "JSESSIONID")
 
     :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader (component/using
                                                                            (koostepalvelu-service/map->HakukohdeValintalaskentaCacheLoader {})
@@ -161,7 +158,7 @@
                                              :hakukohde-cache])
 
     :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "/j_spring_cas_security_check"
-                                                 "JSESSIONID" (-> config :public-config :virkailija-caller-id))
+                                                 "JSESSIONID")
 
     :valintatapajono-cache-loader (component/using
                                    (valintaperusteet-client/map->ValintatapajonoCacheLoader {})
@@ -193,7 +190,7 @@
                                [:ohjausparametrit-cache])
 
     :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service" "/j_spring_cas_security_check"
-                                             "JSESSIONID" (-> config :public-config :virkailija-caller-id))
+                                             "JSESSIONID")
 
     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
                             (kayttooikeus-service/->FakeKayttooikeusService)
@@ -201,10 +198,7 @@
                              (kayttooikeus-service/->HttpKayttooikeusService nil)
                              [:kayttooikeus-cas-client]))
 
-    :maksut-cas-client (cas/new-client "/maksut"
-                        "/auth/cas"
-                        "ring-session"
-                        (-> config :public-config :virkailija-caller-id))
+    :maksut-cas-client (cas/new-client "/maksut" "/auth/cas" "ring-session")
 
     :maksut-service (component/using
                      (maksut-service/new-maksut-service)
@@ -222,7 +216,7 @@
                                   [:ohjausparametrit-service])
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "/j_spring_cas_security_check"
-                                                      "JSESSIONID" (-> config :public-config :virkailija-caller-id))
+                                                      "JSESSIONID")
 
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
@@ -242,23 +236,20 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :login-cas-client (let [client (cas/new-client "/lomake-editori" "/auth/cas" "ring-session" (-> config :public-config :virkailija-caller-id))]
+    :login-cas-client (let [client (cas/new-client "/lomake-editori" "/auth/cas" "ring-session")]
                         (log/debug "Initialized login-cas-client:" client)
                         client)
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
-                                        "ring-session" (-> config :public-config :virkailija-caller-id))
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas" "ring-session")
 
-    :tutu-cas-client (cas/new-client "/tutu-backend/api" "/j_spring_cas_security_check" "JSESSIONID"
-                                     (-> config :public-config :virkailija-caller-id))
+    :tutu-cas-client (cas/new-client "/tutu-backend/api" "/j_spring_cas_security_check" "JSESSIONID")
 
     :siirtotiedosto-client (new SiirtotiedostoPalvelu
                                 (-> config :siirtotiedostot :aws-region)
                                 (-> config :siirtotiedostot :s3-bucket)
                                 (-> config :siirtotiedostot :transferFileTargetRoleArn))
 
-    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser"
-                                  "1.2.246.562.10.00000000001.ataru-hakija.frontend")
+    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser")
     :koski-service (component/using
                      (koski-service/map->IntegratedKoskiTutkintoService {})
                      {:koski-cas-client :koski-client})
