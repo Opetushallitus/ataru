@@ -27,6 +27,22 @@ AND EXISTS (SELECT 1
 /*~ (when (contains? params :hakukohde) */
               AND hakukohde = ANY (:hakukohde)
 /*~   ) ~*/
+/*~ (when (contains? params :permit-attachment-key) */
+              -- Dokumenttivaihtoehdon puuttuvia liitteitä ei oteta huomioon, kun oleskelulupaliitteen tarkistus
+              -- ratkaisee hakemusmaksuvelvollisuuden (ks. application-states/attachment-reviews-for-filtering)
+              AND NOT (state = 'attachment-missing' AND
+                       EXISTS (SELECT 1
+                               FROM kk_application_payment_permit_checks AS pc
+                               WHERE pc.application_key = a.key AND
+                                     pc.attachment_key = :permit-attachment-key AND
+                                     pc.found_in_migri AND
+                                     pc.payment_obligation_basis IS NOT NULL) AND
+                       EXISTS (SELECT 1
+                               FROM application_hakukohde_reviews
+                               WHERE application_key = a.key AND
+                                     requirement = 'kk-application-payment-obligation' AND
+                                     state = 'reviewed'))
+/*~   ) ~*/
            )
 
 -- :snip option-answers-snip
@@ -172,6 +188,18 @@ SELECT a.id,
                                             'hakukohde', hakukohde))
         FROM application_hakukohde_attachment_reviews
         WHERE application_key = a.key) AS "application-attachment-reviews",
+       -- Oleskelulupaliitteet, joiden tarkistus ratkaisee hakemusmaksuvelvollisuuden liitteistä riippumatta (ks.
+       -- kk-application-payment/permit-check-payment-obligation)
+       (SELECT coalesce(array_agg(pc.attachment_key), '{}')
+        FROM kk_application_payment_permit_checks AS pc
+        WHERE pc.application_key = a.key AND
+              pc.found_in_migri AND
+              pc.payment_obligation_basis IS NOT NULL AND
+              EXISTS (SELECT 1
+                      FROM application_hakukohde_reviews
+                      WHERE application_key = pc.application_key AND
+                            requirement = 'kk-application-payment-obligation' AND
+                            state = 'reviewed')) AS "kk-payment-permit-found-in-migri-attachment-keys",
        (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications AS a
 LEFT JOIN applications AS la

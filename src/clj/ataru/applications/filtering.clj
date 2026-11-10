@@ -20,7 +20,7 @@
 (defn- filter-by-attachment-review
   [application selected-hakukohteet states-to-include]
   (or (empty? (:hakukohde application))
-      (let [states (->> (application-states/attachment-reviews-with-no-requirements application)
+      (let [states (->> (application-states/attachment-reviews-for-filtering application)
                         (filter #(or (empty? selected-hakukohteet) (contains? selected-hakukohteet (:hakukohde %))))
                         (map :state))]
         (not (empty? (clojure.set/intersection

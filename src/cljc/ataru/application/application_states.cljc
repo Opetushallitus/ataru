@@ -1,5 +1,6 @@
 (ns ataru.application.application-states
   (:require [ataru.application.review-states :as review-states]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [clojure.set :as set]))
 
 (defn get-review-state-label-by-name
@@ -52,3 +53,27 @@
         no-reqs (set/difference (set (:hakukohde application))
                   (set (map :hakukohde reviews)))]
     (concat reviews (map (fn [oid] {:hakukohde oid :state review-states/no-attachment-requirements}) no-reqs))))
+
+(defn remove-attachment-reviews-ignored-in-filtering
+  "Poistaa liitemerkinnöistä ne, joita ei oteta huomioon, kun hakemuslistaa suodatetaan liitteiden tilan perusteella.
+   Dokumenttivaihtoehdon puuttuviksi merkittyjä liitteitä ei oteta huomioon, kun virkailija on tarkastanut hakijan
+   oleskeluluvan ja todennut sen löytyvän Migrin palvelusta, maksuvelvollisuuden peruste on merkitty ja
+   hakemusmaksuvelvollisuus on tarkastettu (:kk-payment-permit-found-in-migri-attachment-keys). Tarkistus ratkaisee
+   silloin hakemusmaksuvelvollisuuden liitteistä riippumatta, joten hakijalle ei tarvitse lähettää niistä
+   muistutusta. Muut puuttuvat liitteet löytyvät suodatuksessa edelleen."
+  [application attachment-reviews]
+  (let [ignored-attachment-keys (->> (:kk-payment-permit-found-in-migri-attachment-keys application)
+                                     (mapcat payment-module/kk-application-payment-attachment-keys-by-residence-permit-attachment-key)
+                                     set)]
+    (remove #(and (= "attachment-missing" (:state %))
+                  (contains? ignored-attachment-keys (:attachment-key %)))
+            attachment-reviews)))
+
+(defn attachment-reviews-for-filtering
+  "Liitemerkinnät, joiden mukaan hakemuslistaa suodatetaan liitteiden tilan perusteella (ks.
+   remove-attachment-reviews-ignored-in-filtering). Hakukohteella, jolle ei jää merkintöjä, ei ole liitepyyntöjä,
+   jotta hakemus löytyy edelleen, kun kaikki tilat on valittu."
+  [application]
+  (attachment-reviews-with-no-requirements
+    (update application :application-attachment-reviews
+            (partial remove-attachment-reviews-ignored-in-filtering application))))
