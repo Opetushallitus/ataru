@@ -108,7 +108,7 @@
    (fn [acc application]
      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
                  acc
-                 (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
+                 (group-by :state (cond->> (application-states/attachment-reviews-for-filtering application)
                                     (some? included-hakukohde-oid-set)
                                     (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
@@ -213,6 +213,7 @@
             (if-let [states (->> (:application-attachment-reviews application)
                                  (filter #(or (empty? selected-hakukohde-oids)
                                               (contains? selected-hakukohde-oids (:hakukohde %))))
+                                 (application-states/remove-attachment-reviews-ignored-in-filtering application)
                                  (map :state)
                                  distinct
                                  seq)]

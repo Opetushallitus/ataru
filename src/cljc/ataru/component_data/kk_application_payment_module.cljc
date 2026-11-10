@@ -79,6 +79,20 @@
   [attachment-key]
   (contains? kk-application-payment-residence-permit-attachment-keys (name attachment-key)))
 
+; Dokumenttivaihtoehdon kaikki liitteet sen oleskelulupaliitteen mukaan, johon virkailija merkitsee tarkistuksen
+(def kk-application-payment-attachment-keys-by-residence-permit-attachment-key
+  (into {}
+        (map (fn [[option attachment-key]]
+               [attachment-key (get kk-application-payment-attachment-keys-by-option option)]))
+        kk-application-payment-residence-permit-attachment-key-by-option))
+
+; Oleskelulupaliite, johon tarkistus merkitään, sen dokumenttivaihtoehdon liitteen mukaan, johon liite kuuluu
+(def kk-application-payment-residence-permit-attachment-key-by-attachment-key
+  (into {}
+        (for [[permit-attachment-key attachment-keys] kk-application-payment-attachment-keys-by-residence-permit-attachment-key
+              attachment-key attachment-keys]
+          [attachment-key permit-attachment-key])))
+
 (def kk-payment-obligation-bases
   ["not-obligated"
    "obligated-own-studies"
