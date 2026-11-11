@@ -15,6 +15,35 @@
   tilaan."
   (:require [ataru.application-common.components.dropdown-viewport :as viewport]))
 
+(defn- set-px! [style prop value]
+  (aset style prop (str (js/Math.round value) "px")))
+
+(defn- reset-popup-style! [style]
+  (doseq [prop ["left" "width" "minWidth" "maxWidth" "top" "bottom" "height" "maxHeight"]]
+    (aset style prop "")))
+
+(defn- set-mobile-geometry! [style rect space-below]
+  (set-px! style "top" (.-bottom rect))
+  (set-px! style "height" (max viewport/min-mobile-popup-height space-below)))
+
+;; Työpöydällä popup näytetään oletuksena kentän alapuolella, mutta jos
+;; siellä ei ole riittävästi tilaa JA yläpuolella on enemmän, näytetään se
+;; sen sijaan kentän yläpuolella (vrt. natiivi <select> tai muut popover-
+;; komponentit) — muuten sivun alareunan lähellä oleva kenttä jättäisi
+;; popupin osittain tai kokonaan näkymän ulkopuolelle, eikä sitä position:
+;; fixed -sijoittelun vuoksi voisi enää tuoda näkyviin sivua vierittämällä.
+(defn- set-desktop-geometry! [style rect vh space-below space-above]
+  (set-px! style "left" (.-left rect))
+  (set-px! style "minWidth" (.-width rect))
+  (set-px! style "maxWidth" (min viewport/desktop-popup-max-width
+                                 (- (viewport/viewport-width) (.-left rect))))
+  (if (and (< space-below viewport/min-usable-popup-height)
+           (> space-above space-below))
+    (do (set-px! style "bottom" (+ (- vh (.-top rect)) viewport/popup-margin-top))
+        (set-px! style "maxHeight" (min (max space-above 0) viewport/desktop-popup-default-max-height)))
+    (do (set-px! style "top" (.-bottom rect))
+        (set-px! style "maxHeight" (min (max space-below 0) viewport/desktop-popup-default-max-height)))))
+
 (defn make-sync-popup-geometry!
   "popup-ref ja field-ref ovat atomeja DOM-solmuihin, mobile? reagent-atom.
   Popupin sijoitusankkuri (field-ref) on erikseen komponentin root-refistä,
@@ -32,37 +61,10 @@
         (let [rect        (.getBoundingClientRect anchor-el)
               style       (.-style popup-el)
               vh          (viewport/viewport-height)
-              space-below (- vh (.-bottom rect) viewport/popup-margin-top)
-              space-above (- (.-top rect) viewport/popup-margin-top)]
-          (set! (.-position style) "fixed")
-          (set! (.-left style) (str (.-left rect) "px"))
-          (set! (.-width style) (str (.-width rect) "px"))
-          (cond
-            @mobile?
-            (do (set! (.-bottom style) "")
-                (set! (.-top style) (str (.-bottom rect) "px"))
-                (set! (.-height style) (str (-> space-below (max 100) js/Math.round) "px"))
-                (set! (.-maxHeight style) "none"))
-
-            ;; Työpöydällä popup näytetään oletuksena kentän alapuolella,
-            ;; mutta jos siellä ei ole riittävästi tilaa JA yläpuolella on
-            ;; enemmän, näytetään se sen sijaan kentän yläpuolella (vrt.
-            ;; natiivi <select> tai muut popover-komponentit) — muuten sivun
-            ;; alareunan lähellä oleva kenttä jättäisi popupin osittain tai
-            ;; kokonaan näkymän ulkopuolelle, eikä sitä position: fixed
-            ;; -sijoittelun vuoksi voisi enää tuoda näkyviin sivua
-            ;; vierittämällä.
-            (and (< space-below viewport/min-usable-popup-height)
-                 (> space-above space-below))
-            (do (set! (.-top style) "")
-                (set! (.-bottom style) (str (js/Math.round (+ (- vh (.-top rect)) viewport/popup-margin-top)) "px"))
-                (set! (.-height style) "")
-                (set! (.-maxHeight style) (str (js/Math.round (min (max space-above 0) 300)) "px")))
-
-            :else
-            (do (set! (.-bottom style) "")
-                (set! (.-top style) (str (.-bottom rect) "px"))
-                (set! (.-height style) "")
-                ;; min: CSS:n oma 300px-oletus säilyy silloin kun kentän
-                ;; alapuolella on riittävästi tilaa.
-                (set! (.-maxHeight style) (str (js/Math.round (min (max space-below 0) 300)) "px")))))))))
+              top-offset  (viewport/viewport-top-offset)
+              space-below (- (+ top-offset vh) (.-bottom rect) viewport/popup-margin-top)
+              space-above (- (.-top rect) top-offset viewport/popup-margin-top)]
+          (reset-popup-style! style)
+          (if @mobile?
+            (set-mobile-geometry! style rect space-below)
+            (set-desktop-geometry! style rect vh space-below space-above)))))))
