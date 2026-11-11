@@ -8,6 +8,7 @@
             [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [schema.core :as s]
+            [ataru.application-common.components.dropdown-aria :as aria]
             [ataru.application-common.components.dropdown-view :as view]
             [ataru.application-common.components.dropdown-viewport :as viewport]
             [ataru.application-common.components.dropdown-actions :as actions]
@@ -46,7 +47,7 @@
 ;; ---------------------------------------------------------------------
 
 (defn- make-dropdown-handlers
-  [{:keys [dropdown-id root-ref option-refs focus-input mobile?]}
+  [{:keys [dropdown-id root-ref popup-ref option-refs focus-input mobile?]}
    {:keys [on-change disabled? aria-labelledby clearable? selected-value]}
    {:keys [expanded? active-index selected-index last-option-index
            active-option options-with-id label-id]}]
@@ -101,11 +102,18 @@
                              (on-query-change (.. e -target -value)))
         ;; :on-blur juuritasolla (ei pelkässä syötekentässä), jotta vain
         ;; fokuksen siirtyminen kokonaan komponentin ulkopuolelle sulkee sen.
+        ;; Popup on portaalissa eikä siis @root-refin DOM-jälkeläinen, joten
+        ;; fokuksen siirtyminen sen sisälle (esim. kun ruudunlukija siirtää
+        ;; fokuksen listaan) pitää tunnistaa erikseen — muuten valikko
+        ;; sulkeutuisi heti, kun ruudunlukija siirtyy vaihtoehtoihin.
         on-dropdown-blur  (fn on-dropdown-blur [e]
-                             (let [related-target (.-relatedTarget e)]
+                             (let [related-target (.-relatedTarget e)
+                                   inside?        (fn [ref]
+                                                    (and @ref (.contains @ref related-target)))]
                                (when (or (nil? related-target)
                                          (and @root-ref
-                                              (not (.contains @root-ref related-target))))
+                                              (not (inside? root-ref))
+                                              (not (inside? popup-ref))))
                                  (actions/collapse-dropdown {:dropdown-id dropdown-id}))))
         on-option-click   (fn on-option-click [value]
                              (actions/collapse-dropdown {:dropdown-id dropdown-id})
@@ -225,6 +233,11 @@
         _              (if expanded?
                          (listeners/attach-global-listeners! context)
                          (listeners/detach-global-listeners! context))
+        ;; Ruudunlukijan pyyhkäisynavigointi syötekentästä suoraan portaalissa
+        ;; oleviin vaihtoehtoihin (ks. dropdown-aria). Idempotentti kuten yllä.
+        _              (if expanded?
+                         (aria/hide-background! context)
+                         (aria/restore-background! context))
         ;; Alkuarvo heti avattaessa — sen jälkeen resize/scroll-kuuntelijat pitävät sen ajan tasalla myös näppäimistön sulkeutuessa. Tarvitaan aina kun auki (ei vain kokoruututilassa), koska popup on nyt portaali eikä saa sijaintiaan enää ilmaiseksi CSS:llä.
         _              (when expanded?
                          (reagent/after-render (:sync-popup-geometry! context)))]
