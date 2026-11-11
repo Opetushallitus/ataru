@@ -25,10 +25,10 @@
                                               nil
                                               value]))
         options         @(re-frame/subscribe [:application/visible-options field-descriptor])
-        blank-option?   (and
-                          (nil? (:koodisto-source field-descriptor))
-                          (not (:no-blank-option field-descriptor))
-                          (not= "" (:value (first options))))
+        blank-answer-supported? (and (nil? (:koodisto-source field-descriptor))
+                                     (not (:no-blank-option field-descriptor)))
+        blank-option?   (and blank-answer-supported?
+                             (not= "" (:value (first options))))
         all-options     (concat
                           (when blank-option?
                             [{:value "" :label {:fi "" :sv "" :en ""}}])
@@ -81,7 +81,7 @@
           :on-change        on-change
           :disabled?        disabled?
           :required?        (application-field/is-required-field? field-descriptor)
-          :clearable?       (not (:no-blank-option field-descriptor))
+          :clearable?       blank-answer-supported?
           :invalid?         (not (:valid answer))
           :id               form-field-id
           :aria-labelledby  (str form-field-id "-label")

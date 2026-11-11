@@ -89,6 +89,23 @@ const noBlankOptionFieldFixture: FormNode = {
   ],
 }
 
+// Kolmas pudotusvalikko, jonka vaihtoehdot tulevat oikeasta koodistosta
+// (sama mekanismi kuin hakijan henkilötietomoduulin asuinmaa/kansalaisuus-
+// kentissä, ks. person_info_module.cljc). Testaa, että koodistopohjaiselle
+// kentälle ei koskaan näytetä tyhjennysnappia valinnan jälkeen.
+const KOODISTO_DROPDOWN_LABEL = 'Valitse koodistomaa'
+
+const koodistoDropdownFieldFixture: FormNode = {
+  fieldClass: 'formField',
+  fieldType: 'dropdown',
+  id: 'pw-koodisto-dropdown',
+  label: { fi: KOODISTO_DROPDOWN_LABEL },
+  metadata,
+  params: {},
+  validators: [],
+  'koodisto-source': { uri: 'maatjavaltiot2', version: 2 },
+}
+
 const lomakkeenAvain = randomUUID()
 
 const getFieldByLabel = (page: Page, label: string) =>
@@ -130,6 +147,21 @@ const getNoBlankOptionListbox = async (page: Page) => {
 
 const getNoBlankOptionClearButton = (page: Page) =>
   getFieldByLabel(page, NO_BLANK_OPTION_LABEL).getByRole('button', {
+    name: CLEAR_BUTTON_LABEL,
+  })
+
+const getKoodistoDropdownCombobox = (page: Page) =>
+  getFieldByLabel(page, KOODISTO_DROPDOWN_LABEL).getByRole('combobox')
+
+const getKoodistoDropdownListbox = async (page: Page) => {
+  const combobox = getKoodistoDropdownCombobox(page)
+  const listboxId = await combobox.getAttribute('aria-controls')
+  const listbox = page.locator(`[id="${listboxId}"]`)
+  return listbox
+}
+
+const getKoodistoDropdownClearButton = (page: Page) =>
+  getFieldByLabel(page, KOODISTO_DROPDOWN_LABEL).getByRole('button', {
     name: CLEAR_BUTTON_LABEL,
   })
 
@@ -196,6 +228,7 @@ test.beforeAll(async ({ browser }) => {
     hakukohteetFieldFixture,
     noBlankOptionFieldFixture,
     dropdownFieldFixture,
+    koodistoDropdownFieldFixture,
   ])
   await page.close()
 })
@@ -400,6 +433,16 @@ test.describe('Työpöytänäkymä', () => {
     await expect(getNoBlankOptionClearButton(page)).toHaveCount(0)
   })
 
+  test('koodistopohjainen kenttä ei näytä tyhjennysnappia valinnan jälkeenkään', async ({
+    page,
+  }) => {
+    await getKoodistoDropdownCombobox(page).click()
+    const listbox = await getKoodistoDropdownListbox(page)
+    await getOption(listbox, 'Suomi').click()
+    await expect(getKoodistoDropdownCombobox(page)).toHaveValue('Suomi')
+    await expect(getKoodistoDropdownClearButton(page)).toHaveCount(0)
+  })
+
   test('ArrowDown auki olevassa valikossa siirtää kohdistusta eteenpäin yksi vaihtoehto kerrallaan', async ({
     page,
   }) => {
@@ -498,6 +541,24 @@ test.describe('Työpöytänäkymä', () => {
     await expect(getNoBlankOptionClearButton(page)).toHaveCount(0)
     await getNoBlankOptionCombobox(page).press('Escape')
     await expect(getNoBlankOptionCombobox(page)).toHaveValue('Kyllä')
+  })
+
+  test('Backspace ei tyhjennä valintaa koodisto-kentässä', async ({ page }) => {
+    const listbox = await getKoodistoDropdownListbox(page)
+    const combobox = await getKoodistoDropdownCombobox(page)
+    await combobox.click()
+    await getOption(listbox, 'Suomi').click()
+
+    await combobox.click()
+    await expect(listbox).toBeVisible()
+    await combobox.fill('')
+    await expect(combobox).toHaveValue('')
+
+    await combobox.press('Backspace')
+
+    await expect(getKoodistoDropdownClearButton(page)).toHaveCount(0)
+    await combobox.press('Escape')
+    await expect(combobox).toHaveValue('Suomi')
   })
 })
 
