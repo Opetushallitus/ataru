@@ -1,6 +1,6 @@
 (ns ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-subs-test
-  (:require [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs :as k])
-  (:require-macros [cljs.test :refer [deftest are]]))
+  (:require [cljs.test :refer-macros [deftest are]]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs :as k]))
 
 (deftest test-match-kevyt-valinta-states
   (are [valinnan-tulos-for-application kevyt-valinta-write-rights? expected-result]
