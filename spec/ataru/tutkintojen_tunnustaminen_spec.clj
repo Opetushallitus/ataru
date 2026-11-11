@@ -89,6 +89,7 @@
   (send-modify-application-link-email [_ _ _ _ _] nil)
   (add-review-note [_ _ _] nil)
   (add-review-notes [_ _ _] nil)
+  (remove-review-note [_ _ _] nil)
   (get-application-version-changes [_ _ _ _] nil)
   (omatsivut-applications [_ _ _ _] [])
   (get-applications-for-valintalaskenta [_ _ _ _ _ _] [])

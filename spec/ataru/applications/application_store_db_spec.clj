@@ -7,9 +7,11 @@
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.fixtures.form :as form-fixtures]
+            [ataru.test-utils :as test-utils]
             [ataru.util :as util]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [after around around-all context describe it should-be-nil should= should== tags]]
+            [speclj.core :refer [after around around-all before context describe it should-be-nil
+                                 should-contain should-not-be-nil should= should== tags]]
             [yesql.core :as sql]))
 
 (declare yesql-upsert-virkailija<!)
@@ -19,7 +21,11 @@
 
 (def ^:private test-application-id (atom nil))
 
-(def audit-logger (audit-log/new-dummy-audit-logger))
+;; Kerätään auditlokimerkinnät, jotta niitä voidaan tarkastaa muistiinpanotesteissä.
+;; Käyttäytyy muuten kuten dummy-lokittaja.
+(def ^:private audit-log-capture (test-utils/new-capturing-audit-logger))
+(def ^:private audit-entries (first audit-log-capture))
+(def audit-logger (second audit-log-capture))
 
 (defn- find-application-key-by-id [id]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -693,3 +699,84 @@
     )
   )
 )
+
+(def ^:private note-virkailija-oid "1.2.246.562.24.99999999999")
+
+(def ^:private note-session
+  {:identity {:oid                      note-virkailija-oid
+              :first-name               "Testi"
+              :last-name                "Virkailija"
+              :user-right-organizations {:edit-applications [{:oid "1.2.246.562.10.00000000001"}]}}})
+
+(defn- upsert-note-virkailija! []
+  (db/exec :db yesql-upsert-virkailija<! {:oid        note-virkailija-oid
+                                          :first_name "Testi"
+                                          :last_name  "Virkailija"}))
+
+(describe "review notes"
+  (tags :unit :database)
+
+  (before
+    (upsert-note-virkailija!)
+    (reset! audit-entries []))
+
+  (it "stores a note and writes a lisäys audit entry"
+    (let [application-key "1.2.246.562.11.00000000000000009001"
+          stored          (store/add-review-note {:application-key application-key
+                                                  :notes           "Tallennettava muistiinpano"}
+                                                 note-session
+                                                 audit-logger)
+          entries         (test-utils/audit-entries-for audit-entries "lisäys" :applicationOid application-key)]
+      (should-not-be-nil (:id stored))
+      (should-not-be-nil (:created-time stored))
+      (should= "Tallennettava muistiinpano" (:notes stored))
+      ;; virkailija_oid ei kuulu vastaukseen, nimet kylläkin
+      (should-be-nil (:virkailija-oid stored))
+      (should= "Testi" (:first-name stored))
+      (should= 1 (count entries))
+      (should= (str (:id stored)) (get-in (first entries) [:target :noteId]))))
+
+  (it "finds a stored note by id and returns nil for an unknown id"
+    (let [application-key "1.2.246.562.11.00000000000000009002"
+          stored          (store/add-review-note {:application-key application-key
+                                                  :notes           "Haettava muistiinpano"
+                                                  :hakukohde       "1.2.246.562.20.00000000000000009002"
+                                                  :state-name      "processing-state"}
+                                                 note-session
+                                                 audit-logger)
+          found           (store/get-review-note-by-id (:id stored))]
+      (should= application-key (:application-key found))
+      (should= "Haettava muistiinpano" (:notes found))
+      (should= "1.2.246.562.20.00000000000000009002" (:hakukohde found))
+      (should= "processing-state" (:state-name found))
+      ;; Poistamattoman muistiinpanon removed on nil
+      (should-be-nil (:removed found))
+      (should-be-nil (store/get-review-note-by-id 999999999))))
+
+  (it "soft deletes a note and writes a poisto entry containing the removed text"
+    (let [application-key "1.2.246.562.11.00000000000000009003"
+          stored          (store/add-review-note {:application-key application-key
+                                                  :notes           "Poistettava muistiinpano"}
+                                                 note-session
+                                                 audit-logger)
+          _               (reset! audit-entries [])
+          result          (store/remove-review-note stored note-session audit-logger)
+          entries         (test-utils/audit-entries-for audit-entries "poisto" :applicationOid application-key)]
+      (should= (:id stored) result)
+      ;; Rivi on yhä olemassa, mutta merkitty poistetuksi eikä näy listauksessa
+      (should-not-be-nil (:removed (store/get-review-note-by-id (:id stored))))
+      (should= 0 (count (store/get-application-review-notes application-key)))
+      (should= 1 (count entries))
+      (should-contain "Poistettava muistiinpano" (pr-str (:changes (first entries))))))
+
+  (it "returns nil and writes no second entry when a note is removed twice"
+    (let [application-key "1.2.246.562.11.00000000000000009004"
+          stored          (store/add-review-note {:application-key application-key
+                                                  :notes           "Kahdesti poistettava"}
+                                                 note-session
+                                                 audit-logger)
+          _               (store/remove-review-note stored note-session audit-logger)
+          _               (reset! audit-entries [])
+          result          (store/remove-review-note stored note-session audit-logger)]
+      (should-be-nil result)
+      (should= 0 (count (test-utils/audit-entries-for audit-entries "poisto"))))))
