@@ -78,7 +78,6 @@
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]
                  [cljsjs/react-dom "18.2.0-1"]
-                 [lein-doo "0.1.11"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]
@@ -218,20 +217,11 @@
   :jvm-opts ^:replace ["-Xmx8g"]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            [lein-doo "0.1.11"]
             [lein-figwheel "0.5.20"]
             [lein-ancient "0.7.0"]
             [lein-environ "1.2.0"]
             [lein-resource "17.06.1"]
             [speclj "3.4.3"]]
-
-  :doo {:debug true
-        :paths {:karma "./node_modules/karma/bin/karma"}
-        :karma {:config
-                {"customLaunchers"
-                 {"Chrome"
-                  {"base" "ChromeHeadless"
-                   "flags" ["--disable-gpu" "--disable-software-rasterizer" "--no-sandbox"]}}}}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css"
@@ -269,7 +259,7 @@
                        {:id           "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.hakija.core/mount-root"}
-                        :compiler     {:main                 "ataru.hakija.core"
+                        :compiler     {:main                 "ataru.hakija.core" 
                                        :preloads             [devtools.preload day8.re-frame-10x.preload.react-18]
                                        :output-to            "resources/public/js/compiled/hakija-app.js"
                                        :output-dir           "resources/public/js/compiled/hakija-out"
@@ -322,6 +312,8 @@
                        {:id           "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler     {:output-to     "resources/public/js/test/test.js"
+                                       :output-dir    "resources/public/js/test/out"
+                                       :asset-path    "out"
                                        :main          "ataru.unit-runner"
                                        :parallel-build       true
                                        :process-shim  false
@@ -414,14 +406,18 @@
              :hakija-cypress        {:env {:dev? "true"}
                                      :target-path "target/target-cypess-hakija"}
 
-             :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"
-                                                            "-Dclojure.main.report=stderr"]}]
+             :virkailija-dev-opts {:target-path "target-virkailija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"
+                                                           "-Dclojure.main.report=stderr"]}
 
-             :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
+             :hakija-dev-opts     {:target-path "target-hakija"
+                                   :jvm-opts    ^:replace ["-Duser.home=."
+                                                           "-XX:MaxJavaStackTraceDepth=10"]}
+
+             :virkailija-dev [:dev :virkailija-dev-opts]
+
+             :hakija-dev     [:dev :hakija-dev-opts]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
@@ -448,7 +444,8 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
+            "start-figwheel-dev"     ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev"]
+            "start-figwheel-cypress" ["with-profile" "figwheel" "figwheel" "virkailija-cypress" "hakija-cypress"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]

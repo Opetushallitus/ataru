@@ -1,6 +1,9 @@
 import { Browser, expect, Page, Request, test } from '@playwright/test'
 import {
   fillField,
+  getDropdownOptionValue,
+  getFieldByLabel,
+  selectOption,
   unsafeFoldOption,
   waitForResponse,
 } from '../playwright-utils'
@@ -392,7 +395,9 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     await expect(page.getByTestId('postal-code-input')).toHaveValue(
       seededValues.postalCode
     )
-    await expect(page.getByTestId('home-town-input')).toHaveValue('061')
+    expect(
+      await getDropdownOptionValue(page.getByTestId('home-town-input'))
+    ).toBe('061') // Forssa
 
     const extraFieldsToCheck = legacyExtraFieldDefinitions.filter(
       (field) => field.value.length > 0 && field.fieldType !== 'singleChoice'
@@ -603,11 +608,10 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
       .getByRole('combobox', { name: /Kansalaisuus/i })
       .first()
     await expect(nationality).toBeEnabled()
-    await expect(nationality).not.toHaveClass(
-      /application__form-select--locked/
-    )
-    await nationality.selectOption({ label: 'Suomi' })
-    await page.getByTestId('language-input').selectOption({ label: 'suomi' })
+    await selectOption(page, nationality, { label: 'Suomi' })
+    await selectOption(page, page.getByTestId('language-input'), {
+      label: 'suomi',
+    })
 
     await expect(getSubmitButton(page)).toBeEnabled()
 
@@ -633,14 +637,14 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
 
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
-    await expect(homeTownInput).toHaveValue('853')
+    expect(await getDropdownOptionValue(homeTownInput)).toBe('853') // Jyväskylä
 
     // The nationality is uneditable for the applicant in an edit
     const editedNationality = page
       .getByRole('combobox', { name: /Kansalaisuus/i })
       .first()
     await expect(editedNationality).toBeDisabled()
-    await expect(editedNationality).toHaveValue('246')
+    expect(await getDropdownOptionValue(editedNationality)).toBe('246')
   })
 
   test('lukitsee Suomen kansalaisuuden hakemusmaksullisessa haussa', async () => {
@@ -650,16 +654,13 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     // and another citizenship can be added on a row of its own
     const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
     await expect(nationalities.first()).toBeDisabled()
-    await expect(nationalities.first()).toHaveClass(
-      /application__form-select--locked/
-    )
-    await expect(nationalities.first()).toHaveValue('246')
+    expect(await getDropdownOptionValue(nationalities.first())).toBe('246')
     const nationalityGroup = page
       .locator('.application__question-group')
       .filter({ has: nationalities.first() })
     await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
     await expect(nationalities).toHaveCount(2)
-    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
+    await selectOption(page, nationalities.nth(1), { label: 'Ruotsi' })
     await expect(
       nationalityGroup.getByRole('button', {
         name: 'Poista vastausvaihtoehto',

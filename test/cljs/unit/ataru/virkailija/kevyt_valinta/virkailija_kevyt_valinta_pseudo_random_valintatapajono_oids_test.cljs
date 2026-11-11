@@ -1,6 +1,6 @@
 (ns ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test
-  (:require [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids :as h])
-  (:require-macros [cljs.test :refer [deftest is]]))
+  (:require [cljs.test :refer-macros [deftest is]]
+            [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids :as h]))
 
 (deftest generates-valintatapajono-oid-from-haku-oid-and-hakukohde-oid
   (let [haku-oid      "1.2.246.562.29.89284287409"
