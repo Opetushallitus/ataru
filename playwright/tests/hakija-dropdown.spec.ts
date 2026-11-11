@@ -217,24 +217,53 @@ const waitForNoActiveOption = async (page: Page) => {
 }
 
 // Lähettää synteettisen touchmove-tapahtuman annetulle elementille ja palauttaa, kutsuiko joku kuuntelija sille preventDefaultia (ks. make-fullscreen-touchmove-listener dropdown_component.cljs:ssä) — ei yritä todentaa itse sivun visuaalista vierittymistä/panorointia, koska sen simulointi ja havaitseminen luotettavasti pelkillä synteettisillä kosketustapahtumilla ei ole mielekästä (todellinen selaimen oma "panorointi" ei reagoi niihin).
+type TouchEventSpec = {
+  type: 'touchstart' | 'touchmove'
+  x: number
+  y: number
+}
+
+// Lähettää kosketustapahtumat järjestyksessä samalla kosketuspisteellä.
+// Palauttaa, estettiinkö viimeinen tapahtuma (eli ettei se vieritä/panoroi).
+const dispatchTouchEvents = (
+  locator: Locator,
+  events: Array<TouchEventSpec>
+): Promise<boolean> =>
+  locator.evaluate((el, events) => {
+    let defaultPrevented = false
+    for (const { type, x, y } of events) {
+      const touch = new Touch({
+        identifier: 1,
+        target: el,
+        clientX: x,
+        clientY: y,
+      })
+      const event = new TouchEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        touches: [touch],
+        targetTouches: [touch],
+        changedTouches: [touch],
+      })
+      el.dispatchEvent(event)
+      defaultPrevented = event.defaultPrevented
+    }
+    return defaultPrevented
+  }, events)
+
 const dispatchTouchmove = (locator: Locator): Promise<boolean> =>
-  locator.evaluate((el) => {
-    const touch = new Touch({
-      identifier: 1,
-      target: el,
-      clientX: 10,
-      clientY: 10,
-    })
-    const event = new TouchEvent('touchmove', {
-      bubbles: true,
-      cancelable: true,
-      touches: [touch],
-      targetTouches: [touch],
-      changedTouches: [touch],
-    })
-    el.dispatchEvent(event)
-    return event.defaultPrevented
-  })
+  dispatchTouchEvents(locator, [{ type: 'touchmove', x: 10, y: 10 }])
+
+// Yksi pystysuuntainen veto: touchstart kohdassa fromY ja touchmove kohtaan toY.
+const dispatchSwipe = (
+  locator: Locator,
+  fromY: number,
+  toY: number
+): Promise<boolean> =>
+  dispatchTouchEvents(locator, [
+    { type: 'touchstart', x: 10, y: fromY },
+    { type: 'touchmove', x: 10, y: toY },
+  ])
 
 const avaaLomake = async (page: Page): Promise<void> => {
   await Promise.all([
@@ -728,7 +757,7 @@ test.describe('Mobiilinäkymä', () => {
     await expect(getClearButton(page)).toBeHidden()
   })
 
-  test('kokoruutuvalikon ollessa auki touchmove ei vieritä/panoroi sivua muualla, mutta listan sisällä se sallitaan', async ({
+  test('kokoruutuvalikon ollessa auki touchmove ei vieritä/panoroi sivua listan ulkopuolella', async ({
     page,
   }) => {
     expect(await dispatchTouchmove(page.locator('body'))).toBe(false)
@@ -743,11 +772,44 @@ test.describe('Mobiilinäkymä', () => {
     expect(await dispatchTouchmove(page.locator('body'))).toBe(true)
     expect(await dispatchTouchmove(label)).toBe(true)
     expect(await dispatchTouchmove(banner)).toBe(true)
+  })
 
+  test('kokoruutuvalikon lista, joka ei vierity, estää vedon', async ({
+    page,
+  }) => {
+    // 844px korkeaan näkymään kaikki vaihtoehdot mahtuvat ilman vieritystä.
+    await getCombobox(page).tap()
     const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
 
-    expect(await dispatchTouchmove((await getOptions(listbox)).first())).toBe(
-      false
+    expect(await dispatchSwipe(getOptions(listbox).first(), 200, 100)).toBe(
+      true
     )
+  })
+
+  test('kokoruutuvalikon vierittyvässä listassa veto sallitaan, paitsi reunan yli', async ({
+    page,
+  }) => {
+    // Matala näkymä, jotta lista vierittyy.
+    await page.setViewportSize({ width: 390, height: 400 })
+    await getCombobox(page).tap()
+    const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
+    await expect
+      .poll(() =>
+        // Vierityssäiliö on listboxin ympäröivä popup, ei listbox itse.
+        listbox.evaluate((el) => {
+          const popup = el.closest('.a-dropdown-popup')
+          return !!popup && popup.scrollHeight > popup.clientHeight
+        })
+      )
+      .toBe(true)
+
+    const firstOption = getOptions(listbox).first()
+
+    // Lista on ylälaidassa: sormi ylöspäin vierittää listaa alas — sallitaan.
+    expect(await dispatchSwipe(firstOption, 200, 100)).toBe(false)
+    // Sormi alaspäin vetäisi listaa yläreunan yli — estetään.
+    expect(await dispatchSwipe(firstOption, 100, 200)).toBe(true)
   })
 })

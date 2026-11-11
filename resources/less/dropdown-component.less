@@ -107,25 +107,25 @@
   }
 }
 
-// html, ei body: <html> omistaa oman overflow-y: scroll -arvonsa suoraan (ks. hakija.less), joten se on elementti jonka overflow oikeasti pitää lukita.
+// html eikä body, koska vieritys on html:llä (ks. hakija.less).
 html:has(.a-dropdown-popup--fullscreen) {
   overflow: hidden;
+  // Estää panoroinnin ja zoomauksen muualla kuin listassa, jonka oma pan-y
+  // (.a-dropdown-popup--fullscreen) jää voimaan. Loput iOS:n panoroinnista
+  // estää dropdown-listeners.
+  touch-action: none;
 
-  // Kesken oleva opacity-animaatio (animate.css .animated) luo esi-isälle
-  // stacking contextin, joka vangitsee popupin z-indexin alleen. Pakotetaan
-  // opacity valmiiksi 1:ksi.
+  // Kesken oleva animate.css-animaatio loisi stacking contextin, joka
+  // vangitsisi kokoruutuwrapperin z-indexin.
   .animated {
     opacity: 1 !important;
   }
 }
 
-// Ei itse kiinnitä koko näyttöä (position: fixed ym.) — se on kutsujan
-// vastuulla (ks. hakija.less .application__dropdown-fullscreen-wrapper),
-// koska vain kutsuja tietää mitä muuta (esim. label) pitää näkyä mukana.
-// Tämä vain venyy täyttämään säiliönsä.
+// Vain venyy säiliöönsä; koko näytön kiinnitys on kutsujan vastuulla (ks.
+// hakija.less .application__dropdown-fullscreen-wrapper).
 @media only screen and (max-width: @mobile-width) {
-  // min-width: 0, koska flex-itemin oletus (auto) ei kutistuisi sisällön
-  // min-content-leveyttä pienemmäksi.
+  // min-width: 0, jotta flex-item voi kutistua sisältöään kapeammaksi.
   .a-dropdown--fullscreen {
     .flex-column(stretch, flex-start);
 
@@ -157,17 +157,15 @@ html:has(.a-dropdown-popup--fullscreen) {
   }
 }
 
-// Renderöidään React-portaalilla document.bodyyn (ks. dropdown-geometry),
-// joten position/top/left/width tulevat JS:stä inline-tyylinä eivätkä ole
-// enää suhteessa kutsujaan CSS:llä. position: fixed on vain oletusarvo,
-// ettei popup näy väärässä kohdassa ennen ensimmäistä JS-asemointia.
+// Portaalissa document.bodyssa; sijainti tulee JS:stä (ks. dropdown-geometry).
 .a-dropdown-popup {
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.20);
   margin-top: 4px;
-  max-height: 300px;
-  // Estää scrollin "ketjuuntumisen" taustalle listan ylä-/alarajalla.
+  // Sama kuin dropdown-geometryn desktop-popup-default-max-height.
+  max-height: 400px;
+  // Ei vieritystä taustalle listan reunoilla.
   overscroll-behavior: contain;
   overflow-y: auto;
   padding: 4px 0;
@@ -181,6 +179,14 @@ html:has(.a-dropdown-popup--fullscreen) {
   left: 8px;
   right: 8px;
   width: auto;
+  // Samat muuttujat kuin kokoruutuwrapperilla, jotta popup liikkuu kentän
+  // mukana (ks. dropdown-geometry). --a-dropdown-field-offset: kentän
+  // alareunan etäisyys wrapperin yläreunasta; 4px: margin-top; 100px:
+  // minimikorkeus.
+  top: calc(var(--a-dropdown-viewport-top, 0px) + var(--a-dropdown-field-offset, 0px));
+  height: ~"max(100px, calc(var(--a-dropdown-viewport-height, 100vh) - var(--a-dropdown-field-offset, 0px) - 4px))";
+  // Ks. html:has(.a-dropdown-popup--fullscreen) yllä.
+  touch-action: pan-y;
 }
 
 .a-dropdown-popup--collapsed {
@@ -221,16 +227,14 @@ html:has(.a-dropdown-popup--fullscreen) {
   }
 }
 
-// Nuolinäppäimillä korostettu vaihtoehto — eri tila kuin --selected, jotta
-// nykyinen valinta ja näppäimistön kohde erottuvat toisistaan.
+// Nuolinäppäimillä korostettu vaihtoehto, erillään valitusta (--selected).
 .a-dropdown-list__option--active {
   outline: 2px solid @a-dropdown-menu-item-selected-color;
   outline-offset: -2px;
 }
 
 .a-dropdown-list__option-label {
-  // min-width: 0, jotta rivi voi kutistua ja teksti rivittyä —
-  // muuten flex-itemin oletus min-width: auto pitäisi sen tekstin levyisenä.
+  // min-width: 0, jotta pitkä teksti rivittyy.
   min-width: 0;
   white-space: normal;
   overflow-wrap: break-word;
