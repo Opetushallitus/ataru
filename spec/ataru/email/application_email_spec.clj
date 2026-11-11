@@ -29,7 +29,8 @@
 
 (describe "application email"
   (it "creates guardian confirmation email for an unauthenticated minor applicant"
-    (let [application (minor-application nil)
+    (let [application (assoc (minor-application nil)
+                             :secret "guardian-test-secret")
           get-attachment-type (fn [attachment-type] {:fi attachment-type
                                                      :sv attachment-type
                                                      :en attachment-type})
@@ -44,8 +45,12 @@
                                       true
                                       nil
                                       test-attachment-deadline-service)
+          applicant-email (first emails)
           guardian-email (second emails)
+          secret (:secret application)
           body (:body guardian-email)]
+      (should= true (str/includes? (:body applicant-email) secret))
+      (should= false (str/includes? (:body guardian-email) secret))
       (should= 2 (count emails))
       (should= ["huoltaja@testaaja.fi"] (:recipients guardian-email))
       (should= true (str/includes? body "Huollettavasi hakemus on vastaanotettu"))

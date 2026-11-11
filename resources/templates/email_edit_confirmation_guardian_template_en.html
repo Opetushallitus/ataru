@@ -8,18 +8,18 @@
     <table style="width: 600px;">
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          <span style="font-size: 24px;">en_Muutokset huollettavasi hakemukseen on tallennettu</span>
+          <span style="font-size: 24px;">Changes to your dependant's application have been saved</span>
         </td>
       </tr>
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          en_Hakemusnumero: {{application-oid}}
+          Application number: {{application-oid}}
         </td>
       </tr>
       {% if hakukohteet|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          en_Hakutoiveet:
+          Study options:
         </td>
       </tr>
       {% for h in hakukohteet %}
@@ -33,7 +33,7 @@
       {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
         <tr>
           <td style="padding-left: 20px; padding-top: 20px;">
-            Hakijan saama liiteohje:
+            Required attachment(s) for the applicant to submit:
           </td>
         </tr>
       {% endif %}
@@ -45,7 +45,7 @@
                 <li>
                   {{attachment.label}}
                   {% if attachment.deadline|not-empty %}
-                  <br> Palautettava viimeistään {{attachment.deadline}}
+                  <br>The attachment must be submitted no later than {{attachment.deadline}}
                   {% endif %}
                 </li>
               {% endfor %}
@@ -67,7 +67,7 @@
                   <li>
                     {{attachment.label|safe}}
                     {% if attachment.deadline|not-empty %}
-                    Palautettava viimeistään {{attachment.deadline}}
+                    The attachment must be submitted no later than {{attachment.deadline}}
                     {% endif %}
                   </li>
                 {% endfor %}
@@ -81,7 +81,7 @@
       {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          en_Muutokset hakemukseen on tallennettu.
+          The changes to the application have been saved.
         </td>        
       </tr>
       {% if signature|not-empty %}

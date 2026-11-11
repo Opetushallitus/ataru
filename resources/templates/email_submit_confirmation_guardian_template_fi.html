@@ -22,7 +22,6 @@
           Hakutoiveet:
         </td>
       </tr>
-      {% endif %}
       {% for h in hakukohteet %}
       <tr>
         <td style="padding-left: 20px; padding-top: 10px;">
@@ -30,6 +29,7 @@
         </td>
       </tr>
       {% endfor %}
+      {% endif %}
       {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
         <tr>
           <td style="padding-left: 20px; padding-top: 20px;">
@@ -45,7 +45,7 @@
                 <li>
                   {{attachment.label}}
                   {% if attachment.deadline|not-empty %}
-                  <br> Palautettava viimeistään {{attachment.deadline}}
+                  <br>Palautettava viimeistään {{attachment.deadline}}
                   {% endif %}
                 </li>
               {% endfor %}

@@ -8,21 +8,20 @@
     <table style="width: 600px;">
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          <span style="font-size: 24px;">en_Huollettavasi hakemus on vastaanotettu</span>
+          <span style="font-size: 24px;">Your dependent's application has been received</span>
         </td>
       </tr>
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Hakemusnumero: {{application-oid}}
+          Application number: {{application-oid}}
         </td>
       </tr>
       {% if hakukohteet|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Hakutoiveet:
+          Study options:
         </td>
       </tr>
-      {% endif %}
       {% for h in hakukohteet %}
       <tr>
         <td style="padding-left: 20px; padding-top: 10px;">
@@ -30,10 +29,11 @@
         </td>
       </tr>
       {% endfor %}
+      {% endif %}
       {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
         <tr>
           <td style="padding-left: 20px; padding-top: 20px;">
-            Hakijan saama liiteohje:
+            Required attachment(s) for the applicant to submit:
           </td>
         </tr>
       {% endif %}
@@ -45,7 +45,7 @@
                 <li>
                   {{attachment.label}}
                   {% if attachment.deadline|not-empty %}
-                  <br> Palautettava viimeistään {{attachment.deadline}}
+                  <br>The attachment must be submitted no later than {{attachment.deadline}}
                   {% endif %}
                 </li>
               {% endfor %}
@@ -67,7 +67,7 @@
                   <li>
                     {{attachment.label|safe}}
                     {% if attachment.deadline|not-empty %}
-                    Palautettava viimeistään {{attachment.deadline}}
+                    The attachment must be submitted no later than {{attachment.deadline}}
                     {% endif %}
                   </li>
                 {% endfor %}
@@ -81,24 +81,24 @@
       {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 10px;">
-          Hakutoiveet ja myöhemmin myös opiskelijavalinnan tulokset ovat nähtävillä Valpas -palvelun huoltajanäkymässä. 
+          Guardians can view the study options, and later the admission results, in the Valpas service.
         </td>
       </tr>
       {% if applicant-authenticated? %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Hakija voi katsella ja muokata hakemustaan Oma Opintopolku -palvelussa.
-          Muutoksia voi tehdä hakuaikana. Oma Opintopolku -palvelussa hän voi lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan.
+          The applicant can view and edit their application in the My Studyinfo service during the application period. 
+          In My Studyinfo, they can also view the admission results and accept a study place.
         </td>
       </tr>
       {% else %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Hakija voi katsella ja muokata hakemustaan saamansa linkin kautta. Jos hänellä on verkkopankkitunnukset, 
-          mobiilivarmenne tai sähköinen henkilökortti, hän voi vaihtoehtoisesti kirjautua sisään 
-          <a style="color: #0093C4;" href="https://www.opintopolku.fi/konfo/en" target="_blank">Opintopolku.fi:ssä</a>,
-          ja tehdä muutoksia hakemukseensa Oma Opintopolku -palvelussa hakuaikana.
-          Oma Opintopolku -palvelussa hän voi lisäksi nähdä valintojen tulokset ja ottaa opiskelupaikan vastaan
+          The applicant can view and edit their application using the link they have received. If they have Finnish online banking credentials 
+          (e-identification must be enabled), a Finnish electronic ID-card or mobile certificate, they may alternatively sign in to 
+          <a style="color: #0093C4;" href="https://www.opintopolku.fi/konfo/en" target="_blank">Opintopolku.fi</a>
+          and make changes to their application in the My Studyinfo service during the application period. 
+          In My Studyinfo they can also view admission results and accept an offered study place.
         </td>
       </tr>
       {% endif %}

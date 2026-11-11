@@ -31,13 +31,13 @@
 
 (def edit-email-subjects-for-guardian
   {:fi "Opintopolku: Muutokset huollettavasi hakemukseen on tallennettu"
-   :sv "Studieinfo: TODO"
-   :en "Studyinfo: TODO"})
+   :sv "Studieinfo: Ändringar i ansökan som gäller ditt minderåriga barn har sparats"
+   :en "Studyinfo: Changes to your dependant's application have been saved"})
 
 (def submit-email-subjects-for-guardian
   {:fi "Opintopolku: Huollettavasi hakemus on vastaanotettu"
-   :sv "Studieinfo: TODO"
-   :en "Studyinfo: TODO"})
+   :sv "Studieinfo: Vi har mottagit en ansökan som gäller ditt minderåriga barn"
+   :en "Studyinfo: Your dependant's application has been received"})
 
 (def refresh-secret-email-subjects
   {:fi "Opintopolku: uusi hakemuslinkkisi"
@@ -276,8 +276,7 @@
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          guardian-subject-prefix         (if subject (edit-email-subjects-for-guardian lang) (submit-email-subjects-for-guardian lang))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
-         guardian-subject                (email-util/enrich-subject-with-application-key-and-limit-length guardian-subject-prefix (:key application) lang)
-         applicant-authenticated?        (= constants/auth-type-strong (:tunnistautuminen application))
+         guardian-subject                (email-util/enrich-subject-with-application-key-and-limit-length guardian-subject-prefix (:key application) lang) 
          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :organization-oids          (organization-oids tarjonta-info application)
@@ -293,7 +292,7 @@
                                           :kouta-attachments-by-type  attachments-info-from-kouta
                                           :signature                  signature
                                           :no-hakuaika-mentions       (or (email-util/tutu-form? form) (email-util/astu-form? form))}
-         applicant-template-params       template-params
+         applicant-authenticated?        (= constants/auth-type-strong (:tunnistautuminen application))
          guardian-template-params        (assoc
                                           (select-keys template-params [:hakukohteet
                                                                         :organization-oids
@@ -303,7 +302,7 @@
                                                                         :attachments-without-answer
                                                                         :kouta-attachments-by-type])
                                           :applicant-authenticated? applicant-authenticated?)
-         applicant-email-data            (email-util/make-email-data applier-recipients subject applicant-template-params)
+         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients guardian-subject guardian-template-params)
          render-file-fn                  (fn [template-params]
                                            (selmer/render-file (template-name lang) template-params))
