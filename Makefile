@@ -87,11 +87,11 @@ start-pm2: $(NODE_MODULES) start-docker
 	$(foreach service, $(DEV_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-cypress: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+start-pm2-cypress: $(NODE_MODULES) start-docker-cypress clear-cypress-db run-fake-deps-server
 	$(foreach service, $(CYPRESS_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-ci: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
+start-pm2-ci: $(NODE_MODULES) start-docker-cypress clear-cypress-db run-fake-deps-server
 	$(PM2) start pm2.ci.config.js
 
 start-watch: $(NODE_MODULES)
@@ -161,10 +161,13 @@ stop-fake-deps-server:
 init-test-db: run-fake-deps-server
 	lein with-profile test run -m ataru.db.flyway-migration/migrate "use dummy-audit-logger!"
 
-nuke-test-db:
+clear-test-db:
 	lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
 
-load-test-fixture: nuke-test-db init-test-db
+clear-cypress-db:
+	CONFIG=config/cypress.edn lein with-profile dev run -m ataru.fixtures.db.unit-test-db/clear-database
+
+load-test-fixture: clear-test-db init-test-db
 	lein with-profile test run -m ataru.fixtures.db.browser-test-db/init-db-fixture
 
 # ----------------
@@ -182,7 +185,7 @@ stop: stop-pm2 stop-pm2-ci stop-docker stop-fake-deps-server
 
 restart: stop-pm2 start-pm2
 
-clean: nuke-test-db stop clean-lein clean-docker
+clean: clear-test-db stop clean-lein clean-docker
 	rm -rf node_modules
 	rm *.log
 
@@ -239,7 +242,7 @@ install-cypress:
 test-clojurescript: $(NODE_MODULES)
 	lein with-profile test doo chrome test once
 
-test-clojure: $(NODE_MODULES) nuke-test-db init-test-db
+test-clojure: $(NODE_MODULES) clear-test-db init-test-db
 	lein with-profile test spec
 
 test: start-docker-test test-clojurescript test-clojure
@@ -253,7 +256,6 @@ test-playwright: $(NODE_MODULES)
 test-cypress-ci: $(NODE_MODULES) 
 	pnpm run cypress:run:ci
 
-reset-test-database-with-fixture: nuke-test-db init-test-db load-test-fixture
 
 process-resources:
 	lein resource
