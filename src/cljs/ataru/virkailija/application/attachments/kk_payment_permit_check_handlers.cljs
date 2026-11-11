@@ -11,7 +11,7 @@
   [:found-in-migri :permit-valid-until :payment-obligation-basis :payment-obligation-other-reason])
 
 (defn permit-valid-until-range
-  "Earliest and latest allowed permit card validity dates as yyyy-MM-dd strings."
+  "Lupakortin aikaisin ja myöhäisin sallittu voimassaolopäivä yyyy-MM-dd-merkkijonoina."
   []
   (let [today     (t/today)
         formatter (f/formatter "yyyy-MM-dd")]
@@ -25,7 +25,8 @@
         (<= (compare earliest permit-valid-until) 0 (compare latest permit-valid-until)))))
 
 (defn- permit-valid-until-valid?
-  "A stored date the limits have since passed may be kept, only a changed date has to be within the limits."
+  "Tallennetun päivämäärän saa pitää, vaikka se olisi sittemmin jäänyt rajojen ulkopuolelle. Vain muutetun
+   päivämäärän on oltava rajojen sisällä."
   [check saved]
   (or (permit-valid-until-in-range? (:permit-valid-until check))
       (= (:permit-valid-until check) (:permit-valid-until saved))))
@@ -33,7 +34,7 @@
 (defn- check-path [application-key attachment-key]
   [:kk-payment-permit-check application-key (name attachment-key)])
 
-; Normalized as on the server, so that whitespace alone does not count as a change
+; Normalisoidaan kuten palvelimella, jotta pelkkä välilyönti ei ole muutos
 (defn- body [check]
   (-> (into {} (map (fn [k] [k (get check k)]) body-keys))
       (update :payment-obligation-other-reason
@@ -45,7 +46,7 @@
    :timeout  timeout
    :dispatch [:kk-payment-permit-check/save application-key attachment-key]})
 
-; Changes not yet saved are kept when the application is fetched again
+; Tallentamattomat muutokset säilyvät, kun hakemus haetaan uudelleen
 (defn set-checks [db application-key checks]
   (update-in db
              [:kk-payment-permit-check application-key]
@@ -63,7 +64,8 @@
                                                 :check (if unsaved? check (get stored attachment-key))
                                                 :saved (get stored attachment-key))]))))))
 
-; save is :immediate, :debounced (e.g. while typing a date) or :none (text field saved on blur)
+; save on :immediate, :debounced (esim. päivämäärää kirjoitettaessa) tai :none (tekstikenttä tallennetaan, kun
+; siitä poistutaan)
 (re-frame/reg-event-fx
   :kk-payment-permit-check/set-field
   (fn [{db :db} [_ application-key attachment-key field value save]]
@@ -73,7 +75,7 @@
                                                       attachment-key
                                                       (if (= :debounced save) 1000 0))))))
 
-; The other reason of the payment obligation is cleared with the basis, so that it does not return with the basis
+; Maksuvelvollisuuden muu syy tyhjennetään perusteen mukana, jotta se ei palaa, kun peruste valitaan uudelleen
 (re-frame/reg-event-fx
   :kk-payment-permit-check/clear-field
   (fn [{db :db} [_ application-key attachment-key field]]
@@ -89,9 +91,9 @@
   (fn [_ [_ application-key attachment-key]]
     {:dispatch-debounced (save-dispatch application-key attachment-key 0)}))
 
-; A validity date outside the sanity limits is not saved, the view shows the allowed range instead. Nothing is sent
-; when the notes have not changed since they were last saved, and a save waits for the previous one to finish so that
-; the requests cannot overtake each other.
+; Sallittujen rajojen ulkopuolista voimassaolopäivää ei tallenneta, vaan näkymä näyttää sallitun välin. Mitään ei
+; lähetetä, jos merkinnät eivät ole muuttuneet edellisen tallennuksen jälkeen, ja tallennus odottaa edellisen
+; valmistumista, jotta pyynnöt eivät ohita toisiaan.
 (re-frame/reg-event-fx
   :kk-payment-permit-check/save
   (fn [{db :db} [_ application-key attachment-key]]
@@ -110,7 +112,6 @@
                                        :attachment-key  attachment-key
                                        :body            to-save}}))))
 
-; The save state is shown in the banner as with the other saves of the application
 (def ^:private saving-flash {:loading? true :message "Tietoja tallennetaan"})
 (def ^:private saved-flash {:loading? false :message "Kaikki muutokset tallennettu"})
 (def ^:private save-failed-flash {:loading? false :message "Virhe tallennettaessa." :error-type :server-error})
@@ -160,7 +161,8 @@
   (fn [db [_ application-key attachment-key]]
     (get-in db (conj (check-path application-key attachment-key) :check))))
 
-; Only the stored check is shown as inherited, the virkailija's own changes replace the inherited check when saved
+; Vain tallennettu tarkistus näytetään perittynä. Virkailijan omat muutokset korvaavat perityn tarkistuksen, kun ne
+; tallennetaan
 (re-frame/reg-sub
   :kk-payment-permit-check/original-check
   (fn [db [_ application-key attachment-key]]
