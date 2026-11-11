@@ -15,7 +15,8 @@
            :haut                     (map second @haut)
            :hakukohderyhmat          @hakukohderyhmat
            :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
-           :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
+           :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)
+           :show-state-text?         true}]
          [h-and-h/visibility-checkbox id path is-option?]
          [h-and-h/search-listing
           {:id                         id
@@ -26,7 +27,8 @@
            :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
            :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
            :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
-           :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}]
+           :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])
+           :show-state-text?           true}]
          #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]
         [h-and-h/popup
          [:div.belongs-to-hakukohteet-modal__no-haku-row

@@ -127,6 +127,7 @@
                       :title          "Maat ja valtiot"
                       :version        2
                       :allow-invalid? true}
+    :options []
     :validators ["required"]
     :label (:country-of-completion texts)))
 
@@ -157,6 +158,7 @@
                       :title          "Ammatilliset oppilaitokset"
                       :version        1
                       :allow-invalid? true}
+    :options []
     :validators ["required"]
     :label label))
 
@@ -186,6 +188,7 @@
                                     :version        1
                                     :allow-invalid? false}
                   :koodisto-ordered-by-user true           ; TODO: Check order
+                  :options []
                   :validators ["required"]
                   :label (:finnish-higher-education-degree-level texts))
                 (name-of-degree metadata)
@@ -487,6 +490,7 @@
                                     :version        1
                                     :allow-invalid? false}
                   :koodisto-ordered-by-user true            ; TODO: check if this is required then order options
+                  :options []
                   :validators ["required"]
                   :label (:finnish-higher-education-degree-level texts))
                 (higher-education-text-field metadata)
