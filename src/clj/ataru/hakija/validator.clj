@@ -1,5 +1,6 @@
 (ns ataru.hakija.validator
   (:require [ataru.hakija.application-validators :as validator]
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code finland-equivalent-country-codes]]
             [ataru.util :as util]
             [clojure.core.async :as async]
             [taoensso.timbre :as log]
@@ -10,12 +11,18 @@
             [ataru.component-data.koski-tutkinnot-module :as ktm]
             [ataru.tutkinto.tutkinto-util :as tutkinto-util]))
 
+(defn- nationalities-value-contains-countries
+  [value country-codes]
+  (some (fn [[country-code]] (country-codes country-code))
+        value))
+
 (defn- nationalities-value-contains-finland?
   [value]
-  (some true? (map
-                (fn [[country-code]]
-                  (= country-code "246"))
-                value)))
+  (nationalities-value-contains-countries value #{finland-country-code}))
+
+(defn- nationalities-value-contains-finland-equivalent?
+  [value]
+  (nationalities-value-contains-countries value finland-equivalent-country-codes))
 
 (defn- validate-birthdate-and-gender-component
   [answers-by-key failed _]
@@ -333,11 +340,15 @@
    citizenship, and may state other citizenships as well. Only Finland is accepted, not Åland, as it is the
    citizenship locked for the applicant. A missing nationality answer is left to the validation of required answers."
   [answers-by-key oppija-session kk-application-payment-haku?]
-  (when (and kk-application-payment-haku?
-             (true? (get-in oppija-session [:data :finnish-citizen])))
+  (when kk-application-payment-haku?
     (when-let [{:keys [value]} (:nationality answers-by-key)]
-      (when-not (nationalities-value-contains-finland? value)
-        "Hakemus-answer for key :nationality does not include the Finnish citizenship of the strongly authenticated applicant"))))
+      (cond
+        (and (true? (get-in oppija-session [:data :finnish-citizen]))
+             (not (nationalities-value-contains-finland? value)))
+        "Hakemus-answer for key :nationality does not include the Finnish citizenship of a strongly authenticated citizen"
+        (and (false? (get-in oppija-session [:data :finnish-citizen]))
+             (nationalities-value-contains-finland-equivalent? value))
+        "Hakemus-answer for key :nationality includes Finnish citizenship for a strongly authenticated non-citizen"))))
 
 (defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session kk-application-payment-haku?]
   (when oppija-session

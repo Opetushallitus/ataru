@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]))
 
 (def csrf-value "ataru")
+(def backend-caller-id "1.2.246.562.10.00000000001.ataru.backend")
 
 ;todo maybe only add csrf cookie to PUT POST DELETE?
 (defn enrich-with-mandatory-headers-and-common-settings [opts]
@@ -12,7 +13,7 @@
       (update :socket-timeout (fnil identity 300000))
       (assoc  :throw-exceptions false)
       (update :headers merge
-              {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
+              {"Caller-Id" backend-caller-id}
               {"CSRF" csrf-value})
       (update :cookies merge {"CSRF" {:value csrf-value :path "/"}})))
 
