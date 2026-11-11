@@ -12,7 +12,11 @@
             [ataru.virkailija.editor.db :as db]
             [ataru.virkailija.editor.demo.handlers]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
-            [ataru.virkailija.editor.editor-selectors :refer [get-email-template]]
+            [ataru.virkailija.editor.editor-selectors :refer [get-component-value
+                                                              get-current-lomakeosiot
+                                                              get-email-template
+                                                              get-email-templates-altered
+                                                              get-yhteishaku?]]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.temporal :as temporal]
@@ -24,8 +28,7 @@
             [cljs.core.async :as async]
             [clojure.string :as string]
             [clojure.walk :as walk]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
-                                   subscribe]])
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -107,7 +110,7 @@
 (defn- add-section-visibility-condition
   [db path condition]
   (let [text-field-path (db/current-form-content-path db [path :section-visibility-conditions])
-        hideable-form-sections @(subscribe [:editor/current-lomakeosiot])
+        hideable-form-sections (get-current-lomakeosiot db)
         default-hidden-section-name (-> hideable-form-sections first :id)
         section-visibility (merge condition {:section-name default-hidden-section-name})]
     (-> db
@@ -140,12 +143,10 @@
                  (fn [condition]
                    (assoc condition :comparison-operator value))))))
 
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-db
   :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (let [field                      @(subscribe [:editor/get-component-value path])
+    (let [field                      (get-component-value db path)
           default-answer-compared-to (some-> field :options first :value)
           condition                  {:condition {:comparison-operator "="
                                                   :data-type           "str"
@@ -377,14 +378,12 @@
               (not max?)
               (update-in (db/current-form-content-path db path) (fn [params]
                                                                (dissoc params :max-value)))))))
-#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
-; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-db
   :editor/set-range-value
   (fn [db [_ id range value & path]]
     (let [path           (concat path [:params])
           min-range?     (= :min-value range)
-          decimals       @(subscribe [:editor/get-component-value path :decimals])
+          decimals       (get-component-value db [path :decimals])
           clean-value    (format-range value)
           opposing-range (if min-range?
                            :max-value
@@ -428,7 +427,7 @@
 
 (defn generate-component
   [{db :db} [_ generate-fn sub-path]]
-  (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
+  (let [yhteishaku?           (get-yhteishaku? db)
         parent-component-path (cond-> (db/current-form-content-path db)
                                       (not (number? sub-path))
                                       (concat (butlast sub-path)))
@@ -442,13 +441,13 @@
                                          (map #(apply % [metadata]) generate-fn)
                                          [(generate-fn metadata)])
 
-                                       @yhteishaku?
+                                       yhteishaku?
                                        (map #(cond-> %
                                                      (not (contains? #{"pohjakoulutusristiriita"
                                                                        "fieldset"
                                                                        "hakukohteet"}
                                                                      (:fieldType %)))
-                                                     (assoc-in [:params :hidden] @yhteishaku?))))
+                                                     (assoc-in [:params :hidden] yhteishaku?))))
         first-component-idx   (cond-> sub-path
                                       (not (number? sub-path))
                                       (last))
@@ -1348,11 +1347,11 @@
   (into {} (for [[k v] m] [k (or v "")])))
 
 (defn- preview-map-to-list
-  [previews]
+  [db previews]
   (let [contents              (->> previews
                                    vals
                                    (map #(select-keys % [:lang :content :content-ending :subject :signature])))
-        contents-changed      @(subscribe [:editor/email-templates-altered])
+        contents-changed      (get-email-templates-altered db)
         only-changed-contents (->> contents
                                    (filter #(get contents-changed (:lang %)))
                                    (map nils-to-string))]
@@ -1373,7 +1372,7 @@
   (fn [{db :db} [_]]
     (let [form-key              (get-in db [:editor :selected-form-key])
           form-allows-ht?       (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))
-          contents              (preview-map-to-list (get-in db [:editor :email-template form-key]))]
+          contents              (preview-map-to-list db (get-in db [:editor :email-template form-key]))]
       {:http {:method              :post
               :params              {:contents contents}
               :handler-args        {:form-key form-key}
@@ -1406,7 +1405,7 @@
 (reg-event-fx
   :editor/save-email-template
   (fn [{db :db} [_]]
-    (let [contents (preview-map-to-list (get-email-template db))
+    (let [contents (preview-map-to-list db (get-email-template db))
           form-key (get-in db [:editor :selected-form-key])
           form-allows-ht? (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))]
       {:http {:method              :post
