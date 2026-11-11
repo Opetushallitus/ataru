@@ -1,20 +1,23 @@
 (ns ataru.hakija.component-handlers.dropdown-component-handlers
   (:require [re-frame.core :as re-frame]))
 
+(def ^:private collapsed-spec {:expanded? false :query nil :active-index nil})
+
+;; Avattaessa muut pudotusvalikot suljetaan, jotta auki on kerrallaan vain
+;; yksi. Suljettaessa koskee vain suljettavaa: muuten aiemmin jonoon jäänyt
+;; toisen valikon sulkeminen (esim. sen blurista) sulkisi juuri avatun.
 (defn- toggle-dropdown-expand [dropdown-specs
                                {:keys [dropdown-id-to-toggle
                                        expand?]}]
-  (as-> dropdown-specs dropdown-specs'
-        (cond-> (assoc-in dropdown-specs' [dropdown-id-to-toggle :expanded?] expand?)
-                (not expand?)
-                (update dropdown-id-to-toggle merge {:query nil :active-index nil}))
-        (reduce-kv (fn collapse-dropdown-component [acc dropdown-id dropdown-spec]
-                     (let [dropdown-spec (cond-> dropdown-spec
-                                                 (not= dropdown-id dropdown-id-to-toggle)
-                                                 (merge {:expanded? false :query nil :active-index nil}))]
-                       (assoc acc dropdown-id dropdown-spec)))
+  (if expand?
+    (-> (reduce-kv (fn collapse-other-dropdown [acc dropdown-id dropdown-spec]
+                     (assoc acc dropdown-id (if (= dropdown-id dropdown-id-to-toggle)
+                                              dropdown-spec
+                                              (merge dropdown-spec collapsed-spec))))
                    {}
-                   dropdown-specs')))
+                   dropdown-specs)
+        (assoc-in [dropdown-id-to-toggle :expanded?] true))
+    (update dropdown-specs dropdown-id-to-toggle merge collapsed-spec)))
 
 (re-frame/reg-event-db
   :application-components/collapse-dropdown

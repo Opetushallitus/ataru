@@ -568,6 +568,7 @@ test.describe('Työpöytänäkymä', () => {
     await getCombobox(page).click()
     await getCombobox(page).fill('ei osumaa xyz')
     const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
     await expect(listbox).toContainText('Ei hakutuloksia')
     await getCombobox(page).press('ArrowDown')
     await getCombobox(page).press('ArrowUp')
@@ -580,13 +581,87 @@ test.describe('Työpöytänäkymä', () => {
     await expect(getCombobox(page)).toHaveValue('')
   })
 
-  test('klikkaus "Ei hakutuloksia" -riviin ei sulje valikkoa', async ({
+  test('lista on nimetty kentän labelin mukaan', async ({ page }) => {
+    await getCombobox(page).click()
+    const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
+    await expect(listbox).toHaveAccessibleName(DROPDOWN_LABEL)
+  })
+
+  test('hakutulosten määrä ilmoitetaan ruudunlukijalle haettaessa', async ({
     page,
   }) => {
+    const status = getField(page).getByRole('status')
+    await expect(status).toHaveText('')
+
+    // Pelkkä avaaminen ei ilmoita määrää.
+    await getCombobox(page).click()
+    await expect(await getListbox(page)).toBeVisible()
+    await expect(status).toHaveText('')
+
+    await getCombobox(page).fill('saar')
+    await expect(status).toHaveText('1 vaihtoehto')
+
+    await getCombobox(page).fill('ei osumaa xyz')
+    await expect(status).toHaveText('Ei hakutuloksia')
+
+    // Tyhjennetty haku on yhä haku: koko lista.
+    await getCombobox(page).fill('')
+    await expect(status).toHaveText(`${OPTION_COUNT} vaihtoehtoa`)
+
+    await getCombobox(page).press('Escape')
+    await expect(status).toHaveText('')
+  })
+
+  test('avausnappi on nimetty tilansa mukaan ruudunlukijalle', async ({
+    page,
+  }) => {
+    await expect(getTriggerButton(page)).toHaveAccessibleName(
+      'Näytä vaihtoehdot'
+    )
+    await getCombobox(page).click()
+    await expect(getTriggerButton(page)).toHaveAccessibleName(
+      'Sulje vaihtoehdot'
+    )
+  })
+
+  test('valittu vaihtoehto vieritetään näkyviin avattaessa', async ({
+    page,
+  }) => {
+    await getCombobox(page).click()
+    const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
+    const lastOption = getOptions(listbox).last()
+    const lastLabel = (await lastOption.textContent()) ?? ''
+    await getCombobox(page).press('End')
+    await getCombobox(page).press('Enter')
+    await expect(getCombobox(page)).toHaveValue(lastLabel)
+    await expect(listbox).toBeHidden()
+
+    await getCombobox(page).click()
+    await expect(listbox).toBeVisible()
+    // Vaihtoehto on vierityssäiliön (popupin) näkyvällä alueella.
+    await expect
+      .poll(() =>
+        lastOption.evaluate((el) => {
+          const popup = el.closest('.a-dropdown-popup')
+          if (!popup) return false
+          const p = popup.getBoundingClientRect()
+          const o = el.getBoundingClientRect()
+          return o.top >= p.top && o.bottom <= p.bottom
+        })
+      )
+      .toBe(true)
+  })
+
+  test('"Ei hakutuloksia" -rivi ei ole valittavissa', async ({ page }) => {
     await getCombobox(page).fill('ei osumaa xyz')
     const listbox = await getListbox(page)
-    await expect(listbox).toContainText('Ei hakutuloksia')
-    await listbox.getByText('Ei hakutuloksia').click()
+    await expect(listbox).toBeVisible()
+
+    await expect(
+      listbox.getByRole('option', { name: 'Ei hakutuloksia' })
+    ).toBeDisabled()
     await expect(listbox).toBeVisible()
     await expect(getCombobox(page)).toHaveValue('ei osumaa xyz')
   })
@@ -723,10 +798,53 @@ test.describe('Mobiilinäkymä', () => {
     await expect(listbox).toBeHidden()
   })
 
+  test('pelkkä fokus ei avaa valikkoa, napautus avaa', async ({ page }) => {
+    const listbox = await getListbox(page)
+    await getCombobox(page).focus()
+    await expect(getCombobox(page)).toBeFocused()
+    await expect(listbox).toBeHidden()
+
+    await getCombobox(page).tap()
+    await expect(listbox).toBeVisible()
+  })
+
+  test('kokoruutuvalikko on modaalinen dialogi ruudunlukijalle', async ({
+    page,
+  }) => {
+    const dialog = page.getByRole('dialog', { name: DROPDOWN_LABEL })
+    await expect(dialog).toHaveCount(0)
+
+    await getCombobox(page).tap()
+    const listbox = await getListbox(page)
+    await expect(listbox).toBeVisible()
+    await expect(dialog).toHaveAttribute('aria-modal', 'true')
+    await expect(dialog.getByRole('combobox')).toBeVisible()
+
+    await getOption(listbox, 'Norja').tap()
+    await expect(listbox).toBeHidden()
+    await expect(dialog).toHaveCount(0)
+  })
+
+  test('avausnapista avattaessa fokus siirtyy kenttään ja suljettaessa jää nappiin', async ({
+    page,
+  }) => {
+    const listbox = await getListbox(page)
+
+    await getTriggerButton(page).tap()
+    await expect(listbox).toBeVisible()
+    await expect(getCombobox(page)).toBeFocused()
+
+    await getTriggerButton(page).tap()
+    await expect(listbox).toBeHidden()
+    await expect(getTriggerButton(page)).toBeFocused()
+  })
+
   test('valikon voi avata uudelleen valinnan jälkeen', async ({ page }) => {
     const listbox = await getListbox(page)
     await getCombobox(page).tap()
     await getOption(listbox, 'Norja').tap()
+    // Mobiilissa valikko sulkeutuu pienellä viiveellä valinnan jälkeen.
+    await expect(listbox).toBeHidden()
 
     await getCombobox(page).tap()
     await expect(listbox).toBeVisible()

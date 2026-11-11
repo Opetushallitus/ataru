@@ -18,8 +18,8 @@
 (defn make-outside-click-listener [dropdown-id root-ref popup-ref]
   (fn outside-click-listener [e]
     (let [target  (.-target e)
-          ;; Popup on portaalissa eikä @root-refin DOM-jälkeläinen, joten sen
-          ;; sisällä klikkaaminen pitää tunnistaa erikseen.
+          ;; Työpöydällä popup on portaalissa eikä @root-refin DOM-jälkeläinen,
+          ;; joten sen sisällä klikkaaminen pitää tunnistaa erikseen.
           inside? (or (and @root-ref (.contains @root-ref target))
                       (and @popup-ref (.contains @popup-ref target)))]
       (when (and (not inside?)
@@ -108,19 +108,29 @@
 ;; ajan tasalla pitää dropdown-componentin matchMedia-kuuntelija; sen
 ;; muutoksesta seuraava renderöinti synkronoi geometrian, joten resizen
 ;; tarvitsee vain synkronoida.
-(defn attach-global-listeners! [{:keys [outside-click-listener sync-popup-geometry!]}]
+;; Sivun tai kentän esi-isän vieritys siirtää kenttää, joten popup asemoidaan
+;; uudelleen. Popupin oma sisäinen vieritys ohitetaan: se ei siirrä popupia,
+;; ja uudelleenasemointi (tyylien tyhjennys ja asetus) palauttaisi popupin
+;; vierityskohdan, jolloin esim. valitun vaihtoehdon vieritys näkyviin
+;; kumoutuisi.
+(defn make-scroll-listener [popup-ref sync-popup-geometry!]
+  (fn scroll-listener [e]
+    (when-not (some-> @popup-ref (.contains (.-target e)))
+      (sync-popup-geometry!))))
+
+(defn attach-global-listeners! [{:keys [outside-click-listener scroll-listener sync-popup-geometry!]}]
   ;; capture-vaiheessa, jotta ulkopuolinen klikkaus ehditään havaita ennen
   ;; kuin kohde-elementin oma click-käsittelijä (esim. toisen kentän
   ;; avausklikkaus) ehtii reagoida.
   (.addEventListener js/document "mousedown" outside-click-listener true)
   (.addEventListener js/window "resize" sync-popup-geometry!)
-  (.addEventListener js/document "scroll" sync-popup-geometry!
+  (.addEventListener js/document "scroll" scroll-listener
                       #js {:passive true :capture true}))
 
-(defn detach-global-listeners! [{:keys [outside-click-listener sync-popup-geometry!]}]
+(defn detach-global-listeners! [{:keys [outside-click-listener scroll-listener sync-popup-geometry!]}]
   (.removeEventListener js/document "mousedown" outside-click-listener true)
   (.removeEventListener js/window "resize" sync-popup-geometry!)
-  (.removeEventListener js/document "scroll" sync-popup-geometry!
+  (.removeEventListener js/document "scroll" scroll-listener
                          #js {:passive true :capture true}))
 
 ;; Vain kokoruututilan ajan kytketyt kosketuskuuntelijat, joten niiden ei

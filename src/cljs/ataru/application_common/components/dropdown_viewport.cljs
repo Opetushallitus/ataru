@@ -28,7 +28,6 @@
   (if-let [vv (.-visualViewport js/window)]
     (.-offsetTop vv)
     0))
-
 ;; Sivun vierityksen lukitus kokoruutuvalikon ajaksi. html:n overflow:
 ;; hidden (dropdown-component.less) ei yksin riitä iOS:llä: kun eleen
 ;; ensimmäinen touchmove on päästetty läpi (lista alkaa vierittyä), iOS

@@ -5,6 +5,8 @@
   components.dropdown-render (dropdown-componentin renderöintilogiikka) on
   tämän namespacen ainoa käyttäjä."
   (:require [clojure.string :as string]
+            [reagent.core :as reagent]
+            [reagent.dom :as rdom]
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.translations.translation-util :as translations]))
@@ -17,6 +19,9 @@
 ;; Vaihtoehtolistan puhtaat apufunktiot
 ;; ---------------------------------------------------------------------
 
+(defn- option-id [dropdown-id value]
+  (str dropdown-id "-option-" value))
+
 (defn get-filtered-options-with-id
   "Suodattaa vaihtoehdot query:llä (tapauksesta riippumaton osamerkkijonohaku
   labelista) ja lisää kullekin option-id:n, jota käytetään DOM-id:nä, 
@@ -25,7 +30,7 @@
   (let [options-with-id (map (fn [option-props]
                                 (assoc option-props
                                        :option-id
-                                       (str dropdown-id "-option-" (:value option-props))))
+                                       (option-id dropdown-id (:value option-props))))
                               options)]
     (vec (if (string/blank? query)
            options-with-id
@@ -115,14 +120,14 @@
 ;; elementille, jolla on todellinen näppäimistöfokus, ei sille jota se
 ;; osoittaa.
 ;; Sijainnin ja koon asettaa dropdown-geometry suoraan DOM:iin popup-refin
-;; kautta (popup on portaalissa document.bodyssa), joten tämä komponentti ei
-;; ota niihin kantaa.
-(s/defn dropdown-popup
+;; kautta, joten tämä komponentti ei ota niihin kantaa.
+(s/defn ^:private dropdown-popup-content
   [{:keys [expanded?
            fullscreen?
            options-with-id
            on-click
-           label-id
+           listbox-labelledby
+           listbox-label
            dropdown-id
            selected-value
            active-option-id
@@ -133,12 +138,16 @@
                               (s/optional-key :fullscreen?)         s/Bool
                               :options-with-id                      [(st/assoc SelectOptionProps :option-id s/Str)]
                               :on-click                             s/Any
-                              :label-id                             s/Str
+                              ;; Sama näkyvä label tai aria-label kuin syötekentällä,
+                              ;; jotta ruudunlukija nimeää listan kenttänsä mukaan.
+                              (s/optional-key :listbox-labelledby)  (s/maybe s/Str)
+                              (s/optional-key :listbox-label)       (s/maybe s/Str)
                               :dropdown-id                          s/Str
                               :selected-value                       (s/maybe s/Str)
                               (s/optional-key :active-option-id)    (s/maybe s/Str)
                               :register-ref                         s/Any
                               (s/optional-key :popup-ref)           s/Any
+                              (s/optional-key :on-open)             s/Any
                               :lang                                 s/Keyword
                               :data-test-id                         (s/maybe s/Str)}]
   (let [listbox-id (str dropdown-id "-listbox")]
@@ -154,12 +163,18 @@
      ;; ruudunlukijan id-pohjainen haku löytäisi tätä ollenkaan.
      [:ul.a-dropdown-list
       {:id              listbox-id
-       :aria-labelledby label-id
+       :aria-labelledby listbox-labelledby
+       :aria-label      (when-not listbox-labelledby listbox-label)
        :tab-index        "-1"
        :role            "listbox"}
       (if (empty? options-with-id)
+        ;; Listboxin lapsina saa olla vain vaihtoehtoja, joten tyhjä tila on
+        ;; valitsematon vaihtoehto. Hakutulosten määrän ilmoittaa
+        ;; dropdown-status (ks. alla).
         [:li.a-dropdown-empty
-         {:role "status"}
+         {:role          "option"
+          :aria-disabled true
+          :aria-selected false}
          (translations/get-hakija-translation :no-dropdown-search-hits lang)]
         (map (fn [option-props]
                ^{:key (:option-id option-props)}
@@ -169,6 +184,28 @@
                                              :active?        (= active-option-id (:option-id option-props))
                                              :register-ref   register-ref})])
              options-with-id))]]))
+
+;; Kutsuu on-openia popupin DOM-elementillä, kun popup avautuu (myös kun se
+;; mountataan valmiiksi auki — mobiilissa popup mountataan avattaessa uudelleen
+;; kentän perään). Elinkaarimetodeissa, koska React takaa vasta niissä, että
+;; popupin muutokset (esim. näkyvyys) ovat DOM:issa.
+(defn dropdown-popup [_props]
+  (reagent/create-class
+    {:component-did-mount
+     (fn [this]
+       (let [{:keys [expanded? on-open]} (reagent/props this)]
+         (when (and expanded? on-open)
+           (on-open (rdom/dom-node this)))))
+
+     :component-did-update
+     (fn [this [_ old-props]]
+       (let [{:keys [expanded? on-open]} (reagent/props this)]
+         (when (and expanded? (not (:expanded? old-props)) on-open)
+           (on-open (rdom/dom-node this)))))
+
+     :reagent-render
+     (fn [props]
+       [dropdown-popup-content props])}))
 
 ;; Kentän oma osa (syötekenttä + tyhjennysnappi + avausnappi) — erillään
 ;; dropdown-popupista samasta syystä kuin popup on omansa: kutsujan
@@ -196,7 +233,6 @@
            on-input-click
            on-input-change
            on-input-key-down
-           on-input-focus
            on-clear-click
            on-trigger-click]} :- {:input-ref                               s/Any
                                   (s/optional-key :field-ref)              s/Any
@@ -219,7 +255,6 @@
                                   :on-input-click                          s/Any
                                   :on-input-change                         s/Any
                                   :on-input-key-down                       s/Any
-                                  :on-input-focus                          s/Any
                                   :on-clear-click                          s/Any
                                   :on-trigger-click                        s/Any}]
   [:div.a-dropdown-field
@@ -262,16 +297,41 @@
      :aria-activedescendant active-option-id
      :on-click              on-input-click
      :on-change             on-input-change
-     :on-key-down           on-input-key-down
-     :on-focus              on-input-focus}]
+     :on-key-down           on-input-key-down}]
    (when (and (not disabled?) clearable? (not (string/blank? selected-value)))
      [dropdown-clear-button
       {:lang     lang
        :on-click on-clear-click}])
+   ;; Tab-järjestyksen ulkopuolella (näppäimistöllä nuolinäppäimet ja Esc),
+   ;; mutta ruudunlukijan saavutettavissa: VoiceOverilla se on kokoruutu-
+   ;; tilassa näkyvä tapa sulkea lista valitsematta mitään.
    [:button.a-dropdown-trigger
-    {:type        "button"
-     :tab-index   "-1"
-     :aria-hidden true
-     :disabled    disabled?
-     :on-click    on-trigger-click}
+    {:type          "button"
+     :tab-index     "-1"
+     :aria-label    (translations/get-hakija-translation
+                      (if expanded? :dropdown-hide-options :dropdown-show-options)
+                      lang)
+     :aria-controls listbox-id
+     :disabled      disabled?
+     :on-click      on-trigger-click}
     [dropdown-caret {:expanded? expanded?}]]])
+
+;; Hakutulosten määrän ilmoitus ruudunlukijalle haettaessa. iOS:n VoiceOver ei
+;; seuraa aria-activedescendantia, joten ilman tätä kirjoittamisen vaikutus
+;; listaan jäisi kuulematta. Vain haun aikana (searching?) eikä heti
+;; avattaessa: avaamisen muut muutokset (dialogi, fokus) saivat VoiceOverin
+;; toistamaan ilmoituksen. Elementti on DOM:issa aina (tyhjänä muulloin),
+;; koska ruudunlukijat ilmoittavat vain jo olemassa olevan live-alueen
+;; muutokset.
+(s/defn dropdown-status
+  [{:keys [searching? option-count lang]} :- {:searching?   s/Bool
+                                              :option-count s/Int
+                                              :lang         s/Keyword}]
+  [:div.a-dropdown-status
+   {:role      "status"
+    :aria-live "polite"}
+   (when searching?
+     (case option-count
+       0 (translations/get-hakija-translation :no-dropdown-search-hits lang)
+       1 (translations/get-hakija-translation :dropdown-one-option lang)
+       (translations/get-hakija-translation :dropdown-option-count lang option-count)))])
