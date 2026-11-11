@@ -126,7 +126,7 @@
                                                            nil
                                                            value])
                                        (when on-change
-                                         (on-change)))}
+                                         (on-change value)))}
 
              data-test-id
              (assoc :data-test-id data-test-id)
