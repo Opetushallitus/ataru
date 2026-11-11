@@ -14,7 +14,24 @@
     "Gets a flattened organization hierarhy based on direct organizations")
   (get-hakukohde-groups [this]
     "Gets all hakukohde groups")
-  (get-organizations-for-oids [this organization-oids]))
+  (get-organizations-for-oids [this organization-oids])
+  (get-organization-with-parents [this organization-oid]
+    "Gets the organization and its parent organizations below OPH, starting from the topmost, with their types
+     (:koulutustoimija, :oppilaitos, :toimipiste)"))
+
+(def ^:private organization-types
+  {"Koulutustoimija"       :koulutustoimija
+   "organisaatiotyyppi_01" :koulutustoimija
+   "Oppilaitos"            :oppilaitos
+   "organisaatiotyyppi_02" :oppilaitos
+   "Toimipiste"            :toimipiste
+   "organisaatiotyyppi_03" :toimipiste})
+
+(defn- organization-with-types
+  [{:keys [oid nimi tyypit organisaatiotyypit]}]
+  {:oid   oid
+   :name  (or nimi {})
+   :types (set (keep organization-types (concat tyypit organisaatiotyypit)))})
 
 (defn get-organization-hierarchies
   [organizations-hierarchy-cache direct-oids]
@@ -54,6 +71,15 @@
           groups      (map #(get all-groups % (unknown-group %)) group-oids)]
       (concat normal-orgs groups)))
 
+  (get-organization-with-parents [_ organization-oid]
+    (when-let [organization (org-client/get-single-organization-cached organization-oid)]
+      ; The path of a single organization lists the parents starting from the root, e.g. "|<OPH oid>|<parent oid>|"
+      (let [parent-oids (->> (s/split (or (:parentOidPath organization) "") #"\|")
+                             (remove s/blank?)
+                             (remove #{org-client/oph-organization organization-oid}))]
+        (conj (mapv (comp organization-with-types org-client/get-single-organization-cached) parent-oids)
+              (organization-with-types organization)))))
+
   (start [this] this)
 
   (stop [this] this))
@@ -66,16 +92,32 @@
    "1.2.246.562.28.1"                    {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
    "1.2.246.562.10.0439846"              {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
    "1.2.246.562.28.2"                    {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}
-   "1.2.246.562.10.10826252480"          {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization}
+   "1.2.246.562.10.10826252480"          {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization
+                                          :types #{:oppilaitos}}
    "form-access-control-test-oppilaitos" {:name {:fi "Testioppilaitos"}, :oid "form-access-control-test-oppilaitos" :type :organization}
-   "1.2.246.562.10.10826252479"          {:name {:fi "Tarjoajan oppilaitos"} :oid "1.2.246.562.10.10826252479" :type :organization}
-   "1.2.246.562.10.00000000001"          {:name {:fi "Test OPH"}, :oid "1.2.246.562.10.00000000001" :type :organization}})
+   "1.2.246.562.10.10826252479"          {:name {:fi "Tarjoajan oppilaitos"} :oid "1.2.246.562.10.10826252479" :type :organization
+                                          :types #{:oppilaitos}}
+   "1.2.246.562.10.00000000001"          {:name {:fi "Test OPH"}, :oid "1.2.246.562.10.00000000001" :type :organization}
+   "1.2.246.562.10.2000000001"           {:name {:fi "Testikorkeakoulun koulutustoimija"}, :oid "1.2.246.562.10.2000000001" :type :organization
+                                          :types #{:koulutustoimija}}
+   "1.2.246.562.10.2000000002"           {:name {:fi "Testikorkeakoulu"}, :oid "1.2.246.562.10.2000000002" :type :organization
+                                          :types #{:oppilaitos} :parent-oid "1.2.246.562.10.2000000001"}
+   "1.2.246.562.10.2000000003"           {:name {:fi "Testikorkeakoulun tiedekunta"}, :oid "1.2.246.562.10.2000000003" :type :organization
+                                          :types #{:toimipiste} :parent-oid "1.2.246.562.10.2000000002"}
+   "1.2.246.562.10.2000000004"           {:name {:fi "Testikorkeakoulun tiedekunnan laitos"}, :oid "1.2.246.562.10.2000000004" :type :organization
+                                          :types #{:toimipiste} :parent-oid "1.2.246.562.10.2000000003"}})
+
+(defn- fake-org-with-descendants [oid]
+  (cons (get fake-org-by-oid oid)
+        (->> (vals fake-org-by-oid)
+             (filter #(= oid (:parent-oid %)))
+             (mapcat (comp fake-org-with-descendants :oid)))))
 
 (defn fake-orgs-by-root-orgs [root-orgs]
   (some->> root-orgs
            (map :oid)
            (map name)
-           (map #(get fake-org-by-oid %))))
+           (mapcat fake-org-with-descendants)))
 
 ;; Test double for UI tests
 (defrecord FakeOrganizationService []
@@ -92,7 +134,16 @@
     (fake-orgs-by-root-orgs root-orgs))
 
   (get-organizations-for-oids [_ organization-oids]
-    (map fake-org-by-oid organization-oids)))
+    (map fake-org-by-oid organization-oids))
+
+  (get-organization-with-parents [_ organization-oid]
+    (when (contains? fake-org-by-oid organization-oid)
+      (->> organization-oid
+           (iterate #(:parent-oid (get fake-org-by-oid %)))
+           (take-while some?)
+           (map #(select-keys (get fake-org-by-oid %) [:oid :name :types]))
+           reverse
+           vec))))
 
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
