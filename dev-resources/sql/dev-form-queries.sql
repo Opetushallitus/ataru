@@ -4,6 +4,12 @@ UPDATE forms
 SET id = :new_id
 WHERE id = :old_id;
 
+-- name: yesql-delete-fixture-kk-application-payment-permit-checks!
+DELETE FROM kk_application_payment_permit_checks
+WHERE application_key in (SELECT key
+                         FROM applications
+                         WHERE form_id = :form_id);
+
 -- name: yesql-delete-fixture-application-review!
 DELETE FROM application_reviews
 WHERE application_key in (SELECT key

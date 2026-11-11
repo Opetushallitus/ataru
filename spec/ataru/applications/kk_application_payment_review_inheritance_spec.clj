@@ -6,11 +6,16 @@
             [ataru.fixtures.db.unit-test-db :as unit-test-db]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
             [ataru.log.audit-log :as audit-log]
             [ataru.test-utils :as test-utils]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [after-all describe it should= should-be-nil tags before]]))
+            [speclj.core :refer [after-all describe it should= should-be-nil tags before]]
+            [yesql.core :as sql]))
+
+(sql/defqueries "sql/virkailija-queries.sql")
+(declare yesql-upsert-virkailija<!)
 
 (def audit-logger (audit-log/new-dummy-audit-logger))
 
@@ -89,6 +94,7 @@
 
   (before
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+      (jdbc/delete! conn :kk_application_payment_permit_checks [])
       (jdbc/delete! conn :application_hakukohde_reviews [])
       (jdbc/delete! conn :application_hakukohde_attachment_reviews [])))
 
@@ -207,4 +213,22 @@
                         {})
       (should= "not-checked" (:state (attachment-review application-key hakukohde-1)))
       (should= "not-checked" (:state (attachment-review application-key hakukohde-2)))
-      (should= "reviewed" (:state (obligation-review application-key hakukohde-2))))))
+      (should= "reviewed" (:state (obligation-review application-key hakukohde-2)))))
+
+  (it "keeps the residence permit checks, which are not specific to a hakukohde"
+    (let [application     (init-application [hakukohde-1])
+          application-key (:key application)
+          virkailija-oid  "1.2.246.562.24.00000001213"]
+      (db/exec :db yesql-upsert-virkailija<! {:oid        virkailija-oid
+                                              :first_name "Hemuli"
+                                              :last_name  "Hemuli?"})
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (jdbc/insert! conn :kk_application_payment_permit_checks
+                      {:application_key          application-key
+                       :attachment_key           "continuous-residence-permit-front"
+                       :payment_obligation_basis "not-obligated"
+                       :virkailija_oid           virkailija-oid
+                       :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))
+      (edit-hakukohteet application [hakukohde-1 hakukohde-2])
+      (should= ["continuous-residence-permit-front"]
+               (map :attachment-key (permit-check/get-permit-checks application-key))))))
