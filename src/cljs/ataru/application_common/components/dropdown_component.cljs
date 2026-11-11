@@ -96,13 +96,13 @@
 ;; Elinkaarimetodit
 ;; ---------------------------------------------------------------------
 
-(defn- mount-dropdown! [{:keys [portal-container] :as context}]
+(defn- mount-dropdown! [{:keys [portal-container]}]
   (reset! portal-container (.createElement js/document "div"))
-  (.appendChild (.-body js/document) @portal-container)
-  (listeners/attach-listeners! context))
+  (.appendChild (.-body js/document) @portal-container))
 
 (defn- unmount-dropdown! [{:keys [portal-container] :as context}]
-  (listeners/detach-listeners! context)
+  ;; Poistetaan globaalit kuuntelijat varmuuden vuoksi myös tässä
+  (listeners/detach-global-listeners! context)
   (viewport/unlock-body-scroll!)
   (when-let [el @portal-container]
     (.removeChild (.-body js/document) el)))
