@@ -109,6 +109,65 @@
   }
 }
 
+// dropdown_component.cljs:n lock-body-scroll!/unlock-body-scroll! lisää/poistaa
+// tämän luokan sekä document.documentElementiin (<html>) että document.bodyyn
+// kokoruutuvalikon ollessa auki — ilman tätä sääntöä sivu jää vierittyväksi
+// kokoruutuvalikon alla, jolloin näytöllä on sekä valikon oma vieritys että
+// sivun vieritys yhtä aikaa. Standards-modessa (tämän sovelluksen tila)
+// todellinen vierittyvä elementti on <html>, ei <body> — pelkkä body riittäisi
+// vain quirks-modessa, joten molemmat lukitaan varmuuden vuoksi.
+html.a-dropdown-fullscreen-open,
+body.a-dropdown-fullscreen-open {
+  overflow: hidden;
+
+  // Kesken oleva opacity-animaatio (animate.css:n .animated-luokka, esim.
+  // lomakkeen osion fadeIn) luo esi-isälle uuden stacking contextin niin
+  // kauan kuin opacity < 1 — tämä "vangitsee" position: fixed -kokoruutu-
+  // valikon z-indexin siitä huolimatta, kuinka suuri se on, jolloin esim.
+  // ylätunniste voi jäädä sen päälle. Pakotetaan opacity valmiiksi
+  // kokoruutuvalikon ollessa auki, jotta stacking context ei jää väliin.
+  // Ei kosketa animation-nimeä (esim. "animation: none"): sen muuttaminen
+  // pois päältä ja takaisin päälle käynnistäisi animaation alusta, jolloin
+  // valikon sulkeutuessa nähtäisiin koko fade-in uudestaan. !important-
+  // opacity riittää yksin, koska se ohittaa kaskadissa animaation ajaman
+  // opacityn joka tapauksessa — animaatio saa siis edetä taustalla
+  // huomaamatta ja päätyä luonnolliseen lopputilaansa (opacity: 1) itse.
+  .animated {
+    opacity: 1 !important;
+  }
+}
+
+// a-dropdown--fullscreen ei itse ota kantaa koko näytön peittävään
+// kiinnittämiseen (position: fixed, top/z-index/tausta) — se on kutsujan
+// vastuulla (ks. esim. hakija.less:n .application__dropdown-fullscreen-
+// wrapper), koska vain kutsuja tietää mitä muuta (esim. label) pitäisi
+// näkyä sen mukana. Tämä venyy vain täyttämään sen säiliön, johon se
+// päätyy.
+@media only screen and (max-width: @mobile-width) {
+  // min-width: 0 tässä ja popupissa: nämä ovat flex-itemejä (tämä oman
+  // kiinnitetyn wrapperinsa lapsena, popup tämän lapsena), ja flex-itemin
+  // OLETUS min-width on "auto" eli "älä kutista sisällön min-content-
+  // leveyden alle" — ilman tätä pitkä, katkeamaton vaihtoehtoteksti
+  // (a-dropdown-list__option-label, white-space: nowrap) listassa pakottaisi
+  // koko ketjun leveämmäksi kuin 100 %, vaikka text-overflow: ellipsis on jo
+  // asetettu (se leikkaa vain piirtämisen, ei vaikuta flex-kokolaskentaan).
+  .a-dropdown--fullscreen {
+    .flex-column(stretch, flex-start);
+
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: auto;
+  }
+
+  .a-dropdown--fullscreen .a-dropdown-popup {
+    flex: 1;
+    max-height: none;
+    min-width: 0;
+    position: static;
+  }
+}
+
 .a-dropdown--disabled {
   .a-dropdown-field {
     background: @disabled-background-gray;
@@ -130,27 +189,32 @@
   }
 }
 
+// Piilotettu apuelementti, jota mm. Playwright-testit käyttävät kentän id:n
+// kautta — ei todellista käyttöliittymää (ks. dropdown-select
+// dropdown_component.cljs:ssä).
 .a-dropdown-select-container {
-  .flex-row(center, space-between);
-
-  width: 100%;
+  display: none;
 }
 
 .a-dropdown-select {
   .default-font();
 
-  background-color: transparent;
-  border: 0;
-  color: @component-gray;
-  left: -5px;
-  margin-left: 4px;
-  min-width: 24px;
-  outline: 0;
-  position: relative;
-
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  background-color: transparent;
+  border: 0;
+  color: @neutral-grey-900;
+  flex: 1;
+  font-size: 16px;
+  height: 100%;
+  min-width: 0;
+  outline: 0;
+  padding: 0;
+
+  &:disabled {
+    color: @disabled-font-gray;
+  }
 }
 
 .a-dropdown-select--collapsed {
@@ -164,6 +228,10 @@
   left: 0;
   margin-top: 4px;
   max-height: 300px;
+  // Estää scrollin "ketjuuntumisen" taustalle (rubber-band/overscroll-
+  // efekti), kun listaa vieritetään sen ylä-/alarajaan asti — ilman tätä
+  // kosketuseleen jatkaminen rajan yli vierittää body:ä.
+  overscroll-behavior: contain;
   overflow-y: auto;
   padding: 4px 0;
   position: absolute;
@@ -219,6 +287,11 @@
 }
 
 .a-dropdown-list__option-label {
+  // min-width: 0 tarpeen, koska tämä on flex-item (a-dropdown-list__option
+  // on flex-row) — ilman sitä flex-itemin oletus min-width: auto pitää sen
+  // vähintään tekstin oman (katkeamattoman) min-content-leveyden mukaisena,
+  // eikä alla oleva ellipsis pääsisi koskaan leikkaamaan sitä lyhyemmäksi.
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
