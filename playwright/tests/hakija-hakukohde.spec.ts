@@ -54,7 +54,6 @@ const getSelectedHakukohdeText = async (page: Page) =>
 let page: Page
 
 test.beforeAll(async ({ browser }) => {
-  test.setTimeout(120000)
   page = await browser.newPage()
 
   await kirjauduVirkailijanNakymaan(page)
