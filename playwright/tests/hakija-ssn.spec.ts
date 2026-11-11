@@ -10,6 +10,7 @@ import {
 } from '../playwright-ataru-utils'
 import {
   fillField,
+  getVisibleFieldLocator,
   selectOption,
   unsafeFoldOption,
   waitForResponse,
@@ -45,7 +46,9 @@ type FormNode = {
 const getFieldById = (page: Page, id: string) => page.locator(`[id="${id}"]`)
 
 const expectFieldVisible = async (page: Page, id: string) => {
-  await expect(getFieldById(page, id)).toBeVisible()
+  await expect(
+    await getVisibleFieldLocator(getFieldById(page, id))
+  ).toBeVisible()
 }
 
 const expectFieldHidden = async (page: Page, id: string) => {

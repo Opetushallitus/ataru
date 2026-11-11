@@ -13,7 +13,8 @@
             duplicate-question-class (if is-duplicate-question "application__form-field-label application__form-field-label--duplicate-question" "application__form-field-label")]
         [:label
          {:class duplicate-question-class
-          :for form-field-id}
+          :id    (str form-field-id "-label")
+          :for   form-field-id}
          (when-not is-duplicate-question
            [:span label [:span.application__form-field-label.application__form-field-label--required (application-field/required-hint field-descriptor lang)]])
          (when is-duplicate-question
