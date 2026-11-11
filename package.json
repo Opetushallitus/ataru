@@ -5,7 +5,7 @@
     "url": "https://github.com/Opetushallitus/lomake-editori.git"
   },
   "license": "EUPL-1.1",
-  "packageManager": "pnpm@9.15.5",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "prepare": "husky",
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
@@ -24,18 +24,6 @@
     "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
       "clj-kondo --lint"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "body-parser": "1.20.3",
-      "cross-spawn": "7.0.6",
-      "form-data": "4.0.4",
-      "minimatch": "3.0.5",
-      "systeminformation": "5.27.12",
-      "tar-fs": "2.1.4",
-      "ua-parser-js": "0.7.35",
-      "unzip-stream": "0.3.4"
-    }
   },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
