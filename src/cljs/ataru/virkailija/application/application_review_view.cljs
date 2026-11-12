@@ -566,6 +566,12 @@
            [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
            [:span @(subscribe [:application/field-label (:review-key event)])]]]
 
+         {:event-type "kk-payment-permit-check-removed"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-removed])]
+          [:div
+           [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
+           [:span @(subscribe [:application/field-label (:review-key event)])]]]
+
          {:event-type "kk-payment-permit-check-inherited"}
          [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-inherited])]
           [:div

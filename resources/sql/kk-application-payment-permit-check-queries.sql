@@ -108,3 +108,19 @@ RETURNING attachment_key                                AS "attachment-key",
           checked_time                                  AS "checked-time",
           inherited_from_application_key                AS "inherited-from-application-key",
           inherited_time                                AS "inherited-time";
+
+-- name: yesql-delete-other-kk-application-payment-permit-checks
+-- Poistaa hakemuksen tarkistukset muilta liitteiltä kuin :attachment_key, tai kaikki, kun se on NULL
+DELETE FROM kk_application_payment_permit_checks
+WHERE application_key = :application_key
+  AND attachment_key IS DISTINCT FROM CAST(:attachment_key AS TEXT)
+RETURNING attachment_key                                AS "attachment-key",
+          found_in_migri                                AS "found-in-migri",
+          to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
+          payment_obligation_basis                      AS "payment-obligation-basis",
+          payment_obligation_other_reason               AS "payment-obligation-other-reason",
+          virkailija_oid                                AS "virkailija-oid",
+          organization_oid                              AS "organization-oid",
+          checked_time                                  AS "checked-time",
+          inherited_from_application_key                AS "inherited-from-application-key",
+          inherited_time                                AS "inherited-time";

@@ -10,6 +10,7 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
             [ataru.forms.form-store :as forms]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
             [ataru.util :refer [answers-by-key] :as util]
@@ -517,6 +518,63 @@
                                                    {:user-agent "kk-application-payment-review-inheritance"}
                                                    audit-logger))))))
 
+(declare add-application-event-in-tx save-application-hakukohde-review-in-tx)
+
+(defn- remove-permit-checks-of-previous-document-option
+  "Poistaa oleskelulupatarkistukset, jotka eivät koske hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitettä,
+   kun hakija tai virkailija vaihtaa vaihtoehtoa. Muuten edellisen vaihtoehdon tarkistus jäisi hakemukselle, vaikka
+   sen liitettä ei enää ole.
+   - Poisto kirjataan omana tapahtumanaan, eikä poistetun liitteen tarkistus periydy hakemukselle, vaikka hakija
+     vaihtaisi takaisin (ks. kk-application-payment-permit-check-inheritance).
+   - Jos poistettu tarkistus ratkaisi maksuvelvollisuuden (ks. payment-module/permit-check-decides-payment-obligation?),
+     hakemuksen hakukohteiden tarkastettu maksuvelvollisuus palautetaan tarkastamattomaksi, jotta virkailija tarkastaa
+     hakemuksen uudelleen. Liitteiden määräaikaa ei tarkisteta: määräajan jälkeen puuttuvat liitteet tekevät hakijasta
+     maksuvelvollisen maksuvelvollisuuden tarkastuksesta riippumatta, joten nollaus vain palauttaa hakemuksen
+     virkailijan tarkastettavaksi.
+   - Hakemukselle jo jääneitä edellisen vaihtoehdon tarkistuksia ei poisteta, jos vaihtoehto ei muutu."
+  [connection application-key hakukohteet old-answers new-answers virkailija-oid audit-session audit-logger]
+  (let [option-key (keyword payment-module/kk-application-payment-choice-key)
+        new-option (get-in new-answers [option-key :value])]
+    (when (not= (get-in old-answers [option-key :value]) new-option)
+      (let [hakukohteet        (set hakukohteet)
+            obligation-reviews (->> (queries/yesql-get-application-hakukohde-reviews {:application_key application-key}
+                                                                                    {:connection connection})
+                                    (map ->kebab-case-kw)
+                                    (filter #(and (= "kk-application-payment-obligation" (:requirement %))
+                                                  (contains? hakukohteet (:hakukohde %)))))
+            removed            (permit-check-store/delete-other-permit-checks!
+                                 connection
+                                 application-key
+                                 (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option
+                                      new-option))]
+        (doseq [check removed]
+        (log/info "Removing kk application payment permit check of attachment" (:attachment-key check)
+                  "from application" application-key "as the document option changed")
+        (add-application-event-in-tx connection
+                                     {:application-key application-key
+                                      :event-type      "kk-payment-permit-check-removed"
+                                      :review-key      (:attachment-key check)
+                                      :virkailija-oid  virkailija-oid}
+                                     nil)
+        (audit-log/log audit-logger
+                       {:old       check
+                        :id        {:applicationOid application-key
+                                    :attachmentKey  (:attachment-key check)}
+                        :session   audit-session
+                        :operation audit-log/operation-delete}))
+        (when (some #(payment-module/permit-check-decides-payment-obligation? % obligation-reviews) removed)
+          (doseq [{:keys [hakukohde]} (filter #(= "reviewed" (:state %)) obligation-reviews)]
+            (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
+                      application-key ", hakukohde" hakukohde "as the deciding residence permit check was removed")
+            (save-application-hakukohde-review-in-tx connection
+                                                     application-key
+                                                     hakukohde
+                                                     "kk-application-payment-obligation"
+                                                     "unreviewed"
+                                                     (time/now)
+                                                     audit-session
+                                                     audit-logger)))))))
+
 (defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger oppija-session]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
@@ -538,6 +596,7 @@
                                              (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
           old-answers                      (-> old-application :answers util/answers-by-key)
           new-answers                      (-> new-application :answers util/answers-by-key)
+          hakukohteet                      (:hakukohde new-application)
           ; kk application payment reviews of the hakukohteet added to the application are inherited
           inheritance                      {:added-hakukohde-oids    (remove (set (:hakukohde old-application))
                                                                              (:hakukohde new-application))
@@ -553,6 +612,11 @@
                                                 conn
                                                 oppija-session)]
       (inherit-kk-application-payment-obligation-reviews conn key inheritance audit-logger)
+      (remove-permit-checks-of-previous-document-option conn key hakukohteet old-answers new-answers virkailija-oid
+                                                        (if updated-by-applicant?
+                                                          session
+                                                          (assoc-in session [:identity :oid] virkailija-oid))
+                                                        audit-logger)
       (log/info (str "Updating application with key "
                      (:key old-application)
                      " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))

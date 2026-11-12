@@ -119,11 +119,15 @@
   [candidates]
   (last (sort-by (comp time/to-instant :checked-time :check) candidates)))
 
-; Tarkistus periytyy vain kerran. Se ei periydy lainkaan, jos virkailija on jo tarkistanut liitteen hakemuksella tai
-; tarkistus on nollattu uuden liitteen vuoksi. Nollaus palauttaa maksuvelvollisuuden tarkastamattomaksi, jotta
-; virkailija tarkastaa uuden liitteen, ja aiemman tarkistuksen periyttäminen uudelleen kumoaisi nollauksen.
+; Tarkistus periytyy vain kerran. Se ei periydy lainkaan, jos virkailija on jo tarkistanut liitteen hakemuksella,
+; tarkistus on nollattu uuden liitteen vuoksi tai se on poistettu dokumenttivaihtoehdon vaihtuessa. Nollaus ja poisto
+; palauttavat maksuvelvollisuuden tarkastamattomaksi, jotta virkailija tarkastaa hakemuksen uudelleen, ja aiemman
+; tarkistuksen periyttäminen uudelleen kumoaisi sen.
 (def ^:private handled-event-types
-  [inherited-event-type "kk-payment-permit-check-updated" "kk-payment-permit-check-reset"])
+  [inherited-event-type
+   "kk-payment-permit-check-updated"
+   "kk-payment-permit-check-reset"
+   "kk-payment-permit-check-removed"])
 
 (defn- handled-before?
   [application-key attachment-key]

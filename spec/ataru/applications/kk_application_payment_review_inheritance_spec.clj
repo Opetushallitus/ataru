@@ -12,7 +12,7 @@
             [ataru.test-utils :as test-utils]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [after-all describe it should= should-be-nil tags before]]
+            [speclj.core :refer [after-all describe it should should-not should= should-be-nil should-not-be-nil tags before]]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
@@ -34,18 +34,23 @@
           :key     "kk-payment-review-inheritance-form"
           :content [(payment-module/kk-application-payment-module)]}))
 
-(defn- init-application [hakukohteet]
-  (unit-test-db/init-db-fixture form)
-  (-> (application-store/add-application (assoc application-fixtures/application-with-hakemusmaksu-exemption
-                                                :form (:id form)
-                                                :hakukohde hakukohteet)
-                                         (map (fn [oid] {:oid oid}) hakukohteet)
-                                         form
-                                         {}
-                                         audit-logger
-                                         nil)
-      :id
-      application-store/get-application))
+(defn- init-application
+  ([hakukohteet]
+   (init-application hakukohteet (:passport-option-value payment-module/kk-application-payment-document-options)))
+  ([hakukohteet option]
+   (unit-test-db/init-db-fixture form)
+   (-> (application-store/add-application (assoc (application-fixtures/with-kk-application-payment-option
+                                                   application-fixtures/application-with-hakemusmaksu-exemption
+                                                   option)
+                                                 :form (:id form)
+                                                 :hakukohde hakukohteet)
+                                          (map (fn [oid] {:oid oid}) hakukohteet)
+                                          form
+                                          {}
+                                          audit-logger
+                                          nil)
+       :id
+       application-store/get-application)))
 
 (defn- latest-application [application-key]
   (application-store/get-application (:id (application-store/get-latest-application-by-key application-key))))
@@ -90,6 +95,35 @@
   (->> (payment/get-kk-application-payment-obligation-reviews application-key)
        (filter #(= hakukohde (:hakukohde %)))
        first))
+
+(defn- option [option-key]
+  (get payment-module/kk-application-payment-document-options option-key))
+
+(defn- change-option [new-option]
+  (partial mapv #(cond-> %
+                   (= payment-module/kk-application-payment-choice-key (:key %))
+                   (assoc :value new-option))))
+
+(def ^:private permit-check-virkailija-oid "1.2.246.562.24.00000001213")
+
+(defn- insert-permit-check!
+  ([application-key attachment-key]
+   (insert-permit-check! application-key attachment-key true))
+  ([application-key attachment-key found-in-migri]
+   (db/exec :db yesql-upsert-virkailija<! {:oid        permit-check-virkailija-oid
+                                           :first_name "Hemuli"
+                                           :last_name  "Hemuli?"})
+   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+     (jdbc/insert! conn :kk_application_payment_permit_checks
+                   {:application_key          application-key
+                    :attachment_key           attachment-key
+                    :found_in_migri           found-in-migri
+                    :payment_obligation_basis "not-obligated"
+                    :virkailija_oid           permit-check-virkailija-oid
+                    :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))))
+
+(defn- permit-check-attachment-keys [application-key]
+  (sort (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key))))
 
 (describe "kk application payment reviews of a hakukohde added to the application"
   (tags :unit)
@@ -233,4 +267,68 @@
                        :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))
       (edit-hakukohteet application [hakukohde-1 hakukohde-2])
       (should= ["continuous-residence-permit-front"]
-               (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key))))))
+               (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
+
+  (it "removes the residence permit checks of other attachments when the document option changes"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (insert-permit-check! application-key "continuous-residence-permit-front")
+      (insert-permit-check! application-key "longterm-permit-attachment")
+      (edit-hakukohteet application [hakukohde-1] (change-option (option :longterm-residence-option-value)) {})
+      (should= ["longterm-permit-attachment"] (permit-check-attachment-keys application-key))
+      (should (application-store/application-event-exists? application-key "continuous-residence-permit-front"
+                                                            ["kk-payment-permit-check-removed"]))
+      (should-not (application-store/application-event-exists? application-key "longterm-permit-attachment"
+                                                                ["kk-payment-permit-check-removed"]))))
+
+  (it "removes all residence permit checks when the new document option has no residence permit"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (insert-permit-check! application-key "continuous-residence-permit-front")
+      (edit-hakukohteet application [hakukohde-1] (change-option (option :no-document-option-value)) {})
+      (should= [] (permit-check-attachment-keys application-key))))
+
+  (it "removes the residence permit check when virkailija changes the document option"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (insert-permit-check! application-key "continuous-residence-permit-front")
+      (edit-hakukohteet (-> application
+                            (assoc :virkailija-secret (test-utils/create-fake-virkailija-rewrite-secret application-key))
+                            (dissoc :secret))
+                        [hakukohde-1]
+                        (change-option (option :longterm-residence-option-value))
+                        {})
+      (should= [] (permit-check-attachment-keys application-key))
+      (should-not-be-nil (->> (application-store/get-application-events application-key)
+                              (filter #(= "kk-payment-permit-check-removed" (:event-type %)))
+                              first
+                              :virkailija-oid))))
+
+  (it "returns the reviewed payment obligation to unreviewed when the removed residence permit check decided it"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (review-obligation application-key hakukohde-1 "reviewed" reviewed-time)
+      (insert-permit-check! application-key "continuous-residence-permit-front")
+      (edit-hakukohteet application [hakukohde-1 hakukohde-2] (change-option (option :longterm-residence-option-value)) {})
+      (should= "unreviewed" (:state (obligation-review application-key hakukohde-1)))
+      (should= "unreviewed" (:state (obligation-review application-key hakukohde-2)))))
+
+  (it "keeps the reviewed payment obligation when the removed residence permit check did not decide it"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (review-obligation application-key hakukohde-1 "reviewed" reviewed-time)
+      (insert-permit-check! application-key "continuous-residence-permit-front" false)
+      (edit-hakukohteet application [hakukohde-1] (change-option (option :longterm-residence-option-value)) {})
+      (should= [] (permit-check-attachment-keys application-key))
+      (should= "reviewed" (:state (obligation-review application-key hakukohde-1)))))
+
+  (it "keeps the residence permit check when the document option does not change"
+    (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
+          application-key (:key application)]
+      (review-obligation application-key hakukohde-1 "reviewed" reviewed-time)
+      (insert-permit-check! application-key "continuous-residence-permit-front")
+      (edit-hakukohteet application [hakukohde-1] (change-option (option :continuous-residence-option-value)) {})
+      (should= ["continuous-residence-permit-front"] (permit-check-attachment-keys application-key))
+      (should= "reviewed" (:state (obligation-review application-key hakukohde-1)))
+      (should-not (application-store/application-event-exists? application-key "continuous-residence-permit-front"
+                                                                ["kk-payment-permit-check-removed"])))))
