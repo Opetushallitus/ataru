@@ -611,7 +611,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await expect(nationality).not.toHaveClass(
       /application__form-select--locked/
     )
-    await nationality.selectOption({ label: 'Suomi' })
     await page.getByTestId('language-input').selectOption({ label: 'suomi' })
 
     await expect(getSubmitButton(page)).toBeEnabled()
