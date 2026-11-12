@@ -172,6 +172,13 @@ SELECT a.id,
                                             'hakukohde', hakukohde))
         FROM application_hakukohde_attachment_reviews
         WHERE application_key = a.key) AS "application-attachment-reviews",
+       -- Oleskelulupatarkistukset, joiden perusteella liitesuodatus ohittaa puuttuvat liitteet (ks.
+       -- application-states/remove-attachment-reviews-ignored-in-filtering)
+       (SELECT jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
+                                            'found-in-migri', found_in_migri,
+                                            'payment-obligation-basis', payment_obligation_basis))
+        FROM kk_application_payment_permit_checks
+        WHERE application_key = a.key) AS "kk-payment-permit-checks-for-filtering",
        (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications AS a
 LEFT JOIN applications AS la

@@ -485,6 +485,10 @@
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
    :eligibility-set-automatically                   [s/Str]
+   (s/optional-key :kk-payment-permit-checks-for-filtering)
+   (s/maybe [{:attachment-key           s/Str
+              :found-in-migri           (s/maybe s/Bool)
+              :payment-obligation-basis (s/maybe s/Str)}])
    (s/optional-key :tunnistautuminen)               (s/maybe s/Str)
    (s/optional-key :kk-payment-state)               (s/maybe s/Str)})
 
@@ -806,6 +810,7 @@
                          "field-deadline-unset"
                          "kk-payment-permit-check-updated"
                          "kk-payment-permit-check-reset"
+                         "kk-payment-permit-check-removed"
                          "kk-payment-permit-check-inherited"
                          "person-found-matching"
                          "person-dob-or-gender-conflict"

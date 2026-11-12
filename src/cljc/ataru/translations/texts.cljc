@@ -2363,6 +2363,9 @@
    :kk-payment-permit-check-reset                            {:fi "Oleskelulupaliitteen käsittelymerkinnät poistettu uuden liitteen vuoksi"
                                                               :sv "Anteckningarna om uppehållstillståndsbilagan har tagits bort på grund av en ny bilaga"
                                                               :en "Residence permit attachment notes removed due to a new attachment"}
+   :kk-payment-permit-check-removed                          {:fi "Oleskelulupaliitteen käsittelymerkinnät poistettu dokumenttivaihtoehdon vaihduttua"
+                                                              :sv "Anteckningarna om uppehållstillståndsbilagan har tagits bort då dokumentalternativet ändrades"
+                                                              :en "Residence permit attachment notes removed as the document option changed"}
    :kk-payment-permit-check-inherited                        {:fi "Oleskelulupaliitteen käsittelymerkinnät periytetty hakijan aiemmalta hakemukselta"
                                                               :sv "Anteckningarna om uppehållstillståndsbilagan har ärvts från sökandens tidigare ansökan"
                                                               :en "Residence permit attachment notes inherited from the applicant's earlier application"}

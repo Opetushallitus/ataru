@@ -1,5 +1,6 @@
 (ns ataru.applications.application-service
   (:require
+    [ataru.application.application-states :as application-states]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
@@ -455,6 +456,21 @@
         (assoc application :application-hakukohde-reviews relevant-hakukohde-reviews))
       application)))
 
+(defn- filter-by-attachment-review-states
+  "Kenttäkohtainen liitesuodatin rajaa hakemukset kyselyssä kaikkien liitemerkintöjen perusteella. Tässä karsitaan
+   hakemukset, jotka löytyivät vain suodatuksessa ohitettavien merkintöjen perusteella (ks.
+   application-states/remove-attachment-reviews-ignored-in-filtering). Kysely ei ohita niitä itse, jotta
+   oleskelulupatarkistuksen ehto on yhdessä paikassa (ks. payment-module/permit-check-decides-payment-obligation?)."
+  [query applications]
+  (if-let [[attachment-key states] (first (:attachment-review-states query))]
+    (filter #(application-states/attachment-review-states-filter-matches?
+               %
+               attachment-key
+               states
+               (or (seq (:ensisijainen-hakukohde query)) (seq (:hakukohde query))))
+            applications)
+    applications))
+
 (defn- get-application-list-by-query
     [person-service
      organization-service
@@ -467,7 +483,10 @@
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews)
                                        populate-applications-with-kk-payment-status)
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)
+          ; Sivutus lasketaan kaikista haetuista hakemuksista, joten kyselyn jälkeen karsitaan vain näytettävät
+          authorized-applications (->> applications
+                                       (filter-by-attachment-review-states query)
+                                       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session))
           filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                                     (application-filtering/filter-applications
                                       (populate-applications-with-person-data person-service authorized-applications)
