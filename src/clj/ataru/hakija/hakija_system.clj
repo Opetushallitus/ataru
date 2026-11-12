@@ -155,11 +155,9 @@
                             :job-runner
                             :form-by-id-cache])
 
-    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser"
-                                  "1.2.246.562.10.00000000001.ataru-hakija.frontend")
     :koski-service (component/using
                      (koski-service/map->IntegratedKoskiTutkintoService {})
-                     {:koski-cas-client :koski-client})
+                     [])
 
     :handler (component/using
                (handler/new-handler)
