@@ -810,6 +810,7 @@
                          "field-deadline-unset"
                          "kk-payment-permit-check-updated"
                          "kk-payment-permit-check-reset"
+                         "kk-payment-permit-check-removed"
                          "kk-payment-permit-check-inherited"
                          "person-found-matching"
                          "person-dob-or-gender-conflict"

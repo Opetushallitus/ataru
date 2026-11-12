@@ -9,6 +9,7 @@
 (declare yesql-upsert-kk-application-payment-permit-check)
 (declare yesql-insert-inherited-kk-application-payment-permit-check)
 (declare yesql-delete-kk-application-payment-permit-checks)
+(declare yesql-delete-other-kk-application-payment-permit-checks)
 (yesql/defqueries "sql/kk-application-payment-permit-check-queries.sql")
 
 (defn get-permit-checks
@@ -40,4 +41,13 @@
   (yesql-delete-kk-application-payment-permit-checks
     {:application_key application-key
      :modified_until  modified-until}
+    {:connection connection}))
+
+(defn delete-other-permit-checks!
+  "Poistaa hakemuksen tarkistukset muilta liitteiltä kuin attachment-key, tai kaikki tarkistukset, kun se on nil.
+   Palauttaa poistetut tarkistukset."
+  [connection application-key attachment-key]
+  (yesql-delete-other-kk-application-payment-permit-checks
+    {:application_key application-key
+     :attachment_key  attachment-key}
     {:connection connection}))
