@@ -602,12 +602,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
-    await selectOption(page, await getFieldByLabel(page, /Kansalaisuus/i), {
-      label: 'Suomi',
-    })
-    await selectOption(page, page.getByTestId('language-input'), {
-      label: 'suomi',
-    })
     // The Finnish citizenship is not locked in a haku without the kk
     // application payment
     const nationality = page
