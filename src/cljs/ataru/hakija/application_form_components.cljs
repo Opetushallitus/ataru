@@ -600,7 +600,9 @@
         [question-group-row
          field-descriptor
          idx
-         (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
+         (and (< 1 row-count)
+              (not (some deref cannot-edits?))
+              (not @(subscribe [:application/question-group-row-locked? field-descriptor idx])))]))]
    (when (not (some deref cannot-edits?))
      [:div.application__add-question-group-row
       [:a {:href     "#"

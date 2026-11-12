@@ -501,7 +501,10 @@
   (get-haku [_ haku-oid]
     (when-let [h (or (get @test-haut haku-oid)
                       ((keyword haku-oid) haut))]
-      (tarjonta-client/parse-haku h)))
+      ;; Vanhan tarjonnan haussa ei ole hakemusmaksua, joten testihaun
+      ;; maksullisuus asetetaan kuten kouta-haulle (ks. kouta-client)
+      (cond-> (tarjonta-client/parse-haku h)
+        (contains? h :maksullinenKkHaku) (assoc :maksullinen-kk-haku? (:maksullinenKkHaku h)))))
 
   (hakus-by-form-key [this form-key]
     (if-let [haku-key
