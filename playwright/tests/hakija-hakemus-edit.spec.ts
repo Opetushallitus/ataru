@@ -1,6 +1,9 @@
 import { Browser, expect, Page, Request, test } from '@playwright/test'
 import {
   fillField,
+  getDropdownOptionValue,
+  getFieldByLabel,
+  selectOption,
   unsafeFoldOption,
   waitForResponse,
 } from '../playwright-utils'
@@ -392,7 +395,9 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     await expect(page.getByTestId('postal-code-input')).toHaveValue(
       seededValues.postalCode
     )
-    await expect(page.getByTestId('home-town-input')).toHaveValue('061')
+    expect(
+      await getDropdownOptionValue(page.getByTestId('home-town-input'))
+    ).toBe('061') // Forssa
 
     const extraFieldsToCheck = legacyExtraFieldDefinitions.filter(
       (field) => field.value.length > 0 && field.fieldType !== 'singleChoice'
@@ -597,6 +602,12 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await fillField(page, page.getByTestId('postal-code-input'), '40100')
     await page.getByTestId('postal-code-input').press('Tab')
     await fillField(page, page.getByTestId('postal-office-input'), 'JYVÄSKYLÄ')
+    await selectOption(page, await getFieldByLabel(page, /Kansalaisuus/i), {
+      label: 'Suomi',
+    })
+    await selectOption(page, page.getByTestId('language-input'), {
+      label: 'suomi',
+    })
     // The Finnish citizenship is not locked in a haku without the kk
     // application payment
     const nationality = page
@@ -633,7 +644,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
 
     const homeTownInput = page.getByTestId('home-town-input')
     await expect(homeTownInput).toBeDisabled()
-    await expect(homeTownInput).toHaveValue('853')
+    expect(await getDropdownOptionValue(homeTownInput)).toBe('853') // Jyväskylä
 
     // The nationality is uneditable for the applicant in an edit
     const editedNationality = page

@@ -61,8 +61,10 @@ test.describe('Virkailijan hakemuksen käsittely lomakkeella, jossa on kysymysry
   })
 
   test('näyttää automaattisesti ainoan lomakkeeseen kuuluvan hakemuksen', async () => {
+    // Vastauksia verrataan osissa (slice), joten toHaveText ei sovellu tähän.
     const readonlyAnswers = await page
       .locator('.application__text-field-paragraph')
+      // eslint-disable-next-line playwright/prefer-web-first-assertions
       .allTextContents()
 
     // Keep person-info expectations strict in order and value.
