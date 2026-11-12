@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.application-authorization-subs
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [re-frame.core :as re-frame]
             [ataru.application.review-states :as review-states]
             [ataru.virkailija.application.application-selectors :refer [application-list-selected-by]]))
@@ -205,6 +206,29 @@
       [:application :selected-application-and-form :application :rights-by-hakukohde]])])
  (fn [[hakukohde-oids rights-by-hakukohde]]
    (rights-to-edit-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
+(defn review-note-removable?
+  "Vastaa backendin check-review-note-delete-rights-tarkistusta: hakukohteelliseen muistiinpanoon
+   vaaditaan muokkausoikeus hakukohteeseen, hakukohteettomaan oma muistiinpano riittää (hakemuksen
+   katseluoikeus on jo olemassa), toisen tekemään vaaditaan muokkausoikeus hakemukseen."
+  [note rights-by-hakukohde]
+  (let [hakukohde (:hakukohde note)]
+    (boolean
+     (if (string/blank? hakukohde)
+       (or (:own? note)
+           (some #(contains? % :edit-applications) (vals rights-by-hakukohde)))
+       (contains? (get rights-by-hakukohde hakukohde) :edit-applications)))))
+
+(re-frame/reg-sub
+ :application/review-note-removable?
+ (fn [[_ note-idx] _]
+   [(re-frame/subscribe
+     [:state-query [:application :review-notes note-idx]])
+    (re-frame/subscribe
+     [:state-query
+      [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[note rights-by-hakukohde] _]
+   (review-note-removable? note rights-by-hakukohde)))
 
 (re-frame/reg-sub
  :application/rights-to-view-review-states-for-hakukohde?
