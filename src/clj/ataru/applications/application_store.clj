@@ -606,13 +606,9 @@
 
 (defn- query->attachment-snip
   [connection query]
-  (let [[field-key states]    (first (:attachment-review-states query))
-        permit-attachment-key (get payment-module/kk-application-payment-residence-permit-attachment-key-by-attachment-key field-key)]
+  (let [[field-key states] (first (:attachment-review-states query))]
     (queries/attachment-snip
      (cond-> {:attachment-key field-key}
-
-             (some? permit-attachment-key)
-             (assoc :permit-attachment-key permit-attachment-key)
 
              (seq states)
              (assoc :states (to-sql-array states connection "varchar"))

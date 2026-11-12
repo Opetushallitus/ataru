@@ -300,10 +300,9 @@
 
 (defn kk-application-payment-obligation-reviewed?
   [application hakukohde]
-  (boolean (some #(and (= "kk-application-payment-obligation" (:requirement %))
-                       (or (nil? hakukohde) (= hakukohde (:hakukohde %)))
-                       (= "reviewed" (:state %)))
-                 (:application-hakukohde-reviews application))))
+  (payment-module/payment-obligation-reviewed?
+    (cond->> (:application-hakukohde-reviews application)
+             (some? hakukohde) (filter #(= hakukohde (:hakukohde %))))))
 
 (defn- keep-if-deadline-passed
   [attachment-deadline-service field-deadlines form haku now application review]
@@ -476,20 +475,19 @@
 
 (defn- permit-check-payment-obligation
   "Virkailijan hakijan dokumenttivaihtoehdon oleskelulupaliitteelle tekemän tarkistuksen mukainen maksuvelvollisuus:
-   :not-obligated, :obligated tai nil, kun tarkistus ei ohita liitemerkintöjä. Tarkistus ohittaa ne, kun lupa on
-   löytynyt Migrin palvelusta, maksuvelvollisuuden peruste on merkitty ja maksuvelvollisuus on tarkastettu."
+   :not-obligated, :obligated tai nil, kun tarkistus ei ohita liitemerkintöjä (ks.
+   payment-module/permit-check-decides-payment-obligation?)."
   [application]
-  (when (kk-application-payment-obligation-reviewed? application nil)
-    (when-let [attachment-key (->> (util/application-answers-by-key application)
-                                   exemption-form-field-name
-                                   :value
-                                   (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option))]
-      (let [{:keys [found-in-migri payment-obligation-basis]}
-            (permit-check-store/get-permit-check (:key application) attachment-key)]
-        (when (and (true? found-in-migri) (some? payment-obligation-basis))
-          (if (= "not-obligated" payment-obligation-basis)
-            :not-obligated
-            :obligated))))))
+  (when-let [attachment-key (and (kk-application-payment-obligation-reviewed? application nil) ; ei turhaa kyselyä
+                                 (->> (util/application-answers-by-key application)
+                                      exemption-form-field-name
+                                      :value
+                                      (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option)))]
+    (let [check (permit-check-store/get-permit-check (:key application) attachment-key)]
+      (when (payment-module/permit-check-decides-payment-obligation? check (:application-hakukohde-reviews application))
+        (if (= "not-obligated" (:payment-obligation-basis check))
+          :not-obligated
+          :obligated)))))
 
 (defn- with-obligation-reviews-reset
   [application hakukohteet]

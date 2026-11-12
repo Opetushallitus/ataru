@@ -56,14 +56,19 @@
 
 (defn remove-attachment-reviews-ignored-in-filtering
   "Poistaa liitemerkinnöistä ne, joita ei oteta huomioon, kun hakemuslistaa suodatetaan liitteiden tilan perusteella.
-   Dokumenttivaihtoehdon puuttuviksi merkittyjä liitteitä ei oteta huomioon, kun virkailija on tarkastanut hakijan
-   oleskeluluvan ja todennut sen löytyvän Migrin palvelusta, maksuvelvollisuuden peruste on merkitty ja
-   hakemusmaksuvelvollisuus on tarkastettu (:kk-payment-permit-found-in-migri-attachment-keys). Tarkistus ratkaisee
-   silloin hakemusmaksuvelvollisuuden liitteistä riippumatta, joten hakijalle ei tarvitse lähettää niistä
-   muistutusta. Muut puuttuvat liitteet löytyvät suodatuksessa edelleen."
+   Dokumenttivaihtoehdon puuttuviksi merkittyjä liitteitä ei oteta huomioon, kun virkailijan oleskelulupatarkistus
+   ratkaisee hakemusmaksuvelvollisuuden liitemerkinnöistä riippumatta (ks.
+   payment-module/permit-check-decides-payment-obligation?). Hakijalle ei silloin tarvitse lähettää niistä
+   muistutusta. Muut puuttuvat liitteet löytyvät suodatuksessa edelleen.
+   Hakemukselta luetaan tarkistukset (:kk-payment-permit-checks-for-filtering) ja hakukohteiden käsittelymerkinnät
+   (:application-hakukohde-reviews)."
   [application attachment-reviews]
-  (let [ignored-attachment-keys (->> (:kk-payment-permit-found-in-migri-attachment-keys application)
-                                     (mapcat payment-module/kk-application-payment-attachment-keys-by-residence-permit-attachment-key)
+  (let [ignored-attachment-keys (->> (:kk-payment-permit-checks-for-filtering application)
+                                     (filter #(payment-module/permit-check-decides-payment-obligation?
+                                                %
+                                                (:application-hakukohde-reviews application)))
+                                     (mapcat (comp payment-module/kk-application-payment-attachment-keys-by-residence-permit-attachment-key
+                                                   :attachment-key))
                                      set)]
     (remove #(and (= "attachment-missing" (:state %))
                   (contains? ignored-attachment-keys (:attachment-key %)))
@@ -77,3 +82,19 @@
   (attachment-reviews-with-no-requirements
     (update application :application-attachment-reviews
             (partial remove-attachment-reviews-ignored-in-filtering application))))
+
+(defn attachment-review-states-filter-matches?
+  "Löytyykö hakemus kenttäkohtaisella liitesuodattimella, kun suodatuksessa ohitettavia liitemerkintöjä ei oteta
+   huomioon (ks. remove-attachment-reviews-ignored-in-filtering). Hakemuslistan kysely rajaa hakemukset samoilla
+   ehdoilla ottaen huomioon kaikki merkinnät, joten tämä voi vain karsia kyselyn tuloksia.
+   - attachment-key: suodatettava liite
+   - states: hyväksytyt tilat, tai tyhjä, jolloin kaikki tilat hyväksytään
+   - hakukohteet: hakukohteet, joiden merkinnät otetaan huomioon, tai tyhjä, jolloin kaikki"
+  [application attachment-key states hakukohteet]
+  (let [states      (set states)
+        hakukohteet (set hakukohteet)]
+    (boolean
+      (some #(and (= attachment-key (:attachment-key %))
+                  (or (empty? states) (contains? states (:state %)))
+                  (or (empty? hakukohteet) (contains? hakukohteet (:hakukohde %))))
+            (remove-attachment-reviews-ignored-in-filtering application (:application-attachment-reviews application))))))
