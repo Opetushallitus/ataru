@@ -615,7 +615,6 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     await selectOption(page, page.getByTestId('language-input'), {
       label: 'suomi',
     })
-    await page.getByTestId('language-input').selectOption({ label: 'suomi' })
 
     await expect(getSubmitButton(page)).toBeEnabled()
 
