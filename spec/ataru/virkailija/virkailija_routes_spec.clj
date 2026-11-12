@@ -736,11 +736,13 @@
       (let [application-key (init-continuous-residence-application!
                               {:attachment-states missing-continuous-residence-attachments})
             resp            (post-applications-list kk-payment-applications-query)]
-        (should= ["continuous-residence-permit-front"]
+        (should= [{:attachment-key           "continuous-residence-permit-front"
+                   :found-in-migri           true
+                   :payment-obligation-basis "not-obligated"}]
                  (->> (get-in resp [:body :applications])
                       (filter #(= application-key (:key %)))
                       first
-                      :kk-payment-permit-found-in-migri-attachment-keys))
+                      :kk-payment-permit-checks-for-filtering))
         (should-not-contain application-key (listed-application-keys missing-attachments-query))))
 
   (it "Should not find by a missing attachment of the document option an application whose residence permit check found in Migri decides the payment obligation"
@@ -770,13 +772,7 @@
                      {:payment-obligation-basis nil}
                      {:obligation-state "unreviewed"}]]
         (let [application-key (init-continuous-residence-application!
-                                (assoc check :attachment-states missing-continuous-residence-attachments))
-              resp            (post-applications-list kk-payment-applications-query)]
-          (should= []
-                   (->> (get-in resp [:body :applications])
-                        (filter #(= application-key (:key %)))
-                        first
-                        :kk-payment-permit-found-in-migri-attachment-keys))
+                                (assoc check :attachment-states missing-continuous-residence-attachments))]
           (should-contain application-key (listed-application-keys missing-attachments-query))
           (should-contain application-key
                           (listed-application-keys (missing-attachment-field-query "continuous-residence-permit-front")))))))
