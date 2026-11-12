@@ -175,6 +175,7 @@
         animated?           (reaction (:animated? @note))
         remove-disabled?    (reaction (or (-> @note :state some?)
                                           (-> @note :id not)))
+        removable?          (subscribe [:application/review-note-removable? note-idx])
         hakukohde-name      (subscribe [:application/hakukohde-name (:hakukohde @note)])
         removing?           (r/atom false)
         remove-note         (fn []
@@ -196,15 +197,16 @@
            [:i.zmdi.zmdi-chevron-up]
            [:i.zmdi.zmdi-chevron-down])
          (str " " @created-time " " @name)]
-        [:div.application-handling__review-note-remove-link
-         {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
-          :on-click #(when-not @remove-disabled?
-                       (if @removing?
-                         (remove-note)
-                         (start-removing-note)))}
-         (if @removing?
-           @(subscribe [:editor/virkailija-translation :confirm-delete])
-           [:i.zmdi.zmdi-close])]]
+        (when @removable?
+          [:div.application-handling__review-note-remove-link
+           {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
+            :on-click #(when-not @remove-disabled?
+                         (if @removing?
+                           (remove-note)
+                           (start-removing-note)))}
+           (if @removing?
+             @(subscribe [:editor/virkailija-translation :confirm-delete])
+             [:i.zmdi.zmdi-close])])]
        (when-not @details-folded?
          [:div.application-handling__review-note-details-row
           (when-let [name @hakukohde-name]

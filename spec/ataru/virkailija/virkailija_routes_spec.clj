@@ -877,6 +877,37 @@
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
 
+          ;; Käyttöliittymä piilottaa poistolinkin :own?-tiedon perusteella. Tekijän oidia ei
+          ;; palauteta selaimelle.
+          ;; Hakemus ilman hakua, jotta hakemuksen haku ei riipu mock-tarjonnan hakukohdetiedoista.
+          (it "Should return own? flag without author oid for review notes"
+              (let [application-key (->> (db/init-db-fixture
+                                           fixtures/minimal-form
+                                           [(-> application-fixtures/bug2139-application
+                                                (assoc :form (:id fixtures/minimal-form))
+                                                (dissoc :haku :hakukohde))])
+                                         first
+                                         get-application-by-id
+                                         :key)
+                    own-note-resp   (post-review-note {:application-key application-key
+                                                       :notes           "Oma muistiinpano"})
+                    other-note-resp (post-review-note {:application-key application-key
+                                                       :notes           "Toisen muistiinpano"}
+                                                      "VIEW-ONLY-USER")
+                    own-note-id     (get-in own-note-resp [:body :id])
+                    other-note-id   (get-in other-note-resp [:body :id])
+                    resp            (get-application-details application-key)
+                    notes-by-id     (->> (get-in resp [:body :review-notes])
+                                         (map (juxt :id identity))
+                                         (into {}))]
+                (should= 200 (:status own-note-resp))
+                (should= 200 (:status other-note-resp))
+                (should= 200 (:status resp))
+                (should= true (get-in notes-by-id [own-note-id :own?]))
+                (should= false (get-in notes-by-id [other-note-id :own?]))
+                (should-not-contain :virkailija-oid (get notes-by-id own-note-id))
+                (should-not-contain :virkailija-oid (get notes-by-id other-note-id))))
+
           ;; Massapassivointi ja -palautus luovat muistiinpanon store-kerroksessa suoraan
           ;; (application_store.clj inactivate-application / reactivate-application), eivät
           ;; muistiinpanoreitin kautta. Varmistetaan että myös nämä auditlokitetaan.
