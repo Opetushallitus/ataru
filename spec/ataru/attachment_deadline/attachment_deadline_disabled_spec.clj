@@ -40,7 +40,7 @@
 
           (for [hakutapa ["hakutapa_03" "hakutapa_03#1" "hakutapa_04" "hakutapa_04#1"]]
             (it (str "allows attachment editing after the default deadline: " hakutapa)
-                (let [service (deadline-service {})
+                (let [service (deadline-service {:liitteidenMuokkausIlmanTakarajaa true})
                       haku {:oid "test-haku" :hakutapa-uri hakutapa}]
                   (should= true (deadline/attachment-deadline-disabled? service haku))
                   (should= nil (attachment-deadline service haku))
@@ -59,7 +59,7 @@
 
           (for [hakutapa ["hakutapa_01#1" "hakutapa_02#1" "hakutapa_05#1" "hakutapa_06#1"]]
             (it (str "preserves the default deadline for other application types: " hakutapa)
-                (let [service (deadline-service {})
+                (let [service (deadline-service {:liitteidenMuokkausIlmanTakarajaa true})
                       haku {:oid "test-haku" :hakutapa-uri hakutapa}]
                   (should= false (deadline/attachment-deadline-disabled? service haku))
                   (should= (c/to-long (t/plus end (t/days 14)))
@@ -84,8 +84,29 @@
                   (should-not= nil (attachment-deadline service haku))
                   (should= true (cannot-edit? service haku attachment)))))
 
+          (for [hakutapa ["hakutapa_03#1" "hakutapa_04#1"]
+                value [true "true"]]
+            (it (str "uses the explicit flag even with a legacy deadline: " hakutapa " " value)
+                (let [service (deadline-service {:liitteidenMuokkausIlmanTakarajaa value
+                                                :PH_LMT {:value 7}})
+                      haku {:oid "test-haku" :hakutapa-uri hakutapa}]
+                  (should= true (deadline/attachment-deadline-disabled? service haku))
+                  (should= nil (attachment-deadline service haku)))))
+
+          (for [hakutapa ["hakutapa_03" "hakutapa_04"]
+                parametrit [nil
+                           {}
+                           {:liitteidenMuokkausIlmanTakarajaa false}
+                           {:liitteidenMuokkausIlmanTakarajaa "false"}]]
+            (it (str "preserves the default without an enabled flag: " hakutapa " " parametrit)
+                (let [service (deadline-service parametrit)
+                      haku {:oid "test-haku" :hakutapa-uri hakutapa}]
+                  (should= false (deadline/attachment-deadline-disabled? service haku))
+                  (should= (c/to-long (t/plus end (t/days 14)))
+                           (c/to-long (attachment-deadline service haku))))))
+
           (it "does not consider a disabled deadline passed in application payment processing"
-              (let [service (deadline-service {})
+              (let [service (deadline-service {:liitteidenMuokkausIlmanTakarajaa true})
                     haku {:oid "test-haku"
                           :hakutapa-uri "hakutapa_04"
                           :hakuajat [{:end (c/to-long end)}]}]

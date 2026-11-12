@@ -1,5 +1,6 @@
 (ns ataru.attachment-deadline.attachment-deadline-service
   (:require
+   [ataru.constants :as constants]
    [ataru.time :as t]
    [ataru.time.coerce :as c]
    [clojure.string :as s]
@@ -51,17 +52,11 @@
       ->boolean
       true?))
 
-(defn- attachment-deadline-disabled?-for-haku?
+(defn- attachment-deadline-disabled-for-haku?
   [ohjausparametrit haku]
-  (and (map? ohjausparametrit)
-       (contains? #{"hakutapa_03" "hakutapa_04"}
+  (and (contains? #{constants/hakutapa-jatkuva-haku constants/hakutapa-joustava-haku}
                   (first (s/split (or (:hakutapa-uri haku) "") #"#")))
-       (not-any? #(some? (get ohjausparametrit %))
-                 [:PH_LMT
-                  :liitteidenMuokkauksenHakukohtainenTakarajaKellonaika
-                  :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa
-                  :liitteidenMuokkauksenHakemuskohtainenTakarajaPaivaa
-                  :liitteidenMuokkauksenHakemuskohtainenTakarajaKellonaika])))
+       (-> ohjausparametrit :liitteidenMuokkausIlmanTakarajaa ->boolean true?)))
 
 (defn- get-attachment-deadline-days
   [ohjausparametrit]
@@ -137,7 +132,7 @@
 
 (defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
   (let [parametrit (get-ohjausparametrit ohjausparametrit-service haku)]
-    (when-not (attachment-deadline-disabled?-for-haku? parametrit haku)
+    (when-not (attachment-deadline-disabled-for-haku? parametrit haku)
       (attachment-deadline parametrit application-submitted hakuaika))))
 
 (defn- per-application-attachment-deadline
@@ -159,7 +154,7 @@
   (get-field-deadlines [_ application-key]
     (get-field-deadlines application-key))
   (attachment-deadline-disabled? [_ haku]
-    (attachment-deadline-disabled?-for-haku?
+    (attachment-deadline-disabled-for-haku?
      (get-ohjausparametrit ohjausparametrit-service haku) haku))
   (attachment-deadline-for-hakuaika [_ application-submitted haku hakuaika]
     (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika))
