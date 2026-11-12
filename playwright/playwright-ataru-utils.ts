@@ -835,12 +835,20 @@ export const fillAndSubmitQuestionGroupApplication = async (
   )
 
   // Single choice
+  const row0SingleChoice = row0.getByRole('radio', {
+    name: /Painikkeet, yksi valittavissa: A/i,
+  })
+  const row1SingleChoice = row1.getByRole('radio', {
+    name: /Painikkeet, yksi valittavissa: B/i,
+  })
   await row0
-    .getByRole('radio', { name: /Painikkeet, yksi valittavissa: A/i })
+    .getByText(/Painikkeet, yksi valittavissa: A/i, { exact: true })
     .click()
+  await expect(row0SingleChoice).toBeChecked()
   await row1
-    .getByRole('radio', { name: /Painikkeet, yksi valittavissa: B/i })
+    .getByText(/Painikkeet, yksi valittavissa: B/i, { exact: true })
     .click()
+  await expect(row1SingleChoice).toBeChecked()
 
   // Multiple choice
   await row0

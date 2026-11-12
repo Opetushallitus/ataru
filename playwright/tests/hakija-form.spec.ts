@@ -536,6 +536,28 @@ test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
   await expect(page.locator(`#${infoTextId}`)).toContainText(
     'Sinun tulee osoittaa kielitaitosi.'
   )
+  await expect(radioGroup).toHaveAccessibleDescription(
+    /Sinun tulee osoittaa kielitaitosi\./
+  )
+
+  const radios = radioGroup.getByRole('radio')
+  await expect(radios).toHaveCount(2)
+  await expect(radios.nth(0)).toHaveAccessibleName('Ensimmäinen vaihtoehto')
+  await expect(radios.nth(1)).toHaveAccessibleName('Toinen vaihtoehto')
+
+  const radioNames = await radios.evaluateAll((elements) =>
+    elements.map((element) => ({
+      tagName: element.tagName,
+      type: element.getAttribute('type'),
+      name: element.getAttribute('name'),
+    }))
+  )
+  expect(radioNames).toEqual([
+    { tagName: 'INPUT', type: 'radio', name: 'tl-section-2-q-default' },
+    { tagName: 'INPUT', type: 'radio', name: 'tl-section-2-q-default' },
+  ])
+  await expect(radioGroup.locator('label[role="radio"]')).toHaveCount(0)
+  await expect(radioGroup.locator('label[tabindex]')).toHaveCount(0)
 })
 
 test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
