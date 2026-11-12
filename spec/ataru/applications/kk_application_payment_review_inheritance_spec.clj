@@ -8,6 +8,7 @@
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
             [ataru.log.audit-log :as audit-log]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.test-utils :as test-utils]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
@@ -18,6 +19,7 @@
 (declare yesql-upsert-virkailija<!)
 
 (def audit-logger (audit-log/new-dummy-audit-logger))
+(def fake-organization-service (organization-service/->FakeOrganizationService))
 
 (def hakukohde-1 "payment-info-test-kk-hakukohde")
 (def hakukohde-2 "payment-info-test-kk-hakukohde-2")
@@ -231,4 +233,4 @@
                        :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))}))
       (edit-hakukohteet application [hakukohde-1 hakukohde-2])
       (should= ["continuous-residence-permit-front"]
-               (map :attachment-key (permit-check/get-permit-checks application-key))))))
+               (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key))))))

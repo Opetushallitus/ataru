@@ -677,7 +677,7 @@
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
             information-requests  (future (information-request-store/get-information-requests application-key))
-            permit-checks         (future (permit-check/get-permit-checks application-key))
+            permit-checks         (future (permit-check/get-permit-checks organization-service application-key))
             master-oid            (future
                                     (some->> application
                                              :person-oid
