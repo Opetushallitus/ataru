@@ -1134,6 +1134,7 @@
                                                   (vec (cons (merge note
                                                                     {:created-time (t/now)
                                                                      :id           tmp-id
+                                                                     :own?         true
                                                                      :animated?    true})
                                                              notes))))
                                      (assoc-in [:application :review-comment] nil))]

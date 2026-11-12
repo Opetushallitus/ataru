@@ -713,8 +713,13 @@
             events                (future (get-application-events organization-service application-key))
             kk-payment-state      (future (kk-application-payment/get-kk-payment-state application false))
             review                (future (application-store/get-application-review application-key))
-            review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
-                                               (application-store/get-application-review-notes application-key)))
+            ;; tekijän oidia ei palauteta selaimelle, vain tieto siitä onko muistiinpano oma
+            ;; (oman hakukohteettoman muistiinpanon saa poistaa katseluoikeudella)
+            review-notes          (future (->> (application-store/get-application-review-notes application-key)
+                                               (map (partial enrich-virkailija-organizations organization-service))
+                                               (map #(-> %
+                                                         (assoc :own? (own-review-note? % session))
+                                                         (dissoc :virkailija-oid)))))
             information-requests  (future (information-request-store/get-information-requests application-key))
             permit-checks         (future (permit-check/get-permit-checks organization-service application-key))
             master-oid            (future

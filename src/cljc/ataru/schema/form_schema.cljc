@@ -888,6 +888,7 @@
                                                 (s/optional-key :active?)         s/Bool}]
    (s/optional-key :hakukohde)                (s/maybe s/Str)
    (s/optional-key :state-name)               HakukohdeReviewTypeNames
+   (s/optional-key :own?)                     s/Bool
    (s/optional-key :created-time)             java.time.ZonedDateTime})
 
 (s/defschema Review
