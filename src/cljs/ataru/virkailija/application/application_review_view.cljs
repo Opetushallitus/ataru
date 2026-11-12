@@ -512,7 +512,7 @@
            (gstring/format "%s: %s "
                            @(subscribe [:editor/virkailija-translation :attachment])
                            (application-states/get-review-state-label-by-name
-                             review-states/attachment-hakukohde-review-types
+                             (review-states/attachment-review-types-for (:review-key event) false)
                              (:new-review-state event)
                              lang))
            (virkailija-initials-span event)]
@@ -969,9 +969,7 @@
             application-key      @(subscribe [:state-query [:application :selected-key]])
             can-edit?            (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
             virkailija-lang      (subscribe [:editor/virkailija-lang])
-            review-types         (if multiple-values?
-                                   review-states/attachment-hakukohde-review-types-with-multiple-values
-                                   review-states/attachment-hakukohde-review-types)
+            review-types         (review-states/attachment-review-types-for attachment-key multiple-values?)
             permit-attachment?   (kk-payment-module/residence-permit-attachment? attachment-key)
             state-selector       (if @list-opened
                                    [:div.application-handling__review-state-list

@@ -1,5 +1,6 @@
 (ns ataru.application.review-states
-  (:require [ataru.translations.texts :refer [state-translations
+  (:require [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.translations.texts :refer [state-translations
                                               virkailija-texts]]
             [ataru.util :as util]))
 
@@ -240,6 +241,28 @@
   (cons
    ["multiple-values" (:multiple-values state-translations)]
    attachment-hakukohde-review-types))
+
+; Hakemusmaksusta vapauttavan liitteen tarkastettu tila nimetään vapauttavaksi, jotta sitä ei sekoiteta hakemusmaksun
+; käsittelytilaan Tarkastettu
+(defn- with-exempting-checked-label
+  [review-types]
+  (map (fn [[state :as review-type]]
+         (if (= "checked" state)
+           [state (:checked-exempting-attachment state-translations)]
+           review-type))
+       review-types))
+
+(defn attachment-review-types-for
+  "Liitteen merkintöjen tilat nimineen. Hakemusmaksusta vapauttavalla liitteellä tarkastettu tila on Tarkastettu,
+   vapauttava liite, muilla liitteillä Tarkastettu. Tilan tunniste on molemmissa sama.
+   - attachment-key: liitteen avain merkkijonona tai keywordina
+   - multiple-values?: lisätäänkö tila Monta arvoa, kun liitteellä on hakukohteittain eri tila"
+  [attachment-key multiple-values?]
+  (cond-> (if multiple-values?
+            attachment-hakukohde-review-types-with-multiple-values
+            attachment-hakukohde-review-types)
+          (payment-module/exempt-attachment? attachment-key)
+          with-exempting-checked-label))
 
 (def no-attachment-requirements "no-requirements")
 

@@ -56,6 +56,11 @@
 (def kk-application-payment-residence-permit-attachment-keys
   (set (vals kk-application-payment-residence-permit-attachment-key-by-option)))
 
+(defn exempt-attachment?
+  "Vaikuttaako liitteen merkintä hakemusmaksuvapautukseen. Liitteen avain merkkijonona tai keywordina, tai nil."
+  [attachment-key]
+  (contains? kk-application-payment-exempt-attachment-keys (some-> attachment-key name)))
+
 (defn residence-permit-attachment?
   [attachment-key]
   (contains? kk-application-payment-residence-permit-attachment-keys (name attachment-key)))
