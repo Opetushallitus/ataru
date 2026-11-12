@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">Your dependent's application has been received</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Application number: {{application-oid}}
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Study options:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
+        <tr>
+          <td style="padding-left: 20px; padding-top: 20px;">
+            Required attachment(s) for the applicant to submit:
+          </td>
+        </tr>
+      {% endif %}
+      {% if any attachments-without-answer|not-empty %}
+        <tr>
+          <td>
+            <ul>
+              {% for attachment in attachments-without-answer %}
+                <li>
+                  {{attachment.label}}
+                  {% if attachment.deadline|not-empty %}
+                  <br>The attachment must be submitted no later than {{attachment.deadline}}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+        </tr>
+      {% endif %}
+      {% if any kouta-attachments-by-type|not-empty %}
+      <tr>
+        <td>
+          <ul>
+            {% for type,attachments in kouta-attachments-by-type|not-empty %}
+            <li>
+              {{type}}
+              <br><br>
+              {{attachments.0.info-text}}
+              <ul>
+                {% for attachment in attachments %}
+                  <li>
+                    {{attachment.label|safe}}
+                    {% if attachment.deadline|not-empty %}
+                    The attachment must be submitted no later than {{attachment.deadline}}
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+          </ul>
+          <ul></ul>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          Guardians can view the study options, and later the admission results, in the Valpas service.
+        </td>
+      </tr>
+      {% if applicant-authenticated? %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          The applicant can view and edit their application in the My Studyinfo service during the application period. 
+          In My Studyinfo, they can also view the admission results and accept a study place.
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          The applicant can view and edit their application using the link they have received. If they have Finnish online banking credentials 
+          (e-identification must be enabled), a Finnish electronic ID-card or mobile certificate, they may alternatively sign in to 
+          <a style="color: #0093C4;" href="https://www.opintopolku.fi/konfo/en" target="_blank">Opintopolku.fi</a>
+          and make changes to their application in the My Studyinfo service during the application period. 
+          In My Studyinfo they can also view admission results and accept an offered study place.
+        </td>
+      </tr>
+      {% endif %}
+      {% if signature|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{signature|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>
