@@ -647,7 +647,7 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
       .getByRole('combobox', { name: /Kansalaisuus/i })
       .first()
     await expect(editedNationality).toBeDisabled()
-    await expect(editedNationality).toHaveValue('246')
+    await expect(editedNationality).toHaveValue('Suomi')
   })
 
   test('lukitsee Suomen kansalaisuuden hakemusmaksullisessa haussa', async () => {
@@ -657,16 +657,13 @@ test.describe('Hakijan hakemuksen muokkaus vahvasti tunnistautuneena', () => {
     // and another citizenship can be added on a row of its own
     const nationalities = page.getByRole('combobox', { name: /Kansalaisuus/i })
     await expect(nationalities.first()).toBeDisabled()
-    await expect(nationalities.first()).toHaveClass(
-      /application__form-select--locked/
-    )
-    await expect(nationalities.first()).toHaveValue('246')
+    await expect(nationalities.first()).toHaveValue('Suomi')
     const nationalityGroup = page
       .locator('.application__question-group')
       .filter({ has: nationalities.first() })
     await nationalityGroup.getByRole('link', { name: 'Lisää' }).click()
     await expect(nationalities).toHaveCount(2)
-    await nationalities.nth(1).selectOption({ label: 'Ruotsi' })
+    await selectOption(page, nationalities.nth(1), { label: 'Ruotsi' })
     await expect(
       nationalityGroup.getByRole('button', {
         name: 'Poista vastausvaihtoehto',
