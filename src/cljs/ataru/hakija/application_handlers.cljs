@@ -31,7 +31,7 @@
             [cljs-time.coerce :refer [to-long]]
             [ataru.hakija.demo :as demo]
             [ataru.hakija.validation-error :as validation-error]
-            [ataru.koodisto.koodisto-codes :refer [finland-country-code]]))
+            [ataru.koodisto.koodisto-codes :refer [finland-country-code finland-equivalent-country-codes]]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -778,6 +778,29 @@
         (set-repeatable-application-field-top-level-valid :nationality true))
     db))
 
+(defn- filter-out-finnish-citizenship
+  "In a haku with the kk application payment, Finnish citizenship is removed from possible options for strongly
+   authenticated non-citizens. For te eIDAS-authenticated, DVV doesn't know the citizenship, so we show all options."
+  [db]
+  (if (and (true? (get-in db [:form :tarjonta :maksullinen-kk-haku?]))
+           (get-in db [:oppija-session :logged-in])
+           (false? (get-in db [:oppija-session :finnish-citizen]))
+           (contains? (get-in db [:application :answers]) :nationality))
+    (let [content (-> db :form :content)
+          has-kk-payment-id? #(= "onr-kk-application-payment" (:id %))
+          [section-index section] (first (keep-indexed #(when (has-kk-payment-id? %2) [%1 %2]) content))
+          has-nationality-id? #(= (:id %) "nationality")
+          has-nationality-child? #(some has-nationality-id? (:children %))
+          [person-info-index person-info] (first (keep-indexed #(when (has-nationality-child? %2) [%1 %2]) (:children section)))
+          nationality-index (first (keep-indexed #(when (has-nationality-id? %2) %1) (:children person-info)))]
+      (-> db
+          (update-in [:form :content] vec)
+          (update-in [:form :content section-index :children] vec)
+          (update-in [:form :content section-index :children person-info-index :children] vec)
+          (update-in [:form :content section-index :children person-info-index :children nationality-index :options]
+                     (partial filter #(not (finland-equivalent-country-codes (:value %)))))))
+    db))
+
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :fields])]
@@ -827,6 +850,7 @@
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
                (set-tutkinto-fetch-status-as-needed tutkinto-fetch-needed)
                (prefill-and-lock-finnish-citizenship)
+               (filter-out-finnish-citizenship)
                (set-field-visibilities)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
