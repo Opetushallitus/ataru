@@ -877,6 +877,31 @@
                 (should= 1 (count (audit-entries-for audit-entries "epäonnistunut")))
                 (should= 1 (count (application-store/get-application-review-notes application-key)))))
 
+          ;; Rekisterinpitäjällä (ilman valittua organisaatiota) on kaikki oikeudet kaikkiin
+          ;; hakukohteisiin ja hakemuksiin, joten omistajuudella ei ole merkitystä.
+          (it "Should allow a superuser to delete another user's note without hakukohde"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :notes           "Toisen muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "SUPERUSER")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto" :applicationOid application-key)))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
+          (it "Should allow a superuser to delete another user's note with hakukohde"
+              (let [application-key (first (init-application-keys 1))
+                    note-id         (get-in (post-review-note {:application-key application-key
+                                                               :hakukohde       authorized-hakukohde
+                                                               :notes           "Toisen hakukohteellinen muistiinpano"})
+                                            [:body :id])
+                    _               (reset! audit-entries [])
+                    resp            (delete-review-note note-id "SUPERUSER")]
+                (should= 200 (:status resp))
+                (should= 1 (count (audit-entries-for audit-entries "poisto" :applicationOid application-key)))
+                (should= 0 (count (application-store/get-application-review-notes application-key)))))
+
           ;; Käyttöliittymä piilottaa poistolinkin :own?-tiedon perusteella. Tekijän oidia ei
           ;; palauteta selaimelle.
           ;; Hakemus ilman hakua, jotta hakemuksen haku ei riipu mock-tarjonnan hakukohdetiedoista.

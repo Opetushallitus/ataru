@@ -14,9 +14,9 @@ import {
   taytaHenkilotietomoduuli,
 } from '../playwright-ataru-utils'
 
-// Hakukohteettoman muistiinpanon poistolinkki: muokkausoikeudella linkki näkyy
-// kaikissa muistiinpanoissa, pelkällä katseluoikeudella (VIEW-ONLY-USER) vain
-// käyttäjän omissa. Sama sääntö kuin backendin check-review-note-delete-rightsissa.
+// Hakukohteettoman muistiinpanon poistolinkki: muokkausoikeudella ja
+// rekisterinpitäjällä linkki näkyy kaikissa muistiinpanoissa, pelkällä
+// katseluoikeudella (VIEW-ONLY-USER) vain käyttäjän omissa. Sama sääntö kuin backendin check-review-note-delete-rightsissa.
 
 test.describe.configure({ mode: 'serial' })
 
@@ -136,6 +136,25 @@ test('muokkausoikeudella poistolinkki näkyy kaikissa muistiinpanoissa', async (
     removeLink(kasittelijaPage, KASITTELIJAN_MUISTIINPANO)
   ).toBeVisible()
   await expect(removeLink(kasittelijaPage, LUKIJAN_MUISTIINPANO)).toBeVisible()
+})
+
+test('rekisterinpitäjällä poistolinkki näkyy kaikissa muistiinpanoissa', async ({
+  browser,
+}) => {
+  const rekisterinpitajaPage = await browser.newPage()
+  try {
+    await kirjauduVirkailijanNakymaan(rekisterinpitajaPage, 'SUPERUSER')
+    await avaaHakemus(rekisterinpitajaPage)
+
+    await expect(
+      removeLink(rekisterinpitajaPage, KASITTELIJAN_MUISTIINPANO)
+    ).toBeVisible()
+    await expect(
+      removeLink(rekisterinpitajaPage, LUKIJAN_MUISTIINPANO)
+    ).toBeVisible()
+  } finally {
+    await rekisterinpitajaPage.close()
+  }
 })
 
 test('katseluoikeudella oman muistiinpanon voi poistaa', async () => {
