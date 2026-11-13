@@ -1,5 +1,6 @@
 (ns ataru.util.http-util
-  (:require [clj-http.client :as http-client]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http-client]
             [clojure.string]
             [taoensso.timbre :as log]))
 
@@ -40,6 +41,13 @@
 (defn do-post
   [url opts]
   (do-request (assoc opts :url url :method :post)))
+
+(defn do-post-json-with-basic-auth
+  [url username password jsonBody opts]
+  (do-post url (assoc opts :basic-auth [username password]
+                           :content-type "application/json"
+                           :accept "application/json"
+                           :body (json/generate-string jsonBody))))
 
 (defn do-delete
   [url]
