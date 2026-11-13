@@ -523,7 +523,7 @@ test('lomake latautuu täydellisenä', async () => {
   ).toHaveText('0 / 2000')
 })
 
-test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
+test('radioryhmän ohjeteksti ja näppäimistökäyttö ovat saavutettavia', async () => {
   const radioGroup = page.getByRole('radiogroup', {
     name: 'Lyhyen listan kysymys',
   })
@@ -536,6 +536,46 @@ test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
   await expect(page.locator(`#${infoTextId}`)).toContainText(
     'Sinun tulee osoittaa kielitaitosi.'
   )
+  await expect(radioGroup).toHaveAccessibleDescription(
+    /Sinun tulee osoittaa kielitaitosi\./
+  )
+
+  const radios = radioGroup.getByRole('radio')
+  await expect(radios).toHaveCount(2)
+  const firstRadio = radios.nth(0)
+  const secondRadio = radios.nth(1)
+  await expect(firstRadio).toHaveAccessibleName('Ensimmäinen vaihtoehto')
+  await expect(secondRadio).toHaveAccessibleName('Toinen vaihtoehto')
+
+  await radioGroup.getByText('Toinen vaihtoehto', { exact: true }).click()
+  await expect(secondRadio).toBeChecked()
+  await expect(firstRadio).not.toBeChecked()
+
+  await radioGroup.getByText('Ensimmäinen vaihtoehto', { exact: true }).click()
+  await expect(firstRadio).toBeChecked()
+  await expect(secondRadio).not.toBeChecked()
+
+  await radioGroup.getByText('Toinen vaihtoehto', { exact: true }).click()
+  await expect(secondRadio).toBeChecked()
+  await expect(firstRadio).not.toBeChecked()
+
+  const previousLink = page.getByRole('link', { name: 'alkuun', exact: true })
+  const nextField = page.getByRole('textbox', { name: 'Tekstikenttä 1' })
+
+  await previousLink.focus()
+  await previousLink.press('Tab')
+  await expect(secondRadio).toBeFocused()
+  await secondRadio.press('Tab')
+  await expect(nextField).toBeFocused()
+  await nextField.press('Shift+Tab')
+  await expect(secondRadio).toBeFocused()
+
+  await Promise.all([
+    waitForResponse(page, 'GET', (url) =>
+      url.includes(getLomakkeenHaunOsoite(lomakkeenAvain))
+    ),
+    page.reload(),
+  ])
 })
 
 test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
