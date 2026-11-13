@@ -235,7 +235,7 @@
   [cas-client]
   (let [now (t/now)]
     (when-let [hakus (some-> :kouta-internal.haku-search
-                             (url-helper/resolve-url {"vuosi" (str (t/year now))})
+                             (url-helper/resolve-url {"hakuvuosi" (str (t/year now))})
                              (get-result cas-client))]
       (->> hakus
            (filter #(= "haunkohdejoukko_12#1" (:kohdejoukkoKoodiUri %)))
