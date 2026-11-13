@@ -10,11 +10,15 @@
   (let [url (url-helper/resolve-url :koski.hakemuspalvelu)
         username (get-in config [:koski :username])
         password (get-in config [:koski :password])
+        default-username-status (if (= username "not-in-use")
+                                  "Default username IS in use"
+                                  "Default username NOT in use")
         {:keys [status body]} (http/do-post-json-with-basic-auth url username password {:oid oppija-oid} {})]
     (case status
       200 (json/parse-string body true)
       404 nil
       (throw (new RuntimeException (str "Could not post " url ", "
+                                        default-username-status
                                         "status: " status ", "
                                         "body: " body))))))
 
