@@ -2933,9 +2933,12 @@
    :not-checked                  {:fi "Tarkastamatta"
                                   :sv "Inte granskad"
                                   :en "Not checked"}
-   :checked                      {:fi "Tarkistettu"
+   :checked                      {:fi "Tarkastettu"
                                   :sv "Granskad"
                                   :en "Checked"}
+   :checked-exempting-attachment {:fi "Tarkastettu, vapauttava liite"
+                                  :sv "Granskad, befriande bilaga"
+                                  :en "Checked, exempting attachment"}
    :incomplete-answer            {:fi "Puutteellinen"
                                   :sv "Bristfällig"
                                   :en "Incomplete"}

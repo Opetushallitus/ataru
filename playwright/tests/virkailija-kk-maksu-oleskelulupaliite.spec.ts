@@ -186,6 +186,41 @@ test('näyttää merkinnät vain oleskelulupaliitteelle', async () => {
   ).toHaveCount(0)
 })
 
+// Avaa liitteen tilavalikon, tarkistaa tarkastetun tilan nimen ja sulkee
+// valikon valitsemalla nykyisen tilan, jolloin tila ei muutu.
+const expectCheckedStateLabel = async (
+  label: string,
+  checkedLabel: string,
+  otherCheckedLabel: string
+) => {
+  const row = attachmentRow(label)
+  await row.locator('.application-handling__review-state-row--selected').click()
+  const list = row.locator('.application-handling__review-state-list')
+  const option = (text: string) =>
+    list.locator('.application-handling__review-state-row', {
+      hasText: new RegExp(`^${text}$`),
+    })
+  await expect(option(checkedLabel)).toHaveCount(1)
+  await expect(option(otherCheckedLabel)).toHaveCount(0)
+  await list
+    .locator('.application-handling__review-state-row--selected')
+    .click()
+  await expect(list).toHaveCount(0)
+}
+
+test('nimeää hakemusmaksusta vapauttavan liitteen tarkastetun tilan vapauttavaksi', async () => {
+  await expectCheckedStateLabel(
+    PERMIT_ATTACHMENT_LABEL,
+    'Tarkastettu, vapauttava liite',
+    'Tarkastettu'
+  )
+  await expectCheckedStateLabel(
+    OTHER_ATTACHMENT_LABEL,
+    'Tarkastettu',
+    'Tarkastettu, vapauttava liite'
+  )
+})
+
 test('ohjaa puuttuvan liitteen tiedot Migrin lupatietopalvelusta', async () => {
   const row = attachmentRow(PERMIT_ATTACHMENT_LABEL)
   await expect(
