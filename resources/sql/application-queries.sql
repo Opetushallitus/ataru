@@ -671,9 +671,15 @@ WHERE a.haku IS NULL
 GROUP BY lf.name, lf.key, lf.organization_oid;
 
 -- name: yesql-add-application-feedback<!
-INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent)
+INSERT INTO application_feedback (created_time, form_key, form_id, form_name, stars, feedback, user_agent, haku_oid)
 VALUES
-  (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent);
+  (now(), :form_key, :form_id, :form_name, :rating, left(:feedback, 2000), :user_agent, :haku_oid);
+
+-- name: yesql-get-application-feedback-by-form-key
+SELECT created_time, form_key, form_id, form_name, haku_oid, stars, feedback, user_agent
+FROM application_feedback
+WHERE form_key = :form_key
+ORDER BY created_time DESC, id DESC;
 
 -- name: yesql-get-application-hakukohde-reviews
 SELECT
