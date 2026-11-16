@@ -21,7 +21,7 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
-            [ataru.test-utils :refer [login should-have-header]]
+            [ataru.test-utils :refer [login should-have-header with-excel-workbook]]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
@@ -227,6 +227,18 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- get-form-as [id ticket]
+  (-> (mock/request :get (str "/lomake-editori/api/forms/" id))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes ticket))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      parse-body))
+
+(defn- get-feedback-excel-as [form-key ticket]
+  (-> (mock/request :get (str "/lomake-editori/api/forms/" form-key "/feedback/excel") {:lang "fi"})
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes ticket))
+      ((deref virkailija-routes))))
+
 (defn- post-form [form]
   (-> (mock/request :post "/lomake-editori/api/forms"
         (json/generate-string form))
@@ -367,6 +379,64 @@
 
   (it "Should have :content with it"
       (should= (:content fixtures/form-with-content) (-> @resp :body :content))))
+
+(describe "Fetching a form"
+          (tags :unit :route-get-form)
+
+  (it "Should return the form to a user with edit rights to the form's organization"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form (:id form))]
+        (should= 200 (:status resp))
+        (should= (:key form) (-> resp :body :key))))
+
+  (it "Should return the form to a superuser"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form-as (:id form) "SUPERUSER")]
+        (should= 200 (:status resp))
+        (should= (:key form) (-> resp :body :key))))
+
+  (it "Should not return the form to a user without rights to the form's organization"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (get-form-as (:id form) "USER-WITH-HAKUKOHDE-ORGANIZATION")]
+        (should= 403 (:status resp))
+        (should-be-nil (-> resp :body :key))))
+
+  (it "Should return not found for a form that does not exist"
+      (let [resp (get-form-as 2147483647 "SUPERUSER")]
+        (should= 404 (:status resp)))))
+
+(describe "Downloading form feedback as excel"
+          (tags :unit :route-form-feedback-excel)
+
+  (it "Should return an excel file to a user with edit rights to the form's organization"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            _    (application-store/add-application-feedback {:form-key   (:key form)
+                                                              :form-id    (:id form)
+                                                              :form-name  "A"
+                                                              :user-agent "Mozilla/5.0 (test)"
+                                                              :rating     5
+                                                              :haku-oid   nil
+                                                              :feedback   "Palaute reitin kautta"})
+            resp (get-feedback-excel-as (:key form) nil)]
+        (should= 200 (:status resp))
+        (should= "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                 (get-in resp [:headers "Content-Type"]))
+        (should (.startsWith ^String (get-in resp [:headers "Content-Disposition"])
+                             "attachment; filename=palautteet_A_"))
+        (with-excel-workbook (:body resp)
+          (fn [workbook]
+            (let [sheet (.getSheetAt workbook 0)]
+              (should= 2 (.getPhysicalNumberOfRows sheet))
+              (should= "Palaute reitin kautta" (.getStringCellValue (.getCell (.getRow sheet 1) 2))))))))
+
+  (it "Should not return feedback to a user without rights to the form"
+      (let [form (:body (post-form (fixtures/create-form (fixtures/create-element "A"))))
+            resp (parse-body (get-feedback-excel-as (:key form) "USER-WITH-HAKUKOHDE-ORGANIZATION"))]
+        (should= 403 (:status resp))))
+
+  (it "Should return not found for an unknown form"
+      (let [resp (parse-body (get-feedback-excel-as "no-such-form-key" "SUPERUSER"))]
+        (should= 404 (:status resp)))))
 
 (defn- swap [v i1 i2]
   (assoc v i2 (v i1) i1 (v i2)))
