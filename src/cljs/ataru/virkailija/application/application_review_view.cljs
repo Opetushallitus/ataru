@@ -8,6 +8,8 @@
             [ataru.virkailija.application.application-subs]
             [ataru.virkailija.application.application-authorization-subs]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-subs]
+            [ataru.virkailija.application.attachments.kk-payment-permit-check-view :as permit-check]
+            [ataru.component-data.kk-application-payment-module :as kk-payment-module]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-view :as lir]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
@@ -549,6 +551,21 @@
             [:span @(subscribe [:application/field-label (:review-key event)])]]
            (event-organizations-list event lang)]]
 
+         {:event-type "kk-payment-permit-check-updated"}
+         [[:span (str @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-updated]) " ")
+           (virkailija-initials-span event)]
+          [:div
+           [:div
+            [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
+            [:span @(subscribe [:application/field-label (:review-key event)])]]
+           (event-organizations-list event lang)]]
+
+         {:event-type "kk-payment-permit-check-reset"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-reset])]
+          [:div
+           [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
+           [:span @(subscribe [:application/field-label (:review-key event)])]]]
+
          {:event-type "ehto-hakukohteessa-set"}
          [[:span @(subscribe [:editor/virkailija-translation :ehdollisesti-hyvaksyttavissa])]
           [:div
@@ -954,7 +971,64 @@
             virkailija-lang      (subscribe [:editor/virkailija-lang])
             review-types         (if multiple-values?
                                    review-states/attachment-hakukohde-review-types-with-multiple-values
-                                   review-states/attachment-hakukohde-review-types)]
+                                   review-states/attachment-hakukohde-review-types)
+            permit-attachment?   (kk-payment-module/residence-permit-attachment? attachment-key)
+            state-selector       (if @list-opened
+                                   [:div.application-handling__review-state-list
+                                    (doall
+                                      (for [[state labels]
+                                            review-types]
+                                        (let [label (get labels @virkailija-lang)]
+                                          [:div.application-handling__review-state-row
+                                           {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
+                                            :on-click (if (= state selected-state)
+                                                        #(swap! list-opened not)
+                                                        (fn []
+                                                          (swap! list-opened not)
+                                                          (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
+                                            :key      (str attachment-key label)}
+                                           (if (= state selected-state) [icons/icon-check]
+                                                                        [icons/icon-unselected]) label])))]
+                                   [:div.application-handling__review-state-row.application-handling__review-state-row--selected
+                                    {:class    (if @can-edit?
+                                                 "application-handling__review-state-row--enabled"
+                                                 "application-handling__review-state-row--disabled")
+                                     :on-click #(when @can-edit? (swap! list-opened not))}
+                                    [icons/icon-check]
+                                    (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])
+            deadline-row         [:div.application__attachment-review-deadline-row
+                                  (when (or (= "incomplete-attachment" selected-state)
+                                            @(subscribe [:liitepyynto-information-request/deadline-visible?
+                                                         application-key
+                                                         attachment-key]))
+                                    [:div.application__attachment-review-deadline-row__send-toggle
+                                     [lir/send-toggle-lable application-key attachment-key]
+                                     [:div.application__attachment-review-deadline-row__send-toggle-input
+                                      [lir/send-toggle application-key attachment-key]]])
+                                  (when @(subscribe [:liitepyynto-information-request/deadline-visible?
+                                                     application-key
+                                                     attachment-key])
+                                    [:div.application__attachment-review-deadline-row__deadline
+                                     [lir/deadline-date-label application-key attachment-key]
+                                     [:div.application__attachment-review-deadline-row__deadline-date
+                                      [lir/deadline-date-input application-key attachment-key]]
+                                     [lir/deadline-time-label application-key attachment-key]
+                                     [:div.application__attachment-review-deadline-row__deadline-time
+                                      [lir/deadline-time-input application-key attachment-key]]])
+                                  (when @(subscribe [:liitepyynto-information-requets/deadline-error? application-key attachment-key])
+                                    [:div.application__attachment-review-deadline-row__deadline-error
+                                     [lir/deadline-error]])]
+            attachment-files     [:ul.application__attachment-review-row-attachments
+                                  (for [attachment-file files
+                                        :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
+                                    ^{:key (str "attachment-file-" attachment-file)}
+                                    [:li
+                                     (if (and (= (:virus-scan-status attachment-file) "done")
+                                              (contains? selected-attachment-keys (:key attachment-file)))
+                                       [:a
+                                        {:on-click #(dispatch [:virkailija-attachments/open-attachment-skimming (:key attachment-file)])}
+                                        text]
+                                       text)])]]
         [:div.application__attachment-review-row
          [:div.application__attachment-review-info-row
           [:input.application-handling__attachment-download-checkbox
@@ -973,62 +1047,27 @@
                                                                           attachments-with-inconsistent-visibility)]
                            (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
-          (if @list-opened
-            [:div.application-handling__review-state-list
-             (doall
-               (for [[state labels]
-                     review-types]
-                 (let [label (get labels @virkailija-lang)]
-                   [:div.application-handling__review-state-row
-                    {:class    (when (= state selected-state) "application-handling__review-state-row--selected application-handling__review-state-row--enabled")
-                     :on-click (if (= state selected-state)
-                                 #(swap! list-opened not)
-                                 (fn []
-                                   (swap! list-opened not)
-                                   (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
-                     :key      (str attachment-key label)}
-                    (if (= state selected-state) [icons/icon-check]
-                                                 [icons/icon-unselected]) label])))]
-            [:div.application-handling__review-state-row.application-handling__review-state-row--selected
-             {:class    (if @can-edit?
-                          "application-handling__review-state-row--enabled"
-                          "application-handling__review-state-row--disabled")
-              :on-click #(when @can-edit? (swap! list-opened not))}
-             [icons/icon-check]
-             (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]
-         [:div.application__attachment-review-deadline-row
-          (when (or (= "incomplete-attachment" selected-state)
-                    @(subscribe [:liitepyynto-information-request/deadline-visible?
-                                 application-key
-                                 attachment-key]))
-            [:div.application__attachment-review-deadline-row__send-toggle
-             [lir/send-toggle-lable application-key attachment-key]
-             [:div.application__attachment-review-deadline-row__send-toggle-input
-              [lir/send-toggle application-key attachment-key]]])
-          (when @(subscribe [:liitepyynto-information-request/deadline-visible?
-                             application-key
-                             attachment-key])
-            [:div.application__attachment-review-deadline-row__deadline
-             [lir/deadline-date-label application-key attachment-key]
-             [:div.application__attachment-review-deadline-row__deadline-date
-              [lir/deadline-date-input application-key attachment-key]]
-             [lir/deadline-time-label application-key attachment-key]
-             [:div.application__attachment-review-deadline-row__deadline-time
-              [lir/deadline-time-input application-key attachment-key]]])
-          (when @(subscribe [:liitepyynto-information-requets/deadline-error? application-key attachment-key])
-            [:div.application__attachment-review-deadline-row__deadline-error
-             [lir/deadline-error]])]
-         [:ul.application__attachment-review-row-attachments
-          (for [attachment-file files
-                :let [text (str (:filename attachment-file) " (" (util/size-bytes->str (:size attachment-file)) ")")]]
-            ^{:key (str "attachment-file-" attachment-file)}
-            [:li
-             (if (and (= (:virus-scan-status attachment-file) "done")
-                      (contains? selected-attachment-keys (:key attachment-file)))
-               [:a
-                {:on-click #(dispatch [:virkailija-attachments/open-attachment-skimming (:key attachment-file)])}
-                text]
-               text)])]]))))
+          (when-not permit-attachment?
+            state-selector)]
+         ; As in the design, the residence permit notes start with a notification, below which the attachment state
+         ; is shown next to the notes
+         (if permit-attachment?
+           [:<>
+            [permit-check/permit-check-notification (and (seq files) (not= "attachment-missing" selected-state))]
+            [:div.kk-payment-permit-check__columns
+             [:div.kk-payment-permit-check__main
+              attachment-files
+              [permit-check/permit-check
+               application-key
+               attachment-key
+               (= "checked" selected-state)
+               @can-edit?]]
+             [:div.kk-payment-permit-check__side
+              state-selector
+              deadline-row]]]
+           [:<>
+            deadline-row
+            attachment-files])]))))
 
 (defn- attachment-review-area [reviews lang]
   (let [all-keys                 (->> (vals reviews)

@@ -4,6 +4,7 @@
             [ataru.config.url-helper :as url-helper]
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment :as payment]
+            [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.time :as time]
@@ -187,12 +188,6 @@
       (log/info "Invalidating ok-by-proxy kk payment applications with keys" proxy-state-application-keys)
       (maksut-protocol/invalidate-laskut maksut-service proxy-state-application-keys))))
 
-(defn- attachment-deadline-passed?
-  [job-runner application-key]
-  (payment/attachment-deadline-passed? job-runner
-                                       (application-store/get-latest-application-by-key application-key)
-                                       (seq (payment/get-invalid-or-not-checked-attachment-reviews application-key))))
-
 (defn- ok-by-proxy-or-not-required?
   [payments]
   (some #(contains? #{(:ok-by-proxy payment/all-states) (:not-required payment/all-states)} (:state %)) payments))
@@ -211,7 +206,8 @@
      by editing the application), writes the state only for hakukohteet with no obligation state at all.
    Never overrides 'in-migri-review', 'exemption-not-verified' or already-'reviewed' virkailija decisions.
    Must be called BEFORE reset-kk-application-payment-obligation-states-if-needed so that the
-   reset can still win when there are new unchecked attachments."
+   reset can still win when there are new unchecked attachments and the payment was set to not-required in this
+   job run. The reviews of payments already not required due to citizenship before the job run are never reset."
   [{:keys [audit-logger]} existing-payments modified-payments]
   (let [modified-keys       (->> modified-payments
                                  (filter eu-citizen-not-required-payment?)
@@ -246,45 +242,57 @@
         {:cronjob "automatic-vtj-verified-eu-citizen"}
         audit-logger))))
 
+(defn- not-required-application-keys
+  [payments]
+  (->> payments
+       (filter #(= (:not-required payment/all-states) (:state %)))
+       (map :application-key)
+       set))
+
 (defn- reset-kk-application-payment-obligation-states-if-needed
-  [{:keys [audit-logger] :as job-runner} existing-payments modified-payments]
-  (when (seq modified-payments)
-    (doseq [application-key (->> (concat existing-payments modified-payments)
-                                 (map :application-key)
-                                 (remove nil?)
-                                 distinct)]
-      (let [not-checked-attm-reviews-by-hakukohde (group-by :hakukohde
-                                                            (payment/get-not-checked-attachment-reviews application-key))
-            app-payment-obligation-reviews-by-hakukohde (group-by :hakukohde
-                                                                  (payment/get-kk-application-payment-obligation-reviews
-                                                                   application-key))]
-        (doseq [hakukohde (keys not-checked-attm-reviews-by-hakukohde)]
-          (let [not-checked-attm-reviews (get not-checked-attm-reviews-by-hakukohde hakukohde)
-                app-payment-obligation-reviews (get app-payment-obligation-reviews-by-hakukohde hakukohde)
-                any-not-checked-attm-review-after-latest-app-payment-obligation-review?
-                (some #(some->> (->> app-payment-obligation-reviews
-                                    (map :modified-time)
-                                    (sort)
-                                    (last))
-                                (.isAfter %))
-                      (map :modified-time not-checked-attm-reviews))]
-            (when (and (payment/kk-application-payment-obligation-reviewed? {:application-hakukohde-reviews
-                                                                             app-payment-obligation-reviews}
-                                                                            hakukohde)
-                       any-not-checked-attm-review-after-latest-app-payment-obligation-review?
-                       (not (attachment-deadline-passed? job-runner application-key)))
-              (doseq [existing-review (filter #(and (= "kk-application-payment-obligation" (:requirement %))
-                                                    (= hakukohde (:hakukohde %))
-                                                    (= "reviewed" (:state %)))
-                                              app-payment-obligation-reviews)]
-                (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
-                          application-key ", hakukohde" hakukohde)
-                (application-store/save-application-hakukohde-review application-key
-                                                                     (:hakukohde existing-review)
-                                                                     (:requirement existing-review)
-                                                                     "unreviewed"
-                                                                     {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
-                                                                     audit-logger)))))))))
+  "Resets the payment obligation review and removes the residence permit checks of an application to be reviewed
+   again, when an applicant who was interpreted as obligated to pay delivers a new attachment before the attachment
+   deadline. Checks saved after resets-decided-at are kept.
+   - Without a decisive residence permit check, applications whose payment was not required already before the job
+     run, for any reason, are not reset.
+   - An obligation found in Migri is reset as decided when determining the payments, regardless of the payment state
+     before the job run and whether the payments changed in it, unless the payment is paid, overdue or not required
+     due to citizenship.
+   - An exemption found in Migri is never reset."
+  [{:keys [audit-logger] :as job-runner} applications-payments modified-payments resets-decided-at]
+  (let [not-required-keys (not-required-application-keys (keep :payment applications-payments))]
+    (doseq [{:keys [application permit-check-state]} applications-payments
+            :let [application-key      (:key application)
+                  hakukohteet-to-reset (when (some? application-key)
+                                         (case (:obligation permit-check-state)
+                                           ; A review saved by virkailija after the reset was decided is kept
+                                           :obligated     (when-let [decided (seq (:hakukohteet-to-reset
+                                                                                    permit-check-state))]
+                                                            (filter (set (payment/hakukohteet-with-obligation-review-to-reset
+                                                                           job-runner application))
+                                                                    decided))
+                                           :not-obligated nil
+                                           (when (and (seq modified-payments)
+                                                      (not (contains? not-required-keys application-key)))
+                                             (payment/hakukohteet-with-obligation-review-to-reset
+                                               job-runner application))))]
+            :when (seq hakukohteet-to-reset)]
+      (->> (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+             ; The hakukohteet to reset have a reviewed payment obligation, which is unique per hakukohde
+             (doseq [hakukohde hakukohteet-to-reset]
+               (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
+                         application-key ", hakukohde" hakukohde)
+               (application-store/save-application-hakukohde-review-in-tx
+                 connection
+                 application-key
+                 hakukohde
+                 "kk-application-payment-obligation"
+                 "unreviewed"
+                 (time/now)
+                 {:cronjob "reset-kk-application-payment-obligation-states-if-needed"}
+                 audit-logger))
+             (permit-check/reset-permit-checks connection application-key resets-decided-at))
+           (permit-check/audit-log-reset audit-logger application-key)))))
 
 (def keys-affecting-kk-application-payment
   #{payment/exemption-form-field-name :nationality})
@@ -331,7 +339,7 @@
     (let [[person-oid application-term application-year]
           (resolve-term-data tarjonta-service person_oid term year application_id application_key)]
       (if (and person-oid application-term application-year)
-        (let [{:keys [modified-payments existing-payments]}
+        (let [{:keys [modified-payments existing-payments resets-decided-at]}
               (payment/update-payments-for-person-term-and-year job-runner person-oid application-term
                                                                 application-year)]
           (if (or (some? modified-payments) (some? existing-payments))
@@ -357,8 +365,9 @@
                                                                          modified-payments)
 
               (reset-kk-application-payment-obligation-states-if-needed job-runner
-                                                                        (map :payment existing-payments)
-                                                                        modified-payments)
+                                                                        existing-payments
+                                                                        modified-payments
+                                                                        resets-decided-at)
 
               (log/info "Update kk payment status handler for" person-oid application-term application-year "finished."))
 

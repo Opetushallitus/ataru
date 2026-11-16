@@ -722,6 +722,7 @@
         uncertain?     (subscribe [:application/selection-over-network-uncertain?])
         option-value   (:value option)
         option-id      (str (:id field-descriptor) "-" question-group-idx "-" option-value)
+        option-name    (str (:id field-descriptor) "-" (or question-group-idx "default"))
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
         valid?         (subscribe [:application/single-choice-option-valid? parent-id question-group-idx])
         lang           (subscribe [:application/form-language])]
@@ -746,26 +747,18 @@
          {:key option-id}
          [:input
           (merge {:id        option-id
-                  :tab-index 0
-                  :type      "checkbox"
-                  :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
+                  :type      "radio"
+                  :name      option-name
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
-                  :on-change #(toggle-value-fn (.. % -target -value))
-                  :role      "radio"
+                  :on-change #(when (.. % -target -checked)
+                                (toggle-value-fn (.. % -target -value)))
                   :class     (if use-multi-choice-style?
                                "application__form-radio"
                                "application__form-single-choice-button")}
                  (when disabled? {:disabled true}))]
          [:label
           (merge {:for option-id}
-                  (when (not disabled?)
-                    {:tab-index 0
-                     :role      "radio"
-                     :aria-label  label
-                     :aria-checked (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
-                     :on-key-up #(when (a11y/is-enter-or-space? %) 
-                                (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
             [:span.application__form-single-choice-button--verifying
