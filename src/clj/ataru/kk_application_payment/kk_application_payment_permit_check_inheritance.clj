@@ -209,21 +209,24 @@
   (let [target-key (:key target)
         now        (time/now)]
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-      ; Nil, kun virkailija on tallentanut oman tarkistuksen periytymispäätöksen jälkeen
-      (when-let [inherited (store/insert-inherited-permit-check!
-                             connection
-                             {:application_key                 target-key
-                              :attachment_key                  attachment-key
-                              :found_in_migri                  (:found-in-migri check)
-                              :permit_valid_until              (:permit-valid-until check)
-                              :payment_obligation_basis        (:payment-obligation-basis check)
-                              :payment_obligation_other_reason (:payment-obligation-other-reason check)
-                              :virkailija_oid                  (:virkailija-oid check)
-                              :organization_oid                (:organization-oid check)
-                              :checked_time                    (:checked-time check)
-                              ; Eteenpäin periytyvä tarkistus viittaa hakemukseen, jolla se alun perin tehtiin
-                              :inherited_from_application_key  (or (:inherited-from-application-key check)
-                                                                   (:key source))})]
+      (store/lock-permit-checks! connection target-key)
+      ; Nil, kun hakija on vaihtanut dokumenttivaihtoehtoa tai virkailija on tallentanut oman tarkistuksen
+      ; periytymispäätöksen jälkeen
+      (when-let [inherited (and (= attachment-key (store/selected-residence-permit-attachment-key connection target-key))
+                                (store/insert-inherited-permit-check!
+                                  connection
+                                  {:application_key                 target-key
+                                   :attachment_key                  attachment-key
+                                   :found_in_migri                  (:found-in-migri check)
+                                   :permit_valid_until              (:permit-valid-until check)
+                                   :payment_obligation_basis        (:payment-obligation-basis check)
+                                   :payment_obligation_other_reason (:payment-obligation-other-reason check)
+                                   :virkailija_oid                  (:virkailija-oid check)
+                                   :organization_oid                (:organization-oid check)
+                                   :checked_time                    (:checked-time check)
+                                   ; Eteenpäin periytyvä tarkistus viittaa hakemukseen, jolla se alun perin tehtiin
+                                   :inherited_from_application_key  (or (:inherited-from-application-key check)
+                                                                        (:key source))}))]
         (log/info "Inheriting kk application payment permit check of attachment" attachment-key
                   "from application" (:key source) "to application" target-key)
         (application-store/add-application-event-in-tx connection

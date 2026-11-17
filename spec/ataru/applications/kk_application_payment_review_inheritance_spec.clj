@@ -269,17 +269,14 @@
       (should= ["continuous-residence-permit-front"]
                (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
 
-  (it "removes the residence permit checks of other attachments when the document option changes"
+  (it "removes the residence permit check of the previous option when the document option changes"
     (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))
           application-key (:key application)]
       (insert-permit-check! application-key "continuous-residence-permit-front")
-      (insert-permit-check! application-key "longterm-permit-attachment")
       (edit-hakukohteet application [hakukohde-1] (change-option (option :longterm-residence-option-value)) {})
-      (should= ["longterm-permit-attachment"] (permit-check-attachment-keys application-key))
+      (should= [] (permit-check-attachment-keys application-key))
       (should (application-store/application-event-exists? application-key "continuous-residence-permit-front"
-                                                            ["kk-payment-permit-check-removed"]))
-      (should-not (application-store/application-event-exists? application-key "longterm-permit-attachment"
-                                                                ["kk-payment-permit-check-removed"]))))
+                                                            ["kk-payment-permit-check-removed"]))))
 
   (it "removes all residence permit checks when the new document option has no residence permit"
     (let [application     (init-application [hakukohde-1] (option :continuous-residence-option-value))

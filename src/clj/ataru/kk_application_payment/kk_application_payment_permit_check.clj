@@ -138,8 +138,11 @@
                                                  session))
 
 (defn save-permit-check
-  "Palauttaa tallennetun tarkistuksen, :not-found, :unauthorized, :bad-request (liite ei ole oleskelulupaliite)
-   tai :invalid-permit-valid-until (lupakortin voimassaolopäivä on sallittujen rajojen ulkopuolella)."
+  "Palauttaa tallennetun tarkistuksen, :not-found, :unauthorized, :bad-request (liite ei ole oleskelulupaliite),
+   :attachment-not-selected (liite ei kuulu hakijan valitsemaan dokumenttivaihtoehtoon) tai
+   :invalid-permit-valid-until (lupakortin voimassaolopäivä on sallittujen rajojen ulkopuolella).
+   Hakemuksella on enintään yksi tarkistus, joten vain valitun vaihtoehdon oleskelulupaliitteelle voi tallentaa
+   tarkistuksen."
   [organization-service tarjonta-service audit-logger session application-key attachment-key body]
   (cond
     (empty? (application-store/applications-authorization-data [application-key]))
@@ -167,30 +170,39 @@
     (let [{:keys [found-in-migri permit-valid-until payment-obligation-basis payment-obligation-other-reason]}
           (normalize-body body)
           organization-oid (authorized-organization-oid organization-service tarjonta-service session application-key)
+          ; Uusi on nil, kun liite ei ole hakijan valitseman vaihtoehdon oleskelulupaliite. Vaihtoehto luetaan lukon
+          ; jälkeen, jotta samanaikainen vaihtoehdon vaihto ei jätä hakemukselle edellisen vaihtoehdon tarkistusta.
           [old new]        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (let [old (store/get-permit-check connection application-key attachment-key)
-                                   new (store/upsert-permit-check!
-                                         connection
-                                         {:application_key                 application-key
-                                          :attachment_key                  attachment-key
-                                          :found_in_migri                  found-in-migri
-                                          :permit_valid_until              permit-valid-until
-                                          :payment_obligation_basis        payment-obligation-basis
-                                          :payment_obligation_other_reason payment-obligation-other-reason
-                                          :virkailija_oid                  (-> session :identity :oid)
-                                          :organization_oid                organization-oid})]
-                               (add-event! connection "kk-payment-permit-check-updated" application-key attachment-key
-                                           session)
-                               [old new]))]
-      (audit-log/log audit-logger
-                     (cond-> {:new       new
-                              :id        {:applicationOid application-key
-                                          :attachmentKey  attachment-key}
-                              :session   session
-                              :operation (if old audit-log/operation-modify audit-log/operation-new)}
-                             ; virkailija yksilöidään oidilla
-                             old (assoc :old (dissoc old :virkailija-first-name :virkailija-last-name))))
-      (->public new))))
+                             (store/lock-permit-checks! connection application-key)
+                             (when (= attachment-key
+                                      (store/selected-residence-permit-attachment-key connection application-key))
+                               (let [old (store/get-permit-check connection application-key attachment-key)
+                                     new (store/upsert-permit-check!
+                                           connection
+                                           {:application_key                 application-key
+                                            :attachment_key                  attachment-key
+                                            :found_in_migri                  found-in-migri
+                                            :permit_valid_until              permit-valid-until
+                                            :payment_obligation_basis        payment-obligation-basis
+                                            :payment_obligation_other_reason payment-obligation-other-reason
+                                            :virkailija_oid                  (-> session :identity :oid)
+                                            :organization_oid                organization-oid})]
+                                 (when new
+                                   (add-event! connection "kk-payment-permit-check-updated" application-key
+                                               attachment-key session))
+                                 [old new])))]
+      (if (nil? new)
+        :attachment-not-selected
+        (do
+          (audit-log/log audit-logger
+                         (cond-> {:new       new
+                                  :id        {:applicationOid application-key
+                                              :attachmentKey  attachment-key}
+                                  :session   session
+                                  :operation (if old audit-log/operation-modify audit-log/operation-new)}
+                                 ; virkailija yksilöidään oidilla
+                                 old (assoc :old (dissoc old :virkailija-first-name :virkailija-last-name))))
+          (->public new))))))
 
 (defn reset-permit-checks
   "Poistaa hakemuksen tarkistukset, jotka on tallennettu viimeistään hetkellä modified-until, esim. kun

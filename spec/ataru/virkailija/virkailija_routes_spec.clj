@@ -802,7 +802,8 @@
 
 (defn- init-payment-exemption-application []
   (-> (db/init-db-fixture fixtures/payment-exemption-test-form
-                          application-fixtures/application-with-hakemusmaksu-exemption
+                          (application-fixtures/with-kk-application-payment-option
+                            application-fixtures/application-with-hakemusmaksu-exemption "3")
                           nil)
       (application-store/get-application)
       :key))
@@ -836,6 +837,14 @@
                                               (assoc empty-permit-check :found-in-migri true))]
         (should= 400 (:status resp))))
 
+  (it "should refuse notes on the residence permit attachment of a document option the applicant has not selected"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :found-in-migri true))]
+        (should= 400 (:status resp))
+        (should= "Attachment eu-blue-card-attachment is not the residence permit attachment of the selected document option"
+                 (get-in resp [:body :error]))))
+
   (it "should refuse notes without rights to edit the application"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
                                               "eu-blue-card-attachment"
@@ -857,14 +866,14 @@
 
   (it "should refuse a permit validity date outside the sanity limits"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
-                                              "eu-blue-card-attachment"
+                                              "continuous-residence-permit-front"
                                               (assoc empty-permit-check
                                                      :permit-valid-until (str (.plusYears (java.time.LocalDate/now) 10))))]
         (should= 400 (:status resp))))
 
   (it "should refuse a too long other reason"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
-                                              "eu-blue-card-attachment"
+                                              "continuous-residence-permit-front"
                                               (assoc empty-permit-check
                                                      :payment-obligation-basis "obligated-other"
                                                      :payment-obligation-other-reason (apply str (repeat 501 "x"))))]

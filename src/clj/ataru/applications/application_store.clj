@@ -536,6 +536,7 @@
   (let [option-key (keyword payment-module/kk-application-payment-choice-key)
         new-option (get-in new-answers [option-key :value])]
     (when (not= (get-in old-answers [option-key :value]) new-option)
+      (permit-check-store/lock-permit-checks! connection application-key)
       (let [hakukohteet        (set hakukohteet)
             obligation-reviews (->> (queries/yesql-get-application-hakukohde-reviews {:application_key application-key}
                                                                                     {:connection connection})
