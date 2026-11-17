@@ -31,12 +31,12 @@
    (check-of-attachment (get-permit-checks connection application-key) attachment-key)))
 
 (defn upsert-permit-check!
-  "Palauttaa nil, kun hakemuksella on jo toisen liitteen tarkistus, koska hakemuksella on enintään yksi tarkistus."
+  "Palauttaa nil, kun hakemuksella on jo toisen liitteen tarkastus, koska hakemuksella on enintään yksi tarkastus."
   [connection check]
   (first (yesql-upsert-kk-application-payment-permit-check check {:connection connection})))
 
 (defn insert-inherited-permit-check!
-  "Palauttaa nil, kun hakemuksella on jo tarkistus."
+  "Palauttaa nil, kun hakemuksella on jo tarkastus."
   [connection check]
   (first (yesql-insert-inherited-kk-application-payment-permit-check check {:connection connection})))
 
@@ -48,8 +48,8 @@
     {:connection connection}))
 
 (defn delete-other-permit-checks!
-  "Poistaa hakemuksen tarkistukset muilta liitteiltä kuin attachment-key, tai kaikki tarkistukset, kun se on nil.
-   Palauttaa poistetut tarkistukset."
+  "Poistaa hakemuksen tarkastukset muilta liitteiltä kuin attachment-key, tai kaikki tarkastukset, kun se on nil.
+   Palauttaa poistetut tarkastukset."
   [connection application-key attachment-key]
   (yesql-delete-other-kk-application-payment-permit-checks
     {:application_key application-key
@@ -57,10 +57,10 @@
     {:connection connection}))
 
 (defn lock-permit-checks!
-  "Lukitsee hakemuksen tarkistukset transaktion loppuun asti. Tarkistusta tallennettaessa lukko otetaan ennen kuin
+  "Lukitsee hakemuksen tarkastukset transaktion loppuun asti. Tarkastusta tallennettaessa lukko otetaan ennen kuin
    hakijan valitsema dokumenttivaihtoehto luetaan, ja vaihtoehdon vaihtuessa ennen kuin edellisen vaihtoehdon
-   tarkistus poistetaan. Muuten tarkistus voisi tallentua edellisen vaihtoehdon liitteelle samanaikaisen vaihdon
-   jälkeen ja estää valitun vaihtoehdon liitteen tarkistuksen, koska hakemuksella on enintään yksi tarkistus."
+   tarkastus poistetaan. Muuten tarkastus voisi tallentua edellisen vaihtoehdon liitteelle samanaikaisen vaihdon
+   jälkeen ja estää valitun vaihtoehdon liitteen tarkastuksen, koska hakemuksella on enintään yksi tarkastus."
   [connection application-key]
   (yesql-lock-kk-application-payment-permit-checks {:application_key application-key} {:connection connection}))
 

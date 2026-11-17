@@ -1,18 +1,18 @@
--- Hakemuksella on enintään yksi oleskelulupatarkistus: hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitteen
--- tarkistus.
+-- Hakemuksella on enintään yksi oleskelulupatarkastus: hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitteen
+-- tarkastus.
 --
--- Taulu lukitaan kirjoituksilta ennen siivousta, jotta tarkistuksia ei voi tallentaa siivouksen ja yksilöivyysehdon
+-- Taulu lukitaan kirjoituksilta ennen siivousta, jotta tarkastuksia ei voi tallentaa siivouksen ja yksilöivyysehdon
 -- lisäämisen välissä.
 LOCK TABLE kk_application_payment_permit_checks IN SHARE ROW EXCLUSIVE MODE;
 
--- Poistetaan tarkistukset, jotka eivät koske hakemuksen nykyisen dokumenttivaihtoehdon oleskelulupaliitettä. Niitä on
--- jäänyt hakemuksille, joilla dokumenttivaihtoehto vaihdettiin tarkistuksen jälkeen ennen kuin vaihto alkoi poistaa
--- edellisen vaihtoehdon tarkistuksen. Maksuvelvollisuus päätellään vain nykyisen vaihtoehdon liitteen tarkistuksesta,
+-- Poistetaan tarkastukset, jotka eivät koske hakemuksen nykyisen dokumenttivaihtoehdon oleskelulupaliitettä. Niitä on
+-- jäänyt hakemuksille, joilla dokumenttivaihtoehto vaihdettiin tarkastuksen jälkeen ennen kuin vaihto alkoi poistaa
+-- edellisen vaihtoehdon tarkastuksen. Maksuvelvollisuus päätellään vain nykyisen vaihtoehdon liitteen tarkastuksesta,
 -- joten poisto ei muuta maksuvelvollisuutta eikä käsittelymerkintöjä tarvitse palauttaa. Poisto kirjataan hakemuksen
 -- historiaan samana tapahtumana kuin vaihtoehdon vaihtuessa.
 --
 -- Vaihtoehdon arvo -> oleskelulupaliite, kuten kk-application-payment-residence-permit-attachment-key-by-option.
--- Passilla (0) ja ilman dokumenttia (8) ei ole oleskelulupaliitettä, joten niiden kaikki tarkistukset poistetaan.
+-- Passilla (0) ja ilman dokumenttia (8) ei ole oleskelulupaliitettä, joten niiden kaikki tarkastukset poistetaan.
 WITH permit_attachment_by_option (option_value, attachment_key) AS (
     VALUES ('1', 'eu-blue-card-attachment'),
            ('2', 'eu-family-member-permit'),

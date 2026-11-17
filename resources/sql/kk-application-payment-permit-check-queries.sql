@@ -35,7 +35,7 @@ VALUES (:application_key,
         :virkailija_oid,
         :organization_oid,
         now())
--- Hakemuksella on enintään yksi tarkistus. Toisen liitteen tarkistusta ei korvata, jolloin kysely ei palauta riviä.
+-- Hakemuksella on enintään yksi tarkastus. Toisen liitteen tarkastusta ei korvata, jolloin kysely ei palauta riviä.
 ON CONFLICT (application_key) DO UPDATE
     SET found_in_migri                  = EXCLUDED.found_in_migri,
         permit_valid_until              = EXCLUDED.permit_valid_until,
@@ -112,7 +112,7 @@ RETURNING attachment_key                                AS "attachment-key",
           inherited_time                                AS "inherited-time";
 
 -- name: yesql-delete-other-kk-application-payment-permit-checks
--- Poistaa hakemuksen tarkistukset muilta liitteiltä kuin :attachment_key, tai kaikki, kun se on NULL
+-- Poistaa hakemuksen tarkastukset muilta liitteiltä kuin :attachment_key, tai kaikki, kun se on NULL
 DELETE FROM kk_application_payment_permit_checks
 WHERE application_key = :application_key
   AND attachment_key IS DISTINCT FROM CAST(:attachment_key AS TEXT)
@@ -136,7 +136,7 @@ WHERE a.key = :application_key
   AND ans.key = :answer_key;
 
 -- name: yesql-lock-kk-application-payment-permit-checks
--- Lukitsee hakemuksen tarkistukset dokumenttivaihtoehdon tarkistamisen ja tarkistuksen tallentamisen ajaksi
+-- Lukitsee hakemuksen tarkastukset dokumenttivaihtoehdon tarkistamisen ja tarkastuksen tallentamisen ajaksi
 SELECT application_key
 FROM application_reviews
 WHERE application_key = :application_key

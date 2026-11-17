@@ -521,17 +521,17 @@
 (declare add-application-event-in-tx save-application-hakukohde-review-in-tx)
 
 (defn- remove-permit-checks-of-previous-document-option
-  "Poistaa oleskelulupatarkistukset, jotka eivät koske hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitettä,
-   kun hakija tai virkailija vaihtaa vaihtoehtoa. Muuten edellisen vaihtoehdon tarkistus jäisi hakemukselle, vaikka
+  "Poistaa oleskelulupatarkastukset, jotka eivät koske hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitettä,
+   kun hakija tai virkailija vaihtaa vaihtoehtoa. Muuten edellisen vaihtoehdon tarkastus jäisi hakemukselle, vaikka
    sen liitettä ei enää ole.
-   - Poisto kirjataan omana tapahtumanaan, eikä poistetun liitteen tarkistus periydy hakemukselle, vaikka hakija
+   - Poisto kirjataan omana tapahtumanaan, eikä poistetun liitteen tarkastus periydy hakemukselle, vaikka hakija
      vaihtaisi takaisin (ks. kk-application-payment-permit-check-inheritance).
-   - Jos poistettu tarkistus ratkaisi maksuvelvollisuuden (ks. payment-module/permit-check-decides-payment-obligation?),
+   - Jos poistettu tarkastus ratkaisi maksuvelvollisuuden (ks. payment-module/permit-check-decides-payment-obligation?),
      hakemuksen hakukohteiden tarkastettu maksuvelvollisuus palautetaan tarkastamattomaksi, jotta virkailija tarkastaa
      hakemuksen uudelleen. Liitteiden määräaikaa ei tarkisteta: määräajan jälkeen puuttuvat liitteet tekevät hakijasta
      maksuvelvollisen maksuvelvollisuuden tarkastuksesta riippumatta, joten nollaus vain palauttaa hakemuksen
      virkailijan tarkastettavaksi.
-   - Hakemukselle jo jääneitä edellisen vaihtoehdon tarkistuksia ei poisteta, jos vaihtoehto ei muutu."
+   - Hakemukselle jo jääneitä edellisen vaihtoehdon tarkastuksia ei poisteta, jos vaihtoehto ei muutu."
   [connection application-key hakukohteet old-answers new-answers virkailija-oid audit-session audit-logger]
   (let [option-key (keyword payment-module/kk-application-payment-choice-key)
         new-option (get-in new-answers [option-key :value])]

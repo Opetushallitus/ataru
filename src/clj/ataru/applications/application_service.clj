@@ -460,7 +460,7 @@
   "Kenttäkohtainen liitesuodatin rajaa hakemukset kyselyssä kaikkien liitemerkintöjen perusteella. Tässä karsitaan
    hakemukset, jotka löytyivät vain suodatuksessa ohitettavien merkintöjen perusteella (ks.
    application-states/remove-attachment-reviews-ignored-in-filtering). Kysely ei ohita niitä itse, jotta
-   oleskelulupatarkistuksen ehto on yhdessä paikassa (ks. payment-module/permit-check-decides-payment-obligation?)."
+   oleskelulupatarkastuksen ehto on yhdessä paikassa (ks. payment-module/permit-check-decides-payment-obligation?)."
   [query applications]
   (if-let [[attachment-key states] (first (:attachment-review-states query))]
     (filter #(application-states/attachment-review-states-filter-matches?

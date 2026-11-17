@@ -475,7 +475,7 @@
 
 (defn- permit-check-payment-obligation
   "Virkailijan hakijan dokumenttivaihtoehdon oleskelulupaliitteelle tekemän tarkistuksen mukainen maksuvelvollisuus:
-   :not-obligated, :obligated tai nil, kun tarkistus ei ohita liitemerkintöjä (ks.
+   :not-obligated, :obligated tai nil, kun tarkastus ei ohita liitemerkintöjä (ks.
    payment-module/permit-check-decides-payment-obligation?)."
   [application]
   (when-let [attachment-key (and (kk-application-payment-obligation-reviewed? application nil) ; ei turhaa kyselyä

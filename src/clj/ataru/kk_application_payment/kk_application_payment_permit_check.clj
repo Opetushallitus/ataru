@@ -138,11 +138,11 @@
                                                  session))
 
 (defn save-permit-check
-  "Palauttaa tallennetun tarkistuksen, :not-found, :unauthorized, :bad-request (liite ei ole oleskelulupaliite),
+  "Palauttaa tallennetun tarkastuksen, :not-found, :unauthorized, :bad-request (liite ei ole oleskelulupaliite),
    :attachment-not-selected (liite ei kuulu hakijan valitsemaan dokumenttivaihtoehtoon) tai
    :invalid-permit-valid-until (lupakortin voimassaolopäivä on sallittujen rajojen ulkopuolella).
-   Hakemuksella on enintään yksi tarkistus, joten vain valitun vaihtoehdon oleskelulupaliitteelle voi tallentaa
-   tarkistuksen."
+   Hakemuksella on enintään yksi tarkastus, joten vain valitun vaihtoehdon oleskelulupaliitteelle voi tallentaa
+   tarkastuksen."
   [organization-service tarjonta-service audit-logger session application-key attachment-key body]
   (cond
     (empty? (application-store/applications-authorization-data [application-key]))
@@ -171,7 +171,7 @@
           (normalize-body body)
           organization-oid (authorized-organization-oid organization-service tarjonta-service session application-key)
           ; Uusi on nil, kun liite ei ole hakijan valitseman vaihtoehdon oleskelulupaliite. Vaihtoehto luetaan lukon
-          ; jälkeen, jotta samanaikainen vaihtoehdon vaihto ei jätä hakemukselle edellisen vaihtoehdon tarkistusta.
+          ; jälkeen, jotta samanaikainen vaihtoehdon vaihto ei jätä hakemukselle edellisen vaihtoehdon tarkastusta.
           [old new]        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (store/lock-permit-checks! connection application-key)
                              (when (= attachment-key

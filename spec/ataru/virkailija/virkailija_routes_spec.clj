@@ -497,7 +497,7 @@
 
 (defn- init-continuous-residence-application!
   "Tallentaa hakemuksen, jolla hakija on valinnut jatkuvan oleskeluluvan dokumenttivaihtoehdon. Hakemukselle
-   tallennetaan annetut liitemerkinnät, oleskelulupatarkistus ja hakemusmaksuvelvollisuuden merkintä."
+   tallennetaan annetut liitemerkinnät, oleskelulupatarkastus ja hakemusmaksuvelvollisuuden merkintä."
   [{:keys [attachment-states found-in-migri payment-obligation-basis obligation-state]
     :or   {found-in-migri           true
            payment-obligation-basis "not-obligated"

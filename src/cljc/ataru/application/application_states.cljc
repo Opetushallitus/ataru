@@ -56,11 +56,11 @@
 
 (defn remove-attachment-reviews-ignored-in-filtering
   "Poistaa liitemerkinnöistä ne, joita ei oteta huomioon, kun hakemuslistaa suodatetaan liitteiden tilan perusteella.
-   Dokumenttivaihtoehdon puuttuviksi merkittyjä liitteitä ei oteta huomioon, kun virkailijan oleskelulupatarkistus
+   Dokumenttivaihtoehdon puuttuviksi merkittyjä liitteitä ei oteta huomioon, kun virkailijan oleskelulupatarkastus
    ratkaisee hakemusmaksuvelvollisuuden liitemerkinnöistä riippumatta (ks.
    payment-module/permit-check-decides-payment-obligation?). Hakijalle ei silloin tarvitse lähettää niistä
    muistutusta. Muut puuttuvat liitteet löytyvät suodatuksessa edelleen.
-   Hakemukselta luetaan tarkistukset (:kk-payment-permit-checks-for-filtering) ja hakukohteiden käsittelymerkinnät
+   Hakemukselta luetaan tarkastukset (:kk-payment-permit-checks-for-filtering) ja hakukohteiden käsittelymerkinnät
    (:application-hakukohde-reviews)."
   [application attachment-reviews]
   (let [ignored-attachment-keys (->> (:kk-payment-permit-checks-for-filtering application)
