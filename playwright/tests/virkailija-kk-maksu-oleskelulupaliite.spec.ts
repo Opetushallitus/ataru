@@ -1,5 +1,9 @@
 import { test, expect, Page, Request } from '@playwright/test'
-import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
+import {
+  selectOption,
+  unsafeFoldOption,
+  waitForResponse,
+} from '../playwright-utils'
 import {
   getHakemuksenLahettamisenOsoite,
   getHakijanNakymanOsoite,
@@ -41,6 +45,25 @@ const attachmentFixture = (id: string, label: string): FormNode => ({
   params: {},
   validators: [],
 })
+
+// Merkinnät voi tallentaa vain hakijan valitseman dokumenttivaihtoehdon
+// oleskelulupaliitteelle, joten lomakkeella on moduulin vaihtoehtokysymys.
+const DOCUMENT_OPTION_LABEL = 'Dokumenttivaihtoehto'
+const EU_BLUE_CARD_OPTION = '1'
+
+const documentOptionFixture: FormNode = {
+  fieldClass: 'formField',
+  fieldType: 'dropdown',
+  id: 'kk-application-payment-option',
+  label: { fi: DOCUMENT_OPTION_LABEL },
+  metadata: systemMetadata,
+  params: {},
+  validators: [],
+  options: [
+    { value: '0', label: { fi: 'Passi' } },
+    { value: EU_BLUE_CARD_OPTION, label: { fi: 'Sininen kortti' } },
+  ],
+}
 
 // Merkinnät näytetään hakemusmaksumoduulin oleskelulupaliitteille, jotka
 // tunnistetaan moduulin kiinteistä kenttä-id:istä.
@@ -95,6 +118,7 @@ const injectAttachmentFields = async (formId: number) => {
       content: [
         hakukohteet,
         personInfoModule,
+        documentOptionFixture,
         attachmentFixture('eu-blue-card-attachment', PERMIT_ATTACHMENT_LABEL),
         attachmentFixture('pw-other-attachment', OTHER_ATTACHMENT_LABEL),
         attachmentFixture(
@@ -169,6 +193,14 @@ test.beforeAll(async ({ browser }) => {
     ),
   ])
   await taytaHenkilotietomoduuli(page, HAKIJA)
+  await selectOption(
+    page,
+    page
+      .locator('.application__form-field')
+      .filter({ hasText: DOCUMENT_OPTION_LABEL })
+      .locator('select'),
+    EU_BLUE_CARD_OPTION
+  )
   await Promise.all([
     waitForResponse(page, 'POST', (url) =>
       url.includes(getHakemuksenLahettamisenOsoite())
