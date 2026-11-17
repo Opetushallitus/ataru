@@ -54,10 +54,10 @@
     session
     organization-service
     [:form-edit]
-    (fn [] false)
+    (constantly false)
     (fn [org-oids]
       (form-editable-by-organizations? tarjonta-service org-oids form))
-    (fn [] true)))
+    (constantly true)))
 
 (defn get-organizations-with-edit-rights
   [session]
