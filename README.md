@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml/badge.svg)](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml)
 
-A system for creating custom forms, applying to education and handling applications.
+A system for creating custom forms, applying to education and handling applications. 
 
 ## How to start
 
