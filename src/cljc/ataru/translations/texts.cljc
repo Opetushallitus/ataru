@@ -371,6 +371,9 @@
    :opens-in-new-tab                            {:fi "(avautuu uuteen välilehteen)"
                                                  :sv "(öppnas i en ny flik)"
                                                  :en "(opens in a new tab)"}
+   :external-link-opens-in-new-tab              {:fi "Ulkoinen linkki, avautuu uuteen välilehteen"
+                                                 :sv "Extern länk, öppnas i en ny flik"
+                                                 :en "External link, opens in a new tab"}
    :oppiaine                                    {:fi "Oppiaine"
                                                  :sv "Läroämne"
                                                  :en "Subject"}
