@@ -1010,7 +1010,7 @@
                 (should= {:application-key application-key
                           :state (:not-required payment/all-states)}
                          (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))
-                (should= [] (permit-check/get-permit-checks application-key))))
+                (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
           (it "should keep the residence permit checks saved after the reset was decided"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1050,7 +1050,7 @@
                 (should= "unreviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
                 (should= ["eu-blue-card-attachment"]
-                         (map :attachment-key (permit-check/get-permit-checks application-key)))))
+                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should reset the payment obligation found in Migri and exempt the applicant in the same run when a new attachment is added"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1081,7 +1081,7 @@
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= "unreviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= [] (permit-check/get-permit-checks application-key))
+                (should= [] (permit-check/get-permit-checks fake-organization-service application-key))
                 (should= (:not-required payment/all-states)
                          (:state (first (payment/get-raw-payments [application-key]))))))
 
@@ -1115,7 +1115,7 @@
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
                 (should= ["continuous-residence-permit-front"]
-                         (map :attachment-key (permit-check/get-permit-checks application-key)))
+                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))
                 (should= (:not-required payment/all-states)
                          (:state (first (payment/get-raw-payments [application-key]))))))
 
@@ -1151,7 +1151,7 @@
                          (select-keys (first (payment/get-raw-payments [application-key])) [:state :maksut-secret]))
                 (should= "unreviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= [] (permit-check/get-permit-checks application-key))))
+                (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
           (it "should reset the payment obligation found in Migri without sending an invoice when a new attachment is added and another attachment is incomplete"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1177,7 +1177,7 @@
                 (should= {:state (:not-required payment/all-states) :maksut-secret nil}
                          (select-keys (first (payment/get-raw-payments [application-key])) [:state :maksut-secret]))
                 (should= "unreviewed" (obligation-review-state application-key))
-                (should= [] (permit-check/get-permit-checks application-key))))
+                (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
           (it "should keep the exemption found in Migri when a new attachment is added although the payment was required"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1212,7 +1212,7 @@
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
                 (should= ["continuous-residence-permit-front"]
-                         (map :attachment-key (permit-check/get-permit-checks application-key)))))
+                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should not reset the payment obligation found in Migri when a new attachment is added after the payment was paid"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1245,7 +1245,7 @@
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
                 (should= ["continuous-residence-permit-front"]
-                         (map :attachment-key (permit-check/get-permit-checks application-key)))))
+                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should not reset the payment obligation found in Migri when a new attachment is added and the payment is not required due to citizenship"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1277,7 +1277,7 @@
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
                 (should= ["continuous-residence-permit-front"]
-                         (map :attachment-key (permit-check/get-permit-checks application-key)))))
+                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should not reset the payment obligation found in Migri when a new attachment is added after the payment became overdue"
               (let [[application-id application-key] (init-application-obligated-by-migri)]
@@ -1289,7 +1289,7 @@
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= (:overdue payment/all-states) (payment-state application-key))
                 (should= "reviewed" (obligation-review-state application-key))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should not reset the payment obligation found in Migri when a new attachment is added after the attachment deadline"
               (let [[application-id application-key] (init-application-obligated-by-migri)]
@@ -1306,7 +1306,7 @@
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= (:awaiting payment/all-states) (payment-state application-key))
                 (should= "reviewed" (obligation-review-state application-key))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should reset the payment obligation found in Migri and exempt the applicant when a new attachment is added after another application was paid"
               (let [[application-id
@@ -1327,7 +1327,7 @@
                 (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner)
                 (should= (:not-required payment/all-states) (payment-state application-key))
                 (should= "unreviewed" (obligation-review-state application-key))
-                (should= [] (permit-check/get-permit-checks application-key))))
+                (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
           (it "should keep the payment obligation review state virkailija changes after the reset was decided"
               (let [[application-id application-key] (init-application-obligated-by-migri)
@@ -1345,7 +1345,7 @@
                                   result))]
                   (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner))
                 (should= "in-migri-review" (obligation-review-state application-key))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))
                 ; the payment was determined as if the review was reset
                 (should= (:not-required payment/all-states) (payment-state application-key))))
 
@@ -1387,7 +1387,7 @@
                   (java.time.Instant/now))
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should not reset kk application payment obligation state when new attachments are added after review and payment is not required"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1430,7 +1430,7 @@
                            :found-in-migri true
                            :payment-obligation-basis "not-obligated"}]
                          (map #(select-keys % [:attachment-key :found-in-migri :payment-obligation-basis])
-                              (permit-check/get-permit-checks application-key)))))
+                              (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should keep payment obligation state and permit checks of an exempted application when the person's other payments are modified"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1456,7 +1456,7 @@
                   (java.time.Instant/now))
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should reset only the obligated application of the person when new attachments are added to several applications"
               (let [[obligated-key exempted-key] (->> (unit-test-db/init-db-fixture
@@ -1485,10 +1485,10 @@
                   (java.time.Instant/now))
                 (should= "unreviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews obligated-key))))
-                (should= [] (permit-check/get-permit-checks obligated-key))
+                (should= [] (permit-check/get-permit-checks fake-organization-service obligated-key))
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews exempted-key))))
-                (should= 1 (count (permit-check/get-permit-checks exempted-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service exempted-key)))))
 
           (it "should keep permit checks when resetting the payment obligation state fails"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1516,7 +1516,7 @@
                                   (java.time.Instant/now))))
                 (should= "reviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should keep permit checks when new attachments are added while payment obligation is in Migri review"
               (let [application-id (unit-test-db/init-db-fixture
@@ -1542,7 +1542,7 @@
                   (java.time.Instant/now))
                 (should= "in-migri-review"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= 1 (count (permit-check/get-permit-checks application-key)))))
+                (should= 1 (count (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should reset 'exemption-not-verified' kk application payment obligation state to 'unreviewed' when applicant delivers exemption attachment"
               (let [application (application-store/get-application

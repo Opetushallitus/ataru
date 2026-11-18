@@ -1,54 +1,111 @@
 (ns ataru.kk-application-payment.kk-application-payment-permit-check
   "Virkailija's notes on kk application payment residence permit attachments: whether the permit was found in
    Migri's permit information service, permit card validity and the basis of the payment obligation."
-  ;; TODO OPHHAMA-17: the permit card validity determines whether the checks are inherited
   (:require [ataru.applications.application-access-control :as aac]
             [ataru.applications.application-store :as application-store]
             [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.db.db :as db]
             [ataru.kk-application-payment.kk-application-payment-permit-check-store :as store]
             [ataru.log.audit-log :as audit-log]
-            [ataru.organization-service.session-organizations :as session-orgs]
+            [ataru.organization-service.organization-client :as org-client]
+            [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.time :as time]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
 
+(def ^:private oph-name
+  {:fi "Opetushallitus"
+   :sv "Utbildningsstyrelsen"
+   :en "Finnish National Agency for Education"})
+
 (defn- ->public
-  "Who made the check is shown through application events, which do not expose virkailija oids either."
+  "Who made the check is shown through application events, which do not expose virkailija oids either. An inherited
+   check is shown with its original check instead, as the events of the original application are not shown."
   [check]
-  (dissoc check :virkailija-oid :organization-oid))
+  (dissoc check :virkailija-oid :virkailija-first-name :virkailija-last-name :organization-oid))
+
+(defn- oppilaitos
+  "The oppilaitos level of an organization and its parents (see get-organization-with-parents), e.g. the oppilaitos
+   of a toimipiste."
+  [organizations]
+  (last (filter #(contains? (:types %) :oppilaitos) organizations)))
+
+(defn- organization-to-show
+  "The oppilaitos the check was made in, or OPH. Nil when not known."
+  [organization-service organization-oid]
+  (cond
+    (nil? organization-oid)
+    nil
+
+    (= org-client/oph-organization organization-oid)
+    {:oid organization-oid :name oph-name}
+
+    :else
+    (try
+      (some-> (organization-service/get-organization-with-parents organization-service organization-oid)
+              oppilaitos
+              (select-keys [:oid :name]))
+      (catch Exception e
+        (log/error e "Could not get the organization" organization-oid)
+        nil))))
+
+(defn- with-original-check
+  [organization-service check]
+  (cond-> (->public check)
+          (some? (:inherited-from-application-key check))
+          (assoc :original-check {:application-key (:inherited-from-application-key check)
+                                  :checked-time    (:checked-time check)
+                                  :virkailija-name (string/join " " (remove string/blank?
+                                                                            [(:virkailija-first-name check)
+                                                                             (:virkailija-last-name check)]))
+                                  :organization    (organization-to-show organization-service
+                                                                         (:organization-oid check))})))
 
 (defn get-permit-checks
-  [application-key]
-  (mapv ->public (store/get-permit-checks application-key)))
+  [organization-service application-key]
+  (mapv (partial with-original-check organization-service) (store/get-permit-checks application-key)))
 
 (defn- authorized-organization-oid
-  "Tarjoaja organization of the first applied hakukohde (in hakutoive order) that the virkailija has edit rights to.
-   Nil for superusers without a selected organization, as they are not tied to any korkeakoulu."
-  ;; TODO OPHHAMA-17: nil also when the virkailija is authorized only through the form's organization or a
-  ;; hakukohderyhmä, so nil does not necessarily mean a superuser when showing the korkeakoulu of an inherited check
+  "The oppilaitos of the first applied hakukohde (in hakutoive order) the virkailija is authorized to through the
+   organization they are attached to with edit rights (or have selected): the tarjoaja or one of its parents. The
+   oppilaitos is shown instead of the organization, e.g. for a virkailija attached to a toimipiste or a
+   koulutustoimija. OPH for superusers without a selected organization and for virkailijat attached to OPH. Nil when
+   the virkailija is authorized only through the form's organization or a hakukohderyhmä, or the hakukohde has no
+   oppilaitos, as no korkeakoulu can be determined then, or when the organizations cannot be fetched, as saving the
+   check is not prevented by that."
   [organization-service tarjonta-service session application-key]
-  (let [hakukohde-oids (some-> (application-store/applications-authorization-data [application-key])
-                               first
-                               :hakukohde)
-        hakukohteet    (when (seq hakukohde-oids)
-                         (let [by-oid (->> (tarjonta/get-hakukohteet tarjonta-service hakukohde-oids)
-                                           (map (juxt :oid identity))
-                                           (into {}))]
-                           (keep by-oid hakukohde-oids)))]
-    (session-orgs/run-org-authorized
-      session
-      organization-service
-      [:edit-applications]
-      (constantly nil)
-      (fn [authorized-oids]
-        (->> hakukohteet
-             (mapcat :tarjoaja-oids)
-             (filter #(contains? authorized-oids %))
-             first))
-      (constantly nil))))
+  (let [selected-organization (:selected-organization session)]
+    (if (and (-> session :identity :superuser) (nil? selected-organization))
+      org-client/oph-organization
+      (try
+        (let [attached-oids  (if selected-organization
+                               #{(:oid selected-organization)}
+                               (->> (get-in session [:identity :user-right-organizations :edit-applications])
+                                    (map :oid)
+                                    set))
+              hakukohde-oids (some-> (application-store/applications-authorization-data [application-key])
+                                     first
+                                     :hakukohde)
+              hakukohteet    (when (seq hakukohde-oids)
+                               (let [by-oid (->> (tarjonta/get-hakukohteet tarjonta-service hakukohde-oids)
+                                                 (map (juxt :oid identity))
+                                                 (into {}))]
+                                 (keep by-oid hakukohde-oids)))]
+          (or (->> hakukohteet
+                   (mapcat :tarjoaja-oids)
+                   (keep (fn [tarjoaja-oid]
+                           (let [organizations (organization-service/get-organization-with-parents organization-service
+                                                                                                   tarjoaja-oid)]
+                             (when (some (comp attached-oids :oid) organizations)
+                               (:oid (oppilaitos organizations))))))
+                   first)
+              ; The parents do not include OPH
+              (attached-oids org-client/oph-organization)))
+        (catch Exception e
+          (log/error e "Could not determine the organization of the virkailija for application" application-key)
+          nil)))))
 
 ; A day of tolerance, as the browser checks the limits against its own date
 (defn- permit-valid-until-in-range?
@@ -127,7 +184,8 @@
                                           :attachmentKey  attachment-key}
                               :session   session
                               :operation (if old audit-log/operation-modify audit-log/operation-new)}
-                             old (assoc :old old)))
+                             ; the virkailija is identified by the oid
+                             old (assoc :old (dissoc old :virkailija-first-name :virkailija-last-name))))
       (->public new))))
 
 (defn reset-permit-checks

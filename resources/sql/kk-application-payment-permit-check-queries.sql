@@ -1,17 +1,20 @@
 -- name: yesql-get-kk-application-payment-permit-checks
-SELECT attachment_key                                AS "attachment-key",
-       found_in_migri                                AS "found-in-migri",
-       to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
-       payment_obligation_basis                      AS "payment-obligation-basis",
-       payment_obligation_other_reason               AS "payment-obligation-other-reason",
-       virkailija_oid                                AS "virkailija-oid",
-       organization_oid                              AS "organization-oid",
-       checked_time                                  AS "checked-time",
-       inherited_from_application_key                AS "inherited-from-application-key",
-       inherited_time                                AS "inherited-time"
-FROM kk_application_payment_permit_checks
-WHERE application_key = :application_key
-ORDER BY attachment_key;
+SELECT c.attachment_key                                AS "attachment-key",
+       c.found_in_migri                                AS "found-in-migri",
+       to_char(c.permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
+       c.payment_obligation_basis                      AS "payment-obligation-basis",
+       c.payment_obligation_other_reason               AS "payment-obligation-other-reason",
+       c.virkailija_oid                                AS "virkailija-oid",
+       v.first_name                                    AS "virkailija-first-name",
+       v.last_name                                     AS "virkailija-last-name",
+       c.organization_oid                              AS "organization-oid",
+       c.checked_time                                  AS "checked-time",
+       c.inherited_from_application_key                AS "inherited-from-application-key",
+       c.inherited_time                                AS "inherited-time"
+FROM kk_application_payment_permit_checks c
+JOIN virkailija v ON v.oid = c.virkailija_oid
+WHERE c.application_key = :application_key
+ORDER BY c.attachment_key;
 
 -- name: yesql-upsert-kk-application-payment-permit-check
 INSERT INTO kk_application_payment_permit_checks (application_key,
@@ -43,6 +46,42 @@ ON CONFLICT (application_key, attachment_key) DO UPDATE
         inherited_from_application_key  = NULL,
         inherited_time                  = NULL,
         modified_time                   = now()
+RETURNING attachment_key                                AS "attachment-key",
+          found_in_migri                                AS "found-in-migri",
+          to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
+          payment_obligation_basis                      AS "payment-obligation-basis",
+          payment_obligation_other_reason               AS "payment-obligation-other-reason",
+          virkailija_oid                                AS "virkailija-oid",
+          organization_oid                              AS "organization-oid",
+          checked_time                                  AS "checked-time",
+          inherited_from_application_key                AS "inherited-from-application-key",
+          inherited_time                                AS "inherited-time";
+
+-- name: yesql-insert-inherited-kk-application-payment-permit-check
+-- Copy of an earlier check of the applicant, kept as such when the application already has a check of its own
+INSERT INTO kk_application_payment_permit_checks (application_key,
+                                                  attachment_key,
+                                                  found_in_migri,
+                                                  permit_valid_until,
+                                                  payment_obligation_basis,
+                                                  payment_obligation_other_reason,
+                                                  virkailija_oid,
+                                                  organization_oid,
+                                                  checked_time,
+                                                  inherited_from_application_key,
+                                                  inherited_time)
+VALUES (:application_key,
+        :attachment_key,
+        :found_in_migri,
+        :permit_valid_until::date,
+        :payment_obligation_basis,
+        :payment_obligation_other_reason,
+        :virkailija_oid,
+        :organization_oid,
+        :checked_time,
+        :inherited_from_application_key,
+        now())
+ON CONFLICT (application_key, attachment_key) DO NOTHING
 RETURNING attachment_key                                AS "attachment-key",
           found_in_migri                                AS "found-in-migri",
           to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",

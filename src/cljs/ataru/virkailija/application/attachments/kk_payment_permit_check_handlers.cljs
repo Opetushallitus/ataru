@@ -160,6 +160,12 @@
   (fn [db [_ application-key attachment-key]]
     (get-in db (conj (check-path application-key attachment-key) :check))))
 
+; Only the stored check is shown as inherited, the virkailija's own changes replace the inherited check when saved
+(re-frame/reg-sub
+  :kk-payment-permit-check/original-check
+  (fn [db [_ application-key attachment-key]]
+    (get-in db (conj (check-path application-key attachment-key) :saved :original-check))))
+
 (re-frame/reg-sub
   :kk-payment-permit-check/save-error?
   (fn [db [_ application-key attachment-key]]

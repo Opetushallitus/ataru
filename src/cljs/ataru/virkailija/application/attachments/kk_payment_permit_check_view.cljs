@@ -1,9 +1,13 @@
 (ns ataru.virkailija.application.attachments.kk-payment-permit-check-view
   (:require [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.util :as util]
             [ataru.virkailija.application.attachments.kk-payment-permit-check-handlers :as handlers]
             [ataru.virkailija.date-time-picker :as date-time-picker]
+            [ataru.virkailija.temporal :as temporal]
+            [cljs-time.core :as t]
             [cljs-time.format :as f]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [reagent.core :as r]))
 
 (def ^:private migri-permit-service-url "https://miso1.sovellukset.migri.fi")
 
@@ -138,17 +142,58 @@
                                    :none)
           :on-blur     #(re-frame/dispatch [:kk-payment-permit-check/save-now application-key attachment-key])}]])]))
 
+(defn- original-check-details [id {:keys [application-key organization checked-time virkailija-name]}]
+  (let [lang @(re-frame/subscribe [:editor/virkailija-lang])]
+    [:dl.kk-payment-permit-check__original-check {:id id}
+     [:dt (translation :kk-payment-permit-check-original-application)]
+     [:dd application-key]
+     [:dt (translation :kk-payment-permit-check-original-organization)]
+     [:dd (if organization
+            (util/from-multi-lang (:name organization) lang)
+            (translation :kk-payment-permit-check-original-organization-unknown))]
+     [:dt (translation :kk-payment-permit-check-original-checked-time)]
+     [:dd (some->> (cond-> checked-time
+                     (string? checked-time) temporal/str->googdate)
+                   t/to-default-time-zone
+                   (f/unparse (f/formatter "d.M.yyyy")))]
+     [:dt (translation :kk-payment-permit-check-original-virkailija)]
+     [:dd virkailija-name]]))
+
+; The details of the original check are hidden until the virkailija opens them
+(defn- inherited-notification [application-key attachment-key _original-check]
+  (let [open? (r/atom false)
+        id    (field-id application-key attachment-key :original-check)]
+    (fn [_ _ original-check]
+      [:div.kk-payment-permit-check__inherited
+       {:class (when @open? "kk-payment-permit-check__inherited--open")}
+       [notification [(str (translation :kk-payment-permit-check-inherited-from) " ")
+                      [:button.kk-payment-permit-check__details-toggle
+                       {:type          "button"
+                        :aria-expanded @open?
+                        :aria-controls id
+                        :on-click      #(swap! open? not)}
+                       (translation (if @open?
+                                      :kk-payment-permit-check-hide-original-check
+                                      :kk-payment-permit-check-show-original-check))]]]
+       (when @open?
+         [original-check-details id original-check])])))
+
 (defn permit-check-notification
   "Guidance on checking a kk application payment residence permit, depending on whether the applicant has delivered
-   the attachment."
-  [attachment-delivered?]
-  (if attachment-delivered?
-    [notification [(str (translation :kk-payment-permit-check-attachment-delivered) " ")
-                   [migri-link]
-                   "."]]
-    [notification [(str (translation :kk-payment-permit-check-attachment-missing) " ")
-                   [migri-link]
-                   (str " " (translation :kk-payment-permit-check-attachment-missing-suffix))]]))
+   the attachment, or the original check of inherited notes."
+  [application-key attachment-key attachment-delivered?]
+  (if-let [original-check @(re-frame/subscribe [:kk-payment-permit-check/original-check
+                                                application-key attachment-key])]
+    ; Keyed so that the details are not left open, and the ids are not left stale, when the application changes
+    ^{:key (str application-key "-" (name attachment-key))}
+    [inherited-notification application-key attachment-key original-check]
+    (if attachment-delivered?
+      [notification [(str (translation :kk-payment-permit-check-attachment-delivered) " ")
+                     [migri-link]
+                     "."]]
+      [notification [(str (translation :kk-payment-permit-check-attachment-missing) " ")
+                     [migri-link]
+                     (str " " (translation :kk-payment-permit-check-attachment-missing-suffix))]])))
 
 (defn permit-check
   "Virkailija's notes on a kk application payment residence permit attachment."
