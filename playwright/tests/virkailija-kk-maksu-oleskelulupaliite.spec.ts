@@ -46,6 +46,7 @@ const attachmentFixture = (id: string, label: string): FormNode => ({
 // tunnistetaan moduulin kiinteistä kenttä-id:istä.
 const PERMIT_ATTACHMENT_LABEL = 'EU:n sininen kortti'
 const OTHER_ATTACHMENT_LABEL = 'Muu liite'
+const P_PERMIT_ATTACHMENT_LABEL = 'Pysyvä oleskelulupakortti'
 
 const isoDateYearsFromToday = (years: number) => {
   const date = new Date()
@@ -96,6 +97,10 @@ const injectAttachmentFields = async (formId: number) => {
         personInfoModule,
         attachmentFixture('eu-blue-card-attachment', PERMIT_ATTACHMENT_LABEL),
         attachmentFixture('pw-other-attachment', OTHER_ATTACHMENT_LABEL),
+        attachmentFixture(
+          'permanent-residence-permit',
+          P_PERMIT_ATTACHMENT_LABEL
+        ),
       ],
     },
   })
@@ -464,4 +469,36 @@ test('näyttää alkuperäisen tarkastuksen korkeakoulun tuntemattomana, kun sit
   await expect(
     inheritedNotification().locator('dl').locator('dd').nth(1)
   ).toHaveText('Ei tiedossa')
+})
+
+test('ei vaadi P-luvan lupakortin voimassaoloa', async () => {
+  await openApplicationAttachments()
+  const pPermitCheck = attachmentRow(P_PERMIT_ATTACHMENT_LABEL).locator(
+    '.kk-payment-permit-check'
+  )
+  const isPPermitCheckPut = (request: Request) =>
+    request.method() === 'PUT' &&
+    request
+      .url()
+      .includes('/kk-payment-permit-check/permanent-residence-permit')
+
+  await Promise.all([
+    page.waitForRequest(isPPermitCheckPut),
+    pPermitCheck.getByLabel('Kyllä').click(),
+  ])
+  await expect(
+    pPermitCheck.locator('.kk-payment-permit-check__notification')
+  ).toHaveText('Lisää tieto hakijan hakemusmaksuvelvollisuudesta.')
+  await expect(
+    pPermitCheck.locator('label', { hasText: 'Lupakortti voimassa' })
+  ).toHaveText('Lupakortti voimassa')
+
+  // Ohje piilotetaan, kun peruste on merkitty, vaikka voimassaoloa ei ole
+  await Promise.all([
+    page.waitForRequest(isPPermitCheckPut),
+    pPermitCheck.getByLabel('Ei maksuvelvollinen').click(),
+  ])
+  await expect(
+    pPermitCheck.locator('.kk-payment-permit-check__notification')
+  ).toHaveCount(0)
 })
