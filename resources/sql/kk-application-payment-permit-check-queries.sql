@@ -58,7 +58,7 @@ RETURNING attachment_key                                AS "attachment-key",
           inherited_time                                AS "inherited-time";
 
 -- name: yesql-insert-inherited-kk-application-payment-permit-check
--- Copy of an earlier check of the applicant, kept as such when the application already has a check of its own
+-- Kopio hakijan aiemmasta tarkistuksesta. Hakemuksen oma tarkistus säilyy ennallaan, jos sellainen on jo
 INSERT INTO kk_application_payment_permit_checks (application_key,
                                                   attachment_key,
                                                   found_in_migri,
@@ -94,7 +94,7 @@ RETURNING attachment_key                                AS "attachment-key",
           inherited_time                                AS "inherited-time";
 
 -- name: yesql-delete-kk-application-payment-permit-checks
--- Checks saved after :modified_until are kept, as they may already take the reason for the removal into account
+-- Hetken :modified_until jälkeen tallennetut tarkistukset säilytetään, koska niissä on voitu jo huomioida poiston syy
 DELETE FROM kk_application_payment_permit_checks
 WHERE application_key = :application_key
   AND modified_time <= :modified_until

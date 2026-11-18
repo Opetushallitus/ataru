@@ -1,7 +1,7 @@
 (ns ataru.kk-application-payment.kk-application-payment-permit-check-store
-  "Storage of virkailija's notes on kk application payment residence permit attachments. Kept apart from the
-   access controlled handling of the notes, as payment determination depends on them and the access control
-   depends on payment determination."
+  "Virkailijan hakemusmaksun oleskelulupaliitteisiin tekemien merkintöjen tallennus. Erillään merkintöjen
+   pääsynhallinnallisesta käsittelystä, koska maksun määrittely riippuu merkinnöistä ja pääsynhallinta maksun
+   määrittelystä."
   (:require [ataru.db.db :as db]
             [yesql.core :as yesql]))
 
@@ -31,7 +31,7 @@
   (first (yesql-upsert-kk-application-payment-permit-check check {:connection connection})))
 
 (defn insert-inherited-permit-check!
-  "Returns nil when the application already has a check of the attachment."
+  "Palauttaa nil, kun hakemuksella on jo liitteen tarkistus."
   [connection check]
   (first (yesql-insert-inherited-kk-application-payment-permit-check check {:connection connection})))
 
