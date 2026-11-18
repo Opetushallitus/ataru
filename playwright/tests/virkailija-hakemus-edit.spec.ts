@@ -435,6 +435,36 @@ test.describe('Virkailijan hakemuksen muokkaus', () => {
     expect(displayedValuesWithLegacyEmptySlot).toEqual(expectedValues)
   })
 
+  test('muutoshistorian kentän klikkaus vierittää kenttään ja korostaa sen', async () => {
+    const alkuperainenViewport = page.viewportSize()!
+    await page.setViewportSize({ width: 1280, height: 400 })
+    await page.goto(
+      `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`
+    )
+    await page.getByTestId('show-results').click()
+    await expect(
+      page.locator('.application-handling__review-area-main-heading')
+    ).toContainText(seededValues.lastName)
+
+    await page
+      .locator('.application-handling__event-row-header > span')
+      .filter({ hasText: 'muutosta' })
+      .first()
+      .click()
+    const muutos = page
+      .locator('.application-handling__event-row-update-list li a')
+      .first()
+    await muutos.scrollIntoViewIfNeeded()
+    const kentta = page.locator('#phone')
+    await expect(kentta).not.toBeInViewport()
+
+    await muutos.click()
+
+    await expect(kentta).toHaveClass(/highlighted/)
+    await expect(kentta).toBeInViewport()
+    await page.setViewportSize(alkuperainenViewport)
+  })
+
   test('näyttää virheen virheellisellä avaimella', async () => {
     const secret = requireVirkailijaSecret(virkailijaSecret)
     await page.goto(`/hakemus?virkailija-secret=${secret}-invalid`)

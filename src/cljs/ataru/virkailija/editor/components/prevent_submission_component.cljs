@@ -8,13 +8,13 @@
 
 (defn- on-change-handler
   [path]
-  (let [parent-path (parent-field-path path)]
+  (let [parent-path  (parent-field-path path)
+        option-value @(subscribe [:editor/get-component-value path :value])]
     (fn [event]
       (let [checked (boolean (-> event .-target .-checked))
             event (if checked
                     :editor/add-invalid-value-validator
-                    :editor/remove-invalid-value-validator)
-            option-value @(subscribe [:editor/get-component-value path :value])]
+                    :editor/remove-invalid-value-validator)]
         (dispatch [event option-value parent-path])))))
 
 (defn prevent-submission-option
