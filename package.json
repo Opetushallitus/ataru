@@ -5,7 +5,7 @@
     "url": "https://github.com/Opetushallitus/lomake-editori.git"
   },
   "license": "EUPL-1.1",
-  "packageManager": "pnpm@9.15.5",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "prepare": "husky",
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
@@ -19,53 +19,31 @@
   },
   "lint-staged": {
     "**/*.{js,ts}": [
-      "eslint"
+      "eslint --no-warn-ignored"
     ],
     "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
       "clj-kondo --lint"
     ]
   },
-  "pnpm": {
-    "overrides": {
-      "body-parser": "1.20.3",
-      "cross-spawn": "7.0.6",
-      "form-data": "4.0.4",
-      "minimatch": "3.0.5",
-      "systeminformation": "5.27.12",
-      "tar-fs": "2.1.4",
-      "ua-parser-js": "0.7.35",
-      "unzip-stream": "0.3.4"
-    }
-  },
   "devDependencies": {
     "@playwright/test": "^1.55.1",
     "@types/node": "^24.12.2",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
-    "@typescript-eslint/parser": "^7.17.0",
-    "chai": "^4.4.1",
-    "child-process": "^1.0.2",
     "clj-kondo": "^2024.2.12",
     "cypress": "^4.12.1",
-    "eslint": "8.56.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-chai-friendly": "1.0.0",
-    "eslint-plugin-cypress": "3.4.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-playwright": "^1.6.2",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-playwright": "^2.12.0",
     "eslint-plugin-prefer-arrow": "1.2.3",
-    "eslint-plugin-prettier": "5.2.1",
+    "eslint-plugin-prettier": "5.5.6",
     "fp-ts": "2.16.8",
+    "globals": "^17.12.0",
     "http-server": "^14.1.1",
     "husky": "9.1.1",
-    "karma": "^5.2.3",
-    "karma-chrome-launcher": "3.2.0",
-    "karma-cljs-test": "0.1.0",
     "less": "^4.2.0",
-    "lint-staged": "15.2.7",
-    "only-allow": "1.1.1",
+    "lint-staged": "17.6.0",
     "pm2": "7.0.4",
     "prettier": "3.3.3",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.71.0"
   }
 }

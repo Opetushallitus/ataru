@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <span style="font-size: 24px;">Vi har mottagit en ansökan som gäller ditt minderåriga barn</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ansökningsnummer: {{application-oid}}
+        </td>
+      </tr>
+      {% if hakukohteet|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ansökningsönskemål:
+        </td>
+      </tr>
+      {% for h in hakukohteet %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          {{h}}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
+        <tr>
+          <td style="padding-left: 20px; padding-top: 20px;">
+            Bilaga med anvisningar som den sökande har fått:
+          </td>
+        </tr>
+      {% endif %}
+      {% if any attachments-without-answer|not-empty %}
+        <tr>
+          <td>
+            <ul>
+              {% for attachment in attachments-without-answer %}
+                <li>
+                  {{attachment.label}}
+                  {% if attachment.deadline|not-empty %}
+                  <br>Bilagan ska skickas senast {{attachment.deadline}}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+        </tr>
+      {% endif %}
+      {% if any kouta-attachments-by-type|not-empty %}
+      <tr>
+        <td>
+          <ul>
+            {% for type,attachments in kouta-attachments-by-type|not-empty %}
+            <li>
+              {{type}}
+              <br><br>
+              {{attachments.0.info-text}}
+              <ul>
+                {% for attachment in attachments %}
+                  <li>
+                    {{attachment.label|safe}}
+                    {% if attachment.deadline|not-empty %}
+                    Bilagan ska skickas senast {{attachment.deadline}}
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+          </ul>
+          <ul></ul>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+          Ansökningsönskemålen och senare också resultaten av studerandeantagningen finns till påseende för vårdnadshavaren i tjänsten Valpas.
+        </td>
+      </tr>
+      {% if applicant-authenticated? %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          I tjänsten Min Studieifo kan den sökande se och göra ändringar i sin ansökan. Ändringar kan göras under ansökningstiden. 
+          I tjänsten Min Studieinfo kan den sökande också se sina antagningsresultat och ta emot en studieplats.
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Den sökande kan se och göra ändringar i sin ansökan via den länk som hen fått. 
+          Om den sökande har nätbankskoder, ett mobilcertifikat eller ett elektroniskt identitetskort kan hen alternativt logga in via  
+          <a style="color: #0093C4;" href="https://www.opintopolku.fi/konfo/sv" target="_blank">Studieinfo.fi</a> 
+          och göra ändringar i sin ansökan i tjänsten Min Studieinfo under ansökningstiden. 
+          I tjänsten Min Studieinfo kan den sökande också se sina antagningsresultat och ta emot en studieplats.
+        </td>
+      </tr>
+      {% endif %}
+      {% if signature|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{signature|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>

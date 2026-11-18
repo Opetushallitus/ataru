@@ -7,102 +7,259 @@
   .flex-column(flex-start, flex-start);
 
   position: relative;
-}
-
-.a-dropdown-button-container {
-  .flex-row(center, center);
-}
-
-.a-dropdown-button__label:not(:first-child) {
-  color: @primary-green-700;
-  margin-left: 10px;
-}
-
-.a-dropdown-select-container {
-  .flex-row(center, space-between);
-
   width: 100%;
 }
 
-.a-dropdown-select {
-  .default-font();
+.a-dropdown-field {
+  .flex-row(center, flex-start);
 
-  background-color: transparent;
-  border: 0;
-  color: @component-gray;
-  left: -5px;
-  margin-left: 4px;
-  min-width: 24px;
-  outline: 0;
-  position: relative;
+  background-image: linear-gradient(-180deg, #f0f0f0 0%, #FFFFFF 9%);
+  border: 1px solid #C1C1C1;
+  border-radius: 2px;
+  box-sizing: border-box;
+  cursor: text;
+  height: 43px;
+  padding: 0 0 0 8px;
+  width: 100%;
 
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.a-dropdown-select--collapsed {
-  display: none;
-}
-
-.a-dropdown-list {
-  left: -7px;
-  position: absolute;
-  top: 30px;
-  z-index: 10;
-}
-
-.a-dropdown-button--chevron {
-  margin-left: 5px;
-}
-
-.a-dropdown-list--collapsed {
-  display: none;
-}
-
-.a-dropdown-list__option {
-  color: @primary-green-700;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-  white-space: nowrap;
-
-  &:focus-visible {
+  &:focus-within {
     outline: auto;
   }
 }
 
-.a-dropdown-list-option__checked {
-  left: -15px;
-  margin-right: 5px;
-  position: absolute;
-  top: 3px;
+.a-dropdown-field__icon {
+  .flex-row(center, center);
+
+  margin-right: 8px;
 }
 
-.a-dropdown-list__option:hover {
-  color:  @primary-green-900;
-}
+.a-dropdown-input {
+  .default-font();
 
-.a-dropdown-list-container {
-  background-color: white;
-  border-radius: 3px;
+  background-color: transparent;
   border: 0;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
+  color: @neutral-grey-900;
+  flex: 1;
+  font-size: 16px;
+  height: 100%;
+  min-width: 0;
+  outline: 0;
+  overflow: hidden;
+  padding: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &::placeholder {
+    color: @neutral-grey-600;
+    opacity: 1;
+  }
+}
+
+.a-dropdown-clear-button,
+.a-dropdown-trigger {
+  .flex-row(center, center);
+
+  background: transparent;
+  border: 0;
+  color: @neutral-grey-600;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    color: @neutral-grey-900;
+  }
+
+  &:focus-visible {
+    outline: auto;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.a-dropdown-clear-button {
+  align-self: stretch;
+  padding: 0 8px;
+
+  .zmdi {
+    font-size: 20px;
+  }
+}
+
+.a-dropdown-trigger {
+  align-self: stretch;
+  border-radius: 0 2px 2px 0;
+  padding: 0 12px;
+}
+
+// Täytetty kolmio (caret) zmdi-chevron-ikonin sijaan.
+.a-dropdown-caret {
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  display: inline-block;
+  height: 0;
+  width: 0;
+
+  &--expanded {
+    transform: rotate(180deg);
+  }
+}
+
+// html eikä body, koska vieritys on html:llä (ks. hakija.less).
+html:has(.a-dropdown-popup--fullscreen) {
+  overflow: hidden;
+  // Estää panoroinnin ja zoomauksen muualla kuin listassa, jonka oma pan-y
+  // (.a-dropdown-popup--fullscreen) jää voimaan. Loput iOS:n panoroinnista
+  // estää dropdown-listeners.
+  touch-action: none;
+
+  // animate.css-animaatio (esim. koko lomakkeen fadeIn) on fill-mode: bothin
+  // vuoksi voimassa vielä päättymisensä jälkeen ja voi tehdä elementistä
+  // stacking contextin, joka vangitsisi kokoruutuwrapperin z-indexin — jolloin
+  // lomakkeen ulkopuoliset elementit (esim. ylätunniste) voisivat peittää
+  // listan. Pelkkä opacityn ohitus ei poista animaatiota, joten se poistetaan
+  // kokonaan; näkyvä vaikutus on jo ohi.
+  .animated {
+    animation: none !important;
+  }
+}
+
+// Vain venyy säiliöönsä; koko näytön kiinnitys on kutsujan vastuulla (ks.
+// hakija.less .application__dropdown-fullscreen-wrapper).
+@media only screen and (max-width: @mobile-width) {
+  // min-width: 0, jotta flex-item voi kutistua sisältöään kapeammaksi.
+  .a-dropdown--fullscreen {
+    .flex-column(stretch, flex-start);
+
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    width: auto;
+  }
+}
+
+.a-dropdown--disabled {
+  .a-dropdown-field {
+    background: @disabled-background-gray;
+    background-image: none;
+    border: 1px solid #ccc;
+    cursor: default;
+  }
+
+  .a-dropdown-input {
+    color: @disabled-font-gray;
+
+    &::placeholder {
+      color: @disabled-font-gray;
+    }
+  }
+
+  .a-dropdown-trigger {
+    color: @neutral-grey-500;
+  }
+}
+
+// Työpöydällä portaalissa, kokoruututilassa kentän perässä; sijainti tulee
+// JS:stä (ks. dropdown-geometry).
+.a-dropdown-popup {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.20);
+  margin-top: 4px;
+  // Sama kuin dropdown-geometryn desktop-popup-default-max-height.
+  max-height: 400px;
+  // Ei vieritystä taustalle listan reunoilla.
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  padding: 4px 0;
+  position: fixed;
+  // Menee yläpalkin alle
+  z-index: 9;
+}
+
+.a-dropdown-popup--fullscreen {
+  max-height: none;
+  left: 8px;
+  right: 8px;
+  width: auto;
+  // Samat muuttujat kuin kokoruutuwrapperilla, jotta popup liikkuu kentän
+  // mukana (ks. dropdown-geometry). --a-dropdown-field-offset: kentän
+  // alareunan etäisyys wrapperin yläreunasta; 4px: margin-top; 100px:
+  // minimikorkeus.
+  top: calc(var(--a-dropdown-viewport-top, 0px) + var(--a-dropdown-field-offset, 0px));
+  height: ~"max(100px, calc(var(--a-dropdown-viewport-height, 100vh) - var(--a-dropdown-field-offset, 0px) - 4px))";
+  // Ks. html:has(.a-dropdown-popup--fullscreen) yllä.
+  touch-action: pan-y;
+}
+
+.a-dropdown-popup--collapsed {
+  display: none;
+}
+
+// Hakutulosten määrä vain ruudunlukijalle (ks. dropdown-view/dropdown-status).
+.a-dropdown-status {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.a-dropdown-list {
   list-style-type: none;
   margin: 0;
   outline: 0;
-  padding: 15px 23px;
-  position: relative;
+  padding: 0;
 }
 
-.a-dropdown-list-container::before {
-  border-color: white transparent transparent transparent;
-  border-style: solid;
-  border-width: 8px 10px 0 10px;
-  content: '';
-  height: 0;
-  left: 5px;
-  position: absolute;
-  top: -7px;
-  transform: rotate(180deg);
-  width: 0;
+// Värit noudattavat oph-design-systemin OphSelect-komponentin (MuiMenuItem)
+// opintopolku-teemaa: https://github.com/Opetushallitus/oph-design-system
+@a-dropdown-menu-item-selected-background: #F6F6F6;
+@a-dropdown-menu-item-selected-color: #378703;
+
+.a-dropdown-list__option {
+  .flex-row(center, space-between);
+
+  color: @neutral-grey-900;
+  cursor: pointer;
+  padding: 8px 16px;
+  user-select: none;
+
+  &:hover {
+    background-color: @a-dropdown-menu-item-selected-background;
+  }
+}
+
+.a-dropdown-list__option--selected {
+  background-color: @a-dropdown-menu-item-selected-background;
+  color: @a-dropdown-menu-item-selected-color;
+
+  &:hover {
+    background-color: @a-dropdown-menu-item-selected-background;
+  }
+}
+
+// Nuolinäppäimillä korostettu vaihtoehto, erillään valitusta (--selected).
+.a-dropdown-list__option--active {
+  outline: 2px solid @a-dropdown-menu-item-selected-color;
+  outline-offset: -2px;
+}
+
+.a-dropdown-list__option-label {
+  // min-width: 0, jotta pitkä teksti rivittyy.
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.a-dropdown-empty {
+  color: @neutral-grey-600;
+  margin: 0;
+  padding: 8px 16px;
 }

@@ -561,6 +561,7 @@
                              {:attachment-states-to-include
                               ["not-checked"
                                "checked"
+                               "non-exempting-attachment"
                                "incomplete-attachment"
                                "attachment-missing"
                                "overdue"
@@ -639,6 +640,12 @@
       (update :answers
               (comp vec concat)
               [{:key "kk-application-payment-option" :value "0" :fieldType "dropdown"}])))
+
+(defn with-kk-application-payment-option
+  [application option]
+  (update application :answers (partial mapv #(cond-> %
+                                                 (= "kk-application-payment-option" (:key %))
+                                                 (assoc :value option)))))
 
 (def application-without-hakemusmaksu-exemption
   (-> person-info-form-application-without-kk-application-answer

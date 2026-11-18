@@ -1,0 +1,222 @@
+(ns ataru.virkailija.application.attachments.kk-payment-permit-check-view
+  (:require [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.util :as util]
+            [ataru.virkailija.application.attachments.kk-payment-permit-check-handlers :as handlers]
+            [ataru.virkailija.date-time-picker :as date-time-picker]
+            [ataru.virkailija.temporal :as temporal]
+            [cljs-time.core :as t]
+            [cljs-time.format :as f]
+            [re-frame.core :as re-frame]
+            [reagent.core :as r]))
+
+(def ^:private migri-permit-service-url "https://miso1.sovellukset.migri.fi")
+
+(defn- translation [key]
+  @(re-frame/subscribe [:editor/virkailija-translation key]))
+
+(defn- field-id [application-key attachment-key field]
+  (str "kk-payment-permit-check-" (name field) "-" application-key "-" (name attachment-key)))
+
+(defn- set-field [application-key attachment-key field value save]
+  (re-frame/dispatch [:kk-payment-permit-check/set-field application-key attachment-key field value save]))
+
+(defn- migri-link []
+  [:a {:href   migri-permit-service-url
+       :target "_blank"
+       :rel    "noopener noreferrer"}
+   (translation :kk-payment-permit-check-migri-service)
+   [:span.kk-payment-permit-check__visually-hidden
+    (str " " (translation :kk-payment-permit-check-opens-in-new-tab))]])
+
+(defn- notification [content]
+  [:div.application__message-display.application__message-display--notification.kk-payment-permit-check__notification
+   [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle {:aria-hidden true}]]
+   [:div.application__message-display--details
+    (into [:div] content)]])
+
+(defn- radio [{:keys [id name checked? disabled? on-change label]}]
+  [:div.kk-payment-permit-check__radio
+   [:input {:id        id
+            :type      "radio"
+            :name      name
+            :checked   checked?
+            :disabled  disabled?
+            :on-change on-change}]
+   [:label {:for id} label]])
+
+; Näytetään täytetyn kentän otsikon perässä, koska radiopainikkeiden valintaa ei voi muuten poistaa. Kun painike
+; katoaa, fokus siirretään kentän ensimmäiseen radiopainikkeeseen.
+(defn- clear-button [application-key attachment-key check disabled? field label-key focus-id]
+  (when (and (not disabled?) (some? (get check field)))
+    [:button.kk-payment-permit-check__clear
+     {:type       "button"
+      :aria-label @(re-frame/subscribe [:editor/virkailija-translation :kk-payment-permit-check-clear
+                                        (translation label-key)])
+      :on-click   (fn []
+                    (re-frame/dispatch [:kk-payment-permit-check/clear-field application-key attachment-key field])
+                    (some-> (.getElementById js/document focus-id) .focus))}
+     [:i.material-icons-outlined {:aria-hidden true} "edit_off"]]))
+
+; Legend sisältää tyhjennyspainikkeen, joten kenttä nimetään pelkällä otsikkotekstillä
+(defn- legend [name label clear-button]
+  [:legend.kk-payment-permit-check__label
+   [:span {:id (str name "-label")} label]
+   clear-button])
+
+(defn- found-in-migri [application-key attachment-key check disabled?]
+  (let [name (field-id application-key attachment-key :found-in-migri)]
+    [:fieldset.kk-payment-permit-check__field {:aria-labelledby (str name "-label")}
+     [legend name
+      (translation :kk-payment-permit-check-found-in-migri)
+      [clear-button application-key attachment-key check disabled? :found-in-migri
+       :kk-payment-permit-check-found-in-migri (str name "-" true)]]
+     [:div.kk-payment-permit-check__radios--inline
+      (for [[value label-key] [[true :kk-payment-permit-check-yes] [false :kk-payment-permit-check-no]]]
+        ^{:key (str value)}
+        [radio {:id        (str name "-" value)
+                :name      name
+                :checked?  (= value (:found-in-migri check))
+                :disabled? disabled?
+                :on-change #(set-field application-key attachment-key :found-in-migri value :immediate)
+                :label     (translation label-key)}])]]))
+
+(defn- label-text [label-key required?]
+  (str (translation label-key) (when required? " *")))
+
+(defn- finnish-date [iso-date]
+  (f/unparse-local-date (f/formatter "d.M.yyyy") (f/parse-local-date (f/formatter "yyyy-MM-dd") iso-date)))
+
+(defn- permit-valid-until [application-key attachment-key check disabled? required?]
+  (let [id                (field-id application-key attachment-key :permit-valid-until)
+        [earliest latest] (handlers/permit-valid-until-range)
+        valid?            @(re-frame/subscribe [:kk-payment-permit-check/permit-valid-until-valid?
+                                                application-key attachment-key])]
+    [:div.kk-payment-permit-check__field
+     [:label.kk-payment-permit-check__label {:for id} (label-text :kk-payment-permit-check-valid-until required?)]
+     [date-time-picker/date-picker
+      id
+      "kk-payment-permit-check__date-input"
+      (or (:permit-valid-until check) "")
+      ""
+      (fn [value]
+        (set-field application-key attachment-key :permit-valid-until (not-empty value) :debounced))
+      {:disabled?        disabled?
+       :min              earliest
+       :max              latest
+       :aria-required    required?
+       :aria-invalid     (not valid?)}]
+     (when-not valid?
+       [:div.kk-payment-permit-check__error {:role "alert"}
+        @(re-frame/subscribe [:editor/virkailija-translation :kk-payment-permit-check-valid-until-out-of-range
+                              (finnish-date earliest) (finnish-date latest)])])]))
+
+(defn- payment-obligation-basis [application-key attachment-key check disabled? required?]
+  (let [name (field-id application-key attachment-key :payment-obligation-basis)]
+    [:fieldset.kk-payment-permit-check__field {:aria-labelledby (str name "-label")}
+     [legend name
+      (label-text :kk-payment-permit-check-obligation required?)
+      [clear-button application-key attachment-key check disabled? :payment-obligation-basis
+       :kk-payment-permit-check-obligation (str name "-" (first payment-module/kk-payment-obligation-bases))]]
+     (for [value payment-module/kk-payment-obligation-bases]
+       ^{:key value}
+       [radio {:id        (str name "-" value)
+               :name      name
+               :checked?  (= value (:payment-obligation-basis check))
+               :disabled? disabled?
+               :on-change #(set-field application-key attachment-key :payment-obligation-basis value :immediate)
+               :label     (translation (keyword (str "kk-payment-permit-check-" value)))}])
+     (when (= "obligated-other" (:payment-obligation-basis check))
+       [:div.kk-payment-permit-check__other-reason-container
+        [:input.kk-payment-permit-check__other-reason
+         {:type        "text"
+          :aria-label  (translation :kk-payment-permit-check-other-reason)
+          :placeholder (translation :kk-payment-permit-check-other-reason)
+          :value       (or (:payment-obligation-other-reason check) "")
+          :max-length  payment-module/kk-payment-permit-check-other-reason-max-length
+          :disabled    disabled?
+          :on-change   #(set-field application-key
+                                   attachment-key
+                                   :payment-obligation-other-reason
+                                   (.. % -target -value)
+                                   :none)
+          :on-blur     #(re-frame/dispatch [:kk-payment-permit-check/save-now application-key attachment-key])}]])]))
+
+(defn- original-check-details [id {:keys [application-key organization checked-time virkailija-name]}]
+  (let [lang @(re-frame/subscribe [:editor/virkailija-lang])]
+    [:dl.kk-payment-permit-check__original-check {:id id}
+     [:dt (translation :kk-payment-permit-check-original-application)]
+     [:dd application-key]
+     [:dt (translation :kk-payment-permit-check-original-organization)]
+     [:dd (if organization
+            (util/from-multi-lang (:name organization) lang)
+            (translation :kk-payment-permit-check-original-organization-unknown))]
+     [:dt (translation :kk-payment-permit-check-original-checked-time)]
+     [:dd (some->> (cond-> checked-time
+                     (string? checked-time) temporal/str->googdate)
+                   t/to-default-time-zone
+                   (f/unparse (f/formatter "d.M.yyyy")))]
+     [:dt (translation :kk-payment-permit-check-original-virkailija)]
+     [:dd virkailija-name]]))
+
+(defn- inherited-notification [application-key attachment-key _original-check]
+  (let [open? (r/atom false)
+        id    (field-id application-key attachment-key :original-check)]
+    (fn [_ _ original-check]
+      [:div.kk-payment-permit-check__inherited
+       {:class (when @open? "kk-payment-permit-check__inherited--open")}
+       [notification [(str (translation :kk-payment-permit-check-inherited-from) " ")
+                      [:button.kk-payment-permit-check__details-toggle
+                       {:type          "button"
+                        :aria-expanded @open?
+                        :aria-controls id
+                        :on-click      #(swap! open? not)}
+                       (translation (if @open?
+                                      :kk-payment-permit-check-hide-original-check
+                                      :kk-payment-permit-check-show-original-check))]]]
+       (when @open?
+         [original-check-details id original-check])])))
+
+(defn permit-check-notification
+  "Ohje hakemusmaksun oleskeluluvan tarkistamiseen sen mukaan, onko hakija toimittanut liitteen, tai perittyjen
+   merkintöjen alkuperäinen tarkistus."
+  [application-key attachment-key attachment-delivered?]
+  (if-let [original-check @(re-frame/subscribe [:kk-payment-permit-check/original-check
+                                                application-key attachment-key])]
+    ; Avain asetetaan, jotta tiedot eivät jää auki eivätkä id:t vanhene, kun hakemus vaihtuu
+    ^{:key (str application-key "-" (name attachment-key))}
+    [inherited-notification application-key attachment-key original-check]
+    (if attachment-delivered?
+      [notification [(str (translation :kk-payment-permit-check-attachment-delivered) " ")
+                     [migri-link]
+                     "."]]
+      [notification [(str (translation :kk-payment-permit-check-attachment-missing) " ")
+                     [migri-link]
+                     (str " " (translation :kk-payment-permit-check-attachment-missing-suffix))]])))
+
+(defn permit-check
+  "Virkailijan merkinnät hakemusmaksun oleskelulupaliitteeseen."
+  [application-key attachment-key attachment-checked? can-edit?]
+  (let [check            @(re-frame/subscribe [:kk-payment-permit-check/check application-key attachment-key])
+        disabled?        (not can-edit?)
+        add-info?        (or (true? (:found-in-migri check)) attachment-checked?)
+        validity-needed? (payment-module/permit-validity-needed? attachment-key)
+        info-added?      (and (or (not validity-needed?)
+                                  (and (some? (:permit-valid-until check))
+                                       @(re-frame/subscribe [:kk-payment-permit-check/permit-valid-until-valid?
+                                                             application-key attachment-key])))
+                              (some? (:payment-obligation-basis check)))]
+    [:div.kk-payment-permit-check
+     [found-in-migri application-key attachment-key check disabled?]
+     (when (and add-info? (not info-added?))
+       [notification [(translation (if validity-needed?
+                                     :kk-payment-permit-check-add-info
+                                     :kk-payment-permit-check-add-obligation))]])
+     [permit-valid-until application-key attachment-key check disabled? (and add-info? validity-needed?)]
+     [payment-obligation-basis application-key attachment-key check disabled? add-info?]
+     (when @(re-frame/subscribe [:kk-payment-permit-check/save-error? application-key attachment-key])
+       [:div.kk-payment-permit-check__error {:role "alert"}
+        (translation :kk-payment-permit-check-save-error)
+        [:button.kk-payment-permit-check__retry
+         {:type     "button"
+          :on-click #(re-frame/dispatch [:kk-payment-permit-check/save-now application-key attachment-key])}
+         (translation :kk-payment-permit-check-retry)]])]))

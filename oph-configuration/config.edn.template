@@ -32,6 +32,7 @@
                            :enabled? {{ataru_kk_application_payments_enabled | default('false')}}
                            :status-updater-enabled? {{ataru_kk_application_payments_status_updater_enabled | default('false')}}
                            :maksut-poller-enabled? {{ataru_kk_application_payments_maksut_poller_enabled | default('false')}}
+                           :permit-check-inheritance-enabled? {{ataru_kk_application_payments_permit_check_inheritance_enabled | default('true')}}
                            :start-year {{ataru_kk_application_payments_start_year | default('2025')}}
                            :start-month {{ataru_kk_application_payments_start_month | default('1')}}
                            :start-day {{ataru_kk_application_payments_start_day | default('1')}}}

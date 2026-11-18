@@ -1,6 +1,6 @@
 (ns ataru.collections-test
-  (:require [ataru.collections :as c])
-  (:require-macros [cljs.test :refer [deftest are is]]))
+  (:require [cljs.test :refer-macros [deftest are is]]
+            [ataru.collections :as c]))
 
 (deftest returns-true-when-a-before-b
   (are [coll]

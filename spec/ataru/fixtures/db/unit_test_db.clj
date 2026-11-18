@@ -10,6 +10,7 @@
             [ataru.log.audit-log :as audit-log]))
 
 ; Make linter happy again
+(declare yesql-delete-fixture-kk-application-payment-permit-checks!)
 (declare yesql-delete-fixture-application-review!)
 (declare yesql-delete-fixture-application-events!)
 (declare yesql-delete-fixture-application-secrets!)
@@ -22,10 +23,13 @@
 (declare yesql-set-form-id!)
 (declare yesql-delete-kk-payments-history!)
 (declare yesql-delete-kk-payments!)
+(declare yesql-upsert-virkailija<!)
 
 (defqueries "sql/dev-form-queries.sql")
+(defqueries "sql/virkailija-queries.sql")
 
 (defn- nuke-old-fixture-data [form-id]
+  (ataru-db/exec :db yesql-delete-fixture-kk-application-payment-permit-checks! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-review! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-events! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-secrets! {:form_id form-id})
@@ -118,6 +122,24 @@
 (defn save-reviews-to-db! [reviews]
   (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
     (application-store/store-reviews reviews {:connection conn})))
+
+(def permit-check-virkailija-oid "1.2.246.562.24.00000001213")
+
+(defn save-permit-check-to-db!
+  "Stores virkailija's residence permit check with the virkailija it refers to."
+  [{:keys [application-key attachment-key found-in-migri payment-obligation-basis]
+    :or   {found-in-migri true}}]
+  (ataru-db/exec :db yesql-upsert-virkailija<! {:oid        permit-check-virkailija-oid
+                                                :first_name "Hemuli"
+                                                :last_name  "Hemuli?"})
+  (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
+    (jdbc/insert! conn :kk_application_payment_permit_checks
+                  {:application_key          application-key
+                   :attachment_key           attachment-key
+                   :found_in_migri           found-in-migri
+                   :payment_obligation_basis payment-obligation-basis
+                   :virkailija_oid           permit-check-virkailija-oid
+                   :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))})))
 
 (defn init-oppija-session-to-db
   [ticket data]

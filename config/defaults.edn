@@ -28,6 +28,7 @@
  :kk-application-payments   {:enabled? false
                              :status-updater-enabled? false
                              :maksut-poller-enabled? false
+                             :permit-check-inheritance-enabled? true
                              :processing-fee "100.00"
                              :start-year 2025
                              :start-month 1

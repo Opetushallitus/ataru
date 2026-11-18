@@ -197,6 +197,13 @@ LEFT JOIN virkailija v ON ae.virkailija_oid = v.oid
 WHERE ae.application_key = :application_key
 ORDER BY ae.id ASC;
 
+-- name: yesql-application-event-exists
+SELECT EXISTS (SELECT 1
+               FROM application_events
+               WHERE application_key = :application_key AND
+                     review_key = :review_key AND
+                     event_type IN (:event_types)) AS exists;
+
 -- name: yesql-get-application-review
 SELECT
   id,
@@ -348,6 +355,10 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                                     state <> 'inactivated') AS t
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
+
+-- name: yesql-delete-kk-application-payment-permit-checks-by-application-key!
+DELETE FROM kk_application_payment_permit_checks
+WHERE application_key = :key;
 
 -- name: yesql-get-latest-application-by-key
 SELECT
@@ -681,6 +692,17 @@ SELECT
   application_key
 FROM application_hakukohde_reviews
 WHERE application_key = :application_key;
+
+-- name: yesql-get-application-hakukohde-reviews-by-requirement
+SELECT
+  id,
+  modified_time,
+  requirement,
+  state,
+  hakukohde,
+  application_key
+FROM application_hakukohde_reviews
+WHERE application_key = :application_key AND requirement = :requirement;
 
 -- name: yesql-get-application-attachment-reviews
 SELECT

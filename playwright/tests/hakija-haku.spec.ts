@@ -96,7 +96,6 @@ test.describe('hakemus haulla, jolla on yksi hakukohde', () => {
   let page: Page
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -129,7 +128,6 @@ test.describe('hakemus KK-haulla, jolla on yksi hakukohde', () => {
   let page: Page
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -158,7 +156,6 @@ test.describe('hakemus KK-haulla, jolla on useita hakukohteita', () => {
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -207,7 +204,6 @@ test.describe('hakemus haulla, jolla on useita hakukohteita', () => {
   const lomakkeenAvain = randomUUID()
 
   test.beforeAll(async ({ browser }) => {
-    test.setTimeout(120000)
     page = await browser.newPage()
 
     await kirjauduVirkailijanNakymaan(page)
@@ -341,23 +337,22 @@ test.describe('hakemus haulla, jolla on useita hakukohteita', () => {
       '1Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie2Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie'
     )
 
-    const otherValues = await page
-      .locator('.application__text-field-paragraph')
-      .allTextContents()
-    expect(otherValues).toEqual([
-      'Etunimi Tokanimi',
-      'Etunimi',
-      'Sukunimi',
-      'Suomi',
-      '020202A0202',
-      'test@example.com',
-      '0123456789',
-      'Suomi',
-      'Katutie 12 B',
-      '00100',
-      'HELSINKI',
-      'Helsinki',
-      'suomi',
-    ])
+    await expect(page.locator('.application__text-field-paragraph')).toHaveText(
+      [
+        'Etunimi Tokanimi',
+        'Etunimi',
+        'Sukunimi',
+        'Suomi',
+        '020202A0202',
+        'test@example.com',
+        '0123456789',
+        'Suomi',
+        'Katutie 12 B',
+        '00100',
+        'HELSINKI',
+        'Helsinki',
+        'suomi',
+      ]
+    )
   })
 })

@@ -162,7 +162,8 @@
 (def kk-application-payment-obligation-states
   [["unreviewed" (:unreviewed state-translations)]
    ["reviewed" (:reviewed state-translations)]
-   ["in-migri-review" (:in-migri-review state-translations)]])
+   ["in-migri-review" (:in-migri-review state-translations)]
+   ["exemption-not-verified" (:exemption-not-verified state-translations)]])
 
 (def kk-application-payment-states
   [["not-required" (:not-required state-translations)]
@@ -230,6 +231,7 @@
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
    ["checked" (:checked state-translations)]
+   ["non-exempting-attachment" (:non-exempting-attachment state-translations)]
    ["incomplete-attachment" (:incomplete-attachment state-translations)]
    ["attachment-missing" (:attachment-missing state-translations)]
    ["overdue" (:overdue state-translations)]])
