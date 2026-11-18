@@ -50,6 +50,7 @@ const attachmentFixture = (id: string, label: string): FormNode => ({
 // oleskelulupaliitteelle, joten lomakkeella on moduulin vaihtoehtokysymys.
 const DOCUMENT_OPTION_LABEL = 'Dokumenttivaihtoehto'
 const EU_BLUE_CARD_OPTION = '1'
+const P_PERMIT_OPTION = '6'
 
 const documentOptionFixture: FormNode = {
   fieldClass: 'formField',
@@ -62,6 +63,7 @@ const documentOptionFixture: FormNode = {
   options: [
     { value: '0', label: { fi: 'Passi' } },
     { value: EU_BLUE_CARD_OPTION, label: { fi: 'Sininen kortti' } },
+    { value: P_PERMIT_OPTION, label: { fi: 'Pysyvä oleskelulupa' } },
   ],
 }
 
@@ -90,6 +92,16 @@ const HAKIJA = {
   address: 'Katutie 3',
   'postal-code': '00100',
   'home-town': 'Forssa',
+}
+
+// P-luvan merkinnät tallennetaan omalle hakemukselle, jolla hakija on valinnut
+// pysyvän oleskeluluvan vaihtoehdon.
+const P_LUVAN_HAKIJA = {
+  ...HAKIJA,
+  'last-name': 'Pysyvä',
+  ssn: '030303A9016',
+  email: 'pysyva@example.com',
+  'verify-email': 'pysyva@example.com',
 }
 
 let page: Page
@@ -160,7 +172,9 @@ const permitCheckUpdatedEvents = () =>
     hasText: 'Oleskelulupaliitteen käsittelymerkinnät päivitetty',
   })
 
-const openApplicationAttachments = async () => {
+const openApplicationAttachments = async (
+  lastName: string = HAKIJA['last-name']
+) => {
   await page.goto(
     `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`
   )
@@ -169,11 +183,37 @@ const openApplicationAttachments = async () => {
     .locator(
       '.application-handling__list-row:not(.application-handling__list-header)'
     )
-    .filter({ hasText: HAKIJA['last-name'] })
+    .filter({ hasText: lastName })
     .click()
   await page
     .locator('.application-handling__attachment-review-toggle-container-link')
     .click()
+}
+
+const sendApplication = async (
+  hakija: typeof HAKIJA,
+  documentOption: string
+) => {
+  await Promise.all([
+    page.goto(getHakijanNakymanOsoite(lomakkeenAvain)),
+    waitForResponse(page, 'GET', (url) =>
+      url.includes(getLomakkeenHaunOsoite(lomakkeenAvain))
+    ),
+  ])
+  await taytaHenkilotietomoduuli(page, hakija)
+  await selectOption(
+    page,
+    page
+      .locator('.application__form-field')
+      .filter({ hasText: DOCUMENT_OPTION_LABEL }),
+    documentOption
+  )
+  await Promise.all([
+    waitForResponse(page, 'POST', (url) =>
+      url.includes(getHakemuksenLahettamisenOsoite())
+    ),
+    page.getByTestId('send-application-button').click(),
+  ])
 }
 
 test.beforeAll(async ({ browser }) => {
@@ -186,28 +226,7 @@ test.beforeAll(async ({ browser }) => {
   lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
   await injectAttachmentFields(unsafeFoldOption(lomake.lomakkeenId))
 
-  await Promise.all([
-    page.goto(getHakijanNakymanOsoite(lomakkeenAvain)),
-    waitForResponse(page, 'GET', (url) =>
-      url.includes(getLomakkeenHaunOsoite(lomakkeenAvain))
-    ),
-  ])
-  await taytaHenkilotietomoduuli(page, HAKIJA)
-  await selectOption(
-    page,
-    page
-      .locator('.application__form-field')
-      .filter({ hasText: DOCUMENT_OPTION_LABEL })
-      .locator('select'),
-    EU_BLUE_CARD_OPTION
-  )
-  await Promise.all([
-    waitForResponse(page, 'POST', (url) =>
-      url.includes(getHakemuksenLahettamisenOsoite())
-    ),
-    page.getByTestId('send-application-button').click(),
-  ])
-
+  await sendApplication(HAKIJA, EU_BLUE_CARD_OPTION)
   await openApplicationAttachments()
 })
 
@@ -504,7 +523,8 @@ test('näyttää alkuperäisen tarkastuksen korkeakoulun tuntemattomana, kun sit
 })
 
 test('ei vaadi P-luvan lupakortin voimassaoloa', async () => {
-  await openApplicationAttachments()
+  await sendApplication(P_LUVAN_HAKIJA, P_PERMIT_OPTION)
+  await openApplicationAttachments(P_LUVAN_HAKIJA['last-name'])
   const pPermitCheck = attachmentRow(P_PERMIT_ATTACHMENT_LABEL).locator(
     '.kk-payment-permit-check'
   )
