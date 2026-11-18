@@ -523,7 +523,7 @@ test('lomake latautuu täydellisenä', async () => {
   ).toHaveText('0 / 2000')
 })
 
-test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
+test('radioryhmän ohjeteksti ja näppäimistökäyttö ovat saavutettavia', async () => {
   const radioGroup = page.getByRole('radiogroup', {
     name: 'Lyhyen listan kysymys',
   })
@@ -542,22 +542,40 @@ test('radioryhmän ohjeteksti on saavutettavasti yhdistetty', async () => {
 
   const radios = radioGroup.getByRole('radio')
   await expect(radios).toHaveCount(2)
-  await expect(radios.nth(0)).toHaveAccessibleName('Ensimmäinen vaihtoehto')
-  await expect(radios.nth(1)).toHaveAccessibleName('Toinen vaihtoehto')
+  const firstRadio = radios.nth(0)
+  const secondRadio = radios.nth(1)
+  await expect(firstRadio).toHaveAccessibleName('Ensimmäinen vaihtoehto')
+  await expect(secondRadio).toHaveAccessibleName('Toinen vaihtoehto')
 
-  const radioNames = await radios.evaluateAll((elements) =>
-    elements.map((element) => ({
-      tagName: element.tagName,
-      type: element.getAttribute('type'),
-      name: element.getAttribute('name'),
-    }))
-  )
-  expect(radioNames).toEqual([
-    { tagName: 'INPUT', type: 'radio', name: 'tl-section-2-q-default' },
-    { tagName: 'INPUT', type: 'radio', name: 'tl-section-2-q-default' },
+  await radioGroup.getByText('Toinen vaihtoehto', { exact: true }).click()
+  await expect(secondRadio).toBeChecked()
+  await expect(firstRadio).not.toBeChecked()
+
+  await radioGroup.getByText('Ensimmäinen vaihtoehto', { exact: true }).click()
+  await expect(firstRadio).toBeChecked()
+  await expect(secondRadio).not.toBeChecked()
+
+  await radioGroup.getByText('Toinen vaihtoehto', { exact: true }).click()
+  await expect(secondRadio).toBeChecked()
+  await expect(firstRadio).not.toBeChecked()
+
+  const previousLink = page.getByRole('link', { name: 'alkuun', exact: true })
+  const nextField = page.getByRole('textbox', { name: 'Tekstikenttä 1' })
+
+  await previousLink.focus()
+  await previousLink.press('Tab')
+  await expect(secondRadio).toBeFocused()
+  await secondRadio.press('Tab')
+  await expect(nextField).toBeFocused()
+  await nextField.press('Shift+Tab')
+  await expect(secondRadio).toBeFocused()
+
+  await Promise.all([
+    waitForResponse(page, 'GET', (url) =>
+      url.includes(getLomakkeenHaunOsoite(lomakkeenAvain))
+    ),
+    page.reload(),
   ])
-  await expect(radioGroup.locator('label[role="radio"]')).toHaveCount(0)
-  await expect(radioGroup.locator('label[tabindex]')).toHaveCount(0)
 })
 
 test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
