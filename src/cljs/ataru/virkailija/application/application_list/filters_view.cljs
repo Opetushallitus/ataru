@@ -130,7 +130,7 @@
                                   [checked?
                                    (util/non-blank-val label [lang :fi :sv :en])
                                    [state checked?]]))
-                              review-states/attachment-hakukohde-review-types)
+                              (review-states/attachment-review-types-for field-id false))
         selected-options (filter first options)]
     [:div.application-handling__filters-attachment-attachments__dropdown
      [dropdown/multi-option
