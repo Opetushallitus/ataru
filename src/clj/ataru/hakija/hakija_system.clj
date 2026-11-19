@@ -43,8 +43,7 @@
 
     :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
                                                       "/auth/cas"
-                                                      "ring-session"
-                                                      (-> config :public-config :virkailija-caller-id))
+                                                      "ring-session")
 
     :hakukohderyhmapalvelu-service (component/using
                                      (hakukohderyhma-service/new-hakukohderyhmapalvelu-service)
@@ -70,10 +69,9 @@
                                [:ohjausparametrit-cache])
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "/j_spring_cas_security_check"
-                                                      "JSESSIONID" (-> config :public-config :hakija-caller-id))
+                                                      "JSESSIONID")
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
-                                        "ring-session" (-> config :public-config :hakija-caller-id))
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas" "ring-session")
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -95,10 +93,7 @@
                                          :hakukohderyhma-settings-cache
                                          :attachment-deadline-service])
 
-    :maksut-cas-client (cas/new-client "/maksut"
-                                       "/auth/cas"
-                                       "ring-session"
-                                       (-> config :public-config :virkailija-caller-id))
+    :maksut-cas-client (cas/new-client "/maksut" "/auth/cas" "ring-session")
 
     :maksut-service (component/using
                        (maksut-service/new-maksut-service)
@@ -109,7 +104,7 @@
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
     :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "/j_spring_cas_security_check"
-                                                  "JSESSIONID" (-> config :public-config :hakija-caller-id))
+                                                  "JSESSIONID")
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
@@ -131,8 +126,7 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
-                                                      "session" (-> config :public-config :hakija-caller-id))
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login" "session")
 
     :valinta-tulos-service (component/using
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
@@ -155,8 +149,7 @@
                             :job-runner
                             :form-by-id-cache])
 
-    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser"
-                                  "1.2.246.562.10.00000000001.ataru-hakija.frontend")
+    :koski-client (cas/new-client "/koski" "/cas/virkailija" "koskiUser")
     :koski-service (component/using
                      (koski-service/map->IntegratedKoskiTutkintoService {})
                      {:koski-cas-client :koski-client})

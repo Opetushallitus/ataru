@@ -1,6 +1,7 @@
 (ns ataru.cas.client
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
+            [ataru.util.http-util :refer [backend-caller-id]]
             [cheshire.core :as json]
             [clojure.string :as str]
             [taoensso.timbre :as log])
@@ -8,15 +9,15 @@
            [java.util.concurrent CompletableFuture]
            [org.asynchttpclient RequestBuilder Response]))
 
-(defn new-client [service security-uri-suffix session-cookie-name caller-id]
+(defn new-client [service security-uri-suffix session-cookie-name]
   {:pre [(some? (:cas config))]}
   (let [username    (get-in config [:cas :username])
         password    (get-in config [:cas :password])
         cas-url     (resolve-url :cas-client)
         service-url (str (resolve-url :url-virkailija) service)
         csrf-token  (or (get-in config [:cas :csrf])
-                        caller-id) ;; fallback to caller-id
-        cas-config  (-> (CasConfig$CasConfigBuilder. username password cas-url service-url csrf-token caller-id security-uri-suffix)
+                        backend-caller-id) ;; fallback to caller-id
+        cas-config  (-> (CasConfig$CasConfigBuilder. username password cas-url service-url csrf-token backend-caller-id security-uri-suffix)
                         (.setJsessionName session-cookie-name)
                         .build)
         cas-client  (CasClientBuilder/build cas-config)]
