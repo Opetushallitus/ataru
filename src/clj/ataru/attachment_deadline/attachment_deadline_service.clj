@@ -1,5 +1,6 @@
 (ns ataru.attachment-deadline.attachment-deadline-service
   (:require
+   [ataru.constants :as constants]
    [ataru.time :as t]
    [ataru.time.coerce :as c]
    [clojure.string :as s]
@@ -50,6 +51,12 @@
       :liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa
       ->boolean
       true?))
+
+(defn- attachment-deadline-disabled-for-haku?
+  [ohjausparametrit haku]
+  (and (contains? #{constants/hakutapa-jatkuva-haku constants/hakutapa-joustava-haku}
+                  (first (s/split (or (:hakutapa-uri haku) "") #"#")))
+       (-> ohjausparametrit :liitteidenMuokkausIlmanTakarajaa ->boolean true?)))
 
 (defn- get-attachment-deadline-days
   [ohjausparametrit]
@@ -124,7 +131,9 @@
             (set-local-time haku-settings-based-grace-period-time))))
 
 (defn- attachment-deadline-for-hakuaika [ohjausparametrit-service application-submitted haku hakuaika]
-  (attachment-deadline (get-ohjausparametrit ohjausparametrit-service haku) application-submitted hakuaika))
+  (let [parametrit (get-ohjausparametrit ohjausparametrit-service haku)]
+    (when-not (attachment-deadline-disabled-for-haku? parametrit haku)
+      (attachment-deadline parametrit application-submitted hakuaika))))
 
 (defn- per-application-attachment-deadline
   "Attachment deadline calculated from application submission time, regardless of whether haku uses per-application deadline."
@@ -144,6 +153,9 @@
     (get-field-deadlines-authorized organization-service tarjonta-service audit-logger session application-key))
   (get-field-deadlines [_ application-key]
     (get-field-deadlines application-key))
+  (attachment-deadline-disabled? [_ haku]
+    (attachment-deadline-disabled-for-haku?
+     (get-ohjausparametrit ohjausparametrit-service haku) haku))
   (attachment-deadline-for-hakuaika [_ application-submitted haku hakuaika]
     (attachment-deadline-for-hakuaika ohjausparametrit-service application-submitted haku hakuaika))
   (per-application-attachment-deadline [_ application-submitted haku]
