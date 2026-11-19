@@ -86,8 +86,10 @@
              (after? hakuaika-start)
              (or (before? hakuaika-end)
                  (nil? hakuaika-end)
-                 (and (before? attachment-edit-end)
-                      (= "attachment" (:fieldType field)))
+                 (and (= "attachment" (:fieldType field))
+                      (or (before? attachment-edit-end)
+                          (attachment-deadline/attachment-deadline-disabled?
+                           attachment-deadline-service haku)))
                  (and (before? hakukierros-end)
                       (contains? editing-allowed-person-info-field-ids
                         (keyword (:id field)))))))))
