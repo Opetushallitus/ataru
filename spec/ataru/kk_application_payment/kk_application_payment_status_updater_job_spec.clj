@@ -1012,10 +1012,10 @@
                          (select-keys (first (payment/get-raw-payments [application-key])) [:application-key :state]))
                 (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
-          (it "should keep the residence permit checks saved after the reset was decided"
+          (it "should keep the residence permit check saved after the reset was decided"
               (let [application-id (unit-test-db/init-db-fixture
                                      form-fixtures/payment-exemption-test-form
-                                     application-fixtures/application-with-hakemusmaksu-exemption
+                                     application-with-permit-option
                                      nil)
                     application-key (:key (application-store/get-application application-id))
                     hakukohteet-to-reset payment/hakukohteet-with-obligation-review-to-reset]
@@ -1044,13 +1044,18 @@
                                   (when (seq hakukohteet)
                                     ; margin for the database clock compared to the system clock of the job
                                     (Thread/sleep 10)
-                                    (store-permit-check application-key "obligated-own-studies" "eu-blue-card-attachment"))
+                                    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                                      (jdbc/execute! conn ["UPDATE kk_application_payment_permit_checks
+                                                            SET payment_obligation_basis = 'not-obligated',
+                                                                modified_time = now()
+                                                            WHERE application_key = ?" application-key])))
                                   hakukohteet))]
                   (updater-job/update-kk-payment-status-for-person-handler {:application_id application-id} runner))
                 (should= "unreviewed"
                          (:state (first (payment/get-kk-application-payment-obligation-reviews application-key))))
-                (should= ["eu-blue-card-attachment"]
-                         (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))))
+                (should= [["continuous-residence-permit-front" "not-obligated"]]
+                         (map (juxt :attachment-key :payment-obligation-basis)
+                              (permit-check/get-permit-checks fake-organization-service application-key)))))
 
           (it "should reset the payment obligation found in Migri and exempt the applicant in the same run when a new attachment is added"
               (let [application-id (unit-test-db/init-db-fixture

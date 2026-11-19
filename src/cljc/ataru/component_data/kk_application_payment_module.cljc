@@ -89,6 +89,35 @@
   [attachment-key]
   (not (contains? kk-payment-permit-validity-not-needed-attachment-keys (name attachment-key))))
 
+; Dokumenttivaihtoehdon kaikki liitteet sen oleskelulupaliitteen mukaan, johon virkailija merkitsee tarkastuksen
+(def kk-application-payment-attachment-keys-by-residence-permit-attachment-key
+  (into {}
+        (map (fn [[option attachment-key]]
+               [attachment-key (get kk-application-payment-attachment-keys-by-option option)]))
+        kk-application-payment-residence-permit-attachment-key-by-option))
+
+(defn payment-obligation-reviewed?
+  "Onko hakemusmaksuvelvollisuus tarkastettu jollakin annetuista hakukohteiden käsittelymerkinnöistä (avaimet
+   :requirement ja :state)."
+  [hakukohde-reviews]
+  (boolean (some #(and (= "kk-application-payment-obligation" (:requirement %))
+                       (= "reviewed" (:state %)))
+                 hakukohde-reviews)))
+
+(defn permit-check-decides-payment-obligation?
+  "Ratkaiseeko virkailijan oleskelulupatarkastus hakemusmaksuvelvollisuuden liitemerkinnöistä riippumatta. Tarkastus
+   ratkaisee sen, kun
+   - lupa on löytynyt Migrin palvelusta,
+   - maksuvelvollisuuden peruste on merkitty ja
+   - hakemusmaksuvelvollisuus on tarkastettu jollakin hakemuksen hakukohteella.
+   Parametrit:
+   - check: tarkastus avaimin :found-in-migri ja :payment-obligation-basis, tai nil
+   - hakukohde-reviews: hakemuksen hakukohteiden käsittelymerkinnät avaimin :requirement ja :state"
+  [check hakukohde-reviews]
+  (and (true? (:found-in-migri check))
+       (some? (:payment-obligation-basis check))
+       (payment-obligation-reviewed? hakukohde-reviews)))
+
 (def kk-payment-obligation-bases
   ["not-obligated"
    "obligated-own-studies"

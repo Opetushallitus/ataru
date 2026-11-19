@@ -58,13 +58,17 @@
    :payment-obligation-basis        "not-obligated"
    :payment-obligation-other-reason nil})
 
-(defn- init-application []
-  (let [application-id (unit-test-db/init-db-fixture
-                         form-fixtures/payment-exemption-test-form
-                         (assoc application-fixtures/application-with-hakemusmaksu-exemption
-                                :hakukohde ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"])
-                         nil)]
-    (:key (application-store/get-application application-id))))
+(defn- init-application
+  "Creates an application whose document option is the given one, by default the EU blue card."
+  ([] (init-application "1"))
+  ([option]
+   (let [application-id (unit-test-db/init-db-fixture
+                          form-fixtures/payment-exemption-test-form
+                          (-> application-fixtures/application-with-hakemusmaksu-exemption
+                              (application-fixtures/with-kk-application-payment-option option)
+                              (assoc :hakukohde ["payment-info-test-kk-hakukohde" "payment-info-test-kk-hakukohde-2"]))
+                          nil)]
+     (:key (application-store/get-application application-id)))))
 
 (defn- save [session application-key attachment-key body]
   (permit-check/save-permit-check fake-organization-service fake-tarjonta-service audit-logger session
@@ -92,7 +96,7 @@
       (jdbc/delete! conn :kk_application_payment_permit_checks [])))
 
   (it "stores the check with the oppilaitos of the first hakukohde virkailija has edit rights to"
-    (let [application-key (init-application)
+    (let [application-key (init-application "3")
           saved           (save (session-with-edit-rights tarjoaja-oid) application-key
                                 "continuous-residence-permit-front" check-body)]
       (should= {:attachment-key                  "continuous-residence-permit-front"
@@ -112,7 +116,7 @@
       (should= 1 (count (events application-key "kk-payment-permit-check-updated")))))
 
   (it "stores the oppilaitos of the first hakukohde in hakutoive order when virkailija has rights to several"
-    (let [application-key (init-application)
+    (let [application-key (init-application "3")
           _               (save (session-with-edit-rights tarjoaja-oid other-tarjoaja-oid) application-key
                                 "continuous-residence-permit-front" check-body)]
       (should= other-tarjoaja-oid
@@ -227,6 +231,32 @@
       (should= :bad-request (save superuser-session application-key "continuous-residence-permit-back" check-body))
       (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
+  (it "refuses checks for the residence permit attachment of a document option the applicant has not selected"
+    (let [application-key (init-application "1")]
+      (should= :attachment-not-selected
+               (save superuser-session application-key "continuous-residence-permit-front" check-body))
+      (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
+
+  (it "refuses checks when the selected document option has no residence permit attachment"
+    (let [application-key (init-application "0")]
+      (should= :attachment-not-selected (save superuser-session application-key "eu-blue-card-attachment" check-body))
+      (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
+
+  (it "does not overwrite the check of another attachment of the application"
+    (let [application-key (init-application "1")]
+      ; Check saved for the newly selected option while the save request was based on the previous one
+      (unit-test-db/save-permit-check-to-db! {:application-key          application-key
+                                              :attachment-key           "eu-blue-card-attachment"
+                                              :payment-obligation-basis "obligated-own-studies"})
+      (with-redefs [permit-check-store/selected-residence-permit-attachment-key
+                    (constantly "continuous-residence-permit-front")]
+        (should= :attachment-not-selected
+                 (save superuser-session application-key "continuous-residence-permit-front" check-body)))
+      (should= [["eu-blue-card-attachment" "obligated-own-studies"]]
+               (map (juxt :attachment-key :payment-obligation-basis)
+                    (permit-check/get-permit-checks fake-organization-service application-key)))
+      (should= 0 (count (events application-key "kk-payment-permit-check-updated")))))
+
   (it "refuses permit card validity dates outside the sanity limits"
     (let [application-key (init-application)
           save-valid-until (fn [date]
@@ -269,19 +299,16 @@
                                    "eu-blue-card-attachment" check-body))
       (should= [] (permit-check/get-permit-checks fake-organization-service application-key))))
 
-  (it "resets the checks of the application saved at the latest at the given time"
+  (it "resets the check of the application saved at the latest at the given time"
     (let [application-key (init-application)
           _               (save superuser-session application-key "eu-blue-card-attachment" check-body)
-          _               (save superuser-session application-key "continuous-residence-permit-front" check-body)
           ; A new check is saved at the same moment as it is checked
-          modified-until  (:checked-time (stored-check application-key "continuous-residence-permit-front"))
-          _               (Thread/sleep 10)
-          _               (save superuser-session application-key "brexit-permit-attachment" check-body)
+          modified-until  (:checked-time (stored-check application-key "eu-blue-card-attachment"))
           removed         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                             (permit-check/reset-permit-checks connection application-key modified-until))]
-      (should= #{"eu-blue-card-attachment" "continuous-residence-permit-front"} (set (map :attachment-key removed)))
-      (should= ["brexit-permit-attachment"] (map :attachment-key (permit-check/get-permit-checks fake-organization-service application-key)))
-      (should= 2 (count (events application-key "kk-payment-permit-check-reset")))))
+      (should= ["eu-blue-card-attachment"] (map :attachment-key removed))
+      (should= [] (permit-check/get-permit-checks fake-organization-service application-key))
+      (should= 1 (count (events application-key "kk-payment-permit-check-reset")))))
 
   (it "does not reset checks saved after the given time"
     (let [application-key (init-application)
