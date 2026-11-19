@@ -20,15 +20,31 @@ http {
 
     access_log  /var/log/nginx/access.log  main;
 
+    upstream virkailija {
+        server $DOCKER_HOST_ADDRESS:8352;
+        keepalive 32;
+    }
+
+    upstream hakija {
+        server $DOCKER_HOST_ADDRESS:8353;
+        keepalive 32;
+    }
+
     server {
         listen 8354;
 
+        proxy_http_version 1.1;
+
         location /lomake-editori {
-            proxy_pass http://$DOCKER_HOST_ADDRESS:8352;
+            proxy_set_header Host $DOCKER_HOST_ADDRESS:8352;
+            proxy_set_header Connection "";
+            proxy_pass http://virkailija;
         }
 
         location /hakemus {
-            proxy_pass http://$DOCKER_HOST_ADDRESS:8353;
+            proxy_set_header Host $DOCKER_HOST_ADDRESS:8353;
+            proxy_set_header Connection "";
+            proxy_pass http://hakija;
         }
     }
 }

@@ -368,7 +368,9 @@
         final-application             (if final-answer-hakukohteet
                                         (merge final-application {:hakukohde final-answer-hakukohteet})
                                         (dissoc final-application :hakukohde))
-        hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application)) oppija-session)
+        hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application))
+                                                                                                      oppija-session
+                                                                                                      (boolean (:maksullinen-kk-haku? haku)))
         validation-result             (validator/valid-application?
                                        koodisto-cache
                                        has-applied
