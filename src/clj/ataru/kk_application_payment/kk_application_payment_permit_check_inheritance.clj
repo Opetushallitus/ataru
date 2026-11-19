@@ -11,6 +11,10 @@
    - on oleskelulupaliite. Liitetiedostoja ei verrata, koska hakija voi ottaa lupakortista uudet kuvat jokaiseen
      hakemukseen.
 
+   Tarkastus ei periydy hakemukselta, jolla hakija on maksuvelvollinen liitemerkintöjen perusteella, koska lupaa ei ole
+   löytynyt Migrin palvelusta tai maksuvelvollisuuden perustetta ei ole merkitty (ks. source-candidates). Tämä ei riipu
+   siitä, onko myöhemmällä hakemuksella oleskelulupaliite.
+
    Jos tarkistuksessa hakija on todettu ei-maksuvelvolliseksi eikä sen hakemuksen maksua, jolta tarkistus kopioidaan,
    vaadita, tarkistus kopioidaan myös silloin, kun liite puuttuu (ks. missing-attachment-source-candidates).
    Puuttuva liite ei silloin tee hakijasta maksuvelvollista niin kauan kuin peritty tarkistus on ennallaan ja
@@ -92,23 +96,43 @@
          (or (true? (:found-in-migri check))
              (= "checked" (get (latest-attachment-reviews (:key source) #{attachment-key}) attachment-key))))))
 
+(defn- invalid-attachments?
+  [application-key]
+  (some #(and (contains? payment-module/kk-application-payment-exempt-attachment-keys (:attachment-key %))
+              (contains? payment-module/kk-application-payment-invalid-attachment-states (:state %)))
+        (application-store/get-application-attachment-reviews application-key false)))
+
+(defn- check-decides-payment-obligation?
+  "Tarkastus ratkaisee maksuvelvollisuuden liitemerkinnöistä riippumatta, kun lupa on löytynyt Migrin palvelusta ja
+   maksuvelvollisuuden peruste on merkitty (ks. kk-application-payment/permit-check-payment-obligation)."
+  [check]
+  (and (true? (:found-in-migri check))
+       (some? (:payment-obligation-basis check))))
+
+(defn- obligated-by-attachment-reviews?
+  "Onko hakija lähdehakemuksella maksuvelvollinen liitemerkintöjen perusteella: tarkastus ei ratkaise
+   maksuvelvollisuutta, ja maksuun liittyviä liitteitä on merkitty puuttuviksi tai virheellisiksi. Koska lähteen
+   maksuvelvollisuus on tarkastettu, merkinnät tekevät hakijasta maksuvelvollisen liitteiden määräajasta riippumatta
+   (ks. kk-application-payment/includes-fields-with-passed-deadlines?)."
+  [source check]
+  (and (not (check-decides-payment-obligation? check))
+       (invalid-attachments? (:key source))))
+
 (defn- source-candidates
-  "Liitteen tarkistukset ennen kohdehakemusta jätetyillä hakemuksilla, joiden maksuvelvollisuus on tarkastettu."
+  "Liitteen tarkastukset ennen kohdehakemusta jätetyillä hakemuksilla, joiden maksuvelvollisuus on tarkastettu.
+   Tarkastus ei periydy hakemukselta, jolla hakija on maksuvelvollinen liitemerkintöjen perusteella, vaan virkailija
+   tarkastaa kohdehakemuksen maksuvelvollisuuden. Kohdehakemukselle toimitettu oleskelulupaliite ei muuta tätä."
   [applications target attachment-key]
   (for [source applications
         :when (time/before? (:submitted source) (:submitted target))
         ; Luetaan kannasta, koska lähde on voinut periä tarkistuksen aiemmin samassa ajossa
         :when (seq (reviewed-reviews (obligation-reviews (:key source))))
         :let [check (store/get-permit-check (:key source) attachment-key)]
-        :when (and (some? check) (inheritable? source check target attachment-key))]
+        :when (and (some? check)
+                   (inheritable? source check target attachment-key)
+                   (not (obligated-by-attachment-reviews? source check)))]
     {:application source
      :check       check}))
-
-(defn- invalid-attachments?
-  [application-key]
-  (some #(and (contains? payment-module/kk-application-payment-exempt-attachment-keys (:attachment-key %))
-              (contains? payment-module/kk-application-payment-invalid-attachment-states (:state %)))
-        (application-store/get-application-attachment-reviews application-key false)))
 
 (defn- obligated-in-migri?
   "Tarkistus, jossa hakija on todettu maksuvelvolliseksi Migrin palvelusta löytyneen luvan perusteella."
@@ -117,13 +141,11 @@
        (not (not-obligated? check))))
 
 (defn- missing-attachment-source-candidates
-  "Lähteet hakemukselle, jolta oleskelulupaliite puuttuu.
+  "Lähteet hakemukselle, jolta oleskelulupaliite puuttuu. Lähteellä hakija ei ole maksuvelvollinen
+   liitemerkintöjen perusteella (ks. source-candidates).
    - Jos lähteen tarkistuksessa hakija on todettu ei-maksuvelvolliseksi, lähteen maksua ei saa vaatia ajon alussa.
-     Lähteellä ei myöskään saa olla puuttuviksi tai virheellisiksi merkittyjä liitteitä, koska ne voivat tehdä siitä
-     maksuvelvollisen vielä samassa ajossa. Liitteillä ei ole merkitystä, jos lupa on löytynyt Migrin palvelusta ja
-     peruste on merkitty (ks. kk-application-payment/permit-check-payment-obligation).
    - Jos hakija on todettu maksuvelvolliseksi Migrin palvelusta löytyneen luvan perusteella, tarkistus ratkaisee
-     maksuvelvollisuuden liitteistä riippumatta, joten lähteen maksulla ja liitteillä ei ole merkitystä."
+     maksuvelvollisuuden liitteistä riippumatta, joten lähteen maksulla ei ole merkitystä."
   [applications not-required-application-keys target attachment-key]
   (filter (fn [{:keys [application check]}]
             (cond
@@ -131,10 +153,7 @@
               true
 
               (not-obligated? check)
-              (and (contains? not-required-application-keys (:key application))
-                   (or (and (true? (:found-in-migri check))
-                            (= "not-obligated" (:payment-obligation-basis check)))
-                       (not (invalid-attachments? (:key application)))))
+              (contains? not-required-application-keys (:key application))
 
               :else
               false))
