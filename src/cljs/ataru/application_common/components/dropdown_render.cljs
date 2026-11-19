@@ -439,7 +439,7 @@
                    :selected-value     selected-value
                    :active-option-id   (:option-id active-option)
                    :register-ref       (:register-option-ref context)
-                   :popup-ref          #(reset! (:popup-ref context) %)
+                   :popup-ref          (:popup-ref context)
                    ;; Avattaessa (millä tavalla tahansa) valittu vaihtoehto
                    ;; vieritetään listan yläosaan; kokoruututilassa samalla
                    ;; asemoidaan lista ja asetetaan fokus (ks. focus-when-
