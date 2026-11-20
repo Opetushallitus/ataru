@@ -177,6 +177,7 @@
         animated?           (reaction (:animated? @note))
         remove-disabled?    (reaction (or (-> @note :state some?)
                                           (-> @note :id not)))
+        removable?          (subscribe [:application/review-note-removable? note-idx])
         hakukohde-name      (subscribe [:application/hakukohde-name (:hakukohde @note)])
         removing?           (r/atom false)
         remove-note         (fn []
@@ -198,15 +199,16 @@
            [:i.zmdi.zmdi-chevron-up]
            [:i.zmdi.zmdi-chevron-down])
          (str " " @created-time " " @name)]
-        [:div.application-handling__review-note-remove-link
-         {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
-          :on-click #(when-not @remove-disabled?
-                       (if @removing?
-                         (remove-note)
-                         (start-removing-note)))}
-         (if @removing?
-           @(subscribe [:editor/virkailija-translation :confirm-delete])
-           [:i.zmdi.zmdi-close])]]
+        (when @removable?
+          [:div.application-handling__review-note-remove-link
+           {:class    (when @remove-disabled? "application-handling__review-note-remove-link--disabled")
+            :on-click #(when-not @remove-disabled?
+                         (if @removing?
+                           (remove-note)
+                           (start-removing-note)))}
+           (if @removing?
+             @(subscribe [:editor/virkailija-translation :confirm-delete])
+             [:i.zmdi.zmdi-close])])]
        (when-not @details-folded?
          [:div.application-handling__review-note-details-row
           (when-let [name @hakukohde-name]
@@ -512,7 +514,7 @@
            (gstring/format "%s: %s "
                            @(subscribe [:editor/virkailija-translation :attachment])
                            (application-states/get-review-state-label-by-name
-                             review-states/attachment-hakukohde-review-types
+                             (review-states/attachment-review-types-for (:review-key event) false)
                              (:new-review-state event)
                              lang))
            (virkailija-initials-span event)]
@@ -562,6 +564,12 @@
 
          {:event-type "kk-payment-permit-check-reset"}
          [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-reset])]
+          [:div
+           [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
+           [:span @(subscribe [:application/field-label (:review-key event)])]]]
+
+         {:event-type "kk-payment-permit-check-removed"}
+         [[:span @(subscribe [:editor/virkailija-translation :kk-payment-permit-check-removed])]
           [:div
            [:span (str @(subscribe [:editor/virkailija-translation :attachment]) ": ")]
            [:span @(subscribe [:application/field-label (:review-key event)])]]]
@@ -975,9 +983,7 @@
             application-key      @(subscribe [:state-query [:application :selected-key]])
             can-edit?            (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
             virkailija-lang      (subscribe [:editor/virkailija-lang])
-            review-types         (if multiple-values?
-                                   review-states/attachment-hakukohde-review-types-with-multiple-values
-                                   review-states/attachment-hakukohde-review-types)
+            review-types         (review-states/attachment-review-types-for attachment-key multiple-values?)
             permit-attachment?   (kk-payment-module/residence-permit-attachment? attachment-key)
             state-selector       (if @list-opened
                                    [:div.application-handling__review-state-list
@@ -1077,7 +1083,8 @@
             attachment-files])]))))
 
 (defn- attachment-review-area [reviews lang]
-  (let [all-keys                 (->> (vals reviews)
+  (let [download-form-node       (r/atom nil)
+        all-keys                 (->> (vals reviews)
                                       (mapcat #(-> % ffirst :values flatten))
                                       (keep :key)
                                       set)
@@ -1115,6 +1122,7 @@
           [:div.application-handling__excel-request-row
            [:form#attachment-download-link
             {:action "/lomake-editori/api/files/zip"
+             :ref #(reset! download-form-node %)
              :method "POST"}
             [:input {:type  "hidden"
                      :name  "keys"
@@ -1126,7 +1134,8 @@
            [:button.application-handling__download-attachments-button
             {:disabled (empty? selected-attachment-keys)
              :on-click (fn [_]
-                         (.submit (.getElementById js/document "attachment-download-link")))}
+                         (when-let [form @download-form-node]
+                           (.submit form)))}
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
                  ^{:key (:key (ffirst all-similar-attachments))}

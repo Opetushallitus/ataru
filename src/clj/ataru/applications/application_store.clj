@@ -10,6 +10,7 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
             [ataru.forms.form-store :as forms]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
             [ataru.util :refer [answers-by-key] :as util]
@@ -517,6 +518,64 @@
                                                    {:user-agent "kk-application-payment-review-inheritance"}
                                                    audit-logger))))))
 
+(declare add-application-event-in-tx save-application-hakukohde-review-in-tx)
+
+(defn- remove-permit-checks-of-previous-document-option
+  "Poistaa oleskelulupatarkastukset, jotka eivät koske hakijan valitseman dokumenttivaihtoehdon oleskelulupaliitettä,
+   kun hakija tai virkailija vaihtaa vaihtoehtoa. Muuten edellisen vaihtoehdon tarkastus jäisi hakemukselle, vaikka
+   sen liitettä ei enää ole.
+   - Poisto kirjataan omana tapahtumanaan, eikä poistetun liitteen tarkastus periydy hakemukselle, vaikka hakija
+     vaihtaisi takaisin (ks. kk-application-payment-permit-check-inheritance).
+   - Jos poistettu tarkastus ratkaisi maksuvelvollisuuden (ks. payment-module/permit-check-decides-payment-obligation?),
+     hakemuksen hakukohteiden tarkastettu maksuvelvollisuus palautetaan tarkastamattomaksi, jotta virkailija tarkastaa
+     hakemuksen uudelleen. Liitteiden määräaikaa ei tarkisteta: määräajan jälkeen puuttuvat liitteet tekevät hakijasta
+     maksuvelvollisen maksuvelvollisuuden tarkastuksesta riippumatta, joten nollaus vain palauttaa hakemuksen
+     virkailijan tarkastettavaksi.
+   - Hakemukselle jo jääneitä edellisen vaihtoehdon tarkastuksia ei poisteta, jos vaihtoehto ei muutu."
+  [connection application-key hakukohteet old-answers new-answers virkailija-oid audit-session audit-logger]
+  (let [option-key (keyword payment-module/kk-application-payment-choice-key)
+        new-option (get-in new-answers [option-key :value])]
+    (when (not= (get-in old-answers [option-key :value]) new-option)
+      (permit-check-store/lock-permit-checks! connection application-key)
+      (let [hakukohteet        (set hakukohteet)
+            obligation-reviews (->> (queries/yesql-get-application-hakukohde-reviews {:application_key application-key}
+                                                                                    {:connection connection})
+                                    (map ->kebab-case-kw)
+                                    (filter #(and (= "kk-application-payment-obligation" (:requirement %))
+                                                  (contains? hakukohteet (:hakukohde %)))))
+            removed            (permit-check-store/delete-other-permit-checks!
+                                 connection
+                                 application-key
+                                 (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option
+                                      new-option))]
+        (doseq [check removed]
+        (log/info "Removing kk application payment permit check of attachment" (:attachment-key check)
+                  "from application" application-key "as the document option changed")
+        (add-application-event-in-tx connection
+                                     {:application-key application-key
+                                      :event-type      "kk-payment-permit-check-removed"
+                                      :review-key      (:attachment-key check)
+                                      :virkailija-oid  virkailija-oid}
+                                     nil)
+        (audit-log/log audit-logger
+                       {:old       check
+                        :id        {:applicationOid application-key
+                                    :attachmentKey  (:attachment-key check)}
+                        :session   audit-session
+                        :operation audit-log/operation-delete}))
+        (when (some #(payment-module/permit-check-decides-payment-obligation? % obligation-reviews) removed)
+          (doseq [{:keys [hakukohde]} (filter #(= "reviewed" (:state %)) obligation-reviews)]
+            (log/info "Changing kk-application-payment-obligation review to 'unreviewed' for application"
+                      application-key ", hakukohde" hakukohde "as the deciding residence permit check was removed")
+            (save-application-hakukohde-review-in-tx connection
+                                                     application-key
+                                                     hakukohde
+                                                     "kk-application-payment-obligation"
+                                                     "unreviewed"
+                                                     (time/now)
+                                                     audit-session
+                                                     audit-logger)))))))
+
 (defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger oppija-session]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
@@ -538,6 +597,7 @@
                                              (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
           old-answers                      (-> old-application :answers util/answers-by-key)
           new-answers                      (-> new-application :answers util/answers-by-key)
+          hakukohteet                      (:hakukohde new-application)
           ; kk application payment reviews of the hakukohteet added to the application are inherited
           inheritance                      {:added-hakukohde-oids    (remove (set (:hakukohde old-application))
                                                                              (:hakukohde new-application))
@@ -553,6 +613,11 @@
                                                 conn
                                                 oppija-session)]
       (inherit-kk-application-payment-obligation-reviews conn key inheritance audit-logger)
+      (remove-permit-checks-of-previous-document-option conn key hakukohteet old-answers new-answers virkailija-oid
+                                                        (if updated-by-applicant?
+                                                          session
+                                                          (assoc-in session [:identity :oid] virkailija-oid))
+                                                        audit-logger)
       (log/info (str "Updating application with key "
                      (:key old-application)
                      " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
@@ -946,6 +1011,19 @@
        (mapv #(if (nil? (:virkailija-organizations %))
                 (dissoc % :virkailija-organizations)
                 %))))
+
+(defn- auditlog-review-note
+  [note session audit-logger operation]
+  (audit-log/log audit-logger
+                 (cond-> {:id        {:applicationOid (:application-key note)
+                                      :hakukohdeOid   (:hakukohde note)
+                                      :requirement    (:state-name note)
+                                      ;; Target-kentät ovat merkkijonoja, id on numero
+                                      :noteId         (some-> (:id note) str)}
+                          :session   session
+                          :operation operation}
+                   (= operation audit-log/operation-new)    (assoc :new note)
+                   (= operation audit-log/operation-delete) (assoc :old note))))
 
 (defn- edit-application-right-organizations->json [session]
   (->> (-> session :identity :user-right-organizations :edit-applications)
@@ -1577,19 +1655,26 @@
                             (add-application-event-in-tx db event session)))
 
 
-(defn add-review-note [note session]
+(defn add-review-note [note session audit-logger]
   {:pre [(-> note :application-key clojure.string/blank? not)
          (-> note :notes clojure.string/blank? not)]}
-  (-> (exec-db :db queries/yesql-add-review-note<! {:application_key          (:application-key note)
-                                                    :notes                    (:notes note)
-                                                    :virkailija_oid           (-> session :identity :oid)
-                                                    :hakukohde                (:hakukohde note)
-                                                    :virkailija_organizations (edit-application-right-organizations->json session)
-                                                    :state_name               (:state-name note)})
-      util/remove-nil-values
-      (merge (select-keys (:identity session) [:first-name :last-name]))
-      (dissoc :virkailija_oid :removed)
-      (->kebab-case-kw)))
+  (let [stored (-> (exec-db :db queries/yesql-add-review-note<! {:application_key          (:application-key note)
+                                                                 :notes                    (:notes note)
+                                                                 :virkailija_oid           (-> session :identity :oid)
+                                                                 :hakukohde                (:hakukohde note)
+                                                                 :virkailija_organizations (edit-application-right-organizations->json session)
+                                                                 :state_name               (:state-name note)})
+                   util/remove-nil-values
+                   (merge (select-keys (:identity session) [:first-name :last-name]))
+                   (dissoc :virkailija_oid :removed)
+                   (->kebab-case-kw))]
+    (auditlog-review-note stored session audit-logger audit-log/operation-new)
+    stored))
+
+(defn get-review-note-by-id [note-id]
+  (some-> (exec-db :db queries/yesql-get-review-note-by-id {:id note-id})
+          first
+          (->kebab-case-kw)))
 
 (defn get-application-info-for-valintapiste [haku-oid hakukohde-oid]
   (->> (exec-db :db queries/yesql-valintapiste-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
@@ -1806,9 +1891,19 @@
        (map #(:application_count %))
        (first)))
 
-(defn remove-review-note [note-id]
-  (when-not (= (exec-db :db queries/yesql-remove-review-note! {:id note-id}) 0)
-    note-id))
+(defn remove-review-note
+  "Poistaa muistiinpanon loogisesti. Ottaa parametriksi jo haetun muistiinpanon, jonka kutsuja
+   on hakenut oikeustarkistusta varten. Palauttaa nil, jos muistiinpano oli jo poistettu kirjoitushetkellä, jolloin
+   ylimääräistä auditlokimerkintää ei synny."
+  [note session audit-logger]
+  (when-not (zero? (exec-db :db queries/yesql-remove-review-note! {:id (:id note)}))
+    ;; virkailija-oid jätetään merkintään, sillä se on myös poiston oikeusperuste: oman muistiinpanon
+    ;; saa poistaa pelkällä katseluoikeudella
+    (auditlog-review-note (dissoc note :removed)
+                          session
+                          audit-logger
+                          audit-log/operation-delete)
+    (:id note)))
 
 (defn get-application-keys-for-person-oid [person-oid]
   (exec-db :db queries/yesql-get-latest-application-keys-distinct-by-person-oid {:person_oid person-oid}))
@@ -1903,7 +1998,7 @@
       (log/info "Inactivating application for application key" application-key)
       (try
         (save-application-review {:application-key application-key :state "inactivated"} session audit-logger)
-        (add-review-note {:application-key application-key :notes reason-of-inactivation} session)
+        (add-review-note {:application-key application-key :notes reason-of-inactivation} session audit-logger)
         nil
         (catch Exception e
           (log/error e "Inactivation failed for application key" application-key "exception:" e)
@@ -1921,7 +2016,7 @@
         (save-application-review {:application-key application-key
                                   :state application-review-states/initial-application-review-state}
                                  session audit-logger)
-        (add-review-note {:application-key application-key :notes reason-of-reactivation} session)
+        (add-review-note {:application-key application-key :notes reason-of-reactivation} session audit-logger)
         nil
         (catch Exception e
           (log/error e "Reactivation failed for application key" application-key "exception:" e)

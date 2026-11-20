@@ -102,9 +102,8 @@
                                                "multiple-values")
                                              (:state effective-liitepyynto)
                                              "not-checked")
-            review-types                 (if multiple-liitepyynto-states?
-                                           review-states/attachment-hakukohde-review-types-with-multiple-values
-                                           review-states/attachment-hakukohde-review-types)
+            review-types                 (review-states/attachment-review-types-for (:key effective-liitepyynto)
+                                                                                    multiple-liitepyynto-states?)
             can-edit?                    @(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
         [:div.attachment-skimming-review-dropdown
          [:div.attachment-skimming-review-dropdown__list

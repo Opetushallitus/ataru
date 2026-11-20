@@ -2,10 +2,9 @@
   (:require [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
-            [clojure.core.match :refer [match]]
-            [ataru.config.core :refer [config]]))
+            [clojure.core.match :refer [match]]))
 
-(def cas-client (cas-client/new-client "/suorituspalvelu" "/api/login/j_spring_cas_security_check" "JSESSIONID" (-> config :public-config :hakija-caller-id)))
+(def cas-client (cas-client/new-client "/suorituspalvelu" "/api/login/j_spring_cas_security_check" "JSESSIONID"))
 
 (defn oppilaitoksen-opiskelijat [oppilaitos-oid vuosi]
   (let [url (url/resolve-url

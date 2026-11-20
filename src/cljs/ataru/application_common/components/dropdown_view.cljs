@@ -6,7 +6,6 @@
   tämän namespacen ainoa käyttäjä."
   (:require [clojure.string :as string]
             [reagent.core :as reagent]
-            [reagent.dom :as rdom]
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.translations.translation-util :as translations]))
@@ -146,13 +145,13 @@
                               :selected-value                       (s/maybe s/Str)
                               (s/optional-key :active-option-id)    (s/maybe s/Str)
                               :register-ref                         s/Any
-                              (s/optional-key :popup-ref)           s/Any
+                              :popup-ref                            s/Any
                               (s/optional-key :on-open)             s/Any
                               :lang                                 s/Keyword
                               :data-test-id                         (s/maybe s/Str)}]
   (let [listbox-id (str dropdown-id "-listbox")]
     [:div.a-dropdown-popup
-     {:ref          popup-ref
+     {:ref          #(reset! popup-ref %)
       :data-test-id (str data-test-id "-list")
       :tab-index    "-1"
       :class        (str (when-not expanded? "a-dropdown-popup--collapsed ")
@@ -193,15 +192,15 @@
   (reagent/create-class
     {:component-did-mount
      (fn [this]
-       (let [{:keys [expanded? on-open]} (reagent/props this)]
+       (let [{:keys [expanded? on-open popup-ref]} (reagent/props this)]
          (when (and expanded? on-open)
-           (on-open (rdom/dom-node this)))))
+           (on-open @popup-ref))))
 
      :component-did-update
      (fn [this [_ old-props]]
-       (let [{:keys [expanded? on-open]} (reagent/props this)]
+       (let [{:keys [expanded? on-open popup-ref]} (reagent/props this)]
          (when (and expanded? (not (:expanded? old-props)) on-open)
-           (on-open (rdom/dom-node this)))))
+           (on-open @popup-ref))))
 
      :reagent-render
      (fn [props]

@@ -130,7 +130,7 @@
                                   [checked?
                                    (util/non-blank-val label [lang :fi :sv :en])
                                    [state checked?]]))
-                              review-states/attachment-hakukohde-review-types)
+                              (review-states/attachment-review-types-for field-id false))
         selected-options (filter first options)]
     [:div.application-handling__filters-attachment-attachments__dropdown
      [dropdown/multi-option
@@ -421,17 +421,18 @@
                                                                "singleChoice"])
                              (qsh/belongs-to-selected-filter-predicate db form-key)))]]
              (if (seq @filter-questions)
-               [:div.application-handling__filters-attachment-attachments
-                (into [:ul.application-handling__filters-attachment-attachments__list]
-                      (map (fn [[field-id _]]
-                             [:li.application-handling__filters-attachment-attachments__list-item
-                              [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-question-filter (get @(subscribe [:application/form-fields-by-id @form-key]) (keyword field-id))])}
-                               [:i.zmdi.zmdi-close]]
-                              [:span.application-handling__filters-attachment-attachments__label
-                               @(subscribe [:application/form-field-label @form-key field-id])]
-                              [question-filter-dropdown @form-key field-id]])
-                           @filter-questions))]
+               (let [fields @(subscribe [:application/form-fields-by-id @form-key])]
+                 [:div.application-handling__filters-attachment-attachments
+                  (into [:ul.application-handling__filters-attachment-attachments__list]
+                        (map (fn [[field-id _]]
+                               [:li.application-handling__filters-attachment-attachments__list-item
+                                [:button.application-handling__filters-attachment-attachments__remove-button
+                                 {:on-click #(dispatch [:application/remove-question-filter (get fields (keyword field-id))])}
+                                 [:i.zmdi.zmdi-close]]
+                                [:span.application-handling__filters-attachment-attachments__label
+                                 @(subscribe [:application/form-field-label @form-key field-id])]
+                                [question-filter-dropdown @form-key field-id]])
+                             @filter-questions))])
                [:div.application-handling__filters-attachment-search-results
                 [question-search/search-results
                  @form-key

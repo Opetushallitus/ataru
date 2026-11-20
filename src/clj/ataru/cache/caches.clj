@@ -89,7 +89,7 @@
       {:redis   :redis
        :loader  :hakukohderyhma-settings-cache-loader})]
    [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "/j_spring_cas_security_check"
-                                                 "JSESSIONID" (-> config :public-config :virkailija-caller-id))]
+                                                  "JSESSIONID")]
    [:oppilaitoksen-opiskelijat-cache-loader
     (component/using
       (suoritus-service/map->OppilaitoksenOpiskelijatCacheLoader {})
@@ -139,7 +139,7 @@
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
    [:kouta-internal-cas-client
-    (cas/new-client "/kouta-internal" "/auth/login" "session" (-> config :public-config :virkailija-caller-id))]
+    (cas/new-client "/kouta-internal" "/auth/login" "session")]
    [:kouta-haku-cache-loader
     (component/using
      (kouta-client/map->CacheLoader {})

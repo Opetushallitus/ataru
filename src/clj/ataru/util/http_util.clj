@@ -1,9 +1,11 @@
 (ns ataru.util.http-util
-  (:require [clj-http.client :as http-client]
+  (:require [cheshire.core :as json]
+            [clj-http.client :as http-client]
             [clojure.string]
             [taoensso.timbre :as log]))
 
 (def csrf-value "ataru")
+(def backend-caller-id "1.2.246.562.10.00000000001.ataru.backend")
 
 ;todo maybe only add csrf cookie to PUT POST DELETE?
 (defn enrich-with-mandatory-headers-and-common-settings [opts]
@@ -12,7 +14,7 @@
       (update :socket-timeout (fnil identity 300000))
       (assoc  :throw-exceptions false)
       (update :headers merge
-              {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
+              {"Caller-Id" backend-caller-id}
               {"CSRF" csrf-value})
       (update :cookies merge {"CSRF" {:value csrf-value :path "/"}})))
 
@@ -39,6 +41,13 @@
 (defn do-post
   [url opts]
   (do-request (assoc opts :url url :method :post)))
+
+(defn do-post-json-with-basic-auth
+  [url username password jsonBody opts]
+  (do-post url (assoc opts :basic-auth [username password]
+                           :content-type "application/json"
+                           :accept "application/json"
+                           :body (json/generate-string jsonBody))))
 
 (defn do-delete
   [url]

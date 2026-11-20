@@ -4,22 +4,26 @@
             [ataru.cache.cache-service :as cache-service]
             [ataru.db.db :as db]
             [ataru.fixtures.excel-fixtures :as fixtures]
+            [ataru.maksut.maksut-protocol :refer [MaksutServiceProtocol]]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as mock-tarjonta-service]
+            [ataru.valinta-tulos-service.valintatulosservice-protocol :refer [ValintaTulosService]]
             [ataru.koski.koski-service :refer [KoskiTutkintoService]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.time.coerce :as coerce]
             [ataru.time :as time]
             [ataru.time.format :as format]
+            [cheshire.core :as json]
             [clojure.string :as clj-string]
             [ring.mock.request :as mock]
             [speclj.core :refer [should-contain should-not-be-nil
                                  should-not-contain should=]]
             [yesql.core :as sql])
 
-  (:import [java.io File FileOutputStream]
+  (:import [fi.vm.sade.auditlog DummyAuditLog]
+           [java.io File FileOutputStream]
            [java.time Instant]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
@@ -39,6 +43,127 @@
        first
        (clj-string/split #";")
        first)))
+
+(defn new-capturing-audit-logger
+  "Palauttaa [entries logger], missä entries on atomi ja logger kelpaa :audit-logger-riippuvuudeksi.
+   Jokainen merkintä on muotoa
+   {:user {...} :operation \"lisäys\" :target {...} :changes [...]}.
+
+   Periytetään DummyAuditLogista eikä rakenneta Auditia suoraan, jotta testiajoon ei synny
+   HeartbeatDaemon-säiettä eikä tiedostokirjoitusta."
+  []
+  (let [entries (atom [])
+        ->clj   (fn [json-el] (json/parse-string (str json-el) true))]
+    [entries
+     (proxy [DummyAuditLog] []
+       (log [user operation target changes]
+         (swap! entries conj
+                {:user      (->clj (.asJson user))
+                 :operation (.name operation)
+                 :target    (->clj (.asJson target))
+                 :changes   (->clj (.asJsonArray changes))})))]))
+
+(defrecord FakeValintaTulosService [calls response]
+  ValintaTulosService
+  (hakukohteen-ehdolliset [_ _] #{})
+  (valinnan-tulos-hakemukselle [_ _ _] @response)
+  (valinnantulos-hakemukselle-tilahistorialla [_ _] @response)
+  (valinnantulos-monelle-tilahistorialla [_ _] @response)
+  (change-kevyt-valinta-property [_ valintatapajono-oid body _]
+    (swap! calls conj {:op :change-kevyt-valinta-property
+                       :valintatapajono-oid valintatapajono-oid
+                       :body body})
+    @response)
+  (hyvaksynnan-ehto-hakukohteessa-hakemus [_ _ _] @response)
+  (add-hyvaksynnan-ehto-hakukohteessa-hakemus [_ ehto hakukohde-oid application-key _]
+    (swap! calls conj {:op :add-hyvaksynnan-ehto
+                       :ehto ehto
+                       :hakukohde-oid hakukohde-oid
+                       :application-key application-key})
+    @response)
+  (delete-hyvaksynnan-ehto-hakukohteessa-hakemus [_ hakukohde-oid application-key _]
+    (swap! calls conj {:op :delete-hyvaksynnan-ehto
+                       :hakukohde-oid hakukohde-oid
+                       :application-key application-key})
+    @response)
+  (hyvaksynnan-ehto-valintatapajonoissa-hakemus [_ _ _] @response)
+  (hyvaksynnan-ehto-hakemukselle [_ _] @response)
+  (hyvaksynnan-ehto-hakukohteessa-muutoshistoria [_ _ _] @response))
+
+(defrecord FakeMaksutService [calls laskut invoice]
+  MaksutServiceProtocol
+  (create-kk-application-payment-lasku [_ lasku]
+    (swap! calls conj {:op :create-kk-application-payment-lasku :lasku lasku})
+    @invoice)
+  (create-kasittely-lasku [_ lasku]
+    (swap! calls conj {:op :create-kasittely-lasku :lasku lasku})
+    @invoice)
+  (create-paatos-lasku [_ lasku]
+    (swap! calls conj {:op :create-paatos-lasku :lasku lasku})
+    @invoice)
+  (list-lasku-statuses [_ _] [])
+  (list-laskut-by-application-key [_ _] @laskut)
+  (download-receipt [_ _] {:status 200 :body ""})
+  (invalidate-laskut [_ _] nil)
+  (force-invalidate-laskut [_ _] nil)
+  (delete-laskut [_ _] nil)
+  (update-laskut-due-date [_ _ _] nil))
+
+;; Fake-palveluiden oletusarvot. Nimettyinä, jotta testit voivat palauttaa atomit näihin
+;; before-lohkossa sen sijaan että jokainen muuttaja huolehtisi palautuksesta itse.
+(def fake-lasku {:order_id "ORDER-1" :status :active :secret "lasku-secret-1"})
+
+(def fake-invoice {:order_id "ORDER-1"
+                   :secret   "lasku-secret-1"
+                   :amount   "100"
+                   :vat      "24"
+                   :due_date "2026-12-31"
+                   :status   :active})
+
+(def fake-vts-response {:status 200 :headers {} :body "{}"})
+
+(defn new-fake-maksut-service
+  "Palauttaa {:calls :laskut :invoice :service}. :calls kerää luontikutsut, :laskut on
+   list-laskut-by-application-key:n vastaus ja :invoice create-*-lasku:n palauttama lasku."
+  []
+  (let [calls   (atom [])
+        laskut  (atom [fake-lasku])
+        invoice (atom fake-invoice)]
+    {:calls   calls
+     :laskut  laskut
+     :invoice invoice
+     :service (->FakeMaksutService calls laskut invoice)}))
+
+(defn new-fake-valinta-tulos-service
+  "Palauttaa {:calls :response :service}. :calls kerää tehdyt muutoskutsut, :response on VTS:n
+   vastaus, jonka reitit palauttavat sellaisenaan."
+  []
+  (let [calls    (atom [])
+        response (atom fake-vts-response)]
+    {:calls    calls
+     :response response
+     :service  (->FakeValintaTulosService calls response)}))
+
+(defn new-counting-cache
+  "Palauttaa {:calls :cache}. :calls kerää tyhjennykset, jotta testi voi varmistaa myös sen
+   ettei välimuistia kosketettu — luvattoman kutsun olennaisin väite."
+  []
+  (let [calls (atom [])]
+    {:calls calls
+     :cache (reify cache-service/Cache
+              (get-from [_ _])
+              (get-many-from [_ _])
+              (remove-from [_ key] (swap! calls conj [:remove-from key]))
+              (clear-all [_] (swap! calls conj [:clear-all])))}))
+
+(defn audit-entries-for
+  "Suodattaa merkinnät operaation ja valinnaisen target-kentän perusteella.
+   Operaatiot ovat audit_log.clj:n suomenkielisiä nimiä, esim. \"lisäys\", \"poisto\"."
+  ([entries operation]
+   (filter #(= operation (:operation %)) @entries))
+  ([entries operation target-key target-value]
+   (filter #(= target-value (get-in % [:target target-key]))
+           (audit-entries-for entries operation))))
 
 (defn should-have-header
   [header expected-val resp]

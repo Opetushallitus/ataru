@@ -29,8 +29,8 @@
             [cljs-time.core :as t]
             [clojure.set :as clj-set]
             [clojure.string :as clj-string]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
-                                   subscribe]]))
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [re-frame.db :refer [app-db]]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -108,7 +108,7 @@
    (fn [acc application]
      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
                  acc
-                 (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
+                 (group-by :state (cond->> (application-states/attachment-reviews-for-filtering application)
                                     (some? included-hakukohde-oid-set)
                                     (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
@@ -213,6 +213,7 @@
             (if-let [states (->> (:application-attachment-reviews application)
                                  (filter #(or (empty? selected-hakukohde-oids)
                                               (contains? selected-hakukohde-oids (:hakukohde %))))
+                                 (application-states/remove-attachment-reviews-ignored-in-filtering application)
                                  (map :state)
                                  distinct
                                  seq)]
@@ -595,7 +596,7 @@
    (autosave/interval-loop {:subscribe-path [:application :review]
                             :changed-predicate review-autosave-predicate
                             :handler (fn [current _]
-                                       (let [selected-review-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+                                       (let [selected-review-hakukohde-oids (get-in @app-db [:application :selected-review-hakukohde-oids])
                                              filtered-hakukohde-reviews (select-keys (current :hakukohde-reviews) (map keyword selected-review-hakukohde-oids))]
                                          (ajax/http
                                           :put
@@ -1134,6 +1135,7 @@
                                                   (vec (cons (merge note
                                                                     {:created-time (t/now)
                                                                      :id           tmp-id
+                                                                     :own?         true
                                                                      :animated?    true})
                                                              notes))))
                                      (assoc-in [:application :review-comment] nil))]
@@ -1180,7 +1182,18 @@
                   {:db   db
                    :http {:method              :delete
                           :path                (str "/lomake-editori/api/applications/notes/" note-id)
-                          :handler-or-dispatch :application/handle-remove-review-note-response}})))
+                          :handler-or-dispatch :application/handle-remove-review-note-response
+                          :override-args       {:error-handler #(dispatch [:application/handle-remove-review-note-error note-id])}}})))
+
+(reg-event-db :application/handle-remove-review-note-error
+              (fn [db [_ note-id]]
+                (if (some? (get-in db [:application :review-notes]))
+                  (update-in db [:application :review-notes]
+                             (partial mapv #(if (and (= note-id (:id %))
+                                                     (= :removing (:state %)))
+                                              (dissoc % :state)
+                                              %)))
+                  db)))
 
 (reg-event-db :application/handle-remove-review-note-response
               (fn [db [_ resp]]
