@@ -86,6 +86,12 @@
     (debounce-dispatch dispatch)))
 
 (re-frame/reg-fx
+  :revoke-object-urls
+  (fn [object-urls]
+    (doseq [object-url object-urls]
+      (js/URL.revokeObjectURL object-url))))
+
+(re-frame/reg-fx
   :set-page-title
   (fn [title]
     (aset js/document "title" title)))

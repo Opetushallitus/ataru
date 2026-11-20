@@ -181,6 +181,37 @@ const injectEditFieldFormData = async (page: Page, formId: number) => {
   }
 }
 
+// Testiympäristössä ei ole liitepalvelua, joten liitteen lataus palvelimelle simuloidaan.
+const mockAttachmentUpload = async (page: Page): Promise<void> => {
+  await page.route('**/hakemus/api/files/signed-upload**', (route) =>
+    route.fulfill({
+      json: {
+        key: 'pw-liite-key',
+        'signed-url': '/pw-signed-upload/pw-liite-key',
+      },
+    })
+  )
+  await page.route('**/pw-signed-upload/**', (route) =>
+    route.fulfill({ status: 200, body: '' })
+  )
+  await page.route('**/hakemus/api/files/mark-upload-delivered**', (route) =>
+    route.fulfill({ status: 201, json: {} })
+  )
+}
+
+const attachmentContent = '%PDF-1.4\n%%EOF\n'
+
+const addAttachment = async (page: Page, filename: string): Promise<void> => {
+  await page.locator('#pw-f-18-attachment-upload-button').setInputFiles({
+    name: filename,
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(attachmentContent),
+  })
+  await expect(
+    page.locator('.application__form-attachment-check-mark')
+  ).toBeVisible()
+}
+
 const getFormFields = (page: Page) =>
   page.locator('.application__form-content-area .application__form-field')
 
@@ -357,6 +388,54 @@ test.describe('Hakijan hakemuksen muokkaus', () => {
     await expect(page.getByTestId('phone-input')).toHaveValue(
       seededValues.phone
     )
+  })
+
+  test('liitteen voi avata uuteen välilehteen ennen hakemuksen lähettämistä', async () => {
+    const formKey = requireValue(lomakkeenAvain, 'Missing form key')
+    await mockAttachmentUpload(page)
+    await page.goto(getHakijanNakymanOsoite(formKey))
+
+    await addAttachment(page, 'liite.pdf')
+
+    const link = page.getByRole('link', {
+      name: 'liite.pdf (avautuu uuteen välilehteen)',
+    })
+    await expect(link).toHaveAttribute('href', /^blob:/)
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+
+    const href = requireValue(
+      await link.getAttribute('href'),
+      'Missing attachment link'
+    )
+    const content = await page.evaluate(
+      async (url) => (await fetch(url)).text(),
+      href
+    )
+    expect(content).toBe(attachmentContent)
+
+    await page.getByRole('button', { name: 'Poista', exact: true }).click()
+    await page.getByRole('button', { name: 'Vahvista poisto' }).click()
+    await expect(page.getByText('liite.pdf')).toHaveCount(0)
+    // Poistetun liitteen osoite vapautetaan selaimen muistista
+    await expect(
+      page.evaluate(async (url) => (await fetch(url)).text(), href)
+    ).rejects.toThrow()
+  })
+
+  test('hakemuksen muokkauksessa lisättyä liitettä ei voi avata', async () => {
+    const secret = requireModifySecret(modifySecret)
+    await mockAttachmentUpload(page)
+    await page.goto(`/hakemus?modify=${secret}`)
+
+    await addAttachment(page, 'liite.pdf')
+
+    await expect(
+      page.locator('span.application__form-attachment-filename', {
+        hasText: 'liite.pdf',
+      })
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: /liite\.pdf/ })).toHaveCount(0)
   })
 
   test('näyttää oikeat aiemmin täytetyt vastaukset', async () => {

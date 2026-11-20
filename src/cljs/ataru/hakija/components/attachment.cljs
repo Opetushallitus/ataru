@@ -4,6 +4,7 @@
              :as application-field]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.generic-label-component :as generic-label-component]
+            [ataru.application-common.components.link-component :as link-component]
             [ataru.util :as util]
             [ataru.translations.translation-util :as tu]
             [reagent.core :as r]
@@ -58,15 +59,31 @@
                           id
                           question-group-idx
                           attachment-idx])
-        link @(subscribe [:application/attachment-download-link (:value file)])]
+        link @(subscribe [:application/attachment-download-link (:value file)])
+        editing? @(subscribe [:application/editing?])
+        lang @(subscribe [:application/form-language])]
     [:div
-     (if (and (:final file)
-              (fc/feature-enabled? :attachment-download-allowed))
-       [:a.application__form-attachment-filename
-        {:href link}
-        (:filename file)]
-       [:span.application__form-attachment-filename
-        (:filename file)])
+     (cond (and (:final file)
+                (fc/feature-enabled? :attachment-download-allowed))
+           [:a.application__form-attachment-filename
+            {:href link}
+            (:filename file)]
+
+           ; Ennen hakemuksen lähettämistä hakija voi avata lisäämänsä liitteen selaimen muistista. Hakemusta
+           ; muokattaessa liitteitä ei voi avata.
+           (and (= :ready (:status file))
+                (some? (:object-url file))
+                (not editing?))
+           [:a.application__form-attachment-filename
+            {:href   (:object-url file)
+             :target "_blank"
+             :rel    "noopener noreferrer"}
+            (:filename file)
+            [link-component/new-tab-hint lang]]
+
+           :else
+           [:span.application__form-attachment-filename
+            (:filename file)])
      (when (and (some? (:size file)) show-size?)
        [:span (str " (" (util/size-bytes->str (:size file)) ")")])]))
 
