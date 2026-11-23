@@ -44,7 +44,15 @@
    {:id        "hakemusmaksuvelvollisuus"
     :label     (:hakemusmaksuvelvollisuus excel-texts)}
    {:id        "kk-payment-state"
-    :label     (:kk-payment-state excel-texts)}])
+    :label     (:kk-payment-state excel-texts)}
+   {:id        "oleskelulupaliitteen-tila"
+    :label     (:oleskelulupaliitteen-tila excel-texts)}
+   {:id        "tiedot-migrin-palvelussa"
+    :label     (:tiedot-migrin-palvelussa excel-texts)}
+   {:id        "lupakortti-voimassa"
+    :label     (:lupakortti-voimassa excel-texts)}
+   {:id        "hakemusmaksuvelvollisuus-tulos"
+    :label     (:hakemusmaksuvelvollisuus-tulos excel-texts)}])
 
 (def common-field-labels
   [{:id "hakemuksen-yleiset-tiedot"
@@ -92,4 +100,3 @@
                                                               (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
                                          (contains? (set hakukohderyhmas) selected-hakukohderyhma)))
       :else true)))
-

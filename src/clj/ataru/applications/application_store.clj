@@ -922,6 +922,10 @@
    (cond->> (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key}))
             without-modified-time? (map #(dissoc % :modified-time)))))
 
+(defn get-attachment-reviews-for-applications [application-keys]
+  (let [reviews (db/exec :db queries/yesql-get-attachment-reviews-for-applications {:application_keys application-keys})]
+    (group-by :application_key reviews)))
+
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db
                                        queries/yesql-get-latest-application-by-secret

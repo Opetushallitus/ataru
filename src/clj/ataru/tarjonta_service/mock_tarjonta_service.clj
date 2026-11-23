@@ -270,6 +270,15 @@
                                                   {:oid     "hakukohde.oid"
                                                    :hakuOid "haku.oid"})
 
+   :other.hakukohde.oid                    (merge base-hakukohde
+                                                  {:oid     "other.hakukohde.oid"
+                                                   :hakuOid "haku.oid"
+                                                   :tarjoajaNimet
+                                                   {:fi "Toinen tarjoaja"}
+                                                   :hakukohteenNimet
+                                                   {:kieli_fi "Toinen ammattitutkinto"
+                                                    :kieli_sv "Andra yrkesexamen"}})
+
    :hakukohde_oid                          base-hakukohde
 
    :hakukohde-in-ryhma.oid                 (merge base-hakukohde
@@ -869,4 +878,3 @@
     (into {} (keep #(when-let [v (get kouta-koulutukset (keyword %))]
                       [% v])
                    koulutus-oids))))
-

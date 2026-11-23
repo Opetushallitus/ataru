@@ -141,3 +141,12 @@ SELECT application_key
 FROM application_reviews
 WHERE application_key = :application_key
 FOR UPDATE;
+
+-- name: yesql-get-kk-application-payment-permit-checks-for-excel
+SELECT application_key                               as "application-key",
+       found_in_migri                                AS "found-in-migri",
+       to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
+       payment_obligation_basis                      AS "payment-obligation-basis",
+       payment_obligation_other_reason               AS "payment-obligation-other-reason"
+FROM kk_application_payment_permit_checks
+WHERE application_key IN (:application_keys);
