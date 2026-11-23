@@ -295,7 +295,7 @@ test('ohjaa puuttuvan liitteen tiedot Migrin lupatietopalvelusta', async () => {
   })
   await expect(migriLink).toHaveAttribute(
     'href',
-    'https://miso1.sovellukset.migri.fi'
+    'https://miso1a.sovellukset.migri.fi'
   )
   await expect(migriLink).toHaveAttribute('target', '_blank')
 })
