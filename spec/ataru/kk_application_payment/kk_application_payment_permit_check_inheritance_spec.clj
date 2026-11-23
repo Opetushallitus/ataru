@@ -529,6 +529,18 @@
           (should= {permit-attachment-key "not-checked" passport-attachment-key "not-checked"}
                    (attachment-states target-key))))))
 
+  (it "inherits the check of an application on which only an attachment unrelated to the application payment is marked missing"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:found-in-migri false})
+      (review-attachments! source-key "attachment-missing" ["transcript-of-records-attachment"])
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-attachments! target-key "not-checked")
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
   (it "inherits a check stating no payment obligation by the permit found in Migri to an application with the residence permit attachment although the earlier application has missing attachments"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
                                                      delivered-application "2025-01-14T10:00:00+02:00")]
