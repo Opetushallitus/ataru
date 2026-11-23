@@ -3207,7 +3207,19 @@
                               :en "Application fee obligation"}
    :kk-payment-state         {:fi "Hakemusmaksun tila"
                               :sv "Ansökningsavgiftens status"
-                              :en "Application fee state"}})
+                              :en "Application fee state"}
+   :oleskelulupaliitteen-tila {:fi "Oleskelulupaliitteen tila"
+                               :sv "Status för bilagan till uppehållstillståndet"
+                               :en "Residence permit attachment status"}
+   :tiedot-migrin-palvelussa {:fi "Tiedot löytyvät Migrin lupatietopalvelusta"
+                               :sv "Uppgifterna finns i Migrationsverkets tjänst för tillståndsuppgifter"
+                               :en "Information found in Migri's permit information service"}
+   :lupakortti-voimassa      {:fi "Lupakortti voimassa"
+                               :sv "Tillståndskortet giltigt till"
+                               :en "Permit card valid until"}
+   :hakemusmaksuvelvollisuus-tulos {:fi "Hakemusmaksuvelvollisuus, tarkastuksen tulos"
+                                    :sv "Skyldighet att betala ansökningsavgift, granskningsresultat"
+                                    :en "Application fee liability, verification result"}})
 
 (def koski-tutkinnot-texts
   {:section-label                                 {:fi "Tutkinnot"

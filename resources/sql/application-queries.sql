@@ -713,6 +713,15 @@ SELECT
 FROM application_hakukohde_attachment_reviews
 WHERE application_key = :application_key;
 
+-- name: yesql-get-attachment-reviews-for-applications
+SELECT
+  application_key,
+  attachment_key,
+  state,
+  hakukohde
+FROM application_hakukohde_attachment_reviews
+WHERE application_key IN (:application_keys);
+
 -- name: yesql-upsert-application-hakukohde-review!
 INSERT INTO application_hakukohde_reviews (application_key, requirement, state, hakukohde, modified_time)
 VALUES (:application_key, :requirement, :state, :hakukohde, :modified_time)

@@ -68,6 +68,12 @@
   [organization-service application-key]
   (mapv (partial with-original-check organization-service) (store/get-permit-checks application-key)))
 
+(defn get-permit-checks-for-excel
+  [application-keys]
+  (let [checks (store/get-permit-checks-for-excel application-keys)]
+    (into {}
+          (map #(vector (:application-key %) %) checks))))
+
 (defn- authorized-organization-oid
   "Sen hakukohteen oppilaitos, joka on hakutoivejärjestyksessä ensimmäinen, johon virkailijalla on oikeus
    liitosorganisaationsa (muokkausoikeus) tai valitsemansa organisaation kautta. Organisaatio on hakukohteen tarjoaja

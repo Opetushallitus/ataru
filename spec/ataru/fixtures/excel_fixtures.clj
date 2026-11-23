@@ -168,6 +168,11 @@
                                                                 {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
                                                                 {:requirement "eligibility-state" :state "uneligible" :hakukohde "hakukohde.oid"}]
                                 :kk-payment-state              "paid"
+                                :kk-payment-permit-check       {:found-in-migri true
+                                                                :permit-valid-until "2026-09-12"
+                                                                :payment-obligation-basis "obligated-other"
+                                                                :payment-obligation-other-reason "Selittävä teksti"}
+                                :residence-permit-attachments  [{:state "attachment-missing" :hakukohde "hakukohde.oid"}]
                                 :answers                       [{:key       "first-name"
                                                                  :label     {:fi "Etunimi"}
                                                                  :value     "Lomake-etunimi"}
@@ -183,6 +188,18 @@
                                                                  :label     {:fi "You should not see this"}
                                                                  :value     "Really, no"
                                                                  :fieldType "textField"}]})
+
+(def application-for-two-hakukohde
+  (assoc application-for-hakukohde
+    :hakukohde ["hakukohde.oid" "other.hakukohde.oid"]
+    :application-hakukohde-reviews [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde.oid"}
+                                    {:requirement "processing-state" :state "processing" :hakukohde "hakukohde.oid"}
+                                    {:requirement "eligibility-state" :state "uneligible" :hakukohde "hakukohde.oid"}
+                                    {:requirement "selection-state" :state "selected" :hakukohde "other.hakukohde.oid"}
+                                    {:requirement "processing-state" :state "processing" :hakukohde "other.hakukohde.oid"}
+                                    {:requirement "eligibility-state" :state "uneligible" :hakukohde "other.hakukohde.oid"}]
+    :residence-permit-attachments [{:state "attachment-missing" :hakukohde "hakukohde.oid"}
+                                   {:state "incomplete-attachment" :hakukohde "other.hakukohde.oid"}]))
 
 (def application-with-special-answers {:id                            3424
                                        :key                           "application_3424_key"
