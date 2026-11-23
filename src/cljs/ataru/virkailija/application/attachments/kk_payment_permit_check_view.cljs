@@ -9,7 +9,7 @@
             [re-frame.core :as re-frame]
             [reagent.core :as r]))
 
-(def ^:private migri-permit-service-url "https://miso1.sovellukset.migri.fi")
+(def ^:private migri-permit-service-url "https://miso1a.sovellukset.migri.fi")
 
 (defn- translation [key]
   @(re-frame/subscribe [:editor/virkailija-translation key]))
