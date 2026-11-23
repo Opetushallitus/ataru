@@ -1,0 +1,4 @@
+# Rebase tuo muiden muutoksia, amend muuttaa vain jo lintattuja tiedostoja
+if [ "$1" = "rebase" ]; then
+  ./bin/refresh-clj-kondo-cache.sh
+fi

@@ -502,6 +502,68 @@
       (run-job! target-key)
       (should= [] (checks target-key))))
 
+  (it "does not inherit the check of an application on which the attachment reviews make the applicant obligated, whether or not the later application has the residence permit attachment"
+    (doseq [target-fixture [delivered-application missing-application]
+            check          [{:found-in-migri nil :payment-obligation-basis nil}
+                            {:found-in-migri false :payment-obligation-basis "not-obligated"}
+                            {:found-in-migri false :payment-obligation-basis "obligated-own-studies"}
+                            ; the permit check does not decide the payment obligation without the basis
+                            {:found-in-migri true :payment-obligation-basis nil}]]
+      (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+        (jdbc/delete! conn :kk_application_payment_permit_checks [])
+        (jdbc/delete! conn :applications [])
+        (jdbc/delete! conn :kk_application_payments [])
+        (jdbc/delete! conn :kk_application_payments_history []))
+      (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                       target-fixture "2025-01-14T10:00:00+02:00")]
+        (checked-source! source-key check)
+        (review-attachments! source-key "incomplete-attachment" [permit-attachment-key])
+        (payment/set-application-fee-not-required-for-exemption source-key nil)
+        (if (= delivered-application target-fixture)
+          (review-attachments! target-key "not-checked")
+          (review-missing-attachments! target-key))
+        (run-job! target-key)
+        (should= [] (checks target-key))
+        (should= [] (inherited-events target-key))
+        (should-be-nil (obligation-state target-key))
+        (when (= delivered-application target-fixture)
+          (should= {permit-attachment-key "not-checked" passport-attachment-key "not-checked"}
+                   (attachment-states target-key))))))
+
+  (it "inherits the check of an application on which only an attachment unrelated to the application payment is marked missing"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:found-in-migri false})
+      (review-attachments! source-key "attachment-missing" ["transcript-of-records-attachment"])
+      (payment/set-application-fee-not-required-for-exemption source-key nil)
+      (review-attachments! target-key "not-checked")
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "inherits a check stating no payment obligation by the permit found in Migri to an application with the residence permit attachment although the earlier application has missing attachments"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (review-back-side-missing! source-key)
+      (review-attachments! target-key "not-checked")
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:not-required payment/all-states) (payment-state target-key))))
+
+  (it "inherits a check stating a payment obligation by the permit found in Migri to an application with the residence permit attachment although the earlier application has missing attachments"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key {:payment-obligation-basis "obligated-own-studies"})
+      (review-back-side-missing! source-key)
+      (review-attachments! target-key "not-checked")
+      (run-job! target-key)
+      (should= [source-key] (map :inherited-from-application-key (checks target-key)))
+      (should= "reviewed" (obligation-state target-key))
+      (should= (:awaiting payment/all-states) (payment-state target-key))))
+
   (it "does not inherit to an application without the residence permit attachment when the permit card has expired before the application was submitted"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
                                                      missing-application "2025-01-14T10:00:00+02:00")]
