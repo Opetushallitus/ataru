@@ -1207,6 +1207,11 @@
   (->kebab-case-kw
    (exec-db :db queries/yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
 
+(defn get-application-feedback-by-form-key
+  [form-key]
+  (mapv ->kebab-case-kw
+        (exec-db :db queries/yesql-get-application-feedback-by-form-key {:form_key form-key})))
+
 (defn- kk-base-educations-old-module [answers]
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
         ["avoin" :studies-required-by-higher-education-field]

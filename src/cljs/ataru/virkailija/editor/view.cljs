@@ -149,14 +149,14 @@
    [:span.editor-form__preview-button-text
     (clojure.string/upper-case (name lang-kwd))]])
 
-(defn- link-to-feedback [path]
-  [:span
-   [:span " | "]
-   [:a.editor-form__form-admin-preview-link
-    {:href   (str "/palaute/"
-                  "?q=" (str js/config.applicant.service_url path))
-     :target "_blank"}
-    @(subscribe [:editor/virkailija-translation :link-to-feedback])]])
+(defn- feedback-excel-link [form-key]
+  (let [lang @(subscribe [:editor/virkailija-lang])]
+    [:a.editor-form__feedback-excel-link
+     {:href         (str "/lomake-editori/api/forms/" form-key "/feedback/excel?lang=" (name lang))
+      :target       "_blank"
+      :data-test-id "feedback-excel-link"}
+     [:i.zmdi.zmdi-download]
+     (str " " @(subscribe [:editor/virkailija-translation :download-feedback-excel]))]))
 
 (defn- lock-form-editing []
   (let [form-locked-info @(subscribe [:editor/form-locked-info])
@@ -248,8 +248,7 @@
        [:i.zmdi.zmdi-open-in-new]]]]))
 
 (defn- haku-preview-link [haku]
-  (let [user-info @(subscribe [:state-query [:editor :user-info]])
-        demo-allowed? @(subscribe [:editor/demo-allowed])]
+  (let [demo-allowed? @(subscribe [:editor/demo-allowed])]
     [:div.editor-form__haku-preview-link
      [:a {:href         (str "/lomake-editori/api/preview/haku/"
                           (:oid haku)
@@ -268,8 +267,6 @@
                        "?ensisijaisesti=false")
           :target "_blank"}
       @(subscribe [:editor/virkailija-translation :link-to-applications])]
-     (when (:superuser? user-info)
-       (link-to-feedback (str "/hakemus/haku/" (:oid haku))))
      (when demo-allowed?
        [:<>
         [:span " | "]
@@ -298,8 +295,7 @@
          [haku-preview-link haku]]))]])
 
 (defn- form-not-in-use-in-hakus [form-key]
-  (let [languages @(subscribe [:editor/languages])
-        user-info @(subscribe [:state-query [:editor :user-info]])]
+  (let [languages @(subscribe [:editor/languages])]
     [:div.editor-form__form-link-container
      [:h3.editor-form__form-link-heading
       [:i.zmdi.zmdi-alert-circle-o]
@@ -312,9 +308,7 @@
       @(subscribe [:editor/virkailija-translation :form])]
      [:span " | "]
      [:a.editor-form__form-admin-preview-link @(subscribe [:editor/virkailija-translation :test-application])]
-     (map (partial preview-link form-key) languages)
-     (when (:superuser? user-info)
-       (link-to-feedback (str "/hakemus/" form-key)))]))
+     (map (partial preview-link form-key) languages)]))
 
 (defn- hakus-present-or-still-fetching [hakus]
   (or (not (empty? hakus))
@@ -322,9 +316,12 @@
 
 (defn- form-usage [form-key]
   (let [form-used-in-hakus @(subscribe [:editor/form-used-in-hakus form-key])]
-    (if (hakus-present-or-still-fetching form-used-in-hakus)
-      [form-in-use-in-hakus form-used-in-hakus]
-      [form-not-in-use-in-hakus form-key])))
+    [:<>
+     (if (hakus-present-or-still-fetching form-used-in-hakus)
+       [form-in-use-in-hakus form-used-in-hakus]
+       [form-not-in-use-in-hakus form-key])
+     [:div.editor-form__feedback-excel-link-container
+      [feedback-excel-link form-key]]]))
 
 (defn- close-form []
   [:a {:on-click (fn [_]

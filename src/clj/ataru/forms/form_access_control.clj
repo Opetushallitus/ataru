@@ -38,6 +38,27 @@
         (some #(authorized-by-tarjoaja? authorized-organization-oids %))
         boolean))))
 
+(defn- form-editable-by-organizations?
+  "Editorin näkyvyyssääntö: lomake kuuluu jollekin annetuista organisaatioista
+   tai jokin niistä on lomaketta käyttävän haun hakukohteen tarjoaja."
+  [tarjonta-service authorized-organization-oids form]
+  (or (contains? authorized-organization-oids (:organization-oid form))
+      (form-allowed-by-haku? tarjonta-service authorized-organization-oids (:key form))))
+
+(defn form-visible-to-user?
+  "Lomake näkyy käyttäjälle editorissa, kun käyttäjällä on lomakkeen
+   muokkausoikeus joko lomakkeen omistavaan organisaatioon tai lomaketta
+   käyttävän haun hakukohteen tarjoajaan. Rekisterinpitäjä näkee kaikki lomakkeet."
+  [form session tarjonta-service organization-service]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:form-edit]
+    (constantly false)
+    (fn [org-oids]
+      (form-editable-by-organizations? tarjonta-service org-oids form))
+    (constantly true)))
+
 (defn get-organizations-with-edit-rights
   [session]
   (if (:selected-organization session)
@@ -221,9 +242,7 @@
 
 (defn- get-forms-as-ordinary-user
   [tarjonta-service authorized-organization-oids hakukohderyhma-oid]
-  (filter (fn [form]
-            (or (contains? authorized-organization-oids (:organization-oid form))
-                (form-allowed-by-haku? tarjonta-service authorized-organization-oids (:key form))))
+  (filter #(form-editable-by-organizations? tarjonta-service authorized-organization-oids %)
           (form-store/get-all-forms hakukohderyhma-oid)))
 
 (defn get-forms-for-editor [session tarjonta-service organization-service hakukohderyhma-oid include-closed?]
