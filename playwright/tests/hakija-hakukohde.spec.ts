@@ -35,6 +35,8 @@ const getFormFields = (page: Page) => page.locator('.application__form-field')
 const getSubmitButton = (page: Page) =>
   page.getByTestId('send-application-button')
 
+const TOTEUTUS_URL_PATTERN = /\/konfo\/fi\/toteutus\/1\.2\.246\.562\.17\.\d+$/
+
 const getSelectedHakukohteet = (page: Page) =>
   page.locator('.application__selected-hakukohde-row')
 
@@ -114,6 +116,18 @@ test('lomake latautuu täydellisenä ja oletushakukohde on valittuna', async () 
   )
 })
 
+test('valitulla hakukohteella on Lue lisää -linkki toteutuksen tietoihin', async () => {
+  const linkki = getSelectedHakukohteet(page).getByRole('link', {
+    name: /^Lue lisää: Testihakukohde 1/,
+  })
+  await expect(linkki).toHaveAttribute('href', TOTEUTUS_URL_PATTERN)
+  await expect(linkki).toHaveAttribute('target', '_blank')
+  await expect(linkki).toHaveAttribute('rel', 'noopener noreferrer')
+  await expect(linkki).toHaveAccessibleName(
+    'Lue lisää: Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (avautuu uuteen välilehteen)'
+  )
+})
+
 test('hakukohteen hakutermien syöttäminen palauttaa oikeat hakutulokset', async () => {
   await page.locator('.application__hakukohde-selection-open-search').click()
   await fillField(page, getSearchInput(page), 'haku')
@@ -126,6 +140,44 @@ test('hakukohteen hakutermien syöttäminen palauttaa oikeat hakutulokset', asyn
     'Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B',
     'Testihakukohde 3 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi C | Tutkintonimike C | Tarkenne C',
   ])
+})
+
+test('hakutuloksilla on Lue lisää -linkit toteutusten tietoihin', async () => {
+  const linkit = getSearchHits(page).getByRole('link', { name: /^Lue lisää/ })
+  await expect(linkit).toHaveCount(3)
+  await expect(getSearchHits(page).nth(0)).toHaveAccessibleName(
+    'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie Koulutuskoodi A | Tutkintonimike A | Tarkenne A'
+  )
+  const nimet = ['Testihakukohde 1', 'Testihakukohde 2', 'Testihakukohde 3']
+  for (let i = 0; i < nimet.length; i++) {
+    const nimi = nimet[i]
+    await expect(linkit.nth(i)).toHaveAccessibleName(
+      new RegExp(`^Lue lisää: ${nimi} – `)
+    )
+    await expect(linkit.nth(i)).toHaveAttribute('href', TOTEUTUS_URL_PATTERN)
+    await expect(linkit.nth(i)).toHaveAttribute('target', '_blank')
+    await expect(linkit.nth(i)).toHaveAttribute('rel', 'noopener noreferrer')
+  }
+})
+
+test('nuolinäppäimet siirtävät fokuksen hakutuloksen Lue lisää -linkistä viereisille riveille', async () => {
+  const linkit = getSearchHits(page).getByRole('link', { name: /^Lue lisää/ })
+  const lisaaPainike = (n: number) =>
+    getSearchHits(page)
+      .nth(n)
+      .locator('.application__search-hit-hakukohde-row--select-button')
+
+  await linkit.nth(0).focus()
+  await page.keyboard.press('ArrowDown')
+  await expect(lisaaPainike(1)).toBeFocused()
+
+  await linkit.nth(2).focus()
+  await page.keyboard.press('ArrowUp')
+  await expect(lisaaPainike(1)).toBeFocused()
+
+  await linkit.nth(1).focus()
+  await page.keyboard.press('ArrowUp')
+  await expect(getSearchHits(page).nth(0)).toBeFocused()
 })
 
 test('hakutulosten tarkentaminen ja hakukohteen lisääminen valittuihin', async () => {
