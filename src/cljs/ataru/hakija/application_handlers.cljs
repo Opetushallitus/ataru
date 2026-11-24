@@ -1411,15 +1411,18 @@
   (let [id (keyword (:id field-descriptor))
         db (update-in db [:attachments-uploading id] dissoc upload-id)]
     (if-let [path (attachment-path/path-by-upload-id db id upload-id)]
-      (let [new-db (-> db
-                       (update-in (pop path) autil/remove-nth (peek path))
-                       (set-repeatable-field-value id)
-                       (set-validator-processing id))]
-        {:db                 new-db
-         :validate-debounced (attachment-validation db
-                                                    new-db
-                                                    field-descriptor
-                                                    (attachment-path/question-group-idx-of-path path))})
+      (let [new-db     (-> db
+                           (update-in (pop path) autil/remove-nth (peek path))
+                           (set-repeatable-field-value id)
+                           (set-validator-processing id))
+            object-url (get-in db (conj path :object-url))]
+        (cond-> {:db                 new-db
+                 :validate-debounced (attachment-validation db
+                                                            new-db
+                                                            field-descriptor
+                                                            (attachment-path/question-group-idx-of-path path))}
+                (some? object-url)
+                (assoc :revoke-object-urls [object-url])))
       {:db db})))
 
 (reg-event-fx
@@ -1474,7 +1477,9 @@
                                          :speed         0
                                          :status        :uploading
                                          :valid         false
-                                         :upload-id     upload-id}))
+                                         :upload-id     upload-id
+                                         ; Hakija voi avata liitteen selaimen muistista ennen hakemuksen lähettämistä
+                                         :object-url    (js/URL.createObjectURL file)}))
                                     new-files
                                     upload-ids)]
       {:db         (-> (if (some? question-group-idx)
@@ -1513,15 +1518,18 @@
   (fn [{db :db} [_ field-descriptor upload-id response]]
     (let [id (keyword (:id field-descriptor))]
       (if-let [path (attachment-path/path-by-upload-id db id upload-id)]
-        (let [new-db (-> db
-                         (update-in [:attachments-uploading id] dissoc upload-id)
-                         (assoc-in path {:value    (:key response)
-                                         :filename (:filename response)
-                                         :size     (:size response)
-                                         :status   :ready
-                                         :valid    true})
-                         (set-repeatable-field-value id)
-                         (set-validator-processing id))]
+        (let [object-url (get-in db (conj path :object-url))
+              new-db     (-> db
+                             (update-in [:attachments-uploading id] dissoc upload-id)
+                             (assoc-in path (cond-> {:value    (:key response)
+                                                     :filename (:filename response)
+                                                     :size     (:size response)
+                                                     :status   :ready
+                                                     :valid    true}
+                                                    (some? object-url)
+                                                    (assoc :object-url object-url)))
+                             (set-repeatable-field-value id)
+                             (set-validator-processing id))]
           {:db                 new-db
            :validate-debounced (attachment-validation db
                                                       new-db
@@ -1585,22 +1593,31 @@
 
 (defn- delete-attachment
   [db field-descriptor question-group-idx attachment-idx attachment-key]
-  (let [id     (keyword (:id field-descriptor))
-        new-db (-> (if (some? question-group-idx)
-                     (update-in db [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
-                     db)
-                   (update-in (cond-> [:application :answers id :values]
-                                (some? question-group-idx)
-                                (conj question-group-idx))
-                              (fn [values]
-                                (if (some? attachment-idx)
-                                  (autil/remove-nth values attachment-idx)
-                                  (vec (remove #(= attachment-key (:value %)) values)))))
-                   (set-repeatable-field-value id)
-                   (set-validator-processing id))]
+  (let [id          (keyword (:id field-descriptor))
+        values      (get-in db (cond-> [:application :answers id :values]
+                                 (some? question-group-idx)
+                                 (conj question-group-idx)))
+        object-urls (->> (if (some? attachment-idx)
+                           [(get values attachment-idx)]
+                           (filter #(= attachment-key (:value %)) values))
+                         (keep :object-url))
+        new-db      (-> (if (some? question-group-idx)
+                          (update-in db [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
+                          db)
+                        (update-in (cond-> [:application :answers id :values]
+                                     (some? question-group-idx)
+                                     (conj question-group-idx))
+                                   (fn [values]
+                                     (if (some? attachment-idx)
+                                       (autil/remove-nth values attachment-idx)
+                                       (vec (remove #(= attachment-key (:value %)) values)))))
+                        (set-repeatable-field-value id)
+                        (set-validator-processing id))]
 
-    {:db                 new-db
-     :validate-debounced (attachment-validation db new-db field-descriptor question-group-idx)}))
+    (cond-> {:db                 new-db
+             :validate-debounced (attachment-validation db new-db field-descriptor question-group-idx)}
+            (seq object-urls)
+            (assoc :revoke-object-urls object-urls))))
 
 (reg-event-fx
   :application/handle-attachment-delete
@@ -1803,6 +1820,18 @@
                                              [:http-abort request]))
                                          uploads)))))
 
+(defn- question-group-row-object-urls
+  "Poistettavan kysymysryhmän rivin liitteiden selainosoitteet, jotka vapautetaan rivin mukana."
+  [db descendants idx]
+  (for [child      descendants
+        :when      (= "attachment" (:fieldType child))
+        :let       [row (get-in db [:application :answers (keyword (:id child)) :values idx])]
+        :when      (vector? row)
+        attachment row
+        :let       [object-url (:object-url attachment)]
+        :when      (some? object-url)]
+    object-url))
+
 (reg-event-fx
   :application/remove-question-group-row
   [check-schema-interceptor]
@@ -1811,6 +1840,7 @@
           descendants          (->> (:children field-descriptor)
                                     autil/flatten-form-fields
                                     (filter autil/answerable?))
+          object-urls          (question-group-row-object-urls db descendants idx)
           count-decremented    (-> db
                                    (update-in [:application :ui id :count] dec)
                                    (update-in [:application :ui id] dissoc :mouse-over-remove-button))
@@ -1823,16 +1853,18 @@
                                                (set-repeatable-application-field-top-level-valid id true))))
                                        count-decremented
                                        descendants)]
-      (stop-uploads-in-question-group-row
-       {:db         (field-visibility/set-field-visibility
-                     descendants-modified
-                     field-descriptor)
-        :dispatch-n  (conj (mapv (fn [descendant]
-                            [:application/run-rules (:rules descendant)])
-                          descendants) [:application/handle-section-visibility-conditions])}
-       db
-       descendants
-       idx))))
+      (cond-> (stop-uploads-in-question-group-row
+               {:db         (field-visibility/set-field-visibility
+                             descendants-modified
+                             field-descriptor)
+                :dispatch-n  (conj (mapv (fn [descendant]
+                                    [:application/run-rules (:rules descendant)])
+                                  descendants) [:application/handle-section-visibility-conditions])}
+               db
+               descendants
+               idx)
+              (seq object-urls)
+              (assoc :revoke-object-urls object-urls)))))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
