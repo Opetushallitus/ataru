@@ -76,6 +76,10 @@
                                            ["Muistiinpanot" nil]
                                            ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                            ["Hakemusmaksun tila" nil]
+                                           ["Oleskelulupaliitteen tila" nil]
+                                           ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                           ["Lupakortti voimassa" nil]
+                                           ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                            ["Kysymys 1" "Vastaus 1"]
                                            ["Kysymys 2" "Vastaus 2"]
                                            ["Etunimi" "Lomake-etunimi"]
@@ -112,10 +116,57 @@
                                            ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                            ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                            ["Hakemusmaksun tila" "Maksettu"]
+                                           ["Oleskelulupaliitteen tila" "Liite puuttuu"]
+                                           ["Tiedot löytyvät Migrin lupatietopalvelusta" "kyllä"]
+                                           ["Lupakortti voimassa" "2026-09-12"]
+                                           ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" "Maksuvelvollinen, muu syy: Selittävä teksti"]
                                            ["Kysymys 4" "Vastaus 4"]
                                            ["Etunimi" "Person-etunimi"]
                                            ["Kysymys 5" "Vastaus 5"]
                                            ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
+
+ (it "should export applications with two hakukohde"
+     (with-excel-workbook
+       (export-test-excel [fixtures/application-for-two-hakukohde] {:skip-answers? false
+                                                                    :ids-only? false})
+       (fn [workbook]
+         (let [metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)
+               hakukohde-nimi    "Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid): "
+               hakukohde2-nimi   "Toinen ammattitutkinto - Toinen tarjoaja (other.hakukohde.oid): "
+               per-hakukohde     #(str hakukohde-nimi %1 "\n" hakukohde2-nimi %2)
+               rev-per-hakukohde #(str hakukohde2-nimi %1 "\n" hakukohde-nimi %2)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Hakukohteen käsittelyn tila" (per-hakukohde "Käsittelyssä" "Käsittelyssä")]
+                                           ["Kielitaitovaatimus" (rev-per-hakukohde "Tarkastamatta" "Tarkastamatta")]
+                                           ["Tutkinnon kelpoisuus" (rev-per-hakukohde "Tarkastamatta" "Tarkastamatta")]
+                                           ["Hakukelpoisuus" (per-hakukohde "Ei hakukelpoinen" "Ei hakukelpoinen")]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" "2018-07-30 18:12:14 Tarkastaja Järvinen: Ei käy"]
+                                           ["Lukuvuosimaksuvelvollisuus" (rev-per-hakukohde "Tarkastamatta" "Tarkastamatta")]
+                                           ["Valinnan tila" (per-hakukohde "Hyväksytty" "Hyväksytty")]
+                                           ["Ehdollinen" (per-hakukohde "ei" "ei")]
+                                           ["Pisteet" "12"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                           ["Turvakielto" "kyllä"]
+                                           ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Hakemusmaksuvelvollisuus" (rev-per-hakukohde "Tarkastamatta" "Tarkastamatta")]
+                                           ["Hakemusmaksun tila" "Maksettu"]
+                                           ["Oleskelulupaliitteen tila" (per-hakukohde "Liite puuttuu" "Puutteellinen liite")]
+                                           ["Tiedot löytyvät Migrin lupatietopalvelusta" "kyllä"]
+                                           ["Lupakortti voimassa" "2026-09-12"]
+                                           ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" "Maksuvelvollinen, muu syy: Selittävä teksti"]
+                                           ["Kysymys 4" "Vastaus 4"]
+                                           ["Etunimi" "Person-etunimi"]
+                                           ["Kysymys 5" "Vastaus 5"]
+                                           ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid),\n(2) Toinen ammattitutkinto - Toinen tarjoaja (other.hakukohde.oid)"]])))))
 
  (it "should export applications for a hakukohde with haku without uneligible reasons"
      (with-excel-workbook
@@ -152,6 +203,10 @@
                                            ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                            ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                            ["Hakemusmaksun tila" "Maksettu"]
+                                           ["Oleskelulupaliitteen tila" "Liite puuttuu"]
+                                           ["Tiedot löytyvät Migrin lupatietopalvelusta" "kyllä"]
+                                           ["Lupakortti voimassa" "2026-09-12"]
+                                           ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" "Maksuvelvollinen, muu syy: Selittävä teksti"]
                                            ["Kysymys 4" "Vastaus 4"]
                                            ["Etunimi" "Person-etunimi"]
                                            ["Kysymys 5" "Vastaus 5"]
@@ -190,6 +245,10 @@
                                                 ["Muistiinpanot" nil]
                                                 ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                                 ["Hakemusmaksun tila" nil]
+                                                ["Oleskelulupaliitteen tila" nil]
+                                                ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                                ["Lupakortti voimassa" nil]
+                                                ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                                 ["Kysymys 1" "Vastaus 1"]
                                                 ["Kysymys 2" "Vastaus 2"]
                                                 ["Etunimi" "Lomake-etunimi"]
@@ -214,6 +273,10 @@
                                                      ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                                      ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                                      ["Hakemusmaksun tila" "Maksettu"]
+                                                     ["Oleskelulupaliitteen tila" "Liite puuttuu"]
+                                                     ["Tiedot löytyvät Migrin lupatietopalvelusta" "kyllä"]
+                                                     ["Lupakortti voimassa" "2026-09-12"]
+                                                     ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" "Maksuvelvollinen, muu syy: Selittävä teksti"]
                                                      ["Kysymys 4" "Vastaus 4"]
                                                      ["Etunimi" "Person-etunimi"]
                                                      ["Kysymys 5" "Vastaus 5"]
@@ -252,6 +315,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Migrin tarkastuksessa"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 
@@ -289,6 +356,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Migrin tarkastuksessa"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Visible from form" nil]
                                              ["Should be visible because belongs-to-hakukohde is not specified" nil]
                                              ["Etunimi" "Person-etunimi"]
@@ -330,6 +401,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Visible from form 2" nil]
                                              ["Visible only if belongs to hakukohderyhmä1" nil]
                                              ["Visible because of parent's hakukohderyhmä" nil]
@@ -373,6 +448,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Tarkastamatta"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Visible from form 2" nil]
                                              ["Visible only if belongs to hakukohderyhmä1" nil]
                                              ["Visible because of parent's hakukohderyhmä" nil]
@@ -416,6 +495,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Migrin tarkastuksessa"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Should be visible because belongs-to-hakukohde is not specified" nil]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Kysymys 5" "Vastaus 5 will be included only when skip-answers? == false"]
@@ -456,6 +539,10 @@
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Hakemusmaksuvelvollisuus" "Migrin tarkastuksessa"]
                                              ["Hakemusmaksun tila" "Maksettu toisessa haussa"]
+                                             ["Oleskelulupaliitteen tila" nil]
+                                             ["Tiedot löytyvät Migrin lupatietopalvelusta" nil]
+                                             ["Lupakortti voimassa" nil]
+                                             ["Hakemusmaksuvelvollisuus, tarkastuksen tulos" nil]
                                              ["Etunimi" "Person-etunimi"]
                                              ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
 

@@ -7,6 +7,7 @@
     [ataru.applications.attachment-review-synchroniser :as attachment-review-synchroniser]
     [ataru.applications.application-util :as application-util]
     [ataru.applications.excel-export :as excel]
+    [ataru.component-data.kk-application-payment-module :refer [kk-application-payment-choice-key kk-application-payment-residence-permit-attachment-key-by-option]]
     [ataru.config.core :refer [config]]
     [ataru.config.url-helper :as url-helper]
     [ataru.email.application-email-jobs :as email]
@@ -259,6 +260,34 @@
            (if-let [kk-payment-state (get-in payment-states-by-application [(:key application) :state])]
              (assoc application :kk-payment-state kk-payment-state)
              application))
+         applications)))
+
+(defn- populate-applications-with-kk-payment-permit-checks
+  [applications]
+  (let [permit-checks-by-application (permit-check/get-permit-checks-for-excel (map :key applications))]
+    (map (fn [application]
+           (if-let [kk-payment-permit-check (get permit-checks-by-application (:key application))]
+             (assoc application :kk-payment-permit-check kk-payment-permit-check)
+             application))
+         applications)))
+
+(defn- populate-applications-with-permit-attachment-reviews
+  [applications]
+  (let [reviews-by-application (application-store/get-attachment-reviews-for-applications (map :key applications))]
+    (map (fn [application]
+           (let [payment-option (->> application
+                                     :answers
+                                     (filter #(= (:key %) kk-application-payment-choice-key))
+                                     first
+                                     :value)
+                 attachment-key (get kk-application-payment-residence-permit-attachment-key-by-option payment-option)
+                 reviews (get reviews-by-application (:key application))
+                 payment-reviews (filter #(= attachment-key (:attachment_key %)) reviews)]
+             (if (seq payment-reviews)
+               (assoc application :residence-permit-attachments
+                                  (map #(select-keys % [:state :hakukohde])
+                                       payment-reviews))
+               application)))
          applications)))
 
 (defn- populate-applications-with-person-data
@@ -792,7 +821,10 @@
                                                                           (get onr-persons)
                                                                           (person-service/parse-person-with-master-oid application))))
                                                   applications)
-            applications-with-persons-and-payment-states (populate-applications-with-kk-payment-status applications-with-persons)
+            applications-with-persons-and-payment-states (-> applications-with-persons
+                                                             populate-applications-with-kk-payment-status
+                                                             populate-applications-with-kk-payment-permit-checks
+                                                             populate-applications-with-permit-attachment-reviews)
             hakukohteiden-ehdolliset         (delay (hakukohteiden-ehdolliset valinta-tulos-service applications))
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                                (<= 200000 (count applications))

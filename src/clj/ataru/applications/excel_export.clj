@@ -34,20 +34,27 @@
 (def ^:private filename-time-format
   (f/formatter "yyyy-MM-dd_HHmm" tz))
 
+(defn boolean-formatter [bool?]
+  (when (some? bool?) (if bool? "kyllä" "ei")))
+
 (defn time-formatter
   ([date-time formatter]
    (f/unparse formatter date-time))
   ([date-time]
    (time-formatter date-time modified-time-format)))
 
+(defn translate-review-state
+  [state lang review-states default]
+  (or
+    (lang (->> review-states
+               (filter #(= (first %) state))
+               first
+               second))
+    default))
+
 (defn application-state-formatter
   [state lang]
-  (or
-   (lang (->> review-states/application-review-states
-              (filter #(= (first %) state))
-              first
-              second))
-   "Tuntematon"))
+  (translate-review-state state lang review-states/application-review-states "Tuntematon"))
 
 (defn hakukohde-review-formatter
   [requirement-name application-hakukohde-reviews lang]
@@ -83,6 +90,32 @@
           ehdollinen?))
     (if (:ehdollinen? (first ehdollinen?)) "kyllä" "ei")))
 
+(declare get-hakukohde-name)
+
+(defn- attachment-review-formatter
+  [application lang get-hakukohde]
+  (let [attachments (:residence-permit-attachments application)
+        translate #(translate-review-state % lang review-states/attachment-hakukohde-review-types "Tuntematon")]
+    (if
+      (or (= 1 (count attachments))  (= 1 (count (set (map :state attachments)))))
+      (-> attachments first :state translate)
+      (clojure.string/join
+        "\n"
+        (map (fn [{:keys [hakukohde state]}]
+               (if-let [hakukohde-name (get-hakukohde-name
+                                         get-hakukohde
+                                         lang
+                                         (:haku application)
+                                         hakukohde)]
+                 (format "%s (%s): %s"
+                         hakukohde-name
+                         hakukohde
+                         (translate state))
+                 (format "%s: %s"
+                         hakukohde
+                         (translate state))))
+             attachments)))))
+
 (defn- application-review-notes-formatter
   ([review-notes]
    (application-review-notes-formatter nil review-notes))
@@ -107,12 +140,16 @@
 
 (defn kk-payment-state-formatter
   [state lang]
-  (or
-   (lang (->> review-states/kk-application-payment-states
-              (filter #(= (first %) state))
-              first
-              second))
-   ""))
+  (translate-review-state state lang review-states/kk-application-payment-states ""))
+
+(defn hakemusmaksuvelvollisuus-tulos-formatter
+  [permit-check lang]
+  (let [basis        (:payment-obligation-basis permit-check)
+        text         (get-in virkailija-texts [(keyword (str "kk-payment-permit-check-" basis)) lang])
+        other-reason (:payment-obligation-other-reason permit-check)]
+    (cond-> text
+            (some? other-reason)
+            (str ": " (:payment-obligation-other-reason permit-check)))))
 
 (def ^:private form-meta-fields
   [{:label     (:name excel-texts)
@@ -150,7 +187,7 @@
    "student-number"                {:field     [:person :master-oid]}
    "applicant-oid"                 {:field     [:application :person-oid]}
    "turvakielto"                   {:field     [:person :turvakielto]
-                                    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
+                                    :format-fn (fnil boolean-formatter false)}
    "hakukohde-handling-state"      {:field     [:application :application-hakukohde-reviews]
                                     :lang?     true
                                     :format-fn (partial hakukohde-review-formatter "processing-state")}
@@ -184,7 +221,16 @@
                                     :format-fn (partial hakukohde-review-formatter "kk-application-payment-obligation")}
    "kk-payment-state"              {:field     [:application :kk-payment-state]
                                     :lang?     true
-                                    :format-fn kk-payment-state-formatter}})
+                                    :format-fn kk-payment-state-formatter}
+   "oleskelulupaliitteen-tila"     {:field     [:application]
+                                    :get-hakukohde?     true ; Implies :lang? true
+                                    :format-fn attachment-review-formatter}
+   "tiedot-migrin-palvelussa"      {:field     [:application :kk-payment-permit-check :found-in-migri]
+                                    :format-fn boolean-formatter}
+   "lupakortti-voimassa"           {:field     [:application :kk-payment-permit-check :permit-valid-until]}
+   "hakemusmaksuvelvollisuus-tulos" {:field     [:application :kk-payment-permit-check]
+                                     :lang?     true
+                                     :format-fn hakemusmaksuvelvollisuus-tulos-formatter}})
 
 (def ^:private application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
@@ -210,7 +256,11 @@
    "turvakielto"
    "application-review-notes"
    "hakemusmaksuvelvollisuus"
-   "kk-payment-state"])
+   "kk-payment-state"
+   "oleskelulupaliitteen-tila"
+   "tiedot-migrin-palvelussa"
+   "lupakortti-voimassa"
+   "hakemusmaksuvelvollisuus-tulos"])
 
 (def ^:private old-application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
@@ -378,14 +428,18 @@
                    e)
         (throw e)))))
 
-(defn write-meta-field! [writer meta-field value-from lang col]
+(defn write-meta-field! [writer meta-field value-from lang col get-hakukohde]
   (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
         value (if (delay? value-candidate) @value-candidate value-candidate)
         format-fn  (:format-fn meta-field)
         render-when-fn (:render-when-fn meta-field)
         meta-value (if (some? format-fn)
-                     (if (:lang? meta-field)
+                     (cond
+                       (:get-hakukohde? meta-field)         ; :get-hakukohde? also implies :lang?
+                       (format-fn value lang get-hakukohde)
+                       (:lang? meta-field)
                        (format-fn value lang)
+                       :else
                        (format-fn value))
                      value)]
     (when (or (nil? render-when-fn)
@@ -393,13 +447,13 @@
       (writer 0 col meta-value))))
 
 (defn- write-form-meta!
-  [writer form applications fields lang]
+  [writer form applications fields lang get-hakukohde]
   (doseq [meta-field fields]
     (let [col        (:column meta-field)
           value-from (case (:from meta-field)
                        :applications (first applications)
                        form)]
-      (write-meta-field! writer meta-field value-from lang col))))
+      (write-meta-field! writer meta-field value-from lang col get-hakukohde))))
 
 (defn- write-application! [liiteri-cas-client
                            writer
@@ -411,6 +465,7 @@
                            headers
                            form-fields-by-key
                            get-koodisto-options
+                           get-hakukohde
                            lang
                            tutkinnot]
   (doseq [header headers]
@@ -420,7 +475,7 @@
                          :application-review-notes application-review-notes
                          :person                   person
                          :ehdollinen?              ehdollinen?}]
-        (write-meta-field! writer meta-field value-from lang (:column header)))
+        (write-meta-field! writer meta-field value-from lang (:column header) get-hakukohde))
       (write-answer-value-for-excel! liiteri-cas-client writer person header form-fields-by-key
                                      get-koodisto-options application lang tutkinnot))))
 
@@ -688,6 +743,14 @@
                                             (:key application))})))
    (:hakukohde application)))
 
+(defn- filter-residence-permit-attachments
+  "Rajaa oleskelulupaliitteen merkinnät valittuihin hakukohteisiin samoin kuin hakukohteiden merkinnät."
+  [selected-hakukohde-oids application]
+  (if-let [selected (some-> selected-hakukohde-oids seq set)]
+    (update application :residence-permit-attachments
+            (partial filter #(contains? selected (:hakukohde %))))
+    application))
+
 (defn- filter-eligibility-set-automatically
   [selected-hakukohde-oids application]
   (if (empty? selected-hakukohde-oids)
@@ -755,6 +818,7 @@
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-haku get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
+         (map (partial filter-residence-permit-attachments selected-hakukohde-oids))
          (map (partial filter-eligibility-set-automatically selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
@@ -775,7 +839,7 @@
                                                          {}
                                                          (util/flatten-form-fields (:content form)))
                               tutkinto-levels   (tutkinto-util/koski-tutkinto-levels-in-form form)]
-                          (write-form-meta! meta-writer form applications form-meta-fields lang)
+                          (write-form-meta! meta-writer form applications form-meta-fields lang get-hakukohde)
                           (write-headers! header-writer headers)
                           (->> applications
                                (sort-by sort-by-field (if (= sort-order :asc) asc desc))
@@ -802,6 +866,7 @@
                                                                     headers
                                                                     form-fields-by-key
                                                                     get-koodisto-options
+                                                                    get-hakukohde
                                                                     lang
                                                                     tutkinnot))))
                                (dorun))
@@ -826,4 +891,3 @@
    "_"
    (time-formatter (t/now) filename-time-format)
    ".xlsx"))
-

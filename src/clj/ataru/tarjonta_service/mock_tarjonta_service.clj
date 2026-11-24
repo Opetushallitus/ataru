@@ -270,6 +270,15 @@
                                                   {:oid     "hakukohde.oid"
                                                    :hakuOid "haku.oid"})
 
+   :other.hakukohde.oid                    (merge base-hakukohde
+                                                  {:oid     "other.hakukohde.oid"
+                                                   :hakuOid "haku.oid"
+                                                   :tarjoajaNimet
+                                                   {:fi "Toinen tarjoaja"}
+                                                   :hakukohteenNimet
+                                                   {:kieli_fi "Toinen ammattitutkinto"
+                                                    :kieli_sv "Andra yrkesexamen"}})
+
    :hakukohde_oid                          base-hakukohde
 
    :hakukohde-in-ryhma.oid                 (merge base-hakukohde
@@ -876,4 +885,3 @@
   ;; Mockilla ei ole omia välimuisteja, mutta metodi tarvitaan jotta sitä kutsuvat reitit
   ;; (POST /api/cache/haku/:haku-oid/clear) ovat testattavissa.
   (clear-haku-caches [_ _]))
-
