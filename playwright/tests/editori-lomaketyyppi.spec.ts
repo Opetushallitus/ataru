@@ -72,7 +72,7 @@ test.describe('Lomake-editori lomaketyyppi', () => {
       'Opiskelijavalinta',
       'TUTU',
       'YKI',
-      'Muu'
+      'Muu',
     ])
   })
 
