@@ -743,6 +743,14 @@
                                             (:key application))})))
    (:hakukohde application)))
 
+(defn- filter-residence-permit-attachments
+  "Rajaa oleskelulupaliitteen merkinnät valittuihin hakukohteisiin samoin kuin hakukohteiden merkinnät."
+  [selected-hakukohde-oids application]
+  (if-let [selected (some-> selected-hakukohde-oids seq set)]
+    (update application :residence-permit-attachments
+            (partial filter #(contains? selected (:hakukohde %))))
+    application))
+
 (defn- filter-eligibility-set-automatically
   [selected-hakukohde-oids application]
   (if (empty? selected-hakukohde-oids)
@@ -810,6 +818,7 @@
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-haku get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
+         (map (partial filter-residence-permit-attachments selected-hakukohde-oids))
          (map (partial filter-eligibility-set-automatically selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
                    (let [form-key (:key (get-form-by-id form))
