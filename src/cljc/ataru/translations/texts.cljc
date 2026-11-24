@@ -1442,6 +1442,21 @@
    :close-form                                               {:fi "Sulje lomake"
                                                               :sv "Stänga blanketten"
                                                               :en "Close form"}
+   :lomaketyyppi-input                                       {:fi "Lomaketyyppi"
+                                                              :sv "Blankettyp"
+                                                              :en "Form type"}
+   :lomaketyyppi-opiskelijavalinta                           {:fi "Opiskelijavalinta"
+                                                              :sv "Studieintresse"
+                                                              :en "Student selection"}
+   :lomaketyyppi-tutu                                        {:fi "TUTU"
+                                                              :sv "TUTU"
+                                                              :en "TUTU"}
+   :lomaketyyppi-yki                                         {:fi "YKI"
+                                                              :sv "YKI"
+                                                              :en "YKI"}
+   :lomaketyyppi-muu                                         {:fi "Muu"
+                                                              :sv "Annan"
+                                                              :en "Other"}
    :submitted-content-search-placeholder                     {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                               :sv "Sök enligt fråga eller begäran om bilaga..."
                                                               :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}

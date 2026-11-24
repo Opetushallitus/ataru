@@ -8,6 +8,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
+            [ataru.schema.form-properties-schema :refer [lomaketyypit]]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [reagent.dom :as r-dom]
@@ -506,6 +507,23 @@
       {:for id}
       @(subscribe [:editor/virkailija-translation :close-form])]]))
 
+(defn- lomaketyyppi-component
+  []
+  [:div.editor-form__text-field-wrapper
+   [:label.editor-form__component-item-header.bold
+    @(subscribe [:editor/virkailija-translation :lomaketyyppi-input])]
+   [:select.editor-form__select
+    {:data-test-id "lomaketyyppi-input"
+     :value        @(subscribe [:editor/lomaketyyppi])
+     :disabled     @(subscribe [:editor/form-locked?])
+     :on-change    #(dispatch [:editor/change-lomaketyyppi (.-value (.-target %))])}
+    (doall
+      (for [lomaketyyppi lomaketyypit]
+        ^{:key lomaketyyppi}
+        [:option {:value lomaketyyppi}
+         @(subscribe [:editor/virkailija-translation
+                      (keyword (str "lomaketyyppi-" lomaketyyppi))])]))]])
+
 (defn- properties []
   (let [form-key              @(subscribe [:editor/selected-form-key])
         form-used-in-hakus    @(subscribe [:editor/form-used-in-hakus form-key])
@@ -516,6 +534,8 @@
        [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
      [:div.editor-form__component-content-wrapper
       [:div.editor-form__module-fields
+       (when @(subscribe [:editor/superuser?])
+         [lomaketyyppi-component])
        [allow-only-yhteishaku-component]
        [allow-hakeminen-tunnistautuneena-component]
        (when-not kk-payments-required? [lomakkeeseen-liittyy-maksutoiminto-component])
