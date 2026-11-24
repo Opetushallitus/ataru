@@ -55,6 +55,8 @@ const haeDemoPaattyy = (page: Page) => page.getByTestId('demo-validity-end')
 const haeLinkkiDemoon = (page: Page) => page.getByTestId('demo-link')
 const haeTogglePayment = (page: Page) =>
   page.getByTestId('toggle-maksutoiminto')
+const haeLomaketyyppiSelect = (page: Page) =>
+  page.getByTestId('lomaketyyppi-input')
 
 test.describe('Lomake-editori Yleiset asetukset -osio', () => {
   test('Näyttää Yleiset asetukset', async () => {
@@ -92,5 +94,11 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
     const togglePayment = haeTogglePayment(page)
 
     await expect(togglePayment).toBeDisabled()
+  })
+
+  test('Lomaketyypin muuttamiseen tarvitaan rekisterinpitäjän oikeudet', async () => {
+    const lomaketyyppiSelect = haeLomaketyyppiSelect(page)
+
+    await expect(lomaketyyppiSelect).toBeHidden()
   })
 })

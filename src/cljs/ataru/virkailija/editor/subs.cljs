@@ -1,5 +1,6 @@
 (ns ataru.virkailija.editor.subs
   (:require [ataru.cljs-util :as cu]
+            [ataru.constants :refer [default-lomaketyyppi]]
             [ataru.tarjonta.haku :as haku]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as util :refer [collect-ids]]
@@ -684,6 +685,13 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
     (get form-properties :payment)))
+
+(re-frame/reg-sub
+  :editor/lomaketyyppi
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (or (get form-properties :lomaketyyppi) default-lomaketyyppi)))
 
 (re-frame/reg-sub
   :editor/form-closed?
