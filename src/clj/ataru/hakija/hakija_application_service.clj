@@ -342,6 +342,14 @@
                                              (keep (fn [{:keys [id fieldType]}]
                                                      (when (= fieldType "attachment")
                                                        id)))))
+        deadline-passed-attachments   (when (not-empty cannot-edit-attachment)
+                                        (->> (:content form)
+                                             util/flatten-form-fields
+                                             (filter #((set cannot-edit-attachment) (:id %)))
+                                             (keep (fn [{:keys [id cannot-edit-because-deadline-passed]}]
+                                                     (when cannot-edit-because-deadline-passed
+                                                       id)))
+                                             set))
         cannot-edit-fields            (when (not-empty edited-cannot-edit-questions)
                                         (->> (:content form)
                                              util/flatten-form-fields
@@ -462,10 +470,14 @@
 
       (not-empty cannot-edit-attachment)
       {:passed?  false
-       :failures (into {} (map #(vector % "Deadline passed in attachments")
+       :failures (into {} (map #(vector % (if (contains? deadline-passed-attachments %)
+                                            "Deadline passed in attachments"
+                                            "Cannot edit attachment"))
                                cannot-edit-attachment))
        :key  (:key latest-application)
-       :code :internal-server-error}
+       :code (if (not-empty deadline-passed-attachments)
+               :attachment-deadline-passed
+               :internal-server-error)}
 
       (not (:passed? validation-result))
       (assoc validation-result :key (:key latest-application))

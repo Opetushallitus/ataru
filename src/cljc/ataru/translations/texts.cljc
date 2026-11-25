@@ -563,6 +563,9 @@
    :application-period-closed                   {:fi "Hakemusta ei voi lähettää: Hakuaika on päättynyt tai liitteen määräaika on umpeutunut"
                                                  :sv "Ansökan kan inte skickas: Ansökningstiden eller deadline för bilagor har utgått"
                                                  :en "Application cannot be submitted: Application period has ended or deadline for submitting attachments has passed"}
+   :attachment-deadline-passed                  {:fi "Liitteiden palautusajankohta on päättynyt. Hakemuksen tallentaminen ei onnistunut."
+                                                 :sv "Tiden för att lämna in bilagor har gått ut. Ansökan kunde inte sparas."
+                                                 :en "The deadline for submitting attachments has passed. Your application could not be saved."}
    :inactivated                                 {:fi "Hakemuksesi on peruttu."
                                                  :sv "Din ansökning har annullerats."
                                                  :en "Your application is cancelled."}

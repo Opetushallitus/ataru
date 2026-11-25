@@ -124,6 +124,14 @@
             :else
             (editing-allowed-by-hakuaika? attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku))))
 
+(defn- deadline-passed?
+  "Palauttaa true, jos jokin määräaika estää kentän muokkauksen: hakemuskohtainen
+  määräaika, kentän oma määräaika tai hakuajan ja liitteiden palautusajan päättyminen.
+  Hakemuksen käsittelytilaa ei huomioida, joten käsittelyyn ottaminen ei yksinään
+  tee tästä totta."
+  [attachment-deadline-service now field hakuajat roles field-deadline application-submitted haku]
+  (not (editing-allowed-by-deadlines? attachment-deadline-service now field hakuajat roles false field-deadline application-submitted haku)))
+
 (defn- application-not-in-processing?
   [roles hakuajat application-in-processing-state?]
   (or (form-role/virkailija? roles)
@@ -202,10 +210,23 @@
                             use-toisen-asteen-yhteishaku-restrictions?
                             has-overdue-payment?
                             application-submitted
-                            haku))]
-      (assoc field
-             :cannot-view cannot-view?
-             :cannot-edit cannot-edit?))
+                            haku))
+          attachment-deadline-passed? (and cannot-edit?
+                                           (not cannot-view?)
+                                           (= "attachment" (:fieldType field))
+                                           (deadline-passed?
+                                            attachment-deadline-service
+                                            now
+                                            field
+                                            hakuajat
+                                            roles
+                                            (get field-deadlines (:id field))
+                                            application-submitted
+                                            haku))]
+      (cond-> (assoc field
+                     :cannot-view cannot-view?
+                     :cannot-edit cannot-edit?)
+        attachment-deadline-passed? (assoc :cannot-edit-because-deadline-passed true)))
     field))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any
