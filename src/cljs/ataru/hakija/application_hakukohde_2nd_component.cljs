@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [re-frame.core :refer [dispatch subscribe]]
             [ataru.application-common.components.button-component :as btn]
-            [ataru.application-common.components.link-component :as link-component]
+            [ataru.hakija.components.hakukohde-read-more-link :refer [read-more-link]]
             [ataru.util :as u]
             [ataru.translations.translation-util :as translations]
             [ataru.translations.texts :refer [general-texts]]
@@ -139,13 +139,8 @@
       ^{:key :i.zmdi.zmdi-close-circle-o} [:i.zmdi.zmdi-close-circle-o]]]))
 
 (defn- hakukohde-details [hakukohde-oid]
-  (let [lang @(subscribe [:application/form-language])
-        url @(subscribe [:application/hakukohde-konfo-url-by-oid hakukohde-oid])]
-    [:div.application__hakukohde-2nd-row__selected-button-wrapper
-       [:a {:href url :target "_blank" :rel "noopener noreferrer"}
-        [:i.zmdi.zmdi-open-in-new {:aria-hidden true}]
-        (translations/get-hakija-translation :read-more lang)
-        [link-component/new-tab-hint lang]]]))
+  [:div.application__hakukohde-2nd-row__selected-button-wrapper
+   [read-more-link hakukohde-oid @(subscribe [:application/hakukohde-label hakukohde-oid])]])
 
 (defn- selected-hakukohde [idx hakukohde-oid]
   (let [editable? (subscribe [:application/hakukohteet-editable?])

@@ -7,6 +7,7 @@
     [ataru.translations.translation-util :as translations]
     [reagent.core :as r]
     [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
+    [ataru.hakija.components.hakukohde-read-more-link :refer [read-more-link]]
     [ataru.application-common.accessibility-util :as a11y]))
 
 (def ^:private nav-sel
@@ -124,46 +125,48 @@
         (not hakukohde-editable?)
         (when has-priorization-warning?
           priorization-warning-id)])
-     [:div.application__selected-hakukohde-row--content
-      [:div.application__hakukohde-header
-       (when (and virkailija? archived?)
-         [:i.material-icons-outlined.arkistoitu
-          {:title (translations/get-hakija-translation :archived lang)}
-          "archive"])
-       @(subscribe [:application/hakukohde-label hakukohde-oid])]
-      [:div.application__hakukohde-description
-       @(subscribe [:application/hakukohde-description hakukohde-oid])]
-      (when (not hakukohde-editable?)
-        [:div.application__hakukohde-application-period-ended
-         [:i.zmdi.zmdi-lock]
-         (translations/get-hakija-translation :not-editable-application-period-ended lang)])
-      (when (not-empty rajaavat-hakukohteet)
-        [:div.application__search-hit-hakukohde-row--limit-reached
-         {:aria-live "polite"}
-         [:h3.application__search-hit-hakukohde-row--limit-reached-heading
-          (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
-         [:ul
-          (doall (for [hakukohde rajaavat-hakukohteet]
-                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
-                   [:li.application__search-hit-hakukohde-row--limitting-hakukohde
-                    @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])
-      (if (seq should-be-higher)
-        (offending-priorization 
-         hakukohde-oid
-         (first should-be-higher)
-         hakukohde-oid)
-        (when (seq should-be-lower)
-          (offending-priorization 
-           hakukohde-oid 
-           hakukohde-oid 
-           (first should-be-lower))))]
-     [:div.application__selected-hakukohde-row--buttons
-      (cond (and haku-editable? hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid false]
-            (not hakukohde-editable?)
-            [selected-hakukohde-row-remove hakukohde-oid true]
-            haku-editable?
-            [selected-hakukohde-row-remove hakukohde-oid false])]]))
+     [:div.application__selected-hakukohde-row--main
+      [:div.application__selected-hakukohde-row--content
+       [:div.application__hakukohde-header
+        (when (and virkailija? archived?)
+          [:i.material-icons-outlined.arkistoitu
+           {:title (translations/get-hakija-translation :archived lang)}
+           "archive"])
+        @(subscribe [:application/hakukohde-label hakukohde-oid])]
+       [:div.application__hakukohde-description
+        @(subscribe [:application/hakukohde-description hakukohde-oid])]
+       (when (not hakukohde-editable?)
+         [:div.application__hakukohde-application-period-ended
+          [:i.zmdi.zmdi-lock]
+          (translations/get-hakija-translation :not-editable-application-period-ended lang)])
+       (when (not-empty rajaavat-hakukohteet)
+         [:div.application__search-hit-hakukohde-row--limit-reached
+          {:aria-live "polite"}
+          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
+           (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
+          [:ul
+           (doall (for [hakukohde rajaavat-hakukohteet]
+                    ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                    [:li.application__search-hit-hakukohde-row--limitting-hakukohde
+                     @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])
+       (if (seq should-be-higher)
+         (offending-priorization 
+          hakukohde-oid
+          (first should-be-higher)
+          hakukohde-oid)
+         (when (seq should-be-lower)
+           (offending-priorization 
+            hakukohde-oid 
+            hakukohde-oid 
+            (first should-be-lower))))]
+      [:div.application__selected-hakukohde-row--buttons
+       [read-more-link hakukohde-oid @(subscribe [:application/hakukohde-label hakukohde-oid])]
+       (cond (and haku-editable? hakukohde-editable?)
+             [selected-hakukohde-row-remove hakukohde-oid false]
+             (not hakukohde-editable?)
+             [selected-hakukohde-row-remove hakukohde-oid true]
+             haku-editable?
+             [selected-hakukohde-row-remove hakukohde-oid false])]]]))
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid]
@@ -180,31 +183,34 @@
         limit-reached?       (not-empty rajaavat-hakukohteet)
         disabled?            (boolean (or hakukohteet-full? (not hakukohde-editable?) limit-reached?))]
     [:div.application__search-hit-hakukohde-row
-     {:role          "option"
-      :aria-selected (if hakukohde-selected? "true" "false")
+     {:role            "option"
+      :aria-labelledby (str aria-header-id " " aria-description-id)
+      :aria-selected   (if hakukohde-selected? "true" "false")
       :tab-index (when hakukohde-selected? 0)}
-     [:div.application__search-hit-hakukohde-row--content
-      [:div.application__hakukohde-header
-       {:id aria-header-id}
-       (hilight-text hakukohde-label search-term)]
-      [:div.application__hakukohde-description
-       {:id aria-description-id}
-       (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]
-      (when (not hakukohde-editable?)
-        [:div.application__hakukohde-application-period-ended
-         [:i.zmdi.zmdi-lock]
-         (translations/get-hakija-translation :not-selectable-application-period-ended lang)])
-      (when (and (not hakukohde-selected?) limit-reached?)
-        [:div.application__search-hit-hakukohde-row--limit-reached
-         {:id        aria-limit-id
-          :aria-live "polite"}
-         [:h3.application__search-hit-hakukohde-row--limit-reached-heading
-          (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
-         [:ul
-          (doall (for [hakukohde rajaavat-hakukohteet]
-                   ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
-                   [:li.application__search-hit-hakukohde-row--limitting-hakukohde
-                    @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])]
+     [:div.application__search-hit-hakukohde-row--main
+      [:div.application__search-hit-hakukohde-row--content
+       [:div.application__hakukohde-header
+        {:id aria-header-id}
+        (hilight-text hakukohde-label search-term)]
+       [:div.application__hakukohde-description
+        {:id aria-description-id}
+        (hilight-text @(subscribe [:application/hakukohde-description hakukohde-oid]) search-term)]
+       (when (not hakukohde-editable?)
+         [:div.application__hakukohde-application-period-ended
+          [:i.zmdi.zmdi-lock]
+          (translations/get-hakija-translation :not-selectable-application-period-ended lang)])
+       (when (and (not hakukohde-selected?) limit-reached?)
+         [:div.application__search-hit-hakukohde-row--limit-reached
+          {:id        aria-limit-id
+           :aria-live "polite"}
+          [:h3.application__search-hit-hakukohde-row--limit-reached-heading
+           (translations/get-hakija-translation :application-limit-reached-in-hakukohderyhma lang)]
+          [:ul
+           (doall (for [hakukohde rajaavat-hakukohteet]
+                    ^{:key (str "limitting-hakukohde-" (:oid hakukohde))}
+                    [:li.application__search-hit-hakukohde-row--limitting-hakukohde
+                     @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))]])]
+       [read-more-link hakukohde-oid hakukohde-label]]
      [:div.application__search-hit-hakukohde-row--buttons
       (if hakukohde-selected?
         [:i.zmdi.zmdi-check.zmdi-hc-2x.application__search-hit-hakukohde-row--selected-check
@@ -241,9 +247,20 @@
                                 aria-description-id)}
          (translations/get-hakija-translation :add lang)])]]))
 
+(defn- nav-target
+  "Palauttaa nuolinavigoinnin kohteen, jota fokusoitu elementti vastaa. Jos fokus on hakutulosrivin
+   muussa elementissä (esim. Lue lisää -linkissä), kohteena on saman rivin navigointikohde."
+  [active]
+  (if (.matches active nav-sel)
+    active
+    (when-let [row (.closest active ".application__search-hit-hakukohde-row")]
+      (if (.matches row nav-sel)
+        row
+        (.querySelector row nav-sel)))))
+
 (defn- find-button-idx [container]
   (let [buttons (array-seq (.querySelectorAll container nav-sel))
-        active  (.-activeElement js/document)]
+        active  (some-> (.-activeElement js/document) nav-target)]
     [buttons (count (take-while #(not= % active) buttons))]))
 
 (defn- hakukohde-selection-search
