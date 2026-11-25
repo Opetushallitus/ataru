@@ -21,6 +21,7 @@
             [clojure.string :as string :refer [trim]]
             [taoensso.timbre :as log])
   (:import [java.io ByteArrayOutputStream]
+           [java.time.format DateTimeFormatter]
            [org.apache.poi.ss.usermodel Row$MissingCellPolicy VerticalAlignment]
            [org.apache.poi.xssf.usermodel XSSFCell XSSFSheet XSSFWorkbook]))
 
@@ -34,6 +35,9 @@
 (def ^:private filename-time-format
   (f/formatter "yyyy-MM-dd_HHmm" tz))
 
+(def ^:private ^DateTimeFormatter date-format
+  (f/formatter "d.M.yyyy"))
+
 (defn boolean-formatter [bool?]
   (when (some? bool?) (if bool? "kyllä" "ei")))
 
@@ -42,6 +46,12 @@
    (f/unparse formatter date-time))
   ([date-time]
    (time-formatter date-time modified-time-format)))
+
+(defn date-str-formatter
+  [date-str]
+  (when date-str
+    (let [date (f/parse-local-date (f/formatter :date) date-str)]
+      (.format date-format date))))
 
 (defn translate-review-state
   [state lang review-states default]
@@ -143,13 +153,9 @@
   (translate-review-state state lang review-states/kk-application-payment-states ""))
 
 (defn hakemusmaksuvelvollisuus-tulos-formatter
-  [permit-check lang]
-  (let [basis        (:payment-obligation-basis permit-check)
-        text         (get-in virkailija-texts [(keyword (str "kk-payment-permit-check-" basis)) lang])
-        other-reason (:payment-obligation-other-reason permit-check)]
-    (cond-> text
-            (some? other-reason)
-            (str ": " (:payment-obligation-other-reason permit-check)))))
+  [basis lang]
+  (when basis
+    (get-in virkailija-texts [(keyword (str "kk-payment-permit-check-" basis)) lang])))
 
 (def ^:private form-meta-fields
   [{:label     (:name excel-texts)
@@ -227,8 +233,9 @@
                                     :format-fn attachment-review-formatter}
    "tiedot-migrin-palvelussa"      {:field     [:application :kk-payment-permit-check :found-in-migri]
                                     :format-fn boolean-formatter}
-   "lupakortti-voimassa"           {:field     [:application :kk-payment-permit-check :permit-valid-until]}
-   "hakemusmaksuvelvollisuus-tulos" {:field     [:application :kk-payment-permit-check]
+   "lupakortti-voimassa"           {:field     [:application :kk-payment-permit-check :permit-valid-until]
+                                    :format-fn date-str-formatter}
+   "hakemusmaksuvelvollisuus-tulos" {:field     [:application :kk-payment-permit-check :payment-obligation-basis]
                                      :lang?     true
                                      :format-fn hakemusmaksuvelvollisuus-tulos-formatter}})
 
