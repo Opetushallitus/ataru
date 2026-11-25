@@ -13,6 +13,7 @@
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.kk-application-payment.kk-application-payment-permit-check :as permit-check]
             [ataru.kk-application-payment.kk-application-payment-permit-check-inheritance :as inheritance]
+            [ataru.kk-application-payment.kk-application-payment-permit-check-store :as permit-check-store]
             [ataru.kk-application-payment.kk-application-payment-status-updater-job :as updater-job]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
@@ -739,6 +740,27 @@
                (attachment-states target-key))
       (should-be-nil (obligation-state target-key))
       (should= (:paid payment/all-states) (payment-state target-key))))
+
+  (it "does not inherit the check when the applicant has changed the document option after the inheritance was decided"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (review-attachments! target-key "not-checked")
+      (with-redefs [permit-check-store/selected-residence-permit-attachment-key (constantly "longterm-permit-attachment")]
+        (run-job! target-key))
+      (should= [] (checks target-key))
+      (should= 0 (count (inherited-events target-key)))))
+
+  (it "does not inherit the check to an application that has a check of another attachment"
+    (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"
+                                                     delivered-application "2025-01-14T10:00:00+02:00")]
+      (checked-source! source-key)
+      (review-attachments! target-key "not-checked")
+      (unit-test-db/save-permit-check-to-db! {:application-key target-key
+                                              :attachment-key  "longterm-permit-attachment"})
+      (run-job! target-key)
+      (should= ["longterm-permit-attachment"] (map :attachment-key (checks target-key)))
+      (should= 0 (count (inherited-events target-key)))))
 
   (it "inherits the check of an application whose payment has already been paid"
     (let [[source-key target-key] (init-applications delivered-application "2025-01-10T10:00:00+02:00"

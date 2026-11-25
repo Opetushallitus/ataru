@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.application.review-states :as review-states]
             [ataru.applications.field-deadline :as field-deadline]
             [ataru.background-job.job :as job]
             [ataru.cache.cache-service :as cache-service]
@@ -12,6 +13,7 @@
             [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [ataru.component-data.kk-application-payment-module :as payment-module]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.kk-application-payment.kk-application-payment :as payment]
             [ataru.koodisto.koodisto :as koodisto]
@@ -491,6 +493,63 @@
 
   )
 
+(def ^:private kk-payment-hakukohde "payment-info-test-kk-hakukohde")
+
+(defn- init-continuous-residence-application!
+  "Tallentaa hakemuksen, jolla hakija on valinnut jatkuvan oleskeluluvan dokumenttivaihtoehdon. Hakemukselle
+   tallennetaan annetut liitemerkinnät, oleskelulupatarkastus ja hakemusmaksuvelvollisuuden merkintä."
+  [{:keys [attachment-states found-in-migri payment-obligation-basis obligation-state]
+    :or   {found-in-migri           true
+           payment-obligation-basis "not-obligated"
+           obligation-state         "reviewed"}}]
+  (let [application-key (-> (db/init-db-fixture
+                              fixtures/payment-exemption-test-form
+                              (application-fixtures/with-kk-application-payment-option
+                                application-fixtures/application-with-hakemusmaksu-exemption
+                                (:continuous-residence-option-value payment-module/kk-application-payment-document-options))
+                              [{:hakukohde          kk-payment-hakukohde
+                                :review-requirement "kk-application-payment-obligation"
+                                :review-state       obligation-state}])
+                            (application-store/get-application)
+                            :key)]
+    (db/save-reviews-to-db! (for [[attachment-key state] attachment-states]
+                              {:application_key application-key
+                               :attachment_key  attachment-key
+                               :hakukohde       kk-payment-hakukohde
+                               :state           state
+                               :updated?        true}))
+    (db/save-permit-check-to-db! {:application-key          application-key
+                                  :attachment-key           "continuous-residence-permit-front"
+                                  :found-in-migri           found-in-migri
+                                  :payment-obligation-basis payment-obligation-basis})
+    application-key))
+
+(def ^:private missing-continuous-residence-attachments
+  {"continuous-residence-permit-front"       "attachment-missing"
+   "continuous-residence-permit-back"        "attachment-missing"
+   "continuous-residence-passport-attachment" "attachment-missing"})
+
+(def ^:private kk-payment-applications-query
+  (assoc application-fixtures/applications-list-query-matching-everything :haku-oid "payment-info-test-kk-haku"))
+
+(defn- attachment-states-query [states]
+  (assoc-in kk-payment-applications-query [:states-and-filters :attachment-states-to-include] states))
+
+(def ^:private missing-attachments-query
+  (attachment-states-query ["attachment-missing"]))
+
+(defn- missing-attachment-field-query [attachment-key]
+  (assoc kk-payment-applications-query
+         :attachment-review-states {(keyword attachment-key)
+                                    (into {}
+                                          (map (fn [[state _]] [(keyword state) (= "attachment-missing" state)]))
+                                          review-states/attachment-hakukohde-review-types)}))
+
+(defn- listed-application-keys [query]
+  (let [resp (post-applications-list query)]
+    (should= 200 (:status resp))
+    (set (map :key (get-in resp [:body :applications])))))
+
 (describe "Fetching applications list"
           (tags :unit :api-applications)
 
@@ -671,7 +730,52 @@
             status       (:status resp)
             applications (get-in resp [:body :applications])]
         (should= 200 status)
-        (should= 0 (count applications)))))
+        (should= 0 (count applications))))
+
+  (it "Should not find by missing attachments an application whose residence permit check found in Migri decides the payment obligation"
+      (let [application-key (init-continuous-residence-application!
+                              {:attachment-states missing-continuous-residence-attachments})
+            resp            (post-applications-list kk-payment-applications-query)]
+        (should= [{:attachment-key           "continuous-residence-permit-front"
+                   :found-in-migri           true
+                   :payment-obligation-basis "not-obligated"}]
+                 (->> (get-in resp [:body :applications])
+                      (filter #(= application-key (:key %)))
+                      first
+                      :kk-payment-permit-checks-for-filtering))
+        (should-not-contain application-key (listed-application-keys missing-attachments-query))))
+
+  (it "Should not find by a missing attachment of the document option an application whose residence permit check found in Migri decides the payment obligation"
+      (let [application-key (init-continuous-residence-application!
+                              {:attachment-states        missing-continuous-residence-attachments
+                               :payment-obligation-basis "obligated-own-studies"})]
+        (doseq [attachment-key (keys missing-continuous-residence-attachments)]
+          (should-not-contain application-key
+                              (listed-application-keys (missing-attachment-field-query attachment-key))))))
+
+  (it "Should find by missing attachments an application whose residence permit check decides the payment obligation when another attachment is missing"
+      (let [application-key (init-continuous-residence-application!
+                              {:attachment-states (assoc missing-continuous-residence-attachments
+                                                         "other-attachment" "attachment-missing")})]
+        (should-contain application-key (listed-application-keys missing-attachments-query))
+        (should-contain application-key (listed-application-keys (missing-attachment-field-query "other-attachment")))))
+
+  (it "Should find by an incomplete residence permit attachment an application whose residence permit check decides the payment obligation"
+      (let [application-key (init-continuous-residence-application!
+                              {:attachment-states {"continuous-residence-permit-front" "incomplete-attachment"}})]
+        (should-contain application-key
+                        (listed-application-keys (attachment-states-query ["incomplete-attachment"])))))
+
+  (it "Should find by missing attachments an application whose residence permit check does not decide the payment obligation"
+      (doseq [check [{:found-in-migri false}
+                     {:found-in-migri nil}
+                     {:payment-obligation-basis nil}
+                     {:obligation-state "unreviewed"}]]
+        (let [application-key (init-continuous-residence-application!
+                                (assoc check :attachment-states missing-continuous-residence-attachments))]
+          (should-contain application-key (listed-application-keys missing-attachments-query))
+          (should-contain application-key
+                          (listed-application-keys (missing-attachment-field-query "continuous-residence-permit-front")))))))
 
 (describe "Field deadline"
           (tags :unit :api-applications)
@@ -698,7 +802,8 @@
 
 (defn- init-payment-exemption-application []
   (-> (db/init-db-fixture fixtures/payment-exemption-test-form
-                          application-fixtures/application-with-hakemusmaksu-exemption
+                          (application-fixtures/with-kk-application-payment-option
+                            application-fixtures/application-with-hakemusmaksu-exemption "3")
                           nil)
       (application-store/get-application)
       :key))
@@ -732,6 +837,14 @@
                                               (assoc empty-permit-check :found-in-migri true))]
         (should= 400 (:status resp))))
 
+  (it "should refuse notes on the residence permit attachment of a document option the applicant has not selected"
+      (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
+                                              "eu-blue-card-attachment"
+                                              (assoc empty-permit-check :found-in-migri true))]
+        (should= 400 (:status resp))
+        (should= "Attachment eu-blue-card-attachment is not the residence permit attachment of the selected document option"
+                 (get-in resp [:body :error]))))
+
   (it "should refuse notes without rights to edit the application"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
                                               "eu-blue-card-attachment"
@@ -753,14 +866,14 @@
 
   (it "should refuse a permit validity date outside the sanity limits"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
-                                              "eu-blue-card-attachment"
+                                              "continuous-residence-permit-front"
                                               (assoc empty-permit-check
                                                      :permit-valid-until (str (.plusYears (java.time.LocalDate/now) 10))))]
         (should= 400 (:status resp))))
 
   (it "should refuse a too long other reason"
       (let [resp (put-kk-payment-permit-check (init-payment-exemption-application)
-                                              "eu-blue-card-attachment"
+                                              "continuous-residence-permit-front"
                                               (assoc empty-permit-check
                                                      :payment-obligation-basis "obligated-other"
                                                      :payment-obligation-other-reason (apply str (repeat 501 "x"))))]

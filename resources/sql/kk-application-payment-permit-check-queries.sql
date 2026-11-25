@@ -35,7 +35,8 @@ VALUES (:application_key,
         :virkailija_oid,
         :organization_oid,
         now())
-ON CONFLICT (application_key, attachment_key) DO UPDATE
+-- Hakemuksella on enintään yksi tarkastus. Toisen liitteen tarkastusta ei korvata, jolloin kysely ei palauta riviä.
+ON CONFLICT (application_key) DO UPDATE
     SET found_in_migri                  = EXCLUDED.found_in_migri,
         permit_valid_until              = EXCLUDED.permit_valid_until,
         payment_obligation_basis        = EXCLUDED.payment_obligation_basis,
@@ -46,6 +47,7 @@ ON CONFLICT (application_key, attachment_key) DO UPDATE
         inherited_from_application_key  = NULL,
         inherited_time                  = NULL,
         modified_time                   = now()
+    WHERE kk_application_payment_permit_checks.attachment_key = EXCLUDED.attachment_key
 RETURNING attachment_key                                AS "attachment-key",
           found_in_migri                                AS "found-in-migri",
           to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
@@ -81,7 +83,7 @@ VALUES (:application_key,
         :checked_time,
         :inherited_from_application_key,
         now())
-ON CONFLICT (application_key, attachment_key) DO NOTHING
+ON CONFLICT (application_key) DO NOTHING
 RETURNING attachment_key                                AS "attachment-key",
           found_in_migri                                AS "found-in-migri",
           to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
@@ -108,3 +110,34 @@ RETURNING attachment_key                                AS "attachment-key",
           checked_time                                  AS "checked-time",
           inherited_from_application_key                AS "inherited-from-application-key",
           inherited_time                                AS "inherited-time";
+
+-- name: yesql-delete-other-kk-application-payment-permit-checks
+-- Poistaa hakemuksen tarkastukset muilta liitteiltä kuin :attachment_key, tai kaikki, kun se on NULL
+DELETE FROM kk_application_payment_permit_checks
+WHERE application_key = :application_key
+  AND attachment_key IS DISTINCT FROM CAST(:attachment_key AS TEXT)
+RETURNING attachment_key                                AS "attachment-key",
+          found_in_migri                                AS "found-in-migri",
+          to_char(permit_valid_until, 'YYYY-MM-DD')     AS "permit-valid-until",
+          payment_obligation_basis                      AS "payment-obligation-basis",
+          payment_obligation_other_reason               AS "payment-obligation-other-reason",
+          virkailija_oid                                AS "virkailija-oid",
+          organization_oid                              AS "organization-oid",
+          checked_time                                  AS "checked-time",
+          inherited_from_application_key                AS "inherited-from-application-key",
+          inherited_time                                AS "inherited-time";
+
+-- name: yesql-get-kk-application-payment-document-option
+-- Hakijan valitsema dokumenttivaihtoehto hakemuksen uusimmassa versiossa
+SELECT ans.value
+FROM latest_applications a
+JOIN answers ans ON ans.application_id = a.id
+WHERE a.key = :application_key
+  AND ans.key = :answer_key;
+
+-- name: yesql-lock-kk-application-payment-permit-checks
+-- Lukitsee hakemuksen tarkastukset dokumenttivaihtoehdon tarkistamisen ja tarkastuksen tallentamisen ajaksi
+SELECT application_key
+FROM application_reviews
+WHERE application_key = :application_key
+FOR UPDATE;

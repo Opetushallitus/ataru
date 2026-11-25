@@ -819,6 +819,7 @@
             :not-found (response/not-found {:error (str "Application " application-key " not found")})
             :unauthorized (response/unauthorized {:error "Unauthorized"})
             :bad-request (response/bad-request {:error (str "Attachment " attachment-key " is not a residence permit attachment")})
+            :attachment-not-selected (response/bad-request {:error (str "Attachment " attachment-key " is not the residence permit attachment of the selected document option")})
             :invalid-permit-valid-until (response/bad-request {:error (str "Permit card validity date " (:permit-valid-until body) " is out of range")})
             (response/ok {:check  response
                           :events (application-service/get-application-events organization-service application-key)}))))
