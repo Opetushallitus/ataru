@@ -1156,7 +1156,14 @@ SELECT
                                      'virkailijaOid', virkailija_oid))
    FROM application_review_notes arn
    WHERE arn.application_key = a.key
-   and arn.removed is null) AS "application-review-notes"
+   and arn.removed is null) AS "application-review-notes",
+  (SELECT json_build_object('attachmentKey', attachment_key,
+                            'foundInMigri', found_in_migri,
+                            'permitValidUntil', permit_valid_until,
+                            'paymentObligationBasis', payment_obligation_basis,
+                            'paymentObligationOtherReason', payment_obligation_other_reason)
+   FROM kk_application_payment_permit_checks appc
+   WHERE appc.application_key = a.key) as "kk-application-payment-permit-checks"
 FROM latest_applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 JOIN forms AS f ON form_id = f.id

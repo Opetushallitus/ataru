@@ -1,7 +1,7 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
             [ataru.application.review-states :as review-states]
-            [ataru.applications.field-deadline :as field-deadline]
+            [ataru.applications.field-deadline]
             [ataru.background-job.job :as job]
             [ataru.cache.cache-service :as cache-service]
             [ataru.config.core :refer [config]]
@@ -498,9 +498,16 @@
 (defn- init-continuous-residence-application!
   "Tallentaa hakemuksen, jolla hakija on valinnut jatkuvan oleskeluluvan dokumenttivaihtoehdon. Hakemukselle
    tallennetaan annetut liitemerkinnät, oleskelulupatarkastus ja hakemusmaksuvelvollisuuden merkintä."
-  [{:keys [attachment-states found-in-migri payment-obligation-basis obligation-state]
+  [{:keys [attachment-states
+           found-in-migri
+           permit-valid-until
+           payment-obligation-basis
+           other-reason
+           obligation-state]
     :or   {found-in-migri           true
+           permit-valid-until       nil
            payment-obligation-basis "not-obligated"
+           other-reason             nil
            obligation-state         "reviewed"}}]
   (let [application-key (-> (db/init-db-fixture
                               fixtures/payment-exemption-test-form
@@ -521,7 +528,9 @@
     (db/save-permit-check-to-db! {:application-key          application-key
                                   :attachment-key           "continuous-residence-permit-front"
                                   :found-in-migri           found-in-migri
-                                  :payment-obligation-basis payment-obligation-basis})
+                                  :permit-valid-until       permit-valid-until
+                                  :payment-obligation-basis payment-obligation-basis
+                                  :other-reason             other-reason})
     application-key))
 
 (def ^:private missing-continuous-residence-attachments
@@ -1288,7 +1297,9 @@
                     status (:status resp)
                     applications (:body resp)]
                 (should= 200 status)
-                (should= 1 (count applications))))
+                (should= 1 (count applications))
+                (should-contain :kkApplicationPaymentPermitCheck (first applications))
+                (should-be-nil (-> applications first :kkApplicationPaymentPermitCheck))))
 
           (it "should return an application with kk payment data"
               (let [[_ _ _ application _] (init-and-get-kk-fixtures)
@@ -1298,6 +1309,26 @@
                     applications (:body resp)]
                 (should= 200 status)
                 (should= 1 (count applications))))
+
+          (it "should return an application with kk payment permit check"
+              (let [application-key (init-continuous-residence-application!
+                                      {:attachment-states missing-continuous-residence-attachments
+                                       :found-in-migri true
+                                       :permit-valid-until "2025-04-14"
+                                       :payment-obligation-basis "obligated-other"
+                                       :other-reason "Selittävä teksti"
+                                       :obligation-state "reviewed"})
+                    resp (post-siirto-application-query [application-key])
+                    status (:status resp)
+                    applications (:body resp)]
+                (should= 200 status)
+                (should= 1 (count applications))
+                (should= {:attachmentKey "continuous-residence-permit-front"
+                          :foundInMigri true
+                          :permitValidUntil "2025-04-14"
+                          :paymentObligationBasis "obligated-other"
+                          :paymentObligationOtherReason "Selittävä teksti"}
+                         (-> applications first :kkApplicationPaymentPermitCheck))))
 
           (it "should not return an application awaiting kk payment"
               (let [[_ _ _ application _] (init-and-get-kk-fixtures)
