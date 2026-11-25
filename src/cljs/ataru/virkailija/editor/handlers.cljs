@@ -24,6 +24,7 @@
                                                       dispatch-toast-error-msg
                                                       http post put]]
             [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
+            [ataru.constants :refer [default-lomaketyyppi]]
             [ataru.config :as config]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
@@ -855,7 +856,8 @@
        :content   [(component/hakukohteet) (pm/person-info-module)]
        :languages [:fi]
        :locked    nil
-       :locked-by nil})
+       :locked-by nil
+       :properties {:lomaketyyppi default-lomaketyyppi}})
     db))
 
 
@@ -895,7 +897,8 @@
                                             (dissoc :belongs-to-hakukohteet))
                                         x))
         properties (-> (or (get-in form [:properties]) {})
-                       (select-keys [:allow-hakeminen-tunnistautuneena]))]
+                       (select-keys [:lomaketyyppi :allow-hakeminen-tunnistautuneena])
+                       (update :lomaketyyppi #(or % default-lomaketyyppi)))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
@@ -1710,6 +1713,12 @@
   (fn [db [_ order-id-prefix]]
     (let [path (db/current-form-properties-path db [:payment :order-id-prefix])]
       (assoc-in db path order-id-prefix))))
+
+(reg-event-db
+  :editor/change-lomaketyyppi
+  (fn [db [_ lomaketyyppi]]
+    (let [path (db/current-form-properties-path db [:lomaketyyppi])]
+      (assoc-in db path (when-not (string/blank? lomaketyyppi) lomaketyyppi)))))
 
 (reg-event-db
   :editor/toggle-close-form

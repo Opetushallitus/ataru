@@ -8,6 +8,15 @@
    (s/optional-key :vat)                              (s/maybe s/Str)
    (s/optional-key :order-id-prefix)                  (s/maybe s/Str)})
 
+(def lomaketyypit
+  ["opiskelijavalinta"
+   "tutu"
+   "yki"
+   "muu"])
+
+(s/defschema Lomaketyyppi
+  (apply s/enum lomaketyypit))
+
 (s/defschema FormCategoryProperties
              {(s/optional-key :selected-option-ids)  [s/Str]})
 
@@ -25,4 +34,5 @@
               (s/optional-key :demo-validity-end)                (s/maybe s/Str)
               (s/optional-key :closed)                           s/Bool
               (s/optional-key :payment)                          (s/maybe PaymentProperties)
+              (s/optional-key :lomaketyyppi)                     (s/maybe Lomaketyyppi)
               (s/optional-key :tutkinto-properties)              TutkintoProperties})
