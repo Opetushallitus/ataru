@@ -70,27 +70,57 @@
         #(dispatch [:state-update dispatcher])
         200))))
 
+(defn- build-id
+  "Identifies the build of the bundle this page is running, set by the server in
+   the page template. Missing when the page itself comes from a cache that
+   predates it."
+  []
+  ;; Read by name so that the advanced compilation does not rename it.
+  (let [id (aget js/window "ataruBuildId")]
+    (when (and (string? id) (not (string/blank? id)))
+      id)))
+
+(def ^:private max-reported-client-errors 10)
+
+(defn report-client-error?
+  "Whether this error should be sent to the server, marking it as sent. The same
+   error is sent once per page load, and at most max-reported-client-errors
+   distinct errors in total, so that a page stuck in an error loop cannot flood
+   the server log with thousands of copies of the same thing."
+  [reported-errors error-key]
+  (let [[before after] (swap-vals! reported-errors
+                                   (fn [reported]
+                                     (if (or (contains? reported error-key)
+                                             (<= max-reported-client-errors (count reported)))
+                                       reported
+                                       (conj reported error-key))))]
+    (not= before after)))
+
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
    error"
   [send-to-server-fn description-fn]
-  (set! (.-onerror js/window)
-        (fn [error-msg url line col error-obj]
-          (let [user-agent (-> js/window .-navigator .-userAgent)
-                error-details {:error-message error-msg
-                               :url url
-                               :line line
-                               :description (description-fn)
-                               :col col
-                               :user-agent user-agent}]
-            (-> ((.-fromError js/StackTrace) error-obj)
-                (.then (fn [frames]
-                         (->> (for [frame frames]
-                                (.toString frame))
-                              (interpose "\n")
-                              (apply str)
-                              (assoc error-details :stack)
-                              (send-to-server-fn)))))))))
+  (let [reported-errors (atom #{})]
+    (set! (.-onerror js/window)
+          (fn [error-msg url line col error-obj]
+            (when (report-client-error? reported-errors [error-msg url line col])
+              (let [user-agent (-> js/window .-navigator .-userAgent)
+                    error-details (cond-> {:error-message error-msg
+                                           :url url
+                                           :line line
+                                           :description (description-fn)
+                                           :col col
+                                           :user-agent user-agent}
+                                          (build-id)
+                                          (assoc :build-id (build-id)))]
+                (-> ((.-fromError js/StackTrace) error-obj)
+                    (.then (fn [frames]
+                             (->> (for [frame frames]
+                                    (.toString frame))
+                                  (interpose "\n")
+                                  (apply str)
+                                  (assoc error-details :stack)
+                                  (send-to-server-fn)))))))))))
 
 (defn cljs->str
   [data]
