@@ -1,11 +1,12 @@
 
 (ns ataru.virkailija.application.excel-download.excel-handlers
   (:require [ajax.core]
-            [ajax.protocols :as pr]
+            [ajax.protocols]
             [ataru.cljs-util :as cljs-util]
             [ataru.excel-common :refer [common-field-labels
-                                        form-field-belongs-to-hakukohde]]
-            [ataru.util :as util :refer [assoc?]]
+                                        form-field-belongs-to-hakukohde
+                                        hakemusmaksu-field-labels]]
+            [ataru.util :refer [assoc?]]
             [ataru.virkailija.application.excel-download.excel-utils :refer [assoc-in-excel
                                                                              download-blob
                                                                              get-excel-checkbox-filter-defs
@@ -125,6 +126,7 @@
  (fn [db [_ selected-form-key selected-hakukohde selected-hakukohderyhma]]
    (let [form-content (get-in db [:forms selected-form-key :content])
          form-properties (get-in db [:forms selected-form-key :properties])
+         hakemusmaksu-fields (hakemusmaksu-field-labels form-content)
          all-hakukohteet (get-in db [:hakukohteet])
          form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma (delay all-hakukohteet)))
          new-filters-init-params {:selected-form-key selected-form-key
@@ -132,7 +134,7 @@
                                   :selected-hakukohderyhma selected-hakukohderyhma}]
      (-> db
          (assoc-in-excel :filters (get-excel-checkbox-filter-defs
-                                   (concat common-field-labels form-content)
+                                   (concat common-field-labels hakemusmaksu-fields form-content)
                                    form-field-belongs-to
                                    form-properties
                                    ))
