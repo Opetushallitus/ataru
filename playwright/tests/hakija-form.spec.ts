@@ -585,7 +585,7 @@ test('ohjetekstin linkki avautuu uuteen ikkunaan', async () => {
   await expect(link).toHaveAttribute('target', '_blank')
   await expect(link).toHaveAttribute('rel', /noopener/)
   await expect(link).toHaveAccessibleName(
-    'Opintopolusta (avautuu uuteen välilehteen)'
+    'Opintopolusta Ulkoinen linkki, avautuu uuteen välilehteen'
   )
 })
 
@@ -595,6 +595,7 @@ test('ohjetekstin sähköpostilinkki ei avaudu uuteen ikkunaan', async () => {
   await expect(link).toHaveAttribute('href', 'mailto:kirjaamo@oph.fi')
   await expect(link).not.toHaveAttribute('target')
   await expect(link).toHaveAccessibleName('kirjaamoon')
+  await expect(link.locator('.zmdi-open-in-new')).toHaveCount(0)
 })
 
 test('ohjetekstin otsikollinen linkki avautuu uuteen ikkunaan', async () => {
@@ -604,7 +605,7 @@ test('ohjetekstin otsikollinen linkki avautuu uuteen ikkunaan', async () => {
   await expect(link).toHaveAttribute('title', 'Hakuohje')
   await expect(link).toHaveAttribute('target', '_blank')
   await expect(link).toHaveAccessibleName(
-    'hakuohje (avautuu uuteen välilehteen)'
+    'hakuohje Ulkoinen linkki, avautuu uuteen välilehteen'
   )
 })
 
@@ -614,11 +615,36 @@ test('ohjetekstin sivunsisäinen linkki ei avaudu uuteen ikkunaan', async () => 
   await expect(link).toHaveAttribute('href', '#alku')
   await expect(link).not.toHaveAttribute('target')
   await expect(link).toHaveAccessibleName('alkuun')
+  await expect(link.locator('.zmdi-open-in-new')).toHaveCount(0)
+})
+
+test('ohjetekstin ulkoisen linkin kuvake näyttää oman natiivin vihjeensä', async () => {
+  const link = page.getByRole('link', { name: 'hakuohje' })
+  const icon = link.locator('i.zmdi.zmdi-open-in-new')
+
+  await expect(icon).toBeVisible()
+  await expect(icon).toHaveAttribute('aria-hidden', 'true')
+  await expect(icon).toHaveAttribute(
+    'title',
+    'Ulkoinen linkki, avautuu uuteen välilehteen'
+  )
+  await expect(icon).not.toHaveAttribute('tabindex')
+  await expect(link).toHaveAttribute('title', 'Hakuohje')
+  expect(
+    await link.evaluate((element) => element.childNodes[0].textContent)
+  ).toBe('hakuohje ')
+  expect(
+    await icon.evaluate(
+      (element) => getComputedStyle(element, '::before').content
+    )
+  ).not.toBe('none')
 })
 
 test('uuden välilehden vihje ei näy visuaalisesti', async () => {
   const link = page.getByRole('link', { name: 'Opintopolusta' })
-  const hint = link.getByText('(avautuu uuteen välilehteen)')
+  const hint = link.getByText('Ulkoinen linkki, avautuu uuteen välilehteen', {
+    exact: true,
+  })
 
   await expect(hint).toHaveCSS('position', 'absolute')
   await expect(hint).toHaveCSS('overflow', 'hidden')

@@ -28,8 +28,10 @@
 
 (defonce html-sanitizer
   (-> (new HtmlSanitizer.Builder)
-      ; Only allow the visually-hidden class so that the new tab hint stays hidden
-      (.withCustomTokenPolicy (fn [token _] (when (= token "visually-hidden") token)))
+      ; Preserve only the classes needed by the external-link icon and hidden hint.
+      (.withCustomTokenPolicy (fn [token _]
+                                (when (contains? #{"visually-hidden" "zmdi" "zmdi-open-in-new"} token)
+                                  token)))
       .build))
 
 (defonce application-identifier-block-start-tag "BEGIN_APPLICATION_IDENTIFIER")
@@ -70,6 +72,9 @@
                    (fn [[_ href-and-attrs link-text]]
                      (str "<a target=\"_blank\" rel=\"noopener noreferrer\" href=" href-and-attrs ">"
                           link-text
+                          " <i class=\"zmdi zmdi-open-in-new\" aria-hidden=\"true\" title=\""
+                          (s/htmlEscape new-tab-hint)
+                          "\"></i>"
                           "<span class=\"visually-hidden\"> " (s/htmlEscape new-tab-hint) "</span></a>")))
    state])
 
@@ -117,7 +122,7 @@
                                           :replacement-transformers (concat [(partial application-identifier-block application-identifier)]
                                                                             transformer-vector
                                                                             [(partial add-link-target-prop
-                                                                                      (translations/get-hakija-translation :opens-in-new-tab @lang))]))
+                                                                                      (translations/get-hakija-translation :external-link-opens-in-new-tab @lang))]))
                                 (.sanitize html-sanitizer v)
                                 (.getTypedStringValue v))
                collapsable?   (and collapse-enabled? (< 140 (or @scroll-height 0)))]
