@@ -1075,7 +1075,8 @@
             attachment-files])]))))
 
 (defn- attachment-review-area [reviews lang]
-  (let [all-keys                 (->> (vals reviews)
+  (let [download-form-node       (r/atom nil)
+        all-keys                 (->> (vals reviews)
                                       (mapcat #(-> % ffirst :values flatten))
                                       (keep :key)
                                       set)
@@ -1113,6 +1114,7 @@
           [:div.application-handling__excel-request-row
            [:form#attachment-download-link
             {:action "/lomake-editori/api/files/zip"
+             :ref #(reset! download-form-node %)
              :method "POST"}
             [:input {:type  "hidden"
                      :name  "keys"
@@ -1124,7 +1126,8 @@
            [:button.application-handling__download-attachments-button
             {:disabled (empty? selected-attachment-keys)
              :on-click (fn [_]
-                         (.submit (.getElementById js/document "attachment-download-link")))}
+                         (when-let [form @download-form-node]
+                           (.submit form)))}
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
                  ^{:key (:key (ffirst all-similar-attachments))}
