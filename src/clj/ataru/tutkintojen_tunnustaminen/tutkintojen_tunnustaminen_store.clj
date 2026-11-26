@@ -21,6 +21,7 @@
       (throw (new RuntimeException (str "Application " application-id
                                         " not found"))))
     application))
+
 (defn get-application-by-event-id
   [country-question-id event-id]
   (let [id-and-state (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
