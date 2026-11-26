@@ -1,5 +1,6 @@
 (ns ataru.excel-common
-  (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]
+  (:require [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clojure.set :as set]))
 
 (def hakemuksen-yleiset-tiedot-field-labels
@@ -40,8 +41,10 @@
    {:id        "pisteet"
     :label     (:pisteet excel-texts)}
    {:id        "application-review-notes"
-    :label     (:notes excel-texts)}
-   {:id        "hakemusmaksuvelvollisuus"
+    :label     (:notes excel-texts)}])
+
+(def kk-hakemusmaksu-field-labels
+  [{:id        "hakemusmaksuvelvollisuus"
     :label     (:hakemusmaksuvelvollisuus excel-texts)}
    {:id        "kk-payment-state"
     :label     (:kk-payment-state excel-texts)}
@@ -61,6 +64,13 @@
    {:id "kasittelymerkinnat"
     :label (:excel-kasittelymerkinnat virkailija-texts)
     :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
+
+(defn hakemusmaksu-field-labels [form-content]
+  (if (some #(= (:id %) payment-module/kk-application-payment-wrapper-key) form-content)
+    [{:id       "hakemusmaksu-merkinnat"
+      :label    (:excel-kk-hakemusmaksu-merkinnat virkailija-texts)
+      :children (map #(select-keys % [:id :label]) kk-hakemusmaksu-field-labels)}]
+    []))
 
 (defn- vals-if-map [x] (if (map? x) (vals x) x))
 

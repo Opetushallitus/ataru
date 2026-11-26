@@ -1958,6 +1958,9 @@
    :excel-include-all-placeholder                            {:fi "Kaikki tunnisteet"
                                                               :sv "Alla identifikationer"
                                                               :en "All identifiers"}
+   :excel-kk-hakemusmaksu-merkinnat                          {:fi "Hakemusmaksujen merkinnät"
+                                                              :sv "Markeringar om ansökningsavgifter"
+                                                              :en "Application fee notes"}
    :excel-kasittelymerkinnat                                 {:fi "Käsittelymerkinnät"
                                                               :sv "Behandlingsmarkeringar"
                                                               :en "Processing notes"}
