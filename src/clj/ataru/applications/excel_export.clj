@@ -38,8 +38,16 @@
 (def ^:private ^DateTimeFormatter date-format
   (f/formatter "d.M.yyyy"))
 
-(defn boolean-formatter [bool?]
-  (when (some? bool?) (if bool? "kyllä" "ei")))
+(defn boolean-formatter
+  "nil is interpreted as a no"
+  [bool lang]
+  (if bool (-> excel-texts :yes lang)
+           (-> excel-texts :no lang)))
+
+(defn boolean?-formatter
+  "nil is kept as a nil"
+  [bool? lang]
+  (when (some? bool?) (boolean-formatter bool? lang)))
 
 (defn time-formatter
   ([date-time formatter]
@@ -193,7 +201,7 @@
    "student-number"                {:field     [:person :master-oid]}
    "applicant-oid"                 {:field     [:application :person-oid]}
    "turvakielto"                   {:field     [:person :turvakielto]
-                                    :format-fn (fnil boolean-formatter false)}
+                                    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
    "hakukohde-handling-state"      {:field     [:application :application-hakukohde-reviews]
                                     :lang?     true
                                     :format-fn (partial hakukohde-review-formatter "processing-state")}
@@ -232,7 +240,8 @@
                                     :get-hakukohde?     true ; Implies :lang? true
                                     :format-fn attachment-review-formatter}
    "tiedot-migrin-palvelussa"      {:field     [:application :kk-payment-permit-check :found-in-migri]
-                                    :format-fn boolean-formatter}
+                                    :lang?     true
+                                    :format-fn boolean?-formatter}
    "lupakortti-voimassa"           {:field     [:application :kk-payment-permit-check :permit-valid-until]
                                     :format-fn date-str-formatter}
    "hakemusmaksuvelvollisuus-tulos" {:field     [:application :kk-payment-permit-check :payment-obligation-basis]

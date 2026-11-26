@@ -3139,7 +3139,13 @@
                            :en "Finnish National Agency for Education"}})
 
 (def excel-texts
-  {:name                     {:fi "Nimi"
+  {:yes                      {:fi "kyllä"
+                              :sv "ja"
+                              :en "yes"}
+   :no                       {:fi "ei"
+                              :sv "nej"
+                              :en "no"}
+   :name                     {:fi "Nimi"
                               :sv "Namn"
                               :en "EN: Nimi"}
    :id                       {:fi "Id"
