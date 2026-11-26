@@ -1776,13 +1776,14 @@
                             get-raw-key-values)
         payment-state   (or (:application-payment-states application) {})]
     (-> application
-         (assoc :attachments attachments)
+        (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
         (assoc :application-payment-states payment-state)
         (clojure.set/rename-keys {:key :hakemusOid
                                   :person-oid :personOid
                                   :haku :hakuOid
-                                  :application-payment-states :applicationPaymentState}))))
+                                  :application-payment-states :applicationPaymentState
+                                  :kk-application-payment-permit-check :kkApplicationPaymentPermitCheck}))))
 
 (defn- parse-siirto-time
   [value]

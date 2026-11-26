@@ -1388,7 +1388,20 @@ SELECT
                                        'approvedAt', approved_at,
                                        'modifiedAt', modified_at)
      FROM kk_application_payments kkap
-     WHERE kkap.application_key = a.key limit 1) AS "application-payment-states"
+     WHERE kkap.application_key = a.key limit 1) AS "application-payment-states",
+    (SELECT json_build_object('attachmentKey', attachment_key,
+                              'foundInMigri', found_in_migri,
+                              'permitValidUntil', permit_valid_until,
+                              'paymentObligationBasis', payment_obligation_basis,
+                              'paymentObligationOtherReason', payment_obligation_other_reason,
+                              'virkailijaOid', virkailija_oid,
+                              'organizationOid', organization_oid,
+                              'checkedTime', checked_time,
+                              'inheritedFromApplicationKey', inherited_from_application_key,
+                              'inheritedTime', inherited_time,
+                              'modifiedTime', modified_time)
+     FROM kk_application_payment_permit_checks appc
+     WHERE appc.application_key = a.key) as "kk-application-payment-permit-check"
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
