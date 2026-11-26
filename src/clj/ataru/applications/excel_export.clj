@@ -5,7 +5,8 @@
             [ataru.excel-common :refer [form-field-belongs-to-hakukohde
                                         hakemuksen-yleiset-tiedot-field-labels
                                         hakukohderyhma-to-hakukohde-oids
-                                        kasittelymerkinnat-field-labels]]
+                                        kasittelymerkinnat-field-labels
+                                        kk-hakemusmaksu-field-labels]]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
@@ -250,7 +251,7 @@
 
 (def ^:private application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
-       (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels)))
+       (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels kk-hakemusmaksu-field-labels)))
 
 (def ^:private old-application-meta-fields-order
   ["application-number"
@@ -281,7 +282,7 @@
 (def ^:private old-application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
        (sort-by #(.indexOf old-application-meta-fields-order (:id %))
-                (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
+                (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels kk-hakemusmaksu-field-labels))))
 
 (defn- create-cell-styles
   [workbook]
