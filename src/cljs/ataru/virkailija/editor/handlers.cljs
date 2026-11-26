@@ -17,6 +17,7 @@
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
+                                                      dispatch-toast-error-msg
                                                       http post put]]
             [ataru.schema.maksut-schema :refer [astu-order-id-prefixes]]
             [ataru.config :as config]
@@ -708,12 +709,39 @@
           (update-in [:editor :forms key] set-form-lock-state)
           (assoc-in [:editor :form-loading] false))))))
 
+;; Lomakkeen haku voi epäonnistua esimerkiksi silloin, kun käyttäjällä ei ole
+;; (enää) oikeutta lomakkeeseen. Puretaan valinta, ettei editori jää lataustilaan.
+;; Jos käyttäjä on ehtinyt valita toisen lomakkeen ennen virheen saapumista,
+;; uuteen valintaan ei kosketa.
+(reg-event-db
+  :editor/handle-fetch-form-error
+  (fn [db [_ form-id]]
+    (let [selected-form-key (get-in db [:editor :selected-form-key])]
+      (if (= form-id (get-in db [:editor :forms selected-form-key :id]))
+        (-> db
+            (assoc-in [:editor :form-loading] false)
+            (update :editor dissoc :selected-form-key))
+        db))))
+
+(defn- handle-fetch-form-error-response
+  "override-args:n :error-handler korvaa http-kerroksen oman virhekäsittelijän
+   kokonaan, joten sen tekemät asiat on tehtävä tässä itse: vanhentunut istunto
+   ohjataan kirjautumiseen ja muista virheistä näytetään http-kerroksen ilmoitus."
+  [form-id path response]
+  (let [redirect-url (-> response :response :redirect)]
+    (if (and (= 401 (:status response)) (some? redirect-url))
+      (set! (.. js/window -location -href) redirect-url)
+      (do (dispatch-toast-error-msg :get response path)
+          (dispatch [:editor/handle-fetch-form-error form-id])))))
+
 (defn- fetch-form-content-fx
   [form-id]
-  {:http {:method :get
-          :path (str "/lomake-editori/api/forms/" form-id)
-          :skip-parse-times? true
-          :handler-or-dispatch :editor/handle-fetch-form}})
+  (let [path (str "/lomake-editori/api/forms/" form-id)]
+    {:http {:method :get
+            :path path
+            :skip-parse-times? true
+            :handler-or-dispatch :editor/handle-fetch-form
+            :override-args {:error-handler (partial handle-fetch-form-error-response form-id path)}}}))
 
 (reg-event-fx
   :editor/handle-refresh-form-used-in-hakus
