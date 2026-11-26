@@ -127,19 +127,28 @@
 
 (defn save-permit-check-to-db!
   "Stores virkailija's residence permit check with the virkailija it refers to."
-  [{:keys [application-key attachment-key found-in-migri payment-obligation-basis]
-    :or   {found-in-migri true}}]
+  [{:keys [application-key
+           attachment-key
+           found-in-migri
+           permit-valid-until
+           payment-obligation-basis
+           other-reason]
+    :or   {found-in-migri     true
+           permit-valid-until nil
+           other-reason       nil}}]
   (ataru-db/exec :db yesql-upsert-virkailija<! {:oid        permit-check-virkailija-oid
                                                 :first_name "Hemuli"
                                                 :last_name  "Hemuli?"})
   (jdbc/with-db-transaction [conn {:datasource (ataru-db/get-datasource :db)}]
     (jdbc/insert! conn :kk_application_payment_permit_checks
-                  {:application_key          application-key
-                   :attachment_key           attachment-key
-                   :found_in_migri           found-in-migri
-                   :payment_obligation_basis payment-obligation-basis
-                   :virkailija_oid           permit-check-virkailija-oid
-                   :checked_time             (java.sql.Timestamp. (System/currentTimeMillis))})))
+                  {:application_key                 application-key
+                   :attachment_key                  attachment-key
+                   :found_in_migri                  found-in-migri
+                   :permit_valid_until              (when permit-valid-until (java.sql.Date/valueOf ^String permit-valid-until))
+                   :payment_obligation_basis        payment-obligation-basis
+                   :payment_obligation_other_reason other-reason
+                   :virkailija_oid                  permit-check-virkailija-oid
+                   :checked_time                    (java.sql.Timestamp. (System/currentTimeMillis))})))
 
 (defn init-oppija-session-to-db
   [ticket data]

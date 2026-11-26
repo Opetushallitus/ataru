@@ -1776,13 +1776,14 @@
                             get-raw-key-values)
         payment-state   (or (:application-payment-states application) {})]
     (-> application
-         (assoc :attachments attachments)
+        (assoc :attachments attachments)
         (assoc :keyValues keyword-values)
         (assoc :application-payment-states payment-state)
         (clojure.set/rename-keys {:key :hakemusOid
                                   :person-oid :personOid
                                   :haku :hakuOid
-                                  :application-payment-states :applicationPaymentState}))))
+                                  :application-payment-states :applicationPaymentState
+                                  :kk-application-payment-permit-check :kkApplicationPaymentPermitCheck}))))
 
 (defn- parse-siirto-time
   [value]
@@ -1831,17 +1832,27 @@
                                               (update :modified parse-siirto-time)
                                               (update :reminderSentAt parse-siirto-time)))
                                         (or (:application-payment-states application) []))
+        kk-application-payment-permit-checks (:kk-application-payment-permit-checks application)
         submitted-formatted (.format zoned-date-time-formatter (:submitted application))
         created-formatted (.format zoned-date-time-formatter (:created application))
         modified-formatted (.format zoned-date-time-formatter (:modified application))]
   (-> application
-      (dissoc :content :application-hakukohde-reviews :application-hakukohde-attachment-reviews :application-review-notes :application-payment-states :submitted :created :modified)
+      (dissoc :content
+              :application-hakukohde-reviews
+              :application-hakukohde-attachment-reviews
+              :application-review-notes
+              :application-payment-states
+              :kk-application-payment-permit-checks
+              :submitted
+              :created
+              :modified)
       (assoc :attachments attachments)
       (assoc :keyValues keyword-values)
       (assoc :hakukohdeReviews application-hakukohde-reviews)
       (assoc :hakukohdeAttachmentReviews application-hakukohde-attachment-reviews)
       (assoc :applicationReviewNotes application-review-notes)
       (assoc :applicationPaymentStates application-payment-states)
+      (assoc :kkApplicationPaymentPermitCheck kk-application-payment-permit-checks)
       (assoc :originallySubmitted submitted-formatted)
       (assoc :versionCreated created-formatted)
       (assoc :versionModified modified-formatted)

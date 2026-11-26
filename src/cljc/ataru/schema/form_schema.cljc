@@ -753,6 +753,10 @@
   {:kieliKoodi  s/Str
    :kieliTyyppi s/Str})
 
+(s/defschema PermitCheckAttachmentKeys (apply s/enum payment-module/kk-application-payment-exempt-attachment-keys))
+
+(s/defschema KkPaymentObligationBasis (apply s/enum payment-module/kk-payment-obligation-bases))
+
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
    :personOid   s/Str
@@ -792,7 +796,13 @@
                                :dueDate (s/maybe s/Str)
                                :total (s/maybe s/Num)
                                :modified java.time.ZonedDateTime
-                               :reminderSentAt (s/maybe java.time.ZonedDateTime)}]})
+                               :reminderSentAt (s/maybe java.time.ZonedDateTime)}]
+   :kkApplicationPaymentPermitCheck (s/maybe
+                                       {:attachmentKey                (s/maybe PermitCheckAttachmentKeys)
+                                        :foundInMigri                 (s/maybe s/Bool)
+                                        :permitValidUntil             (s/maybe s/Str)
+                                        :paymentObligationBasis       (s/maybe KkPaymentObligationBasis)
+                                        :paymentObligationOtherReason (s/maybe s/Str)})})
 
 (def event-types (s/enum "updated-by-applicant"
                          "updated-by-virkailija"
@@ -860,7 +870,7 @@
 (s/defschema KkPaymentPermitCheckBody
   {:found-in-migri                  (s/maybe s/Bool)
    :permit-valid-until              (s/maybe LocalDateString)
-   :payment-obligation-basis        (s/maybe (apply s/enum payment-module/kk-payment-obligation-bases))
+   :payment-obligation-basis        (s/maybe KkPaymentObligationBasis)
    :payment-obligation-other-reason (s/maybe (s/constrained s/Str
                                                             #(<= (count %) payment-module/kk-payment-permit-check-other-reason-max-length)
                                                             'max-length))})
