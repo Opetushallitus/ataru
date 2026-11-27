@@ -1,6 +1,6 @@
 (ns ataru.hakija.hakija-form-service-spec
   (:require [ataru.hakija.hakija-form-service :as hfs]
-            [speclj.core :refer [describe it should-be should-be-nil]]
+            [speclj.core :refer [describe it should= should-be should-be-nil should-contain]]
             [ataru.time :as time]
             [ataru.attachment-deadline.attachment-deadline-service :as attachment-deadline-service]
             [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
@@ -50,6 +50,13 @@
                :end                       nil
                :on                        true
                :jatkuva-or-joustava-haku? true}}
+   :by-oid  {}})
+
+;; Hakuaika alkaa vasta 1.1.2021, eli testien nykyhetken (14.10.2020) jälkeen
+(def hakuajat-not-started
+  {:uniques #{{:start 1609459200000
+               :end   1612137600000
+               :on    false}}
    :by-oid  {}})
 
 (def attachment-field
@@ -171,33 +178,38 @@
           (should-be false? (:cannot-view new-field))
           (should-be true? (:cannot-edit new-field))))))
 
-  (describe "cannot-edit-because-deadline-passed"
-    (it "should be set for attachment field with expired field deadline"
+  (describe "cannot-edit-reasons"
+    (it "should contain deadline for attachment field with expired field deadline"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines attachment-field) false false nil nil attachment-field)]
         (should-be true? (:cannot-edit new-field))
-        (should-be true? (:cannot-edit-because-deadline-passed new-field))))
+        (should= #{:deadline} (:cannot-edit-reasons new-field))))
 
-    (it "should be set for attachment field with expired field deadline when application is also in processing"
+    (it "should contain deadline for attachment field with expired field deadline when application is also in processing"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-jatkuva-haku [:hakija] true (expired-field-deadlines attachment-field) false false nil nil attachment-field)]
         (should-be true? (:cannot-edit new-field))
-        (should-be true? (:cannot-edit-because-deadline-passed new-field))))
+        (should-contain :deadline (:cannot-edit-reasons new-field))))
 
-    (it "should not be set for attachment field locked because application is in processing in jatkuva haku"
+    (it "should contain only in-processing for attachment field locked because application is in processing in jatkuva haku"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-jatkuva-haku [:hakija] true nil false false nil nil attachment-field)]
         (should-be true? (:cannot-edit new-field))
-        (should-be-nil (:cannot-edit-because-deadline-passed new-field))))
+        (should= #{:in-processing} (:cannot-edit-reasons new-field))))
 
-    (it "should not be set for attachment field locked because of overdue kk payment"
+    (it "should contain only kk-payment-overdue for attachment field locked because of overdue kk payment"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false nil false true nil nil attachment-field)]
         (should-be true? (:cannot-edit new-field))
-        (should-be-nil (:cannot-edit-because-deadline-passed new-field))))
+        (should= #{:kk-payment-overdue} (:cannot-edit-reasons new-field))))
+
+    (it "should contain hakuaika-not-started but not deadline when hakuaika has not started"
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-not-started [:hakija] false nil false false nil nil attachment-field)]
+        (should-be true? (:cannot-edit new-field))
+        (should= #{:hakuaika-not-started} (:cannot-edit-reasons new-field))))
 
     (it "should not be set for editable attachment field"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now hakuajat-jatkuva-haku [:hakija] false nil false false nil nil attachment-field)]
         (should-be false? (:cannot-edit new-field))
-        (should-be-nil (:cannot-edit-because-deadline-passed new-field))))
+        (should-be-nil (:cannot-edit-reasons new-field))))
 
-    (it "should not be set for non-attachment field with expired field deadline"
-      (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:hakija] false (expired-field-deadlines normal-field) false false nil nil normal-field)]
-        (should-be true? (:cannot-edit new-field))
-        (should-be-nil (:cannot-edit-because-deadline-passed new-field))))))
+    (it "should not be set for virkailija"
+      (let [new-field (hfs/flag-uneditable-and-unviewable-field test-attachment-deadline-service now nil [:virkailija] false (expired-field-deadlines attachment-field) false true nil nil attachment-field)]
+        (should-be false? (:cannot-edit new-field))
+        (should-be-nil (:cannot-edit-reasons new-field))))))

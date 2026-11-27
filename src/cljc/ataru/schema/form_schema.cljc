@@ -55,7 +55,8 @@
    :metadata                                        element-metadata-schema/ElementMetadata
    (s/optional-key :cannot-view)                    s/Bool
    (s/optional-key :cannot-edit)                    s/Bool
-   (s/optional-key :cannot-edit-because-deadline-passed) s/Bool
+   (s/optional-key :cannot-edit-reasons)            #{(s/enum :person-info :deadline :hakuaika-not-started :in-processing
+                                                              :toisen-asteen-yhteishaku :kk-payment-overdue)}
    (s/optional-key :validators)                     [validator-schema/Validator]
    (s/optional-key :rules)                          {s/Keyword s/Any}
    (s/optional-key :blur-rules)                     {s/Keyword s/Any}

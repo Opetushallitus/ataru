@@ -234,6 +234,11 @@
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
+(defn- attachment-deadline-passed?
+  "Onko liitekenttä lukittu määräajan vuoksi."
+  [field]
+  (contains? (:cannot-edit-reasons field) :deadline))
+
 (defn- validate-and-store [liiteri-cas-client
                            form-by-id-cache
                            koodisto-cache
@@ -335,21 +340,11 @@
                                           final-application
                                           latest-application
                                           form))
-        cannot-edit-attachment        (when (not-empty edited-cannot-edit-questions)
+        cannot-edit-attachments       (when (not-empty edited-cannot-edit-questions)
                                         (->> (:content form)
                                              util/flatten-form-fields
                                              (filter #((set edited-cannot-edit-questions) (:id %)))
-                                             (keep (fn [{:keys [id fieldType]}]
-                                                     (when (= fieldType "attachment")
-                                                       id)))))
-        deadline-passed-attachments   (when (not-empty cannot-edit-attachment)
-                                        (->> (:content form)
-                                             util/flatten-form-fields
-                                             (filter #((set cannot-edit-attachment) (:id %)))
-                                             (keep (fn [{:keys [id cannot-edit-because-deadline-passed]}]
-                                                     (when cannot-edit-because-deadline-passed
-                                                       id)))
-                                             set))
+                                             (filter #(= "attachment" (:fieldType %)))))
         cannot-edit-fields            (when (not-empty edited-cannot-edit-questions)
                                         (->> (:content form)
                                              util/flatten-form-fields
@@ -468,14 +463,14 @@
        :key (:key latest-application)
        :code :form-closed}
 
-      (not-empty cannot-edit-attachment)
+      (not-empty cannot-edit-attachments)
       {:passed?  false
-       :failures (into {} (map #(vector % (if (contains? deadline-passed-attachments %)
-                                            "Deadline passed in attachments"
-                                            "Cannot edit attachment"))
-                               cannot-edit-attachment))
+       :failures (into {} (map #(vector (:id %) (if (attachment-deadline-passed? %)
+                                                  "Deadline passed in attachments"
+                                                  "Cannot edit attachment"))
+                               cannot-edit-attachments))
        :key  (:key latest-application)
-       :code (if (not-empty deadline-passed-attachments)
+       :code (if (some attachment-deadline-passed? cannot-edit-attachments)
                :attachment-deadline-passed
                :internal-server-error)}
 
