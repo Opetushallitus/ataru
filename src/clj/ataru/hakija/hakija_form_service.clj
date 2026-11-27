@@ -70,7 +70,11 @@
               (fn [content]
                 (walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
-(defn- editing-allowed-by-hakuaika?
+(defn- hakuaika-uneditable-reasons
+  "Syyt, joiden vuoksi kentän hakuaika estää muokkauksen. Tyhjä joukko, jos muokkaus on sallittu.
+  :hakuaika-not-started – hakuaika ei ole alkanut.
+  :deadline             – hakuaika on päättynyt eikä liitteiden tai henkilötietojen lisäaika ole voimassa.
+  :in-processing        – jatkuvan tai joustavan haun hakemus on käsittelyssä."
   [attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku]
   (let [hakuaika            (hakuaika/select-hakuaika-for-field now field hakuajat)
         hakuaika-start      (some-> hakuaika :start t/from-long)
@@ -81,16 +85,23 @@
                                         (time/after? now t)))
         before?             (fn [t] (and (some? t)
                                          (time/before? now t)))]
-    (or (nil? hakuaika)
-        (and (not (and application-in-processing-state? (:jatkuva-or-joustava-haku? hakuaika)))
-             (after? hakuaika-start)
-             (or (before? hakuaika-end)
+    (if (nil? hakuaika)
+      #{}
+      (cond-> #{}
+        (and application-in-processing-state? (:jatkuva-or-joustava-haku? hakuaika))
+        (conj :in-processing)
+
+        (not (after? hakuaika-start))
+        (conj :hakuaika-not-started)
+
+        (not (or (before? hakuaika-end)
                  (nil? hakuaika-end)
                  (and (before? attachment-edit-end)
                       (= "attachment" (:fieldType field)))
                  (and (before? hakukierros-end)
                       (contains? editing-allowed-person-info-field-ids
-                        (keyword (:id field)))))))))
+                        (keyword (:id field))))))
+        (conj :deadline)))))
 
 (def lupatiedot-field-ids #{:lupatiedot-toinen-aste :paatos-opiskelijavalinnasta-sahkopostiin :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
 
@@ -114,15 +125,21 @@
            (not (form-role/with-henkilo? roles)))
       (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field))))))
 
-(defn- editing-allowed-by-deadlines?
+(defn- deadline-uneditable-reasons
+  "Syyt, joiden vuoksi määräajat estävät kentän muokkauksen: hakemuskohtainen määräaika, kentän oma
+  määräaika tai kentän hakuaika (ks. hakuaika-uneditable-reasons). Tyhjä joukko, jos muokkaus on sallittu."
   [attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline application-submitted haku]
-  (or (form-role/virkailija? roles)
-      (cond (some? field-deadline)
-            (time/before? now (:deadline field-deadline))
-            (deadline/custom-deadline field)
-            (not (deadline/custom-deadline-passed? now field))
-            :else
-            (editing-allowed-by-hakuaika? attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku))))
+  (cond (form-role/virkailija? roles)
+        #{}
+
+        (some? field-deadline)
+        (if (time/before? now (:deadline field-deadline)) #{} #{:deadline})
+
+        (deadline/custom-deadline field)
+        (if (deadline/custom-deadline-passed? now field) #{:deadline} #{})
+
+        :else
+        (hakuaika-uneditable-reasons attachment-deadline-service now field hakuajat application-in-processing-state? application-submitted haku)))
 
 (defn- application-not-in-processing?
   [roles hakuajat application-in-processing-state?]
@@ -141,16 +158,32 @@
   (or (form-role/virkailija? roles)
       (not has-overdue-payment?)))
 
-(defn- uneditable?
+(defn- uneditable-reasons
+  "Syyt, joiden vuoksi hakija ei voi muokata kenttää. Tyhjä joukko, jos muokkaus on sallittu.
+  Määräaikoihin liittyvät syyt, ks. deadline-uneditable-reasons. Lisäksi
+  :person-info              – henkilötietokenttää ei saa muokata,
+  :in-processing            – hakemus on käsittelyssä,
+  :toisen-asteen-yhteishaku – toisen asteen yhteishaun rajoitukset estävät muokkauksen,
+  :kk-payment-overdue       – korkeakouluhaun hakemusmaksu on erääntynyt."
   [attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline
    use-toisen-asteen-yhteishaku-restrictions? has-overdue-payment? application-submitted haku]
-  (not (and (editing-allowed-for-person-info-field? roles field)
-            (or (is-always-editable-lupatieto-field? field)
-                (editing-allowed-by-deadlines? attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline application-submitted haku))
-            (or (is-always-editable-lupatieto-field? field)
-                (application-not-in-processing? roles hakuajat application-in-processing-state?))
-            (editing-allowed-by-toisen-asteen-yhteishaku-restrictions? use-toisen-asteen-yhteishaku-restrictions? field)
-            (editing-allowed-by-kk-payment-status? roles has-overdue-payment?))))
+  (let [always-editable? (is-always-editable-lupatieto-field? field)]
+    (cond-> #{}
+      (not (editing-allowed-for-person-info-field? roles field))
+      (conj :person-info)
+
+      (not always-editable?)
+      (into (deadline-uneditable-reasons attachment-deadline-service now field hakuajat roles application-in-processing-state? field-deadline application-submitted haku))
+
+      (and (not always-editable?)
+           (not (application-not-in-processing? roles hakuajat application-in-processing-state?)))
+      (conj :in-processing)
+
+      (not (editing-allowed-by-toisen-asteen-yhteishaku-restrictions? use-toisen-asteen-yhteishaku-restrictions? field))
+      (conj :toisen-asteen-yhteishaku)
+
+      (not (editing-allowed-by-kk-payment-status? roles has-overdue-payment?))
+      (conj :kk-payment-overdue))))
 
 (defn- combine-old-priorisoivat-ryhmat-with-new
   [haku-oid old-priorisoivat hakukohderyhmat-with-settings]
@@ -190,22 +223,22 @@
   [attachment-deadline-service now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions? has-overdue-payment? application-submitted haku field]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (cannot-view-field? roles field)
-          cannot-edit? (or cannot-view?
-                           (uneditable?
-                            attachment-deadline-service
-                            now
-                            field
-                            hakuajat
-                            roles
-                            application-in-processing-state?
-                            (get field-deadlines (:id field))
-                            use-toisen-asteen-yhteishaku-restrictions?
-                            has-overdue-payment?
-                            application-submitted
-                            haku))]
-      (assoc field
-             :cannot-view cannot-view?
-             :cannot-edit cannot-edit?))
+          reasons      (uneditable-reasons
+                        attachment-deadline-service
+                        now
+                        field
+                        hakuajat
+                        roles
+                        application-in-processing-state?
+                        (get field-deadlines (:id field))
+                        use-toisen-asteen-yhteishaku-restrictions?
+                        has-overdue-payment?
+                        application-submitted
+                        haku)]
+      (cond-> (assoc field
+                     :cannot-view cannot-view?
+                     :cannot-edit (or cannot-view? (boolean (seq reasons))))
+        (seq reasons) (assoc :cannot-edit-reasons reasons)))
     field))
 
 (s/defn ^:always-validate flag-uneditable-and-unviewable-fields :- s/Any

@@ -234,6 +234,11 @@
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
+(defn- attachment-deadline-passed?
+  "Onko liitekenttä lukittu määräajan vuoksi."
+  [field]
+  (contains? (:cannot-edit-reasons field) :deadline))
+
 (defn- validate-and-store [liiteri-cas-client
                            form-by-id-cache
                            koodisto-cache
@@ -335,13 +340,11 @@
                                           final-application
                                           latest-application
                                           form))
-        cannot-edit-attachment        (when (not-empty edited-cannot-edit-questions)
+        cannot-edit-attachments       (when (not-empty edited-cannot-edit-questions)
                                         (->> (:content form)
                                              util/flatten-form-fields
                                              (filter #((set edited-cannot-edit-questions) (:id %)))
-                                             (keep (fn [{:keys [id fieldType]}]
-                                                     (when (= fieldType "attachment")
-                                                       id)))))
+                                             (filter #(= "attachment" (:fieldType %)))))
         cannot-edit-fields            (when (not-empty edited-cannot-edit-questions)
                                         (->> (:content form)
                                              util/flatten-form-fields
@@ -460,12 +463,16 @@
        :key (:key latest-application)
        :code :form-closed}
 
-      (not-empty cannot-edit-attachment)
+      (not-empty cannot-edit-attachments)
       {:passed?  false
-       :failures (into {} (map #(vector % "Deadline passed in attachments")
-                               cannot-edit-attachment))
+       :failures (into {} (map #(vector (:id %) (if (attachment-deadline-passed? %)
+                                                  "Deadline passed in attachments"
+                                                  "Cannot edit attachment"))
+                               cannot-edit-attachments))
        :key  (:key latest-application)
-       :code :internal-server-error}
+       :code (if (some attachment-deadline-passed? cannot-edit-attachments)
+               :attachment-deadline-passed
+               :internal-server-error)}
 
       (not (:passed? validation-result))
       (assoc validation-result :key (:key latest-application))

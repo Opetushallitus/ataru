@@ -253,6 +253,17 @@
                                    :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
+(defn- hakuaika-jatkuva-haku-ongoing
+  [_ _ _ _]
+  (hakuaika/hakuaika-with-label {:on                                  true
+                                 :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :end                                 nil
+                                 :hakukierros-end                     nil
+                                 :jatkuva-haku?                       true
+                                 :joustava-haku?                      false
+                                 :jatkuva-or-joustava-haku?           true
+                                 :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
+
 (defn- get-fields-of-form-without-payment-module [resp]
   (->> resp :body :content
        (filter #(not= (:id %) payment-module/kk-application-payment-wrapper-key))
@@ -673,7 +684,8 @@
       (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     crypto/url-part (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
-          (should= 400 (:status resp)))))
+          (should= 400 (:status resp))
+          (should= "attachment-deadline-passed" (get-in resp [:body :code])))))
 
     (it "should disallow application edit after grace period to attachment with extended field deadline that has passed"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
@@ -683,7 +695,17 @@
                                                            :last-modified (t/now)}])
                     crypto/url-part                    (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
-          (should= 400 (:status resp)))))
+          (should= 400 (:status resp))
+          (should= "attachment-deadline-passed" (get-in resp [:body :code])))))
+
+    (it "should disallow attachment edit with generic error code when application is in processing in jatkuva haku"
+      (with-redefs [hakuaika/hakukohteen-hakuaika     hakuaika-jatkuva-haku-ongoing
+                    util/application-in-processing? (constantly true)
+                    crypto/url-part                 (constantly "0000000023")]
+        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
+          (should= 400 (:status resp))
+          (should= "internal-server-error" (get-in resp [:body :code]))
+          (should= "Cannot edit attachment" (get-in resp [:body :failures :164954b5-7b23-4774-bd44-dee14071316b])))))
 
     (it "should allow application edit after grace period to attachment with extended field deadline"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
