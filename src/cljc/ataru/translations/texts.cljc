@@ -1940,6 +1940,9 @@
    :excel-include-all-placeholder                            {:fi "Kaikki tunnisteet"
                                                               :sv "Alla identifikationer"
                                                               :en "All identifiers"}
+   :excel-kk-hakemusmaksu-merkinnat                          {:fi "Hakemusmaksujen merkinnät"
+                                                              :sv "Markeringar om ansökningsavgifter"
+                                                              :en "Application fee notes"}
    :excel-kasittelymerkinnat                                 {:fi "Käsittelymerkinnät"
                                                               :sv "Behandlingsmarkeringar"
                                                               :en "Processing notes"}
@@ -3139,7 +3142,13 @@
                            :en "Finnish National Agency for Education"}})
 
 (def excel-texts
-  {:name                     {:fi "Nimi"
+  {:yes                      {:fi "kyllä"
+                              :sv "ja"
+                              :en "yes"}
+   :no                       {:fi "ei"
+                              :sv "nej"
+                              :en "no"}
+   :name                     {:fi "Nimi"
                               :sv "Namn"
                               :en "EN: Nimi"}
    :id                       {:fi "Id"
@@ -3207,7 +3216,19 @@
                               :en "Application fee obligation"}
    :kk-payment-state         {:fi "Hakemusmaksun tila"
                               :sv "Ansökningsavgiftens status"
-                              :en "Application fee state"}})
+                              :en "Application fee state"}
+   :oleskelulupaliitteen-tila {:fi "Oleskelulupaliitteen tila"
+                               :sv "Status för bilagan till uppehållstillståndet"
+                               :en "Residence permit attachment status"}
+   :tiedot-migrin-palvelussa {:fi "Tiedot löytyvät Migrin lupatietopalvelusta"
+                               :sv "Uppgifterna finns i Migrationsverkets tjänst för tillståndsuppgifter"
+                               :en "Information found in Migri's permit information service"}
+   :lupakortti-voimassa      {:fi "Lupakortti voimassa"
+                               :sv "Tillståndskortet giltigt till"
+                               :en "Permit card valid until"}
+   :hakemusmaksuvelvollisuus-tulos {:fi "Hakemusmaksuvelvollisuus, tarkastuksen tulos"
+                                    :sv "Skyldighet att betala ansökningsavgift, granskningsresultat"
+                                    :en "Application fee liability, verification result"}})
 
 (def koski-tutkinnot-texts
   {:section-label                                 {:fi "Tutkinnot"

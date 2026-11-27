@@ -1,5 +1,6 @@
 (ns ataru.excel-common
-  (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]
+  (:require [ataru.component-data.kk-application-payment-module :as payment-module]
+            [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clojure.set :as set]))
 
 (def hakemuksen-yleiset-tiedot-field-labels
@@ -40,11 +41,21 @@
    {:id        "pisteet"
     :label     (:pisteet excel-texts)}
    {:id        "application-review-notes"
-    :label     (:notes excel-texts)}
-   {:id        "hakemusmaksuvelvollisuus"
+    :label     (:notes excel-texts)}])
+
+(def kk-hakemusmaksu-field-labels
+  [{:id        "hakemusmaksuvelvollisuus"
     :label     (:hakemusmaksuvelvollisuus excel-texts)}
    {:id        "kk-payment-state"
-    :label     (:kk-payment-state excel-texts)}])
+    :label     (:kk-payment-state excel-texts)}
+   {:id        "oleskelulupaliitteen-tila"
+    :label     (:oleskelulupaliitteen-tila excel-texts)}
+   {:id        "tiedot-migrin-palvelussa"
+    :label     (:tiedot-migrin-palvelussa excel-texts)}
+   {:id        "lupakortti-voimassa"
+    :label     (:lupakortti-voimassa excel-texts)}
+   {:id        "hakemusmaksuvelvollisuus-tulos"
+    :label     (:hakemusmaksuvelvollisuus-tulos excel-texts)}])
 
 (def common-field-labels
   [{:id "hakemuksen-yleiset-tiedot"
@@ -53,6 +64,13 @@
    {:id "kasittelymerkinnat"
     :label (:excel-kasittelymerkinnat virkailija-texts)
     :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
+
+(defn hakemusmaksu-field-labels [form-content]
+  (if (some #(= (:id %) payment-module/kk-application-payment-wrapper-key) form-content)
+    [{:id       "hakemusmaksu-merkinnat"
+      :label    (:excel-kk-hakemusmaksu-merkinnat virkailija-texts)
+      :children (map #(select-keys % [:id :label]) kk-hakemusmaksu-field-labels)}]
+    []))
 
 (defn- vals-if-map [x] (if (map? x) (vals x) x))
 
@@ -92,4 +110,3 @@
                                                               (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
                                          (contains? (set hakukohderyhmas) selected-hakukohderyhma)))
       :else true)))
-

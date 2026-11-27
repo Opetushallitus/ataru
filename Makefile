@@ -188,7 +188,7 @@ restart: stop-pm2 start-pm2
 
 clean: clear-test-db stop clean-lein clean-docker
 	rm -rf node_modules
-	rm *.log
+	rm -f *.log
 
 status: $(NODE_MODULES)
 	docker ps

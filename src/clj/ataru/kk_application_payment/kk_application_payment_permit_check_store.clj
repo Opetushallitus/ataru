@@ -13,6 +13,7 @@
 (declare yesql-delete-other-kk-application-payment-permit-checks)
 (declare yesql-get-kk-application-payment-document-option)
 (declare yesql-lock-kk-application-payment-permit-checks)
+(declare yesql-get-kk-application-payment-permit-checks-for-excel)
 (yesql/defqueries "sql/kk-application-payment-permit-check-queries.sql")
 
 (defn get-permit-checks
@@ -75,3 +76,6 @@
        first
        :value
        (get payment-module/kk-application-payment-residence-permit-attachment-key-by-option)))
+
+(defn get-permit-checks-for-excel [application-keys]
+  (db/exec :db yesql-get-kk-application-payment-permit-checks-for-excel {:application_keys application-keys}))
